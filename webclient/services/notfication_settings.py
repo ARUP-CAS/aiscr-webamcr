@@ -37,6 +37,11 @@ notification_settings = {
         "predmet": "AMČR: nová uživatelská role či oprávnění | AMCR: new user role or permissions",
         "cesta_sablony": "emails/E-U-06.html",
     },
+    "E-U-07": {
+        "zasilat_neaktivnim": True,
+        "predmet": "AMČR: uživatel {ident_cely} - žádost o odstranění účtu | AMCR: user {ident_cely} - request to delete account",
+        "cesta_sablony": "emails/E-U-07.html",
+    },
     "E-NZ-01": {
         "zasilat_neaktivnim": False,
         "predmet": "AMČR: projekt {ident_cely} - blíží se lhůta pro odevzdání NZ | AMCR: project {ident_cely} - report submission deadline approaching",

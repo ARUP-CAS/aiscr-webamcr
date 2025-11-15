@@ -36,6 +36,9 @@
                     style="display: none"></span>
                 </button>
                 <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">{% trans "uzivatel.templates.updateUser.historieUzivatele" %}</a>
+                <button id="uzivatel-delete-request-btn" class="btn btn-secondary mt-3" type="button" name="button">
+                    <span class="app-controls-button-text">{% trans "uzivatel.templates.updateUser.userDeleteRequest" %}</span>
+                </button>
             </div>
         </form>
     </div>
@@ -66,4 +69,12 @@
 {% endblock %}
 
 {% block script %}
+    <script>
+      var options = Object.assign(Object.create(defaults), {
+        modalID: "modal-form",
+        formURL: "{% url 'uzivatel:delete-uzivatel-request' %}",
+        modalFormID: "#user-delete-request-dialog",
+      })
+      delete_user_request_modal = new Modal(options, "uzivatel-delete-request-btn");
+    </script>
 {% endblock %}

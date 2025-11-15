@@ -56,6 +56,7 @@ ALWAYS_ACTIVE = [
     "E-U-03",
     "E-U-05",
     "E-U-06",
+    "E-U-07",
     "E-N-03",
     "E-N-04",
     "E-NZ-01",
@@ -303,6 +304,26 @@ class Mailer:
         )
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.__send(notification_type.predmet, user.email, html, notification_type=notification_type, user=user)
+
+    @classmethod
+    def send_eu07(cls, user: "uzivatel.models.User"):
+        IDENT_CELY = "E-U-07"
+        logger.debug("services.mailer.send_eu07", extra={"ident_cely": IDENT_CELY})
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        subject = notification_type.predmet.format(ident_cely=user.ident_cely)
+        html = render_to_string(
+            notification_type.cesta_sablony,
+            {
+                "uzivatel": user,
+            },
+        )
+        cls.__send(
+            subject=subject,
+            to="info@amapa.cz",
+            html_content=html,
+            notification_type=notification_type,
+            from_email=user.email,
+        )
 
     @classmethod
     def _send_notification_for_project(cls, project, notification_type):
