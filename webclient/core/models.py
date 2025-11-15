@@ -720,6 +720,9 @@ class Permissions(models.Model):
         projekt_zadost_odhlaseni_projektu = "projekt_zadost_odhlaseni_projektu", _(
             "core.models.permissions.actionChoices.projekt_zadost_odhlaseni_projektu"
         )
+        projekt_zadost_zruseni_projektu = "projekt_zadost_zruseni_projektu", _(
+            "core.models.permissions.actionChoices.projekt_zadost_zruseni_projektu"
+        )
         projekt_uzavrit = "projekt_uzavrit", _("core.models.permissions.actionChoices.projekt_uzavrit")
         projekt_vratit_navrh_zruseni = "projekt_vratit_navrh_zruseni", _(
             "core.models.permissions.actionChoices.projekt_vratit_navrh_zruseni"

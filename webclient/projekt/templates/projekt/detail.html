@@ -831,6 +831,14 @@
       })
       let zadost_odhlaseni_projektu_modal = new Modal(options, "zadost-odhlaseni-projektu");
       }
+      if ("{{show.zadost_zruseni_projektu}}" != "False") {
+        let options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        formURL: "{% url 'projekt:zadost-zruseni-projektu' projekt.ident_cely %}",
+        formID: "zadost-zruseni-projektu-form",
+        modalFormID: "#zadost-zruseni-projektu-form",
+      })
+      let zadost_zruseni_projektu_modal = new Modal(options, "zadost-zruseni-projektu");
+      }
     });
     </script>
     <script type="text/javascript">

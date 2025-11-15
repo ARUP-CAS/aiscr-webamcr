@@ -111,6 +111,9 @@
           {% if show.zadost_odhlaseni_projektu %}
             <button id="zadost-odhlaseni-projektu" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.ZadostOdhlaseniProjektu.label" %}</button>
           {% endif %}
+          {% if show.zadost_zruseni_projektu %}
+            <button id="zadost-zruseni-projektu" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.ZadostZruseniProjektu.label" %}</button>
+          {% endif %}
           {% if show.vypis%}
           <a class="dropdown-item" href="{% url 'vypis:vypis' 'projekt' projekt.ident_cely %}" target=”_blank”>{% trans "templates.toolbarProjekt.vypis.label" %}</a>
           {% endif %}
