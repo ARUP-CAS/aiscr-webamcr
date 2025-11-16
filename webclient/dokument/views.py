@@ -1847,7 +1847,12 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
-        qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES).order_by("ident_cely")
+        ident = self.request.GET.get("ident")
+        qs = Dokument.objects.exclude(
+            Q(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
+            | Q(casti__archeologicky_zaznam__ident_cely=ident)
+            | Q(casti__projekt__ident_cely=ident)
+        ).order_by("ident_cely")
         if self.q:
             qs = qs.filter(
                 Q(ident_cely__icontains=self.q) | Q(autori_snapshot__icontains=self.q) | Q(rok_vzniku__icontains=self.q)
@@ -2159,54 +2164,51 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         }
     if request.method == "POST":
         dokument_ids = request.POST.getlist("dokument")
-
-        for dokument_id in dokument_ids:
-            dokument = get_object_or_404(Dokument, id=dokument_id)
-            fedora_transaction = zaznam.create_transaction(request.user, DOKUMENT_USPESNE_PRIPOJEN)
-            dokument.active_transaction = fedora_transaction
-            relace = casti_zaznamu.filter(dokument__id=dokument_id)
-            if not relace.exists():
-                dc_ident = get_cast_dokumentu_ident(dokument)
-                if isinstance(zaznam, ArcheologickyZaznam):
-                    dc = DokumentCast(
-                        archeologicky_zaznam=zaznam,
-                        dokument=dokument,
-                        ident_cely=dc_ident,
+        if len(dokument_ids) > 0:
+            fedora_transaction = zaznam.create_transaction(request.user)
+            for dokument_id in dokument_ids:
+                dokument = get_object_or_404(Dokument, id=dokument_id)
+                dokument.active_transaction = fedora_transaction
+                relace = casti_zaznamu.filter(dokument__id=dokument_id)
+                if not relace.exists():
+                    dc_ident = get_cast_dokumentu_ident(dokument)
+                    if isinstance(zaznam, ArcheologickyZaznam):
+                        dc = DokumentCast(
+                            archeologicky_zaznam=zaznam,
+                            dokument=dokument,
+                            ident_cely=dc_ident,
+                        )
+                    else:
+                        dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
+                    dc.active_transaction = fedora_transaction
+                    dc.save()
+                    dokument.save()
+                    logger.debug(
+                        "dokument.views.pripojit.pripojit",
+                        extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
                     )
-                    dc.active_transaction = fedora_transaction
-                    dc.save()
+                    messages.add_message(
+                        request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
+                    )
                 else:
-                    dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
-                    dc.active_transaction = fedora_transaction
-                    dc.save()
-                dokument.close_active_transaction_when_finished = True
-                dokument.save()
-                logger.debug(
-                    "dokument.views.pripojit.pripojit",
-                    extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
-                )
-            else:
-                fedora_transaction.error_message = DOKUMENT_JIZ_BYL_PRIPOJEN
-                fedora_transaction.rollback_transaction()
+                    messages.add_message(request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}")
+            fedora_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": redirect_name})
     else:
         if proj_ident_cely:
             # Pridavam projektove dokumenty
-            projektove_dokumenty = set()
-            proj_dok_list = set()
-            dokumenty_akce = set(Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_zaznam))
             projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
-            for akce in projekt.akce_set.all().exclude(archeologicky_zaznam__ident_cely=ident_zaznam):
-                for cast in akce.archeologicky_zaznam.casti_dokumentu.all():
-                    if cast.dokument not in dokumenty_akce:
-                        projektove_dokumenty.add((cast.dokument.id, cast.dokument.ident_cely))
-                        proj_dok_list.add(cast.dokument)
+            proj_dok_list = (
+                Dokument.objects.filter(casti__archeologicky_zaznam__akce__projekt=projekt)
+                .exclude(casti__archeologicky_zaznam__ident_cely=ident_zaznam)
+                .distinct()
+            )
             context["dokumenty"] = proj_dok_list
-            context["pripojit"] = proj_dok_list
+            context["pripojit"] = True
             return render(request, "core/transakce_table_modal.html", context)
         else:
             # Pridavam vsechny dokumenty
-            form = PripojitDokumentForm()
+            form = PripojitDokumentForm(ident_zaznam)
         context["form"] = form
         context["hide_table"] = True
     return render(request, "core/transakce_table_modal.html", context)
