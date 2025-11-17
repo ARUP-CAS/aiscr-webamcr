@@ -393,6 +393,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         if 41729 in exif_dict["Exif"] and isinstance(exif_dict["Exif"][41729], int):
             exif_dict["Exif"][41729] = str(exif_dict["Exif"][41729]).encode("utf-8")
         try:
+            exif_dict["Exif"].pop(37500, None)  # smazání proprietálního tagu MakerNote
             new_exif_bytes = piexif.dump(exif_dict)
             output_io = io.BytesIO()
             img.save(output_io, format=img.format, exif=new_exif_bytes)

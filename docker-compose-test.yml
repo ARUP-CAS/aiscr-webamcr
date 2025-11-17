@@ -11,7 +11,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
       - /opt/selenium_test:/vol/web/selenium_test
       - /opt/fcrepo/fcrepo-home/data:/vol/fcrepo
     environment:
@@ -105,7 +105,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
     networks:
       - prod-net
     healthcheck:
@@ -130,7 +130,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
     networks:
       - prod-net
     healthcheck:
