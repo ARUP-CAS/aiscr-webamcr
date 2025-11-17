@@ -1215,7 +1215,7 @@ class FedoraRepositoryConnector:
     def save_single_file_from_storage(
         cls, record, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False
     ) -> None:
-        from core.models import Soubor
+        from core.models import AntivirusCheckResult, Soubor
         from xml_generator.models import ModelWithMetadata
 
         if isinstance(record, int):
@@ -1248,7 +1248,7 @@ class FedoraRepositoryConnector:
         soubor_data.seek(0)
         mimetype = Soubor.get_mime_types(soubor_data)
         soubor_data.seek(0)
-        if disable_antivirus is False and Soubor.check_antivirus(soubor_data) is False:
+        if disable_antivirus is False and Soubor.check_antivirus(soubor_data) == AntivirusCheckResult.PASSES:
             return
         soubor_data.seek(0)
         mime_extensions = Soubor.get_file_extension_by_mime(soubor_data)

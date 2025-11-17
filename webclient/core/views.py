@@ -39,7 +39,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.models import Soubor
+from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
     FedoraError,
     FedoraRepositoryConnector,
@@ -512,7 +512,7 @@ def post_upload(request):
         return JsonResponse({"error": help_translation}, status=400)
     soubor_data = BytesIO(soubor.read())
     check_antivirus_result = Soubor.check_antivirus(soubor_data)
-    if check_antivirus_result is False:
+    if check_antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
         logger.warning("core.views.post_upload.check_antivirus_result")
         help_translation = _("core.views.post_upload.antivirus_check_failed")
         return JsonResponse({"error": help_translation}, status=400)
@@ -1586,9 +1586,7 @@ class DataImportProgress(LoginRequiredMixin, View):
         redis_connector = RedisConnector().get_connection_decode()
         try:
             record_count = int(redis_connector.get(f"import_data_count_{job_id}"))
-            import_data_progress_files = int(
-                redis_connector.get(f"import_data_progress_files_{job_id}")
-            )
+            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}"))
             status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
