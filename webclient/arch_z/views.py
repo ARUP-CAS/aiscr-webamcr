@@ -231,9 +231,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
             if self.arch_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 context["showbackdetail"] = True if self.request.user.hlavni_role.pk != ROLE_BADATEL_ID else False
                 context["app"] = "pr"
-                context[
-                    "arch_pr_link"
-                ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+                context["arch_pr_link"] = (
+                    '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+                )
             else:
                 context["app"] = "akce"
                 context["arch_pr_link"] = None
@@ -262,7 +262,6 @@ class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateV
     Třída pohledu pro zobrazení detailu akce.
     """
 
-    scroll_to_dj = True
     template_name = "arch_z/dj/arch_z_detail.html"
 
     def get_archeologicky_zaznam(self) -> ArcheologickyZaznam:
@@ -1923,10 +1922,12 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_import_pian_change": not show_add_pian
         and show_import_pian_change_user
         and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely),
-        "show_change_katastr": True
-        if jednotka.typ.id == TYP_DJ_KATASTR
-        and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely)
-        else False,
+        "show_change_katastr": (
+            True
+            if jednotka.typ.id == TYP_DJ_KATASTR
+            and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely)
+            else False
+        ),
         "show_dj_smazat": show_dj_smazat,
         "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat, user, jednotka.ident_cely),
         "show_pripojit_pian_mapa": show_pripojit_pian_mapa,

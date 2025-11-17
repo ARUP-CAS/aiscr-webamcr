@@ -105,6 +105,4 @@ anonymně a slouží pouze k vylepšení funkčnosti webu.
 Další cookies
 -------------
 
-Cookie `next_url` slouží k přesměrování, například po automatickém přihlášení.
-
 Cookie `zpet` slouží k nastavení odkazu pro přechod na předchozí stránku u obrazovky pro detail dokumentu.
