@@ -81,14 +81,6 @@ def detail(request, ident_cely):
         logger.debug("pian.views.detail.form.not_valid", extra={"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         response = redirect(dj.get_absolute_url() + "/pian/edit/" + str(ident_cely))
-    response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000, secure=True, samesite="Strict")
-    response.set_cookie(
-        "set-active",
-        f"el_div_dokumentacni_jednotka_{dj_ident_cely.replace('-', '_')}",
-        max_age=1000,
-        secure=True,
-        samesite="Strict",
-    )
     return response
 
 
@@ -139,16 +131,6 @@ def odpojit(request, dj_ident_cely):
         dj.save()
         logger.debug("pian.views.odpojit.finished", extra={"transaction": fedora_transaction.uid})
         response = JsonResponse({"redirect": dj.get_absolute_url()})
-        response.set_cookie(
-            "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict"
-        )
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
-            max_age=1000,
-            secure=True,
-            samesite="Strict",
-        )
         return response
     else:
         context = {
@@ -202,16 +184,6 @@ def potvrdit(request, dj_ident_cely):
                 extra={"ident_cely": pian.ident_cely, "transaction": fedora_transaction.uid},
             )
             response = JsonResponse({"redirect": dj.get_absolute_url()})
-            response.set_cookie(
-                "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict"
-            )
-            response.set_cookie(
-                "set-active",
-                f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
-                max_age=1000,
-                secure=True,
-                samesite="Strict",
-            )
             return response
     context = {
         "object": pian,
@@ -269,14 +241,6 @@ def create(request, dj_ident_cely):
         logger.info("pian.views.create.not_valid", extra={"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         response = redirect(dj.get_absolute_url() + "/pian/zapsat")
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict")
-    response.set_cookie(
-        "set-active",
-        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
-        max_age=1000,
-        secure=True,
-        samesite="Strict",
-    )
     return response
 
 

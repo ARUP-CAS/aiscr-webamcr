@@ -154,12 +154,6 @@ def detail(request, typ_vazby, ident_cely):
             ],
         )
     response = redirect(url)
-    response.set_cookie(
-        "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000, secure=True, samesite="Strict"
-    )
-    response.set_cookie(
-        "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000, secure=True, samesite="Strict"
-    )
     komponenta.close_active_transaction_when_finished = True
     komponenta.save()
     return response
@@ -243,17 +237,6 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 args=[cast.dokument.ident_cely, cast.ident_cely],
             )
     response = redirect(url)
-    if komp_ident_cely:
-        response.set_cookie(
-            "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000, secure=True, samesite="Strict"
-        )
-        response.set_cookie(
-            "set-active",
-            f"el_komponenta_{komp_ident_cely.replace('-', '_')}",
-            max_age=1000,
-            secure=True,
-            samesite="Strict",
-        )
     return response
 
 

@@ -320,53 +320,10 @@
           return v ? v[2] : null;
       }
 
-      function show_form(form_id, form_to_show_next) {
-        //clearUnfinishedEditGeometry()
-          // Validate form_id and form_to_show_next to prevent XSS
-          const validPattern = /^[a-zA-Z0-9_-]+$/;
-          if (!validPattern.test(form_id)) {
-              console.error("Invalid form_id: must contain only alphanumeric characters, hyphens, and underscores");
-              return;
-          }
-          if (form_to_show_next != null && !validPattern.test(form_to_show_next)) {
-              console.error("Invalid form_to_show_next: must contain only alphanumeric characters, hyphens, and underscores");
-              return;
-          }
-          let form = document.getElementById(form_id);
-          if (form) {
-            if (form.style.display === "none") {
-                // hide the form what was shown
-                if (shown_form_id !== "") {
-                    document.getElementById(shown_form_id).style.display = "none"
-                }
-                // Show desired form
-                form.style.display = "block";
-                shown_form_id = form_id
-                if (form_to_show_next == null) {
-                    form_to_show_next = form_id;
-                }
-                setCookie("detail-id-shown", form_to_show_next, "/arch-z/detail/")
-            }
-          }
-          const currentUrl = window.location.href;
-          if (form_id.includes("detail_dj_form_") || currentUrl.includes("/zapsat")) {
-            arch_select_perspective(
-              currentUrl,
-              document.getElementById("main_cadastre_id").value,
-              '{{ zaznam.ident_cely }}',
-             '{{ dj_ident_cely }}'
-              )
-          }
-          try {document.getElementById("dj_list_card_header").scrollIntoView();}
-            catch (e) {
-              console.log(e);
-            }
-      }
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
       function show_create_child_form(url, form_id, form_to_show_next) {
           //clearUnfinishedEditGeometry()
 
-          show_form(form_id, form_to_show_next);
           let forma = document.getElementById(form_id + "_id");
           forma.action = url;
           if (form_id === "create_pian_form") {
@@ -383,23 +340,6 @@
       {% endblock %}
     <script>
       document.addEventListener('DOMContentLoaded', function (event) {
-          // Focus on detail set by the cookie and display it
-          let detail_to_show = getCookie("detail-id-shown")
-          const show_form_cookie = getCookie("show-form");
-          const set_active_cookie = getCookie("set-active");
-          let element_of_the_detail = document.getElementById(detail_to_show);
-          if (set_active_cookie) {
-              const new_el = document.getElementById(set_active_cookie);
-              change_active_element(new_el);
-              setCookie("set-active", "", "/");
-          }
-          if (show_form_cookie) {
-              show_form(show_form_cookie);
-              setCookie("show-form", "", "/");
-          } else if (detail_to_show != null && element_of_the_detail != null) {
-              show_form(detail_to_show)
-              document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
-          }
           let i = 0;
           let vedouci_filed = null;
           let organizace_field = null;
@@ -420,7 +360,6 @@
 
       const div_komponenta_click = (data) => {
           const {ident_cely, ident_cely_safe} = data;
-          show_form(`detail_komponenta_form_${ident_cely}`);
           const el_li_komponenta
               = document.getElementById(`el_li_komponenta_${ident_cely_safe}`);
           change_active_element(el_li_komponenta);
@@ -428,7 +367,6 @@
 
       const div_dokumentacni_jednotka_click = (data) => {
           const {ident_cely, ident_cely_safe} = data;
-          show_form(`detail_dj_form_${ident_cely}`);
           get_create_pain_form_action(ident_cely);
           const el_div_dokumentacni_jednotka
               = document.getElementById(`el_div_dokumentacni_jednotka_${ident_cely_safe}`);

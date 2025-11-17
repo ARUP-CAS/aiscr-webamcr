@@ -65,16 +65,7 @@ def zapsat(request, dj_ident_cely):
         logger.debug("adb.views.zapsat.not_valid", extra={"error": str(form.errors)})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    response = redirect(dj.get_absolute_url())
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict")
-    response.set_cookie(
-        "set-active",
-        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
-        max_age=1000,
-        secure=True,
-        samesite="Strict",
-    )
-    return response
+    return redirect(dj.get_absolute_url())
 
 
 @login_required

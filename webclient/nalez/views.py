@@ -160,10 +160,4 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
         response = redirect(safe_redirect)
     else:
         response = redirect(reverse("core:home"))
-    response.set_cookie(
-        "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000, secure=True, samesite="Strict"
-    )
-    response.set_cookie(
-        "set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000, secure=True, samesite="Strict"
-    )
     return response
