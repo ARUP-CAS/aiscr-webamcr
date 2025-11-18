@@ -12,7 +12,11 @@ updates:
     open-pull-requests-limit: 30
     
   - package-ecosystem: "docker" # See documentation for possible values
-    directory: "/" # Location of package manifests
+    directories: # Location of package manifests
+      - "/" 
+      - "/fedora/"
+      - "/redis/"
+      - "/proxy/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 30
