@@ -124,6 +124,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
     """
 
     arch_zaznam = None
+    scroll_to_dj = False
 
     def get_shows(self):
         """
@@ -230,9 +231,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
             if self.arch_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 context["showbackdetail"] = True if self.request.user.hlavni_role.pk != ROLE_BADATEL_ID else False
                 context["app"] = "pr"
-                context[
-                    "arch_pr_link"
-                ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+                context["arch_pr_link"] = (
+                    '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+                )
             else:
                 context["app"] = "akce"
                 context["arch_pr_link"] = None
@@ -252,6 +253,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
         context["externi_odkazy"] = self.get_externi_odkazy()
         context["next_url"] = self.arch_zaznam.get_absolute_url()
+        context["scroll_to_dj"] = self.scroll_to_dj
         return context
 
 
@@ -285,6 +287,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
     Třida, která se dedí a která obsahuje metódy pro získaní relací DJ.
     """
 
+    scroll_to_dj = True
     template_name = "arch_z/dj/dj_update.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
@@ -329,6 +332,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
     Třída pohledu pro vytvoření dokumentační jednotky.
     """
 
+    scroll_to_dj = True
     template_name = "arch_z/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
@@ -1588,6 +1592,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     Třida pohledu pro zmenu projektové akce na samostatnou.
     """
 
+    scroll_to_dj = True
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):
@@ -1659,6 +1664,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     Třida pohledu pro zmenu samostatní akce na projektovou.
     """
 
+    scroll_to_dj = True
     template_name = "core/transakce_table_modal.html"
 
     def get_context_data(self, **kwargs):
@@ -1916,10 +1922,12 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_import_pian_change": not show_add_pian
         and show_import_pian_change_user
         and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely),
-        "show_change_katastr": True
-        if jednotka.typ.id == TYP_DJ_KATASTR
-        and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely)
-        else False,
+        "show_change_katastr": (
+            True
+            if jednotka.typ.id == TYP_DJ_KATASTR
+            and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely)
+            else False
+        ),
         "show_dj_smazat": show_dj_smazat,
         "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat, user, jednotka.ident_cely),
         "show_pripojit_pian_mapa": show_pripojit_pian_mapa,
