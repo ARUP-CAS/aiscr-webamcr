@@ -965,12 +965,11 @@ class Mailer:
         logger.debug("services.mailer.send_ek02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=document.ident_cely)
-        MOVED_TO_STATE = document.stav - 2
         html = render_to_string(
             notification_type.cesta_sablony,
             {
                 "ident_cely": document.ident_cely,
-                "state": document.STATES[MOVED_TO_STATE][1],
+                "state": document.STATES[0][1],
                 "reason": reason,
                 "site_url": settings.SITE_URL,
             },
