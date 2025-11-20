@@ -526,7 +526,7 @@ class UserDeleteRequest(LoginRequiredMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         user: User = request.user
-        Mailer.send_eu07(user=user)
+        Mailer.send_eu07(user, request)
         messages.add_message(request, messages.SUCCESS, ZADOST_SMAZANI_UZIVATELE_SUCCESS)
         return JsonResponse({"redirect": reverse("uzivatel:update-uzivatel")})
 

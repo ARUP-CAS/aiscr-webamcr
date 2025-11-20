@@ -30,6 +30,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import F, OuterRef, Subquery
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from historie.models import Historie
 from oznameni.models import Oznamovatel
@@ -306,16 +307,15 @@ class Mailer:
             cls.__send(notification_type.predmet, user.email, html, notification_type=notification_type, user=user)
 
     @classmethod
-    def send_eu07(cls, user: "uzivatel.models.User"):
+    def send_eu07(cls, user: "uzivatel.models.User", request):
         IDENT_CELY = "E-U-07"
         logger.debug("services.mailer.send_eu07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=user.ident_cely)
+        uzivatel_admin_url = request.build_absolute_uri(reverse("admin:uzivatel_user_change", args=[user.id]))
         html = render_to_string(
             notification_type.cesta_sablony,
-            {
-                "uzivatel": user,
-            },
+            {"uzivatel": user, "uzivatel_admin_url": uzivatel_admin_url},
         )
         cls.__send(
             subject=subject,
