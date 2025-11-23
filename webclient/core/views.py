@@ -513,9 +513,20 @@ def post_upload(request):
     soubor_data = BytesIO(soubor.read())
     check_antivirus_result = Soubor.check_antivirus(soubor_data)
     if check_antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
-        logger.warning("core.views.post_upload.check_antivirus_result")
-        help_translation = _("core.views.post_upload.antivirus_check_failed")
+        logger.warning(
+            "core.views.post_upload.check_antivirus_result.virus_found",
+            extra={"soubor": soubor.name, "user": request.user.pk},
+        )
+        help_translation = _("core.views.post_upload.antivirus_check.virus_found")
         return JsonResponse({"error": help_translation}, status=400)
+    if check_antivirus_result == AntivirusCheckResult.CHECK_FAILED:
+        logger.warning(
+            "core.views.post_upload.check_antivirus_result.check_failed",
+            extra={"soubor": soubor.name, "user": request.user.pk},
+        )
+        help_translation = _("core.views.post_upload.antivirus_check.check_failed")
+        return JsonResponse({"error": help_translation}, status=400)
+    soubor.seek(0)
     rep_bin_file = None
     if soubor:
         if not update:

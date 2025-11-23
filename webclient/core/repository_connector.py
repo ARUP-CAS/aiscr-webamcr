@@ -1248,7 +1248,11 @@ class FedoraRepositoryConnector:
         soubor_data.seek(0)
         mimetype = Soubor.get_mime_types(soubor_data)
         soubor_data.seek(0)
-        if disable_antivirus is False and Soubor.check_antivirus(soubor_data) == AntivirusCheckResult.PASSES:
+        # Antivirus labeled file as infected or the check failed
+        if not disable_antivirus or Soubor.check_antivirus(soubor_data) not in (
+            AntivirusCheckResult.PASSES,
+            AntivirusCheckResult.SKIPPED,
+        ):
             return
         soubor_data.seek(0)
         mime_extensions = Soubor.get_file_extension_by_mime(soubor_data)

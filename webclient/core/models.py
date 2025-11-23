@@ -3,7 +3,6 @@ import io
 import logging
 import os
 import re
-import socket
 import time
 import zipfile
 from enum import Enum
@@ -35,6 +34,7 @@ from PIL import Image
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
 
+from .connectors import ClamdConnectionError, ClamdNetworkSocket, ClamdResponseError
 from .constants import (
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
@@ -48,9 +48,13 @@ logger = logging.getLogger(__name__)
 
 
 class AntivirusCheckResult(Enum):
+    # Antivirus vrátil odpověď, že soubor je v pořádku
     PASSES = 0
+    # Antivirus nalezl v souboru virus
     VIRUS_FOUND = 1
+    # Kontrola antivirem selhala kvůli chybě
     CHECK_FAILED = 2
+    # Kontrola antivirem byla přeskočena, protože není nakonfigurován žádný antivirus
     SKIPPED = 3
 
 
@@ -472,46 +476,46 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def check_antivirus(cls, bytes_io: io.BytesIO):
-        buffer_size = 4096
+        """
+        Zkontroluje soubor na přítomnost virů pomocí ClamAV.
+
+        Args:
+            bytes_io: souborový objekt ke skenování
+
+        Returns:
+            AntivirusCheckResult: výsledek kontroly
+        """
         if settings.CLAMD_HOST and settings.CLAMD_PORT:
             try:
-                with socket.create_connection(
-                    (settings.CLAMD_HOST, settings.CLAMD_PORT), settings.CLAMD_CONNECTION_TIMEOUT
-                ) as s:
-                    start = time.time()
-                    # Keep the same timeout for subsequent ops
-                    s.settimeout(settings.CLAMD_OPERATION_TIMEOUT)
-                    s.send(b"zINSTREAM\0")
-                    bytes_io.seek(0)
-                    while True:
-                        chunk = bytes_io.read(buffer_size)
-                        if not chunk:
-                            break
-                        s.send(len(chunk).to_bytes(4, byteorder="big") + chunk)
-                    s.send(b"\0\0\0\0")
-
-                    response_data = b""
-                    while True:
-                        chunk = s.recv(buffer_size)
-                        if not chunk:
-                            break
-                        response_data += chunk
-                    response = response_data.decode("utf-8").rstrip("\u0000")
-
-                    end = time.time()
+                clamd = ClamdNetworkSocket()
+                bytes_io.seek(0)
+                start_time = time.time()
+                result = clamd.instream(bytes_io)
+                duration_ms = (time.time() - start_time) * 1000
+                filename, (status, reason) = next(iter(result.items()))
+                if status == "OK":
                     logger.debug(
-                        "core.models.Soubor.check_antivirus.response",
-                        extra={"response": response, "time": (end - start)},
+                        "core.models.Soubor.check_antivirus.passes",
+                        extra={"response": status, "duration_ms": duration_ms},
                     )
-                    if response.upper() == "OK" or response.upper().endswith("OK"):
-                        return AntivirusCheckResult.PASSES
-                    else:
-                        return AntivirusCheckResult.VIRUS_FOUND
-            except socket.timeout:
-                logger.error("core.models.Soubor.check_antivirus.timeout_exception")
+                    return AntivirusCheckResult.PASSES
+                elif status == "ERROR":
+                    logger.debug(
+                        "core.models.Soubor.check_antivirus.error",
+                        extra={"response": status, "duration_ms": duration_ms},
+                    )
+                    return AntivirusCheckResult.CHECK_FAILED
+                else:
+                    logger.debug(
+                        "core.models.Soubor.check_antivirus.virus_found",
+                        extra={"response": status, "reason": reason, "duration_ms": duration_ms},
+                    )
+                    return AntivirusCheckResult.VIRUS_FOUND
+            except ClamdConnectionError as err:
+                logger.error("core.models.Soubor.check_antivirus.connection_error", extra={"error": str(err)})
                 return AntivirusCheckResult.CHECK_FAILED
-            except Exception as err:
-                logger.error("core.models.Soubor.check_antivirus.timeout_exception", extra={"error": err})
+            except ClamdResponseError as err:
+                logger.error("core.models.Soubor.check_antivirus.response_error", extra={"error": str(err)})
                 return AntivirusCheckResult.CHECK_FAILED
         return AntivirusCheckResult.SKIPPED
 
