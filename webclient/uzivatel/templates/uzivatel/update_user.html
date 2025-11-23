@@ -31,11 +31,16 @@
                         </li>
                     {% endfor %}
                 </ul>
-                <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "uzivatel.templates.updateUser.submitButton" %}
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
-                    style="display: none"></span>
-                </button>
-                <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">{% trans "uzivatel.templates.updateUser.historieUzivatele" %}</a>
+                <div class="d-flex">
+                    <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3 mr-2">{% trans "uzivatel.templates.updateUser.submitButton" %}
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
+                        style="display: none"></span>
+                    </button>
+                    <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">{% trans "uzivatel.templates.updateUser.historieUzivatele" %}</a>
+                    <button id="uzivatel-delete-request-btn" class="btn mt-3 ml-auto btn-delete" type="button" name="button">
+                        <span class="app-controls-button-text">{% trans "uzivatel.templates.updateUser.userDeleteRequest" %}</span>
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -66,4 +71,12 @@
 {% endblock %}
 
 {% block script %}
+    <script>
+      var options = Object.assign(Object.create(defaults), {
+        modalID: "modal-form",
+        formURL: "{% url 'uzivatel:delete-uzivatel-request' %}",
+        modalFormID: "#user-delete-request-dialog",
+      })
+      delete_user_request_modal = new Modal(options, "uzivatel-delete-request-btn");
+    </script>
 {% endblock %}

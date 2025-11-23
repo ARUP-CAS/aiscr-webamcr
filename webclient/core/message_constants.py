@@ -240,3 +240,6 @@ TRANSLATION_FILE_WRONG_FORMAT: Final = _("core.message_constants.translationFile
 # restart aplikace
 APPLICATION_RESTART_ERROR: Final = _("core.message_constants.applicationRestartError.text")
 APPLICATION_RESTART_SUCCESS: Final = _("core.message_constants.applicationRestartSuccess.text")
+
+# uzivatel
+ZADOST_SMAZANI_UZIVATELE_SUCCESS: Final = _("core.message.ZADOST_SMAZANI_UZIVATELE_SUCCESS.text")
