@@ -196,7 +196,7 @@ services:
     shm_size: '1gb'
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.14.1
+    image: docker.elastic.co/logstash/logstash:8.19.0
     depends_on:
       - elasticsearch
     ports:
@@ -207,7 +207,7 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
     environment:
       - discovery.type=single-node
       - http.host=0.0.0.0
@@ -219,7 +219,7 @@ services:
       - elasticsearch_volume:/usr/share/elasticsearch/data
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.14.1
+    image: docker.elastic.co/kibana/kibana:8.19.0
     restart: always
     ports:
       - 5601:5601
