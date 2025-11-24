@@ -105,17 +105,4 @@ anonymně a slouží pouze k vylepšení funkčnosti webu.
 Další cookies
 -------------
 
-Cookie `show-form` slouží k uložení formuláře, na který má být prohlížeč přesměrován. Jedná se zpravidla o případ,
-kdy uživatel/uživatelka provede akci na jednom formuláři a po potvrzení této akce je přesněmovaný na jiný formuláře.
-Hodnota s prefixem `detail_dj_form_` slouží k přesměrování na formulář dokumentační jednotky, například po odpojení
-PAINu.
-
-Cookie `detail-id-shown` slouží k nastavení zoomu mapy pro formulář detailu archeologického záznamu a lokality.
-
-Cookie `set-active` je používána k uchování aktivního prvku pro editaci.  Hodnota s prefixem
-`el_div_dokumentacni_jednotka_` slouží k označení aktuálně upravovaná dokumentační jednotce na stránce se detailem
-archeologického záznamu.
-
-Cookie `next_url` slouží k přesměrování, například po automatickém přihlášení.
-
 Cookie `zpet` slouží k nastavení odkazu pro přechod na předchozí stránku u obrazovky pro detail dokumentu.

@@ -90,20 +90,16 @@ class RepositoryBinaryFile:
 
 
 class FedoraRequestType(Enum):
-    GET_CONTAINER = 1
+    # dotazy, které mění data ve Fedoře
     CREATE_CONTAINER = 2
     CREATE_LINK = 3
     CREATE_METADATA = 4
     UPDATE_METADATA = 5
-    GET_METADATA = 6
     CREATE_BINARY_FILE_CONTAINER = 7
-    GET_BINARY_FILE_CONTAINER = 8
     CREATE_BINARY_FILE = 9
     CREATE_BINARY_FILE_CONTENT = 10
     CREATE_BINARY_FILE_THUMB = 11
-    GET_BINARY_FILE_CONTENT = 12
     UPDATE_BINARY_FILE_CONTENT = 13
-    GET_LINK = 14
     DELETE_CONTAINER = 15
     DELETE_TOMBSTONE = 16
     RECORD_DELETION_MOVE_MEMBERS = 17
@@ -114,19 +110,26 @@ class FedoraRequestType(Enum):
     DELETE_LINK_TOMBSTONE = 24
     DELETE_BINARY_FILE = 25
     DELETE_BINARY_FILE_COMPLETELY = 26
-    GET_DELETED_LINK = 27
     CONNECT_DELETED_RECORD_1 = 28
     CONNECT_DELETED_RECORD_2 = 29
     CONNECT_DELETED_RECORD_3 = 30
     CONNECT_DELETED_RECORD_4 = 31
-    GET_BINARY_FILE_CONTENT_THUMB = 32
     UPDATE_BINARY_FILE_CONTENT_THUMB = 33
     CREATE_BINARY_FILE_THUMB_LARGE = 34
-    GET_BINARY_FILE_CONTENT_THUMB_LARGE = 35
     UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE = 36
-    GET_TOMBSTONE = 37
     CHANGE_IDENT_CONNECT_RECORDS_5 = 38
     CHANGE_IDENT_CONNECT_RECORDS_6 = 39
+
+    # dotazy, které nemění Fedoru
+    GET_CONTAINER = 1001
+    GET_METADATA = 1006
+    GET_BINARY_FILE_CONTAINER = 1008
+    GET_BINARY_FILE_CONTENT = 1012
+    GET_LINK = 1014
+    GET_DELETED_LINK = 1027
+    GET_BINARY_FILE_CONTENT_THUMB = 1032
+    GET_BINARY_FILE_CONTENT_THUMB_LARGE = 1035
+    GET_TOMBSTONE = 1037
 
 
 class FedoraRepositoryConnector:
@@ -344,6 +347,8 @@ class FedoraRepositoryConnector:
                     f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}"
                     f":{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx/{self.transaction_uid}"
                 )
+            if request_type.value < 1000:
+                self.transaction.changes_count += 1
         if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
             response = requests.post(url, headers=headers, auth=auth, verify=False)
         elif request_type in (
@@ -667,7 +672,7 @@ class FedoraRepositoryConnector:
             }
             return document_func, headers_func
 
-        if not result:
+        if result is None:
             raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
         if result.status_code == 404:
             document, headers = generate_metadata()
@@ -1409,6 +1414,7 @@ class FedoraTransaction:
         self.__status = FedoraTransactionStatus.ACTIVE
         self.redirect_on_error = redirect_on_error
         self.redirect_url = redirect_url
+        self.changes_count = 0
 
     def __str__(self):
         return self.uid
@@ -1492,7 +1498,7 @@ class FedoraTransaction:
         )
         self._send_transaction_request()
         self._perform_post_commit_tasks()
-        if settings.DIGIARCHIV_URL != "":
+        if settings.DIGIARCHIV_URL != "" and self.changes_count > 0:
             self.call_digiarchiv_update()
         self.__status = FedoraTransactionStatus.COMMITTED
         logger.debug(

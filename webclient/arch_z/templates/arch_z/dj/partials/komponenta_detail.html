@@ -74,8 +74,6 @@
 <script src="{% static 'js/ajax_functions.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        //show form
-        show_form(`detail_komponenta_form_{{ k.ident_cely }}`)
         // fill base on nadrazeni
         url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
         ident_cely = '{{k.ident_cely}}'

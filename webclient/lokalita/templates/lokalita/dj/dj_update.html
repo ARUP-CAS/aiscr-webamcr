@@ -134,11 +134,6 @@
 
   {% include "pian/importovat_pian_modal.html" %}
   <script>
-      document.addEventListener('DOMContentLoaded', () => {
-          show_form(`detail_dj_form_{{j.ident_cely}}`);
-      });
-  </script>
-  <script>
       function change_dj_action(new_action, type, ident) {
           if (type === "mapa") {
               show_grap_geom_from_map(ident);
