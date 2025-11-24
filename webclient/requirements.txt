@@ -6,7 +6,7 @@ crispy-bootstrap4==2025.6
 django-recaptcha==4.1.0
 django_registration==5.2.1
 django-filter==25.2
-django-tables2==2.7.5
+django-tables2==2.8.0
 django-tables2-column-shifter==2.2.0
 django-compressor==4.6.0
 django-libsass==0.9 
