@@ -1,0 +1,22 @@
+@prefix premis: <http://www.loc.gov/premis/rdf/v1#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fedora: <http://fedora.info/definitions/v4/repository#> .
+@prefix ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-3D-000000009/file/c84cdcff-d8f2-4f5e-9746-a429efff8d2e/orig>
+        dcterms:creator          "U-005361" ;
+        premis:hasSize           "24811"^^<http://www.w3.org/2001/XMLSchema#long> ;
+        ebucore:filename         "XC3D000000009.zip" ;
+        ebucore:hasMimeType      "application/zip" ;
+        premis:hasMessageDigest  <urn:sha-512:423d86f173de0e642bba917b92239481e9a07e19a73e48a88842d53ea110195eedf292e1c47b91b9362e303981f7941be43a66ec1e571008ba7922f035bf1ed0> ;
+        fedora:created           "2025-11-23T22:10:24.704614Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified      "2025-11-23T22:10:24.704614Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:createdBy         "AMCR" ;
+        fedora:lastModifiedBy    "AMCR" ;
+        rdf:type                 ldp:NonRDFSource ;
+        rdf:type                 ldp:Resource ;
+        rdf:type                 fedora:Resource ;
+        rdf:type                 fedora:Binary ;
+        fedora:hasFixityService  <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-3D-000000009/file/c84cdcff-d8f2-4f5e-9746-a429efff8d2e/orig/fcr:fixity> .

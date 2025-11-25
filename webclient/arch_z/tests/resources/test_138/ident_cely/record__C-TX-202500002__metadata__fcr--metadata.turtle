@@ -1,0 +1,22 @@
+@prefix premis: <http://www.loc.gov/premis/rdf/v1#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fedora: <http://fedora.info/definitions/v4/repository#> .
+@prefix ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-TX-202500002/metadata>
+        dcterms:creator          "U-005361" ;
+        premis:hasSize           "3308"^^<http://www.w3.org/2001/XMLSchema#long> ;
+        ebucore:filename         "metadata.xml" ;
+        ebucore:hasMimeType      "application/xml" ;
+        premis:hasMessageDigest  <urn:sha-512:556ae146f6e65b75fa82a285034a3bb46095d2e21cae33d03ff27a3fbc17a56835ce48b0957a6be901dc91cc47bd0e94d6195cc9af2eef921eb96b91e244ebe8> ;
+        fedora:created           "2025-11-23T21:04:47.707910Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified      "2025-11-23T21:04:52.023976Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:createdBy         "AMCR" ;
+        fedora:lastModifiedBy    "AMCR" ;
+        rdf:type                 ldp:NonRDFSource ;
+        rdf:type                 ldp:Resource ;
+        rdf:type                 fedora:Resource ;
+        rdf:type                 fedora:Binary ;
+        fedora:hasFixityService  <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-TX-202500002/metadata/fcr:fixity> .

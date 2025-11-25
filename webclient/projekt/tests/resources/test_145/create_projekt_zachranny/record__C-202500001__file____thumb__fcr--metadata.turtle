@@ -1,0 +1,22 @@
+@prefix premis: <http://www.loc.gov/premis/rdf/v1#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fedora: <http://fedora.info/definitions/v4/repository#> .
+@prefix ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> .
+@prefix ldp: <http://www.w3.org/ns/ldp#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-202500001/file/96bdc906-9e71-4d43-836e-f0d2462b7a65/thumb>
+        dcterms:creator          "U-005361" ;
+        premis:hasSize           "5099"^^<http://www.w3.org/2001/XMLSchema#long> ;
+        ebucore:filename         "oznameni_C-202500001_20250726120001.png" ;
+        ebucore:hasMimeType      "image/png" ;
+        premis:hasMessageDigest  <urn:sha-512:4b9c970ef97bcf060a8a50b193cb41ee0ebf0e83244eeaab9dff9f829ca70972149890ad5573082531d930dc50e8ed3b06a19f09764df4e000a877a5cfd01fc4> ;
+        fedora:created           "2025-11-23T22:15:32.107879Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified      "2025-11-23T22:15:32.107879Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:createdBy         "AMCR" ;
+        fedora:lastModifiedBy    "AMCR" ;
+        rdf:type                 ldp:NonRDFSource ;
+        rdf:type                 ldp:Resource ;
+        rdf:type                 fedora:Resource ;
+        rdf:type                 fedora:Binary ;
+        fedora:hasFixityService  <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-202500001/file/96bdc906-9e71-4d43-836e-f0d2462b7a65/thumb/fcr:fixity> .

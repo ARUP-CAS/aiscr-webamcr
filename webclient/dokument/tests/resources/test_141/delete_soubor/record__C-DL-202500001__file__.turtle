@@ -3,10 +3,11 @@
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
-<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/5e8a0980-75c0-440d-8683-3328c275a208>
+<http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/b7240733-3236-459f-b968-24bf5e3da44c>
+        dcterms:creator        "U-005361" ;
         dcterms:type           "deleted" ;
-        fedora:created         "2025-06-28T11:23:04.406938Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-28T11:23:32.851808Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-11-23T21:40:06.029698Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-11-23T21:42:29.549121Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -15,6 +16,6 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/5e8a0980-75c0-440d-8683-3328c275a208/orig> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/5e8a0980-75c0-440d-8683-3328c275a208/thumb> ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/5e8a0980-75c0-440d-8683-3328c275a208/thumb-large> .
+        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/b7240733-3236-459f-b968-24bf5e3da44c/orig> ;
+        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/b7240733-3236-459f-b968-24bf5e3da44c/thumb> ;
+        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-DL-202500001/file/b7240733-3236-459f-b968-24bf5e3da44c/thumb-large> .

@@ -3,10 +3,11 @@
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
-<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/BIB-0000027>
-        dcterms:replaces       "http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-BIB-1408662" ;
-        fedora:created         "2025-06-26T17:53:06.279963Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-06-26T17:53:06.542097Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+<http://10.0.1.34:8081/rest/AMCR-selenium-test/record/BIB-0000027>
+        dcterms:creator        "U-005361" ;
+        dcterms:replaces       "http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-BIB-1408662" ;
+        fedora:created         "2025-11-23T20:29:04.336405Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-11-23T20:29:05.385854Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -15,4 +16,4 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/BIB-0000027/metadata> .
+        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/BIB-0000027/metadata> .

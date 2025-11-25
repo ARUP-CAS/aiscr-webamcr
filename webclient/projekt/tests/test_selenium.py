@@ -133,7 +133,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.start")
         self.login("archivar")
         # C projekt zachrany
-        self.createFedoraRecord("U-005361")
+        self.createFedoraRecord("U-005361", "archivar")
         self.goToAddress("/projekt/zapsat")
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
@@ -193,7 +193,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_145/create_soubor")
 
         # C projektova akce
-        self.createFedoraRecord("C-201121404")
+        self.createFedoraRecord("C-201121404", "archivar")
         self.goToAddress("/projekt/detail/C-201121404")
         time = self.getTime()
         self.ElementClick(By.ID, "add_akce")
@@ -219,7 +219,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projektova_akce")
 
         # D projekt
-        self.createFedoraRecord("X-M-202393246")
+        self.createFedoraRecord("X-M-202393246", "archivar")
         self.goToAddress("/projekt/detail/X-M-202393246")
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
@@ -229,8 +229,8 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projekt")
 
         # reC projektova akce
-        self.createFedoraRecord("C-202111043")
-        self.createFedoraRecord("C-202111043A")
+        self.createFedoraRecord("C-202111043", "archivar")
+        self.createFedoraRecord("C-202111043A", "archivar")
         self.goToAddress("/id/C-202111043A")
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "akce-smazat")
@@ -297,7 +297,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         ident = self.driver.current_url.split("/")[-1]
 
         # C dokument_cast
-        self.createFedoraRecord("C-202209999")
+        self.createFedoraRecord("C-202209999", "archivar")
         self.goToAddress("/id/C-202209999")
         time = self.getTime()
         self.ElementClick(By.ID, "others_doc")
@@ -381,8 +381,8 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # reC PAS
         self.logout()
         self.login("archivar")
-        self.createFedoraRecord("M-202302810")
-        self.createFedoraRecord("M-202302810-N00001")
+        self.createFedoraRecord("M-202302810", "archivar")
+        self.createFedoraRecord("M-202302810-N00001", "archivar")
         self.goToAddress("/id/M-202302810-N00001")
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "pas-smazat")
@@ -397,8 +397,8 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_delete(["model/deleted/member/M-202302810-N00001"])
 
         # C dokument_cast existujici
-        self.createFedoraRecord("C-202114070")
-        self.createFedoraRecord("M-TX-194300151")
+        self.createFedoraRecord("C-202114070", "archivar")
+        self.createFedoraRecord("M-TX-194300151", "archivar")
         time = self.getTime()
         self.goToAddress("/id/C-202114070")
         self.ElementClick(By.ID, "others_doc")
