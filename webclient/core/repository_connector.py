@@ -10,6 +10,7 @@ from typing import Optional, Union
 import requests
 from celery import Celery
 from core.connectors import RedisConnector
+from core.log_middleware import LogMiddleware
 from core.utils import get_mime_type, replace_last
 from django.conf import settings
 from pdf2image import convert_from_bytes
@@ -119,6 +120,10 @@ class FedoraRequestType(Enum):
     UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE = 36
     CHANGE_IDENT_CONNECT_RECORDS_5 = 38
     CHANGE_IDENT_CONNECT_RECORDS_6 = 39
+    METADATA_UPDATE_RDF_DATA = 40
+    FILE_CONTENT_UPDATE_RDF_DATA = 41
+    THUMB_CONTENT_UPDATE_RDF_DATA = 42
+    THUMB_LARGE_CONTENT_UPDATE_RDF_DATA = 43
 
     # dotazy, které nemění Fedoru
     GET_CONTAINER = 1001
@@ -135,6 +140,7 @@ class FedoraRequestType(Enum):
 class FedoraRepositoryConnector:
     def __init__(self, record, transaction=None, skip_container_check=True):
         from core.models import ModelWithMetadata
+        from uzivatel.models import User
 
         record: ModelWithMetadata
         self.record = record
@@ -150,6 +156,10 @@ class FedoraRepositoryConnector:
         self.transaction = transaction
         if transaction and not transaction.main_record:
             transaction.main_record = record
+        if isinstance(self.transaction, FedoraTransaction) and isinstance(self.transaction.transaction_user, User):
+            self.user = self.transaction.transaction_user.ident_cely
+        else:
+            self.user = LogMiddleware.get_user_id()
         logger.debug(
             "core_repository_connector.__init__.end",
             extra={"transaction": self.transaction_uid, "ident_cely": record.ident_cely},
@@ -174,6 +184,35 @@ class FedoraRepositoryConnector:
             "SamostatnyNalez": "samostatny_nalez",
             "User": "uzivatel",
         }.get(class_name)
+
+    def _get_rdf_inset_data(self):
+        return f"""PREFIX dcterms: <http://purl.org/dc/terms/>
+DELETE WHERE {{ <> dcterms:creator ?oldCreator .}};
+INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
+
+    def _get_creator(self, url):
+        headers = {"Accept": "text/turtle"}
+        r = self._send_request(url, FedoraRequestType.GET_METADATA, headers=headers)
+        if r.status_code != 200:
+            return None
+        for line in r.text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("dcterms:creator"):
+                match = re.search(r'"(.*?)"', stripped)
+                if match:
+                    return match.group(1)
+        return None
+
+    def _update_creator(self, request_type: FedoraRequestType, uuid=None, ident_cely=None):
+        url = self._get_request_url(request_type, uuid=uuid, ident_cely=ident_cely)
+        existing_creator = self._get_creator(url)
+        if existing_creator != self.user:
+            self._send_request(
+                url,
+                request_type,
+                headers={"Content-Type": "application/sparql-update"},
+                data=self._get_rdf_inset_data(),
+            )
 
     @staticmethod
     def get_base_url():
@@ -208,6 +247,8 @@ class FedoraRepositoryConnector:
             )
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.GET_METADATA):
             return f"{base_url}/record/{self.record.ident_cely}/metadata"
+        elif request_type == FedoraRequestType.METADATA_UPDATE_RDF_DATA:
+            return f"{base_url}/record/{self.record.ident_cely}/metadata/fcr:metadata"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE):
             return f"{base_url}/record/{self.record.ident_cely}/file"
         elif request_type in (
@@ -221,17 +262,24 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/{ident_cely}/file/{uuid}"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
+        elif request_type == FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA:
+            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig/fcr:metadata"
         elif request_type in (
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
             FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB,
         ):
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb"
+        elif request_type == FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA:
+            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/thumb/fcr:metadata"
         elif request_type in (
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
             FedoraRequestType.UPDATE_BINARY_FILE_CONTENT_THUMB_LARGE,
         ):
             ident_cely = ident_cely if ident_cely else self.record.ident_cely
             return f"{base_url}/record/{ident_cely}/file/{uuid}/thumb-large"
+        elif request_type == FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA:
+            ident_cely = ident_cely if ident_cely else self.record.ident_cely
+            return f"{base_url}/record/{ident_cely}/file/{uuid}/thumb-large/fcr:metadata"
         elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
             return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
         elif request_type == FedoraRequestType.DELETE_LINK_TOMBSTONE:
@@ -350,7 +398,7 @@ class FedoraRepositoryConnector:
             if request_type.value < 1000:
                 self.transaction.changes_count += 1
         if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
-            response = requests.post(url, headers=headers, auth=auth, verify=False)
+            response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type in (
             FedoraRequestType.GET_CONTAINER,
             FedoraRequestType.GET_METADATA,
@@ -387,7 +435,7 @@ class FedoraRepositoryConnector:
         ):
             response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
-            response = requests.post(url, headers=headers, auth=auth, verify=False)
+            response = requests.post(url, headers=headers, auth=auth, data=data, verify=False)
         elif request_type in (
             FedoraRequestType.DELETE_CONTAINER,
             FedoraRequestType.DELETE_TOMBSTONE,
@@ -406,6 +454,10 @@ class FedoraRepositoryConnector:
             FedoraRequestType.CONNECT_DELETED_RECORD_1,
             FedoraRequestType.CONNECT_DELETED_RECORD_2,
             FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_6,
+            FedoraRequestType.METADATA_UPDATE_RDF_DATA,
+            FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA,
+            FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA,
+            FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA,
         ):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         extra["status_code"] = response.status_code
@@ -491,8 +543,10 @@ class FedoraRepositoryConnector:
         headers = {
             "Slug": self.record.ident_cely,
             "Link": '<http://fedora.info/definitions/v4/repository#ArchivalGroup>;rel="type"',
+            "Content-Type": "text/turtle",
         }
-        self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers)
+        rdf = f'<> <http://purl.org/dc/terms/creator> "{self.user}" .'
+        self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers, data=rdf)
         self.create_link()
         logger.debug(
             "core_repository_connector._create_container.end",
@@ -507,9 +561,10 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.CREATE_LINK)
         headers = {"Slug": self.record.ident_cely, "Content-Type": "text/turtle"}
         data = (
-            "@prefix ore: <http://www.openarchives.org/ore/terms/> "
-            f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/"
-            f"{ident_cely_proxy if ident_cely_proxy else self.record.ident_cely}>"
+            "@prefix ore: <http://www.openarchives.org/ore/terms/> . "
+            f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/"
+            f"{ident_cely_proxy if ident_cely_proxy else self.record.ident_cely}> ; "
+            f'<http://purl.org/dc/terms/creator> "{self.user}" .'
         )
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
         logger.debug(
@@ -602,8 +657,12 @@ class FedoraRepositoryConnector:
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
         )
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTAINER)
-        headers = {"Slug": "file"}
-        self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, headers=headers)
+        headers = {
+            "Slug": "file",
+            "Content-Type": "text/turtle",
+        }
+        rdf = f'<> <http://purl.org/dc/terms/creator> "{self.user}" .'
+        self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, headers=headers, data=rdf)
         logger.debug(
             "core_repository_connector._create_binary_file_container.end",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -679,10 +738,12 @@ class FedoraRepositoryConnector:
             headers["slug"] = "metadata"
             url = self._get_request_url(FedoraRequestType.CREATE_METADATA)
             self._send_request(url, FedoraRequestType.CREATE_METADATA, headers=headers, data=document)
+            self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         elif update is True:
             document, headers = generate_metadata()
             url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
             self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
+            self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         logger.debug(
             "core_repository_connector.save_metadata.end",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -697,7 +758,11 @@ class FedoraRepositoryConnector:
         )
         self._check_binary_file_container()
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
-        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
+        headers = {
+            "Content-Type": "text/turtle",
+        }
+        rdf = f'<> <http://purl.org/dc/terms/creator> "{self.user}" .'
+        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE, headers=headers, data=rdf)
         uuid = result.text.split("/")[-1]
         rep_bin_file = RepositoryBinaryFile(result.text, file, file_name)
         data = file.read()
@@ -710,6 +775,7 @@ class FedoraRepositoryConnector:
         }
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
+        self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
         if save_thumbs:
             self.save_thumbs(file_name, file, uuid)
         logger.debug(
@@ -849,6 +915,7 @@ class FedoraRepositoryConnector:
                     self._send_request(
                         url, FedoraRequestType.CREATE_BINARY_FILE_THUMB_LARGE, headers=headers, data=data
                     )
+                self._update_creator(FedoraRequestType.THUMB_LARGE_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely)
             else:
                 if update and existing_small_thumb is not None:
                     self._send_request(
@@ -856,6 +923,7 @@ class FedoraRepositoryConnector:
                     )
                 else:
                     self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_THUMB, headers=headers, data=data)
+                self._update_creator(FedoraRequestType.THUMB_CONTENT_UPDATE_RDF_DATA, uuid, ident_cely)
             logger.debug(
                 "core_repository_connector._save_thumb.end",
                 extra={
@@ -896,7 +964,11 @@ class FedoraRepositoryConnector:
             data = None
             file_sha_512 = None
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
-        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
+        headers = {
+            "Content-Type": "text/turtle",
+        }
+        rdf = f'<> <http://purl.org/dc/terms/creator> "{self.user}" .'
+        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE, headers=headers, data=rdf)
         uuid = result.text.split("/")[-1]
         soubor.path = RepositoryBinaryFile.get_url_without_domain(result.text)
         soubor.suppress_signal = True
@@ -912,6 +984,7 @@ class FedoraRepositoryConnector:
             }
             url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
             self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
+            self._update_creator(FedoraRequestType.FILE_CONTENT_UPDATE_RDF_DATA, uuid)
             self.save_thumbs(soubor.nazev, data, soubor.repository_uuid)
             logger.debug(
                 "core_repository_connector.migrate_binary_file.end",
@@ -1100,7 +1173,8 @@ class FedoraRepositoryConnector:
             headers = {"Slug": self.record.ident_cely, "Content-Type": "text/turtle"}
             data = (
                 f"@prefix ore: <http://www.openarchives.org/ore/terms/> . "
-                f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
+                f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}> ; "
+                f'<http://purl.org/dc/terms/creator> "{self.user}" .'
             )
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_ADD_MARK)
             self._send_request(url, FedoraRequestType.RECORD_DELETION_ADD_MARK, headers=headers, data=data)
@@ -1136,7 +1210,8 @@ class FedoraRepositoryConnector:
         headers = {"Slug": ident_cely_old, "Content-Type": "text/turtle"}
         data = (
             f"@prefix ore: <http://www.openarchives.org/ore/terms/> . "
-            f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}> ."
+            f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}> ; "
+            f'<http://purl.org/dc/terms/creator> "{self.user}" .'
         )
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
