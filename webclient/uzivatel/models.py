@@ -346,7 +346,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
     Class pro db model organizace.
     """
 
-    IDENT_PREFIX = "HES"
+    IDENT_PREFIX = "ORG"
     SEQUENCE_NAME = "organizace_ident_seq"
 
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
@@ -478,7 +478,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
     Class pro db model osoba.
     """
 
-    IDENT_PREFIX = "HES"
+    IDENT_PREFIX = "OS"
     SEQUENCE_NAME = "osoba_ident_seq"
 
     jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
