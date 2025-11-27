@@ -1,63 +1,62 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:dokument>
-    <amcr:ident_cely>M-TX-194300151</amcr:ident_cely>
-    <amcr:stav>3</amcr:stav>
-    <amcr:typ_dokumentu xml:lang="cs" id="HES-001075">nálezová zpráva</amcr:typ_dokumentu>
-    <amcr:material_originalu xml:lang="cs" id="HES-000230">papír</amcr:material_originalu>
-    <amcr:rada xml:lang="cs" id="HES-000883">zprávy a hlášení</amcr:rada>
     <amcr:autor id="OS-000510" poradi="1">anonym</amcr:autor>
-    <amcr:rok_vzniku>1943</amcr:rok_vzniku>
-    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
-    <amcr:pristupnost xml:lang="cs" id="HES-000866">badatel</amcr:pristupnost>
-    <amcr:datum_zverejneni>2022-12-31</amcr:datum_zverejneni>
-    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
-    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001167">archiv ARÚB</amcr:ulozeni_originalu>
-    <amcr:popis>Fond Nevázané.</amcr:popis>
-    <amcr:historie>
-      <amcr:id>hist-945026</amcr:id>
-      <amcr:datum_zmeny>2022-12-31T19:08:12+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000691">U-000691</amcr:uzivatel>
-      <amcr:typ_zmeny>D23</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-748079</amcr:id>
-      <amcr:datum_zmeny>2022-12-31T19:08:12+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:soubor>
-      <amcr:id>soub-534769</amcr:id>
-      <amcr:nazev>MTX194300151.pdf</amcr:nazev>
-      <amcr:mimetype>application/pdf</amcr:mimetype>
-      <amcr:rozsah>13</amcr:rozsah>
-      <amcr:size_mb>21.1753644943</amcr:size_mb>
-      <amcr:historie>
-        <amcr:id>hist-2415154</amcr:id>
-        <amcr:datum_zmeny>2023-01-18T23:00:00+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
-        <amcr:poznamka>MTX194300151.pdf</amcr:poznamka>
-        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
-      </amcr:historie>
-    </amcr:soubor>
+    <amcr:datum_zverejneni>2020-01-01T00:00:00+00:00</amcr:datum_zverejneni>
     <amcr:dokument_cast>
-      <amcr:ident_cely>M-TX-194300151-D001</amcr:ident_cely>
       <amcr:archeologicky_zaznam id="M-9106624A">M-9106624A</amcr:archeologicky_zaznam>
+      <amcr:ident_cely>M-TX-194300151-D001</amcr:ident_cely>
     </amcr:dokument_cast>
     <amcr:dokument_cast>
       <amcr:ident_cely>M-TX-194300151-D002</amcr:ident_cely>
       <amcr:neident_akce>
-        <amcr:okres xml:lang="cs" id="ruian-3704">Břeclav</amcr:okres>
         <amcr:katastr xml:lang="cs" id="ruian-772020">Tvrdonice</amcr:katastr>
-        <amcr:vedouci id="OS-004673">Hrubý, Jiří</amcr:vedouci>
-        <amcr:rok_zahajeni>1943</amcr:rok_zahajeni>
-        <amcr:rok_ukonceni>1943</amcr:rok_ukonceni>
         <amcr:lokalizace>Trať Prostřední pole za Řešicí; Hájek. Parc. č. 1235/3.</amcr:lokalizace>
+        <amcr:okres xml:lang="cs" id="ruian-3704">Břeclav</amcr:okres>
+        <amcr:rok_ukonceni>1943</amcr:rok_ukonceni>
+        <amcr:rok_zahajeni>1943</amcr:rok_zahajeni>
+        <amcr:vedouci id="OS-004673">Hrubý, Jiří</amcr:vedouci>
       </amcr:neident_akce>
     </amcr:dokument_cast>
     <amcr:dokument_cast>
-      <amcr:ident_cely>M-TX-194300151-D003</amcr:ident_cely>
       <amcr:archeologicky_zaznam id="X-M-91558334A">X-M-91558334A</amcr:archeologicky_zaznam>
+      <amcr:ident_cely>M-TX-194300151-D003</amcr:ident_cely>
     </amcr:dokument_cast>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>D23</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-000691">U-000691</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:ident_cely>M-TX-194300151</amcr:ident_cely>
+    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
+    <amcr:material_originalu xml:lang="cs" id="HES-000230">papír</amcr:material_originalu>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:popis>Fond Nevázané.</amcr:popis>
+    <amcr:pristupnost xml:lang="cs" id="HES-000866">badatel</amcr:pristupnost>
+    <amcr:rada xml:lang="cs" id="HES-000883">zprávy a hlášení</amcr:rada>
+    <amcr:rok_vzniku>1943</amcr:rok_vzniku>
+    <amcr:soubor>
+      <amcr:historie>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
+        <amcr:poznamka>MTX194300151.pdf</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
+      </amcr:historie>
+      <amcr:id>soub-534769</amcr:id>
+      <amcr:mimetype>application/pdf</amcr:mimetype>
+      <amcr:nazev>MTX194300151.pdf</amcr:nazev>
+      <amcr:rozsah>13</amcr:rozsah>
+      <amcr:size_mb>21.1753644943</amcr:size_mb>
+    </amcr:soubor>
+    <amcr:stav>3</amcr:stav>
+    <amcr:typ_dokumentu xml:lang="cs" id="HES-001075">nálezová zpráva</amcr:typ_dokumentu>
+    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001167">archiv ARÚB</amcr:ulozeni_originalu>
   </amcr:dokument>
 </amcr:amcr>

@@ -1,27 +1,26 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:ext_zdroj>
-    <amcr:ident_cely>X-BIB-000000001</amcr:ident_cely>
-    <amcr:stav>1</amcr:stav>
-    <amcr:typ xml:lang="cs" id="HES-001117">kniha</amcr:typ>
     <amcr:autor id="OS-000174" poradi="1">Havrlant, Jan</amcr:autor>
-    <amcr:nazev>test1</amcr:nazev>
-    <amcr:rok_vydani_vzniku>2023</amcr:rok_vydani_vzniku>
-    <amcr:misto>Praha</amcr:misto>
-    <amcr:historie>
-      <amcr:id>hist-2803165</amcr:id>
-      <amcr:datum_zmeny>2024-11-21T06:35:14.414162+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-005357">U-005357</amcr:uzivatel>
-      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
-    </amcr:historie>
     <amcr:ext_odkaz>
-      <amcr:id>exto-789</amcr:id>
+      <amcr:archeologicky_zaznam id="C-K9000001">C-K9000001</amcr:archeologicky_zaznam>
+      <amcr:id>exto-790</amcr:id>
+    </amcr:ext_odkaz>
+    <amcr:ext_odkaz>
       <amcr:archeologicky_zaznam id="X-C-9000000001A">X-C-9000000001A</amcr:archeologicky_zaznam>
+      <amcr:id>exto-789</amcr:id>
       <amcr:paginace>22</amcr:paginace>
     </amcr:ext_odkaz>
-    <amcr:ext_odkaz>
-      <amcr:id>exto-790</amcr:id>
-      <amcr:archeologicky_zaznam id="C-K9000001">C-K9000001</amcr:archeologicky_zaznam>
-    </amcr:ext_odkaz>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-005357">U-005357</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:ident_cely>X-BIB-000000001</amcr:ident_cely>
+    <amcr:misto>Praha</amcr:misto>
+    <amcr:nazev>test1</amcr:nazev>
+    <amcr:rok_vydani_vzniku>2023</amcr:rok_vydani_vzniku>
+    <amcr:stav>1</amcr:stav>
+    <amcr:typ xml:lang="cs" id="HES-001117">kniha</amcr:typ>
   </amcr:ext_zdroj>
 </amcr:amcr>

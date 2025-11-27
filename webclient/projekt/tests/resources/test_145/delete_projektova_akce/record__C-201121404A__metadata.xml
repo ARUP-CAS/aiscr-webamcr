@@ -1,39 +1,38 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:archeologicky_zaznam>
-    <amcr:ident_cely>C-201121404A</amcr:ident_cely>
-    <amcr:stav>1</amcr:stav>
-    <amcr:okres xml:lang="cs" id="ruian-3505">Liberec</amcr:okres>
-    <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
+    <amcr:akce>
+      <amcr:chranene_udaje>
+        <amcr:lokalizace_okolnosti>-. Parcelní číslo: -</amcr:lokalizace_okolnosti>
+      </amcr:chranene_udaje>
+      <amcr:datum_zahajeni>2011-06-02</amcr:datum_zahajeni>
+      <amcr:hlavni_vedouci id="OS-002550">Stará, Marcela</amcr:hlavni_vedouci>
+      <amcr:je_nz>false</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:organizace xml:lang="cs" id="ORG-000155">Severočeské muzeum v Liberci, p.o.</amcr:organizace>
+      <amcr:projekt id="C-201121404">C-201121404</amcr:projekt>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000887">přesné datum</amcr:specifikace_data>
+      <amcr:typ>R</amcr:typ>
+    </amcr:akce>
     <amcr:chranene_udaje>
       <amcr:hlavni_katastr xml:lang="cs" id="ruian-600326">Andělka</amcr:hlavni_katastr>
       <amcr:uzivatelske_oznaceni>Odkaz: 3997/11</amcr:uzivatelske_oznaceni>
     </amcr:chranene_udaje>
-    <amcr:akce>
-      <amcr:projekt id="C-201121404">C-201121404</amcr:projekt>
-      <amcr:typ>R</amcr:typ>
-      <amcr:je_nz>false</amcr:je_nz>
-      <amcr:odlozena_nz>false</amcr:odlozena_nz>
-      <amcr:hlavni_vedouci id="OS-002550">Stará, Marcela</amcr:hlavni_vedouci>
-      <amcr:organizace xml:lang="cs" id="ORG-000155">Severočeské muzeum v Liberci, p.o.</amcr:organizace>
-      <amcr:specifikace_data xml:lang="cs" id="HES-000887">přesné datum</amcr:specifikace_data>
-      <amcr:datum_zahajeni>2011-06-02</amcr:datum_zahajeni>
-      <amcr:chranene_udaje>
-        <amcr:lokalizace_okolnosti>-. Parcelní číslo: -</amcr:lokalizace_okolnosti>
-      </amcr:chranene_udaje>
-    </amcr:akce>
     <amcr:historie>
-      <amcr:id>hist-2803186</amcr:id>
-      <amcr:datum_zmeny>2025-06-28T11:20:47.132227+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803187</amcr:id>
-      <amcr:datum_zmeny>2025-06-28T11:20:52.134938+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
       <amcr:poznamka>C-201121404A</amcr:poznamka>
       <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
     </amcr:historie>
+    <amcr:ident_cely>C-201121404A</amcr:ident_cely>
+    <amcr:okres xml:lang="cs" id="ruian-3505">Liberec</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
+    <amcr:stav>1</amcr:stav>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

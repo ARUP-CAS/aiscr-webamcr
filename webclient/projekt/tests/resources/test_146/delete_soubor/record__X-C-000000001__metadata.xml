@@ -1,43 +1,42 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:projekt>
-    <amcr:ident_cely>X-C-000000001</amcr:ident_cely>
-    <amcr:stav>0</amcr:stav>
-    <amcr:typ_projektu xml:lang="cs" id="HES-001136">záchranný</amcr:typ_projektu>
-    <amcr:okres xml:lang="cs" id="ruian-3205">Kutná Hora</amcr:okres>
-    <amcr:podnet>dům</amcr:podnet>
-    <amcr:planovane_zahajeni>[2024-11-28, 2024-11-30]</amcr:planovane_zahajeni>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
-    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:chranene_udaje>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-672424">Všesoky</amcr:hlavni_katastr>
-      <amcr:lokalizace>ulice</amcr:lokalizace>
-      <amcr:parcelni_cislo>1</amcr:parcelni_cislo>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
           <gml:coordinates>15.1700002,49.84</gml:coordinates>
         </gml:Point>
       </amcr:geom_gml>
-      <amcr:geom_wkt EPSG="4326">POINT(15.1700002 49.84)</amcr:geom_wkt>
       <amcr:geom_sjtsk_gml>
         <gml:Point srsName="EPSG:5514">
           <gml:coordinates>-693174.81,-1077354.27</gml:coordinates>
         </gml:Point>
       </amcr:geom_sjtsk_gml>
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-693174.81 -1077354.27)</amcr:geom_sjtsk_wkt>
+      <amcr:geom_wkt EPSG="4326">POINT(15.1700002 49.84)</amcr:geom_wkt>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-672424">Všesoky</amcr:hlavni_katastr>
+      <amcr:lokalizace>ulice</amcr:lokalizace>
+      <amcr:parcelni_cislo>1</amcr:parcelni_cislo>
     </amcr:chranene_udaje>
+    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:historie>
-      <amcr:id>hist-2803189</amcr:id>
-      <amcr:datum_zmeny>2025-07-28T14:16:01.384831+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
     </amcr:historie>
+    <amcr:ident_cely>X-C-000000001</amcr:ident_cely>
+    <amcr:okres xml:lang="cs" id="ruian-3205">Kutná Hora</amcr:okres>
     <amcr:oznamovatel>
-      <amcr:oznamovatel>Jan Havrlant</amcr:oznamovatel>
-      <amcr:odpovedna_osoba>Jan Havrlant</amcr:odpovedna_osoba>
       <amcr:adresa>Hilbertova 59</amcr:adresa>
-      <amcr:telefon>608643071</amcr:telefon>
       <amcr:email>jhavrlant@arup.cas.cz</amcr:email>
+      <amcr:odpovedna_osoba>Jan Havrlant</amcr:odpovedna_osoba>
+      <amcr:oznamovatel>Jan Havrlant</amcr:oznamovatel>
+      <amcr:telefon>608643071</amcr:telefon>
     </amcr:oznamovatel>
+    <amcr:planovane_zahajeni>[2024-11-28, 2024-11-30]</amcr:planovane_zahajeni>
+    <amcr:podnet>dům</amcr:podnet>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
+    <amcr:stav>0</amcr:stav>
+    <amcr:typ_projektu xml:lang="cs" id="HES-001136">záchranný</amcr:typ_projektu>
   </amcr:projekt>
 </amcr:amcr>

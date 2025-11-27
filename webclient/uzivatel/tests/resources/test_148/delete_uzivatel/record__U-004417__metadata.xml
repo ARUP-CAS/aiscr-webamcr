@@ -1,92 +1,91 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:uzivatel>
-    <amcr:ident_cely>U-004417</amcr:ident_cely>
-    <amcr:jmeno>JanJan</amcr:jmeno>
-    <amcr:prijmeni>Havrlant</amcr:prijmeni>
-    <amcr:email>jan.havrlant2@centrum.cz</amcr:email>
-    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
-    <amcr:jazyk>cs</amcr:jazyk>
-    <amcr:aktivni>true</amcr:aktivni>
     <amcr:admin>false</amcr:admin>
-    <amcr:superadmin>false</amcr:superadmin>
-    <amcr:datum_registrace>2025-06-26T18:14:56.186084+00:00</amcr:datum_registrace>
+    <amcr:aktivni>true</amcr:aktivni>
+    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
+    <amcr:email>jan.havrlant2@centrum.cz</amcr:email>
     <amcr:historie>
-      <amcr:id>hist-2803186</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:14:58.016983+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803187</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:14:58.018033+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>email: jan.havrlant2@centrum.cz, is_active: True, organizace: Archeologický ústav Praha, first_name: Jan, last_name: Havrlant</amcr:poznamka>
-      <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803188</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:15:07.587111+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803189</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:15:07.588143+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>first_name: JanJan</amcr:poznamka>
-      <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803191</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:15:23.018644+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803192</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:15:31.294118+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803193</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:15:39.644426+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803194</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:15:48.557521+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803195</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:15:56.779219+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803196</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:16:04.718847+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803197</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:16:14.632641+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
       <amcr:poznamka>U-004417</amcr:poznamka>
       <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
     </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>email: jan.havrlant2@centrum.cz, is_active: True, organizace: Archeologický ústav Praha, first_name: Jan, last_name: Havrlant</amcr:poznamka>
+      <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>first_name: JanJan</amcr:poznamka>
+      <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:ident_cely>U-004417</amcr:ident_cely>
+    <amcr:jazyk>cs</amcr:jazyk>
+    <amcr:jmeno>JanJan</amcr:jmeno>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:prijmeni>Havrlant</amcr:prijmeni>
+    <amcr:superadmin>false</amcr:superadmin>
   </amcr:uzivatel>
 </amcr:amcr>

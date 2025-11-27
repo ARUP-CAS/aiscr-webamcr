@@ -1,33 +1,32 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:pian>
-    <amcr:ident_cely>N-1121-000000008</amcr:ident_cely>
-    <amcr:stav>1</amcr:stav>
-    <amcr:typ xml:lang="cs" id="HES-001133">bod</amcr:typ>
-    <amcr:presnost xml:lang="cs" id="HES-000861">odchylka jednotky metrů</amcr:presnost>
-    <amcr:geom_system>5514</amcr:geom_system>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
-      <amcr:zm10>11-41-24</amcr:zm10>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
           <gml:coordinates>12.9,49.88</gml:coordinates>
         </gml:Point>
       </amcr:geom_gml>
-      <amcr:geom_wkt EPSG="4326">POINT(12.9 49.88)</amcr:geom_wkt>
       <amcr:geom_sjtsk_gml>
         <gml:Point srsName="EPSG:5514">
           <gml:coordinates>-854105.85,-1049866.48</gml:coordinates>
         </gml:Point>
       </amcr:geom_sjtsk_gml>
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-854105.85 -1049866.48)</amcr:geom_sjtsk_wkt>
+      <amcr:geom_wkt EPSG="4326">POINT(12.9 49.88)</amcr:geom_wkt>
+      <amcr:zm10>11-41-24</amcr:zm10>
     </amcr:chranene_udaje>
-    <amcr:historie>
-      <amcr:id>hist-2803192</amcr:id>
-      <amcr:datum_zmeny>2025-07-29T10:13:29.006261+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-      <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
-    </amcr:historie>
     <amcr:dokumentacni_jednotka id="X-C-L000000003">X-C-L000000003-D01</amcr:dokumentacni_jednotka>
+    <amcr:geom_system>5514</amcr:geom_system>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:ident_cely>N-1121-000000008</amcr:ident_cely>
+    <amcr:presnost xml:lang="cs" id="HES-000861">odchylka jednotky metrů</amcr:presnost>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
+    <amcr:stav>1</amcr:stav>
+    <amcr:typ xml:lang="cs" id="HES-001133">bod</amcr:typ>
   </amcr:pian>
 </amcr:amcr>

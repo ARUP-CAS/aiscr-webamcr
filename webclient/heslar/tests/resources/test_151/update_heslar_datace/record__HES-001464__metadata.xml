@@ -1,20 +1,19 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:heslo>
-    <amcr:ident_cely>HES-001464</amcr:ident_cely>
-    <amcr:nazev_heslare xml:lang="cs">obdobi</amcr:nazev_heslare>
+    <amcr:datace>
+      <amcr:poznamka>test popis en</amcr:poznamka>
+      <amcr:rok_do_max>2005</amcr:rok_do_max>
+      <amcr:rok_do_min>1990</amcr:rok_do_min>
+      <amcr:rok_od_max>1945</amcr:rok_od_max>
+      <amcr:rok_od_min>1940</amcr:rok_od_min>
+    </amcr:datace>
     <amcr:heslo xml:lang="cs">test</amcr:heslo>
     <amcr:heslo_en xml:lang="en">testen</amcr:heslo_en>
+    <amcr:ident_cely>HES-001464</amcr:ident_cely>
+    <amcr:nazev_heslare xml:lang="cs">obdobi</amcr:nazev_heslare>
     <amcr:popis xml:lang="cs">test popis</amcr:popis>
     <amcr:popis_en xml:lang="en">test popis en</amcr:popis_en>
-    <amcr:zkratka xml:lang="cs">tupdate</amcr:zkratka>
     <amcr:razeni>10</amcr:razeni>
-    <amcr:datace>
-      <amcr:rok_od_min>1940</amcr:rok_od_min>
-      <amcr:rok_od_max>1945</amcr:rok_od_max>
-      <amcr:rok_do_min>1990</amcr:rok_do_min>
-      <amcr:rok_do_max>2005</amcr:rok_do_max>
-      <amcr:poznamka>test popis en</amcr:poznamka>
-    </amcr:datace>
+    <amcr:zkratka xml:lang="cs">tupdate</amcr:zkratka>
   </amcr:heslo>
 </amcr:amcr>

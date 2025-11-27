@@ -1,201 +1,50 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:projekt>
-    <amcr:ident_cely>M-202105907</amcr:ident_cely>
-    <amcr:stav>3</amcr:stav>
-    <amcr:typ_projektu xml:lang="cs" id="HES-001138">průzkum</amcr:typ_projektu>
-    <amcr:okres xml:lang="cs" id="ruian-3704">Břeclav</amcr:okres>
-    <amcr:podnet>-</amcr:podnet>
-    <amcr:planovane_zahajeni>[2022-01-01, 2022-01-01]</amcr:planovane_zahajeni>
-    <amcr:vedouci_projektu id="OS-004839">Komoróczy, Balázs</amcr:vedouci_projektu>
-    <amcr:organizace xml:lang="cs" id="ORG-000105">Archeologický ústav AV ČR, Brno, v.v.i. - detašované pracoviště Dolní Dunajovice</amcr:organizace>
-    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000175">bez ochrany</amcr:kulturni_pamatka>
-    <amcr:datum_zahajeni>2022-01-01</amcr:datum_zahajeni>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
-    <amcr:geom_system>5514</amcr:geom_system>
+    <amcr:archeologicky_zaznam id="M-202105907A">M-202105907A</amcr:archeologicky_zaznam>
     <amcr:chranene_udaje>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-628964">Dolní Dunajovice</amcr:hlavni_katastr>
-      <amcr:lokalizace>Jihomoravský kraj</amcr:lokalizace>
-      <amcr:parcelni_cislo>-</amcr:parcelni_cislo>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
           <gml:coordinates>16.595166,48.8529339</gml:coordinates>
         </gml:Point>
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(16.595166 48.8529339)</amcr:geom_wkt>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-628964">Dolní Dunajovice</amcr:hlavni_katastr>
+      <amcr:lokalizace>Jihomoravský kraj</amcr:lokalizace>
+      <amcr:parcelni_cislo>-</amcr:parcelni_cislo>
     </amcr:chranene_udaje>
+    <amcr:datum_zahajeni>2022-01-01</amcr:datum_zahajeni>
+    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:historie>
-      <amcr:id>hist-1574245</amcr:id>
-      <amcr:datum_zmeny>2021-12-09T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1717678</amcr:id>
-      <amcr:datum_zmeny>2021-12-09T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
       <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2074956</amcr:id>
-      <amcr:datum_zmeny>2021-12-09T23:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
-      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2280584</amcr:id>
-      <amcr:datum_zmeny>2021-12-10T12:30:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
     </amcr:historie>
-    <amcr:soubor>
-      <amcr:id>soub-379130</amcr:id>
-      <amcr:nazev>Projekt_2022.docx</amcr:nazev>
-      <amcr:mimetype>application/zip</amcr:mimetype>
-      <amcr:rozsah>1</amcr:rozsah>
-      <amcr:size_mb>0.0126352310</amcr:size_mb>
-      <amcr:historie>
-        <amcr:id>hist-2532246</amcr:id>
-        <amcr:datum_zmeny>2021-12-09T23:00:00+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
-        <amcr:poznamka>Projekt_2022.docx</amcr:poznamka>
-        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
-      </amcr:historie>
-    </amcr:soubor>
-    <amcr:archeologicky_zaznam id="M-202105907A">M-202105907A</amcr:archeologicky_zaznam>
-    <amcr:samostatny_nalez id="M-202105907-N00762">M-202105907-N00762</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00763">M-202105907-N00763</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00764">M-202105907-N00764</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00765">M-202105907-N00765</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00766">M-202105907-N00766</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00767">M-202105907-N00767</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00768">M-202105907-N00768</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00769">M-202105907-N00769</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00770">M-202105907-N00770</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00771">M-202105907-N00771</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00776">M-202105907-N00776</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00779">M-202105907-N00779</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00786">M-202105907-N00786</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00772">M-202105907-N00772</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00773">M-202105907-N00773</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00774">M-202105907-N00774</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00775">M-202105907-N00775</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00777">M-202105907-N00777</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00778">M-202105907-N00778</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00780">M-202105907-N00780</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00781">M-202105907-N00781</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00782">M-202105907-N00782</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00783">M-202105907-N00783</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00784">M-202105907-N00784</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00785">M-202105907-N00785</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00787">M-202105907-N00787</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00788">M-202105907-N00788</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00789">M-202105907-N00789</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00790">M-202105907-N00790</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00792">M-202105907-N00792</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00793">M-202105907-N00793</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00795">M-202105907-N00795</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00796">M-202105907-N00796</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00797">M-202105907-N00797</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00798">M-202105907-N00798</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00799">M-202105907-N00799</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00800">M-202105907-N00800</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00801">M-202105907-N00801</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00802">M-202105907-N00802</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00803">M-202105907-N00803</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00806">M-202105907-N00806</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00807">M-202105907-N00807</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00808">M-202105907-N00808</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00809">M-202105907-N00809</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00810">M-202105907-N00810</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00811">M-202105907-N00811</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00812">M-202105907-N00812</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00813">M-202105907-N00813</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00814">M-202105907-N00814</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00815">M-202105907-N00815</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00816">M-202105907-N00816</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00817">M-202105907-N00817</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00818">M-202105907-N00818</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00819">M-202105907-N00819</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00820">M-202105907-N00820</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00821">M-202105907-N00821</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00822">M-202105907-N00822</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00823">M-202105907-N00823</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00824">M-202105907-N00824</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00825">M-202105907-N00825</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00826">M-202105907-N00826</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00827">M-202105907-N00827</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00828">M-202105907-N00828</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00829">M-202105907-N00829</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00830">M-202105907-N00830</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00832">M-202105907-N00832</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00833">M-202105907-N00833</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00834">M-202105907-N00834</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00835">M-202105907-N00835</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00836">M-202105907-N00836</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00837">M-202105907-N00837</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00838">M-202105907-N00838</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00839">M-202105907-N00839</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00840">M-202105907-N00840</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00842">M-202105907-N00842</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00843">M-202105907-N00843</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00844">M-202105907-N00844</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00845">M-202105907-N00845</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00846">M-202105907-N00846</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00847">M-202105907-N00847</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00848">M-202105907-N00848</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00849">M-202105907-N00849</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00850">M-202105907-N00850</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00851">M-202105907-N00851</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00852">M-202105907-N00852</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00853">M-202105907-N00853</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00854">M-202105907-N00854</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00855">M-202105907-N00855</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00856">M-202105907-N00856</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00857">M-202105907-N00857</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00858">M-202105907-N00858</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00859">M-202105907-N00859</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00860">M-202105907-N00860</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00861">M-202105907-N00861</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00862">M-202105907-N00862</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00863">M-202105907-N00863</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00864">M-202105907-N00864</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00865">M-202105907-N00865</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00866">M-202105907-N00866</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00867">M-202105907-N00867</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00868">M-202105907-N00868</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00869">M-202105907-N00869</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00870">M-202105907-N00870</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00871">M-202105907-N00871</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00872">M-202105907-N00872</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00873">M-202105907-N00873</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00874">M-202105907-N00874</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00875">M-202105907-N00875</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00876">M-202105907-N00876</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00877">M-202105907-N00877</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00878">M-202105907-N00878</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00879">M-202105907-N00879</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00882">M-202105907-N00882</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00831">M-202105907-N00831</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00880">M-202105907-N00880</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00456">M-202105907-N00456</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00416">M-202105907-N00416</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00417">M-202105907-N00417</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00418">M-202105907-N00418</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00419">M-202105907-N00419</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00420">M-202105907-N00420</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00244">M-202105907-N00244</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00335">M-202105907-N00335</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00379">M-202105907-N00379</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00761">M-202105907-N00761</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00791">M-202105907-N00791</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00841">M-202105907-N00841</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00013">M-202105907-N00013</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00087">M-202105907-N00087</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00159">M-202105907-N00159</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00406">M-202105907-N00406</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00425">M-202105907-N00425</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00025">M-202105907-N00025</amcr:samostatny_nalez>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:ident_cely>M-202105907</amcr:ident_cely>
+    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000175">bez ochrany</amcr:kulturni_pamatka>
+    <amcr:okres xml:lang="cs" id="ruian-3704">Břeclav</amcr:okres>
+    <amcr:organizace xml:lang="cs" id="ORG-000105">Archeologický ústav AV ČR, Brno, v.v.i. - detašované pracoviště Dolní Dunajovice</amcr:organizace>
+    <amcr:planovane_zahajeni>[2022-01-01, 2022-01-01]</amcr:planovane_zahajeni>
+    <amcr:podnet>-</amcr:podnet>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
     <amcr:samostatny_nalez id="M-202105907-N00001">M-202105907-N00001</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00002">M-202105907-N00002</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00003">M-202105907-N00003</amcr:samostatny_nalez>
@@ -208,6 +57,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00010">M-202105907-N00010</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00011">M-202105907-N00011</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00012">M-202105907-N00012</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00013">M-202105907-N00013</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00014">M-202105907-N00014</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00015">M-202105907-N00015</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00016">M-202105907-N00016</amcr:samostatny_nalez>
@@ -219,6 +69,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00022">M-202105907-N00022</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00023">M-202105907-N00023</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00024">M-202105907-N00024</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00025">M-202105907-N00025</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00026">M-202105907-N00026</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00027">M-202105907-N00027</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00028">M-202105907-N00028</amcr:samostatny_nalez>
@@ -240,12 +91,9 @@
     <amcr:samostatny_nalez id="M-202105907-N00044">M-202105907-N00044</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00045">M-202105907-N00045</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00046">M-202105907-N00046</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00084">M-202105907-N00084</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00067">M-202105907-N00067</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00047">M-202105907-N00047</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00048">M-202105907-N00048</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00049">M-202105907-N00049</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00457">M-202105907-N00457</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00050">M-202105907-N00050</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00051">M-202105907-N00051</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00052">M-202105907-N00052</amcr:samostatny_nalez>
@@ -253,7 +101,6 @@
     <amcr:samostatny_nalez id="M-202105907-N00054">M-202105907-N00054</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00055">M-202105907-N00055</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00056">M-202105907-N00056</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00068">M-202105907-N00068</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00057">M-202105907-N00057</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00058">M-202105907-N00058</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00059">M-202105907-N00059</amcr:samostatny_nalez>
@@ -264,6 +111,8 @@
     <amcr:samostatny_nalez id="M-202105907-N00064">M-202105907-N00064</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00065">M-202105907-N00065</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00066">M-202105907-N00066</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00067">M-202105907-N00067</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00068">M-202105907-N00068</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00069">M-202105907-N00069</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00070">M-202105907-N00070</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00071">M-202105907-N00071</amcr:samostatny_nalez>
@@ -278,10 +127,10 @@
     <amcr:samostatny_nalez id="M-202105907-N00081">M-202105907-N00081</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00082">M-202105907-N00082</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00083">M-202105907-N00083</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00098">M-202105907-N00098</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00084">M-202105907-N00084</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00085">M-202105907-N00085</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00086">M-202105907-N00086</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00116">M-202105907-N00116</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00087">M-202105907-N00087</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00088">M-202105907-N00088</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00089">M-202105907-N00089</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00090">M-202105907-N00090</amcr:samostatny_nalez>
@@ -292,6 +141,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00095">M-202105907-N00095</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00096">M-202105907-N00096</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00097">M-202105907-N00097</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00098">M-202105907-N00098</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00099">M-202105907-N00099</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00100">M-202105907-N00100</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00101">M-202105907-N00101</amcr:samostatny_nalez>
@@ -309,6 +159,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00113">M-202105907-N00113</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00114">M-202105907-N00114</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00115">M-202105907-N00115</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00116">M-202105907-N00116</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00117">M-202105907-N00117</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00118">M-202105907-N00118</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00119">M-202105907-N00119</amcr:samostatny_nalez>
@@ -332,7 +183,6 @@
     <amcr:samostatny_nalez id="M-202105907-N00137">M-202105907-N00137</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00138">M-202105907-N00138</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00139">M-202105907-N00139</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00385">M-202105907-N00385</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00140">M-202105907-N00140</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00141">M-202105907-N00141</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00142">M-202105907-N00142</amcr:samostatny_nalez>
@@ -352,6 +202,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00156">M-202105907-N00156</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00157">M-202105907-N00157</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00158">M-202105907-N00158</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00159">M-202105907-N00159</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00160">M-202105907-N00160</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00161">M-202105907-N00161</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00162">M-202105907-N00162</amcr:samostatny_nalez>
@@ -361,8 +212,6 @@
     <amcr:samostatny_nalez id="M-202105907-N00166">M-202105907-N00166</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00167">M-202105907-N00167</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00168">M-202105907-N00168</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00189">M-202105907-N00189</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00190">M-202105907-N00190</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00169">M-202105907-N00169</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00170">M-202105907-N00170</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00171">M-202105907-N00171</amcr:samostatny_nalez>
@@ -383,6 +232,8 @@
     <amcr:samostatny_nalez id="M-202105907-N00186">M-202105907-N00186</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00187">M-202105907-N00187</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00188">M-202105907-N00188</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00189">M-202105907-N00189</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00190">M-202105907-N00190</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00191">M-202105907-N00191</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00192">M-202105907-N00192</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00193">M-202105907-N00193</amcr:samostatny_nalez>
@@ -394,9 +245,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00199">M-202105907-N00199</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00200">M-202105907-N00200</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00201">M-202105907-N00201</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00218">M-202105907-N00218</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00202">M-202105907-N00202</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00219">M-202105907-N00219</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00203">M-202105907-N00203</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00204">M-202105907-N00204</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00205">M-202105907-N00205</amcr:samostatny_nalez>
@@ -412,6 +261,8 @@
     <amcr:samostatny_nalez id="M-202105907-N00215">M-202105907-N00215</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00216">M-202105907-N00216</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00217">M-202105907-N00217</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00218">M-202105907-N00218</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00219">M-202105907-N00219</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00220">M-202105907-N00220</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00221">M-202105907-N00221</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00222">M-202105907-N00222</amcr:samostatny_nalez>
@@ -435,6 +286,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00241">M-202105907-N00241</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00242">M-202105907-N00242</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00243">M-202105907-N00243</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00244">M-202105907-N00244</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00245">M-202105907-N00245</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00246">M-202105907-N00246</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00247">M-202105907-N00247</amcr:samostatny_nalez>
@@ -470,7 +322,6 @@
     <amcr:samostatny_nalez id="M-202105907-N00277">M-202105907-N00277</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00278">M-202105907-N00278</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00279">M-202105907-N00279</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00337">M-202105907-N00337</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00280">M-202105907-N00280</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00281">M-202105907-N00281</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00282">M-202105907-N00282</amcr:samostatny_nalez>
@@ -523,15 +374,14 @@
     <amcr:samostatny_nalez id="M-202105907-N00329">M-202105907-N00329</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00330">M-202105907-N00330</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00331">M-202105907-N00331</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00338">M-202105907-N00338</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00332">M-202105907-N00332</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00333">M-202105907-N00333</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00334">M-202105907-N00334</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00335">M-202105907-N00335</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00336">M-202105907-N00336</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00337">M-202105907-N00337</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00338">M-202105907-N00338</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00339">M-202105907-N00339</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00383">M-202105907-N00383</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00392">M-202105907-N00392</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00384">M-202105907-N00384</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00340">M-202105907-N00340</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00341">M-202105907-N00341</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00342">M-202105907-N00342</amcr:samostatny_nalez>
@@ -554,7 +404,6 @@
     <amcr:samostatny_nalez id="M-202105907-N00359">M-202105907-N00359</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00360">M-202105907-N00360</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00361">M-202105907-N00361</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00393">M-202105907-N00393</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00362">M-202105907-N00362</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00363">M-202105907-N00363</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00364">M-202105907-N00364</amcr:samostatny_nalez>
@@ -572,15 +421,21 @@
     <amcr:samostatny_nalez id="M-202105907-N00376">M-202105907-N00376</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00377">M-202105907-N00377</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00378">M-202105907-N00378</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00379">M-202105907-N00379</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00380">M-202105907-N00380</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00381">M-202105907-N00381</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00382">M-202105907-N00382</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00383">M-202105907-N00383</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00384">M-202105907-N00384</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00385">M-202105907-N00385</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00386">M-202105907-N00386</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00387">M-202105907-N00387</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00388">M-202105907-N00388</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00389">M-202105907-N00389</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00390">M-202105907-N00390</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00391">M-202105907-N00391</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00392">M-202105907-N00392</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00393">M-202105907-N00393</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00394">M-202105907-N00394</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00395">M-202105907-N00395</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00396">M-202105907-N00396</amcr:samostatny_nalez>
@@ -593,6 +448,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00403">M-202105907-N00403</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00404">M-202105907-N00404</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00405">M-202105907-N00405</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00406">M-202105907-N00406</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00407">M-202105907-N00407</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00408">M-202105907-N00408</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00409">M-202105907-N00409</amcr:samostatny_nalez>
@@ -602,10 +458,16 @@
     <amcr:samostatny_nalez id="M-202105907-N00413">M-202105907-N00413</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00414">M-202105907-N00414</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00415">M-202105907-N00415</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00416">M-202105907-N00416</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00417">M-202105907-N00417</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00418">M-202105907-N00418</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00419">M-202105907-N00419</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00420">M-202105907-N00420</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00421">M-202105907-N00421</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00422">M-202105907-N00422</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00423">M-202105907-N00423</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00424">M-202105907-N00424</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00425">M-202105907-N00425</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00426">M-202105907-N00426</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00427">M-202105907-N00427</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00428">M-202105907-N00428</amcr:samostatny_nalez>
@@ -620,7 +482,6 @@
     <amcr:samostatny_nalez id="M-202105907-N00437">M-202105907-N00437</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00438">M-202105907-N00438</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00439">M-202105907-N00439</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00453">M-202105907-N00453</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00440">M-202105907-N00440</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00441">M-202105907-N00441</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00442">M-202105907-N00442</amcr:samostatny_nalez>
@@ -634,14 +495,14 @@
     <amcr:samostatny_nalez id="M-202105907-N00450">M-202105907-N00450</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00451">M-202105907-N00451</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00452">M-202105907-N00452</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00453">M-202105907-N00453</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00454">M-202105907-N00454</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00455">M-202105907-N00455</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00456">M-202105907-N00456</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00457">M-202105907-N00457</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00458">M-202105907-N00458</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00459">M-202105907-N00459</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00460">M-202105907-N00460</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00469">M-202105907-N00469</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00470">M-202105907-N00470</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00529">M-202105907-N00529</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00461">M-202105907-N00461</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00462">M-202105907-N00462</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00463">M-202105907-N00463</amcr:samostatny_nalez>
@@ -650,26 +511,25 @@
     <amcr:samostatny_nalez id="M-202105907-N00466">M-202105907-N00466</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00467">M-202105907-N00467</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00468">M-202105907-N00468</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00469">M-202105907-N00469</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00470">M-202105907-N00470</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00471">M-202105907-N00471</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00472">M-202105907-N00472</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00473">M-202105907-N00473</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00474">M-202105907-N00474</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00475">M-202105907-N00475</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00484">M-202105907-N00484</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00612">M-202105907-N00612</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00487">M-202105907-N00487</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00477">M-202105907-N00477</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00476">M-202105907-N00476</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00497">M-202105907-N00497</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00530">M-202105907-N00530</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00477">M-202105907-N00477</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00478">M-202105907-N00478</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00479">M-202105907-N00479</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00480">M-202105907-N00480</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00481">M-202105907-N00481</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00482">M-202105907-N00482</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00483">M-202105907-N00483</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00484">M-202105907-N00484</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00485">M-202105907-N00485</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00486">M-202105907-N00486</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00487">M-202105907-N00487</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00488">M-202105907-N00488</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00489">M-202105907-N00489</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00490">M-202105907-N00490</amcr:samostatny_nalez>
@@ -679,6 +539,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00494">M-202105907-N00494</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00495">M-202105907-N00495</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00496">M-202105907-N00496</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00497">M-202105907-N00497</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00498">M-202105907-N00498</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00499">M-202105907-N00499</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00500">M-202105907-N00500</amcr:samostatny_nalez>
@@ -710,6 +571,8 @@
     <amcr:samostatny_nalez id="M-202105907-N00526">M-202105907-N00526</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00527">M-202105907-N00527</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00528">M-202105907-N00528</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00529">M-202105907-N00529</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00530">M-202105907-N00530</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00531">M-202105907-N00531</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00532">M-202105907-N00532</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00533">M-202105907-N00533</amcr:samostatny_nalez>
@@ -726,11 +589,11 @@
     <amcr:samostatny_nalez id="M-202105907-N00544">M-202105907-N00544</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00545">M-202105907-N00545</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00546">M-202105907-N00546</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00551">M-202105907-N00551</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00547">M-202105907-N00547</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00548">M-202105907-N00548</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00549">M-202105907-N00549</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00550">M-202105907-N00550</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00551">M-202105907-N00551</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00552">M-202105907-N00552</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00553">M-202105907-N00553</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00554">M-202105907-N00554</amcr:samostatny_nalez>
@@ -760,9 +623,6 @@
     <amcr:samostatny_nalez id="M-202105907-N00578">M-202105907-N00578</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00579">M-202105907-N00579</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00580">M-202105907-N00580</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00589">M-202105907-N00589</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00613">M-202105907-N00613</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00603">M-202105907-N00603</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00581">M-202105907-N00581</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00582">M-202105907-N00582</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00583">M-202105907-N00583</amcr:samostatny_nalez>
@@ -771,6 +631,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00586">M-202105907-N00586</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00587">M-202105907-N00587</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00588">M-202105907-N00588</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00589">M-202105907-N00589</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00590">M-202105907-N00590</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00591">M-202105907-N00591</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00592">M-202105907-N00592</amcr:samostatny_nalez>
@@ -784,6 +645,7 @@
     <amcr:samostatny_nalez id="M-202105907-N00600">M-202105907-N00600</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00601">M-202105907-N00601</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00602">M-202105907-N00602</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00603">M-202105907-N00603</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00604">M-202105907-N00604</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00605">M-202105907-N00605</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00606">M-202105907-N00606</amcr:samostatny_nalez>
@@ -792,6 +654,8 @@
     <amcr:samostatny_nalez id="M-202105907-N00609">M-202105907-N00609</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00610">M-202105907-N00610</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00611">M-202105907-N00611</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00612">M-202105907-N00612</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00613">M-202105907-N00613</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00614">M-202105907-N00614</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00615">M-202105907-N00615</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00616">M-202105907-N00616</amcr:samostatny_nalez>
@@ -939,9 +803,129 @@
     <amcr:samostatny_nalez id="M-202105907-N00758">M-202105907-N00758</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00759">M-202105907-N00759</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00760">M-202105907-N00760</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00761">M-202105907-N00761</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00762">M-202105907-N00762</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00763">M-202105907-N00763</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00764">M-202105907-N00764</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00765">M-202105907-N00765</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00766">M-202105907-N00766</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00767">M-202105907-N00767</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00768">M-202105907-N00768</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00769">M-202105907-N00769</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00770">M-202105907-N00770</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00771">M-202105907-N00771</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00772">M-202105907-N00772</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00773">M-202105907-N00773</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00774">M-202105907-N00774</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00775">M-202105907-N00775</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00776">M-202105907-N00776</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00777">M-202105907-N00777</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00778">M-202105907-N00778</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00779">M-202105907-N00779</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00780">M-202105907-N00780</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00781">M-202105907-N00781</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00782">M-202105907-N00782</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00783">M-202105907-N00783</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00784">M-202105907-N00784</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00785">M-202105907-N00785</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00786">M-202105907-N00786</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00787">M-202105907-N00787</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00788">M-202105907-N00788</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00789">M-202105907-N00789</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00790">M-202105907-N00790</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00791">M-202105907-N00791</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00792">M-202105907-N00792</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00793">M-202105907-N00793</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00794">M-202105907-N00794</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00795">M-202105907-N00795</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00796">M-202105907-N00796</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00797">M-202105907-N00797</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00798">M-202105907-N00798</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00799">M-202105907-N00799</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00800">M-202105907-N00800</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00801">M-202105907-N00801</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00802">M-202105907-N00802</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00803">M-202105907-N00803</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00804">M-202105907-N00804</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00805">M-202105907-N00805</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00806">M-202105907-N00806</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00807">M-202105907-N00807</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00808">M-202105907-N00808</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00809">M-202105907-N00809</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00810">M-202105907-N00810</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00811">M-202105907-N00811</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00812">M-202105907-N00812</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00813">M-202105907-N00813</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00814">M-202105907-N00814</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00815">M-202105907-N00815</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00816">M-202105907-N00816</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00817">M-202105907-N00817</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00818">M-202105907-N00818</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00819">M-202105907-N00819</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00820">M-202105907-N00820</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00821">M-202105907-N00821</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00822">M-202105907-N00822</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00823">M-202105907-N00823</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00824">M-202105907-N00824</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00825">M-202105907-N00825</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00826">M-202105907-N00826</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00827">M-202105907-N00827</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00828">M-202105907-N00828</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00829">M-202105907-N00829</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00830">M-202105907-N00830</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00831">M-202105907-N00831</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00832">M-202105907-N00832</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00833">M-202105907-N00833</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00834">M-202105907-N00834</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00835">M-202105907-N00835</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00836">M-202105907-N00836</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00837">M-202105907-N00837</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00838">M-202105907-N00838</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00839">M-202105907-N00839</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00840">M-202105907-N00840</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00841">M-202105907-N00841</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00842">M-202105907-N00842</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00843">M-202105907-N00843</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00844">M-202105907-N00844</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00845">M-202105907-N00845</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00846">M-202105907-N00846</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00847">M-202105907-N00847</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00848">M-202105907-N00848</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00849">M-202105907-N00849</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00850">M-202105907-N00850</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00851">M-202105907-N00851</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00852">M-202105907-N00852</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00853">M-202105907-N00853</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00854">M-202105907-N00854</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00855">M-202105907-N00855</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00856">M-202105907-N00856</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00857">M-202105907-N00857</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00858">M-202105907-N00858</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00859">M-202105907-N00859</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00860">M-202105907-N00860</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00861">M-202105907-N00861</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00862">M-202105907-N00862</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00863">M-202105907-N00863</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00864">M-202105907-N00864</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00865">M-202105907-N00865</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00866">M-202105907-N00866</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00867">M-202105907-N00867</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00868">M-202105907-N00868</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00869">M-202105907-N00869</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00870">M-202105907-N00870</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00871">M-202105907-N00871</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00872">M-202105907-N00872</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00873">M-202105907-N00873</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00874">M-202105907-N00874</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00875">M-202105907-N00875</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00876">M-202105907-N00876</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00877">M-202105907-N00877</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00878">M-202105907-N00878</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00879">M-202105907-N00879</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00880">M-202105907-N00880</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00881">M-202105907-N00881</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00882">M-202105907-N00882</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="M-202105907-N00883">M-202105907-N00883</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00884">M-202105907-N00884</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00885">M-202105907-N00885</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00886">M-202105907-N00886</amcr:samostatny_nalez>
@@ -950,7 +934,22 @@
     <amcr:samostatny_nalez id="M-202105907-N00889">M-202105907-N00889</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00890">M-202105907-N00890</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="M-202105907-N00891">M-202105907-N00891</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00794">M-202105907-N00794</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="M-202105907-N00883">M-202105907-N00883</amcr:samostatny_nalez>
+    <amcr:soubor>
+      <amcr:historie>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
+        <amcr:poznamka>Projekt_2022.docx</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
+      </amcr:historie>
+      <amcr:id>soub-379130</amcr:id>
+      <amcr:mimetype>application/zip</amcr:mimetype>
+      <amcr:nazev>Projekt_2022.docx</amcr:nazev>
+      <amcr:rozsah>1</amcr:rozsah>
+      <amcr:size_mb>0.0126352310</amcr:size_mb>
+    </amcr:soubor>
+    <amcr:stav>3</amcr:stav>
+    <amcr:typ_projektu xml:lang="cs" id="HES-001138">průzkum</amcr:typ_projektu>
+    <amcr:vedouci_projektu id="OS-004839">Komoróczy, Balázs</amcr:vedouci_projektu>
   </amcr:projekt>
 </amcr:amcr>

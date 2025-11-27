@@ -1,37 +1,36 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:archeologicky_zaznam>
-    <amcr:ident_cely>X-C-9000000011A</amcr:ident_cely>
-    <amcr:stav>1</amcr:stav>
-    <amcr:okres xml:lang="cs" id="ruian-3507">Louny</amcr:okres>
-    <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
-    <amcr:chranene_udaje>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-687391">Louny</amcr:hlavni_katastr>
-    </amcr:chranene_udaje>
     <amcr:akce>
-      <amcr:typ>N</amcr:typ>
-      <amcr:je_nz>true</amcr:je_nz>
-      <amcr:odlozena_nz>false</amcr:odlozena_nz>
-      <amcr:hlavni_vedouci id="OS-001331">Abrahám, Milan</amcr:hlavni_vedouci>
-      <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
-      <amcr:specifikace_data xml:lang="cs" id="HES-000887">přesné datum</amcr:specifikace_data>
-      <amcr:datum_zahajeni>2024-06-24</amcr:datum_zahajeni>
-      <amcr:datum_ukonceni>2024-06-30</amcr:datum_ukonceni>
-      <amcr:hlavni_typ xml:lang="cs" id="HES-001044">vizuální/geodetický průzkum</amcr:hlavni_typ>
       <amcr:chranene_udaje>
         <amcr:lokalizace_okolnosti>test 66</amcr:lokalizace_okolnosti>
       </amcr:chranene_udaje>
+      <amcr:datum_ukonceni>2024-06-30</amcr:datum_ukonceni>
+      <amcr:datum_zahajeni>2024-06-24</amcr:datum_zahajeni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001044">vizuální/geodetický průzkum</amcr:hlavni_typ>
+      <amcr:hlavni_vedouci id="OS-001331">Abrahám, Milan</amcr:hlavni_vedouci>
+      <amcr:je_nz>true</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000887">přesné datum</amcr:specifikace_data>
+      <amcr:typ>N</amcr:typ>
     </amcr:akce>
-    <amcr:historie>
-      <amcr:id>hist-2803153</amcr:id>
-      <amcr:datum_zmeny>2024-06-05T06:13:10.966627+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-005362">U-005362</amcr:uzivatel>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
-    </amcr:historie>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-687391">Louny</amcr:hlavni_katastr>
+    </amcr:chranene_udaje>
     <amcr:dokumentacni_jednotka>
       <amcr:ident_cely>X-C-9000000011A-D01</amcr:ident_cely>
-      <amcr:typ xml:lang="cs" id="HES-001070">celek akce</amcr:typ>
       <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
+      <amcr:typ xml:lang="cs" id="HES-001070">celek akce</amcr:typ>
     </amcr:dokumentacni_jednotka>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-005362">U-005362</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:ident_cely>X-C-9000000011A</amcr:ident_cely>
+    <amcr:okres xml:lang="cs" id="ruian-3507">Louny</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
+    <amcr:stav>1</amcr:stav>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

@@ -1,99 +1,98 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:uzivatel>
-    <amcr:ident_cely>U-000127</amcr:ident_cely>
-    <amcr:jmeno>Kateřina</amcr:jmeno>
-    <amcr:prijmeni>Blažková</amcr:prijmeni>
-    <amcr:email>archeolog@muzeumtgm.cz</amcr:email>
-    <amcr:osoba id="OS-001853">Blažková, Kateřina</amcr:osoba>
-    <amcr:organizace xml:lang="cs" id="ORG-000190">Muzeum T.G.M. Rakovník, p.o.</amcr:organizace>
-    <amcr:jazyk>cs</amcr:jazyk>
-    <amcr:telefon>731449321 </amcr:telefon>
-    <amcr:aktivni>true</amcr:aktivni>
     <amcr:admin>false</amcr:admin>
-    <amcr:superadmin>false</amcr:superadmin>
-    <amcr:skupina xml:lang="cs">Archeolog</amcr:skupina>
+    <amcr:aktivni>true</amcr:aktivni>
+    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
+    <amcr:email>archeolog@muzeumtgm.cz</amcr:email>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:poznamka>0</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:hlidaci_pes xml:lang="cs" id="ruian-27">Středočeský kraj</amcr:hlidaci_pes>
+    <amcr:ident_cely>U-000127</amcr:ident_cely>
+    <amcr:jazyk>cs</amcr:jazyk>
+    <amcr:jmeno>Kateřina</amcr:jmeno>
     <amcr:notifikace>S-E-A-XX</amcr:notifikace>
+    <amcr:notifikace>S-E-K-01</amcr:notifikace>
     <amcr:notifikace>S-E-N-01</amcr:notifikace>
     <amcr:notifikace>S-E-N-02</amcr:notifikace>
     <amcr:notifikace>S-E-N-05</amcr:notifikace>
-    <amcr:notifikace>S-E-K-01</amcr:notifikace>
-    <amcr:hlidaci_pes xml:lang="cs" id="ruian-27">Středočeský kraj</amcr:hlidaci_pes>
-    <amcr:datum_registrace>2024-02-27T22:43:20.909112+00:00</amcr:datum_registrace>
-    <amcr:historie>
-      <amcr:id>hist-2299906</amcr:id>
-      <amcr:datum_zmeny>2017-06-01T10:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-      <amcr:poznamka>0</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
+    <amcr:organizace xml:lang="cs" id="ORG-000190">Muzeum T.G.M. Rakovník, p.o.</amcr:organizace>
+    <amcr:osoba id="OS-001853">Blažková, Kateřina</amcr:osoba>
+    <amcr:prijmeni>Blažková</amcr:prijmeni>
+    <amcr:skupina xml:lang="cs">Archeolog</amcr:skupina>
     <amcr:spoluprace_podrizeni>
-      <amcr:id>spol-356</amcr:id>
-      <amcr:spolupracovnik id="U-003114">U-003114</amcr:spolupracovnik>
-      <amcr:stav>2</amcr:stav>
       <amcr:historie>
-        <amcr:id>hist-2305095</amcr:id>
-        <amcr:datum_zmeny>2022-08-22T06:05:48.180284+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-003114">U-003114</amcr:uzivatel>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
         <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-000439">U-000439</amcr:uzivatel>
       </amcr:historie>
       <amcr:historie>
-        <amcr:id>hist-2305097</amcr:id>
-        <amcr:datum_zmeny>2022-08-22T07:36:54.272790+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-000127">U-000127</amcr:uzivatel>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
         <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
-      </amcr:historie>
-    </amcr:spoluprace_podrizeni>
-    <amcr:spoluprace_podrizeni>
-      <amcr:id>spol-370</amcr:id>
-      <amcr:spolupracovnik id="U-003159">U-003159</amcr:spolupracovnik>
-      <amcr:stav>2</amcr:stav>
-      <amcr:historie>
-        <amcr:id>hist-2305113</amcr:id>
-        <amcr:datum_zmeny>2022-08-25T09:14:34.256695+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-003159">U-003159</amcr:uzivatel>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-      </amcr:historie>
-      <amcr:historie>
-        <amcr:id>hist-2305161</amcr:id>
-        <amcr:datum_zmeny>2022-09-06T09:49:26.636930+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-000127">U-000127</amcr:uzivatel>
-        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
       </amcr:historie>
-    </amcr:spoluprace_podrizeni>
-    <amcr:spoluprace_podrizeni>
       <amcr:id>spol-25</amcr:id>
       <amcr:spolupracovnik id="U-000439">U-000439</amcr:spolupracovnik>
       <amcr:stav>2</amcr:stav>
-      <amcr:historie>
-        <amcr:id>hist-2304553</amcr:id>
-        <amcr:datum_zmeny>2021-01-05T16:32:30.419109+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-000439">U-000439</amcr:uzivatel>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-      </amcr:historie>
-      <amcr:historie>
-        <amcr:id>hist-2304554</amcr:id>
-        <amcr:datum_zmeny>2021-01-05T16:42:31.240150+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-000127">U-000127</amcr:uzivatel>
-        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
-      </amcr:historie>
     </amcr:spoluprace_podrizeni>
     <amcr:spoluprace_podrizeni>
+      <amcr:historie>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-001593">U-001593</amcr:uzivatel>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-000127">U-000127</amcr:uzivatel>
+      </amcr:historie>
       <amcr:id>spol-26</amcr:id>
       <amcr:spolupracovnik id="U-001593">U-001593</amcr:spolupracovnik>
       <amcr:stav>2</amcr:stav>
-      <amcr:historie>
-        <amcr:id>hist-2304555</amcr:id>
-        <amcr:datum_zmeny>2021-01-15T16:15:30.057471+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-001593">U-001593</amcr:uzivatel>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-      </amcr:historie>
-      <amcr:historie>
-        <amcr:id>hist-2304556</amcr:id>
-        <amcr:datum_zmeny>2021-01-18T07:08:08.548035+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-000127">U-000127</amcr:uzivatel>
-        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
-      </amcr:historie>
     </amcr:spoluprace_podrizeni>
+    <amcr:spoluprace_podrizeni>
+      <amcr:historie>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-003114">U-003114</amcr:uzivatel>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-000127">U-000127</amcr:uzivatel>
+      </amcr:historie>
+      <amcr:id>spol-356</amcr:id>
+      <amcr:spolupracovnik id="U-003114">U-003114</amcr:spolupracovnik>
+      <amcr:stav>2</amcr:stav>
+    </amcr:spoluprace_podrizeni>
+    <amcr:spoluprace_podrizeni>
+      <amcr:historie>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-003159">U-003159</amcr:uzivatel>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-</amcr:id>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+        <amcr:uzivatel id="U-000127">U-000127</amcr:uzivatel>
+      </amcr:historie>
+      <amcr:id>spol-370</amcr:id>
+      <amcr:spolupracovnik id="U-003159">U-003159</amcr:spolupracovnik>
+      <amcr:stav>2</amcr:stav>
+    </amcr:spoluprace_podrizeni>
+    <amcr:superadmin>false</amcr:superadmin>
+    <amcr:telefon>731449321 </amcr:telefon>
   </amcr:uzivatel>
 </amcr:amcr>

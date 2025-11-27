@@ -1,48 +1,47 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:projekt>
-    <amcr:ident_cely>C-201121404</amcr:ident_cely>
-    <amcr:stav>3</amcr:stav>
-    <amcr:typ_projektu xml:lang="cs" id="HES-001136">záchranný</amcr:typ_projektu>
-    <amcr:okres xml:lang="cs" id="ruian-3505">Liberec</amcr:okres>
-    <amcr:podnet>Větrná elektrárna ENERCON + přípojky + zpevněné plochy + kontejnery.</amcr:podnet>
-    <amcr:planovane_zahajeni>[2011-05-24, 2011-05-24]</amcr:planovane_zahajeni>
-    <amcr:vedouci_projektu id="OS-002550">Stará, Marcela</amcr:vedouci_projektu>
-    <amcr:organizace xml:lang="cs" id="ORG-000155">Severočeské muzeum v Liberci, p.o.</amcr:organizace>
-    <amcr:uzivatelske_oznaceni>Odkaz: 3997/11</amcr:uzivatelske_oznaceni>
-    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000175">bez ochrany</amcr:kulturni_pamatka>
-    <amcr:datum_zahajeni>2011-06-02</amcr:datum_zahajeni>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost_pom>
-    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:chranene_udaje>
       <amcr:hlavni_katastr xml:lang="cs" id="ruian-600326">Andělka</amcr:hlavni_katastr>
       <amcr:lokalizace>-</amcr:lokalizace>
       <amcr:parcelni_cislo>-</amcr:parcelni_cislo>
     </amcr:chranene_udaje>
+    <amcr:datum_zahajeni>2011-06-02</amcr:datum_zahajeni>
+    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:historie>
-      <amcr:id>hist-1498518</amcr:id>
-      <amcr:datum_zmeny>2011-05-15T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000286">U-000286</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1668501</amcr:id>
-      <amcr:datum_zmeny>2011-07-19T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000204">U-000204</amcr:uzivatel>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
       <amcr:typ_zmeny>P12</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-000204">U-000204</amcr:uzivatel>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2036347</amcr:id>
-      <amcr:datum_zmeny>2011-07-19T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000204">U-000204</amcr:uzivatel>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
       <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-000204">U-000204</amcr:uzivatel>
     </amcr:historie>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-000286">U-000286</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:ident_cely>C-201121404</amcr:ident_cely>
+    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000175">bez ochrany</amcr:kulturni_pamatka>
+    <amcr:okres xml:lang="cs" id="ruian-3505">Liberec</amcr:okres>
+    <amcr:organizace xml:lang="cs" id="ORG-000155">Severočeské muzeum v Liberci, p.o.</amcr:organizace>
     <amcr:oznamovatel>
-      <amcr:oznamovatel>WSB Koncept s.r.o.</amcr:oznamovatel>
-      <amcr:odpovedna_osoba>Ing. arch. Lumír Pašek</amcr:odpovedna_osoba>
       <amcr:adresa>Tovaryšský Vrch 1358/3, 110 00 Liberec 1</amcr:adresa>
-      <amcr:telefon>775606345</amcr:telefon>
       <amcr:email>lumir.pasek@wsb.eu</amcr:email>
+      <amcr:odpovedna_osoba>Ing. arch. Lumír Pašek</amcr:odpovedna_osoba>
+      <amcr:oznamovatel>WSB Koncept s.r.o.</amcr:oznamovatel>
+      <amcr:telefon>775606345</amcr:telefon>
     </amcr:oznamovatel>
+    <amcr:planovane_zahajeni>[2011-05-24, 2011-05-24]</amcr:planovane_zahajeni>
+    <amcr:podnet>Větrná elektrárna ENERCON + přípojky + zpevněné plochy + kontejnery.</amcr:podnet>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost_pom>
+    <amcr:stav>3</amcr:stav>
+    <amcr:typ_projektu xml:lang="cs" id="HES-001136">záchranný</amcr:typ_projektu>
+    <amcr:uzivatelske_oznaceni>Odkaz: 3997/11</amcr:uzivatelske_oznaceni>
+    <amcr:vedouci_projektu id="OS-002550">Stará, Marcela</amcr:vedouci_projektu>
   </amcr:projekt>
 </amcr:amcr>

@@ -1,32 +1,31 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:archeologicky_zaznam>
-    <amcr:ident_cely>X-C-L000000003</amcr:ident_cely>
-    <amcr:stav>1</amcr:stav>
-    <amcr:okres xml:lang="cs" id="ruian-3403">Karlovy Vary</amcr:okres>
-    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
     <amcr:chranene_udaje>
       <amcr:hlavni_katastr xml:lang="cs" id="ruian-600016">Abertamy</amcr:hlavni_katastr>
     </amcr:chranene_udaje>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>X-C-L000000003-D01</amcr:ident_cely>
+      <amcr:nazev>test</amcr:nazev>
+      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
+      <amcr:pian id="N-1121-000000008">N-1121-000000008</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001074">lokalita</amcr:typ>
+    </amcr:dokumentacni_jednotka>
+    <amcr:historie>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-</amcr:id>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+    </amcr:historie>
+    <amcr:ident_cely>X-C-L000000003</amcr:ident_cely>
     <amcr:lokalita>
-      <amcr:typ_lokality xml:lang="cs" id="HES-001123">polygon průzkumu</amcr:typ_lokality>
-      <amcr:druh xml:lang="cs" id="HES-000111">polygon leteckého průzkumu</amcr:druh>
       <amcr:chranene_udaje>
         <amcr:nazev>testtest</amcr:nazev>
       </amcr:chranene_udaje>
+      <amcr:druh xml:lang="cs" id="HES-000111">polygon leteckého průzkumu</amcr:druh>
+      <amcr:typ_lokality xml:lang="cs" id="HES-001123">polygon průzkumu</amcr:typ_lokality>
     </amcr:lokalita>
-    <amcr:historie>
-      <amcr:id>hist-2803190</amcr:id>
-      <amcr:datum_zmeny>2025-07-29T08:42:52.576907+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:dokumentacni_jednotka>
-      <amcr:ident_cely>X-C-L000000003-D01</amcr:ident_cely>
-      <amcr:pian id="N-1121-000000008">N-1121-000000008</amcr:pian>
-      <amcr:typ xml:lang="cs" id="HES-001074">lokalita</amcr:typ>
-      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
-      <amcr:nazev>test</amcr:nazev>
-    </amcr:dokumentacni_jednotka>
+    <amcr:okres xml:lang="cs" id="ruian-3403">Karlovy Vary</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:stav>1</amcr:stav>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

@@ -1,30 +1,29 @@
-<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:adb>
-    <amcr:ident_cely>ADB-BLAT60-000001</amcr:ident_cely>
-    <amcr:dokumentacni_jednotka id="C-9003982A">C-9003982A-D01</amcr:dokumentacni_jednotka>
-    <amcr:stav_pom>2</amcr:stav_pom>
-    <amcr:typ_sondy xml:lang="cs" id="HES-001139">náhodný/povrchový nález</amcr:typ_sondy>
-    <amcr:podnet xml:lang="cs" id="HES-000594">odborný záměr</amcr:podnet>
-    <amcr:stratigraficke_jednotky>1</amcr:stratigraficke_jednotky>
     <amcr:autor_popisu id="OS-005796">Albrecht, Jan</amcr:autor_popisu>
-    <amcr:rok_popisu>2025</amcr:rok_popisu>
-    <amcr:sm5>BLAT60</amcr:sm5>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
-      <amcr:trat>Hrad, chrám sv. Víta</amcr:trat>
       <amcr:cislo_popisne>59</amcr:cislo_popisne>
       <amcr:parcelni_cislo>4</amcr:parcelni_cislo>
+      <amcr:trat>Hrad, chrám sv. Víta</amcr:trat>
       <amcr:vyskovy_bod>
-        <amcr:ident_cely>ADB-BLAT60-000001-V0001</amcr:ident_cely>
-        <amcr:typ xml:lang="cs" id="HES-001162">raný středověk</amcr:typ>
         <amcr:geom_gml>
           <gml:Point srsName="EPSG:5514">
             <gml:coordinates>-791914.07,-1100944.48,300</gml:coordinates>
           </gml:Point>
         </amcr:geom_gml>
         <amcr:geom_wkt EPSG="5514">POINT Z (-791914.07 -1100944.48 300)</amcr:geom_wkt>
+        <amcr:ident_cely>ADB-BLAT60-000001-V0001</amcr:ident_cely>
+        <amcr:typ xml:lang="cs" id="HES-001162">raný středověk</amcr:typ>
       </amcr:vyskovy_bod>
     </amcr:chranene_udaje>
+    <amcr:dokumentacni_jednotka id="C-9003982A">C-9003982A-D01</amcr:dokumentacni_jednotka>
+    <amcr:ident_cely>ADB-BLAT60-000001</amcr:ident_cely>
+    <amcr:podnet xml:lang="cs" id="HES-000594">odborný záměr</amcr:podnet>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
+    <amcr:rok_popisu>2025</amcr:rok_popisu>
+    <amcr:sm5>BLAT60</amcr:sm5>
+    <amcr:stav_pom>2</amcr:stav_pom>
+    <amcr:stratigraficke_jednotky>1</amcr:stratigraficke_jednotky>
+    <amcr:typ_sondy xml:lang="cs" id="HES-001139">náhodný/povrchový nález</amcr:typ_sondy>
   </amcr:adb>
 </amcr:amcr>
