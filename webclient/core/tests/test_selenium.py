@@ -141,21 +141,33 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
         extensions = {
-            "text/turtle": "turtle",
+            "text/turtle": "nt",
             "application/xml": "xml",
             "image/jpeg": "jpg",
             "image/png": "png",
             "application/zip": "zip",
             "application/pdf": "pdf",
         }
-        filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
+        filename = (
+            str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
+        )
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
         if "__file__" in filename:
             filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "wb")
             if extension == "xml":
-                f.write(response.content.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+                xml = self.xml_to_string_bez_ignorovanych_z_textu(
+                    response.content,
+                    ["amcr:datum_zmeny", "amcr:datum_registrace", "amcr:datum_zverejneni"],
+                )
+                f.write(xml)
+            elif extension == "nt":
+                rdf = self.uprav_rdf_pred_ulozenim(
+                    response.content,
+                    ignorovat_predikaty=["fedora:created", "fedora:lastModified", "premis:hasMessageDigest"],
+                )
+                f.write(rdf)
             else:
                 f.write(response.content)
             f.close()
@@ -183,14 +195,16 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
         extensions = {
-            "text/turtle": "turtle",
+            "text/turtle": "nt",
             "application/xml": "xml",
             "image/jpeg": "jpg",
             "image/png": "png",
             "application/zip": "zip",
             "application/pdf": "pdf",
         }
-        filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
+        filename = (
+            str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
+        )
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
         if "__file__" in filename:
             filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
@@ -198,9 +212,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             f = open(f"{path}/{filename}.{extension}", "rb")
             sample_file = f.read()
             f.close()
-        if extension == "turtle":
+        if extension == "nt":
             assert self.porovnej_rdf_obsah(
-                response.content, sample_file, ignorovat_predikaty=["fedora:created", "fedora:lastModified"]
+                response.content,
+                sample_file,
+                ignorovat_predikaty=["fedora:created", "fedora:lastModified", "premis:hasMessageDigest"],
             )
         elif extension == "xml":
             assert self.porovnej_xml_bez_ignorovanych(
@@ -276,7 +292,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         if response.status_code == 200:
             os.makedirs(path, exist_ok=True)
             f = open(f"{path}/index.json", "wb")
-            f.write(response.content)
+            index = self.json_uprav_pro_porovnani(
+                response.content,
+                klice_k_ignoraci=["created", "modified", "content_size", "pagination"],
+            )
+            f.write(json.dumps(index, indent=2).encode("utf-8"))
             f.close()
             res = json.loads(response.text)
             for n in res["items"]:
@@ -306,7 +326,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             assert self.porovnej_json_rovnost(
                 vzor_json_text=json_vzor,
                 vystup_json_text=response.content,
-                klice_k_ignoraci=["created", "modified", "content_size"],
+                klice_k_ignoraci=["created", "modified", "content_size", "pagination"],
             )
 
             res = json.loads(response.text)
@@ -528,7 +548,7 @@ return new Date('2025-06-28T12:00:00Z');}};
  const latlng = L.latLng({lat}, {lon});
  map.setView(latlng, 17);
  const containerPoint = map.latLngToContainerPoint(latlng);
- const layerPoint = map.latLngToLayerPoint(latlng); 
+ const layerPoint = map.latLngToLayerPoint(latlng);
  const syntheticEvent = new MouseEvent('click', {{
  bubbles: true,
  cancelable: true,
@@ -650,9 +670,11 @@ return new Date('2025-06-28T12:00:00Z');}};
             """
         )
 
-    def createFedoraRecord(self, ident_cely):
+    def createFedoraRecord(self, ident_cely, user_name="archeolog"):
         try:
             record = get_record_from_ident(ident_cely)
+            self._username(user_name)
+            user = User.objects.get(email=self._username(user_name))
         except Http404 as err:
             record = None
             logger.debug(
@@ -661,7 +683,7 @@ return new Date('2025-06-28T12:00:00Z');}};
             )
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
             try:
-                fedora_transaction = FedoraTransaction()
+                fedora_transaction = FedoraTransaction(transaction_user=user)
                 record.save_metadata(fedora_transaction)
                 fedora_transaction.mark_transaction_as_closed()
             except FedoraError as err:
@@ -674,7 +696,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """Rekurzivně odstraní ignorované tagy z XML stromu."""
         for elem in list(root):
             if elem.tag in ignorovane_tagy:
-                elem.text = None
+                elem.text = "2020-01-01T00:00:00+00:00"
             else:
                 self.odstran_elementy(elem, ignorovane_tagy)
 
@@ -722,6 +744,21 @@ return new Date('2025-06-28T12:00:00Z');}};
                 hodnoty.append(v.strip())
         return "|".join(hodnoty)
 
+    def nahrad_hist_id_rekurzivne(self, element):
+        """
+        Rekurzivně upraví všechny elementy <amcr:id> s textem 'hist-XXX' na 'hist-'.
+        Nezávislé na konkrétní verzi namespace.
+        """
+        # Zjisti namespace prefix 'amcr' z tagu
+        if element.tag.endswith("id") and "}" in element.tag:
+            lokalni_jmeno = element.tag.split("}", 1)[1]
+            if lokalni_jmeno == "id" and element.text and element.text.startswith("hist-"):
+                element.text = "hist-"
+
+        # Rekurzivně zpracuj podřízené elementy
+        for child in element:
+            self.nahrad_hist_id_rekurzivne(child)
+
     def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy):
         """
         Načte XML z textového vstupu, odstraní ignorované tagy a vrátí serializovanou podobu.
@@ -733,9 +770,10 @@ return new Date('2025-06-28T12:00:00Z');}};
             ignorovane_tagy_trans.append(item.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"))
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
+        self.nahrad_hist_id_rekurzivne(root)
         self.serad_elementy_xml(root)
         text = etree.tostring(root, pretty_print=True, encoding="utf-8")
-        text = re.sub(rb">hist-\d+<", rb">hist-<", text)
+        # text = re.sub(rb">hist-\d+<", rb">hist-<", text)
         return text
 
     def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy):
@@ -799,17 +837,15 @@ return new Date('2025-06-28T12:00:00Z');}};
         for t in nove_triples:
             graf.add(t)
 
-    def rdf_graf_z_textu(self, data, format="turtle"):
-        g = Graph()
-        g.parse(data=data, format=format)
-        return g
-
     def odstran_predikaty(self, graf, predikaty_k_ignoru):
         """Odstraní trojice podle predikátů (může být prefixed nebo plné URI)."""
         for pred in predikaty_k_ignoru:
             # Pokud je to string s dvojtečkou, pokusíme se ho expandovat jako CURIE (prefix:name)
             if ":" in pred and not pred.startswith("http"):
-                pred_uri = graf.namespace_manager.expand_curie(pred)
+                try:
+                    pred_uri = graf.namespace_manager.expand_curie(pred)
+                except ValueError:
+                    continue
             else:
                 pred_uri = URIRef(pred)
 
@@ -845,7 +881,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         g1.parse(data=aktualni_rdf, format="turtle")
 
         g2 = Graph()
-        g2.parse(data=ocekavany_rdf, format="turtle")
+        g2.parse(data=ocekavany_rdf, format="nt")
 
         if ignorovat_predikaty:
             self.odstran_predikaty(g1, ignorovat_predikaty)
@@ -858,6 +894,29 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.odstran_uuid_z_rdf(g2)
 
         return g1.isomorphic(g2)
+
+    def uprav_rdf_pred_ulozenim(self, rdf_input, ignorovat_predikaty=None):
+        """
+        Načte RDF z textu nebo bytes, odstraní proměnlivé predikáty, base URI a UUID,
+        a vrátí výstup jako serializovaný Turtle string.
+        """
+        g = Graph()
+        g.parse(data=rdf_input, format="turtle")
+
+        # Bezpečné odstranění predikátů
+        if ignorovat_predikaty:
+            self.odstran_predikaty(g, ignorovat_predikaty)
+
+        # Nahradit base URI (IP adresu apod.)
+        self.nahrad_base_uri_auto(g)
+
+        # Odstranit UUID z URI a Literálů
+        self.odstran_uuid_z_rdf(g)
+        nt = g.serialize(format="nt")
+        # Seřadit řádky podle abecedy
+        radky = sorted(line.strip() for line in nt.strip().splitlines() if line.strip())
+        nt_stabilni = "\n".join(radky) + "\n"
+        return nt_stabilni.encode("utf-8")
 
     def najdi_base_uri(self, vsechny_retezce):
         """
@@ -951,22 +1010,19 @@ return new Date('2025-06-28T12:00:00Z');}};
         else:
             return data
 
-    def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
-        json_vzor = json.loads(vzor_json_text)
-        json_vystup = json.loads(vystup_json_text)
-
+    def json_uprav_pro_porovnani(self, json_text, klice_k_ignoraci=None):
+        json_obj = json.loads(json_text)
         if klice_k_ignoraci:
-            json_vzor = self.odstran_klice(json_vzor, klice_k_ignoraci)
-            json_vystup = self.odstran_klice(json_vystup, klice_k_ignoraci)
+            json_obj = self.odstran_klice(json_obj, klice_k_ignoraci)
+        json_obj = self.nahrad_base_uri_auto_json(json_obj)
+        json_obj = self.odstran_uuid(json_obj)
+        json_obj = self.normalizuj_json(json_obj)
+        return json_obj
 
-        json_vzor = self.nahrad_base_uri_auto_json(json_vzor)
-        json_vystup = self.nahrad_base_uri_auto_json(json_vystup)
+    def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
+        json_vzor = self.json_uprav_pro_porovnani(vzor_json_text, klice_k_ignoraci)
+        json_vystup = self.json_uprav_pro_porovnani(vystup_json_text, klice_k_ignoraci)
 
-        json_vzor = self.odstran_uuid(json_vzor)
-        json_vystup = self.odstran_uuid(json_vystup)
-
-        json_vzor = self.normalizuj_json(json_vzor)
-        json_vystup = self.normalizuj_json(json_vystup)
         res = json_vzor == json_vystup
         if res is False:
             logger.error(
