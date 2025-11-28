@@ -9,6 +9,7 @@ from core.message_constants import (
     MAINTENANCE_AFTER_LOGOUT,
     OSOBA_JIZ_EXISTUJE,
     OSOBA_USPESNE_PRIDANA,
+    ZADOST_SMAZANI_UZIVATELE_SUCCESS,
 )
 from core.models import Permissions as p
 from core.models import check_permissions
@@ -28,7 +29,7 @@ from django.forms.renderers import BaseRenderer
 from django.http import HttpRequest, JsonResponse
 from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import get_language
@@ -516,3 +517,23 @@ class ObtainAuthTokenWithUpdate(ObtainAuthToken):
             token.delete()
             token.save()
         return Response({"token": token.key})
+
+
+class UserDeleteRequest(LoginRequiredMixin, UpdateView):
+    """
+    Třída pohledu pro požádání o smazání účtu
+    """
+
+    def post(self, request, *args, **kwargs):
+        user: User = request.user
+        Mailer.send_eu07(user, request)
+        messages.add_message(request, messages.SUCCESS, ZADOST_SMAZANI_UZIVATELE_SUCCESS)
+        return JsonResponse({"redirect": reverse("uzivatel:update-uzivatel")})
+
+    def get(self, request, *args, **kwargs):
+        context = {
+            "title": _("uzivatel.views.UserDeleteRequest.title.text"),
+            "id_tag": "user-delete-request-dialog",
+            "button": _("uzivatel.views.UserDeleteRequest.submitButton.text"),
+        }
+        return render(request, "core/transakce_modal.html", context)

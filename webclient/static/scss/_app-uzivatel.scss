@@ -7,3 +7,14 @@ div#user_notifications_settings_card {
     }
   }
 }
+
+.btn-delete {
+  background-color: #ba2121;
+  color: #ffffff; // bílé písmo, aby bylo čitelné
+  border: none;
+
+  &:hover {
+    background-color: #a41515;
+    color: #ffffff;
+  }
+}

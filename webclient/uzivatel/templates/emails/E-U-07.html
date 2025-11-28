@@ -1,0 +1,16 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>
+        Dobrý den,
+    </p>
+    <p>
+        uživatel <b>{{uzivatel.first_name}} {{uzivatel.last_name}}</b> (<a href="{{ uzivatel_admin_url }}">{{uzivatel.ident_cely}}</a>) z organizace <b>{{uzivatel.organizace}}</b> žádá o odstranění svého uživatelského účtu. 
+    </p>
+    <p>
+        O způsobu vypořádání uživatele vždy informujte v odpovědi na tento email.
+    </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
+{% endblock %}

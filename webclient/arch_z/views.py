@@ -14,6 +14,7 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     D_STAV_ARCHIVOVANY,
+    D_STAV_ODESLANY,
     ODESLANI_AZ,
     PIAN_NEPOTVRZEN,
     PIAN_POTVRZEN,
@@ -29,8 +30,8 @@ from core.constants import (
     ZMENA_AZ,
 )
 from core.coordTransform import transform_geom_to_wgs84
-from core.exceptions import MaximalEventCount
-from core.forms import CheckStavNotChangedForm, VratitForm
+from core.exceptions import MaximalEventCount, StateChangedError
+from core.forms import CheckStavNotChangedForm, VratitFormAZ, VratitFormDokument
 from core.ident_cely import get_project_event_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
@@ -64,7 +65,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction
 from django.db.models import Q, RestrictedError
-from django.forms import inlineformset_factory
+from django.forms import formset_factory, inlineformset_factory
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -124,6 +125,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
     """
 
     arch_zaznam = None
+    scroll_to_dj = False
 
     def get_shows(self):
         """
@@ -230,9 +232,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
             if self.arch_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 context["showbackdetail"] = True if self.request.user.hlavni_role.pk != ROLE_BADATEL_ID else False
                 context["app"] = "pr"
-                context[
-                    "arch_pr_link"
-                ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+                context["arch_pr_link"] = (
+                    '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+                )
             else:
                 context["app"] = "akce"
                 context["arch_pr_link"] = None
@@ -252,6 +254,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
         context["externi_odkazy"] = self.get_externi_odkazy()
         context["next_url"] = self.arch_zaznam.get_absolute_url()
+        context["scroll_to_dj"] = self.scroll_to_dj
         return context
 
 
@@ -285,6 +288,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
     Třida, která se dedí a která obsahuje metódy pro získaní relací DJ.
     """
 
+    scroll_to_dj = True
     template_name = "arch_z/dj/dj_update.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
@@ -329,6 +333,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
     Třída pohledu pro vytvoření dokumentační jednotky.
     """
 
+    scroll_to_dj = True
     template_name = "arch_z/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
@@ -845,12 +850,30 @@ def vratit(request, ident_cely):
             {"redirect": az.get_absolute_url()},
             status=403,
         )
+    DokumentFormSet = formset_factory(VratitFormDokument, extra=0)
     if request.method == "POST":
-        form = VratitForm(request.POST)
+        form = VratitFormAZ(request.POST, az=az)
         if form.is_valid():
-            fedora_trasnaction = az.create_transaction(request.user)
+            fedora_transaction = az.create_transaction(request.user)
             stav_initial = az.stav
             try:
+                if az.stav == AZ_STAV_ODESLANY:
+                    formset = DokumentFormSet(request.POST)
+                    if formset.is_valid():
+                        for form_row in formset:
+                            dokument_ident_cely = form_row.cleaned_data["ident_cely"]
+                            dokument = Dokument.objects.get(ident_cely=dokument_ident_cely)
+                            dokument.active_transaction = fedora_transaction
+                            if dokument.stav != D_STAV_ODESLANY:
+                                messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+                                raise PermissionDenied
+                            if check_stav_changed(request, dokument):
+                                raise StateChangedError
+                            form_row.duvod = form_row.cleaned_data["reason"]  # type: ignore[attr-defined]
+                            form_row.dokument = dokument  # type: ignore[attr-defined]
+                            form_row.before_save_state = dokument.stav  # type: ignore[attr-defined]
+                            dokument.set_vraceny(request.user, dokument.stav - 1, form_row.duvod)
+                            dokument.save()
                 if stav_initial == AZ_STAV_ARCHIVOVANY:
                     az.igsn_lokalita_hide()
                 duvod = form.cleaned_data["reason"]
@@ -860,7 +883,7 @@ def vratit(request, ident_cely):
                 # BR-A-3
                 if az.stav == AZ_STAV_ODESLANY and projekt is not None:
                     #  Return also project from the states P6 or P5 to P4
-                    projekt.active_transaction = fedora_trasnaction
+                    projekt.active_transaction = fedora_transaction
                     projekt_stav = projekt.stav
                     logger.debug("arch_z.views.vratit.valid", extra={"ident_cely": ident_cely, "stav": projekt.stav})
                     if projekt_stav == PROJEKT_STAV_UZAVRENY:
@@ -877,27 +900,37 @@ def vratit(request, ident_cely):
                 az.save()
                 if before_save_state == AZ_STAV_ODESLANY:
                     Mailer.send_ev01(zaznam=az, reason=duvod)
-                fedora_trasnaction.success_message = get_message(az, "USPESNE_VRACENA")
+                    for form_row in formset:
+                        if form_row.before_save_state == D_STAV_ODESLANY:
+                            Mailer.send_ek02(document=form_row.dokument, reason=form_row.duvod)
+                fedora_transaction.success_message = get_message(az, "USPESNE_VRACENA")
                 return JsonResponse({"redirect": az.get_absolute_url()})
-            except (DoiWriteError, FedoraError) as err:
+            except Exception as err:
                 logger.info("arch_z.views.vratit.post_error", extra={"error": err, "ident_cely": az.ident_cely})
                 transaction.set_rollback(True)
-                fedora_trasnaction.rollback_transaction()
+                fedora_transaction.rollback_transaction()
                 if isinstance(err, FedoraError):
                     az.igsn_lokalita_publish(check_status=False)
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
             logger.debug("arch_z.views.vratit.not_valid", extra={"error": form.errors})
     else:
-        form = VratitForm(initial={"old_stav": az.stav})
+        form = VratitFormAZ(az=az, initial={"old_stav": az.stav})
     context = {
         "object": az,
         "form": form,
         "title": _("arch_z.views.vratit.title.text"),
-        "id_tag": "vratit-akci-form",
         "button": _("arch_z.views.vratit.submitButton.text"),
+        "id_tag": "vratit-akci-form",
     }
-    return render(request, "core/transakce_modal.html", context)
+    if az.stav == AZ_STAV_ODESLANY:
+        formset = DokumentFormSet()
+        context.update(
+            {
+                "formset": formset,
+            }
+        )
+    return render(request, "core/transakce_table_modal.html", context)
 
 
 @never_cache
@@ -1588,6 +1621,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     Třida pohledu pro zmenu projektové akce na samostatnou.
     """
 
+    scroll_to_dj = True
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):
@@ -1659,6 +1693,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     Třida pohledu pro zmenu samostatní akce na projektovou.
     """
 
+    scroll_to_dj = True
     template_name = "core/transakce_table_modal.html"
 
     def get_context_data(self, **kwargs):
@@ -1916,10 +1951,12 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_import_pian_change": not show_add_pian
         and show_import_pian_change_user
         and check_permissions(p.actionChoices.pian_import_change, user, jednotka.pian.ident_cely),
-        "show_change_katastr": True
-        if jednotka.typ.id == TYP_DJ_KATASTR
-        and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely)
-        else False,
+        "show_change_katastr": (
+            True
+            if jednotka.typ.id == TYP_DJ_KATASTR
+            and check_permissions(p.actionChoices.dj_zmenit_katastr, user, jednotka.ident_cely)
+            else False
+        ),
         "show_dj_smazat": show_dj_smazat,
         "show_vb_smazat": check_permissions(p.actionChoices.vb_smazat, user, jednotka.ident_cely),
         "show_pripojit_pian_mapa": show_pripojit_pian_mapa,

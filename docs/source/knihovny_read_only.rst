@@ -144,7 +144,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/asottile/cfgv
    * - charset-normalizer
-     - 3.4.3
+     - 3.4.4
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
@@ -340,7 +340,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://inflate64.readthedocs.io/
    * - isort
-     - 6.1.0
+     - 7.0.0
      - MIT License
      - https://pycqa.github.io/isort/index.html
    * - kombu
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.15
+     - 9.0.16
      - Apache Software License
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -448,7 +448,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/giampaolo/psutil
    * - psycopg2-binary
-     - 2.9.10
+     - 2.9.11
      - GNU Library or Lesser General Public License (LGPL)
      - https://psycopg.org/
    * - py7zr
@@ -644,7 +644,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/python/tzdata
    * - uWSGI
-     - 2.0.30
+     - 2.0.31
      - GNU General Public License v2 or later (GPLv2+)
      - https://uwsgi-docs.readthedocs.io/en/latest/
    * - urllib3

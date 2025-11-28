@@ -30,6 +30,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import F, OuterRef, Subquery
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from historie.models import Historie
 from oznameni.models import Oznamovatel
@@ -56,6 +57,7 @@ ALWAYS_ACTIVE = [
     "E-U-03",
     "E-U-05",
     "E-U-06",
+    "E-U-07",
     "E-N-03",
     "E-N-04",
     "E-NZ-01",
@@ -303,6 +305,25 @@ class Mailer:
         )
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.__send(notification_type.predmet, user.email, html, notification_type=notification_type, user=user)
+
+    @classmethod
+    def send_eu07(cls, user: "uzivatel.models.User", request):
+        IDENT_CELY = "E-U-07"
+        logger.debug("services.mailer.send_eu07", extra={"ident_cely": IDENT_CELY})
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        subject = notification_type.predmet.format(ident_cely=user.ident_cely)
+        uzivatel_admin_url = request.build_absolute_uri(reverse("admin:uzivatel_user_change", args=[user.id]))
+        html = render_to_string(
+            notification_type.cesta_sablony,
+            {"uzivatel": user, "uzivatel_admin_url": uzivatel_admin_url},
+        )
+        cls.__send(
+            subject=subject,
+            to="info@amapa.cz",
+            html_content=html,
+            notification_type=notification_type,
+            from_email=user.email,
+        )
 
     @classmethod
     def _send_notification_for_project(cls, project, notification_type):
@@ -965,12 +986,11 @@ class Mailer:
         logger.debug("services.mailer.send_ek02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=document.ident_cely)
-        MOVED_TO_STATE = document.stav - 2
         html = render_to_string(
             notification_type.cesta_sablony,
             {
                 "ident_cely": document.ident_cely,
-                "state": document.STATES[MOVED_TO_STATE][1],
+                "state": document.STATES[0][1],
                 "reason": reason,
                 "site_url": settings.SITE_URL,
             },

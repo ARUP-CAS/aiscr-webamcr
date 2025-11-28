@@ -672,7 +672,7 @@ class FedoraRepositoryConnector:
             }
             return document_func, headers_func
 
-        if not result:
+        if result is None:
             raise FedoraNoResponseError(url, "No Fedora response", None, fedora_transaction=self.transaction)
         if result.status_code == 404:
             document, headers = generate_metadata()

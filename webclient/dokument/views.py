@@ -21,7 +21,7 @@ from core.constants import (
 )
 from core.coordTransform import convertToJTSK
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
-from core.forms import CheckStavNotChangedForm, VratitForm
+from core.forms import CheckStavNotChangedForm, VratitForm, VratitFormDokument
 from core.ident_cely import get_cast_dokumentu_ident, get_dokument_rada, get_temp_dokument_ident
 from core.message_constants import (
     DOKUMENT_AZ_USPESNE_PRIPOJEN,
@@ -66,7 +66,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.forms import inlineformset_factory
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -1749,11 +1749,12 @@ def vratit(request, ident_cely):
                 if dokument.stav == D_STAV_ARCHIVOVANY:
                     dokument.doi_hide()
                 duvod = form.cleaned_data["reason"]
-                if dokument.stav == D_STAV_ODESLANY:
-                    Mailer.send_ek02(document=dokument, reason=duvod)
+                before_save_state = dokument.stav
                 dokument.set_vraceny(request.user, dokument.stav - 1, duvod)
                 dokument.close_active_transaction_when_finished = True
                 dokument.save()
+                if before_save_state == D_STAV_ODESLANY:
+                    Mailer.send_ek02(document=dokument, reason=duvod)
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
             except (DoiWriteError, FedoraError) as err:
                 logger.info("dokument.views.vratit.post_error", extra={"error": err, "ident_cely": ident_cely})
@@ -2221,6 +2222,34 @@ def get_dokument_table_row(request):
     Funkce pohledu pro získaní řádku dokumentu pro vykreslení v modalu.
     """
     context = {"d": Dokument.objects.get(id=request.GET.get("id", ""))}
+    return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_dokument_table_row_vratit(request):
+    """
+    AJAX pohled pro načtení jednoho řádku dokumentu do tabulky pro "vrácení dokumentu".
+    """
+    dokument_id = request.GET.get("id")
+    index = request.GET.get("index")
+    if not dokument_id:
+        return HttpResponse(status=400)
+    qs = Dokument.objects.filter(id=dokument_id)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    qs = perm_object.check_filter_permission(qs)
+    dokument = qs.first()
+    if dokument is None:
+        raise Http404("Dokument neexistuje.")
+    form = VratitFormDokument(
+        initial={"old_stav": dokument.stav, "ident_cely": dokument.ident_cely}, prefix=f"form-{index}"
+    )
+    context = {
+        "vratit": True,
+        "d": dokument,
+        "form": form,
+    }
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
 
