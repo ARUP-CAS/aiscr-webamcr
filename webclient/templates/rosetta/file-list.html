@@ -26,8 +26,8 @@
 {% compress css %}
 <link type="text/x-scss" href="{% static 'scss/_app_rosetta_modal.scss' %}" rel="stylesheet" media="screen">
 {% endcompress %}
-<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'js/bootstrap-select1.13.18/bootstrap-select.min.js' %}"></script>
+<script src="{% static 'bootstrap5/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/bootstrap-select1.14.0-beta3/bootstrap-select.min.js' %}"></script>
 {% get_current_language as LANGUAGE_CODE %}
 {% if "en" in LANGUAGE_CODE %}
 <script src="{% static 'js/selectpicker-en.js' %}"></script>

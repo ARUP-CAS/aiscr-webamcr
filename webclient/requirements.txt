@@ -59,3 +59,4 @@ pyOpenSSL==25.3.0
 sphinxcontrib-googleanalytics==0.5
 SPARQLWrapper==2.0.0
 freezegun==1.5.5
+crispy-bootstrap5==2025.4

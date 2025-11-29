@@ -1,11 +1,11 @@
-
 // --- ROOT STYLE ---
 
 @import 'scss/app-variables';
 
-@import './bootstrap/bootstrap';
+@import './bootstrap5_css/bootstrap';
 
 // app styles
+@import 'bootstrap5/bootstrap';
 @import 'scss/app-mixins';
 @import 'scss/app-global';
 @import 'scss/app-layout';

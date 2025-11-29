@@ -143,13 +143,20 @@ table th {
 .form-control:not(textarea),
 .app-daterangepicker .form-group>div .textinput {
   height: 1.5rem !important;
+  min-height: 1.5rem !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
 
-.bootstrap-select .dropdown-toggle {
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+.bootstrap-select {
+  .filter-option {
+    margin-top: -0.225rem !important;
+  }
+
+  .dropdown-toggle {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
 }
 
 .dropdown-toggle {

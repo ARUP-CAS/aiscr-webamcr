@@ -142,6 +142,10 @@
         border-color: $color;
         background-color: $color;
       }
+      .form-check-input:checked{
+        background-color: $color;
+        border-color: $color;
+      }
 
       .badge {
         background-color: $color !important;

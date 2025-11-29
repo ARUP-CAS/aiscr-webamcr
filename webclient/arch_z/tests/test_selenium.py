@@ -92,7 +92,7 @@ class AkceProjektoveAkce(AkceTestClass):
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401502A").count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(
             By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.zahajenVTerenu.label") + "')]"

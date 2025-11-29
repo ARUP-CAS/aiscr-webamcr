@@ -217,7 +217,7 @@ table {
       @extend .p-0;
 
       ul {
-        @extend .pr-0;
+        @extend .pe-0  !optional;
         line-height: 1;
         margin-top: 1px;
       }
@@ -307,7 +307,7 @@ form {
     cursor: pointer;
 
     .input-group-text {
-      @extend .pt-0, .pb-0, .pl-1, .pr-1;
+      @extend .pt-0, .pb-0, .ps-1, .pe-1  !optional;
 
       .material-icons {
         @include setIcon(18);
@@ -510,14 +510,14 @@ input.coordInput {
 }
 
 .custom-edit-coord-marker {
-	width: 12px;
-	height: 12px;
-	background-color: white;
-	border: 1px solid #666;
-	background: #fff;
-	border-radius: 2px;
-	opacity: 0.6;
-	box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border: 1px solid #666;
+  background: #fff;
+  border-radius: 2px;
+  opacity: 0.6;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 .pagination-range {
@@ -729,7 +729,7 @@ input.coordInput {
                   @extend .d-flex;
 
                   &:before {
-                    @extend .mr-1;
+                    @extend .me-1  !optional;
                     font-family: "Material Icons";
                     color: $white;
                   }

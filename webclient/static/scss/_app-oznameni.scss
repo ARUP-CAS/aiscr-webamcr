@@ -16,7 +16,7 @@
 
         a {
           &:first-child {
-            @extend .mr-4;
+            @extend .me-4 !optional;
 
             &:not(:hover) {
               img {
@@ -87,7 +87,7 @@
 
     .app-footer {
       .form-check {
-        @extend .ml-3;
+        @extend .ms-3;
         display: inline-block;
       }
 

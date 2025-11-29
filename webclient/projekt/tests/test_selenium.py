@@ -716,7 +716,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.uzavren.label") + "')]")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -738,7 +738,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(
             By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.ukoncenVTerenu.label") + "')]"
@@ -762,7 +762,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(
             By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.zahajenVTerenu.label") + "')]"
@@ -786,7 +786,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.go_to_form()
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.prihlasen.label") + "')]")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -848,7 +848,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_021_projekt_zrusit_n_001.start")
         self.login("archivar")
         self.go_to_form()
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.uzavren.label") + "')]")
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
@@ -878,7 +878,7 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektZrusitSeleniumTest.test_022_projekt_zrusit_p_001.start")
         self.login("archivar")
         self.go_to_form()
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(
             By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.navrzenKeZruseni.label") + "')]"
@@ -908,7 +908,7 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
         self.login()
         self.go_to_form()
         arch_z_count_old = Akce.objects.count()
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
+        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
         self.ElementClick(
             By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.zahajenVTerenu.label") + "')]"

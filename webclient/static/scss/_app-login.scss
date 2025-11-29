@@ -36,7 +36,7 @@
 
       form {
         ul {
-          @extend .text-left;
+          @extend .text-start;
         }
 
         input {
@@ -108,7 +108,7 @@
           }
 
           .card-body {
-            @extend .p-0, .pr-3;
+            @extend .p-0, .pe-3  !optional;
 
             h3 {
               @extend .app-heading-thin;
