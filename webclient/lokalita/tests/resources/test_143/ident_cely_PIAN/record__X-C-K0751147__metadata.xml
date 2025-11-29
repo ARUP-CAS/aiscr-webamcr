@@ -1,8 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>X-C-K0751147</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3607">Rychnov nad Kněžnou</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
     <amcr:chranene_udaje>
       <amcr:hlavni_katastr xml:lang="cs" id="ruian-773484">Velký Uhřínov</amcr:hlavni_katastr>
     </amcr:chranene_udaje>
+    <amcr:lokalita>
+      <amcr:typ_lokality xml:lang="cs" id="HES-001124">krajina</amcr:typ_lokality>
+      <amcr:druh xml:lang="cs" id="HES-000129">muzeum/skanzen</amcr:druh>
+      <amcr:chranene_udaje>
+        <amcr:nazev>Velký Uhřínov - archeologický skanzen Villa Nova</amcr:nazev>
+        <amcr:popis>Archeologický skanzen v Uhřínově v Orlických horách je budován od r. 1992 a jeho cílem je přiblížit veřejnosti podobu vrcholně a pozdně středověké vesnice (13.-15. století). Postupně u něj vzniká také středisko experimentální archeologie. Všechny stavby jsou vybudovány podle skutečných archeologických nálezů, případně dobových vyobrazení. Najdeme zde např. roubenou polozemnici (zahloubený dům), dvouprostorový nadzemní dům, stodolu, chlév a oboroh, kovárnu, hrnčířskou a železářskou pec či zahrádku s rostlinami, které byly ve středověku pěstovány. -- Navigační bod: N 50°14'57.57", E 16°20'28.46" (vstup do skanzenu).</amcr:popis>
+      </amcr:chranene_udaje>
+    </amcr:lokalita>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000302">U-000302</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>C-K0751147-D01</amcr:ident_cely>
+      <amcr:pian id="P-1412-100089">P-1412-100089</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001074">lokalita</amcr:typ>
+      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
+    </amcr:dokumentacni_jednotka>
     <amcr:dokument id="C-DT-100005023">C-DT-100005023</amcr:dokument>
     <amcr:dokument id="C-DT-100005024">C-DT-100005024</amcr:dokument>
     <amcr:dokument id="C-DT-100005025">C-DT-100005025</amcr:dokument>
@@ -17,29 +42,5 @@
     <amcr:dokument id="C-DT-100005034">C-DT-100005034</amcr:dokument>
     <amcr:dokument id="C-DT-100005035">C-DT-100005035</amcr:dokument>
     <amcr:dokument id="C-DY-100000004">C-DY-100000004</amcr:dokument>
-    <amcr:dokumentacni_jednotka>
-      <amcr:ident_cely>C-K0751147-D01</amcr:ident_cely>
-      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
-      <amcr:pian id="P-1412-100089">P-1412-100089</amcr:pian>
-      <amcr:typ xml:lang="cs" id="HES-001074">lokalita</amcr:typ>
-    </amcr:dokumentacni_jednotka>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000302">U-000302</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:ident_cely>X-C-K0751147</amcr:ident_cely>
-    <amcr:lokalita>
-      <amcr:chranene_udaje>
-        <amcr:nazev>Velký Uhřínov - archeologický skanzen Villa Nova</amcr:nazev>
-        <amcr:popis>Archeologický skanzen v Uhřínově v Orlických horách je budován od r. 1992 a jeho cílem je přiblížit veřejnosti podobu vrcholně a pozdně středověké vesnice (13.-15. století). Postupně u něj vzniká také středisko experimentální archeologie. Všechny stavby jsou vybudovány podle skutečných archeologických nálezů, případně dobových vyobrazení. Najdeme zde např. roubenou polozemnici (zahloubený dům), dvouprostorový nadzemní dům, stodolu, chlév a oboroh, kovárnu, hrnčířskou a železářskou pec či zahrádku s rostlinami, které byly ve středověku pěstovány. -- Navigační bod: N 50°14'57.57", E 16°20'28.46" (vstup do skanzenu).</amcr:popis>
-      </amcr:chranene_udaje>
-      <amcr:druh xml:lang="cs" id="HES-000129">muzeum/skanzen</amcr:druh>
-      <amcr:typ_lokality xml:lang="cs" id="HES-001124">krajina</amcr:typ_lokality>
-    </amcr:lokalita>
-    <amcr:okres xml:lang="cs" id="ruian-3607">Rychnov nad Kněžnou</amcr:okres>
-    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
-    <amcr:stav>2</amcr:stav>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

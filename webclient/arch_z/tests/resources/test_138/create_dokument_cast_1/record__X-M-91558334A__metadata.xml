@@ -1,34 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>X-M-91558334A</amcr:ident_cely>
+    <amcr:stav>1</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3803">Karviná</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-600121">Albrechtice u Českého Těšína</amcr:hlavni_katastr>
+    </amcr:chranene_udaje>
     <amcr:akce>
+      <amcr:typ>N</amcr:typ>
+      <amcr:je_nz>false</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:hlavni_vedouci id="OS-003739">Juchelka, Jiří</amcr:hlavni_vedouci>
+      <amcr:organizace xml:lang="cs" id="ORG-000075">Národní památkový ústav - územní odborné pracoviště v Ostravě</amcr:organizace>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000887">přesné datum</amcr:specifikace_data>
+      <amcr:datum_zahajeni>2003-03-15</amcr:datum_zahajeni>
+      <amcr:datum_ukonceni>2003-03-15</amcr:datum_ukonceni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001056">vertikální řez</amcr:hlavni_typ>
+      <amcr:ulozeni_nalezu>neuvedeno</amcr:ulozeni_nalezu>
       <amcr:chranene_udaje>
         <amcr:lokalizace_okolnosti>ul. Pardubická; stavba plynovodu; ZAV</amcr:lokalizace_okolnosti>
         <amcr:souhrn_upresneni>OZAA MTX200402081</amcr:souhrn_upresneni>
       </amcr:chranene_udaje>
-      <amcr:datum_ukonceni>2003-03-15</amcr:datum_ukonceni>
-      <amcr:datum_zahajeni>2003-03-15</amcr:datum_zahajeni>
-      <amcr:hlavni_typ xml:lang="cs" id="HES-001056">vertikální řez</amcr:hlavni_typ>
-      <amcr:hlavni_vedouci id="OS-003739">Juchelka, Jiří</amcr:hlavni_vedouci>
-      <amcr:je_nz>false</amcr:je_nz>
-      <amcr:odlozena_nz>false</amcr:odlozena_nz>
-      <amcr:organizace xml:lang="cs" id="ORG-000075">Národní památkový ústav - územní odborné pracoviště v Ostravě</amcr:organizace>
-      <amcr:specifikace_data xml:lang="cs" id="HES-000887">přesné datum</amcr:specifikace_data>
-      <amcr:typ>N</amcr:typ>
-      <amcr:ulozeni_nalezu>neuvedeno</amcr:ulozeni_nalezu>
     </amcr:akce>
-    <amcr:chranene_udaje>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-600121">Albrechtice u Českého Těšína</amcr:hlavni_katastr>
-    </amcr:chranene_udaje>
-    <amcr:dokument id="M-TX-194300151">M-TX-194300151</amcr:dokument>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
       <amcr:uzivatel id="U-002190">U-002190</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
-    <amcr:ident_cely>X-M-91558334A</amcr:ident_cely>
-    <amcr:okres xml:lang="cs" id="ruian-3803">Karviná</amcr:okres>
-    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
-    <amcr:stav>1</amcr:stav>
+    <amcr:dokument id="M-TX-194300151">M-TX-194300151</amcr:dokument>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

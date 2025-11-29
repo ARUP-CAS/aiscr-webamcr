@@ -1,33 +1,34 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:pian>
+    <amcr:ident_cely>P-1121-100070</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:typ xml:lang="cs" id="HES-001133">bod</amcr:typ>
+    <amcr:presnost xml:lang="cs" id="HES-000862">odchylka desítky metrů</amcr:presnost>
+    <amcr:geom_system>4326</amcr:geom_system>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
+      <amcr:zm10>11-21-03</amcr:zm10>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
           <gml:coordinates>12.8049934,50.3517312</gml:coordinates>
         </gml:Point>
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(12.8049934 50.3517312)</amcr:geom_wkt>
-      <amcr:zm10>11-21-03</amcr:zm10>
     </amcr:chranene_udaje>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000279">U-000279</amcr:uzivatel>
+      <amcr:typ_zmeny>PI12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000579">U-000579</amcr:uzivatel>
+      <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
+    </amcr:historie>
     <amcr:dokumentacni_jednotka id="C-9002743A">C-9002743A-D01</amcr:dokumentacni_jednotka>
     <amcr:dokumentacni_jednotka id="X-C-9000000011A">X-C-9000000011A-D01</amcr:dokumentacni_jednotka>
-    <amcr:geom_system>4326</amcr:geom_system>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000579">U-000579</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>PI12</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000279">U-000279</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:ident_cely>P-1121-100070</amcr:ident_cely>
-    <amcr:presnost xml:lang="cs" id="HES-000862">odchylka desítky metrů</amcr:presnost>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost_pom>
-    <amcr:stav>2</amcr:stav>
-    <amcr:typ xml:lang="cs" id="HES-001133">bod</amcr:typ>
   </amcr:pian>
 </amcr:amcr>

@@ -1,6 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:let>
+    <amcr:ident_cely>C-LET-00010</amcr:ident_cely>
     <amcr:datum>1992-07-16</amcr:datum>
+    <amcr:hodina_zacatek>12:20</amcr:hodina_zacatek>
+    <amcr:hodina_konec>14:05</amcr:hodina_konec>
+    <amcr:pozorovatel id="OS-001262">Gojda, Martin</amcr:pozorovatel>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:pilot>Šíma</amcr:pilot>
+    <amcr:typ_letounu>L60 S Brigadýr (OK-MTI)</amcr:typ_letounu>
+    <amcr:ucel_letu>Další pozorovatelé: Čtverák. Navigátor: Gojda. Podmínky letu: vegetace. Teplota: 24 (st.). 12 dní bez srážek. Zralost plodin: II-III. Viditelné situace: vegetační příznaky; viditelné struktury; lineární transekty (plynovody aj.).</amcr:ucel_letu>
+    <amcr:letiste_start xml:lang="cs" id="HES-000209">Velká Dobrá</amcr:letiste_start>
+    <amcr:letiste_cil xml:lang="cs" id="HES-000209">Velká Dobrá</amcr:letiste_cil>
+    <amcr:pocasi xml:lang="cs" id="HES-000590">slunečno</amcr:pocasi>
     <amcr:dohlednost xml:lang="cs" id="HES-000101">10–20 km</amcr:dohlednost>
     <amcr:dokument id="C-LD-000000190">C-LD-000000190</amcr:dokument>
     <amcr:dokument id="C-LD-000000996">C-LD-000000996</amcr:dokument>
@@ -36,16 +48,5 @@
     <amcr:dokument id="C-LD-000010279">C-LD-000010279</amcr:dokument>
     <amcr:dokument id="C-LD-000010280">C-LD-000010280</amcr:dokument>
     <amcr:dokument id="C-LD-000010281">C-LD-000010281</amcr:dokument>
-    <amcr:hodina_konec>14:05</amcr:hodina_konec>
-    <amcr:hodina_zacatek>12:20</amcr:hodina_zacatek>
-    <amcr:ident_cely>C-LET-00010</amcr:ident_cely>
-    <amcr:letiste_cil xml:lang="cs" id="HES-000209">Velká Dobrá</amcr:letiste_cil>
-    <amcr:letiste_start xml:lang="cs" id="HES-000209">Velká Dobrá</amcr:letiste_start>
-    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
-    <amcr:pilot>Šíma</amcr:pilot>
-    <amcr:pocasi xml:lang="cs" id="HES-000590">slunečno</amcr:pocasi>
-    <amcr:pozorovatel id="OS-001262">Gojda, Martin</amcr:pozorovatel>
-    <amcr:typ_letounu>L60 S Brigadýr (OK-MTI)</amcr:typ_letounu>
-    <amcr:ucel_letu>Další pozorovatelé: Čtverák. Navigátor: Gojda. Podmínky letu: vegetace. Teplota: 24 (st.). 12 dní bez srážek. Zralost plodin: II-III. Viditelné situace: vegetační příznaky; viditelné struktury; lineární transekty (plynovody aj.).</amcr:ucel_letu>
   </amcr:let>
 </amcr:amcr>

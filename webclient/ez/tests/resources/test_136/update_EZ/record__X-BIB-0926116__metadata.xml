@@ -1,22 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:ext_zdroj>
-    <amcr:autor id="OS-004146" poradi="1">Budinský, Peter</amcr:autor>
-    <amcr:edice_rada>Archeologický výzkum v severních Čechách Sv. 12</amcr:edice_rada>
-    <amcr:ext_odkaz>
-      <amcr:archeologicky_zaznam id="C-9000639A">C-9000639A</amcr:archeologicky_zaznam>
-      <amcr:id>exto-81</amcr:id>
-    </amcr:ext_odkaz>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000736">U-000736</amcr:uzivatel>
-    </amcr:historie>
     <amcr:ident_cely>X-BIB-0926116</amcr:ident_cely>
-    <amcr:misto>TepliceLouny</amcr:misto>
-    <amcr:nazev>Archeologické nálezy z Litoměřicka a z neznámých nalezišť ve sbírce teplického muzea</amcr:nazev>
-    <amcr:rok_vydani_vzniku>1985</amcr:rok_vydani_vzniku>
     <amcr:stav>2</amcr:stav>
     <amcr:typ xml:lang="cs" id="HES-001117">kniha</amcr:typ>
+    <amcr:autor id="OS-004146" poradi="1">Budinský, Peter</amcr:autor>
+    <amcr:nazev>Archeologické nálezy z Litoměřicka a z neznámých nalezišť ve sbírce teplického muzea</amcr:nazev>
+    <amcr:edice_rada>Archeologický výzkum v severních Čechách Sv. 12</amcr:edice_rada>
+    <amcr:rok_vydani_vzniku>1985</amcr:rok_vydani_vzniku>
+    <amcr:misto>TepliceLouny</amcr:misto>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000736">U-000736</amcr:uzivatel>
+      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-81</amcr:id>
+      <amcr:archeologicky_zaznam id="C-9000639A">C-9000639A</amcr:archeologicky_zaznam>
+    </amcr:ext_odkaz>
   </amcr:ext_zdroj>
 </amcr:amcr>

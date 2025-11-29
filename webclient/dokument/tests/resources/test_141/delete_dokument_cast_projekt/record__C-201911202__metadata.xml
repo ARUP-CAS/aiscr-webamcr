@@ -1,64 +1,83 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:projekt>
-    <amcr:archeologicky_zaznam id="C-201911202A">C-201911202A</amcr:archeologicky_zaznam>
+    <amcr:ident_cely>C-201911202</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:typ_projektu xml:lang="cs" id="HES-001138">průzkum</amcr:typ_projektu>
+    <amcr:okres xml:lang="cs" id="ruian-3209">Praha-východ</amcr:okres>
+    <amcr:podnet>průzkum zemědělsky využívané archeologické lokality</amcr:podnet>
+    <amcr:planovane_zahajeni>[2019-08-01, 2019-08-01]</amcr:planovane_zahajeni>
+    <amcr:vedouci_projektu id="OS-002680">Snítilý, Pavel</amcr:vedouci_projektu>
+    <amcr:organizace xml:lang="cs" id="ORG-000126">Městské muzeum v Čelákovicích, p.o.</amcr:organizace>
+    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000175">bez ochrany</amcr:kulturni_pamatka>
+    <amcr:datum_zahajeni>2019-08-01</amcr:datum_zahajeni>
+    <amcr:datum_ukonceni>2019-08-01</amcr:datum_ukonceni>
+    <amcr:termin_odevzdani_nz>2022-08-01</amcr:termin_odevzdani_nz>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost_pom>
+    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-698067">Mochov</amcr:hlavni_katastr>
+      <amcr:lokalizace>mezi lokalitami V žabínku a Pod vinicí, identifikované viereckschanze</amcr:lokalizace>
+      <amcr:parcelni_cislo>1178, 1173/1</amcr:parcelni_cislo>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
           <gml:coordinates>14.7859126,50.1481996</gml:coordinates>
         </gml:Point>
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(14.7859126 50.1481996)</amcr:geom_wkt>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-698067">Mochov</amcr:hlavni_katastr>
-      <amcr:lokalizace>mezi lokalitami V žabínku a Pod vinicí, identifikované viereckschanze</amcr:lokalizace>
-      <amcr:parcelni_cislo>1178, 1173/1</amcr:parcelni_cislo>
     </amcr:chranene_udaje>
-    <amcr:datum_ukonceni>2019-08-01</amcr:datum_ukonceni>
-    <amcr:datum_zahajeni>2019-08-01</amcr:datum_zahajeni>
-    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>P34</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
       <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>P34</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000454">U-000454</amcr:uzivatel>
       <amcr:poznamka>Projekt bude realizován v jiném časovém rozsahu, než jak bylo původně zamýšleno. Dojde k jeho opětovnému přihlášení. O. Švejcar</amcr:poznamka>
       <amcr:typ_zmeny>P*7</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000454">U-000454</amcr:uzivatel>
     </amcr:historie>
-    <amcr:ident_cely>C-201911202</amcr:ident_cely>
-    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000175">bez ochrany</amcr:kulturni_pamatka>
-    <amcr:okres xml:lang="cs" id="ruian-3209">Praha-východ</amcr:okres>
-    <amcr:organizace xml:lang="cs" id="ORG-000126">Městské muzeum v Čelákovicích, p.o.</amcr:organizace>
-    <amcr:planovane_zahajeni>[2019-08-01, 2019-08-01]</amcr:planovane_zahajeni>
-    <amcr:podnet>průzkum zemědělsky využívané archeologické lokality</amcr:podnet>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost_pom>
+    <amcr:soubor>
+      <amcr:id>soub-211627</amcr:id>
+      <amcr:nazev>oznameni_C-201911202.pdf</amcr:nazev>
+      <amcr:mimetype>application/pdf</amcr:mimetype>
+      <amcr:rozsah>3</amcr:rozsah>
+      <amcr:size_mb>0.1358165741</amcr:size_mb>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
+        <amcr:poznamka>oznameni_C-201911202.pdf</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
+    <amcr:archeologicky_zaznam id="C-201911202A">C-201911202A</amcr:archeologicky_zaznam>
     <amcr:samostatny_nalez id="C-201911202-N00001">C-201911202-N00001</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00002">C-201911202-N00002</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00003">C-201911202-N00003</amcr:samostatny_nalez>
@@ -104,23 +123,5 @@
     <amcr:samostatny_nalez id="C-201911202-N00044">C-201911202-N00044</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00045">C-201911202-N00045</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00046">C-201911202-N00046</amcr:samostatny_nalez>
-    <amcr:soubor>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:poznamka>oznameni_C-201911202.pdf</amcr:poznamka>
-        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:id>soub-211627</amcr:id>
-      <amcr:mimetype>application/pdf</amcr:mimetype>
-      <amcr:nazev>oznameni_C-201911202.pdf</amcr:nazev>
-      <amcr:rozsah>3</amcr:rozsah>
-      <amcr:size_mb>0.1358165741</amcr:size_mb>
-    </amcr:soubor>
-    <amcr:stav>3</amcr:stav>
-    <amcr:termin_odevzdani_nz>2022-08-01</amcr:termin_odevzdani_nz>
-    <amcr:typ_projektu xml:lang="cs" id="HES-001138">průzkum</amcr:typ_projektu>
-    <amcr:vedouci_projektu id="OS-002680">Snítilý, Pavel</amcr:vedouci_projektu>
   </amcr:projekt>
 </amcr:amcr>

@@ -1,6 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:let>
+    <amcr:ident_cely>C-LET-00001</amcr:ident_cely>
     <amcr:datum>1992-05-31</amcr:datum>
+    <amcr:hodina_zacatek>13:40</amcr:hodina_zacatek>
+    <amcr:hodina_konec>14:50</amcr:hodina_konec>
+    <amcr:pozorovatel id="OS-001262">Gojda, Martin</amcr:pozorovatel>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:pilot>Polák</amcr:pilot>
+    <amcr:typ_letounu>Z 43 (OK-WOK)</amcr:typ_letounu>
+    <amcr:ucel_letu>Další pozorovatelé: Smrž. Navigátor: Smrž. Podmínky letu: vegetace. Teplota: 23 (st.). 21 dní bez srážek. Zralost plodin: I/zelená. Viditelné situace: vegetační příznaky; půdní příznaky; viditelné struktury; historická architektura; urbánní jednotky; těžba.</amcr:ucel_letu>
+    <amcr:letiste_start xml:lang="cs" id="HES-000190">Chomutov-Pesvice</amcr:letiste_start>
+    <amcr:letiste_cil xml:lang="cs" id="HES-000190">Chomutov-Pesvice</amcr:letiste_cil>
+    <amcr:pocasi xml:lang="cs" id="HES-000590">slunečno</amcr:pocasi>
     <amcr:dohlednost xml:lang="cs" id="HES-000102">20–30 km</amcr:dohlednost>
     <amcr:dokument id="C-LD-000000657">C-LD-000000657</amcr:dokument>
     <amcr:dokument id="C-LD-000000937">C-LD-000000937</amcr:dokument>
@@ -28,16 +40,5 @@
     <amcr:dokument id="C-LD-000010029">C-LD-000010029</amcr:dokument>
     <amcr:dokument id="C-LD-000010030">C-LD-000010030</amcr:dokument>
     <amcr:dokument id="X-C-DL-000000009">X-C-DL-000000009</amcr:dokument>
-    <amcr:hodina_konec>14:50</amcr:hodina_konec>
-    <amcr:hodina_zacatek>13:40</amcr:hodina_zacatek>
-    <amcr:ident_cely>C-LET-00001</amcr:ident_cely>
-    <amcr:letiste_cil xml:lang="cs" id="HES-000190">Chomutov-Pesvice</amcr:letiste_cil>
-    <amcr:letiste_start xml:lang="cs" id="HES-000190">Chomutov-Pesvice</amcr:letiste_start>
-    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
-    <amcr:pilot>Polák</amcr:pilot>
-    <amcr:pocasi xml:lang="cs" id="HES-000590">slunečno</amcr:pocasi>
-    <amcr:pozorovatel id="OS-001262">Gojda, Martin</amcr:pozorovatel>
-    <amcr:typ_letounu>Z 43 (OK-WOK)</amcr:typ_letounu>
-    <amcr:ucel_letu>Další pozorovatelé: Smrž. Navigátor: Smrž. Podmínky letu: vegetace. Teplota: 23 (st.). 21 dní bez srážek. Zralost plodin: I/zelená. Viditelné situace: vegetační příznaky; půdní příznaky; viditelné struktury; historická architektura; urbánní jednotky; těžba.</amcr:ucel_letu>
   </amcr:let>
 </amcr:amcr>

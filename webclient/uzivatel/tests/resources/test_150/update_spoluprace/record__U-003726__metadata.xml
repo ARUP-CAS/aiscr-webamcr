@@ -1,68 +1,69 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:uzivatel>
-    <amcr:admin>false</amcr:admin>
-    <amcr:aktivni>true</amcr:aktivni>
-    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
-    <amcr:email>mischino@seznam.cz</amcr:email>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:poznamka>1</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-    </amcr:historie>
     <amcr:ident_cely>U-003726</amcr:ident_cely>
-    <amcr:jazyk>cs</amcr:jazyk>
     <amcr:jmeno>Michal</amcr:jmeno>
+    <amcr:prijmeni>Bárta</amcr:prijmeni>
+    <amcr:email>mischino@seznam.cz</amcr:email>
+    <amcr:osoba id="OS-000552">Bárta, Michal</amcr:osoba>
+    <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
+    <amcr:jazyk>cs</amcr:jazyk>
+    <amcr:telefon>+420 603288850</amcr:telefon>
+    <amcr:aktivni>true</amcr:aktivni>
+    <amcr:admin>false</amcr:admin>
+    <amcr:superadmin>false</amcr:superadmin>
+    <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
     <amcr:notifikace>S-E-A-XX</amcr:notifikace>
     <amcr:notifikace>S-E-K-01</amcr:notifikace>
     <amcr:notifikace>S-E-N-01</amcr:notifikace>
     <amcr:notifikace>S-E-N-02</amcr:notifikace>
     <amcr:notifikace>S-E-N-05</amcr:notifikace>
-    <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
-    <amcr:osoba id="OS-000552">Bárta, Michal</amcr:osoba>
-    <amcr:prijmeni>Bárta</amcr:prijmeni>
-    <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
+    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:poznamka>1</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+    </amcr:historie>
     <amcr:spoluprace_nadrizeni>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-003726">U-003726</amcr:uzivatel>
-      </amcr:historie>
       <amcr:id>spol-604</amcr:id>
-      <amcr:stav>1</amcr:stav>
       <amcr:vedouci id="U-000127">U-000127</amcr:vedouci>
-    </amcr:spoluprace_nadrizeni>
-    <amcr:spoluprace_nadrizeni>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-003726">U-003726</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:id>spol-605</amcr:id>
       <amcr:stav>1</amcr:stav>
-      <amcr:vedouci id="U-001646">U-001646</amcr:vedouci>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-003726">U-003726</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+      </amcr:historie>
     </amcr:spoluprace_nadrizeni>
     <amcr:spoluprace_nadrizeni>
+      <amcr:id>spol-605</amcr:id>
+      <amcr:vedouci id="U-001646">U-001646</amcr:vedouci>
+      <amcr:stav>1</amcr:stav>
       <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
         <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
         <amcr:uzivatel id="U-003726">U-003726</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:spoluprace_nadrizeni>
+    <amcr:spoluprace_nadrizeni>
+      <amcr:id>spol-609</amcr:id>
+      <amcr:vedouci id="U-000393">U-000393</amcr:vedouci>
+      <amcr:stav>2</amcr:stav>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-003726">U-003726</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
       </amcr:historie>
       <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
         <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
         <amcr:uzivatel id="U-005357">U-005357</amcr:uzivatel>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
       </amcr:historie>
-      <amcr:id>spol-609</amcr:id>
-      <amcr:stav>2</amcr:stav>
-      <amcr:vedouci id="U-000393">U-000393</amcr:vedouci>
     </amcr:spoluprace_nadrizeni>
-    <amcr:superadmin>false</amcr:superadmin>
-    <amcr:telefon>+420 603288850</amcr:telefon>
   </amcr:uzivatel>
 </amcr:amcr>

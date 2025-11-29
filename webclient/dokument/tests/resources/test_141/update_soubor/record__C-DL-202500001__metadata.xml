@@ -1,61 +1,62 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:dokument>
+    <amcr:ident_cely>C-DL-202500001</amcr:ident_cely>
+    <amcr:let id="C-LET-00001">C-LET-00001</amcr:let>
+    <amcr:stav>2</amcr:stav>
+    <amcr:typ_dokumentu xml:lang="cs" id="HES-001099">letecká fotografie – lokalita</amcr:typ_dokumentu>
+    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
+    <amcr:rada xml:lang="cs" id="HES-000872">fotografie – letecké (digitální)</amcr:rada>
     <amcr:autor id="OS-002151" poradi="1">Pavloň, Tomáš</amcr:autor>
-    <amcr:dokument_cast>
-      <amcr:ident_cely>C-DL-202500001-D004</amcr:ident_cely>
-    </amcr:dokument_cast>
+    <amcr:rok_vzniku>2023</amcr:rok_vzniku>
+    <amcr:organizace xml:lang="cs" id="ORG-000104">Archeologický ústav AV ČR, Brno, v.v.i.</amcr:organizace>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
+    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:popis>testtest</amcr:popis>
+    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>X-C-DL-000000009 -&gt; C-DL-202500001</amcr:poznamka>
+      <amcr:typ_zmeny>D12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:soubor>
+      <amcr:id>soub-646257</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-DL-202500001/file/UUID-REMOVED</amcr:path>
+      <amcr:nazev>CDL202500001.jpg</amcr:nazev>
+      <amcr:mimetype>image/jpeg</amcr:mimetype>
+      <amcr:rozsah>1</amcr:rozsah>
+      <amcr:size_mb>0.0081558228</amcr:size_mb>
+      <amcr:sha_512>b96f3ba255bde2dc16bad25e55a5271ae905fc5e16c9ecd23edfbe7a3e8e38d9897dd227ca5f69155fb0b2347c9214fe8f299f90e8cbea8cece4710633382d2d</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-DL-202500001/file/UUID-REMOVED</amcr:url>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+        <amcr:poznamka>test.jpg</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+        <amcr:poznamka>test.jpg</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
     <amcr:extra_data>
       <amcr:geom_system>4326</amcr:geom_system>
     </amcr:extra_data>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:poznamka>X-C-DL-000000009 -&gt; C-DL-202500001</amcr:poznamka>
-      <amcr:typ_zmeny>D12</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:ident_cely>C-DL-202500001</amcr:ident_cely>
-    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
-    <amcr:let id="C-LET-00001">C-LET-00001</amcr:let>
-    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
-    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
-    <amcr:organizace xml:lang="cs" id="ORG-000104">Archeologický ústav AV ČR, Brno, v.v.i.</amcr:organizace>
-    <amcr:popis>testtest</amcr:popis>
-    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
-    <amcr:rada xml:lang="cs" id="HES-000872">fotografie – letecké (digitální)</amcr:rada>
-    <amcr:rok_vzniku>2023</amcr:rok_vzniku>
-    <amcr:soubor>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:poznamka>test.jpg</amcr:poznamka>
-        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:poznamka>test.jpg</amcr:poznamka>
-        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:id>soub-646257</amcr:id>
-      <amcr:mimetype>image/jpeg</amcr:mimetype>
-      <amcr:nazev>CDL202500001.jpg</amcr:nazev>
-      <amcr:path>rest/AMCR-selenium-test/record/C-DL-202500001/file/UUID-REMOVED</amcr:path>
-      <amcr:rozsah>1</amcr:rozsah>
-      <amcr:sha_512>b96f3ba255bde2dc16bad25e55a5271ae905fc5e16c9ecd23edfbe7a3e8e38d9897dd227ca5f69155fb0b2347c9214fe8f299f90e8cbea8cece4710633382d2d</amcr:sha_512>
-      <amcr:size_mb>0.0081558228</amcr:size_mb>
-      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-DL-202500001/file/UUID-REMOVED</amcr:url>
-    </amcr:soubor>
-    <amcr:stav>2</amcr:stav>
-    <amcr:typ_dokumentu xml:lang="cs" id="HES-001099">letecká fotografie – lokalita</amcr:typ_dokumentu>
-    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-DL-202500001-D004</amcr:ident_cely>
+    </amcr:dokument_cast>
   </amcr:dokument>
 </amcr:amcr>

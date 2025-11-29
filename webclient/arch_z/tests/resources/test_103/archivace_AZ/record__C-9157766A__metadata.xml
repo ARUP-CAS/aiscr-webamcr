@@ -1,67 +1,68 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:archeologicky_zaznam>
-    <amcr:akce>
-      <amcr:chranene_udaje>
-        <amcr:lokalizace_okolnosti>Blíže nelokalizováno.</amcr:lokalizace_okolnosti>
-      </amcr:chranene_udaje>
-      <amcr:datum_ukonceni>1969-12-31</amcr:datum_ukonceni>
-      <amcr:datum_zahajeni>1800-01-01</amcr:datum_zahajeni>
-      <amcr:hlavni_typ xml:lang="cs" id="HES-001053">náhodný zásah/nález</amcr:hlavni_typ>
-      <amcr:hlavni_vedouci id="OS-001239">Anonym, Anonym</amcr:hlavni_vedouci>
-      <amcr:je_nz>true</amcr:je_nz>
-      <amcr:odlozena_nz>false</amcr:odlozena_nz>
-      <amcr:organizace xml:lang="cs" id="ORG-000012">[neurčená/nejasná organizace]</amcr:organizace>
-      <amcr:specifikace_data xml:lang="cs" id="HES-000889">někdy v letech</amcr:specifikace_data>
-      <amcr:typ>N</amcr:typ>
-    </amcr:akce>
+    <amcr:ident_cely>C-9157766A</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3607">Rychnov nad Kněžnou</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
     <amcr:chranene_udaje>
       <amcr:hlavni_katastr xml:lang="cs" id="ruian-600172">Albrechtice nad Orlicí</amcr:hlavni_katastr>
     </amcr:chranene_udaje>
+    <amcr:akce>
+      <amcr:typ>N</amcr:typ>
+      <amcr:je_nz>true</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:hlavni_vedouci id="OS-001239">Anonym, Anonym</amcr:hlavni_vedouci>
+      <amcr:organizace xml:lang="cs" id="ORG-000012">[neurčená/nejasná organizace]</amcr:organizace>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000889">někdy v letech</amcr:specifikace_data>
+      <amcr:datum_zahajeni>1800-01-01</amcr:datum_zahajeni>
+      <amcr:datum_ukonceni>1969-12-31</amcr:datum_ukonceni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001053">náhodný zásah/nález</amcr:hlavni_typ>
+      <amcr:chranene_udaje>
+        <amcr:lokalizace_okolnosti>Blíže nelokalizováno.</amcr:lokalizace_okolnosti>
+      </amcr:chranene_udaje>
+    </amcr:akce>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004403">U-004403</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
+    </amcr:historie>
     <amcr:dokumentacni_jednotka>
       <amcr:ident_cely>C-9157766A-D01</amcr:ident_cely>
-      <amcr:komponenta>
-        <amcr:aktivita xml:lang="cs" id="HES-000009">jiná aktivita</amcr:aktivita>
-        <amcr:areal xml:lang="cs" id="HES-000062">ojedinělý nález</amcr:areal>
-        <amcr:ident_cely>C-9157766A-K001</amcr:ident_cely>
-        <amcr:jistota>true</amcr:jistota>
-        <amcr:nalez_predmet>
-          <amcr:druh xml:lang="cs" id="HES-000794">mince</amcr:druh>
-          <amcr:id>nalp-150172</amcr:id>
-          <amcr:specifikace xml:lang="cs" id="HES-000988">kov</amcr:specifikace>
-        </amcr:nalez_predmet>
-        <amcr:obdobi xml:lang="cs" id="HES-000335">doba římská</amcr:obdobi>
-      </amcr:komponenta>
-      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
       <amcr:pian id="P-1413-900069">P-1413-900069</amcr:pian>
       <amcr:typ xml:lang="cs" id="HES-001073">katastrální území</amcr:typ>
+      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
+      <amcr:komponenta>
+        <amcr:ident_cely>C-9157766A-K001</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000335">doba římská</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000062">ojedinělý nález</amcr:areal>
+        <amcr:aktivita xml:lang="cs" id="HES-000009">jiná aktivita</amcr:aktivita>
+        <amcr:nalez_predmet>
+          <amcr:id>nalp-150172</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000794">mince</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000988">kov</amcr:specifikace>
+        </amcr:nalez_predmet>
+      </amcr:komponenta>
     </amcr:dokumentacni_jednotka>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-004403">U-004403</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:ident_cely>C-9157766A</amcr:ident_cely>
-    <amcr:okres xml:lang="cs" id="ruian-3607">Rychnov nad Kněžnou</amcr:okres>
-    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
-    <amcr:stav>3</amcr:stav>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

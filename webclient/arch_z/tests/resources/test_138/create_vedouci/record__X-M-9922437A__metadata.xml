@@ -1,36 +1,37 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:archeologicky_zaznam>
-    <amcr:akce>
-      <amcr:chranene_udaje>
-        <amcr:lokalizace_okolnosti>gtrherheLouny</amcr:lokalizace_okolnosti>
-      </amcr:chranene_udaje>
-      <amcr:datum_ukonceni>2019-12-31</amcr:datum_ukonceni>
-      <amcr:datum_zahajeni>2019-01-01</amcr:datum_zahajeni>
-      <amcr:hlavni_typ xml:lang="cs" id="HES-001044">vizuální/geodetický průzkum</amcr:hlavni_typ>
-      <amcr:hlavni_vedouci id="OS-005716">Kosarova, Zdenka</amcr:hlavni_vedouci>
-      <amcr:je_nz>false</amcr:je_nz>
-      <amcr:odlozena_nz>false</amcr:odlozena_nz>
-      <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
-      <amcr:specifikace_data xml:lang="cs" id="HES-000886">přesně v letech</amcr:specifikace_data>
-      <amcr:typ>N</amcr:typ>
-      <amcr:vedouci_akce_ostatni>
-        <amcr:id>vedo-13241</amcr:id>
-        <amcr:organizace xml:lang="cs" id="ORG-000004">Archaia</amcr:organizace>
-        <amcr:vedouci id="OS-001509">Abušinov, Roman</amcr:vedouci>
-      </amcr:vedouci_akce_ostatni>
-    </amcr:akce>
+    <amcr:ident_cely>X-M-9922437A</amcr:ident_cely>
+    <amcr:stav>1</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3701">Blansko</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
     <amcr:chranene_udaje>
       <amcr:hlavni_katastr xml:lang="cs" id="ruian-600041">Adamov</amcr:hlavni_katastr>
     </amcr:chranene_udaje>
+    <amcr:akce>
+      <amcr:typ>N</amcr:typ>
+      <amcr:je_nz>false</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:hlavni_vedouci id="OS-005716">Kosarova, Zdenka</amcr:hlavni_vedouci>
+      <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
+      <amcr:vedouci_akce_ostatni>
+        <amcr:id>vedo-13241</amcr:id>
+        <amcr:vedouci id="OS-001509">Abušinov, Roman</amcr:vedouci>
+        <amcr:organizace xml:lang="cs" id="ORG-000004">Archaia</amcr:organizace>
+      </amcr:vedouci_akce_ostatni>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000886">přesně v letech</amcr:specifikace_data>
+      <amcr:datum_zahajeni>2019-01-01</amcr:datum_zahajeni>
+      <amcr:datum_ukonceni>2019-12-31</amcr:datum_ukonceni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001044">vizuální/geodetický průzkum</amcr:hlavni_typ>
+      <amcr:chranene_udaje>
+        <amcr:lokalizace_okolnosti>gtrherheLouny</amcr:lokalizace_okolnosti>
+      </amcr:chranene_udaje>
+    </amcr:akce>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
       <amcr:uzivatel id="U-000390">U-000390</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
-    <amcr:ident_cely>X-M-9922437A</amcr:ident_cely>
-    <amcr:okres xml:lang="cs" id="ruian-3701">Blansko</amcr:okres>
-    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
-    <amcr:stav>1</amcr:stav>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

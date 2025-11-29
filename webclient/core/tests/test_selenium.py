@@ -718,17 +718,35 @@ return new Date('2025-06-28T12:00:00Z');}};
         for child in element:
             self.odstran_uuid_z_xml(child)
 
-    def serad_elementy_xml(self, element):
+    def serad_xml_podle_tagu_a_obsahu(self, element):
         """
-        Rekurzivně seřadí podřízené XML elementy podle tagu, obsahu a atributů.
+        Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
+        podle obsahu (pomocí _element_klic).
+        Nezasahuje do pořadí různých typů elementů, čímž zachovává validitu vůči XSD.
         """
-        # Nejprve rekurzivně seřaď všechny děti
+        # Nejprve rekurze
         for child in element:
-            self.serad_elementy_xml(child)
+            self.serad_xml_podle_tagu_a_obsahu(child)
 
-        # Pokud má element více dětí stejného názvu, seřadíme je podle vnitřního obsahu
-        if len(element) > 1:
-            element[:] = sorted(element, key=lambda e: (e.tag, self._element_klic(e)))
+        nove_deti = []
+        index = 0
+        while index < len(element):
+            current_tag = element[index].tag
+            skupina = [element[index]]
+            index += 1
+
+            # Posbírá sousední elementy se stejným tagem
+            while index < len(element) and element[index].tag == current_tag:
+                skupina.append(element[index])
+                index += 1
+
+            # Pokud je víc než jeden, seřadíme
+            if len(skupina) > 1:
+                skupina.sort(key=self._element_klic)
+
+            nove_deti.extend(skupina)
+
+        element[:] = nove_deti
 
     def _element_klic(self, elem):
         """
@@ -753,7 +771,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         if element.tag.endswith("id") and "}" in element.tag:
             lokalni_jmeno = element.tag.split("}", 1)[1]
             if lokalni_jmeno == "id" and element.text and element.text.startswith("hist-"):
-                element.text = "hist-"
+                element.text = "hist-0000001"
 
         # Rekurzivně zpracuj podřízené elementy
         for child in element:
@@ -771,9 +789,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
         self.nahrad_hist_id_rekurzivne(root)
-        self.serad_elementy_xml(root)
-        text = etree.tostring(root, pretty_print=True, encoding="utf-8")
-        # text = re.sub(rb">hist-\d+<", rb">hist-<", text)
+        self.serad_xml_podle_tagu_a_obsahu(root)
+        text = etree.tostring(root, pretty_print=True, encoding="utf-8", xml_declaration=True)
         return text
 
     def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy):

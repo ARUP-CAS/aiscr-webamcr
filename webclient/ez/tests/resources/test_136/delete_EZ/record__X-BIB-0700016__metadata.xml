@@ -1,24 +1,25 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:ext_zdroj>
-    <amcr:autor id="OS-003012" poradi="1">Drbohlav, F.</amcr:autor>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000302">U-000302</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:poznamka>X-BIB-0700016</amcr:poznamka>
-      <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-    </amcr:historie>
     <amcr:ident_cely>X-BIB-0700016</amcr:ident_cely>
-    <amcr:misto>Markvartice</amcr:misto>
-    <amcr:nazev>Historie vesnice a jednotlivých domů obce Příchvoj</amcr:nazev>
-    <amcr:rok_vydani_vzniku>2016</amcr:rok_vydani_vzniku>
     <amcr:stav>2</amcr:stav>
     <amcr:typ xml:lang="cs" id="HES-001117">kniha</amcr:typ>
+    <amcr:autor id="OS-003012" poradi="1">Drbohlav, F.</amcr:autor>
+    <amcr:nazev>Historie vesnice a jednotlivých domů obce Příchvoj</amcr:nazev>
+    <amcr:rok_vydani_vzniku>2016</amcr:rok_vydani_vzniku>
+    <amcr:misto>Markvartice</amcr:misto>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000302">U-000302</amcr:uzivatel>
+      <amcr:typ_zmeny>EZ01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:poznamka>X-BIB-0700016</amcr:poznamka>
+      <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
+    </amcr:historie>
   </amcr:ext_zdroj>
 </amcr:amcr>

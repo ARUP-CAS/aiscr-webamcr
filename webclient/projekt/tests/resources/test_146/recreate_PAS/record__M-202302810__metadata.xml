@@ -1,7 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:projekt>
-    <amcr:archeologicky_zaznam id="M-202302810A">M-202302810A</amcr:archeologicky_zaznam>
+    <amcr:ident_cely>M-202302810</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:typ_projektu xml:lang="cs" id="HES-001138">průzkum</amcr:typ_projektu>
+    <amcr:okres xml:lang="cs" id="ruian-3801">Bruntál</amcr:okres>
+    <amcr:podnet>Preventivní průzkum ohrožených archeologických lokalit na vybraných katastrech obcí okresu Bruntál</amcr:podnet>
+    <amcr:planovane_zahajeni>[2023-06-01, 2023-06-01]</amcr:planovane_zahajeni>
+    <amcr:vedouci_projektu id="OS-003796">Vondroušová, Iva</amcr:vedouci_projektu>
+    <amcr:organizace xml:lang="cs" id="ORG-000084">Archeologický ústav AV ČR, Brno, v.v.i. - detašované pracoviště Opava</amcr:organizace>
+    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000175">bez ochrany</amcr:kulturni_pamatka>
+    <amcr:datum_zahajeni>2023-06-01</amcr:datum_zahajeni>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost_pom>
+    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-760412">Andělská Hora ve Slezsku</amcr:hlavni_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-760421">Dětřichovice</amcr:dalsi_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-690228">Karlov pod Pradědem</amcr:dalsi_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-663301">Karlova Studánka</amcr:dalsi_katastr>
@@ -19,59 +32,47 @@
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-786080">Vrbno pod Pradědem</amcr:dalsi_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-762644">Široká Niva</amcr:dalsi_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-786098">Železná pod Pradědem</amcr:dalsi_katastr>
+      <amcr:lokalizace>okres Bruntál - katastry obcí Rudná pod Pradědem, malá Morávka, Ludvíkov pod Pradědem, Karlova Studánka, Andělská Hora ve Slezsku, Vrbno pod Pradědem, Světlá Hora, Široká Niva</amcr:lokalizace>
+      <amcr:parcelni_cislo>-</amcr:parcelni_cislo>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
           <gml:coordinates>17.3872744,50.0735522</gml:coordinates>
         </gml:Point>
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(17.3872744 50.0735522)</amcr:geom_wkt>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-760412">Andělská Hora ve Slezsku</amcr:hlavni_katastr>
-      <amcr:lokalizace>okres Bruntál - katastry obcí Rudná pod Pradědem, malá Morávka, Ludvíkov pod Pradědem, Karlova Studánka, Andělská Hora ve Slezsku, Vrbno pod Pradědem, Světlá Hora, Široká Niva</amcr:lokalizace>
-      <amcr:parcelni_cislo>-</amcr:parcelni_cislo>
     </amcr:chranene_udaje>
-    <amcr:datum_zahajeni>2023-06-01</amcr:datum_zahajeni>
-    <amcr:geom_system>5514</amcr:geom_system>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
       <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
     </amcr:historie>
-    <amcr:ident_cely>M-202302810</amcr:ident_cely>
-    <amcr:kulturni_pamatka xml:lang="cs" id="HES-000175">bez ochrany</amcr:kulturni_pamatka>
-    <amcr:okres xml:lang="cs" id="ruian-3801">Bruntál</amcr:okres>
-    <amcr:organizace xml:lang="cs" id="ORG-000084">Archeologický ústav AV ČR, Brno, v.v.i. - detašované pracoviště Opava</amcr:organizace>
-    <amcr:planovane_zahajeni>[2023-06-01, 2023-06-01]</amcr:planovane_zahajeni>
-    <amcr:podnet>Preventivní průzkum ohrožených archeologických lokalit na vybraných katastrech obcí okresu Bruntál</amcr:podnet>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost_pom>
-    <amcr:samostatny_nalez id="M-202302810-N00001">M-202302810-N00001</amcr:samostatny_nalez>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
+      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
     <amcr:soubor>
       <amcr:id>soub-584786</amcr:id>
-      <amcr:mimetype>application/zip</amcr:mimetype>
       <amcr:nazev>Projekt_2022_M_202105907.docx</amcr:nazev>
+      <amcr:mimetype>application/zip</amcr:mimetype>
       <amcr:rozsah>1</amcr:rozsah>
       <amcr:size_mb>0.0158243179</amcr:size_mb>
     </amcr:soubor>
-    <amcr:stav>3</amcr:stav>
-    <amcr:typ_projektu xml:lang="cs" id="HES-001138">průzkum</amcr:typ_projektu>
-    <amcr:vedouci_projektu id="OS-003796">Vondroušová, Iva</amcr:vedouci_projektu>
+    <amcr:archeologicky_zaznam id="M-202302810A">M-202302810A</amcr:archeologicky_zaznam>
+    <amcr:samostatny_nalez id="M-202302810-N00001">M-202302810-N00001</amcr:samostatny_nalez>
   </amcr:projekt>
 </amcr:amcr>

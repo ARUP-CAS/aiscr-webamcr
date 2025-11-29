@@ -1,66 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:dokument>
+    <amcr:ident_cely>C-200810918A-DT-15</amcr:ident_cely>
+    <amcr:stav>3</amcr:stav>
+    <amcr:typ_dokumentu xml:lang="cs" id="HES-001094">fotografie – objekt</amcr:typ_dokumentu>
+    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
+    <amcr:rada xml:lang="cs" id="HES-000874">fotografie – terén (digitální)</amcr:rada>
     <amcr:autor id="OS-004063" poradi="1">Švédová, Jarmila</amcr:autor>
+    <amcr:rok_vzniku>2008</amcr:rok_vzniku>
+    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
     <amcr:datum_zverejneni>2020-01-01T00:00:00+00:00</amcr:datum_zverejneni>
-    <amcr:dokument_cast>
-      <amcr:ident_cely>C-200810918A-DT-15-D002</amcr:ident_cely>
-    </amcr:dokument_cast>
-    <amcr:dokument_cast>
-      <amcr:archeologicky_zaznam id="C-200810918A">C-200810918A</amcr:archeologicky_zaznam>
-      <amcr:ident_cely>C-200810918A-DT-15-D001</amcr:ident_cely>
-      <amcr:komponenta>
-        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
-        <amcr:areal xml:lang="cs" id="HES-000081">sídliště</amcr:areal>
-        <amcr:ident_cely>C-200810918A-DT-15-K001</amcr:ident_cely>
-        <amcr:jistota>true</amcr:jistota>
-        <amcr:nalez_objekt>
-          <amcr:druh xml:lang="cs" id="HES-000442">jáma – kůlová/sloupová</amcr:druh>
-          <amcr:id>nalo-173095</amcr:id>
-        </amcr:nalez_objekt>
-        <amcr:obdobi xml:lang="cs" id="HES-000304">zemědělský pravěk</amcr:obdobi>
-      </amcr:komponenta>
-    </amcr:dokument_cast>
+    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000174">nerelevantní</amcr:jazyk_dokumentu>
+    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:oznaceni_originalu>DTC20081091815</amcr:oznaceni_originalu>
+    <amcr:popis>Objekt 1673 po vybrání jižní poloviny. Pohled shora.</amcr:popis>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>D23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:soubor>
+      <amcr:id>soub-411126</amcr:id>
+      <amcr:nazev>C200810918ADT15.tif</amcr:nazev>
+      <amcr:mimetype>image/tiff</amcr:mimetype>
+      <amcr:rozsah>1</amcr:rozsah>
+      <amcr:size_mb>9.2599048615</amcr:size_mb>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
+        <amcr:poznamka>C200810918ADT15.tif</amcr:poznamka>
+        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:soubor>
     <amcr:extra_data>
       <amcr:cislo_objektu>1673</amcr:cislo_objektu>
       <amcr:geom_system>4326</amcr:geom_system>
     </amcr:extra_data>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>D23</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:ident_cely>C-200810918A-DT-15</amcr:ident_cely>
-    <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000174">nerelevantní</amcr:jazyk_dokumentu>
-    <amcr:material_originalu xml:lang="cs" id="HES-000217">digitální soubor</amcr:material_originalu>
-    <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
-    <amcr:oznaceni_originalu>DTC20081091815</amcr:oznaceni_originalu>
-    <amcr:popis>Objekt 1673 po vybrání jižní poloviny. Pohled shora.</amcr:popis>
-    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
-    <amcr:rada xml:lang="cs" id="HES-000874">fotografie – terén (digitální)</amcr:rada>
-    <amcr:rok_vzniku>2008</amcr:rok_vzniku>
-    <amcr:soubor>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:poznamka>C200810918ADT15.tif</amcr:poznamka>
-        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:id>soub-411126</amcr:id>
-      <amcr:mimetype>image/tiff</amcr:mimetype>
-      <amcr:nazev>C200810918ADT15.tif</amcr:nazev>
-      <amcr:rozsah>1</amcr:rozsah>
-      <amcr:size_mb>9.2599048615</amcr:size_mb>
-    </amcr:soubor>
-    <amcr:stav>3</amcr:stav>
-    <amcr:typ_dokumentu xml:lang="cs" id="HES-001094">fotografie – objekt</amcr:typ_dokumentu>
-    <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-200810918A-DT-15-D001</amcr:ident_cely>
+      <amcr:archeologicky_zaznam id="C-200810918A">C-200810918A</amcr:archeologicky_zaznam>
+      <amcr:komponenta>
+        <amcr:ident_cely>C-200810918A-DT-15-K001</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000304">zemědělský pravěk</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000081">sídliště</amcr:areal>
+        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
+        <amcr:nalez_objekt>
+          <amcr:id>nalo-173095</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000442">jáma – kůlová/sloupová</amcr:druh>
+        </amcr:nalez_objekt>
+      </amcr:komponenta>
+    </amcr:dokument_cast>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-200810918A-DT-15-D002</amcr:ident_cely>
+    </amcr:dokument_cast>
   </amcr:dokument>
 </amcr:amcr>

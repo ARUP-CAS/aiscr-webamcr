@@ -1,58 +1,59 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:archeologicky_zaznam>
+    <amcr:ident_cely>C-9003982A</amcr:ident_cely>
+    <amcr:stav>2</amcr:stav>
+    <amcr:okres xml:lang="cs" id="ruian-3307">Strakonice</amcr:okres>
+    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
+    <amcr:chranene_udaje>
+      <amcr:hlavni_katastr xml:lang="cs" id="ruian-601870">Bělčice</amcr:hlavni_katastr>
+    </amcr:chranene_udaje>
     <amcr:akce>
+      <amcr:typ>N</amcr:typ>
+      <amcr:je_nz>false</amcr:je_nz>
+      <amcr:odlozena_nz>false</amcr:odlozena_nz>
+      <amcr:hlavni_vedouci id="OS-004706">Král, Vlastimil</amcr:hlavni_vedouci>
+      <amcr:organizace xml:lang="cs" id="ORG-000019">Muzeum středního Pootaví Strakonice</amcr:organizace>
+      <amcr:specifikace_data xml:lang="cs" id="HES-000886">přesně v letech</amcr:specifikace_data>
+      <amcr:datum_zahajeni>2021-01-01</amcr:datum_zahajeni>
+      <amcr:datum_ukonceni>2021-12-31</amcr:datum_ukonceni>
+      <amcr:hlavni_typ xml:lang="cs" id="HES-001057">sonda</amcr:hlavni_typ>
       <amcr:chranene_udaje>
         <amcr:lokalizace_okolnosti>---Bělčice</amcr:lokalizace_okolnosti>
         <amcr:souhrn_upresneni>negativní akce, ELBL, pí Machová, p. Vondřich</amcr:souhrn_upresneni>
       </amcr:chranene_udaje>
-      <amcr:datum_ukonceni>2021-12-31</amcr:datum_ukonceni>
-      <amcr:datum_zahajeni>2021-01-01</amcr:datum_zahajeni>
-      <amcr:hlavni_typ xml:lang="cs" id="HES-001057">sonda</amcr:hlavni_typ>
-      <amcr:hlavni_vedouci id="OS-004706">Král, Vlastimil</amcr:hlavni_vedouci>
-      <amcr:je_nz>false</amcr:je_nz>
-      <amcr:odlozena_nz>false</amcr:odlozena_nz>
-      <amcr:organizace xml:lang="cs" id="ORG-000019">Muzeum středního Pootaví Strakonice</amcr:organizace>
-      <amcr:specifikace_data xml:lang="cs" id="HES-000886">přesně v letech</amcr:specifikace_data>
-      <amcr:typ>N</amcr:typ>
     </amcr:akce>
-    <amcr:chranene_udaje>
-      <amcr:hlavni_katastr xml:lang="cs" id="ruian-601870">Bělčice</amcr:hlavni_katastr>
-    </amcr:chranene_udaje>
-    <amcr:dokument id="C-TX-202500002">C-TX-202500002</amcr:dokument>
-    <amcr:dokumentacni_jednotka>
-      <amcr:adb id="ADB-BLAT60-000001">ADB-BLAT60-000001</amcr:adb>
-      <amcr:ident_cely>C-9003982A-D01</amcr:ident_cely>
-      <amcr:komponenta>
-        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
-        <amcr:areal xml:lang="cs" id="HES-000081">sídliště</amcr:areal>
-        <amcr:ident_cely>C-9003982A-K001</amcr:ident_cely>
-        <amcr:jistota>true</amcr:jistota>
-        <amcr:obdobi xml:lang="cs" id="HES-000253">paleolit</amcr:obdobi>
-      </amcr:komponenta>
-      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
-      <amcr:pian id="N-2214-000000004">N-2214-000000004</amcr:pian>
-      <amcr:typ xml:lang="cs" id="HES-001072">sonda</amcr:typ>
-    </amcr:dokumentacni_jednotka>
-    <amcr:ext_odkaz>
-      <amcr:ext_zdroj id="BIB-0000001">BIB-0000001</amcr:ext_zdroj>
-      <amcr:id>exto-787</amcr:id>
-    </amcr:ext_odkaz>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
       <amcr:uzivatel id="U-000332">U-000332</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
       <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:poznamka>X-C-91468414A -&gt; C-9003982A</amcr:poznamka>
       <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
     </amcr:historie>
-    <amcr:ident_cely>C-9003982A</amcr:ident_cely>
-    <amcr:okres xml:lang="cs" id="ruian-3307">Strakonice</amcr:okres>
-    <amcr:pristupnost xml:lang="cs" id="HES-000865">anonym</amcr:pristupnost>
-    <amcr:stav>2</amcr:stav>
+    <amcr:dokumentacni_jednotka>
+      <amcr:ident_cely>C-9003982A-D01</amcr:ident_cely>
+      <amcr:pian id="N-2214-000000004">N-2214-000000004</amcr:pian>
+      <amcr:typ xml:lang="cs" id="HES-001072">sonda</amcr:typ>
+      <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
+      <amcr:adb id="ADB-BLAT60-000001">ADB-BLAT60-000001</amcr:adb>
+      <amcr:komponenta>
+        <amcr:ident_cely>C-9003982A-K001</amcr:ident_cely>
+        <amcr:obdobi xml:lang="cs" id="HES-000253">paleolit</amcr:obdobi>
+        <amcr:jistota>true</amcr:jistota>
+        <amcr:areal xml:lang="cs" id="HES-000081">sídliště</amcr:areal>
+        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
+      </amcr:komponenta>
+    </amcr:dokumentacni_jednotka>
+    <amcr:ext_odkaz>
+      <amcr:id>exto-787</amcr:id>
+      <amcr:ext_zdroj id="BIB-0000001">BIB-0000001</amcr:ext_zdroj>
+    </amcr:ext_odkaz>
+    <amcr:dokument id="C-TX-202500002">C-TX-202500002</amcr:dokument>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

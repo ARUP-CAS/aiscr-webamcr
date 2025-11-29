@@ -1,44 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:heslo>
-    <amcr:heslo xml:lang="cs">terénní zásah</amcr:heslo>
-    <amcr:heslo_en xml:lang="en">field intervention</amcr:heslo_en>
-    <amcr:hierarchie_nize>
-      <amcr:heslo_podrazene xml:lang="cs" id="HES-001054">nedokumentovaná akce</amcr:heslo_podrazene>
-      <amcr:id>hier-674</amcr:id>
-      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
-    </amcr:hierarchie_nize>
-    <amcr:hierarchie_nize>
-      <amcr:heslo_podrazene xml:lang="cs" id="HES-001053">náhodný zásah/nález</amcr:heslo_podrazene>
-      <amcr:id>hier-673</amcr:id>
-      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
-    </amcr:hierarchie_nize>
-    <amcr:hierarchie_nize>
-      <amcr:heslo_podrazene xml:lang="cs" id="HES-001055">orientační zjištění</amcr:heslo_podrazene>
-      <amcr:id>hier-675</amcr:id>
-      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
-    </amcr:hierarchie_nize>
-    <amcr:hierarchie_nize>
-      <amcr:heslo_podrazene xml:lang="cs" id="HES-001056">vertikální řez</amcr:heslo_podrazene>
-      <amcr:id>hier-666</amcr:id>
-      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
-    </amcr:hierarchie_nize>
     <amcr:ident_cely>HES-001065</amcr:ident_cely>
     <amcr:nazev_heslare xml:lang="cs">akce_typ_kat</amcr:nazev_heslare>
+    <amcr:heslo xml:lang="cs">terénní zásah</amcr:heslo>
+    <amcr:heslo_en xml:lang="en">field intervention</amcr:heslo_en>
+    <amcr:razeni>30</amcr:razeni>
+    <amcr:hierarchie_nize>
+      <amcr:id>hier-666</amcr:id>
+      <amcr:heslo_podrazene xml:lang="cs" id="HES-001056">vertikální řez</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
+    </amcr:hierarchie_nize>
+    <amcr:hierarchie_nize>
+      <amcr:id>hier-673</amcr:id>
+      <amcr:heslo_podrazene xml:lang="cs" id="HES-001053">náhodný zásah/nález</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
+    </amcr:hierarchie_nize>
+    <amcr:hierarchie_nize>
+      <amcr:id>hier-674</amcr:id>
+      <amcr:heslo_podrazene xml:lang="cs" id="HES-001054">nedokumentovaná akce</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
+    </amcr:hierarchie_nize>
+    <amcr:hierarchie_nize>
+      <amcr:id>hier-675</amcr:id>
+      <amcr:heslo_podrazene xml:lang="cs" id="HES-001055">orientační zjištění</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
+    </amcr:hierarchie_nize>
     <amcr:odkaz>
       <amcr:id>hodk-1163</amcr:id>
-      <amcr:kod>150</amcr:kod>
-      <amcr:nazev_kodu>nazev</amcr:nazev_kodu>
-      <amcr:skos_mapping_relation>skos:closeMatch</amcr:skos_mapping_relation>
       <amcr:zdroj>zdroj</amcr:zdroj>
+      <amcr:nazev_kodu>nazev</amcr:nazev_kodu>
+      <amcr:kod>150</amcr:kod>
+      <amcr:skos_mapping_relation>skos:closeMatch</amcr:skos_mapping_relation>
     </amcr:odkaz>
     <amcr:odkaz>
       <amcr:id>hodk-559</amcr:id>
-      <amcr:kod>300077463</amcr:kod>
-      <amcr:nazev_kodu>ID</amcr:nazev_kodu>
-      <amcr:skos_mapping_relation>skos:broadMatch</amcr:skos_mapping_relation>
-      <amcr:uri>http://vocab.getty.edu/aat/300077463</amcr:uri>
       <amcr:zdroj>Getty Art &amp; Architecture Thesaurus</amcr:zdroj>
+      <amcr:nazev_kodu>ID</amcr:nazev_kodu>
+      <amcr:kod>300077463</amcr:kod>
+      <amcr:uri>http://vocab.getty.edu/aat/300077463</amcr:uri>
+      <amcr:skos_mapping_relation>skos:broadMatch</amcr:skos_mapping_relation>
     </amcr:odkaz>
-    <amcr:razeni>30</amcr:razeni>
   </amcr:heslo>
 </amcr:amcr>

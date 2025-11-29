@@ -1,104 +1,105 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:uzivatel>
-    <amcr:admin>false</amcr:admin>
-    <amcr:aktivni>true</amcr:aktivni>
-    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
-    <amcr:email>zdenek.omelka@email.cz</amcr:email>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:poznamka>1</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-      <amcr:id>hist-</amcr:id>
-      <amcr:typ_zmeny>ZHA</amcr:typ_zmeny>
-      <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
-    </amcr:historie>
-    <amcr:hlidaci_pes xml:lang="cs" id="ruian-116">Jihomoravský kraj</amcr:hlidaci_pes>
     <amcr:ident_cely>U-000408</amcr:ident_cely>
-    <amcr:jazyk>cs</amcr:jazyk>
     <amcr:jmeno>Zdeněk</amcr:jmeno>
+    <amcr:prijmeni>Omelka</amcr:prijmeni>
+    <amcr:email>zdenek.omelka@email.cz</amcr:email>
+    <amcr:osoba id="OS-001507">Omelka, Zdeněk</amcr:osoba>
+    <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
+    <amcr:jazyk>cs</amcr:jazyk>
+    <amcr:aktivni>true</amcr:aktivni>
+    <amcr:admin>false</amcr:admin>
+    <amcr:superadmin>false</amcr:superadmin>
+    <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
     <amcr:notifikace>S-E-A-XX</amcr:notifikace>
     <amcr:notifikace>S-E-K-01</amcr:notifikace>
     <amcr:notifikace>S-E-N-01</amcr:notifikace>
     <amcr:notifikace>S-E-N-02</amcr:notifikace>
     <amcr:notifikace>S-E-N-05</amcr:notifikace>
-    <amcr:organizace xml:lang="cs" id="ORG-000011">[amaterský archeolog/zájemce]</amcr:organizace>
-    <amcr:osoba id="OS-001507">Omelka, Zdeněk</amcr:osoba>
-    <amcr:prijmeni>Omelka</amcr:prijmeni>
-    <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
+    <amcr:hlidaci_pes xml:lang="cs" id="ruian-116">Jihomoravský kraj</amcr:hlidaci_pes>
+    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:poznamka>1</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+      <amcr:typ_zmeny>ZHA</amcr:typ_zmeny>
+    </amcr:historie>
     <amcr:spoluprace_nadrizeni>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
-      </amcr:historie>
       <amcr:id>spol-27</amcr:id>
-      <amcr:stav>2</amcr:stav>
       <amcr:vedouci id="U-001172">U-001172</amcr:vedouci>
-    </amcr:spoluprace_nadrizeni>
-    <amcr:spoluprace_nadrizeni>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-001102">U-001102</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:id>spol-465</amcr:id>
       <amcr:stav>2</amcr:stav>
-      <amcr:vedouci id="U-001102">U-001102</amcr:vedouci>
-    </amcr:spoluprace_nadrizeni>
-    <amcr:spoluprace_nadrizeni>
       <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
         <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-005357">U-005357</amcr:uzivatel>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
       </amcr:historie>
       <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
         <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
+        <amcr:uzivatel id="U-001172">U-001172</amcr:uzivatel>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:spoluprace_nadrizeni>
+    <amcr:spoluprace_nadrizeni>
+      <amcr:id>spol-465</amcr:id>
+      <amcr:vedouci id="U-001102">U-001102</amcr:vedouci>
+      <amcr:stav>2</amcr:stav>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-001102">U-001102</amcr:uzivatel>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+      </amcr:historie>
+    </amcr:spoluprace_nadrizeni>
+    <amcr:spoluprace_nadrizeni>
+      <amcr:id>spol-822</amcr:id>
+      <amcr:vedouci id="U-005357">U-005357</amcr:vedouci>
+      <amcr:stav>2</amcr:stav>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
         <amcr:poznamka>Zadost</amcr:poznamka>
         <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
       </amcr:historie>
-      <amcr:id>spol-822</amcr:id>
-      <amcr:stav>2</amcr:stav>
-      <amcr:vedouci id="U-005357">U-005357</amcr:vedouci>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-005357">U-005357</amcr:uzivatel>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+      </amcr:historie>
     </amcr:spoluprace_nadrizeni>
     <amcr:spoluprace_nadrizeni>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
-      </amcr:historie>
-      <amcr:historie>
-        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
-        <amcr:id>hist-</amcr:id>
-        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
-        <amcr:uzivatel id="U-001227">U-001227</amcr:uzivatel>
-      </amcr:historie>
       <amcr:id>spol-92</amcr:id>
-      <amcr:stav>2</amcr:stav>
       <amcr:vedouci id="U-001227">U-001227</amcr:vedouci>
+      <amcr:stav>2</amcr:stav>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-000408">U-000408</amcr:uzivatel>
+        <amcr:typ_zmeny>SP01</amcr:typ_zmeny>
+      </amcr:historie>
+      <amcr:historie>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+        <amcr:uzivatel id="U-001227">U-001227</amcr:uzivatel>
+        <amcr:typ_zmeny>SP12</amcr:typ_zmeny>
+      </amcr:historie>
     </amcr:spoluprace_nadrizeni>
-    <amcr:superadmin>false</amcr:superadmin>
   </amcr:uzivatel>
 </amcr:amcr>

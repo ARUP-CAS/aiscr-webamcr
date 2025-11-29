@@ -1,19 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
 <amcr:amcr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:amcr="https://api.aiscr.cz/schema/amcr/2.2/" xsi:schemaLocation="https://api.aiscr.cz/schema/amcr/2.2/ https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd">
   <amcr:adb>
-    <amcr:autor_popisu id="OS-005920">Absatz, Michal</amcr:autor_popisu>
-    <amcr:chranene_udaje>
-      <amcr:cislo_popisne>55959</amcr:cislo_popisne>
-      <amcr:parcelni_cislo>5</amcr:parcelni_cislo>
-      <amcr:trat>test</amcr:trat>
-    </amcr:chranene_udaje>
-    <amcr:dokumentacni_jednotka id="X-C-9000000011A">X-C-9000000011A-D01</amcr:dokumentacni_jednotka>
     <amcr:ident_cely>ADB-KRAS07-000001</amcr:ident_cely>
+    <amcr:dokumentacni_jednotka id="X-C-9000000011A">X-C-9000000011A-D01</amcr:dokumentacni_jednotka>
+    <amcr:stav_pom>1</amcr:stav_pom>
+    <amcr:typ_sondy xml:lang="cs" id="HES-001142">geofyzikální průzkum</amcr:typ_sondy>
     <amcr:podnet xml:lang="cs" id="HES-000595">badatelský záměr</amcr:podnet>
-    <amcr:pristupnost_pom xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost_pom>
+    <amcr:stratigraficke_jednotky>2</amcr:stratigraficke_jednotky>
+    <amcr:autor_popisu id="OS-005920">Absatz, Michal</amcr:autor_popisu>
     <amcr:rok_popisu>2025</amcr:rok_popisu>
     <amcr:sm5>KRAS07</amcr:sm5>
-    <amcr:stav_pom>1</amcr:stav_pom>
-    <amcr:stratigraficke_jednotky>2</amcr:stratigraficke_jednotky>
-    <amcr:typ_sondy xml:lang="cs" id="HES-001142">geofyzikální průzkum</amcr:typ_sondy>
+    <amcr:pristupnost_pom xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost_pom>
+    <amcr:chranene_udaje>
+      <amcr:trat>test</amcr:trat>
+      <amcr:cislo_popisne>55959</amcr:cislo_popisne>
+      <amcr:parcelni_cislo>5</amcr:parcelni_cislo>
+    </amcr:chranene_udaje>
   </amcr:adb>
 </amcr:amcr>
