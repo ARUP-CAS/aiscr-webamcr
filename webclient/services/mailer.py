@@ -71,6 +71,7 @@ ALWAYS_ACTIVE = [
     "E-P-03b",
     "E-P-07",
     "E-P-08",
+    "E-P-11",
     "E-P-04",
     "E-P-05",
     "E-P-06a",
@@ -1142,3 +1143,22 @@ class Mailer:
                 reply_to=[user.email],
                 cc=[user.email],
             )
+
+    @classmethod
+    def send_ep11(cls, project: "projekt.models.Projekt", reason, user, request):
+        IDENT_CELY = "E-P-11"
+        logger.debug("services.mailer.send_ep11", extra={"ident_cely": IDENT_CELY})
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
+        projekt_ident_cely_url = request.build_absolute_uri(reverse("projekt:detail", args=[project.ident_cely]))
+        html = render_to_string(
+            notification_type.cesta_sablony,
+            {"projekt": project, "reason": reason, "uzivatel": user, "projekt_ident_cely_url": projekt_ident_cely_url},
+        )
+        cls.__send(
+            subject=subject,
+            to=settings.EMAIL_ZADOST_UDAJE_OZNAMOVATELE,
+            html_content=html,
+            notification_type=notification_type,
+            from_email=user.email,
+        )
