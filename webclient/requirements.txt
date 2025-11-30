@@ -6,7 +6,7 @@ crispy-bootstrap4==2025.6
 django-recaptcha==4.1.0
 django_registration==5.2.1
 django-filter==25.2
-django-tables2==2.7.5
+django-tables2==2.8.0
 django-tables2-column-shifter==2.2.0
 django-compressor==4.6.0
 django-libsass==0.9 
@@ -35,14 +35,14 @@ djangorestframework-xml==2.0.0
 lxml==6.0.2
 python-magic==0.4.27
 pdf2image==1.17.0
-phonenumbers==9.0.18
+phonenumbers==9.0.19
 py7zr==1.0.0
 rarfile==4.2
 django-cacheops==7.2
 django-model-utils==5.0.0
 pandas==2.3.3
 tablib[all]==3.9.0
-pre-commit==4.4.0
+pre-commit==4.5.0
 coverage==7.12.0
 django-debug-toolbar==6.1.0
 django-livereload-server==0.5.1
