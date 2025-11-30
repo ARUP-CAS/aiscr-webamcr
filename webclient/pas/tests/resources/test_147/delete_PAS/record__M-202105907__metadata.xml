@@ -50,10 +50,13 @@
     </amcr:historie>
     <amcr:soubor>
       <amcr:id>soub-379130</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/M-202105907/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>Projekt_2022.docx</amcr:nazev>
       <amcr:mimetype>application/zip</amcr:mimetype>
       <amcr:rozsah>1</amcr:rozsah>
       <amcr:size_mb>0.0126352310</amcr:size_mb>
+      <amcr:sha_512>9149c92482c73b4bc88b92040614198fa547377da1446b792eb7a068c4447d44ef963b3a6aae2347391875fa705f8e4879b58e7ea09a39f0e27e821e4e53897a</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/M-202105907/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
         <amcr:id>hist-0000001</amcr:id>
         <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>

@@ -10,7 +10,7 @@
     <amcr:rok_vzniku>2020</amcr:rok_vzniku>
     <amcr:organizace xml:lang="cs" id="ORG-000103">Archeologické centrum Olomouc, p.o.</amcr:organizace>
     <amcr:pristupnost xml:lang="cs" id="HES-000868">archivář</amcr:pristupnost>
-    <amcr:datum_zverejneni>2020-01-01T00:00:00+00:00</amcr:datum_zverejneni>
+    <amcr:datum_zverejneni>2020-01-01</amcr:datum_zverejneni>
     <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
     <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
     <amcr:popis>test</amcr:popis>

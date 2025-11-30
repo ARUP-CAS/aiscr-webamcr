@@ -30,6 +30,7 @@ from rdflib import Graph, Literal, URIRef
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from uzivatel.models import User
+from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
 
 from webclient.settings.base import get_secret
@@ -73,6 +74,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     host = "0.0.0.0"
     del settings.DATABASES["test_db"]
     databases = {"default", "urgent"}
+    xmlschema = None
 
     @classmethod
     def setUpClass(cls):
@@ -159,7 +161,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             if extension == "xml":
                 xml = self.xml_to_string_bez_ignorovanych_z_textu(
                     response.content,
-                    ["amcr:datum_zmeny", "amcr:datum_registrace", "amcr:datum_zverejneni"],
+                    {
+                        "amcr:datum_zmeny": "xs:dateTime",
+                        "amcr:datum_registrace": "xs:dateTime",
+                        "amcr:datum_zverejneni": "xs:date",
+                    },
+                    f"{path}/{filename}.{extension}",
                 )
                 f.write(xml)
             elif extension == "nt":
@@ -222,7 +229,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             assert self.porovnej_xml_bez_ignorovanych(
                 sample_file,
                 response.content,
-                ignorovane_tagy=["amcr:datum_zmeny", "amcr:datum_registrace", "amcr:datum_zverejneni"],
+                ignorovane_tagy={
+                    "amcr:datum_zmeny": "xs:dateTime",
+                    "amcr:datum_registrace": "xs:dateTime",
+                    "amcr:datum_zverejneni": "xs:date",
+                },
+                filename=f"{path}/{filename}.{extension}",
             )
         elif extension == "png":
             assert self.porovnej_png_obsah(sample_file, response.content)
@@ -696,7 +708,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         """Rekurzivně odstraní ignorované tagy z XML stromu."""
         for elem in list(root):
             if elem.tag in ignorovane_tagy:
-                elem.text = "2020-01-01T00:00:00+00:00"
+                typ = ignorovane_tagy[elem.tag]
+                if typ == "xs:date":
+                    elem.text = "2020-01-01"
+                elif typ == "xs:dateTime":
+                    elem.text = "2020-01-01T00:00:00+00:00"
             else:
                 self.odstran_elementy(elem, ignorovane_tagy)
 
@@ -777,26 +793,40 @@ return new Date('2025-06-28T12:00:00Z');}};
         for child in element:
             self.nahrad_hist_id_rekurzivne(child)
 
-    def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy):
+    def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy, filename):
         """
         Načte XML z textového vstupu, odstraní ignorované tagy a vrátí serializovanou podobu.
         """
         parser = etree.XMLParser(remove_blank_text=True)
         root = etree.fromstring(xml_text, parser)
-        ignorovane_tagy_trans = []
-        for item in ignorovane_tagy:
-            ignorovane_tagy_trans.append(item.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"))
+        ignorovane_tagy_trans = {}
+        for key, item in ignorovane_tagy.items():
+            ignorovane_tagy_trans.update({key.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"): item})
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
         self.nahrad_hist_id_rekurzivne(root)
         self.serad_xml_podle_tagu_a_obsahu(root)
+        if BaseSeleniumTestClass.xmlschema is None:
+            with open(DocumentGenerator.get_path_to_schema(), "rb") as f:
+                xmlschema_doc = etree.parse(f)
+                BaseSeleniumTestClass.xmlschema = etree.XMLSchema(xmlschema_doc)
+        if not BaseSeleniumTestClass.xmlschema.validate(root):
+            error_messages = "\n".join(
+                f"Řádek {error.line}, sloupec {error.column}: {error.message}"
+                for error in BaseSeleniumTestClass.xmlschema.error_log
+            )
+            logger.error(
+                "BaseSeleniumTestClass.xml_to_string_bez_ignorovanych_z_textu.invalid_xml",
+                extra={"file": filename, "value": error_messages},
+            )
+
         text = etree.tostring(root, pretty_print=True, encoding="utf-8", xml_declaration=True)
         return text
 
-    def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy):
+    def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy, filename):
         """Porovná dva XML soubory po odstranění ignorovaných tagů."""
-        vzor = self.xml_to_string_bez_ignorovanych_z_textu(vzorovy_soubor, ignorovane_tagy)
-        vystup = self.xml_to_string_bez_ignorovanych_z_textu(vystupni_soubor, ignorovane_tagy)
+        vzor = self.xml_to_string_bez_ignorovanych_z_textu(vzorovy_soubor, ignorovane_tagy, filename)
+        vystup = self.xml_to_string_bez_ignorovanych_z_textu(vystupni_soubor, ignorovane_tagy, filename)
         res = vzor == vystup
         if res is False:
             logger.error(
