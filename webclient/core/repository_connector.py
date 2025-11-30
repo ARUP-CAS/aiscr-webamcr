@@ -1327,7 +1327,7 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         mimetype = Soubor.get_mime_types(soubor_data)
         soubor_data.seek(0)
         # Antivirus labeled file as infected or the check failed
-        if not disable_antivirus or Soubor.check_antivirus(soubor_data) not in (
+        if not disable_antivirus and Soubor.check_antivirus(soubor_data) not in (
             AntivirusCheckResult.PASSES,
             AntivirusCheckResult.SKIPPED,
         ):
