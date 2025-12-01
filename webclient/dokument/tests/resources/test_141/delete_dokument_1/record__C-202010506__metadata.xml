@@ -25,28 +25,28 @@
       <amcr:geom_wkt EPSG="4326">POINT(16.1225758 50.2239667)</amcr:geom_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1529964</amcr:id>
-      <amcr:datum_zmeny>2020-10-05T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000919">U-000919</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1689561</amcr:id>
-      <amcr:datum_zmeny>2020-10-05T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000919">U-000919</amcr:uzivatel>
-      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2254195</amcr:id>
-      <amcr:datum_zmeny>2020-10-06T10:56:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2053474</amcr:id>
-      <amcr:datum_zmeny>2021-05-16T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000919">U-000919</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000919">U-000919</amcr:uzivatel>
       <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000919">U-000919</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:archeologicky_zaznam id="C-202010506A">C-202010506A</amcr:archeologicky_zaznam>
   </amcr:projekt>

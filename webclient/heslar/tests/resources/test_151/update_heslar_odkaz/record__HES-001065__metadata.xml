@@ -27,19 +27,19 @@
       <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
     </amcr:hierarchie_nize>
     <amcr:odkaz>
+      <amcr:id>hodk-1163</amcr:id>
+      <amcr:zdroj>zdroj</amcr:zdroj>
+      <amcr:nazev_kodu>nazev</amcr:nazev_kodu>
+      <amcr:kod>150</amcr:kod>
+      <amcr:skos_mapping_relation>skos:closeMatch</amcr:skos_mapping_relation>
+    </amcr:odkaz>
+    <amcr:odkaz>
       <amcr:id>hodk-559</amcr:id>
       <amcr:zdroj>Getty Art &amp; Architecture Thesaurus</amcr:zdroj>
       <amcr:nazev_kodu>ID</amcr:nazev_kodu>
       <amcr:kod>300077463</amcr:kod>
       <amcr:uri>http://vocab.getty.edu/aat/300077463</amcr:uri>
       <amcr:skos_mapping_relation>skos:broadMatch</amcr:skos_mapping_relation>
-    </amcr:odkaz>
-    <amcr:odkaz>
-      <amcr:id>hodk-1163</amcr:id>
-      <amcr:zdroj>zdroj</amcr:zdroj>
-      <amcr:nazev_kodu>nazev</amcr:nazev_kodu>
-      <amcr:kod>150</amcr:kod>
-      <amcr:skos_mapping_relation>skos:closeMatch</amcr:skos_mapping_relation>
     </amcr:odkaz>
   </amcr:heslo>
 </amcr:amcr>

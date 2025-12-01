@@ -16,30 +16,30 @@
     <amcr:popis>test</amcr:popis>
     <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:historie>
-      <amcr:id>hist-582321</amcr:id>
-      <amcr:datum_zmeny>2018-03-09T12:32:45+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000024">U-000024</amcr:uzivatel>
       <amcr:typ_zmeny>D01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803196</amcr:id>
-      <amcr:datum_zmeny>2025-09-15T05:40:12.281955+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:poznamka>X-C-TX-201801164</amcr:poznamka>
       <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:soubor>
       <amcr:id>soub-646258</amcr:id>
-      <amcr:path>rest/AMCR-selenium-test/record/X-C-TX-201801164/file/9b760689-3585-4555-8f31-013efbc6a4c8</amcr:path>
+      <amcr:path>rest/AMCR-selenium-test/record/X-C-TX-201801164/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>XCTX201801164.jpg</amcr:nazev>
       <amcr:mimetype>image/jpeg</amcr:mimetype>
       <amcr:rozsah>1</amcr:rozsah>
       <amcr:size_mb>0.0048723221</amcr:size_mb>
       <amcr:sha_512>e4a286b41334ffa0f4dbe9218519e5e6913d5759d5ddbb481fd67a4d1a8c22d30a53d9d1af2bc6873fe6e99e79dcaccd2ab8c0e332201b0c267d89e7f81738b7</amcr:sha_512>
-      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/X-C-TX-201801164/file/9b760689-3585-4555-8f31-013efbc6a4c8</amcr:url>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/X-C-TX-201801164/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
-        <amcr:id>hist-2803195</amcr:id>
-        <amcr:datum_zmeny>2025-09-15T05:40:07.373720+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
         <amcr:poznamka>test.jpg</amcr:poznamka>
         <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>

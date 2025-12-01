@@ -15,17 +15,17 @@
     <amcr:popis>test</amcr:popis>
     <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:historie>
-      <amcr:id>hist-2803185</amcr:id>
-      <amcr:datum_zmeny>2025-06-27T20:42:57.795455+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803186</amcr:id>
-      <amcr:datum_zmeny>2025-06-27T20:43:09.183593+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:poznamka>X-C-TX-000000009</amcr:poznamka>
       <amcr:typ_zmeny>DEL</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
+      <amcr:typ_zmeny>D01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:extra_data>
       <amcr:geom_system>4326</amcr:geom_system>
