@@ -27,32 +27,32 @@
       <amcr:geom_wkt EPSG="4326">POINT(15.8342731 50.2128908)</amcr:geom_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1737753</amcr:id>
-      <amcr:datum_zmeny>2021-04-12T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000448">U-000448</amcr:uzivatel>
-      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2091476</amcr:id>
-      <amcr:datum_zmeny>2021-04-12T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000448">U-000448</amcr:uzivatel>
-      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1602752</amcr:id>
-      <amcr:datum_zmeny>2021-04-12T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000448">U-000448</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2294644</amcr:id>
-      <amcr:datum_zmeny>2021-04-13T11:48:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2197393</amcr:id>
-      <amcr:datum_zmeny>2023-03-31T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000448">U-000448</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000448">U-000448</amcr:uzivatel>
+      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000448">U-000448</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-001279">U-001279</amcr:uzivatel>
       <amcr:typ_zmeny>P34</amcr:typ_zmeny>
     </amcr:historie>

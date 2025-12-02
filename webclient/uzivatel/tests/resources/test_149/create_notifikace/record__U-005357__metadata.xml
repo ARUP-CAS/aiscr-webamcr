@@ -12,24 +12,24 @@
     <amcr:superadmin>false</amcr:superadmin>
     <amcr:skupina xml:lang="cs">Archeolog</amcr:skupina>
     <amcr:notifikace>S-E-A-XX</amcr:notifikace>
+    <amcr:notifikace>S-E-K-01</amcr:notifikace>
     <amcr:notifikace>S-E-N-01</amcr:notifikace>
     <amcr:notifikace>S-E-N-02</amcr:notifikace>
     <amcr:notifikace>S-E-N-05</amcr:notifikace>
-    <amcr:notifikace>S-E-K-01</amcr:notifikace>
-    <amcr:datum_registrace>2024-03-19T12:46:36.676633+00:00</amcr:datum_registrace>
+    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
     <amcr:historie>
-      <amcr:id>hist-2803083</amcr:id>
-      <amcr:datum_zmeny>2024-03-19T12:46:46.914462+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
-      <amcr:poznamka>role: Archeolog</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803084</amcr:id>
-      <amcr:datum_zmeny>2024-03-19T12:46:46.927393+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
       <amcr:poznamka>email: archeolog1@arup.cas.cz, is_active: True, organizace: Archeologický ústav Praha, first_name: Test, last_name: Havrlant</amcr:poznamka>
       <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
+      <amcr:poznamka>role: Archeolog</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
     </amcr:historie>
   </amcr:uzivatel>
 </amcr:amcr>

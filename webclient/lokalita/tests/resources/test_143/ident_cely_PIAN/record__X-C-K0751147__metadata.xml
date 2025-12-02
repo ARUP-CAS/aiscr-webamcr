@@ -17,8 +17,8 @@
       </amcr:chranene_udaje>
     </amcr:lokalita>
     <amcr:historie>
-      <amcr:id>hist-972764</amcr:id>
-      <amcr:datum_zmeny>2018-05-17T18:30:56+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000302">U-000302</amcr:uzivatel>
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
@@ -28,19 +28,19 @@
       <amcr:typ xml:lang="cs" id="HES-001074">lokalita</amcr:typ>
       <amcr:negativni_jednotka>false</amcr:negativni_jednotka>
     </amcr:dokumentacni_jednotka>
-    <amcr:dokument id="C-DY-100000004">C-DY-100000004</amcr:dokument>
-    <amcr:dokument id="C-DT-100005035">C-DT-100005035</amcr:dokument>
-    <amcr:dokument id="C-DT-100005029">C-DT-100005029</amcr:dokument>
-    <amcr:dokument id="C-DT-100005031">C-DT-100005031</amcr:dokument>
     <amcr:dokument id="C-DT-100005023">C-DT-100005023</amcr:dokument>
-    <amcr:dokument id="C-DT-100005034">C-DT-100005034</amcr:dokument>
-    <amcr:dokument id="C-DT-100005025">C-DT-100005025</amcr:dokument>
     <amcr:dokument id="C-DT-100005024">C-DT-100005024</amcr:dokument>
+    <amcr:dokument id="C-DT-100005025">C-DT-100005025</amcr:dokument>
     <amcr:dokument id="C-DT-100005026">C-DT-100005026</amcr:dokument>
-    <amcr:dokument id="C-DT-100005033">C-DT-100005033</amcr:dokument>
-    <amcr:dokument id="C-DT-100005028">C-DT-100005028</amcr:dokument>
     <amcr:dokument id="C-DT-100005027">C-DT-100005027</amcr:dokument>
+    <amcr:dokument id="C-DT-100005028">C-DT-100005028</amcr:dokument>
+    <amcr:dokument id="C-DT-100005029">C-DT-100005029</amcr:dokument>
     <amcr:dokument id="C-DT-100005030">C-DT-100005030</amcr:dokument>
+    <amcr:dokument id="C-DT-100005031">C-DT-100005031</amcr:dokument>
     <amcr:dokument id="C-DT-100005032">C-DT-100005032</amcr:dokument>
+    <amcr:dokument id="C-DT-100005033">C-DT-100005033</amcr:dokument>
+    <amcr:dokument id="C-DT-100005034">C-DT-100005034</amcr:dokument>
+    <amcr:dokument id="C-DT-100005035">C-DT-100005035</amcr:dokument>
+    <amcr:dokument id="C-DY-100000004">C-DY-100000004</amcr:dokument>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

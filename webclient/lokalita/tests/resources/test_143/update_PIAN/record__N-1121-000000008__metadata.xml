@@ -23,8 +23,8 @@
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-854105.85 -1049866.48)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-2803192</amcr:id>
-      <amcr:datum_zmeny>2025-07-29T10:13:29.006261+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
     </amcr:historie>

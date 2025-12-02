@@ -67,6 +67,8 @@ from core.message_constants import (
     PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS,
     PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR,
     PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS,
+    PROJEKT_ZADOST_ZRUSENI_PROJEKTU_ERROR,
+    PROJEKT_ZADOST_ZRUSENI_PROJEKTU_SUCCESS,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
@@ -1476,6 +1478,9 @@ def get_detail_template_shows(projekt, user):
         "zadost_odhlaseni_projektu": check_permissions(
             p.actionChoices.projekt_zadost_odhlaseni_projektu, user, projekt.ident_cely
         ),
+        "zadost_zruseni_projektu": check_permissions(
+            p.actionChoices.projekt_zadost_zruseni_projektu, user, projekt.ident_cely
+        ),
         "vypis": check_permissions(p.actionChoices.vypis_projekt, user, projekt.ident_cely),
     }
     return show
@@ -1799,4 +1804,46 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS)
         else:
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR)
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})
+
+
+class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro odeslání žádosti pro zrušení projektu.
+    """
+
+    template_name = "core/transakce_modal.html"
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        zaznam = get_object_or_404(
+            Projekt,
+            ident_cely=ident_cely,
+        )
+        return zaznam
+
+    def get(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        form = ZadostProjektForm(
+            _("projekt.forms.ZadostZruseniProjektu.duvod.label"),
+            _("projekt.forms.ZadostZruseniProjektu.duvod.tooltip"),
+        )
+        context = {
+            "object": zaznam,
+            "title": _("projekt.views.ZadostZruseniProjektuView.title.text"),
+            "id_tag": "zadost-zruseni-projektu-form",
+            "button": _("projekt.views.ZadostZruseniProjektuView.submitButton.text"),
+            "form": form,
+        }
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        form = ZadostProjektForm(data=request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            zaznam = self.get_zaznam()
+            Mailer.send_ep11(zaznam, duvod, request.user, request)
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ZRUSENI_PROJEKTU_SUCCESS)
+        else:
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ZRUSENI_PROJEKTU_ERROR)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})

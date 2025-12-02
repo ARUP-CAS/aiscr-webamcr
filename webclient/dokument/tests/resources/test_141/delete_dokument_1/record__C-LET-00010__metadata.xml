@@ -14,12 +14,13 @@
     <amcr:letiste_cil xml:lang="cs" id="HES-000209">Velká Dobrá</amcr:letiste_cil>
     <amcr:pocasi xml:lang="cs" id="HES-000590">slunečno</amcr:pocasi>
     <amcr:dohlednost xml:lang="cs" id="HES-000101">10–20 km</amcr:dohlednost>
-    <amcr:dokument id="C-LD-000010270">C-LD-000010270</amcr:dokument>
+    <amcr:dokument id="C-LD-000000190">C-LD-000000190</amcr:dokument>
     <amcr:dokument id="C-LD-000000996">C-LD-000000996</amcr:dokument>
     <amcr:dokument id="C-LD-000001323">C-LD-000001323</amcr:dokument>
     <amcr:dokument id="C-LD-000010249">C-LD-000010249</amcr:dokument>
     <amcr:dokument id="C-LD-000010250">C-LD-000010250</amcr:dokument>
     <amcr:dokument id="C-LD-000010251">C-LD-000010251</amcr:dokument>
+    <amcr:dokument id="C-LD-000010252">C-LD-000010252</amcr:dokument>
     <amcr:dokument id="C-LD-000010253">C-LD-000010253</amcr:dokument>
     <amcr:dokument id="C-LD-000010254">C-LD-000010254</amcr:dokument>
     <amcr:dokument id="C-LD-000010255">C-LD-000010255</amcr:dokument>
@@ -31,22 +32,21 @@
     <amcr:dokument id="C-LD-000010261">C-LD-000010261</amcr:dokument>
     <amcr:dokument id="C-LD-000010262">C-LD-000010262</amcr:dokument>
     <amcr:dokument id="C-LD-000010263">C-LD-000010263</amcr:dokument>
+    <amcr:dokument id="C-LD-000010264">C-LD-000010264</amcr:dokument>
+    <amcr:dokument id="C-LD-000010265">C-LD-000010265</amcr:dokument>
+    <amcr:dokument id="C-LD-000010266">C-LD-000010266</amcr:dokument>
+    <amcr:dokument id="C-LD-000010267">C-LD-000010267</amcr:dokument>
+    <amcr:dokument id="C-LD-000010270">C-LD-000010270</amcr:dokument>
     <amcr:dokument id="C-LD-000010271">C-LD-000010271</amcr:dokument>
     <amcr:dokument id="C-LD-000010272">C-LD-000010272</amcr:dokument>
     <amcr:dokument id="C-LD-000010273">C-LD-000010273</amcr:dokument>
     <amcr:dokument id="C-LD-000010274">C-LD-000010274</amcr:dokument>
     <amcr:dokument id="C-LD-000010275">C-LD-000010275</amcr:dokument>
-    <amcr:dokument id="C-LD-000000190">C-LD-000000190</amcr:dokument>
+    <amcr:dokument id="C-LD-000010276">C-LD-000010276</amcr:dokument>
+    <amcr:dokument id="C-LD-000010277">C-LD-000010277</amcr:dokument>
     <amcr:dokument id="C-LD-000010278">C-LD-000010278</amcr:dokument>
     <amcr:dokument id="C-LD-000010279">C-LD-000010279</amcr:dokument>
     <amcr:dokument id="C-LD-000010280">C-LD-000010280</amcr:dokument>
     <amcr:dokument id="C-LD-000010281">C-LD-000010281</amcr:dokument>
-    <amcr:dokument id="C-LD-000010266">C-LD-000010266</amcr:dokument>
-    <amcr:dokument id="C-LD-000010265">C-LD-000010265</amcr:dokument>
-    <amcr:dokument id="C-LD-000010267">C-LD-000010267</amcr:dokument>
-    <amcr:dokument id="C-LD-000010252">C-LD-000010252</amcr:dokument>
-    <amcr:dokument id="C-LD-000010264">C-LD-000010264</amcr:dokument>
-    <amcr:dokument id="C-LD-000010276">C-LD-000010276</amcr:dokument>
-    <amcr:dokument id="C-LD-000010277">C-LD-000010277</amcr:dokument>
   </amcr:let>
 </amcr:amcr>

@@ -25,22 +25,22 @@
       </amcr:chranene_udaje>
     </amcr:akce>
     <amcr:historie>
-      <amcr:id>hist-198022</amcr:id>
-      <amcr:datum_zmeny>2010-09-22T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000180">U-000180</amcr:uzivatel>
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-571302</amcr:id>
-      <amcr:datum_zmeny>2017-05-23T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-412258</amcr:id>
-      <amcr:datum_zmeny>2017-05-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000180">U-000180</amcr:uzivatel>
       <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:dokumentacni_jednotka>
       <amcr:ident_cely>C-200810821A-D01</amcr:ident_cely>
@@ -48,7 +48,7 @@
       <amcr:typ xml:lang="cs" id="HES-001070">celek akce</amcr:typ>
       <amcr:negativni_jednotka>true</amcr:negativni_jednotka>
     </amcr:dokumentacni_jednotka>
-    <amcr:dokument id="C-TX-201200077">C-TX-201200077</amcr:dokument>
     <amcr:dokument id="C-DL-202500001">C-DL-202500001</amcr:dokument>
+    <amcr:dokument id="C-TX-201200077">C-TX-201200077</amcr:dokument>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

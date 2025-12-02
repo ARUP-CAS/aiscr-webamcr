@@ -187,4 +187,9 @@ notification_settings = {
         "predmet": "AMČR: ukončení projektu {ident_cely} | AMCR: project {ident_cely} finished",
         "cesta_sablony": "emails/E-P-10.html",
     },
+    "E-P-11": {
+        "zasilat_neaktivnim": True,
+        "predmet": "AMČR: projekt {ident_cely} - žádost o zrušení | AMCR: project {ident_cely} cancellation request",
+        "cesta_sablony": "emails/E-P-11.html",
+    },
 }
