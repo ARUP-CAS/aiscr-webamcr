@@ -509,7 +509,7 @@ class GetUserInfo(APIView):
 @method_decorator(odstavka_in_progress, name="post")
 class ObtainAuthTokenWithUpdate(ObtainAuthToken):
     """
-    Třída podlehu pro získaní tokenu pro API.
+    Třída pohledu pro získaní tokenu pro API.
     """
 
     def post(self, request, *args, **kwargs):
