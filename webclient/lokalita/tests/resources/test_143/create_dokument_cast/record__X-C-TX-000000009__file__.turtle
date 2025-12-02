@@ -1,12 +1,10 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix fedora: <http://fedora.info/definitions/v4/repository#> .
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
 
-<http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009/file/5a02fc3a-b502-4aed-a669-dd8379c1e9a2>
-        dcterms:creator        "U-005361" ;
-        fedora:created         "2025-11-23T22:00:35.536409Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-11-23T22:00:35.536409Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009/file/70a82bf6-3888-46de-8bea-f820d556f02f>
+        fedora:created         "2025-06-28T11:25:00.658973Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:25:00.658973Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -15,6 +13,6 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009/file/5a02fc3a-b502-4aed-a669-dd8379c1e9a2/orig> ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009/file/5a02fc3a-b502-4aed-a669-dd8379c1e9a2/thumb> ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009/file/5a02fc3a-b502-4aed-a669-dd8379c1e9a2/thumb-large> .
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009/file/70a82bf6-3888-46de-8bea-f820d556f02f/orig> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009/file/70a82bf6-3888-46de-8bea-f820d556f02f/thumb> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-TX-000000009/file/70a82bf6-3888-46de-8bea-f820d556f02f/thumb-large> .

@@ -148,9 +148,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             "application/zip": "zip",
             "application/pdf": "pdf",
         }
-        filename = (
-            str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
-        )
+        filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
         if "__file__" in filename:
             filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
@@ -192,9 +190,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             "application/zip": "zip",
             "application/pdf": "pdf",
         }
-        filename = (
-            str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
-        )
+        filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
         if "__file__" in filename:
             filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
@@ -204,9 +200,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             f.close()
         if extension == "turtle":
             assert self.porovnej_rdf_obsah(
-                response.content,
-                sample_file,
-                ignorovat_predikaty=["fedora:created", "fedora:lastModified", "premis:hasMessageDigest"],
+                response.content, sample_file, ignorovat_predikaty=["fedora:created", "fedora:lastModified"]
             )
         elif extension == "xml":
             assert self.porovnej_xml_bez_ignorovanych(
@@ -656,11 +650,9 @@ return new Date('2025-06-28T12:00:00Z');}};
             """
         )
 
-    def createFedoraRecord(self, ident_cely, user_name="archeolog"):
+    def createFedoraRecord(self, ident_cely):
         try:
             record = get_record_from_ident(ident_cely)
-            self._username(user_name)
-            user = User.objects.get(email=self._username(user_name))
         except Http404 as err:
             record = None
             logger.debug(
@@ -669,7 +661,7 @@ return new Date('2025-06-28T12:00:00Z');}};
             )
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
             try:
-                fedora_transaction = FedoraTransaction(transaction_user=user)
+                fedora_transaction = FedoraTransaction()
                 record.save_metadata(fedora_transaction)
                 fedora_transaction.mark_transaction_as_closed()
             except FedoraError as err:
@@ -817,10 +809,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         for pred in predikaty_k_ignoru:
             # Pokud je to string s dvojtečkou, pokusíme se ho expandovat jako CURIE (prefix:name)
             if ":" in pred and not pred.startswith("http"):
-                try:
-                    pred_uri = graf.namespace_manager.expand_curie(pred)
-                except ValueError:
-                    continue
+                pred_uri = graf.namespace_manager.expand_curie(pred)
             else:
                 pred_uri = URIRef(pred)
 

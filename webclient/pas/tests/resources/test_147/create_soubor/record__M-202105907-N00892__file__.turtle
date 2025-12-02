@@ -1,12 +1,10 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix fedora: <http://fedora.info/definitions/v4/repository#> .
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
 
-<http://10.0.1.34:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/27b653ce-c057-4635-94d4-26f82650aced>
-        dcterms:creator        "U-000408" ;
-        fedora:created         "2025-11-24T07:12:57.656842Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-11-24T07:12:57.656842Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+<http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd>
+        fedora:created         "2025-06-27T15:53:02.744953Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-27T15:53:02.744953Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -15,6 +13,6 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/27b653ce-c057-4635-94d4-26f82650aced/orig> ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/27b653ce-c057-4635-94d4-26f82650aced/thumb> ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/27b653ce-c057-4635-94d4-26f82650aced/thumb-large> .
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd/orig> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd/thumb> ;
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-202105907-N00892/file/bdb72fb6-fcd1-46a3-b2d5-b551cfbf28cd/thumb-large> .

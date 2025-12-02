@@ -391,11 +391,11 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
 
         # změna ident_cely EZ
         self.login("archivar")
-        self.createFedoraRecord("X-BIB-1408662", "archivar")
-        self.createFedoraRecord("C-9120419A", "archivar")
-        self.createFedoraRecord("C-9120749A", "archivar")
-        self.createFedoraRecord("C-9133040A", "archivar")
-        self.createFedoraRecord("C-K9000004", "archivar")
+        self.createFedoraRecord("X-BIB-1408662")
+        self.createFedoraRecord("C-9120419A")
+        self.createFedoraRecord("C-9120749A")
+        self.createFedoraRecord("C-9133040A")
+        self.createFedoraRecord("C-K9000004")
         time = self.getTime()
         dbID = ExterniZdroj.objects.filter(ident_cely="X-BIB-1408662").first().id
         self.assertEqual(ExterniZdroj.objects.filter(id=dbID).first().stav, EZ_STAV_ODESLANY)
@@ -408,7 +408,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.check_fedora_delete(["record/X-BIB-1408662"])
 
         # U EZ
-        self.createFedoraRecord("X-BIB-0926116", "archivar")
+        self.createFedoraRecord("X-BIB-0926116")
         self.goToAddress("/id/X-BIB-0926116")
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
@@ -419,7 +419,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.check_fedora_change(time, "ez/tests/resources/test_136/update_EZ")
 
         # D EZ
-        self.createFedoraRecord("X-BIB-0700016", "archivar")
+        self.createFedoraRecord("X-BIB-0700016")
         self.goToAddress("/id/X-BIB-0700016")
         count_old = ExterniZdroj.objects.count()
         time = self.getTime()

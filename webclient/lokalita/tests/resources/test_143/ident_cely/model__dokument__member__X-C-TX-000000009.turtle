@@ -1,13 +1,11 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix fedora: <http://fedora.info/definitions/v4/repository#> .
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
 
 <http://10.0.1.34:8081/rest/AMCR-selenium-test/model/dokument/member/X-C-TX-000000009>
-        dcterms:creator        "U-005361" ;
         <http://www.openarchives.org/ore/terms/proxyFor>  <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/C-TX-202500002> ;
-        fedora:created         "2025-11-23T22:01:59.860205Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-11-23T22:01:59.860205Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-07-29T10:54:43.380262Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-07-29T10:54:43.380262Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;

@@ -3,11 +3,10 @@
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
-<http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/5021e985-aa50-41eb-b52c-1dd9f13c806a>
-        dcterms:creator        "U-005361" ;
+<http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/9b760689-3585-4555-8f31-013efbc6a4c8>
         dcterms:type           "deleted" ;
-        fedora:created         "2025-11-23T21:45:50.197385Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-11-23T21:45:57.386929Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-09-15T05:40:06.520709Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-09-15T05:40:13.377751Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -16,6 +15,6 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/5021e985-aa50-41eb-b52c-1dd9f13c806a/orig> ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/5021e985-aa50-41eb-b52c-1dd9f13c806a/thumb> ;
-        ldp:contains           <http://10.0.1.34:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/5021e985-aa50-41eb-b52c-1dd9f13c806a/thumb-large> .
+        ldp:contains           <http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/9b760689-3585-4555-8f31-013efbc6a4c8/orig> ;
+        ldp:contains           <http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/9b760689-3585-4555-8f31-013efbc6a4c8/thumb> ;
+        ldp:contains           <http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/9b760689-3585-4555-8f31-013efbc6a4c8/thumb-large> .

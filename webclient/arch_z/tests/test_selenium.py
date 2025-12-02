@@ -1461,7 +1461,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # Scenar_103 Archivace samostatné akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_103_archivace_samostatne_akce_p_001.start")
         self.login("archivar")
-        self.createFedoraRecord("C-9157766A", "archivar")
+        self.createFedoraRecord("C-9157766A")
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-9157766A").first().stav, AZ_STAV_ODESLANY)
         self.go_to_Akce_vybrat()
         self.ElementClick(By.ID, "buttonFiltr")
@@ -1490,7 +1490,7 @@ class AkceSamostatneAkce(AkceTestClass):
 
         # update akce X-M-9922437A
         self.login("archivar")
-        self.createFedoraRecord("X-M-9922437A", "archivar")
+        self.createFedoraRecord("X-M-9922437A")
         self.goToAddress("/id/X-M-9922437A")
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
@@ -1560,7 +1560,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_DJ")
 
         # C komponenta
-        self.createFedoraRecord("X-C-9000000002A", "archivar")
+        self.createFedoraRecord("X-C-9000000002A")
         self.goToAddress("/id/X-C-9000000002A")
         time = self.getTime()
         with WaitForPageLoad(self.driver):
@@ -1701,7 +1701,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_dokument_cast")
 
         # C EZ
-        self.createFedoraRecord("BIB-0000001", "archivar")
+        self.createFedoraRecord("BIB-0000001")
         time = self.getTime()
         self.ElementClick(By.ID, "eo-pripojit-do-az")
         self.ElementClick(By.ID, "select2-id_ez-container")
@@ -1733,11 +1733,11 @@ class AkceSamostatneAkce(AkceTestClass):
         # změna ident_cely DJ
         # změna ident_cely komponenta
         # ADB-BLAT60-000001
-        self.createFedoraRecord("X-C-91468414A", "archivar")
-        self.createFedoraRecord("X-C-TX-000000008", "archivar")
-        self.createFedoraRecord("BIB-0000001", "archivar")
-        self.createFedoraRecord("ADB-BLAT60-000001", "archivar")
-        self.createFedoraRecord("N-2214-000000004", "archivar")
+        self.createFedoraRecord("X-C-91468414A")
+        self.createFedoraRecord("X-C-TX-000000008")
+        self.createFedoraRecord("BIB-0000001")
+        self.createFedoraRecord("ADB-BLAT60-000001")
+        self.createFedoraRecord("N-2214-000000004")
         self.goToAddress("/id/X-C-TX-000000008")
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
@@ -1765,8 +1765,8 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_AZ")
 
         # C dokument_cast existujici
-        self.createFedoraRecord("X-M-91558334A", "archivar")
-        self.createFedoraRecord("M-TX-194300151", "archivar")
+        self.createFedoraRecord("X-M-91558334A")
+        self.createFedoraRecord("M-TX-194300151")
         time = self.getTime()
         self.goToAddress("/id/X-M-91558334A")
         self.ElementClick(By.ID, "others_doc")
@@ -1785,7 +1785,7 @@ class AkceSamostatneAkce(AkceTestClass):
 
         # C PIAN X-C-9000000011A
         self.login("archivar")
-        self.createFedoraRecord("X-C-9000000011A", "archivar")
+        self.createFedoraRecord("X-C-9000000011A")
         self.goToAddress("/id/X-C-9000000011A")
         self.ElementClick(By.ID, "button-add-dj")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
@@ -1918,7 +1918,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/odpojeni_smazani_PIAN")
 
         # připojení PIAN
-        self.createFedoraRecord("P-1121-100070", "archivar")
+        self.createFedoraRecord("P-1121-100070")
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "add_others")
@@ -1965,7 +1965,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_delete([f"record/{pian}"])
 
         # C DJ katastr
-        self.createFedoraRecord("ruian-693154", "archivar")
+        self.createFedoraRecord("ruian-693154")
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000011A-D01-typ .btn")
         self.ElementClick(By.ID, "bs-select-1-3")
@@ -1974,7 +1974,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_DJ_katastr")
 
         # U DJ katastr
-        self.createFedoraRecord("ruian-600016", "archivar")
+        self.createFedoraRecord("ruian-600016")
         time = self.getTime()
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "zmenit-katastr-X-C-9000000011A-D01")
@@ -1995,8 +1995,8 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_DJ_katastr")
 
         # D DJ
-        self.createFedoraRecord("X-C-91601363A", "archivar")
-        self.createFedoraRecord("P-2212-010011", "archivar")
+        self.createFedoraRecord("X-C-91601363A")
+        self.createFedoraRecord("P-2212-010011")
         self.goToAddress("/id/X-C-91601363A-D01")
         time = self.getTime()
         self.ElementClick(By.ID, "others")
@@ -2012,9 +2012,9 @@ class AkceSamostatneAkce(AkceTestClass):
         self.login("archivar")
 
         # změna zmena stavu ADB
-        self.createFedoraRecord("M-9002352A", "archivar")
-        self.createFedoraRecord("N-1541-000000005", "archivar")
-        self.createFedoraRecord("ADB-OPAV13-000001", "archivar")
+        self.createFedoraRecord("M-9002352A")
+        self.createFedoraRecord("N-1541-000000005")
+        self.createFedoraRecord("ADB-OPAV13-000001")
         self.goToAddress("/arch-z/akce/detail/M-9002352A/dj/M-9002352A-D01")
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "pian-potvrdit-N-1541-000000005")

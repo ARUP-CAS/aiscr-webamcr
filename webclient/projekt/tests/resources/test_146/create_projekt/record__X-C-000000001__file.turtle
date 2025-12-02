@@ -1,12 +1,10 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix fedora: <http://fedora.info/definitions/v4/repository#> .
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
 
 <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-000000001/file>
-        dcterms:creator        "anonymous" ;
-        fedora:created         "2025-11-24T22:17:43.409565Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-11-24T22:17:43.409565Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-06-28T11:21:21.630603Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-28T11:21:21.630603Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;
@@ -15,4 +13,4 @@
         rdf:type               ldp:RDFSource ;
         rdf:type               ldp:Container ;
         rdf:type               fedora:Container ;
-        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-000000001/file/a92b12e1-5e01-4f24-b722-fe5195f51f15> .
+        ldp:contains           <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/X-C-000000001/file/8c62dabe-de29-4545-a959-d26d66ac9dea> .

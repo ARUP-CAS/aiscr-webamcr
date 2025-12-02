@@ -4,10 +4,9 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
 <http://192.168.1.28:8081/rest/AMCR-selenium-test/record/OS-006534>
-        dcterms:creator        "U-004415" ;
         dcterms:type           "deleted" ;
-        fedora:created         "2025-11-24T20:56:33.404270Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-        fedora:lastModified    "2025-11-24T20:58:02.412344Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:created         "2025-06-26T18:21:03.487133Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+        fedora:lastModified    "2025-06-26T18:21:14.962811Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
         fedora:createdBy       "AMCR" ;
         fedora:lastModifiedBy  "AMCR" ;
         rdf:type               ldp:BasicContainer ;

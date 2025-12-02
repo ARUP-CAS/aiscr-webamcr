@@ -397,7 +397,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_lokalita")
 
         # C dokumentacni_jednotka
-        self.createFedoraRecord("ruian-679038", "archivar")
+        self.createFedoraRecord("ruian-679038")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-dj")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
@@ -551,7 +551,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_dokument_cast")
 
         # C externi_odkaz
-        self.createFedoraRecord("BIB-0000001", "archivar")
+        self.createFedoraRecord("BIB-0000001")
         time = self.getTime()
         self.goToAddress(f"/id/{ident}")
         self.ElementClick(By.ID, "eo-pripojit-do-az")
@@ -647,8 +647,8 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_lokalita")
 
         # změna ident_cely PIAN
-        self.createFedoraRecord("X-C-K0751147", "archivar")
-        self.createFedoraRecord("N-1412-000000007", "archivar")
+        self.createFedoraRecord("X-C-K0751147")
+        self.createFedoraRecord("N-1412-000000007")
         time = self.getTime()
         self.goToAddress("/arch-z/lokalita/detail/X-C-K0751147/dj/C-K0751147-D01")
         self.ElementClick(By.ID, "others")
@@ -659,8 +659,8 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_delete(["record/N-1412-000000007"])
 
         # C dokument_cast existujici
-        self.createFedoraRecord("M-L9000181", "archivar")
-        self.createFedoraRecord("M-TX-194300151", "archivar")
+        self.createFedoraRecord("M-L9000181")
+        self.createFedoraRecord("M-TX-194300151")
         time = self.getTime()
         self.goToAddress("/id/M-L9000181")
         self.ElementClick(By.ID, "others_doc")

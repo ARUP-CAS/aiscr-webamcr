@@ -161,8 +161,8 @@ class AkceUzivatel(BaseSeleniumTestClass):
         logger.info("AkceUzivatel.test_149_test_Fedora_uzivatel_002.start")
 
         # U uzivatel
-        self.createFedoraRecord("U-005362", "administrator")
-        self.createFedoraRecord("U-005357", "administrator")
+        self.createFedoraRecord("U-005362")
+        self.createFedoraRecord("U-005357")
 
         self.login("badatel")
         self.goToAddress("/uzivatel/edit/")
@@ -183,7 +183,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
 
         # D notifikace
         self.login("archeolog")
-        self.createFedoraRecord("U-005357", "administrator")
+        self.createFedoraRecord("U-005357")
         self.goToAddress("/uzivatel/edit/")
         time = self.getTime()
         self.ElementClick(By.ID, "id_notification_types_0")
@@ -251,11 +251,11 @@ class AkceUzivatel(BaseSeleniumTestClass):
     def test_150_test_Fedora_spoluprace_001(self):
         # Scenar_150 Test Fedory pro spolupráci PAS
         logger.info("AkceUzivatel.test_150_test_Fedora_spoluprace_001.start")
-        self.createFedoraRecord("U-000393", "administrator")
-        self.createFedoraRecord("U-003726", "administrator")
-        self.createFedoraRecord("U-005357", "administrator")
-        self.createFedoraRecord("U-000408", "administrator")
-        self.createFedoraRecord("U-000127", "administrator")
+        self.createFedoraRecord("U-000393")
+        self.createFedoraRecord("U-003726")
+        self.createFedoraRecord("U-005357")
+        self.createFedoraRecord("U-000408")
+        self.createFedoraRecord("U-000127")
 
         # C spolupráce
         self.login("badatel1")
