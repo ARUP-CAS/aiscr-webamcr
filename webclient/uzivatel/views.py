@@ -22,7 +22,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import CharField, F, IntegerField, Q, Value
 from django.db.models.functions import Concat
 from django.forms.renderers import BaseRenderer
@@ -508,14 +508,24 @@ class GetUserInfo(APIView):
 
 @method_decorator(odstavka_in_progress, name="post")
 class ObtainAuthTokenWithUpdate(ObtainAuthToken):
+    """
+    Třída podlehu pro získaní tokenu pro API.
+    """
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
         if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
-            token.delete()
-            token.save()
+            try:
+                with transaction.atomic():
+                    Token.objects.filter(user=user).delete()
+                    token = Token.objects.create(user=user)
+            except IntegrityError:
+                # pokud mezitím druhý request token vytvořil,
+                # jen si ho načteme
+                token = Token.objects.get(user=user)
         return Response({"token": token.key})
 
 
