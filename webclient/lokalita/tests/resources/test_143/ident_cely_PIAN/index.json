@@ -70,6 +70,18 @@
       ]
     },
     {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/P-1412-100089/metadata/fcr:metadata",
+      "mime_type": null,
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#NonRdfSourceDescription",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#RDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
       "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-K0751147/metadata",
       "mime_type": "application/xml",
       "rdf_type": [

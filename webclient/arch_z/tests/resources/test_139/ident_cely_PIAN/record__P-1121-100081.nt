@@ -1,5 +1,6 @@
 <info:test-base/rest/AMCR-selenium-test/record/P-1121-100081> <http://fedora.info/definitions/v4/repository#createdBy> "AMCR" .
 <info:test-base/rest/AMCR-selenium-test/record/P-1121-100081> <http://fedora.info/definitions/v4/repository#lastModifiedBy> "AMCR" .
+<info:test-base/rest/AMCR-selenium-test/record/P-1121-100081> <http://purl.org/dc/terms/creator> "U-005361" .
 <info:test-base/rest/AMCR-selenium-test/record/P-1121-100081> <http://purl.org/dc/terms/replaces> "info:test-base/rest/AMCR-selenium-test/record/N-1121-000000009" .
 <info:test-base/rest/AMCR-selenium-test/record/P-1121-100081> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://fedora.info/definitions/v4/repository#Container> .
 <info:test-base/rest/AMCR-selenium-test/record/P-1121-100081> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://fedora.info/definitions/v4/repository#Resource> .

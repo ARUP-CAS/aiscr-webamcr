@@ -350,7 +350,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.start")
         # C PAS
         self.login("badatel1")
-        self.createFedoraRecord("M-202105907")
+        self.createFedoraRecord("M-202105907", "badatel1")
         time = self.getTime()
         ident = self.create_PAS()
         self.check_fedora_change(time, "pas/tests/resources/test_147/create_PAS")
