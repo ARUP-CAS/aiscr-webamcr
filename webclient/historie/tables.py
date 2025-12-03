@@ -50,31 +50,32 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
 
     datum = tables.DateTimeColumn(
         verbose_name=_("historie.templates.historieList.fedora.datum"),
-        format="Y-m-d, H:i",
+        format="Y-m-d, H:i:s",
         attrs={"td": {"class": "col_datum"}},
         orderable=True,
     )
     url = tables.Column(
-        verbose_name="Stáhnout",
+        verbose_name=_("historie.templates.historieList.fedora.stahnout"),
         attrs={
             "td": {
-                "class": "col_stahnout",
+                "class": "col-stahnout",
                 "rel": "",
                 "title": "",
-            }
+            },
+            "th": {"class": "col-stahnout"},
         },
         orderable=False,
     )
 
     def render_url(self, value, record):
         return format_html(
-            '<a href="{}" class="btn btn-sm btn-outline-primary" target="_blank">'
+            '<a href="{}" class="btn-sm" target="_blank">'
             '<span class="material-icons" style="vertical-align:middle;">download</span>'
             "</a>",
             record["url"],
         )
 
     class Meta:
-        attrs = {"class": "table-shifter table"}
-        fields = ("datum", "url")
+        attrs = {"class": "table-shifter table fedora-table"}
+        fields = ("url", "datum")
         order_by = ("-datum",)

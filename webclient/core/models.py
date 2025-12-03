@@ -711,7 +711,6 @@ class Permissions(models.Model):
         model_edit = "model_edit", _("core.models.permissions.actionChoices.model_edit")
         neident_akce_edit = "neident_akce_edit", _("core.models.permissions.actionChoices.neident_akce_edit")
         neident_akce_smazat = "neident_akce_smazat", _("core.models.permissions.actionChoices.neident_akce_smazat")
-        stahnout_metadata = "stahnout_metadata", _("core.models.permissions.actionChoices.stahnout_metadata")
         ez_edit = "ez_edit", _("core.models.permissions.actionChoices.ez_edit")
         ez_odeslat = "ez_odeslat", _("core.models.permissions.actionChoices.ez_odeslat")
         ez_potvrdit = "ez_potvrdit", _("core.models.permissions.actionChoices.ez_potvrdit")

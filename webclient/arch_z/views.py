@@ -1402,9 +1402,7 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
         "zapsat_dokumenty": check_permissions(
             p.actionChoices.dok_zapsat_do_archz, user, archeologicky_zaznam.ident_cely
         ),
-        "stahnout_metadata": check_permissions(
-            p.actionChoices.stahnout_metadata, user, archeologicky_zaznam.ident_cely
-        ),
+        "historie_fedora": check_permissions(p.actionChoices.historie_fedora, user, archeologicky_zaznam.ident_cely),
         "vypis": check_permissions(
             p.actionChoices.vypis_lokalita if app == "lokalita" else p.actionChoices.vypis_akce,
             user,

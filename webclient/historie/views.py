@@ -1,5 +1,6 @@
 import logging
 
+from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from core.models import Permissions as p
@@ -19,6 +20,7 @@ from ez.models import ExterniZdroj
 from historie.models import Historie
 from historie.tables import FedoraHistorieTable, HistorieTable
 from pas.models import SamostatnyNalez
+from pian.models import Pian
 from projekt.models import Projekt
 from uzivatel.models import User
 
@@ -31,6 +33,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     Třída se dědí pro jednotlivá historie.
     """
 
+    use_history_table = True
     table_class = HistorieTable
     model = Historie
     template_name = "historie/historie_list.html"
@@ -55,6 +58,8 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         pass
 
     def get_queryset(self):
+        if not self.use_history_table:
+            return self.model.objects.none()
         if not self.queryset_filter:
             raise ValueError(f"{self.__class__.__name__} must define queryset_filter")
 
@@ -129,7 +134,14 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
 
         context["fedora_table"] = fedora_table
 
+    def get_table(self, **kwargs):
+        if not self.use_history_table:
+            return None
+        return super().get_table(**kwargs)
+
     def get_context_data(self, **kwargs):
+        if not self.use_history_table:
+            self.table_class = None
         context = super().get_context_data(**kwargs)
         context["export_formats"] = ["csv", "json", "xlsx"]
         if self.context_typ:
@@ -154,7 +166,6 @@ class ProjektHistorieListView(HistorieListView):
     """
 
     context_typ = "projekt"
-    lookup_kwarg = "ident_cely"
     queryset_filter = "vazba__projekt_historie__ident_cely"
     fedora_model = Projekt
 
@@ -172,7 +183,6 @@ class AkceHistorieListView(HistorieListView):
     """
 
     context_typ = "akce"
-    lookup_kwarg = "ident_cely"
     queryset_filter = "vazba__archeologickyzaznam__ident_cely"
     fedora_model = ArcheologickyZaznam
 
@@ -189,7 +199,6 @@ class DokumentHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie dokumentů.
     """
 
-    lookup_kwarg = "ident_cely"
     queryset_filter = "vazba__dokument_historie__ident_cely"
     fedora_model = Dokument
 
@@ -220,7 +229,6 @@ class SamostatnyNalezHistorieListView(HistorieListView):
     """
 
     context_typ = "samostatny_nalez"
-    lookup_kwarg = "ident_cely"
     queryset_filter = "vazba__sn_historie__ident_cely"
     fedora_model = SamostatnyNalez
 
@@ -314,7 +322,6 @@ class LokalitaHistorieListView(HistorieListView):
     """
 
     context_typ = "lokalita"
-    lookup_kwarg = "ident_cely"
     queryset_filter = "vazba__archeologickyzaznam__ident_cely"
     fedora_model = ArcheologickyZaznam
 
@@ -332,7 +339,6 @@ class UzivatelHistorieListView(HistorieListView):
     """
 
     context_typ = "uzivatel"
-    lookup_kwarg = "ident_cely"
     queryset_filter = "vazba__uzivatelhistorievazba__ident_cely"
     fedora_model = User
 
@@ -350,7 +356,6 @@ class ExterniZdrojHistorieListView(HistorieListView):
     """
 
     context_typ = "ext_zdroj"
-    lookup_kwarg = "ident_cely"
     queryset_filter = "vazba__externizdroj__ident_cely"
     fedora_model = ExterniZdroj
 
@@ -359,4 +364,57 @@ class ExterniZdrojHistorieListView(HistorieListView):
             "url": reverse("ez:detail", args=[context["ident_cely"]]),
             "icon": "menu_book",
             "text": _("historie.templates.historieList.ext_zdroj.cardHeader"),
+        }
+
+
+class PianHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie Pianu.
+    """
+
+    use_history_table = False
+    fedora_model = Pian
+    context_typ = "akce"
+
+    def get_header_config(self, context):
+        return {
+            "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
+            "icon": "brush",
+            "text": _("historie.templates.historieList.pian.cardHeader"),
+        }
+
+
+class PianLokalitaHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie Pianu.
+    """
+
+    use_history_table = False
+    fedora_model = Pian
+    context_typ = "lokalita"
+
+    def get_header_config(self, context):
+        return {
+            "url": reverse(
+                "lokalita:detail-dj", args=[self.kwargs["lokalita_ident_cely"], self.kwargs["dj_ident_cely"]]
+            ),
+            "icon": "tour",
+            "text": _("historie.templates.historieList.pian.cardHeader"),
+        }
+
+
+class AdbHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie ADB.
+    """
+
+    use_history_table = False
+    fedora_model = Adb
+    context_typ = "akce"
+
+    def get_header_config(self, context):
+        return {
+            "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
+            "icon": "brush",
+            "text": _("historie.templates.historieList.adb.cardHeader"),
         }

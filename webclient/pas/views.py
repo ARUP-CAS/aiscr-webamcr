@@ -1137,7 +1137,6 @@ def get_detail_template_shows(sn, user):
         "arch_links": show_arch_links,
         "smazat": check_permissions(p.actionChoices.pas_smazat, user, sn.ident_cely),
         "ulozeni_edit": check_permissions(p.actionChoices.pas_ulozeni_edit, user, sn.ident_cely),
-        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, sn.ident_cely),
         "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_pas, user, sn.ident_cely),
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_pas, user, sn.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_pas, user, sn.ident_cely),
