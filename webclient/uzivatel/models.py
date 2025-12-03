@@ -57,7 +57,7 @@ def get_default_licence():
     return DOKUMENT_LICENCE_NEZNAMA
 
 
-class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin):
+class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin, ModelWithMetadata):
     """
     Class pro db model user.
     """

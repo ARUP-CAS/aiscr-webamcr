@@ -41,6 +41,11 @@ urlpatterns = [
         name="stahnout_metadata",
     ),
     path(
+        "data-historicka/stahnout/<str:model_name>/<str:ident_cely>/<str:timestamp>",
+        views.StahnoutDataHistorickaView.as_view(),
+        name="stahnout_data_historicka",
+    ),
+    path(
         "mapa-pian-pas",
         post_ajax_get_pas_and_pian_limit,
         name="post_ajax_get_pas_pian_limit",

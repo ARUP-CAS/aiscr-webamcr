@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import re
+from datetime import datetime, timezone
 from enum import Enum
 from io import BytesIO
 from typing import Optional, Union
@@ -135,6 +136,8 @@ class FedoraRequestType(Enum):
     GET_BINARY_FILE_CONTENT_THUMB = 1032
     GET_BINARY_FILE_CONTENT_THUMB_LARGE = 1035
     GET_TOMBSTONE = 1037
+    GET_METADATA_HISTORIE = 1038
+    GET_BINARY_FILE_CONTENT_HISTORIE = 1039
 
 
 class FedoraRepositoryConnector:
@@ -249,6 +252,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             return f"{base_url}/record/{self.record.ident_cely}/metadata"
         elif request_type == FedoraRequestType.METADATA_UPDATE_RDF_DATA:
             return f"{base_url}/record/{self.record.ident_cely}/metadata/fcr:metadata"
+        elif request_type == FedoraRequestType.GET_METADATA_HISTORIE:
+            return f"{base_url}/record/{self.record.ident_cely}/metadata/fcr:versions"
+        elif request_type == FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE:
+            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig/fcr:versions"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE):
             return f"{base_url}/record/{self.record.ident_cely}/file"
         elif request_type in (
@@ -409,6 +416,8 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB,
             FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE,
             FedoraRequestType.GET_TOMBSTONE,
+            FedoraRequestType.GET_METADATA_HISTORIE,
+            FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE,
         ):
             try:
                 response = requests.get(url, headers=headers, auth=auth, verify=False)
@@ -713,6 +722,59 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
         return response.content
 
+    def get_metadata_historicka(self, timestamp):
+        """
+        Metoda varacející konkrétní verzi metadat
+        """
+        url = self._get_request_url(FedoraRequestType.GET_METADATA_HISTORIE)
+        response = self._send_request(f"{url}/{timestamp}", FedoraRequestType.GET_METADATA_HISTORIE)
+        return response.content
+
+    def parse_historie(self, response_text):
+        """
+        Metoda k parsování odpovědi s verzemi
+        """
+        datetimes = []
+        for line in response_text.splitlines():
+            stripped = line.strip()
+
+            if stripped.startswith("ldp:contains"):
+
+                m = re.search(r"<(.*?)>", stripped)
+                if m:
+                    url = m.group(1)
+                    ts = url.rstrip("/").split("/")[-1]
+                    if ts.isdigit() and len(ts) == 14:
+                        try:
+                            dt = datetime.strptime(ts, "%Y%m%d%H%M%S")
+                            dt = dt.replace(tzinfo=timezone.utc)
+                            datetimes.append(dt)
+                        except ValueError:
+                            logger.error(
+                                "core_repository_connector.parse_historie.datetime_error",
+                                extra={"ident_cely": self.record.ident_cely, "data": ts},
+                            )
+
+        return datetimes
+
+    def get_historie_metadat(self):
+        """
+        Metoda k získání info o verzích metadat
+        """
+        url = self._get_request_url(FedoraRequestType.GET_METADATA_HISTORIE)
+        response = self._send_request(url, FedoraRequestType.GET_METADATA_HISTORIE, headers={"Accept": "text/turtle"})
+        return self.parse_historie(response.text)
+
+    def get_historie_file(self, uuid):
+        """
+        Metoda k získání info o verzích souborů
+        """
+        url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE, uuid=uuid)
+        response = self._send_request(
+            url, FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE, headers={"Accept": "text/turtle"}
+        )
+        return self.parse_historie(response.text)
+
     def save_metadata(self, update=True):
         logger.debug(
             "core_repository_connector.save_metadata.start",
@@ -994,7 +1056,7 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             return rep_bin_file
 
     def get_binary_file(
-        self, uuid, ident_cely_old=None, thumb_small=False, thumb_large=False
+        self, uuid, ident_cely_old=None, thumb_small=False, thumb_large=False, timestamp=None
     ) -> RepositoryBinaryFile | None:
         logger.debug(
             "core_repository_connector.get_binary_file.start",
@@ -1018,6 +1080,9 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB)
         elif thumb_large:
             response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT_THUMB_LARGE)
+        elif timestamp:
+            url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE, uuid=uuid)
+            response = self._send_request(f"{url}/{timestamp}", FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE)
         else:
             response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT)
         if response:

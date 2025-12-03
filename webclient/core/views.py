@@ -1234,6 +1234,43 @@ class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
         return response
 
 
+class StahnoutDataHistorickaView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro stažení historické verze souboru nebo metadat z Fedory
+    """
+
+    MODEL_MAP = {
+        "Pian": Pian,
+        "Projekt": Projekt,
+        "ArcheologickyZaznam": ArcheologickyZaznam,
+        "Adb": Adb,
+        "Dokument": Dokument,
+        "SamostatnyNalez": SamostatnyNalez,
+        "ExterniZdroj": ExterniZdroj,
+        "User": User,
+        "Soubor": Soubor,
+    }
+
+    def get(self, request, model_name, ident_cely, timestamp):
+        Model = self.MODEL_MAP.get(model_name)
+        if Model is None:
+            raise Http404
+
+        def context_processor(content):
+            yield content
+
+        if model_name == "Soubor":
+            record = Model.objects.get(pk=ident_cely)
+            response = record.get_soubor_historicky(timestamp)
+        else:
+            record = Model.objects.get(ident_cely=ident_cely)
+            metadata = record.get_metadata_historicka(timestamp)
+            response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+            response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
+
+        return response
+
+
 class CheckUserAuthentication(View):
     def get(self, request, *args, **kwargs):
         return JsonResponse({"is_authenticated": request.user.is_authenticated})

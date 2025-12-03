@@ -5,6 +5,7 @@ import os
 import re
 import time
 import zipfile
+import zoneinfo
 from enum import Enum
 from typing import Optional, Union
 
@@ -18,6 +19,7 @@ from django.contrib.auth.models import Group
 from django.db import models
 from django.forms import ValidationError
 from django.http import FileResponse
+from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -198,7 +200,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return None
 
     def get_repository_content(
-        self, ident_cely_old=None, thumb_small=False, thumb_large=False
+        self, ident_cely_old=None, thumb_small=False, thumb_large=False, timestamp=None
     ) -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
 
@@ -209,7 +211,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 extra={"ident_cely": record.ident_cely, "uuid": self.repository_uuid},
             )
             conector = FedoraRepositoryConnector(record, skip_container_check=False)
-            rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old, thumb_small, thumb_large)
+            rep_bin_file = conector.get_binary_file(
+                self.repository_uuid, ident_cely_old, thumb_small, thumb_large, timestamp
+            )
             return rep_bin_file
         logger.debug(
             "core.models.Soubor.get_repository_content.not_found",
@@ -558,6 +562,49 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def getMock(self):
         return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
 
+    def get_historicke_verze(self):
+        """
+        Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        record = self.vazba.navazany_objekt
+        results = []
+        if record is not None and self.repository_uuid is not None:
+            logger.debug(
+                "core.models.Soubor.get_repository_content",
+                extra={"ident_cely": record.ident_cely, "uuid": self.repository_uuid},
+            )
+            connector = FedoraRepositoryConnector(record)
+            dt_list = connector.get_historie_file(self.repository_uuid)
+            for dt in dt_list:
+                local_dt = dt.astimezone(zoneinfo.ZoneInfo("Europe/Prague"))
+                url_date = dt.strftime("%Y%m%d%H%M%S")
+                url = reverse(
+                    "core:stahnout_data_historicka",
+                    kwargs={
+                        "model_name": self.__class__.__name__,
+                        "ident_cely": self.pk,
+                        "timestamp": url_date,
+                    },
+                )
+                results.append(
+                    {
+                        "datum": local_dt,
+                        "url": url,
+                    }
+                )
+        return results
+
+    def get_soubor_historicky(self, timestamp) -> FileResponse | None:
+        """
+        Metoda k získání vlastního souboru dané verze z Fedory
+        """
+        rep_bin_file: RepositoryBinaryFile = self.get_repository_content(timestamp=timestamp)
+        if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
+            return self._create_file_response(rep_bin_file)
+        return None
+
 
 class ProjektSekvence(models.Model):
     """
@@ -860,6 +907,7 @@ class Permissions(models.Model):
         vypis_pas = "vypis_pas", _("core.models.permissions.actionChoices.vypis_pas")
         vypis_model3d = "vypis_model3d", _("core.models.permissions.actionChoices.vypis_model3d")
         vypis_ez = "vypis_ez", _("core.models.permissions.actionChoices.vypis_ez")
+        historie_fedora = "historie_fedora", _("core.models.permissions.actionChoices.historie_fedora")
 
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,
