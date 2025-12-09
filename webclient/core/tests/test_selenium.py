@@ -38,6 +38,19 @@ from webclient.settings.base import get_secret
 logger = logging.getLogger(__name__)
 
 
+class LocalResolver(etree.Resolver):
+    """
+    Resolver, který nahradí vzdálené XSD URL lokálním souborem.
+    Hodí se, když libxml neumí stahovat přes HTTP a nechcete upravovat XSD.
+    """
+
+    def resolve(self, url, id, context):
+        if url == "http://www.w3.org/2001/03/xml.xsd":
+            local_path = "xml_generator/definitions/xml.xsd"
+            return self.resolve_filename(local_path, context)
+        return None
+
+
 class WaitForPageLoad:
     def __init__(self, browser):
         self.browser = browser
@@ -808,7 +821,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.serad_xml_podle_tagu_a_obsahu(root)
         if BaseSeleniumTestClass.xmlschema is None:
             with open(DocumentGenerator.get_path_to_schema(), "rb") as f:
-                xmlschema_doc = etree.parse(f)
+                parser = etree.XMLParser()
+                parser.resolvers.add(LocalResolver())
+                xmlschema_doc = etree.parse(f, parser)
                 BaseSeleniumTestClass.xmlschema = etree.XMLSchema(xmlschema_doc)
         if not BaseSeleniumTestClass.xmlschema.validate(root):
             error_messages = "\n".join(
