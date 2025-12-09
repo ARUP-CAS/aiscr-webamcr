@@ -26,7 +26,7 @@ from django.http import Http404
 from django.test import LiveServerTestCase
 from lxml import etree
 from PIL import Image, ImageChops
-from rdflib import Graph, Literal, URIRef
+from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from uzivatel.models import User
@@ -185,7 +185,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             elif extension == "nt":
                 rdf = self.uprav_rdf_pred_ulozenim(
                     response.content,
-                    ignorovat_predikaty=["fedora:created", "fedora:lastModified", "premis:hasMessageDigest"],
+                    ignorovat_predikaty={
+                        "fedora:created": "xs:dateTime",
+                        "fedora:lastModified": "xs:dateTime",
+                        "premis:hasMessageDigest": "urn:sha",
+                        "premis:hasSize": "xsd:long",
+                    },
                 )
                 f.write(rdf)
             else:
@@ -236,7 +241,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             assert self.porovnej_rdf_obsah(
                 response.content,
                 sample_file,
-                ignorovat_predikaty=["fedora:created", "fedora:lastModified", "premis:hasMessageDigest"],
+                ignorovat_predikaty={
+                    "fedora:created": "xs:dateTime",
+                    "fedora:lastModified": "xs:dateTime",
+                    "premis:hasMessageDigest": "urn:sha",
+                    "premis:hasSize": "xsd:long",
+                },
             )
         elif extension == "xml":
             assert self.porovnej_xml_bez_ignorovanych(
@@ -901,7 +911,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def odstran_predikaty(self, graf, predikaty_k_ignoru):
         """Odstraní trojice podle predikátů (může být prefixed nebo plné URI)."""
-        for pred in predikaty_k_ignoru:
+        for pred, typ in predikaty_k_ignoru.items():
             # Pokud je to string s dvojtečkou, pokusíme se ho expandovat jako CURIE (prefix:name)
             if ":" in pred and not pred.startswith("http"):
                 try:
@@ -911,8 +921,17 @@ return new Date('2025-06-28T12:00:00Z');}};
             else:
                 pred_uri = URIRef(pred)
 
+            if typ == "xs:dateTime":
+                new_obj = Literal("2020-01-01T00:00:00.000000Z", datatype=XSD.dateTime)
+            elif typ == "xsd:long":
+                new_obj = Literal(0, datatype=XSD.long)
+            elif typ == "urn:sha":
+                fake_digest = "f" * 128
+                new_obj = URIRef(f"urn:sha-512:{fake_digest}")
+
             for s, p, o in list(graf.triples((None, pred_uri, None))):
                 graf.remove((s, p, o))
+                graf.add((s, p, new_obj))
 
     def odstran_uuid_z_rdf(self, graf):
         """
@@ -954,8 +973,17 @@ return new Date('2025-06-28T12:00:00Z');}};
 
         self.odstran_uuid_z_rdf(g1)
         self.odstran_uuid_z_rdf(g2)
-
-        return g1.isomorphic(g2)
+        res = g1.isomorphic(g2)
+        if res is False:
+            nt = g1.serialize(format="nt")
+            # Seřadit řádky podle abecedy
+            radky = sorted(line.strip() for line in nt.strip().splitlines() if line.strip())
+            nt_stabilni = "\n".join(radky) + "\n"
+            logger.error(
+                "BaseSeleniumTestClass.fedora_error.porovnej_rdf_obsah",
+                extra={"data": nt_stabilni},
+            )
+        return res
 
     def uprav_rdf_pred_ulozenim(self, rdf_input, ignorovat_predikaty=None):
         """

@@ -1,4 +1,6 @@
+<info:test-base/rest/AMCR-selenium-test/record/C-TX-202500002/file/UUID-REMOVED> <http://fedora.info/definitions/v4/repository#created> "2020-01-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
 <info:test-base/rest/AMCR-selenium-test/record/C-TX-202500002/file/UUID-REMOVED> <http://fedora.info/definitions/v4/repository#createdBy> "AMCR" .
+<info:test-base/rest/AMCR-selenium-test/record/C-TX-202500002/file/UUID-REMOVED> <http://fedora.info/definitions/v4/repository#lastModified> "2020-01-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
 <info:test-base/rest/AMCR-selenium-test/record/C-TX-202500002/file/UUID-REMOVED> <http://fedora.info/definitions/v4/repository#lastModifiedBy> "AMCR" .
 <info:test-base/rest/AMCR-selenium-test/record/C-TX-202500002/file/UUID-REMOVED> <http://purl.org/dc/terms/creator> "U-005361" .
 <info:test-base/rest/AMCR-selenium-test/record/C-TX-202500002/file/UUID-REMOVED> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://fedora.info/definitions/v4/repository#Container> .
