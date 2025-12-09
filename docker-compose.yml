@@ -167,6 +167,7 @@ services:
     command:
       - "--config.file=/run/secrets/prometheus_config"
       - "--storage.tsdb.retention.time=365d"
+      - "--web.enable-admin-api"
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.19.0
