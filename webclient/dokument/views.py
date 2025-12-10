@@ -2167,33 +2167,41 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         dokument_ids = request.POST.getlist("dokument")
         if len(dokument_ids) > 0:
             fedora_transaction = zaznam.create_transaction(request.user)
-            for dokument_id in dokument_ids:
-                dokument = get_object_or_404(Dokument, id=dokument_id)
-                dokument.active_transaction = fedora_transaction
-                relace = casti_zaznamu.filter(dokument__id=dokument_id)
-                if not relace.exists():
-                    dc_ident = get_cast_dokumentu_ident(dokument)
-                    if isinstance(zaznam, ArcheologickyZaznam):
-                        dc = DokumentCast(
-                            archeologicky_zaznam=zaznam,
-                            dokument=dokument,
-                            ident_cely=dc_ident,
+            try:
+                for dokument_id in dokument_ids:
+                    dokument = get_object_or_404(Dokument, id=dokument_id)
+                    dokument.active_transaction = fedora_transaction
+                    relace = casti_zaznamu.filter(dokument__id=dokument_id)
+                    if not relace.exists():
+                        dc_ident = get_cast_dokumentu_ident(dokument)
+                        if isinstance(zaznam, ArcheologickyZaznam):
+                            dc = DokumentCast(
+                                archeologicky_zaznam=zaznam,
+                                dokument=dokument,
+                                ident_cely=dc_ident,
+                            )
+                        else:
+                            dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
+                        dc.active_transaction = fedora_transaction
+                        dc.save()
+                        dokument.save()
+                        logger.debug(
+                            "dokument.views.pripojit.pripojit",
+                            extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                        )
+                        messages.add_message(
+                            request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
                         )
                     else:
-                        dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
-                    dc.active_transaction = fedora_transaction
-                    dc.save()
-                    dokument.save()
-                    logger.debug(
-                        "dokument.views.pripojit.pripojit",
-                        extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
-                    )
-                    messages.add_message(
-                        request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
-                    )
-                else:
-                    messages.add_message(request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}")
-            fedora_transaction.mark_transaction_as_closed()
+                        messages.add_message(
+                            request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
+                        )
+            except Exception as err:
+                logger.error("dokument.views.pripojit.error", extra={"error": err, "ident_cely": dokument.ident_cely})
+                transaction.set_rollback(True)
+                fedora_transaction.rollback_transaction()
+            else:
+                fedora_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": redirect_name})
     else:
         if proj_ident_cely:
