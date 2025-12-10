@@ -545,7 +545,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, f"id_{ident}-K001_o-0-pocet").send_keys("1")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-19 > .text")
-        self.ElementClick(By.CSS_SELECTOR, ".dropup > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-specifikace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-4 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
