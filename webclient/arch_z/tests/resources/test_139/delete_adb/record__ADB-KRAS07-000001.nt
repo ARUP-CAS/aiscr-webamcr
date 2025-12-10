@@ -1,4 +1,6 @@
+<info:test-base/rest/AMCR-selenium-test/record/ADB-KRAS07-000001> <http://fedora.info/definitions/v4/repository#created> "2020-01-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
 <info:test-base/rest/AMCR-selenium-test/record/ADB-KRAS07-000001> <http://fedora.info/definitions/v4/repository#createdBy> "AMCR" .
+<info:test-base/rest/AMCR-selenium-test/record/ADB-KRAS07-000001> <http://fedora.info/definitions/v4/repository#lastModified> "2020-01-01T00:00:00+00:00"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
 <info:test-base/rest/AMCR-selenium-test/record/ADB-KRAS07-000001> <http://fedora.info/definitions/v4/repository#lastModifiedBy> "AMCR" .
 <info:test-base/rest/AMCR-selenium-test/record/ADB-KRAS07-000001> <http://purl.org/dc/terms/creator> "U-005361" .
 <info:test-base/rest/AMCR-selenium-test/record/ADB-KRAS07-000001> <http://purl.org/dc/terms/type> "deleted" .
