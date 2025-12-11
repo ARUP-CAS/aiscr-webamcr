@@ -36,11 +36,6 @@ urlpatterns = [
     path("id/<str:ident_cely>", views.redirect_ident_view, name="redirect_ident"),
     path("session/prodlouzit/", views.prolong_session, name="prolong_session"),
     path(
-        "metadata/stahnout/<str:model_name>/<str:ident_cely>",
-        views.StahnoutMetadataIdentCelyView.as_view(),
-        name="stahnout_metadata",
-    ),
-    path(
         "data-historicka/stahnout/<str:model_name>/<str:ident_cely>/<str:timestamp>",
         views.StahnoutDataHistorickaView.as_view(),
         name="stahnout_data_historicka",

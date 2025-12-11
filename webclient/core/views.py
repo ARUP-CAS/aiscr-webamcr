@@ -1206,34 +1206,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return super().get(request, *args, **kwargs)
 
 
-class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
-    def get(self, request, model_name, ident_cely):
-        if model_name == "pian":
-            record: Pian = Pian.objects.get(ident_cely=ident_cely)
-        elif model_name == "projekt":
-            record: Projekt = Projekt.objects.get(ident_cely=ident_cely)
-        elif model_name == "archeologicky_zaznam":
-            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
-        elif model_name == "adb":
-            record: Adb = Adb.objects.get(ident_cely=ident_cely)
-        elif model_name == "dokument":
-            record: Dokument = Dokument.objects.get(ident_cely=ident_cely)
-        elif model_name == "samostatny_nalez":
-            record: SamostatnyNalez = SamostatnyNalez.objects.get(ident_cely=ident_cely)
-        elif model_name == "externi_zdroj":
-            record: ExterniZdroj = ExterniZdroj.objects.get(ident_cely=ident_cely)
-        else:
-            raise Http404
-        metadata = record.metadata
-
-        def context_processor(content):
-            yield content
-
-        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
-        return response
-
-
 class StahnoutDataHistorickaView(LoginRequiredMixin, View):
     """
     Třída pohledu pro stažení historické verze souboru nebo metadat z Fedory
