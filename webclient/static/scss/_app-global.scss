@@ -648,6 +648,7 @@ input.coordInput {
         width: 0 !important;    
         white-space: nowrap;
         text-align: center;
+        min-width: 0px !important;
         th {
           color: white !important;
         }
