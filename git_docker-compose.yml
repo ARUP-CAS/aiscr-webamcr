@@ -61,7 +61,7 @@ services:
       - git-reverse-proxy
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.80.0-alpine
+    image: oliver006/redis_exporter:v1.80.1-alpine
     ports:
       - "9121:9121"
     secrets:
