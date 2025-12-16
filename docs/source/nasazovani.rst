@@ -93,7 +93,6 @@ další Github workflow s názvem `.github\workflows\deployment.yml` v rámci kt
 * v místě nasazení dojde k otevření adresáře obsahujícího deployment skripty a následnému stashování git repozitáře a jeho aktualizaci (tzv. pull).
 * spuštění deployment skriptu (`scripts/ci_deployment/deploy_server_dev.sh`), který poté vyvolá:
 
- * spuštění skriptu `scripts/db/db_backup.sh` tj. zálohování existující databáze a zkopírování její zálohy označené předchozí verzí ve formátu .gzip a uložení do adresáře `../db_backups`
  * spuštění vlastního nasazení WebAMČR přes skript `scripts/prod_deploy.sh`, tj. nasazení nejnovějších docker obrazů z docker-hubu pomocí swarm módu.
  * ověření správného spuštění docker kontejnerů ve swarm-mode.
 
