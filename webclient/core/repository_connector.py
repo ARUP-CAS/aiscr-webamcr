@@ -1233,7 +1233,9 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
                 extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
             )
             headers = {"Content-Type": "application/sparql-update"}
-            data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
+            data = """PREFIX dcterms: <http://purl.org/dc/terms/>
+DELETE WHERE { <> dcterms:type ?restored .};
+INSERT DATA { <> dcterms:type "deleted" .};"""
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS)
             self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS, headers=headers, data=data)
             headers = {"Slug": self.record.ident_cely, "Content-Type": "text/turtle"}
