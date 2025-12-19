@@ -636,9 +636,9 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
                 "hlavni_katastr",
                 "organizace",
                 "vedouci_projektu",
-                "hlavni_katastr__okres",
+                "hlavni_katastr__okres__kraj",
             )
-            .prefetch_related("katastry__okres")
+            .prefetch_related("katastry__okres__kraj")
             .defer("geom")
         )
         return self.check_filter_permission(qs)
