@@ -1,9 +1,11 @@
 import logging
+import zoneinfo
 from typing import Optional
 
 from celery import Celery
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 UPDATE_REDIS_SNAPSHOT = 20
@@ -90,6 +92,44 @@ class ModelWithMetadata(BaseAmcrModel):
 
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
+
+    def get_metadata_historicka(self, timestamp):
+        """
+        Metoda k získání vlastního souboru metadat dané verze z Fedory
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        connector = FedoraRepositoryConnector(self)
+        return connector.get_metadata_historicka(timestamp)
+
+    def get_historicke_verze(self):
+        """
+        Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        connector = FedoraRepositoryConnector(self)
+        dt_list = connector.get_historie_metadat()
+        results = []
+
+        for dt in dt_list:
+            local_dt = dt.astimezone(zoneinfo.ZoneInfo("Europe/Prague"))
+            url_date = dt.strftime("%Y%m%d%H%M%S")
+            url = reverse(
+                "core:stahnout_data_historicka",
+                kwargs={
+                    "model_name": self.__class__.__name__,
+                    "ident_cely": self.ident_cely,
+                    "timestamp": url_date,
+                },
+            )
+            results.append(
+                {
+                    "datum": local_dt,
+                    "url": url,
+                }
+            )
+        return results
 
     def save_metadata(
         self, fedora_transaction=None, include_files=False, close_transaction=False, skip_container_check=False

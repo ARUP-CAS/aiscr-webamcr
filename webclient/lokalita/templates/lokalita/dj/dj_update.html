@@ -86,13 +86,13 @@
                 {% trans 'lokalita.templates.dj.djUpdate.moreActions.potvrditPian.label' %}
               </button>
             {% endif %}
-            {% if j.pian_ident_cely and show.stahnout_metadata %}
+            {% if j.pian_ident_cely and show.historie_fedora %}
               <a class="dropdown-item"
-                 href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadPianMetadata.label" %}</a>
+                 href="{% url 'historie:pian-lokalita'  j.pian_ident_cely zaznam.ident_cely dj_ident_cely %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadPianMetadata.label" %}</a>
             {% endif %}
-            {% if j.adb_pk and show.stahnout_metadata %}
+            {% if j.adb_pk and show.historie_fedora %}
               <a class="dropdown-item"
-                 href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadAdbMetadata.label" %}</a>
+                 href="{% url 'historie:adb'  j.adb_ident_cely zaznam.ident_cely dj_ident_cely %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadAdbMetadata.label" %}</a>
             {% endif %}
             {% if j.show_remove_adb %}
               <button id="adb-smazat-{{ j.adb_ident_cely }}" class="dropdown-item adb-smazat-btn" type="button"
