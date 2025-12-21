@@ -36,13 +36,13 @@ Vyhodnocení výsledků testu
 K vyhodnocení běhu testu slouží aplikace Kibana. V ní je připraven
 pohled ``Test logs query`` (zobrazuje logové zprávy z půběhu testu).
 
-.. image:: images/automaticke_testy_test_log_view.png
+.. image:: ../images/automaticke_testy_test_log_view.png
    :alt: dashboard
 
 Dále jsou k dispozici dashboardy ``Test Errors`` (zobrazuje chyby a
 varování) a ``Test Overview`` (statistika chybových zpráv testu).
 
-.. image:: images/automaticke_testy_dashboard.png
+.. image:: ../images/automaticke_testy_dashboard.png
    :alt: dashboard
 
 Požadované vlastnosti testovacího scénáře

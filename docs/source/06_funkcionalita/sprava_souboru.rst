@@ -1,7 +1,15 @@
-Migrace souborů
+Správa souborů
 ================================
 
-Soubory je možné migraovat z napojeného disku. Adresář disku je potřeba připojit v souboru `docker-compose.yml`
+Adresářová struktura
+---------------------
+
+Zde nalezneme dokumentaci adresářové struktury. Je zde popsané členění aplikace a jednotlivé pomocné adresáře.
+
+Migrace souborů
+----------------
+
+Soubory je možné migrovat z napojeného disku. Adresář disku je potřeba připojit v souboru `docker-compose.yml`
 
 .. code::
     volumes:
@@ -30,7 +38,7 @@ Dále je potřeba pomocí `docker ps` zjistit jméno kontejneru `web`.
   ba0e5ae5d249   portainer/portainer-ce:latest                          "/portainer"             9 hours ago         Up 9 hours                   8000/tcp, 9000/tcp, 9443/tcp                tooling_portainer.1.l0spxbs4cp2cbas9m20cltz4g
   7d5bffc3d20d   aiscr/webamcr-proxy:latest                             "/docker-entrypoint.…"   9 hours ago         Up 9 hours (healthy)         8080/tcp                                    swarm_webamcr_proxy.1.ks8xasq9q09ldme8d1ophkx1n
   79b452459fe9   fcrepo/fcrepo:6.4.0                                    "catalina.sh run"        7 months ago        Up 5 weeks                   0.0.0.0:8081->8080/tcp, :::8081->8080/tcp   fcrepo
-  633a10eb8ccf   postgres:12.3                                          "docker-entrypoint.s…"   7 months ago        Up 2 months                  0.0.0.0:5433->5432/tcp, :::5433->5432/tcp   fcrepo-postgres
+  633a10eb8ccf   postgres:12.3                                          "docker-entrypoint.s…"   7 months ago        Up 2 months                  0.0.0.0:5433->5432/tcp, :::8081->8080/tcp   fcrepo-postgres
 
 Např. v tomto případě je název `swarm_webamcr_web.1.1q93chcyn82p3zdo8iu984uri`. Název je pak třeba vložit do příkazu
 pro spuštění Django shellu.
@@ -44,7 +52,7 @@ Poté je potřeba provést import třídy `FedoraRepositoryConnector`.
   from core.repository_connector import FedoraRepositoryConnector
 
 Pro migraci konkrétního souboru je potřeba zavolat metodu `save_single_file_from_storage` třídy `FedoraRepositoryConnector`.
-Prvním argumentem je ID záznamu, druhým namapovaný adresář v kontejneru. Ve sloužece se soubory by název souboru měl být
+Prvním argumentem je ID záznamu, druhým namapovaný adresář v kontejneru. Ve složce se soubory by název souboru měl být
 ve formátu `ID.ext`, např. `646372.txt`.
 
 .. code:: py
