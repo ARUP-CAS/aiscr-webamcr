@@ -1,20 +1,28 @@
 import logging
 
+from adb.models import Adb
+from arch_z.models import ArcheologickyZaznam
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
-from core.models import Soubor
+from core.models import Permissions as p
+from core.models import Soubor, check_permissions
 from core.views import ExportMixinDate
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import CharField, F, Value
 from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils.translation import get_language
+from django.utils.translation import gettext as _
 from django.views.generic import ListView
-from django_tables2 import SingleTableMixin
+from django_tables2 import RequestConfig, SingleTableMixin
 from dokument.models import Dokument
+from ez.models import ExterniZdroj
 from historie.models import Historie
-from historie.tables import HistorieTable
+from historie.tables import FedoraHistorieTable, HistorieTable
 from pas.models import SamostatnyNalez
+from pian.models import Pian
 from projekt.models import Projekt
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +30,47 @@ logger = logging.getLogger(__name__)
 class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
     """
     Třida pohledu pro zobrazení historie záznamu.
-    Třída se dedí pro jednotlivá historie.
+    Třída se dědí pro jednotlivá historie.
     """
 
+    use_history_table = True
     table_class = HistorieTable
     model = Historie
     template_name = "historie/historie_list.html"
     export_name = "export_historie_"
+
+    context_typ = None  # např. "samostatny_nalez"
+    lookup_kwarg = "ident_cely"  # URL parametr obsahující identifikátor
+    queryset_filter = None  # např. "vazba__sn_historie__ident_cely"
+    context_entity = None
+    fedora_lookup = "ident_cely"
+
+    def get_lookup_value(self):
+        """Vrátí hodnotu z URL podle lookup_kwarg."""
+        return self.kwargs[self.lookup_kwarg]
+
+    def prepare_queryset(self, qs):
+        """Potomek může přepsat pro vlastní řazení nebo dodatečné filtry."""
+        return qs.order_by("datum_zmeny")
+
+    def add_extra_context(self, context):
+        """Potomek může přepsat a doplnit další hodnoty do contextu."""
+        pass
+
+    def get_queryset(self):
+        if not self.use_history_table:
+            return self.model.objects.none()
+        if not self.queryset_filter:
+            raise ValueError(f"{self.__class__.__name__} must define queryset_filter")
+
+        lookup = self.get_lookup_value()
+        qs = self.model.objects.filter(**{self.queryset_filter: lookup})
+        qs = self.prepare_queryset(qs)
+        return self._annotate_queryset(qs)
+
+    def get_header_config(self, context):
+        """Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}"""
+        return None
 
     def _annotate_queryset(self, queryset):
         user = self.request.user
@@ -65,9 +107,56 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
                 )
             )
 
-    def get_context_data(self, typ=None, **kwargs):
+    def add_fedora_history(self, context):
+        """
+        Pokud potomek definuje fedora_model, automaticky se načte
+        metadata historie z Fedory a přidá se druhá tabulka fedora_table.
+        """
+        if not hasattr(self, "fedora_model") or self.fedora_model is None:
+            return
+
+        ident = context.get("ident_cely") or context.get("pk") or context.get("soubor_id")
+        if not ident:
+            return
+
+        lookup_field = getattr(self, "fedora_lookup", "ident_cely")
+        lookup = {lookup_field: ident}
+
+        try:
+            record = self.fedora_model.objects.get(**lookup)
+        except Exception:
+            return
+        fedora_data = record.get_historicke_verze()
+        if not fedora_data:
+            return
+        fedora_table = FedoraHistorieTable(fedora_data, prefix="fed-")
+        RequestConfig(self.request).configure(fedora_table)
+
+        context["fedora_table"] = fedora_table
+
+    def get_table(self, **kwargs):
+        if not self.use_history_table:
+            return None
+        return super().get_table(**kwargs)
+
+    def get_context_data(self, **kwargs):
+        if not self.use_history_table:
+            self.table_class = None
         context = super().get_context_data(**kwargs)
         context["export_formats"] = ["csv", "json", "xlsx"]
+        if self.context_typ:
+            context["typ"] = self.context_typ
+            context["entity"] = self.context_typ
+        if self.context_entity:
+            context["entity"] = self.context_entity
+        try:
+            context["ident_cely"] = self.get_lookup_value()
+        except KeyError:
+            pass
+        self.add_extra_context(context)
+        if check_permissions(p.actionChoices.historie_fedora, self.request.user, context["ident_cely"]):
+            self.add_fedora_history(context)
+        context["header"] = self.get_header_config(context)
         return context
 
 
@@ -76,18 +165,16 @@ class ProjektHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie projektu.
     """
 
-    def get_queryset(self):
-        projekt_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(vazba__projekt_historie__ident_cely=projekt_ident).order_by("datum_zmeny")
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    context_typ = "projekt"
+    queryset_filter = "vazba__projekt_historie__ident_cely"
+    fedora_model = Projekt
 
-    def get_context_data(self, **kwargs):
-        context = super(ProjektHistorieListView, self).get_context_data(**kwargs)
-        context["typ"] = "projekt"
-        context["ident_cely"] = self.kwargs["ident_cely"]
-        context["entity"] = context["typ"]
-        return context
+    def get_header_config(self, context):
+        return {
+            "url": reverse("projekt:detail", args=[context["ident_cely"]]),
+            "icon": "dynamic_feed",
+            "text": _("historie.templates.historieList.projekt.cardHeader"),
+        }
 
 
 class AkceHistorieListView(HistorieListView):
@@ -95,18 +182,16 @@ class AkceHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie akcií.
     """
 
-    def get_queryset(self):
-        akce_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(vazba__archeologickyzaznam__ident_cely=akce_ident).order_by("datum_zmeny")
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    context_typ = "akce"
+    queryset_filter = "vazba__archeologickyzaznam__ident_cely"
+    fedora_model = ArcheologickyZaznam
 
-    def get_context_data(self, **kwargs):
-        context = super(AkceHistorieListView, self).get_context_data(**kwargs)
-        context["typ"] = "akce"
-        context["ident_cely"] = self.kwargs["ident_cely"]
-        context["entity"] = context["typ"]
-        return context
+    def get_header_config(self, context):
+        return {
+            "url": reverse("arch_z:detail", args=[context["ident_cely"]]),
+            "icon": "brush",
+            "text": _("historie.templates.historieList.akce.cardHeader"),
+        }
 
 
 class DokumentHistorieListView(HistorieListView):
@@ -114,23 +199,28 @@ class DokumentHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie dokumentů.
     """
 
-    def get_queryset(self):
-        dokument_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(vazba__dokument_historie__ident_cely=dokument_ident).order_by(
-            "datum_zmeny"
-        )
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    queryset_filter = "vazba__dokument_historie__ident_cely"
+    fedora_model = Dokument
 
-    def get_context_data(self, **kwargs):
-        context = super(DokumentHistorieListView, self).get_context_data(**kwargs)
-        if "3D" in self.kwargs["ident_cely"]:
-            context["typ"] = "knihovna_3d"
-        else:
-            context["typ"] = "dokument"
-        context["ident_cely"] = self.kwargs["ident_cely"]
-        context["entity"] = context["typ"]
-        return context
+    def get_header_config(self, context):
+        ident = context["ident_cely"]
+        if "3D" in ident:
+            return {
+                "url": reverse("dokument:detail-model-3D", args=[ident]),
+                "icon": "3d_rotation",
+                "text": _("historie.templates.historieList.model3D.cardHeader"),
+            }
+        return {
+            "url": reverse("dokument:detail", args=[ident]),
+            "icon": "description",
+            "text": _("historie.templates.historieList.dokument.cardHeader"),
+        }
+
+    def add_extra_context(self, context):
+        ident = self.get_lookup_value()
+        typ = "knihovna_3d" if "3D" in ident else "dokument"
+        context["typ"] = typ
+        context["entity"] = typ
 
 
 class SamostatnyNalezHistorieListView(HistorieListView):
@@ -138,18 +228,16 @@ class SamostatnyNalezHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie samostatných nálezů.
     """
 
-    def get_queryset(self):
-        sn_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(vazba__sn_historie__ident_cely=sn_ident).order_by("datum_zmeny")
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    context_typ = "samostatny_nalez"
+    queryset_filter = "vazba__sn_historie__ident_cely"
+    fedora_model = SamostatnyNalez
 
-    def get_context_data(self, **kwargs):
-        context = super(SamostatnyNalezHistorieListView, self).get_context_data(**kwargs)
-        context["typ"] = "samostatny_nalez"
-        context["entity"] = context["typ"]
-        context["ident_cely"] = self.kwargs["ident_cely"]
-        return context
+    def get_header_config(self, context):
+        return {
+            "url": reverse("pas:detail", args=[context["ident_cely"]]),
+            "icon": "location_on",
+            "text": _("historie.templates.historieList.sn.cardHeader"),
+        }
 
 
 class SpolupraceHistorieListView(HistorieListView):
@@ -157,17 +245,17 @@ class SpolupraceHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie spolupráce.
     """
 
-    def get_queryset(self):
-        spoluprace_ident = self.kwargs["pk"]
-        queryset = self.model.objects.filter(vazba__spoluprace_historie__pk=spoluprace_ident).order_by("datum_zmeny")
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    context_typ = "spoluprace"
+    context_entity = "samostatny_nalez"
+    lookup_kwarg = "pk"
+    queryset_filter = "vazba__spoluprace_historie__pk"
 
-    def get_context_data(self, **kwargs):
-        context = super(SpolupraceHistorieListView, self).get_context_data(**kwargs)
-        context["typ"] = "spoluprace"
-        context["entity"] = "samostatny_nalez"
-        return context
+    def get_header_config(self, context):
+        return {
+            "url": reverse("pas:spoluprace_list"),
+            "icon": "location_on",
+            "text": _("historie.templates.historieList.spoluprace.cardHeader"),
+        }
 
 
 class SouborHistorieListView(HistorieListView):
@@ -175,39 +263,57 @@ class SouborHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie souborů.
     """
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        soubor_id = self.kwargs["soubor_id"]
-        context["typ"] = "soubor"
-        context["entity"] = context["typ"]
-        soubor = get_object_or_404(Soubor, pk=soubor_id)
-        try:
-            context["projekt"] = soubor.vazba.projekt_souboru
-        except Projekt.DoesNotExist:
-            context["projekt"] = None
-        back_ident = None
-        back_model = None
-        if soubor.vazba and soubor.vazba.navazany_objekt:
-            navazany_objekt = soubor.vazba.navazany_objekt
-            back_ident = navazany_objekt.ident_cely
-            if isinstance(navazany_objekt, Projekt):
-                back_model = "Projekt"
-            elif isinstance(navazany_objekt, Dokument):
-                if "3D" in navazany_objekt.ident_cely:
-                    back_model = "DokumentModel3D"
-                else:
-                    back_model = "Dokument"
-            elif isinstance(navazany_objekt, SamostatnyNalez):
-                back_model = "SamostatnyNalez"
-        context["back_ident"] = back_ident
-        context["back_model"] = back_model
-        return context
+    context_typ = "soubor"
+    lookup_kwarg = "soubor_id"
+    queryset_filter = "vazba__soubor_historie"
+    fedora_model = Soubor
+    fedora_lookup = "pk"
 
-    def get_queryset(self):
-        soubor_id = self.kwargs["soubor_id"]
-        queryset = self.model.objects.filter(vazba__soubor_historie=soubor_id).order_by("-datum_zmeny")
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    def prepare_queryset(self, qs):
+        return qs.order_by("-datum_zmeny")
+
+    def add_extra_context(self, context):
+        soubor_id = self.get_lookup_value()
+        soubor = get_object_or_404(Soubor, pk=soubor_id)
+        context["projekt"] = getattr(soubor.vazba, "projekt_souboru", None)
+        nav = getattr(soubor.vazba, "navazany_objekt", None)
+        if nav:
+            context["back_ident"] = getattr(nav, "ident_cely", None)
+            if isinstance(nav, Projekt):
+                context["back_model"] = "Projekt"
+            elif isinstance(nav, Dokument):
+                context["back_model"] = "DokumentModel3D" if "3D" in nav.ident_cely else "Dokument"
+            elif isinstance(nav, SamostatnyNalez):
+                context["back_model"] = "SamostatnyNalez"
+
+    def get_header_config(self, context):
+        nav = context["back_model"]
+        if nav == "Projekt":
+            return {
+                "url": reverse("projekt:detail", args=[context["back_ident"]]),
+                "icon": "save",
+                "text": _("historie.templates.historieList.soubor.cardHeader"),
+            }
+        if nav == "DokumentModel3D":
+            return {
+                "url": reverse("dokument:detail-model-3D", args=[context["back_ident"]]),
+                "icon": "save",
+                "text": _("historie.templates.historieList.soubor.cardHeader"),
+            }
+        if nav == "Dokument":
+            return {
+                "url": reverse("dokument:detail", args=[context["back_ident"]]),
+                "icon": "save",
+                "text": _("historie.templates.historieList.soubor.cardHeader"),
+            }
+        if nav == "SamostatnyNalez":
+            return {
+                "url": reverse("pas:detail", args=[context["back_ident"]]),
+                "icon": "save",
+                "text": _("historie.templates.historieList.soubor.cardHeader"),
+            }
+
+        return None
 
 
 class LokalitaHistorieListView(HistorieListView):
@@ -215,20 +321,16 @@ class LokalitaHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie lokalit.
     """
 
-    def get_queryset(self):
-        lokalita_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(vazba__archeologickyzaznam__ident_cely=lokalita_ident).order_by(
-            "datum_zmeny"
-        )
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    context_typ = "lokalita"
+    queryset_filter = "vazba__archeologickyzaznam__ident_cely"
+    fedora_model = ArcheologickyZaznam
 
-    def get_context_data(self, **kwargs):
-        context = super(LokalitaHistorieListView, self).get_context_data(**kwargs)
-        context["typ"] = "lokalita"
-        context["entity"] = context["typ"]
-        context["ident_cely"] = self.kwargs["ident_cely"]
-        return context
+    def get_header_config(self, context):
+        return {
+            "url": reverse("lokalita:detail", args=[context["ident_cely"]]),
+            "icon": "tour",
+            "text": _("historie.templates.historieList.lokalita.cardHeader"),
+        }
 
 
 class UzivatelHistorieListView(HistorieListView):
@@ -236,20 +338,16 @@ class UzivatelHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie uživatele.
     """
 
-    def get_queryset(self):
-        user_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(vazba__uzivatelhistorievazba__ident_cely=user_ident).order_by(
-            "datum_zmeny"
-        )
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    context_typ = "uzivatel"
+    queryset_filter = "vazba__uzivatelhistorievazba__ident_cely"
+    fedora_model = User
 
-    def get_context_data(self, **kwargs):
-        context = super(UzivatelHistorieListView, self).get_context_data(**kwargs)
-        context["typ"] = "uzivatel"
-        context["entity"] = context["typ"]
-        context["ident_cely"] = self.kwargs["ident_cely"]
-        return context
+    def get_header_config(self, context):
+        return {
+            "url": reverse("uzivatel:update-uzivatel"),
+            "icon": "person",
+            "text": _("historie.templates.historieList.uzivatele.cardHeader"),
+        }
 
 
 class ExterniZdrojHistorieListView(HistorieListView):
@@ -257,15 +355,66 @@ class ExterniZdrojHistorieListView(HistorieListView):
     Třida pohledu pro zobrazení historie externích zdrojů.
     """
 
-    def get_queryset(self):
-        ez_ident = self.kwargs["ident_cely"]
-        queryset = self.model.objects.filter(vazba__externizdroj__ident_cely=ez_ident).order_by("datum_zmeny")
-        queryset = self._annotate_queryset(queryset)
-        return queryset
+    context_typ = "ext_zdroj"
+    queryset_filter = "vazba__externizdroj__ident_cely"
+    fedora_model = ExterniZdroj
 
-    def get_context_data(self, **kwargs):
-        context = super(ExterniZdrojHistorieListView, self).get_context_data(**kwargs)
-        context["typ"] = "ext_zdroj"
-        context["entity"] = context["typ"]
-        context["ident_cely"] = self.kwargs["ident_cely"]
-        return context
+    def get_header_config(self, context):
+        return {
+            "url": reverse("ez:detail", args=[context["ident_cely"]]),
+            "icon": "menu_book",
+            "text": _("historie.templates.historieList.ext_zdroj.cardHeader"),
+        }
+
+
+class PianHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie Pianu.
+    """
+
+    use_history_table = False
+    fedora_model = Pian
+    context_typ = "akce"
+
+    def get_header_config(self, context):
+        return {
+            "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
+            "icon": "brush",
+            "text": _("historie.templates.historieList.pian.cardHeader"),
+        }
+
+
+class PianLokalitaHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie Pianu.
+    """
+
+    use_history_table = False
+    fedora_model = Pian
+    context_typ = "lokalita"
+
+    def get_header_config(self, context):
+        return {
+            "url": reverse(
+                "lokalita:detail-dj", args=[self.kwargs["lokalita_ident_cely"], self.kwargs["dj_ident_cely"]]
+            ),
+            "icon": "tour",
+            "text": _("historie.templates.historieList.pian.cardHeader"),
+        }
+
+
+class AdbHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie ADB.
+    """
+
+    use_history_table = False
+    fedora_model = Adb
+    context_typ = "akce"
+
+    def get_header_config(self, context):
+        return {
+            "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
+            "icon": "brush",
+            "text": _("historie.templates.historieList.adb.cardHeader"),
+        }

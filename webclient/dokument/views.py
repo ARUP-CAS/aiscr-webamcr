@@ -1925,7 +1925,6 @@ def get_detail_template_shows(dokument, user):
         "tvary_smazat": show_tvary and check_permissions(p.actionChoices.dok_tvary_smazat, user, dokument.ident_cely),
         "zapsat_cast": check_permissions(p.actionChoices.dok_cast_zapsat, user, dokument.ident_cely),
         "nalez_smazat": check_permissions(p.actionChoices.nalez_smazat_dokument, user, dokument.ident_cely),
-        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, dokument.ident_cely),
         "soubor_stahnout": soubor_stahnout_dokument,
         "soubor_nahled": soubor_nahled,
         "soubor_smazat": soubor_smazat,

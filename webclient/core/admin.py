@@ -16,6 +16,7 @@ from django.contrib import admin, messages
 from django.contrib.auth.models import Group
 from django.core.cache import cache
 from django.core.management import call_command
+from django.db.models import Count, Exists, OuterRef, Q
 from django.http import HttpResponse
 from django.http.request import HttpRequest
 from django.shortcuts import redirect
@@ -230,6 +231,30 @@ class PermissionAdmin(admin.ModelAdmin):
                 return redirect(reverse("admin:core_permissions_changelist"))
             Permissions.objects.all().delete()
             sheet["result"] = sheet.apply(self.check_save_row, axis=1)
+            # 1) existence unikátního páru
+            unique_pair_exists = Exists(
+                Permissions.objects.filter(
+                    address_in_app=OuterRef("address_in_app"),
+                    main_role=OuterRef("main_role"),
+                )
+                .values("address_in_app", "main_role")
+                .annotate(cnt=Count("id"))
+                .filter(cnt=1)
+            )
+            # 2) existence záznamu se stejnou kombinací, ale base = False
+            exists_base_false = Exists(
+                Permissions.objects.filter(
+                    address_in_app=OuterRef("address_in_app"),
+                    main_role=OuterRef("main_role"),
+                    base=False,
+                )
+            )
+            Permissions.objects.filter(
+                base=True,
+                status__isnull=True,
+                ownership__isnull=True,
+                accessibility__isnull=True,
+            ).filter(Q(unique_pair_exists) | ~Q(exists_base_false)).delete()
             sheet.drop(sheet.iloc[:, 3:22], axis=1, inplace=True)
             sheet = sheet.reset_index(drop=True)
             logger.debug(sheet.info())
@@ -388,16 +413,15 @@ class PermissionAdmin(admin.ModelAdmin):
         else:
             logger.debug("core.admin.PermissionAdmin.accessibility_NOK")
             return False
-        if not (base is True and status is None and ownership is None and accessibility is None):
-            Permissions.objects.create(
-                address_in_app=address,
-                base=base,
-                main_role=Group.objects.get(id=i + 1),
-                status=status,
-                ownership=ownership,
-                accessibility=accessibility,
-                action=None if pd.isna(row.iloc[2]) else row.iloc[2],
-            )
+        Permissions.objects.create(
+            address_in_app=address,
+            base=base,
+            main_role=Group.objects.get(id=i + 1),
+            status=status,
+            ownership=ownership,
+            accessibility=accessibility,
+            action=None if pd.isna(row.iloc[2]) else row.iloc[2],
+        )
         return True
 
     def check_status_regex(self, cell):
