@@ -706,7 +706,11 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
-            "nalezce", "predano_organizace", "katastr", "katastr__okres", "soubory"
+            "nalezce",
+            "predano_organizace",
+            "katastr",
+            "katastr__okres__kraj",
+            "soubory",
         ).prefetch_related(
             "specifikace",
             "okolnosti",
