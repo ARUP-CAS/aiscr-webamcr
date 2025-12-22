@@ -199,6 +199,11 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
             models.Index(fields=["typ_zmeny", "vazba"]),
             models.Index(fields=["typ_zmeny", "uzivatel", "vazba", "organizace_snapshot"]),
             models.Index(fields=["vazba", "organizace_snapshot"]),
+            models.Index(
+                fields=["uzivatel"],
+                include=["id"],
+                name="historie_org_lookup_idx",
+            ),
         ]
 
 
