@@ -111,7 +111,7 @@ class PermissionService:
             "Přístupnost_E",
         ]
         actual = [col.strip() for col in csv_sheet.columns]
-        if actual[0:20] != expected:
+        if actual[: len(expected)] != expected:
             raise WrongCSVError
         return csv_sheet
 
@@ -237,11 +237,16 @@ class PermissionService:
         :return: True při úspěšném uložení, jinak False.
         :rtype: bool
         """
+        ROLE_COL_OFFSET = 4
+        STATUS_COL_OFFSET = 8
+        OWNERSHIP_COL_OFFSET = 12
+        ACCESSIBILITY_COL_OFFSET = 16
+
         if row.iloc[0] != "core":
             address = str(row.iloc[0]) + "/" + str(row.iloc[1])
         else:
             address = str(row.iloc[1])
-        if row.iloc[4 + i] == "X":
+        if row.iloc[ROLE_COL_OFFSET + i] == "X":
             Permissions.objects.create(
                 address_in_app=address,
                 base=False,
@@ -249,49 +254,51 @@ class PermissionService:
                 action=None if pd.isna(row.iloc[2]) else row.iloc[2],
             )
             return True
-        elif row.iloc[4 + i] == "*":
+        elif row.iloc[ROLE_COL_OFFSET + i] == "*":
             base = True
         else:
             return False
-        if "|" in row.iloc[8 + i]:
+        if "|" in row.iloc[STATUS_COL_OFFSET + i]:
             n = 0
             results = list()
-            for n, value in enumerate(row.iloc[8 + i].split("|")):
+            for n, value in enumerate(row.iloc[STATUS_COL_OFFSET + i].split("|")):
                 new_row = row.copy()
-                new_row.iloc[8 + i] = row.iloc[8 + i].split("|")[n].strip()
-                if len(row.iloc[12 + i].split("|")) > 1:
-                    new_row.iloc[12 + i] = row.iloc[12 + i].split("|")[n].strip()
+                new_row.iloc[STATUS_COL_OFFSET + i] = row.iloc[STATUS_COL_OFFSET + i].split("|")[n].strip()
+                if len(row.iloc[OWNERSHIP_COL_OFFSET + i].split("|")) > 1:
+                    new_row.iloc[OWNERSHIP_COL_OFFSET + i] = row.iloc[OWNERSHIP_COL_OFFSET + i].split("|")[n].strip()
                 else:
-                    new_row.iloc[12 + i] = row.iloc[12 + i]
-                if len(row.iloc[16 + i].split("|")) > 1:
-                    new_row.iloc[16 + i] = row.iloc[16 + i].split("|")[n].strip()
+                    new_row.iloc[OWNERSHIP_COL_OFFSET + i] = row.iloc[OWNERSHIP_COL_OFFSET + i]
+                if len(row.iloc[ACCESSIBILITY_COL_OFFSET + i].split("|")) > 1:
+                    new_row.iloc[ACCESSIBILITY_COL_OFFSET + i] = (
+                        row.iloc[ACCESSIBILITY_COL_OFFSET + i].split("|")[n].strip()
+                    )
                 else:
-                    new_row.iloc[16 + i] = row.iloc[16 + i]
+                    new_row.iloc[ACCESSIBILITY_COL_OFFSET + i] = row.iloc[ACCESSIBILITY_COL_OFFSET + i]
                 results.append(self.save_permission(new_row, i))
             if all(a is True for a in results):
                 return True
             else:
                 return False
         else:
-            if row.iloc[8 + i] == "*":
+            if row.iloc[STATUS_COL_OFFSET + i] == "*":
                 status = None
-            elif self.check_status_regex(row.iloc[8 + i]):
-                status = row.iloc[8 + i]
+            elif self.check_status_regex(row.iloc[STATUS_COL_OFFSET + i]):
+                status = row.iloc[STATUS_COL_OFFSET + i]
             else:
                 return False
-        if row.iloc[12 + i] == "*":
+        if row.iloc[OWNERSHIP_COL_OFFSET + i] == "*":
             ownership = None
-        elif row.iloc[12 + i].endswith(".my"):
+        elif row.iloc[OWNERSHIP_COL_OFFSET + i].endswith(".my"):
             ownership = Permissions.ownershipChoices.my
-        elif row.iloc[12 + i].endswith(".ours"):
+        elif row.iloc[OWNERSHIP_COL_OFFSET + i].endswith(".ours"):
             ownership = Permissions.ownershipChoices.our
         else:
             return False
-        if row.iloc[16 + i] == "*":
+        if row.iloc[ACCESSIBILITY_COL_OFFSET + i] == "*":
             accessibility = None
-        elif row.iloc[16 + i].endswith("(my)"):
+        elif row.iloc[ACCESSIBILITY_COL_OFFSET + i].endswith("(my)"):
             accessibility = Permissions.ownershipChoices.my
-        elif row.iloc[16 + i].endswith("(ours)"):
+        elif row.iloc[ACCESSIBILITY_COL_OFFSET + i].endswith("(ours)"):
             accessibility = Permissions.ownershipChoices.our
         else:
             return False
