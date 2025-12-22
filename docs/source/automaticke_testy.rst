@@ -1,3 +1,5 @@
+.. _automaticke-testy:
+
 Automatické testy
 =================
 

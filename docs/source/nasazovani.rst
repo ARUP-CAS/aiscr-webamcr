@@ -182,6 +182,13 @@ Ve vývojovém nasazení také běží navíc tři další služby:
 
 **Souhrh:** ``./scripts\dev_deploy.sh``, docker compose mode, <ip_adresa_stanice:8000>, existující soubory s definicí secrets, volitelně: soubor (.tar) s daty pro naplnění lokální databáze.
 
+========================================
+Skriptované nasazení pro testovací účely
+========================================
+Pro nasazení na vývojové stanici pro testovací účely, lze využít speciální konfigurace spustitelné přes:
+
+* Automatizační skript ``scripts/test_deploy.sh`` viz :ref:`automaticke-testy`.
+
 ================================================
 Manuální nasazení pomocí docker-compose souborů
 ================================================
