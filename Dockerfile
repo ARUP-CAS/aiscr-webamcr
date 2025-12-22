@@ -1,6 +1,6 @@
 # Dockerfile
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.0
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1
 
 # Load arguments
 ARG VERSION_APP
