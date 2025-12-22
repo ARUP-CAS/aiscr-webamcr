@@ -15,7 +15,7 @@ django-widget-tweaks==1.5.0
 distlib==0.4.0
 django-rosetta==0.10.3
 django-auto-logout==0.5.1
-reportlab==4.4.6
+reportlab==4.4.7
 PyRTF3==0.47.5
 pypdf==6.4.2
 Pillow==12.0.0
@@ -35,14 +35,14 @@ djangorestframework-xml==2.0.0
 lxml==6.0.2
 python-magic==0.4.27
 pdf2image==1.17.0
-phonenumbers==9.0.20
+phonenumbers==9.0.21
 py7zr==1.0.0
 rarfile==4.2
 django-cacheops==7.2
 django-model-utils==5.0.0
 pandas==2.3.3
 tablib[all]==3.9.0
-pre-commit==4.5.0
+pre-commit==4.5.1
 coverage==7.13.0
 django-debug-toolbar==6.1.0
 django-livereload-server==0.5.1
