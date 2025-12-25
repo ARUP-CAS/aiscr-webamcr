@@ -93,7 +93,6 @@ další Github workflow s názvem `.github\workflows\deployment.yml` v rámci kt
 * v místě nasazení dojde k otevření adresáře obsahujícího deployment skripty a následnému stashování git repozitáře a jeho aktualizaci (tzv. pull).
 * spuštění deployment skriptu (`scripts/ci_deployment/deploy_server_dev.sh`), který poté vyvolá:
 
- * spuštění skriptu `scripts/db/db_backup.sh` tj. zálohování existující databáze a zkopírování její zálohy označené předchozí verzí ve formátu .gzip a uložení do adresáře `../db_backups`
  * spuštění vlastního nasazení WebAMČR přes skript `scripts/prod_deploy.sh`, tj. nasazení nejnovějších docker obrazů z docker-hubu pomocí swarm módu.
  * ověření správného spuštění docker kontejnerů ve swarm-mode.
 
@@ -182,6 +181,13 @@ Ve vývojovém nasazení také běží navíc tři další služby:
 * livereload - služba zajišťující aktualizace aplikace WebAMČR při změně souborů v lokálním repozitáři
 
 **Souhrh:** ``./scripts\dev_deploy.sh``, docker compose mode, <ip_adresa_stanice:8000>, existující soubory s definicí secrets, volitelně: soubor (.tar) s daty pro naplnění lokální databáze.
+
+========================================
+Skriptované nasazení pro testovací účely
+========================================
+Pro nasazení na vývojové stanici pro testovací účely, lze využít speciální konfigurace spustitelné přes:
+
+* Automatizační skript ``scripts/test_deploy.sh`` viz :ref:`automaticke-testy`.
 
 ================================================
 Manuální nasazení pomocí docker-compose souborů
