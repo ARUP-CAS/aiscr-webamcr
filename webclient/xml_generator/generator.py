@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 
 # import xml.etree.ElementTree as ET
-from typing import Optional, Union
+from typing import Optional
 
 from adb.models import VyskovyBod
 from django.contrib.gis.db import models
@@ -14,7 +14,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from heslar.models import RuianKraj, RuianOkres
 from lxml import etree
 from lxml import etree as ET
-from xml_generator.models import ModelWithMetadata
 
 AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.2/"
 AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.2/amcr.xsd"
@@ -56,84 +55,6 @@ class DocumentGenerator:
         "xs:decimal",
         "xs:anyURI",
     )
-
-    @classmethod
-    def generate_metadata(cls, model_class=None, limit=None, start_with_pk=None):
-        logger.debug(
-            "xml_generator.generator.generate_metadata.start", extra={"class_name": model_class, "limit": limit}
-        )
-        if not model_class:
-            for current_class in cls._get_schema_dict():
-                logger.debug(
-                    "xml_generator.generator.generate_metadata.loop.strart",
-                    extra={"limit": limit, "class_name": str(current_class)},
-                )
-                if not start_with_pk:
-                    queryset = current_class.objects.all().order_by("pk")
-                else:
-                    queryset = current_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
-                if limit is not None:
-                    queryset = queryset[:limit]
-                for obj in queryset:
-                    from core.repository_connector import FedoraTransaction
-                    from uzivatel.models import User
-
-                    obj: Union[ModelWithMetadata, User]
-                    fedora_transaction = FedoraTransaction()
-                    obj.save_metadata(fedora_transaction, close_transaction=True)
-                logger.debug(
-                    "xml_generator.generator.generate_metadata.loop.end",
-                    extra={"limit": limit, "class_name": str(current_class)},
-                )
-        else:
-            logger.debug(
-                "xml_generator.generator.generate_metadata.loop.strart",
-                extra={"class_name": model_class, "limit": limit},
-            )
-            from adb.models import Adb
-            from arch_z.models import ArcheologickyZaznam
-            from dokument.models import Dokument, Let
-            from ez.models import ExterniZdroj
-            from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
-            from pas.models import SamostatnyNalez
-            from pian.models import Pian
-            from projekt.models import Projekt
-            from uzivatel.models import Organizace, Osoba, User
-
-            model_class = {
-                "Projekt": Projekt,
-                "ArcheologickyZaznam": ArcheologickyZaznam,
-                "Let": Let,
-                "Adb": Adb,
-                "Dokument": Dokument,
-                "ExterniZdroj": ExterniZdroj,
-                "Pian": Pian,
-                "SamostatnyNalez": SamostatnyNalez,
-                "User": User,
-                "Heslar": Heslar,
-                "RuianKraj": RuianKraj,
-                "RuianOkres": RuianOkres,
-                "RuianKatastr": RuianKatastr,
-                "Organizace": Organizace,
-                "Osoba": Osoba,
-            }.get(model_class)
-            if not start_with_pk:
-                queryset = model_class.objects.order_by("pk").all()
-            else:
-                queryset = model_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
-            if limit is not None:
-                queryset = queryset[:limit]
-            for obj in queryset:
-                from core.repository_connector import FedoraTransaction
-
-                obj: Union[ModelWithMetadata, User]
-                fedora_transaction = FedoraTransaction()
-                obj.active_transaction = fedora_transaction
-                obj.save_metadata(fedora_transaction, close_transaction=True)
-            logger.debug(
-                "xml_generator.generator.generate_metadata.loop.end", extra={"class_name": model_class, "limit": limit}
-            )
-        logger.debug("xml_generator.generator.generate_metadata.end", extra={"class_name": model_class, "limit": limit})
 
     @classmethod
     def _get_schema_dict(cls):
@@ -393,9 +314,9 @@ class DocumentGenerator:
             if parsed_comment.attribute_field_names is not None:
                 for attribute_field_name in parsed_comment.attribute_field_names:
                     attribute_name = self.get_ref_type_attribute_name(ref_type)
-                    new_sub_element.attrib[
-                        attribute_name
-                    ] = f"{id_field_prefix}{self._get_attribute_of_record(attribute_field_name, document_object)}"
+                    new_sub_element.attrib[attribute_name] = (
+                        f"{id_field_prefix}{self._get_attribute_of_record(attribute_field_name, document_object)}"
+                    )
 
     def _create_many_to_many_ref_elements(
         self, schema_element, parent_element, related_records, parsed_comment: ParsedComment, prefix="", ref_type=None
@@ -429,9 +350,9 @@ class DocumentGenerator:
                 new_sub_element.attrib["id"] = f"{prefix}{related_records[parsed_comment.attribute_field_names[0]][i]}"
                 if len(parsed_comment.attribute_field_names) == 2:
                     attribute_name = self.get_ref_type_attribute_name(ref_type)
-                    new_sub_element.attrib[
-                        attribute_name
-                    ] = f"{prefix}{related_records[parsed_comment.attribute_field_names[1]][i]}"
+                    new_sub_element.attrib[attribute_name] = (
+                        f"{prefix}{related_records[parsed_comment.attribute_field_names[1]][i]}"
+                    )
 
     def _parse_scheme_create_element(self, schema_element, parent_element):
         if schema_element.__class__.__name__ == "_Element":
