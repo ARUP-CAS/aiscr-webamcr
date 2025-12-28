@@ -16,7 +16,6 @@ distlib==0.4.0
 django-rosetta==0.10.3
 django-auto-logout==0.5.1
 reportlab==4.4.7
-reportlab==4.4.7
 PyRTF3==0.47.5
 pypdf==6.4.2
 Pillow==12.0.0
@@ -27,7 +26,6 @@ celery==5.6.0
 django-add-default-value==0.10.0
 redis==7.1.0
 selenium==4.39.0
-selenium==4.39.0
 django-celery-beat==2.8.1
 django-celery-results==2.6.0
 django-prometheus==2.4.1
@@ -37,7 +35,6 @@ djangorestframework-xml==2.0.0
 lxml==6.0.2
 python-magic==0.4.27
 pdf2image==1.17.0
-phonenumbers==9.0.21
 phonenumbers==9.0.21
 py7zr==1.0.0
 rarfile==4.2
