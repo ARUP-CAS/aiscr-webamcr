@@ -73,9 +73,9 @@
   //script for modal for delete files
   document.addEventListener('DOMContentLoaded', function (event) {
     if (document.getElementsByClassName("file-smazat-btn")){
-      elements = document.getElementsByClassName("file-smazat-btn")
+      const elements = document.getElementsByClassName("file-smazat-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "smazat-soubor-form",
         modalFormID: "#smazat-soubor-form",
         })

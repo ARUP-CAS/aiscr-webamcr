@@ -64,16 +64,19 @@
 </div>
 <script>
   //modal scripts
+  let dokument_pripojit_modal;
+  let dokument_pripojit_z_projektu_modal;
   document.addEventListener('DOMContentLoaded', function (event) {
+    let options;
     if ("{{show.pripojit_dokumenty}}"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })
       dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
     };
     if ("{{show.pripojit_dokumenty}}" && "{{app}}" != "lokalita"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })
@@ -94,9 +97,9 @@
           $('.app-card-dokument .loader').css("display", "none");
           $('.app-card-dokument .content-with-table-responsive').append(data);
           if (document.getElementsByClassName("dokument-odpojit-btn")){
-            elements = document.getElementsByClassName("dokument-odpojit-btn")
+            const elements = document.getElementsByClassName("dokument-odpojit-btn")
             for (let i = 0; i < elements.length; i++){
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "odpojit-dokument-form",
               modalFormID: "#odpojit-dokument-form",
               })

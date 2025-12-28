@@ -145,10 +145,10 @@
 <script type="text/javascript">
     try {
         document.getElementById('jump').onsubmit= function() {
-            var page=document.getElementById('jump-page').value; // value of input box
-            page=page*1; // ensures page is numeric only
-            url = window.location
-            var params = new URLSearchParams(url.search);
+            let page=document.getElementById('jump-page').value; // value of input box
+            page = page * 1; // ensures page is numeric only
+            const url = window.location
+            const params = new URLSearchParams(url.search);
             if (params.has("page") ){
                 params.delete('page')
                 params.append('page', page);
@@ -167,10 +167,10 @@
     };
     try {
         document.getElementById('per-page').onsubmit= function() {
-            var per_page=document.getElementById('per-page-num').value; // value of input box
-            per_page=per_page*1; // ensures page is numeric only
-            url = window.location
-            var params = new URLSearchParams(url.search);
+            let per_page=document.getElementById('per-page-num').value; // value of input box
+            per_page = per_page * 1; // ensures page is numeric only
+            const url = window.location
+            const params = new URLSearchParams(url.search);
             if (params.has("per_page") ){
                 params.delete('per_page')
                 params.append('per_page', per_page);

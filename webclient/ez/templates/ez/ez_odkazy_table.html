@@ -34,8 +34,9 @@
 </div>
 <script>
   //modal scripts
+  let dokument_pripojit_modal;
   document.addEventListener('DOMContentLoaded', function (event) {
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-eo-form",
         modalFormID: "#pripojit-eo-form",
       })
@@ -58,9 +59,9 @@
           $('.app-card-{{card_type}} .loader').css("display", "none");
           $('.app-card-{{card_type}} .content-with-table-responsive').append(data);
           if (document.getElementsByClassName("ez-odpojit-btn")){
-            elements = document.getElementsByClassName("ez-odpojit-btn")
+            const elements = document.getElementsByClassName("ez-odpojit-btn")
             for (let i = 0; i < elements.length; i++){
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "odpojit-az-form",
               modalFormID: "#odpojit-az-form",
               })
@@ -68,9 +69,9 @@
             }
           };
           if (document.getElementsByClassName("ez-change-btn")){
-            elements = document.getElementsByClassName("ez-change-btn")
+            const elements = document.getElementsByClassName("ez-change-btn")
             for (let i = 0; i < elements.length; i++){
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "zmenit-eo-form",
               modalFormID: "#zmenit-eo-form",
               })

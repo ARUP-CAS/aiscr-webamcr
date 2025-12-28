@@ -25,14 +25,19 @@
 
 {% block script_detail %}
   <script>
-    var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
+    let odeslat_akci_modal;
+    let vratit_akci_modal;
+    let archivovat_akci_modal;
+    let smazat_akci_modal;
+    let global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
     if(global_map_projekt_ident.length==0){
       global_map_projekt_ident=document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0];
     }
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
+      let options;
       if ("{{show.odeslat_link}}" != "False"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}&typ=lokalita",
         formID: "odeslat-akci-form",
         modalFormID: "#odeslat-akci-form",
@@ -40,7 +45,7 @@
       odeslat_akci_modal = new Modal(options, "lokalita-odeslat");
       };
       if ("{{show.vratit_link}}" != "False"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "vratit-akci-form",
         modalFormID: "#vratit-akci-form",
@@ -48,14 +53,14 @@
       vratit_akci_modal = new Modal(options, "lokalita-vratit");
       }
       if ("{{show.archivovat_link}}" != "False"){
-        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "archivovat-akci-form",
           modalFormID: "#archivovat-akci-form",
         })
       archivovat_akci_modal = new Modal(options, "lokalita-archivovat");
       }
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "smazat-akci-form",
         modalFormID: "#smazat-akci-form",

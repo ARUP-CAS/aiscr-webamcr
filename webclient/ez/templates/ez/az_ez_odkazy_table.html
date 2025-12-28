@@ -29,9 +29,10 @@
 </div>
 <script>
   //modal scripts
+  let dokument_pripojit_modal;
   document.addEventListener('DOMContentLoaded', function (event) {
     if ("{{show.pripojit_eo}}"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-eo-doaz-form",
         modalFormID: "#pripojit-eo-doaz-form",
       })
