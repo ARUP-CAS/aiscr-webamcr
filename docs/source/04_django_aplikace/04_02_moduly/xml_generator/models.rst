@@ -27,6 +27,14 @@ Třídy
 
    .. py:method:: metadata()
 
+   .. py:method:: get_metadata_historicka()
+
+      Metoda k získání vlastního souboru metadat dané verze z Fedory
+
+   .. py:method:: get_historicke_verze()
+
+      Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
+
    .. py:method:: save_metadata()
 
    .. py:method:: save_record_deletion_record()

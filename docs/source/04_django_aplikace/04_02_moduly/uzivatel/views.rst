@@ -138,7 +138,7 @@ Třídy
 
 .. py:class:: ObtainAuthTokenWithUpdate
 
-   Popis není k dispozici.
+   Třída pohledu pro získaní tokenu pro API.
 
    **Metody:**
 

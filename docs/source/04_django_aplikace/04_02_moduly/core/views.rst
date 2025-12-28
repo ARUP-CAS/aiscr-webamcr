@@ -98,9 +98,9 @@ Třídy
    .. py:method:: get()
 
 
-.. py:class:: StahnoutMetadataIdentCelyView
+.. py:class:: StahnoutDataHistorickaView
 
-   Popis není k dispozici.
+   Třída pohledu pro stažení historické verze souboru nebo metadat z Fedory
 
    **Metody:**
 

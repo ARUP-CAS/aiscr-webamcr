@@ -81,6 +81,22 @@ Třídy
 
    .. py:method:: get_metadata()
 
+   .. py:method:: get_metadata_historicka()
+
+      Metoda varacející konkrétní verzi metadat
+
+   .. py:method:: parse_historie()
+
+      Metoda k parsování odpovědi s verzemi
+
+   .. py:method:: get_historie_metadat()
+
+      Metoda k získání info o verzích metadat
+
+   .. py:method:: get_historie_file()
+
+      Metoda k získání info o verzích souborů
+
    .. py:method:: save_metadata()
 
    .. py:method:: save_binary_file()

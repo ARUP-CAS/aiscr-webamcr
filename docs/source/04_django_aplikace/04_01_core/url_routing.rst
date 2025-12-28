@@ -159,9 +159,9 @@ CORE
    * - ``prolong_session``
      - ``session/prodlouzit/``
      - ``views.prolong_session``
-   * - ``stahnout_metadata``
-     - ``metadata/stahnout/<str:model_name>/<str:ident_cely>``
-     - ``views.StahnoutMetadataIdentCelyView.as_view()``
+   * - ``stahnout_data_historicka``
+     - ``data-historicka/stahnout/<str:model_name>/<str:ident_cely>/<str:timestamp>``
+     - ``views.StahnoutDataHistorickaView.as_view()``
    * - ``post_ajax_get_pas_pian_limit``
      - ``mapa-pian-pas``
      - ``post_ajax_get_pas_and_pian_limit``
@@ -512,6 +512,15 @@ HISTORIE
    * - ``ez``
      - ``ez/<str:ident_cely>``
      - ``ExterniZdrojHistorieListView.as_view()``
+   * - ``pian``
+     - ``pian/<str:ident_cely>/<str:akce_ident_cely>/<str:dj_ident_cely>``
+     - ``PianHistorieListView.as_view()``
+   * - ``pian-lokalita``
+     - ``pian-lokalita/<str:ident_cely>/<str:lokalita_ident_cely>/<str:dj_ident_cely>``
+     - ``PianLokalitaHistorieListView.as_view()``
+   * - ``adb``
+     - ``adb/<str:ident_cely>/<str:akce_ident_cely>/<str:dj_ident_cely>``
+     - ``AdbHistorieListView.as_view()``
 
 KOMPONENTA
 ----------

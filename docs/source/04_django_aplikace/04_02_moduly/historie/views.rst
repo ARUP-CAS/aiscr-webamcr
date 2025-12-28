@@ -9,9 +9,34 @@ Třídy
 .. py:class:: HistorieListView
 
    Třida pohledu pro zobrazení historie záznamu.
-Třída se dedí pro jednotlivá historie.
+Třída se dědí pro jednotlivá historie.
 
    **Metody:**
+
+   .. py:method:: get_lookup_value()
+
+      Vrátí hodnotu z URL podle lookup_kwarg.
+
+   .. py:method:: prepare_queryset()
+
+      Potomek může přepsat pro vlastní řazení nebo dodatečné filtry.
+
+   .. py:method:: add_extra_context()
+
+      Potomek může přepsat a doplnit další hodnoty do contextu.
+
+   .. py:method:: get_queryset()
+
+   .. py:method:: get_header_config()
+
+      Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
+
+   .. py:method:: add_fedora_history()
+
+      Pokud potomek definuje fedora_model, automaticky se načte
+      metadata historie z Fedory a přidá se druhá tabulka fedora_table.
+
+   .. py:method:: get_table()
 
    .. py:method:: get_context_data()
 
@@ -22,9 +47,7 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_queryset()
-
-   .. py:method:: get_context_data()
+   .. py:method:: get_header_config()
 
 
 .. py:class:: AkceHistorieListView
@@ -33,9 +56,7 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_queryset()
-
-   .. py:method:: get_context_data()
+   .. py:method:: get_header_config()
 
 
 .. py:class:: DokumentHistorieListView
@@ -44,9 +65,9 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_queryset()
+   .. py:method:: get_header_config()
 
-   .. py:method:: get_context_data()
+   .. py:method:: add_extra_context()
 
 
 .. py:class:: SamostatnyNalezHistorieListView
@@ -55,9 +76,7 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_queryset()
-
-   .. py:method:: get_context_data()
+   .. py:method:: get_header_config()
 
 
 .. py:class:: SpolupraceHistorieListView
@@ -66,9 +85,7 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_queryset()
-
-   .. py:method:: get_context_data()
+   .. py:method:: get_header_config()
 
 
 .. py:class:: SouborHistorieListView
@@ -77,9 +94,11 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_context_data()
+   .. py:method:: prepare_queryset()
 
-   .. py:method:: get_queryset()
+   .. py:method:: add_extra_context()
+
+   .. py:method:: get_header_config()
 
 
 .. py:class:: LokalitaHistorieListView
@@ -88,9 +107,7 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_queryset()
-
-   .. py:method:: get_context_data()
+   .. py:method:: get_header_config()
 
 
 .. py:class:: UzivatelHistorieListView
@@ -99,9 +116,7 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_queryset()
-
-   .. py:method:: get_context_data()
+   .. py:method:: get_header_config()
 
 
 .. py:class:: ExterniZdrojHistorieListView
@@ -110,7 +125,32 @@ Třída se dedí pro jednotlivá historie.
 
    **Metody:**
 
-   .. py:method:: get_queryset()
+   .. py:method:: get_header_config()
 
-   .. py:method:: get_context_data()
+
+.. py:class:: PianHistorieListView
+
+   Třida pohledu pro zobrazení historie Pianu.
+
+   **Metody:**
+
+   .. py:method:: get_header_config()
+
+
+.. py:class:: PianLokalitaHistorieListView
+
+   Třida pohledu pro zobrazení historie Pianu.
+
+   **Metody:**
+
+   .. py:method:: get_header_config()
+
+
+.. py:class:: AdbHistorieListView
+
+   Třida pohledu pro zobrazení historie ADB.
+
+   **Metody:**
+
+   .. py:method:: get_header_config()
 

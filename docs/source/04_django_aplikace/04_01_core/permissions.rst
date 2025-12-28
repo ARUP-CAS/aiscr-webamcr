@@ -50,7 +50,6 @@ Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:
 - ``model_edit``
 - ``neident_akce_edit``
 - ``neident_akce_smazat``
-- ``stahnout_metadata``
 - ``ez_edit``
 - ``ez_odeslat``
 - ``ez_potvrdit``
@@ -156,5 +155,6 @@ Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:
 - ``vypis_pas``
 - ``vypis_model3d``
 - ``vypis_ez``
+- ``historie_fedora``
 
 **Celkem:** 148 akcí

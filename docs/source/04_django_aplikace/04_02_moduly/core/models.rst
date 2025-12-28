@@ -81,6 +81,14 @@ Obsahuje typ vazby podle typu záznamu.
 
    .. py:method:: getMock()
 
+   .. py:method:: get_historicke_verze()
+
+      Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
+
+   .. py:method:: get_soubor_historicky()
+
+      Metoda k získání vlastního souboru dané verze z Fedory
+
 
 .. py:class:: ProjektSekvence
 
