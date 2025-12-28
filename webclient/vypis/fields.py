@@ -477,7 +477,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
     def get_name(self, instance):
         new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
         if getattr(instance, self.accessor[-1]):
-            return f"{new_name}<div class='mime-type' style='white-space: pre;'> ({getattr(instance, self.accessor[-1])})</div>"
+            return f"{new_name}<div class='mime-type' style='white-space: pro;'> ({getattr(instance, self.accessor[-1])})</div>"
         return new_name
 
 

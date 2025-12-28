@@ -1,8 +1,24 @@
-Neident akce pohledy
-=======================
+NEIDENTAKCE views
+=================
 
-Definice pohledů.
+Definice views.
 
-.. automodule:: neidentakce.views
-    :members:
-    
+Třídy
+------
+
+.. py:class:: NeidentAkceEditView
+
+   Třída pohledu pro editaci neident akce pomocí modalu.
+
+   **Metody:**
+
+   .. py:method:: get_context_data()
+
+   .. py:method:: get_success_url()
+
+   .. py:method:: post()
+
+   .. py:method:: form_valid()
+
+   .. py:method:: form_invalid()
+

@@ -1,14 +1,15 @@
-Externí zdroje
-===============
+EZ
+==
 
-Táto aplikácia obsahuje definici externích zdrojů. Obsahuje pohľady a formuláře na ich správu. 
+Dokumentace modulu ez.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   views
    forms
+   views
+   signals
    filters
-   
+   tables

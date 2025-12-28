@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=DokumentacniJednotka, weak=False)
 def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
     """
-    Metóda pro vytvoření pianu z katastru arch záznamu.
-    Metóda se volá po uložením DJ.
+    Metoda pro vytvoření pianu z katastru arch záznamu.
+    Metoda se volá po uložením DJ.
     """
     logger.debug("dj.signals.save_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     if instance.suppress_signal:

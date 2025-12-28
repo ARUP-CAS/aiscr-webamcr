@@ -8,9 +8,5 @@ Tato sekce popisuje integrace s externími systémy a službami.
    :caption: Obsah:
 
    fedora_repository
-   databaze
-   gis_sluzby
-   externe_api
-   sparql
 
 

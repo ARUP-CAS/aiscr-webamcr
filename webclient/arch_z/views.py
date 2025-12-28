@@ -121,7 +121,7 @@ def get_areal_choices():
 
 class AkceRelatedRecordUpdateView(TemplateView):
     """
-    Třida, která se dedí a která obsahuje metódy pro získaní relací akce.
+    Třida, která se dedí a která obsahuje metody pro získaní relací akce.
     """
 
     arch_zaznam = None
@@ -129,13 +129,13 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
     def get_shows(self):
         """
-        Metóda pro získaní informací které části stránky mají být zobrazeny.
+        Metoda pro získaní informací které části stránky mají být zobrazeny.
         """
         return get_detail_template_shows(self.get_archeologicky_zaznam(), self.get_jednotky(), self.request.user)
 
     def get_archeologicky_zaznam(self):
         """
-        Metóda pro získaní akce z db.
+        Metoda pro získaní akce z db.
         """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
@@ -149,7 +149,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
     def get_jednotky(self):
         """
-        Metóda pro získaní dokumentační jednotky navázané na akci.
+        Metoda pro získaní dokumentační jednotky navázané na akci.
         """
         return (
             DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
@@ -167,7 +167,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
     def get_dokumenty(self):
         """
-        Metóda pro získaní dokumentů navázaných na akci.
+        Metoda pro získaní dokumentů navázaných na akci.
         """
         return (
             Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
@@ -178,7 +178,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
     def get_externi_odkazy(self):
         """
-        Metóda pro získaní externích odkazů navázaných na akci.
+        Metoda pro získaní externích odkazů navázaných na akci.
         """
         return (
             ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=self.arch_zaznam.ident_cely)
@@ -188,7 +188,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
     def get_vedouci(self, context):
         """
-        Metóda pro získaní dalších vedoucích navázaných na akci.
+        Metoda pro získaní dalších vedoucích navázaných na akci.
         """
         ostatni_vedouci_objekt_formset = inlineformset_factory(
             Akce,
@@ -221,7 +221,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní contextu akci pro template.
+        Metoda pro získaní contextu akci pro template.
         """
         context = super().get_context_data(**kwargs)
         self.check_locality_arch_z_conflict()
@@ -267,14 +267,14 @@ class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateV
 
     def get_archeologicky_zaznam(self) -> ArcheologickyZaznam:
         """
-        Metóda pro získani záznamu akce z db podle ident_cely.
+        Metoda pro získani záznamu akce z db podle ident_cely.
         """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat navíc oproti přepisované metóde.
+        Metoda pro získaní context dat navíc oproti přepisované metóde.
         """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
@@ -285,7 +285,7 @@ class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateV
 
 class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
     """
-    Třida, která se dedí a která obsahuje metódy pro získaní relací DJ.
+    Třida, která se dedí a která obsahuje metody pro získaní relací DJ.
     """
 
     scroll_to_dj = True
@@ -308,7 +308,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
     def get_dokumentacni_jednotka(self):
         """
-        Metóda pro získani záznamu DJ z db podle ident_cely.
+        Metoda pro získani záznamu DJ z db podle ident_cely.
         """
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"ident_cely": dj_ident_cely})
@@ -317,7 +317,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat DJ navíc oproti přepisované metóde, záznam DJ.
+        Metoda pro získaní context dat DJ navíc oproti přepisované metóde, záznam DJ.
         """
         context = super().get_context_data(**kwargs)
         context["active_dj_ident"] = self.get_dokumentacni_jednotka().ident_cely
@@ -338,7 +338,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření DJ.
+        Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření DJ.
         """
         context = super().get_context_data(**kwargs)
         typ_akce = None
@@ -376,7 +376,7 @@ class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRel
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat DJ navíc oproti přepisované metóde, pro zobrazení správneho detailu.
+        Metoda pro získaní context dat DJ navíc oproti přepisované metóde, pro zobrazení správneho detailu.
         """
         context = super().get_context_data(**kwargs)
         old_adb_post = self.request.session.pop("_old_adb_post", None)
@@ -398,7 +398,7 @@ class KomponentaCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář na vytvoření komponenty.
+        Metoda pro získaní context dat navíc oproti přepisované metóde, formulář na vytvoření komponenty.
         """
         context = super().get_context_data(**kwargs)
         context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
@@ -430,7 +430,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def get_komponenta(self):
         """
-        Metóda pro získani záznamu komponenty z db podle ident_cely.
+        Metoda pro získani záznamu komponenty z db podle ident_cely.
         """
         dj_ident_cely = self.kwargs["komponenta_ident_cely"]
         object = get_object_or_404(Komponenta, ident_cely=dj_ident_cely)
@@ -444,8 +444,8 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro úpravu komponenty,
-        případne data poslaného chybného formuláře.
+        Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro úpravu komponenty,
+        případně data poslaného chybného formuláře.
         """
         context = super().get_context_data(**kwargs)
         komponenta = self.get_komponenta()
@@ -468,7 +468,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření PIANu.
+        Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření PIANu.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -527,7 +527,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro editaci PIANu.
+        Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro editaci PIANu.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -572,7 +572,7 @@ class AdbCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření ADB.
+        Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření ADB.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -687,9 +687,9 @@ def edit(request, ident_cely):
 def odeslat(request, ident_cely):
     """
     Funkce pohledu pro zobrazení a spracováni odeslání akce.
-    Na začátku se kontroluje jestli stav není jiný než zapsaný nebo nekdo nezmenil stav akce počas odesílaní.
-    Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metódy na modelu.
-    Po post volání se volá metóda na modelu pro posun stavu do odeslaná.
+    Na začátku se kontroluje jestli stav není jiný než zapsaný nebo nekdo nezmenil stav akce během odesílaní.
+    Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metody na modelu.
+    Po post volání se volá metoda na modelu pro posun stavu do odeslaná.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     az: ArcheologickyZaznam
@@ -747,9 +747,9 @@ def odeslat(request, ident_cely):
 def archivovat(request, ident_cely):
     """
     Funkce pohledu pro zobrazení a spracováni archivace akce.
-    Na začátku se kontroluje jestli stav není jiný než odeslaný nebo nekdo nezmenil stav akce počas archivace.
-    Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metódy na modelu.
-    Po post volání se volá metóda na modelu pro posun stavu do odeslaná.
+    Na začátku se kontroluje jestli stav není jiný než odeslaný nebo nekdo nezmenil stav akce během archivace.
+    Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metody na modelu.
+    Po post volání se volá metoda na modelu pro posun stavu do odeslaná.
     """
     logger.debug("arch_z.views.archivovat.start", extra={"ident_cely": ident_cely})
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
@@ -833,9 +833,9 @@ def archivovat(request, ident_cely):
 def vratit(request, ident_cely):
     """
     Funkce pohledu pro zobrazení a spracováni vrácení stacu akce o jedno naspátek.
-    Na začátku se kontroluje jestli nekdo nezmenil stav akce počas vrácení.
+    Na začátku se kontroluje jestli nekdo nezmenil stav akce během vrácení.
     Pro vrácení se používa formulář pro vrácení, který je jednotný napríč aplikací.
-    Po post volání se volá metóda na modelu pro posun stavu naspátek.
+    Po post volání se volá metoda na modelu pro posun stavu naspátek.
     Pokud se jedná o projektovou akci, tak se vrací i stav projektu ze stavu uzavřený nebo archivovaný.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
@@ -940,7 +940,7 @@ def vratit(request, ident_cely):
 def zapsat(request, projekt_ident_cely=None):
     """
     Funkce pohledu pro vytvoření akce.
-    Na začátku se kontroluje jestli jde o vytvoření projektové nebo samostatné akce a případne či je možné vytvořit projektovou akci.
+    Na začátku se kontroluje jestli jde o vytvoření projektové nebo samostatné akce a případně zda je možné vytvořit projektovou akci.
     Zobrazení pozostáva ze 3 formulářů: CreateArchZForm, CreateAkceForm, formset na další vedoucí.
     """
     if projekt_ident_cely:
@@ -1118,8 +1118,8 @@ def zapsat(request, projekt_ident_cely=None):
 def smazat(request, ident_cely):
     """
     Funkce pohledu pro zobrazení a spracováni smazání akce.
-    Na začátku se kontroluje jestli nekdo nezmenil stav akce počas smazání.
-    Po post volání se volá metóda na modelu pro smazání akce.
+    Na začátku se kontroluje jestli nekdo nezmenil stav akce během smazání.
+    Po post volání se volá metoda na modelu pro smazání akce.
     """
     az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
@@ -1520,7 +1520,7 @@ class AkceIndexView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní kontextu podlehu.
+        Metoda pro získaní kontextu podlehu.
         """
         context = {
             "toolbar_name": _("arch_z.views.akceIndexView.toolbarName"),
@@ -1626,7 +1626,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní kontextu podlehu.
+        Metoda pro získaní kontextu podlehu.
         """
         az = self.get_archeologicky_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -1641,7 +1641,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
     def get(self, request, *args, **kwargs):
         """
-        Metóda pro vrácení stránky pri voláni GET.
+        Metoda pro vrácení stránky pri voláni GET.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
@@ -1654,7 +1654,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Metóda po potvrzení zmeny akce na samostatnou.
+        Metoda po potvrzení zmeny akce na samostatnou.
         Pri zavolíní se kontroluje, že akce nebyla změnena v mezičase potvrzení.
         Po úspešné kontrole se odebere projekt, nastaví typ akce na samostatnú a nastaví nový ident celý.
         Celá událost je zapsaná do historie.
@@ -1698,7 +1698,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní kontextu podlehu.
+        Metoda pro získaní kontextu podlehu.
         """
         az = self.get_archeologicky_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -1713,7 +1713,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
     def get(self, request, *args, **kwargs):
         """
-        Metóda pro vrácení stránky pri voláni GET s formulářem pro výber projektu.
+        Metoda pro vrácení stránky pri voláni GET s formulářem pro výber projektu.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
@@ -1729,7 +1729,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """
-        Metóda po potvrzení zmeny akce na projektovou.
+        Metoda po potvrzení zmeny akce na projektovou.
         Pri zavolíní se kontroluje, že akce nebyla změnena v mezičase potvrzení.
         Po úspešné kontrole se napojí projekt, nastaví typ akce na projektovou a nastaví nový ident celý.
         Celá událost je zapsaná do historie.
@@ -1840,11 +1840,11 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
 
         jednotka (DokumentacniJednotka): model DokumentacniJednotka pro který se daný context počítá.
 
-        jednotky (DokumentacniJednotka): list modelů DokumentacniJednotka použit pro správne zobrazení možnosti zmeny typu DJ.
+        jednotky (DokumentacniJednotka): list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
 
         show (dictionary): dictionary pro zobrazení možnosti uživatele na stránce.
 
-        old_adb_post (CreateADBForm): staré volání CreateADBForm pro správne zobrazení chyb formuláře.
+        old_adb_post (CreateADBForm): staré volání CreateADBForm pro správně zobrazení chyb formuláře.
 
     Returns:
         dj_form_detail: dictionary kontextu DJ pro správné zobrazení stránky.

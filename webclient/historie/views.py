@@ -41,9 +41,11 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
                     Value(" ("),
                     F("uzivatel__ident_cely"),
                     Value(", "),
-                    F("uzivatel__organizace__nazev_zkraceny_en")
-                    if get_language() == "en"
-                    else F("uzivatel__organizace__nazev_zkraceny"),
+                    (
+                        F("uzivatel__organizace__nazev_zkraceny_en")
+                        if get_language() == "en"
+                        else F("uzivatel__organizace__nazev_zkraceny")
+                    ),
                     Value(")"),
                     output_field=CharField(),
                 )
@@ -53,9 +55,11 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
                 uzivatel_custom=Concat(
                     F("uzivatel__ident_cely"),
                     Value(" ("),
-                    F("uzivatel__organizace__nazev_zkraceny_en")
-                    if get_language() == "en"
-                    else F("uzivatel__organizace__nazev_zkraceny"),
+                    (
+                        F("uzivatel__organizace__nazev_zkraceny_en")
+                        if get_language() == "en"
+                        else F("uzivatel__organizace__nazev_zkraceny")
+                    ),
                     Value(")"),
                     output_field=CharField(),
                 )

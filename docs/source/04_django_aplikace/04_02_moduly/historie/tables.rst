@@ -1,8 +1,17 @@
-Historie tabulky
-=================
+HISTORIE tables
+===============
 
-Definice tabulek.
+Modul tables.
 
-.. automodule:: historie.tables
-    :members: 
-    
+Třídy
+------
+
+.. py:class:: HistorieTable
+
+   Class pro definování tabulky pro zobrazení historie.
+
+
+.. py:class:: SimpleHistoryTable
+
+   Popis není k dispozici.
+

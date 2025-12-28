@@ -1,7 +1,16 @@
-Neident akce formuláře
-=========================
+NEIDENTAKCE formuláře
+=====================
 
 Definice formulářů.
 
-.. automodule:: neidentakce.forms
-    :members: 
+Třídy
+------
+
+.. py:class:: NeidentAkceForm
+
+   Hlavní formulář pro editaci a zobrazení neident akce.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+

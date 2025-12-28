@@ -1,13 +1,13 @@
-Pian
-=====
+PIAN
+====
 
-Táto aplikácia obsahuje definici pianu. Obsahuje pohľady a formuláře na ich správu. 
+Dokumentace modulu pian.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   views
    forms
-   
+   views
+   signals

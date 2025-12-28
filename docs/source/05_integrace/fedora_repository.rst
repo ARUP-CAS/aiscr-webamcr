@@ -19,6 +19,12 @@ Control Markup Language). Každý objekt může obsahovat libovolný počet data
 vztahy a závislosti. Fedora také poskytuje mechanismy pro indexování obsahu pomocí Apache Solr nebo
 Elasticsearch, což umožňuje efektivní vyhledávání napříč repozitářem.
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Obsah:
+
+   export_structure
+
 Modely s metadaty v Fedoře
 ---------------------------
 

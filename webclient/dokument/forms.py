@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 class AutoriField(forms.models.ModelMultipleChoiceField):
     """
-    Třída pro správne zaobcházení s autormi, tak aby jejich uložení pořadí bylo stejné jako zadané uživatelem.
+    Třída pro správně zaobcházení s autormi, tak aby jejich uložení pořadí bylo stejné jako zadané uživatelem.
     """
 
     def clean(self, value):
@@ -841,7 +841,7 @@ def create_tvar_form(not_readonly=True):
 
 class TvarFormSetHelper(FormHelper):
     """
-    Form helper pro správne vykreslení formuláře tvarů.
+    Form helper pro správné vykreslení formuláře tvarů.
     """
 
     def __init__(self, *args, **kwargs):

@@ -1,15 +1,16 @@
-Archeologický záznam
-====================
+ARCH_Z
+======
 
-Táto aplikácia obsahuje definici archeologických záznamu. Obsahuje pohľady a formuláře na ich správu. 
+Dokumentace modulu arch_z.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   views
    forms
+   views
+   signals
    filters
-   helpers
-   
+   tables
+   validators

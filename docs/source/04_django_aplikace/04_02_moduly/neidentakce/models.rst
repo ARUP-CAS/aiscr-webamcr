@@ -1,7 +1,21 @@
-Neident akce modely
-======================
+NEIDENTAKCE modely
+==================
 
 Definice modelů.
 
-.. automodule:: neidentakce.models
-    :members:
+Třídy
+------
+
+.. py:class:: NeidentAkce
+
+   Class pro db model neident akce.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+
+.. py:class:: NeidentAkceVedouci
+
+   Class pro db model vedouciho neident akce.
+

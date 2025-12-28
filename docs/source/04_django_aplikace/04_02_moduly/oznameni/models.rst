@@ -1,7 +1,14 @@
-Oznámení modely
-======================
+OZNAMENI modely
+===============
 
 Definice modelů.
 
-.. automodule:: oznameni.models
-    :members:
+Třídy
+------
+
+.. py:class:: Oznamovatel
+
+   Class pro db model oznamovatel.
+
+   **Metody:**
+

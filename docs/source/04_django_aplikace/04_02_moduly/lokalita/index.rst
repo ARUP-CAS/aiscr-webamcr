@@ -1,14 +1,15 @@
-Lokalita
-===============
+LOKALITA
+========
 
-Táto aplikácia obsahuje definici lokalit. Obsahuje pohľady a formuláře na ich správu. 
+Dokumentace modulu lokalita.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   views
    forms
+   views
+   signals
    filters
-   
+   tables

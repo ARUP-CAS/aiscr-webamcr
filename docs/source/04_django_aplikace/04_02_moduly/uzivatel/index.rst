@@ -1,12 +1,16 @@
-Uživatel
-=========
+UZIVATEL
+========
 
-Táto aplikácia obsahuje definici uživatelů. Obsahuje pohľady, formuláře, admin panel a signály na ich správu. 
+Dokumentace modulu uzivatel.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   views
    forms
+   views
+   signals
+   admin
+   managers
+   serializers

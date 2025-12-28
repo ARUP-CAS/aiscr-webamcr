@@ -33,7 +33,6 @@ from core.message_constants import (
 )
 from core.models import Permissions as p
 from core.models import check_permissions
-from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.utils import get_message
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
@@ -75,7 +74,7 @@ class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní kontextu podlehu.
+        Metoda pro získaní kontextu podlehu.
         """
         context = {
             "toolbar_name": _("ez.views.externiZdrojIndexView.toolbarName"),
@@ -127,7 +126,9 @@ class ExterniZdrojListView(SearchListView):
         qs = super().get_queryset()
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
-        qs = qs.select_related("typ",).prefetch_related(
+        qs = qs.select_related(
+            "typ",
+        ).prefetch_related(
             Prefetch(
                 "autori",
                 queryset=Osoba.objects.all().order_by("externizdrojautor__poradi"),

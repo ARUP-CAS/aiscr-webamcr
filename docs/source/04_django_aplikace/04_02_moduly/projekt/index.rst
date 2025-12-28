@@ -1,14 +1,18 @@
-Projekty
-=========
+PROJEKT
+=======
 
-Táto aplikácia obsahuje definici Projektů. Obsahuje pohľady, formuláře, filtry a tabulky na ich správu. 
+Dokumentace modulu projekt.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   views
    forms
+   views
+   signals
+   admin
    filters
-   
+   doc_utils
+   rtf_utils
+   tables

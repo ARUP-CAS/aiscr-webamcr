@@ -10,6 +10,4 @@ Tato sekce popisuje strukturu a komponenty Django aplikace WebAMČR.
    identifikatory
    04_01_core/index
    04_02_moduly/index
-   04_03_frontend/index
-   04_04_api/index
 

@@ -1,8 +1,16 @@
-Komponenta formuláře
+KOMPONENTA formuláře
 ====================
 
 Definice formulářů.
 
-.. automodule:: komponenta.forms
-    :members: 
-    
+Třídy
+------
+
+.. py:class:: CreateKomponentaForm
+
+   Hlavní formulář pro vytvoření, editaci a zobrazení komponenty.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+

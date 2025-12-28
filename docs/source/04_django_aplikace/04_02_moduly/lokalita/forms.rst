@@ -1,7 +1,16 @@
-Lokalita formuláře
-=========================
+LOKALITA formuláře
+==================
 
 Definice formulářů.
 
-.. automodule:: lokalita.forms
-    :members: 
+Třídy
+------
+
+.. py:class:: LokalitaForm
+
+   Hlavní formulář pro vytvoření, editaci a zobrazení lokality.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+

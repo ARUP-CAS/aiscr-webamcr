@@ -9,6 +9,6 @@ Tato sekce popisuje instalaci a nasazení aplikace WebAMČR.
 
    nasazovani
    konfigurace
-   databaze_setup
+   nasazeni_databaze
    fedora_repository
    

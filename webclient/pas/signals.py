@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=SamostatnyNalez, weak=False)
 def create_dokument_vazby(sender, instance, **kwargs):
     """
-    Metóda pro vytvoření historických a souborových vazeb samostatnýho náleze.
-    Metóda se volá pred uložením záznamu.
+    Metoda pro vytvoření historických a souborových vazeb samostatnýho náleze.
+    Metoda se volá pred uložením záznamu.
     """
     logger.debug("pas.signals.create_dokument_vazby.start", extra={"ident_cely": instance.ident_cely})
     if instance.pk is None:

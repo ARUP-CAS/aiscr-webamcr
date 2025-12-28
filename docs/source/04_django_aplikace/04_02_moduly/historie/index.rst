@@ -1,7 +1,7 @@
-Historie
-=========
+HISTORIE
+========
 
-Táto aplikácia obsahuje definici historie. Obsahuje pohľady a modely na ich správu. 
+Dokumentace modulu historie.
 
 .. toctree::
    :maxdepth: 2
@@ -9,4 +9,7 @@ Táto aplikácia obsahuje definici historie. Obsahuje pohľady a modely na ich s
 
    models
    views
+   signals
+   admin
+   filters
    tables

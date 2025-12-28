@@ -1,12 +1,13 @@
 DJ
-===
+==
 
-Táto aplikácia obsahuje definici dokumentačních jednotek. Obsahuje pohľady a formuláře na ich správu. 
+Dokumentace modulu dj.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   views
    forms
+   views
+   signals

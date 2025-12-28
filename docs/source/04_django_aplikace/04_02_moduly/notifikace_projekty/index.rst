@@ -1,13 +1,14 @@
-Notifikace projekty
-====================
+NOTIFIKACE_PROJEKTY
+===================
 
-Táto aplikácia obsahuje definici notifikací projektů. Obsahuje pohľady, tasky a formuláře na ich správu. 
+Dokumentace modulu notifikace_projekty.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    models
-   views
    forms
-   
+   views
+   signals
+   tasks

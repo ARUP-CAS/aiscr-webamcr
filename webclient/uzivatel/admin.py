@@ -488,9 +488,9 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 "show_delete_history_button": True,
                 "object_id": object_id,
                 "user_account_history_exists": user_account_history.exists() if user_account_history else None,
-                "user_account_other_records_exists": user_account_other_records.exists()
-                if user_account_other_records
-                else None,
+                "user_account_other_records_exists": (
+                    user_account_other_records.exists() if user_account_other_records else None
+                ),
             }
         )
         return super().render_change_form(request, context, **kwargs)
