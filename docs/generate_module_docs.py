@@ -621,6 +621,19 @@ def extract_model_mappings(schema_root: ET.Element) -> List[Dict[str, str]]:
     return mappings
 
 
+def extract_xsd_version(schema_root: ET.Element) -> str:
+    """
+    Extract version attribute from XSD schema root element.
+
+    Args:
+        schema_root (ET.Element): Root element of the XSD schema
+
+    Returns:
+        str: Version string (e.g., "2.2") or "neznámá" if not found
+    """
+    return schema_root.attrib.get("version", "neznámá")
+
+
 def generate_export_structure_rst() -> bool:
     """Generate docs/source/05_integrace/export_structure.rst from amcr.xsd."""
     xsd_file = project_root / "webclient/xml_generator/definitions/amcr.xsd"
@@ -642,6 +655,8 @@ def generate_export_structure_rst() -> bool:
         return False
 
     schema_root = tree.getroot()
+    xsd_version = extract_xsd_version(schema_root)
+    print(f"    XSD schema version: {xsd_version}")
     model_mappings = extract_model_mappings(schema_root)
 
     documented_complex_types: List[ET.Element] = []
@@ -666,7 +681,7 @@ def generate_export_structure_rst() -> bool:
         "Struktura XML exportu",
         "=====================",
         "",
-        "Tento dokument popisuje strukturu XML exportu z databáze AMCR podle XML schématu verze 2.2.",
+        f"Tento dokument popisuje strukturu XML exportu z databáze AMCR podle XML schématu verze {xsd_version}.",
         "",
     ]
 
