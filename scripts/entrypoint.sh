@@ -67,7 +67,7 @@ python3 manage.py collectstatic --noinput
 python3 manage.py compress --force
 python3 manage.py migrate
 python3 manage.py shell < data_management.py
-#python3 manage.py update_snapshot_fields
+python3 manage.py import_permissions
 
 # copy custom_html to volume nginx_data
 cp -r --update=none /custom_html/* /vol/web/nginx/data
