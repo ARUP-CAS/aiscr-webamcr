@@ -1,7 +1,59 @@
 Oprávnění
 ==========
 
+Oprávnění využívá model ``Opravneni`` a ``KonkretniOpravneni`` a umožňuje řídit přístup k pohledům a záznamům.
+
+Vlastník
+--------
+
+* akce či dokumentu (a jejích potomků) = uživatel, který zapsal záznam
+* projektu = nepoužívá se
+
+Stejná organizace
+-----------------
+
+* u projektu a podřízených DT (vč. akcí a dokumentů; jinde se nepoužívá) = uživatel (archeolog) s totožnou organizací, jako je v poli projekt.organizace
+
+Model Opravneni
+---------------
+
+V Modelu ``Opravneni`` se nastavuje adresa a role pro kterou se použije pak konkrétní oprávnění:
+
+* ``role`` - uživatelská role, pro kterou je oprávnění nastaveno.
+* ``adresa_v_aplikaci`` - adresa v aplikaci v urls začínající s ``/``, například ``/projekt/zrusit/<str:ident_cely>``.
+
+Model KonkretniOpravneni
+------------------------
+
+V Modelu ``KonkretniOpravneni`` se nastavují konkrétní oprávnění která se mají pro adresu a roli zkontrolovat:
+
+* ``druh opravneni`` - nastavení úrovně oprávnění. Pole má následující možnosti:
+    * ``Nic`` - přístup k pohledu není povolen.
+    * ``Vlastni`` - přístup k vlastním záznamům.
+    * ``Organizace`` - přístup k záznamům, které patří uživatelům ze stejné organizace.
+    * ``Vse`` - přístup ke všem záznamům.
+    * ``Stav`` - přístup k záznamům podle stavu. Pokud vybráno, pak povinné pole ``porovnani stavu`` a ``stav``.
+    * ``Xid`` - přístup jen k záznamům, které mají dočasný ident (ident začíná s ``X``).
+* ``porovani stavu`` - Povinné pokud vybrán druh ``Stav``. Vyberá se operátor porovnání (<, =, >).
+* ``stav`` - Povinné pokud vybrán druh ``Stav``. Vyberá se stav který se má porovnávat.
+* ``vazba na konkretni opravneni`` - Vyberá se pokud se mají 2 a více konkrétních oprávnění splnit spolu.
+
+Dokumentace akcí
+----------------
+
 Dokumentace všech definovaných akcí v systému oprávnění.
+
+Generování oprávnění
+---------------------
+
+Generování oprávnění je potřeba provést následujícími příkazy:
+
+.. code-block:: bash
+
+   python3 manage.py update_permissions --apps auth
+   python3 manage.py update_permissions --apps dokument
+   python3 manage.py update_permissions --apps heslar
+   python3 manage.py update_permissions --apps uzivatel
 
 Uživatelské akce řízené pomocí oprávnění
 -----------------------------------------
