@@ -1,70 +1,100 @@
-### from https://github.com/OSGeo/gdal/tree/master/docker ###
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1 AS system-deps
 
-#### Use latest gdal official image
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ="Europe/Prague"
 
+RUN echo $TZ > /etc/timezone && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3-pip \
+        python3-dev \
+        build-essential \
+        gcc \
+        libpq-dev \
+        tzdata \
+        cron \
+        sudo \
+        nano \
+        libgdal-dev \
+        locales \
+        gettext \
+        poppler-utils \
+        unrar \
+        redis-tools \
+        libmagic1 \
+    && locale-gen cs_CZ.utf8 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+FROM system-deps AS python-builder
+
+COPY ./webclient/requirements.txt /tmp/requirements.txt
+
+RUN pip3 wheel --no-cache-dir --wheel-dir /wheels -r /tmp/requirements.txt
+
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1 AS dev-runtime
 
 ARG VERSION_APP
 ARG TAG_APP
 
-ENV VERSION=$VERSION_APP
-ENV TAG=$TAG_APP
-ENV DEV_CONTAINER=1
+ENV VERSION=$VERSION_APP \
+    TAG=$TAG_APP \
+    DEV_CONTAINER=1 \
+    TZ="Europe/Prague" \
+    LC_ALL="cs_CZ.utf8" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-ENV TZ="Europe/Prague"
-RUN echo $TZ > /etc/timezone
-RUN apt-get update
-RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
+RUN echo $TZ > /etc/timezone && \
+    apt-get update && \
+    DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
+        tzdata \
+        cron \
+        sudo \
+        nano \
+        python3 \
+        python3-pip \
+        libgdal-dev \
+        locales \
+        gettext \
+        poppler-utils \
+        unrar \
+        redis-tools \
+        libmagic1 \
+    && locale-gen cs_CZ.utf8 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Update base container install
-RUN apt-get -qq update --fix-missing
+COPY --from=python-builder /wheels /wheels
+RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --break-system-packages --ignore-installed \
+    && rm -rf /wheels ~/.cache/pip
 
-# Install dependencies
-RUN apt-get -qq -y install cron
-RUN apt-get -y -qq install nano && apt-get -y -qq install sudo
-RUN apt-get update
-RUN apt-get install -y python3-pip libgdal-dev locales gettext poppler-utils unrar redis-tools
+RUN echo "alias python=python3" >> /etc/bash.bashrc && \
+    echo "alias pip=pip3" >> /etc/bash.bashrc
 
-# Ensure locales configured correctly
-RUN locale-gen cs_CZ.utf8
-ENV LC_ALL="cs_CZ.utf8"
+RUN mkdir -p /code \
+             /vol/web/media \
+             /vol/web/static \
+             /vol/web/locale \
+             /vol/web/nginx/data
 
-# Set python aliases for python3
-RUN echo "alias python=python3" >> ~/.bashrc
-RUN echo "alias pip=pip3" >> ~/.bashrc
-
-COPY ./webclient/requirements.txt .
-
-RUN pip3 install -r requirements.txt --break-system-packages
-
-RUN mkdir /code
 COPY ./webclient /code
 COPY ./scripts /scripts
 COPY ./cert /cert
+ADD ./proxy/custom_html /vol/web/nginx/data
+
 WORKDIR /code
 
-# Uploaded images
-RUN mkdir -p /vol/web/media
-# Staic files for the app
-RUN mkdir -p /vol/web/static
+RUN userdel ubuntu && \
+    adduser --disabled-password --gecos "" user && \
+    passwd -d user && \
+    usermod -aG sudo user && \
+    chown -R user:user /vol /scripts /code && \
+    chmod -R 755 /vol/web /scripts && \
+    chmod 777 -R /vol/web/nginx/data && \
+    chmod 777 -R /cert/amcr-test-local.crt && \
+    chmod 777 -R /cert/amcr-test-local.key && \
+    crontab -u user /scripts/crontab.txt
 
-RUN mkdir -p /vol/web/locale
-
-RUN mkdir -p /vol/web/nginx/data
-ADD ./proxy/custom_html /vol/web/nginx/data
-RUN userdel ubuntu
 RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt
-RUN adduser user
-RUN passwd -d user
-RUN usermod -aG sudo user
-RUN chown -R user:user /vol /scripts
-RUN chmod -R 755 /vol/web /scripts
-RUN chmod 777 -R  /vol/web/nginx/data
-RUN chmod 777 -R  /cert/amcr-test-local.crt
-RUN chmod 777 -R  /cert/amcr-test-local.key
-RUN crontab -u user /scripts/crontab.txt
+
 USER user
-
-ENV PYTHONUNBUFFERED=1
-
 CMD ["entrypoint.dev.sh"]
