@@ -39,7 +39,20 @@
   </tbody>
   </table>
   </div>
-          
+ {% if missing_urls %}
+  <fieldset class="module aligned">
+    <h2>{% trans "core.admin.templates.permissionImportSuccess.nepodchycene_URL" %}</h2>
+    <p class="help">
+      {% trans "core.admin.templates.permissionImportSuccess.nepodchycene_URL_help" %}
+    </p>
+
+    <ul style="margin-left: 20px">
+      {% for url in missing_urls %}
+        <li><code>/{{ url }}</code></li>
+      {% endfor %}
+    </ul>
+  </fieldset>
+{% endif %}         
 {% endblock %}
 
 {% block pagination %}{% endblock %}
