@@ -28,6 +28,7 @@ Dokumentace modulu core.
    middleware
    mixins
    repository_connector
+   services
    setting_models
    utils
    validators
