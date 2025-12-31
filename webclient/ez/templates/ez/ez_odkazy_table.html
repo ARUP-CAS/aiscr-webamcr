@@ -34,13 +34,12 @@
 </div>
 <script>
   //modal scripts
-  let dokument_pripojit_modal;
   document.addEventListener('DOMContentLoaded', function (event) {
       const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-eo-form",
         modalFormID: "#pripojit-eo-form",
       })
-      dokument_pripojit_modal = new Modal(options, "eo-pripojit-{{card_type}}");
+      let dokument_pripojit_modal = new Modal(options, "eo-pripojit-{{card_type}}");
 });
 
 </script>

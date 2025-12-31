@@ -64,7 +64,6 @@
 </div>
 <script>
   //modal scripts
-  let dokument_pripojit_modal;
   let dokument_pripojit_z_projektu_modal;
   document.addEventListener('DOMContentLoaded', function (event) {
     let options;
@@ -73,7 +72,7 @@
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })
-      dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
+      let dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
     };
     if ("{{show.pripojit_dokumenty}}" && "{{app}}" != "lokalita"){
       options = Object.assign(Object.create(defaults), {modalID: "modal-form",
