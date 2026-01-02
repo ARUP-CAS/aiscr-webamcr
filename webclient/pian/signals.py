@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Pian, weak=False)
 def create_pian_vazby(sender, instance, **kwargs):
     """
-    Metóda pro vytvoření historických vazeb pianu.
-    Metóda se volá pred uložením záznamu.
+    Metoda pro vytvoření historických vazeb pianu.
+    Metoda se volá pred uložením záznamu.
     """
     logger.debug("pian.signals.create_pian_vazby.start")
     if instance.pk is None:
@@ -30,8 +30,8 @@ def create_pian_vazby(sender, instance, **kwargs):
 @receiver(post_save, sender=Pian, weak=False)
 def pian_save_metadata(sender, instance: Pian, **kwargs):
     """
-    Metóda pro vytvoření historických vazeb pianu.
-    Metóda se volá pred uložením záznamu.
+    Metoda pro vytvoření historických vazeb pianu.
+    Metoda se volá pred uložením záznamu.
     """
     logger.debug("pian.signals.pian_save_metadata.start", extra={"instance": instance.ident_cely})
     if not instance.suppress_signal:

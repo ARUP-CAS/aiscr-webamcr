@@ -149,9 +149,11 @@ class ExpertniListCreator(DocumentCreator):
             table_texts += [
                 (
                     "Souřadnice (WGS-84):",
-                    f"{self.projekt.geom.centroid.y}N, {self.projekt.geom.centroid.x}E"
-                    if self.projekt.geom is not None
-                    else None,
+                    (
+                        f"{self.projekt.geom.centroid.y}N, {self.projekt.geom.centroid.x}E"
+                        if self.projekt.geom is not None
+                        else None
+                    ),
                 )
             ]
 
@@ -167,9 +169,11 @@ class ExpertniListCreator(DocumentCreator):
             ("Oznamovatel:", self.projekt.oznamovatel.oznamovatel if self.projekt.has_oznamovatel() else ""),
             (
                 "Zástupce oznamovatele / dodavatel:",
-                f"{self.projekt.oznamovatel.odpovedna_osoba} ({self.projekt.oznamovatel.telefon}; {self.projekt.oznamovatel.email})"
-                if self.projekt.has_oznamovatel()
-                else "",
+                (
+                    f"{self.projekt.oznamovatel.odpovedna_osoba} ({self.projekt.oznamovatel.telefon}; {self.projekt.oznamovatel.email})"
+                    if self.projekt.has_oznamovatel()
+                    else ""
+                ),
             ),
             (
                 ["Datum výzkumu:", f"{self.format_date(self.projekt.datum_zahajeni)}"]

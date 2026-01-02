@@ -232,7 +232,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filtr_katastr(self, queryset, name, value):
         """
-        Metóda pro filtrování podle hlavního i vedlejšího katastru.
+        Metoda pro filtrování podle hlavního i vedlejšího katastru.
         """
         if value:
             return queryset.filter(
@@ -242,7 +242,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filtr_katastr_kraj(self, queryset, name, value):
         """
-        Metóda pro filtrování podle hlavního i vedlejšího kraje.
+        Metoda pro filtrování podle hlavního i vedlejšího kraje.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__okres__kraj__in=value)
@@ -251,7 +251,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filtr_katastr_okres(self, queryset, name, value):
         """
-        Metóda pro filtrování podle hlavního i vedlejšího okresu.
+        Metoda pro filtrování podle hlavního i vedlejšího okresu.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__okres__in=value)
@@ -260,7 +260,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_dj_zjisteni(self, queryset, name, value):
         """
-        Metóda pro filtrování podle dj_zjisteni.
+        Metoda pro filtrování podle dj_zjisteni.
         """
         if "True" in value and "False" in value:
             return queryset.filter(
@@ -276,7 +276,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         """
-        Metóda pro filtrování podle poznámky a počtu predmětu.
+        Metoda pro filtrování podle poznámky a počtu predmětu.
         """
         return queryset.filter(
             Q(
@@ -289,7 +289,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_objekt_pozn_pocet(self, queryset, name, value):
         """
-        Metóda pro filtrování podle poznámky a počtu objektu.
+        Metoda pro filtrování podle poznámky a počtu objektu.
         """
         return queryset.filter(
             Q(
@@ -555,13 +555,13 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_akce_typ(self, queryset, name, value):
         """
-        Metóda pro filtrování podle typu akce.
+        Metoda pro filtrování podle typu akce.
         """
         return queryset.filter(Q(hlavni_typ__in=value) | Q(vedlejsi_typ__in=value)).distinct()
 
     def filtr_vedouci(self, queryset, name, value):
         """
-        Metóda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
+        Metoda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
         """
         if not value:
             return queryset
@@ -569,7 +569,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metóda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
+        Metoda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
         """
         return queryset.filter(
             Q(lokalizace_okolnosti__icontains=value)
@@ -581,7 +581,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filtr_zahrnout_projektove(self, queryset, name, value):
         """
-        Metóda pro filtrování mezi projektovými a samostatnými akcemi.
+        Metoda pro filtrování mezi projektovými a samostatnými akcemi.
         """
         if value is None:
             return queryset.filter(~Q(typ=Akce.TYP_AKCE_PROJEKTOVA))
@@ -592,7 +592,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_has_positive_find(self, queryset, name, value):
         """
-        Metóda pro filtrování podle toho či akce má pozitivní DJ.
+        Metoda pro filtrování podle toho či akce má pozitivní DJ.
         """
         if "True" not in value and "False" not in value:
             return queryset
@@ -609,7 +609,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_adb_popisne_udaje(self, queryset, name, value):
         """
-        Metóda pro filtrování podle popisných údajů ADB.
+        Metoda pro filtrování podle popisných údajů ADB.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__uzivatelske_oznaceni_sondy__icontains=value)
@@ -621,7 +621,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filtr_adb_autori(self, queryset, name, value):
         """
-        Metóda pro filtrování podle autorů revize a popisu ADB.
+        Metoda pro filtrování podle autorů revize a popisu ADB.
         """
         if not value:
             return queryset
@@ -632,7 +632,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_adb_roky(self, queryset, name, value):
         """
-        Metóda pro filtrování podle roku revize a popisu ADB.
+        Metoda pro filtrování podle roku revize a popisu ADB.
         """
         if value:
             if value.start is not None and value.stop is not None:

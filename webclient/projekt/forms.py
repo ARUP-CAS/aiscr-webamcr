@@ -438,7 +438,7 @@ class NavrhnoutZruseniProjektForm(forms.Form):
 
     def clean(self):
         """
-        Metóda na kontrolu obsahu důvodu pro zrušení.
+        Metoda na kontrolu obsahu důvodu pro zrušení.
         """
         cleaned_data = super().clean()
         if cleaned_data.get("reason") == "option1":
@@ -657,7 +657,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
 
     def clean(self):
         """
-        Metóda pro kontrolu datumu ukončení.
+        Metoda pro kontrolu datumu ukončení.
         """
         cleaned_data = super().clean()
         if {"datum_ukonceni"} <= cleaned_data.keys():

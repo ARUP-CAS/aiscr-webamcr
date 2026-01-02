@@ -14,4 +14,12 @@ repos:
     rev: 7.3.0
     hooks:
       - id: flake8
+  - repo: local
+    hooks:
+      - id: generate-module-docs
+        name: Generate module documentation
+        entry: python3 docs/generate_module_docs.py
+        language: system
+        pass_filenames: false
+        always_run: true
 exclude: (migrations)

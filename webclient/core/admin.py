@@ -61,7 +61,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """
-        Metóda na uložení modelu odstávky.
+        Metoda na uložení modelu odstávky.
         Jednotlivé texty z modelu se ukladají do textú prekladů a template.
         Po uložení se restartuje wsgi pro načítaní nových prekladů.
         """
@@ -103,19 +103,19 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
         """
-        Metóda pro určení práv na modul odstávky.
+        Metoda pro určení práv na modul odstávky.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def has_view_permission(self, request, obj=None, *args):
         """
-        Metóda pro určení práv na videní odstávky.
+        Metoda pro určení práv na videní odstávky.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def has_add_permission(self, request, *args):
         """
-        Metóda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
+        Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
         """
         if OdstavkaSystemu.objects.count() > 0:
             return False
@@ -123,13 +123,13 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None, *args):
         """
-        Metóda pro určení práv pro úpravu odstávky.
+        Metoda pro určení práv pro úpravu odstávky.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def file_handler(self, language, form):
         """
-        Pomocní metóda pro úpravu template zobrazených počas odstávky.
+        Pomocní metoda pro úpravu template zobrazených během odstávky.
         """
         with open("/vol/web/nginx/data/" + language + "/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
@@ -175,7 +175,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         """
-        Metóda pri definici dodatečných url.
+        Metoda pri definici dodatečných url.
         """
         urls = super().get_urls()
         my_urls = [
@@ -195,7 +195,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
     def import_file(self, request):
         """
-        Metóda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+        Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
         """
         model = self.model
         opts = model._meta
@@ -254,7 +254,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
     def import_success(self, request):
         """
-        Metóda view pro zobrazení tabulky s výsledkom importu.
+        Metoda view pro zobrazení tabulky s výsledkom importu.
         """
         json_table = cache.get("import_json_results")
         missing_urls = cache.get("import_missing_results")
@@ -349,7 +349,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         """
-        Metóda pri definici dodatečných url.
+        Metoda pri definici dodatečných url.
         """
         urls = super().get_urls()
         my_urls = [
@@ -366,7 +366,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def validate_sheet(self, sheet):
         """
-        Metóda pro validaci importovaného excelu a jeho úpravu.
+        Metoda pro validaci importovaného excelu a jeho úpravu.
         """
         if not sheet.columns[0] == "IDENT_CELY" or not sheet.columns[1] == "IDENT_LIST":
             raise WrongCSVError
@@ -374,7 +374,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def import_skip_file(self, request):
         """
-        Metóda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+        Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
         """
         model = self.model
         opts = model._meta
@@ -442,7 +442,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def import_skip_success(self, request):
         """
-        Metóda view pro zobrazení tabulky s výsledkom importu.
+        Metoda view pro zobrazení tabulky s výsledkom importu.
         """
         json_table = cache.get("import_json_results")
         cache.delete("import_json_results")

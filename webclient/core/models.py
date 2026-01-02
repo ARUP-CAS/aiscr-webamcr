@@ -181,7 +181,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def create_soubor_vazby(self):
         """
-        Metóda pro vytvoření vazby na historii.
+        Metoda pro vytvoření vazby na historii.
         """
         logger.debug("core.models.Soubor.create_soubor_vazby.start")
         hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
@@ -223,7 +223,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def zaznamenej_nahrani(self, user, file_name=None):
         """
-        Metóda pro zapsáni vytvoření souboru do historie.
+        Metoda pro zapsáni vytvoření souboru do historie.
         """
         self.create_soubor_vazby()
         hist = Historie(
@@ -236,7 +236,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
-        Metóda pro zapsáni nahrání nové verze souboru do historie.
+        Metoda pro zapsáni nahrání nové verze souboru do historie.
         """
         if self.historie is None:
             self.create_soubor_vazby()
@@ -639,7 +639,7 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
 
     def clean(self):
         """
-        Metóda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
+        Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
         """
         odstavky = OdstavkaSystemu.objects.filter(status=True)
         if odstavky.count() > 0 and self.status:

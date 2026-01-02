@@ -219,7 +219,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_vytvoreny(self):
         """
-        Metóda pro nastavení pomocného stavu vytvořený.
+        Metoda pro nastavení pomocného stavu vytvořený.
         """
         self.stav = PROJEKT_STAV_VYTVORENY
         owner = get_object_or_404(User, pk=hesla_dynamicka.ADMIN_USER)
@@ -230,7 +230,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_oznameny(self):
         """
-        Metóda pro nastavení stavu oznámený a uložení změny do historie.
+        Metoda pro nastavení stavu oznámený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_OZNAMENY
         owner = get_object_or_404(User, pk=hesla_dynamicka.ADMIN_USER)
@@ -241,7 +241,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_schvaleny(self, user, old_ident):
         """
-        Metóda pro nastavení stavu schvýlený a uložení změny do historie.
+        Metoda pro nastavení stavu schvýlený a uložení změny do historie.
         """
         logger.debug(
             "projekt.models.Projekt.set_schvaleny.start",
@@ -270,7 +270,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_zapsany(self, user):
         """
-        Metóda pro nastavení stavu zapsaný a uložení změny do historie.
+        Metoda pro nastavení stavu zapsaný a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
@@ -278,7 +278,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_prihlaseny(self, user):
         """
-        Metóda pro nastavení stavu prihlásený a uložení změny do historie.
+        Metoda pro nastavení stavu prihlásený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_PRIHLASENY
         Historie(
@@ -290,7 +290,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_zahajeny_v_terenu(self, user, info_text):
         """
-        Metóda pro nastavení stavu zahájený v terénu a uložení změny do historie.
+        Metoda pro nastavení stavu zahájený v terénu a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
         Historie(
@@ -303,7 +303,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_ukoncen_v_terenu(self, user, info_text):
         """
-        Metóda pro nastavení stavu ukončený v terénu a uložení změny do historie.
+        Metoda pro nastavení stavu ukončený v terénu a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
         Historie(
@@ -316,7 +316,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_uzavreny(self, user):
         """
-        Metóda pro nastavení stavu uzavřený a uložení změny do historie.
+        Metoda pro nastavení stavu uzavřený a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_UZAVRENY
         Historie(
@@ -344,7 +344,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_archivovany(self, user):
         """
-        Metóda pro nastavení stavu archivovaný a uložení změny do historie.
+        Metoda pro nastavení stavu archivovaný a uložení změny do historie.
         Součásti je archivace dokumentů a odesláni emailu.
         """
         from services.mailer import Mailer
@@ -362,7 +362,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_navrzen_ke_zruseni(self, user: User, poznamka: str):
         """
-        Metóda pro nastavení stavu navržen k zrušení a uložení změny do historie.
+        Metoda pro nastavení stavu navržen k zrušení a uložení změny do historie.
         """
         self.stav = PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
         Historie(
@@ -375,7 +375,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_zruseny(self, user, poznamka, typ_zmeny=None):
         """
-        Metóda pro nastavení stavu zrušený a uložení změny do historie.
+        Metoda pro nastavení stavu zrušený a uložení změny do historie.
         """
         typ_zmeny = typ_zmeny if typ_zmeny else RUSENI_PROJ
         self.datum_ukonceni = None
@@ -390,7 +390,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_vracen(self, user, new_state, poznamka):
         """
-        Metóda pro vrácení stavu zpět a uložení změny do historie.
+        Metoda pro vrácení stavu zpět a uložení změny do historie.
         """
         if self.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
             self.datum_ukonceni = None
@@ -412,7 +412,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_znovu_zapsan(self, user, poznamka):
         """
-        Metóda pro nastavení stavu zapsaný ze stavu zrušen nebo navrh na zrušení a uložení změny do historie.
+        Metoda pro nastavení stavu zapsaný ze stavu zrušen nebo navrh na zrušení a uložení změny do historie.
         """
         if self.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI:
             zmena = VRACENI_NAVRHU_ZRUSENI
@@ -436,7 +436,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_archivaci(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu archivovaný:
+        Metoda na kontrolu prerekvizit pred posunem do stavu archivovaný:
 
             kontrola jako před uzavřením a navíc
 
@@ -451,7 +451,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_navrzeni_k_zruseni(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu navržen ke zrušení:
+        Metoda na kontrolu prerekvizit pred posunem do stavu navržen ke zrušení:
 
             Projekt nesmí mít pripojené akce.
         """
@@ -463,7 +463,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_smazanim(self) -> list:
         """
-        Metóda na kontrolu prerekvizit pred smazaním projektu:
+        Metoda na kontrolu prerekvizit pred smazaním projektu:
 
             Projekt nesmí mít žádnou akci, soubor ani samostatný nález.
         """
@@ -482,7 +482,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_uzavrenim(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu uzavřený:
+        Metoda na kontrolu prerekvizit pred posunem do stavu uzavřený:
 
             Projekt musí mít alespoň jednou akci která projde svou kontrolou před odesláním.
         """
@@ -507,7 +507,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_zahajenim_v_terenu(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu zahájen v terénu:
+        Metoda na kontrolu prerekvizit pred posunem do stavu zahájen v terénu:
 
             Projektu musí mít lokalizaci
         """
@@ -519,7 +519,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def parse_ident_cely(self):
         """
-        Metóda pro rozdelení identu na region, rok, pořadové číslo a jestli je permanentí.
+        Metoda pro rozdelení identu na region, rok, pořadové číslo a jestli je permanentí.
         """
         year = None
         number = None
@@ -543,7 +543,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def has_oznamovatel(self):
         """
-        Metóda na kontrolu jestli má projekt oznamovatele.
+        Metoda na kontrolu jestli má projekt oznamovatele.
         """
         has_oznamovatel = False
         try:
@@ -554,7 +554,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def set_permanent_ident_cely(self, update_repository=True):
         """
-        Metóda na nastavení permanentního identu akce z projektu sekvence.
+        Metoda na nastavení permanentního identu akce z projektu sekvence.
         """
         logger.debug(
             "projekt.models.projekt.set_permanent_ident_cely.start",
@@ -669,7 +669,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         self, fedora_transaction: FedoraTransaction, additional=False, user=None
     ) -> RepositoryBinaryFile:
         """
-        Metóda na vytvoření oznámovací dokumentace.
+        Metoda na vytvoření oznámovací dokumentace.
         """
         logger.debug(
             "projekt.models.create_confirmation_document.start",
