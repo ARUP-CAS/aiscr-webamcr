@@ -61,25 +61,13 @@ Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
 
       Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
 
-   .. py:method:: validate_and_prepare_sheet()
-
-      Metoda pro validaci importovaného excelu a jeho úpravu.
-
-   .. py:method:: check_save_row()
-
-      Metoda pro kontrolu řádku excelu.
-
-   .. py:method:: save_permission()
-
-      Metoda pro kontrolu a uložení jednotlivého oprávnení z řádku excelu.
-
-   .. py:method:: check_status_regex()
-
-      Metoda pro kontrolu správneho zadáni statusu v excelu.
-
    .. py:method:: import_success()
 
       Metoda view pro zobrazení tabulky s výsledkom importu.
+
+   .. py:method:: reload_permissions()
+
+      Metoda view pro automatický import oprávnění z csv v gitu a zobrazení výsledků importu.
 
 
 .. py:class:: PermissionSkipAdmin

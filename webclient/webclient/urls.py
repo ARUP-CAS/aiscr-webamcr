@@ -88,8 +88,8 @@ urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
     path("pid/", include("pid.urls")),
     path("fedora/", include("fedora_management.urls")),
+    path("healthcheck/", include("healthcheck.urls")),
 ]
-urlpatterns += [re_path(r"^healthcheck/", include("healthcheck.urls"))]
 
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]

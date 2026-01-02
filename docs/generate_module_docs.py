@@ -43,6 +43,9 @@ SKIP_FILES = {"urls.py", "__init__.py", "apps.py"}
 # Directories to skip (not Django apps)
 SKIP_DIRS = {"static", "templates", "locale", "__pycache__", "services"}
 
+# Track if any files have changed
+changes_detected = False
+
 # Common file type descriptions
 FILE_TYPE_INFO = {
     "models.py": {"suffix": "modely", "description": "Definice modelů."},
@@ -56,6 +59,28 @@ FILE_TYPE_INFO = {
     "filters.py": {"suffix": "filtry", "description": "Definice filtrů."},
     "widgets.py": {"suffix": "widgety", "description": "Definice widgetů."},
 }
+
+
+def check_content_changed(content: str, output_file: Path) -> bool:
+    """
+    Check if content differs from existing file.
+
+    Args:
+        content (str): New content to compare
+        output_file (Path): Path to existing file
+
+    Returns:
+        bool: True if content has changed or file doesn't exist
+    """
+    if not output_file.exists():
+        return True
+
+    try:
+        with open(output_file, "r", encoding="utf-8") as f:
+            existing_content = f.read()
+        return existing_content != content
+    except Exception:
+        return True
 
 
 def extract_url_patterns(urls_file: Path) -> Tuple[Optional[str], List[Dict[str, str]]]:
@@ -170,6 +195,7 @@ def generate_url_routing_rst() -> bool:
     Returns:
         bool: True if successful, False otherwise
     """
+    global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/url_routing.rst"
 
     print("\n  Generating URL routing documentation")
@@ -232,8 +258,12 @@ def generate_url_routing_rst() -> bool:
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
+        new_content = "\n".join(rst_lines)
+        if check_content_changed(new_content, output_file):
+            changes_detected = True
+            print("    ⚠ URL routing documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write("\n".join(rst_lines))
+            f.write(new_content)
         print("    ✓ URL routing documentation generated")
         return True
     except Exception as e:
@@ -324,6 +354,7 @@ def generate_signals_rst() -> bool:
     Returns:
         bool: True if successful, False otherwise
     """
+    global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/signals.rst"
 
     print("\n  Generating signals documentation")
@@ -386,8 +417,12 @@ def generate_signals_rst() -> bool:
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
+        new_content = "\n".join(rst_lines)
+        if check_content_changed(new_content, output_file):
+            changes_detected = True
+            print("    ⚠ Signals documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write("\n".join(rst_lines))
+            f.write(new_content)
         print("    ✓ Signals documentation generated")
         return True
     except Exception as e:
@@ -449,6 +484,7 @@ def generate_permissions_rst() -> bool:
     Returns:
         bool: True if successful, False otherwise
     """
+    global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/permissions.rst"
 
     print("\n  Generating permissions documentation")
@@ -518,8 +554,12 @@ def generate_permissions_rst() -> bool:
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
+        new_content = "\n".join(rst_lines)
+        if check_content_changed(new_content, output_file):
+            changes_detected = True
+            print("    ⚠ Permissions documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write("\n".join(final_content))
+            f.write(new_content)
         print(f"    ✓ Found {len(actions)} actions")
         print("    ✓ Permissions documentation updated (preserved existing content)")
         return True
@@ -665,6 +705,7 @@ def extract_xsd_version(schema_root: ET.Element) -> str:
 
 def generate_export_structure_rst() -> bool:
     """Generate docs/source/05_integrace/export_structure.rst from amcr.xsd."""
+    global changes_detected
     xsd_file = project_root / "webclient/xml_generator/definitions/amcr.xsd"
     output_file = docs_dir / "source/05_integrace/export_structure.rst"
 
@@ -804,8 +845,12 @@ def generate_export_structure_rst() -> bool:
 
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
+        new_content = "\n".join(rst_lines)
+        if check_content_changed(new_content, output_file):
+            changes_detected = True
+            print("    ⚠ Export structure documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write("\n".join(rst_lines))
+            f.write(new_content)
         print("    ✓ Export structure documentation generated")
         return True
     except Exception as exc:
@@ -1003,6 +1048,7 @@ def generate_rst_for_file(source_file: Path, module_dir_name: str, output_dir: P
     Returns:
         bool: True if successful, False otherwise
     """
+    global changes_detected
     filename = source_file.name
     module_name = f"{module_dir_name}.{source_file.stem}"
     output_file = output_dir / f"{source_file.stem}.rst"
@@ -1015,6 +1061,9 @@ def generate_rst_for_file(source_file: Path, module_dir_name: str, output_dir: P
             rst_content = generate_rst_explicit(source_file, module_name, module_title, module_description)
         else:
             rst_content = generate_rst_autodoc(module_name, module_title, module_description)
+
+        if check_content_changed(rst_content, output_file):
+            changes_detected = True
 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(rst_content)
@@ -1042,6 +1091,7 @@ def generate_index_rst(module_dir_name: str, generated_files: List[str], output_
     Returns:
         bool: True if successful, False otherwise
     """
+    global changes_detected
     index_file = output_dir / "index.rst"
 
     # Sort files in a logical order: models, forms, views, signals, admin, others
@@ -1092,6 +1142,8 @@ Dokumentace modulu {module_dir_name}.
 
     # Write the index file
     try:
+        if check_content_changed(index_content, index_file):
+            changes_detected = True
         with open(index_file, "w", encoding="utf-8") as f:
             f.write(index_content)
         print("    ✓ index.rst")
@@ -1307,6 +1359,13 @@ def main() -> None:
         print("   cd docs && source ../.venv/bin/activate && python3 generate_module_docs.py --build")
         print("\n3. To view the generated documentation:")
         print("   open build/html/04_django_aplikace/04_02_moduly/")
+
+    # Exit with code 1 if changes were detected
+    if changes_detected:
+        print("\n⚠ Documentation changes detected!")
+        print("The documentation files have been updated.")
+        print("Please review and commit these changes.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
