@@ -10,5 +10,4 @@ Tato sekce obsahuje informace pro vývojáře aplikace WebAMČR.
    struktura_projektu
    git_workflow
    kodovaci_standardy
-
-
+   workflow_feature
