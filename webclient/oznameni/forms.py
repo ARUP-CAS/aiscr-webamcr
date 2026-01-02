@@ -48,7 +48,7 @@ class DateRangeField(forms.DateField):
 
 class DateRangeWidget(forms.TextInput):
     """
-    Třída pro správne zobrazení date range.
+    Třída pro správně zobrazení date range.
     """
 
     def format_value(self, value):

@@ -99,7 +99,7 @@ class Model3DTable(SearchTable):
 
     def render_nahled(self, value, record):
         """
-        Metóda pro správne zobrazení náhledu souboru.
+        Metoda pro správně zobrazení náhledu souboru.
         """
         if len(record.soubory.soubory.all()) > 0:
             soubor = record.soubory.soubory.first()
@@ -248,7 +248,7 @@ class DokumentTable(SearchTable):
 
     def render_nahled(self, value, record):
         """
-        Metóda pro správne zobrazení náhledu souboru.
+        Metoda pro správně zobrazení náhledu souboru.
         """
         if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
             soubor = record.soubory.first_soubor[0]

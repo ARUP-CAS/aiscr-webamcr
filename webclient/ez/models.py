@@ -91,7 +91,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def get_absolute_url(self):
         """
-        Metóda pro získaní absolut url záznamu podle identu.
+        Metoda pro získaní absolut url záznamu podle identu.
         """
         return reverse(
             "ez:detail",
@@ -106,7 +106,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def set_odeslany(self, user):
         """
-        Metóda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
+        Metoda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
         """
         self.stav = EZ_STAV_ODESLANY
         historie_poznamka = self.check_set_permanent_ident()
@@ -121,7 +121,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def set_vraceny(self, user, new_state, poznamka):
         """
-        Metóda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
+        Metoda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
         """
         self.stav = new_state
         Historie(
@@ -134,7 +134,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def set_potvrzeny(self, user):
         """
-        Metóda pro nastavení stavu potvrzená a uložení změny do historie pro externí zdroj.
+        Metoda pro nastavení stavu potvrzená a uložení změny do historie pro externí zdroj.
         Pokud je ident dočasný nahrazení identem stálým.
         """
 
@@ -163,7 +163,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def set_zapsany(self, user):
         """
-        Metóda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
+        Metoda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
         """
         self.stav = EZ_STAV_ZAPSANY
         Historie(

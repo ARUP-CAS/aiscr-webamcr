@@ -59,7 +59,7 @@ class LokalitaIndexView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní kontextu podlehu.
+        Metoda pro získaní kontextu podlehu.
         """
         context = {
             "toolbar_name": _("ez.views.lokalitaIndexView.toolbarName"),
@@ -160,7 +160,7 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
 
     def get_archeologicky_zaznam(self):
         """
-        Metóda pro získaní akce z db.
+        Metoda pro získaní akce z db.
         """
         return self.object.archeologicky_zaznam
 
@@ -169,7 +169,7 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní contextu akci pro template.
+        Metoda pro získaní contextu akci pro template.
         """
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
