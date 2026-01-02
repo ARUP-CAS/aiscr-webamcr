@@ -42,4 +42,3 @@ Model se používa k napojení na jednotlivé záznamy.
 .. py:class:: KomponentaAktivita
 
    Class pro db model komponenta aktivity.
-

@@ -24,4 +24,3 @@ Třídy
    **Metody:**
 
    .. py:method:: get_permission_object()
-

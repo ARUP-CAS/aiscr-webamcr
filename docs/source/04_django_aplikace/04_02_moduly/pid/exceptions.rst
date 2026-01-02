@@ -23,4 +23,3 @@ Třídy
 .. py:class:: DoiConnectionError
 
    Popis není k dispozici.
-

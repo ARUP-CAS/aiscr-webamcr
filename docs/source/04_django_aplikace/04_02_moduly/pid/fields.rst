@@ -61,4 +61,3 @@ Třídy
    .. py:method:: valid_value()
 
    .. py:method:: validate()
-

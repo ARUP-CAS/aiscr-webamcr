@@ -37,4 +37,3 @@ Třídy
    .. py:method:: igsn_url()
 
    .. py:method:: get_by_ident_cely()
-

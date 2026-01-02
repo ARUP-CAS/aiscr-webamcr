@@ -61,4 +61,3 @@ Třídy
 .. py:class:: FormWithCaptcha
 
    Hlavní formulář pro captchu.
-

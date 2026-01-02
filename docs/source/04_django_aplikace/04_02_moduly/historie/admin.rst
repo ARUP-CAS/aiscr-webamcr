@@ -9,4 +9,3 @@ Třídy
 .. py:class:: HistorieAdmin
 
    Popis není k dispozici.
-

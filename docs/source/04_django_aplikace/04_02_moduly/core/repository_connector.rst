@@ -189,4 +189,3 @@ Třídy
    .. py:method:: mark_transaction_as_closed()
 
    .. py:method:: call_digiarchiv_update()
-

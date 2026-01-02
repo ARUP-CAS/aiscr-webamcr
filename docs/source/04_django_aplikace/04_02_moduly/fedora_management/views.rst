@@ -24,4 +24,3 @@ Třídy
    **Metody:**
 
    .. py:method:: process_record()
-

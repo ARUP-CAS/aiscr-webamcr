@@ -15,4 +15,3 @@ Třídy
    .. py:method:: __init__()
 
    .. py:method:: clean_geom()
-

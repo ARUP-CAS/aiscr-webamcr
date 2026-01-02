@@ -25,4 +25,3 @@ Třídy
    .. py:method:: publish_record()
 
    .. py:method:: update_record()
-

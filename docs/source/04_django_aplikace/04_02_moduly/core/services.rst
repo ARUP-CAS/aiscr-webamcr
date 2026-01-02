@@ -72,4 +72,3 @@ Třídy
    .. py:method:: check_status_regex()
 
       Metoda pro kontrolu správneho zadáni statusu v excelu.
-

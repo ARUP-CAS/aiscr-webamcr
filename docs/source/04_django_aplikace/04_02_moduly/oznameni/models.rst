@@ -11,4 +11,3 @@ Třídy
    Class pro db model oznamovatel.
 
    **Metody:**
-

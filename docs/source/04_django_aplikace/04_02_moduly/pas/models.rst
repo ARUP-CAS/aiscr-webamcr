@@ -124,4 +124,3 @@ Třídy
    .. py:method:: generate_redis_snapshot()
 
    .. py:method:: get_by_ident_cely()
-

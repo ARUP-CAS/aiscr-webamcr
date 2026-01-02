@@ -9,4 +9,3 @@ Třídy
 .. py:class:: CustomAdminSettings
 
    Popis není k dispozici.
-

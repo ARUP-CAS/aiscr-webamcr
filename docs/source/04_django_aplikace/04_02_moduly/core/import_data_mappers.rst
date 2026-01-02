@@ -732,4 +732,3 @@ target field and creates a record.
    **Metody:**
 
    .. py:method:: get_mapping()
-

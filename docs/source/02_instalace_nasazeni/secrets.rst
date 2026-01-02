@@ -9,7 +9,7 @@ Konfigurace pomocí Docker Secrets (PROD)
 -----------------------------------------
 
 V produkčním prostředí jsou citlivé údaje spravovány pomocí Docker secrets.
-Následující secrets jsou definovány:
+Jsou definovány následující secrets:
 
 .. note::
    Použití v kontejneru: Docker mountuje každý secret jako soubor v ``/run/secrets/<název_secretu>``.
@@ -17,7 +17,7 @@ Následující secrets jsou definovány:
 
 **Aplikační konfigurace**
 
-* ``db_conf`` - Konfigurační soubor se secrets pro backend (DB, Fedory, API klíče, e-mail)
+* ``db_conf`` - Konfigurační soubor se secrets pro backend (DB, Fedora, API klíče, e-mail)
 
 .. list-table::
    :header-rows: 1

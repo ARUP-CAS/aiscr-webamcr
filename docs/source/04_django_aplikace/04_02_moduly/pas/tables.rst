@@ -48,4 +48,3 @@ Třídy
    .. py:method:: get_all_idents()
 
       Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
-

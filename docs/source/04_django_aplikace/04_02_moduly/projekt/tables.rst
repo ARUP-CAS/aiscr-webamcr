@@ -15,4 +15,3 @@ Třídy
    .. py:method:: render_planovane_zahajeni()
 
    .. py:method:: __init__()
-

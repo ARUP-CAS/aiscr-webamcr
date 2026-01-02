@@ -126,4 +126,3 @@ Třída je prepoužita v dalších filtrech.
    **Metody:**
 
    .. py:method:: __init__()
-

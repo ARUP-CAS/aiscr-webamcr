@@ -19,4 +19,3 @@ Třídy
    .. py:method:: to_representation()
 
       Override reprezentace do dict pro správně zobrazení label.
-

@@ -67,4 +67,3 @@ pomocí ClamAV démona naslouchajícího na TCP portu.
       Raises:
           ClamdBufferTooLongError: pokud velikost bufferu překročí limity clamd
           ClamdConnectionError: při problému s komunikací
-

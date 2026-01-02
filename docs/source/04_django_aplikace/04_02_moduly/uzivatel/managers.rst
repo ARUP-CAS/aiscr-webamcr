@@ -21,4 +21,3 @@ https://testdriven.io/blog/django-custom-user-model/
    .. py:method:: create_superuser()
 
       Create and save a SuperUser with the given email and password.
-

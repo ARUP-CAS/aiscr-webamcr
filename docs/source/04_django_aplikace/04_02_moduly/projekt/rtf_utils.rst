@@ -15,4 +15,3 @@ Třídy
    .. py:method:: build_document()
 
    .. py:method:: __init__()
-

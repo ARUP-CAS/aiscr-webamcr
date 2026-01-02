@@ -39,4 +39,3 @@ Třídy
    .. py:method:: __init__()
 
    .. py:method:: process_view()
-

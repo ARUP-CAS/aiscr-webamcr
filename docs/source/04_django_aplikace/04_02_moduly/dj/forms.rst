@@ -35,4 +35,3 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
-

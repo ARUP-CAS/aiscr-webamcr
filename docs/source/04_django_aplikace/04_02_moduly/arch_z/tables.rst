@@ -30,4 +30,3 @@ Třídy
    .. py:method:: get_all_idents()
 
       Vrátí seznam identifikátorů archeologických záznamů pro akci.
-
