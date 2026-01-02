@@ -8,7 +8,7 @@ Tato sekce popisuje instalaci a nasazení aplikace WebAMČR.
    :caption: Obsah:
 
    nasazovani
-   konfigurace
+   secrets
    nasazeni_databaze
    fedora_repository
    
