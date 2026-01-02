@@ -217,7 +217,7 @@ window.onload = function () {
                 }
             });
             this.on("addedfile", function (file) {
-                disableButtons(true);
+                toggleButtonsDisabled(true);
                 const btn = file.previewElement.querySelector("[data-dz-remove]");
 
                 //přepíše tlačítko delete
@@ -232,7 +232,7 @@ window.onload = function () {
 
                         if (!file.id) return;
 
-                        lockAll(true);
+                        toggleAllLocked(true);
                         btn.style.pointerEvents = "none";
 
                         const xhttp = new XMLHttpRequest();
@@ -249,7 +249,7 @@ window.onload = function () {
                                     show_action_result_message(file, ActionResultsEnum.error, "error", ActionTypeEnum.delete);
                                     btn.style.pointerEvents = "auto";
                                 }
-                                lockAll(false);
+                                toggleAllLocked(false);
                             }
                         };
 
@@ -258,11 +258,11 @@ window.onload = function () {
                 }
             });
             this.on("processing", function (file) {
-                disableRemoving(true);
+                toggleFileRemoving(true);
             });
             this.on("queuecomplete", function () {
-                disableButtons(false);
-                disableRemoving(false);
+                toggleButtonsDisabled(false);
+                toggleFileRemoving(false);
             });
 
         },
@@ -304,21 +304,21 @@ window.onload = function () {
     });
 
     //zablokuje tlačítka mazání
-    function disableRemoving(lock) {
+    function toggleFileRemoving(lock) {
         $("[data-dz-remove]").css({
             "pointer-events": lock ? "none" : "auto",
             "opacity": lock ? "0.4" : "1"
         });
     }
 
-    //zablokuje vše - nahrávání a mazání a tlačítka
-    function lockAll(lock) {
-        disableButtons(lock)
+    //zablokuje vše - nahrávání,  mazání a tlačítka
+    function toggleAllLocked(lock) {
+        toggleButtonsDisabled(lock)
         lock ? newDropzone.disable() : newDropzone.enable();
-        disableRemoving(lock);
+        toggleFileRemoving(lock);
     }
     //zablokuje tlačítka
-    function disableButtons(lock) {
+    function toggleButtonsDisabled(lock) {
         const submitButton = $(".btn-disable-when-running-upload");
         submitButton
             .prop("disabled", lock)
