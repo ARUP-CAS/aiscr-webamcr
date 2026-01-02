@@ -9,13 +9,15 @@ import io
 import logging
 import os
 
+from core.models import AntivirusCheckResult, Soubor
 from core.utils import replace_last
+from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(__name__)
 
 
 def save_single_file_from_storage_impl(
-    record, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False
+    record_par: int | Soubor, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False
 ) -> None:
     """
     Společná implementace pro ukládání jednotlivého souboru ze storage do Fedora repozitáře.
@@ -36,12 +38,17 @@ def save_single_file_from_storage_impl(
         >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
         >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
     """
-    from core.models import AntivirusCheckResult, Soubor
     from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
     from xml_generator.models import ModelWithMetadata
 
-    if isinstance(record, int):
-        record = Soubor.objects.get(pk=record)
+    if isinstance(record_par, int):
+        record = Soubor.objects.get(pk=record_par)
+    elif isinstance(record_par, Soubor):
+        record = record_par
+    else:
+        raise ValueError(
+            _("core.management.commands.utils.file_storage.save_single_file_from_storage_impl.invalid_record_type")
+        )
     record: Soubor
     related_record: ModelWithMetadata = record.vazba.navazany_objekt
     fedora_transaction = FedoraTransaction()
@@ -62,6 +69,7 @@ def save_single_file_from_storage_impl(
             "core.management.commands.utils.file_storage.save_single_file_from_storage_impl.file_not_found",
             extra={"pk": record.pk, "value": storage_path, "transaction": fedora_transaction.uid},
         )
+        fedora_transaction.rollback_transaction()
         return
     soubor_data = io.BytesIO()
     with open(file_path, "rb") as file:

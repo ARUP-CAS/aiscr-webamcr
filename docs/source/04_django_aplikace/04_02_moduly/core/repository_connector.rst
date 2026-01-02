@@ -123,8 +123,6 @@ Třídy
 
    .. py:method:: generate_thumbs()
 
-   .. py:method:: save_single_file_from_storage()
-
    .. py:method:: save_files_from_storage()
 
    .. py:method:: create_missing_thumbnail()

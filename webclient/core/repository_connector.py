@@ -1356,17 +1356,6 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
             cls.generate_thumb_for_single_file(item)
 
     @classmethod
-    def save_single_file_from_storage(
-        cls, record, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False
-    ) -> None:
-        from core.management.commands.utils.file_storage import save_single_file_from_storage_impl
-        from core.models import Soubor
-
-        if isinstance(record, int):
-            record = Soubor.objects.get(pk=record)
-        save_single_file_from_storage_impl(record, storage_path, save_thumbs, disable_antivirus)
-
-    @classmethod
     def save_files_from_storage(
         cls,
         records: Union[list, range],
