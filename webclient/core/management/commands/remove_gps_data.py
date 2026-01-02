@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from django.core.management.base import BaseCommand
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +37,13 @@ class Command(BaseCommand):
         python manage.py remove_gps_data /var/data/images.csv
     """
 
-    help = "Odstranění GPS dat z existujících souborů podle CSV seznamu"
+    help = _("core.management.commands.remove_gps_data.Command.help")
 
     def add_arguments(self, parser):
         parser.add_argument(
             "csv_file",
             type=str,
-            help="Cesta k CSV souboru se seznamem souborů (sloupec 'record')",
+            help=_("core.management.commands.remove_gps_data.Command.add_arguments.csv_file_help"),
         )
 
     def handle(self, *args, **options):
@@ -66,7 +67,11 @@ class Command(BaseCommand):
                 "core.management.commands.remove_gps_data.admin_user_not_found",
                 extra={"admin_user_pk": ADMIN_USER},
             )
-            self.stdout.write(self.style.ERROR(f"Administrátorský uživatel s PK {ADMIN_USER} nebyl nalezen"))
+            self.stdout.write(
+                self.style.ERROR(
+                    _("core.management.commands.remove_gps_data.Command.handle.admin_user_not_found") + str(ADMIN_USER)
+                )
+            )
             return
 
         # Read CSV file
@@ -77,7 +82,11 @@ class Command(BaseCommand):
                 "core.management.commands.remove_gps_data.csv_read_error",
                 extra={"csv_file": csv_file, "error": str(e)},
             )
-            self.stdout.write(self.style.ERROR(f"Chyba při čtení CSV souboru: {str(e)}"))
+            self.stdout.write(
+                self.style.ERROR(
+                    _("core.management.commands.remove_gps_data.Command.handle.csv_read_error") + " " + str(e)
+                )
+            )
             return
 
         total = len(sheet)
@@ -86,13 +95,22 @@ class Command(BaseCommand):
         skipped_count = 0
         error_count = 0
 
-        self.stdout.write(f"Zpracovává se {total} záznamů z CSV souboru...")
+        self.stdout.write(
+            _("core.management.commands.remove_gps_data.Command.handle.processing_total") + " " + str(total)
+        )
 
         for index, row in sheet.iterrows():
             # Show progress
             if index % max(total // 100, 1) == 0:
                 percentage = round(index / total * 100)
-                self.stdout.write(f"\rProgress: {percentage}%", ending="")
+                self.stdout.write(
+                    "\r"
+                    + _("core.management.commands.remove_gps_data.Command.handle.progress")
+                    + " "
+                    + str(percentage)
+                    + "%",
+                    ending="",
+                )
 
             try:
                 record = Soubor.objects.get(path=row["record"])
@@ -133,19 +151,32 @@ class Command(BaseCommand):
 
             except Soubor.DoesNotExist:
                 error_count += 1
-                error_msg = f"Soubor s cestou '{row['record']}' nebyl nalezen v databázi"
+                error_msg = (
+                    _("core.management.commands.remove_gps_data.Command.handle.file_not_found")
+                    + " "
+                    + str(row["record"])
+                )
                 logger.warning(
                     "core.management.commands.remove_gps_data.file_not_found",
                     extra={"path": row["record"]},
                 )
-                self.stdout.write(self.style.WARNING(f"\n{error_msg}"))
+                self.stdout.write(self.style.WARNING("\n" + error_msg))
             except Exception as err:
                 error_count += 1
                 logger.error(
                     "core.management.commands.remove_gps_data.error",
                     extra={"path": row["record"], "error": str(err)},
                 )
-                self.stdout.write(self.style.ERROR(f"\nChyba: {row['record']} - {err}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        "\n"
+                        + _("core.management.commands.remove_gps_data.Command.handle.error")
+                        + " "
+                        + str(row["record"])
+                        + " - "
+                        + str(err)
+                    )
+                )
 
         # Final newline after progress indicator
         self.stdout.write("")
@@ -164,19 +195,41 @@ class Command(BaseCommand):
         # Summary output
         self.stdout.write("")
         self.stdout.write("=" * 50)
-        self.stdout.write("Souhrn zpracování:")
-        self.stdout.write(f"  Celkem záznamů:           {total}")
-        self.stdout.write(f"  Úspěšně zpracováno:       {success_count}")
-        self.stdout.write(f"  Aktualizováno (GPS odstraněno): {updated_count}")
-        self.stdout.write(f"  Přeskočeno (bez GPS):     {skipped_count}")
-        self.stdout.write(f"  Chyby:                    {error_count}")
+        self.stdout.write(_("core.management.commands.remove_gps_data.Command.handle.summary_header"))
+        self.stdout.write(_("core.management.commands.remove_gps_data.Command.handle.summary_total") + " " + str(total))
+        self.stdout.write(
+            _("core.management.commands.remove_gps_data.Command.handle.summary_success") + " " + str(success_count)
+        )
+        self.stdout.write(
+            _("core.management.commands.remove_gps_data.Command.handle.summary_updated") + " " + str(updated_count)
+        )
+        self.stdout.write(
+            _("core.management.commands.remove_gps_data.Command.handle.summary_skipped") + " " + str(skipped_count)
+        )
+        self.stdout.write(
+            _("core.management.commands.remove_gps_data.Command.handle.summary_errors") + " " + str(error_count)
+        )
         self.stdout.write("=" * 50)
 
         if error_count > 0:
             self.stdout.write(
                 self.style.WARNING(
-                    f"\nDokončeno s chybami. Aktualizováno souborů: {updated_count}, Chyby: {error_count}"
+                    "\n"
+                    + _("core.management.commands.remove_gps_data.Command.handle.finished_with_errors")
+                    + " "
+                    + str(updated_count)
+                    + ", "
+                    + _("core.management.commands.remove_gps_data.Command.handle.errors")
+                    + " "
+                    + str(error_count)
                 )
             )
         else:
-            self.stdout.write(self.style.SUCCESS(f"\nDokončeno úspěšně. GPS data odstraněna z {updated_count} souborů"))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "\n"
+                    + _("core.management.commands.remove_gps_data.Command.handle.finished_success")
+                    + " "
+                    + str(updated_count)
+                )
+            )

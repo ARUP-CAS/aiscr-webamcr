@@ -2,6 +2,7 @@ import logging
 
 from core.management.commands.utils.file_storage import save_single_file_from_storage_impl
 from django.core.management.base import BaseCommand
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -27,28 +28,30 @@ class Command(BaseCommand):
         python manage.py save_single_file_from_storage 456 /var/storage --save-thumbs
     """
 
-    help = "Uložení jednotlivého souboru ze storage do Fedora repozitáře"
+    help = _("core.management.commands.save_single_file_from_storage.Command.help")
 
     def add_arguments(self, parser):
         parser.add_argument(
             "pk",
             type=int,
-            help="Primární klíč záznamu souboru",
+            help=_("core.management.commands.save_single_file_from_storage.Command.add_arguments.pk_help"),
         )
         parser.add_argument(
             "storage_path",
             type=str,
-            help="Cesta k adresáři se soubory",
+            help=_("core.management.commands.save_single_file_from_storage.Command.add_arguments.storage_path_help"),
         )
         parser.add_argument(
             "--save-thumbs",
             action="store_true",
-            help="Generovat náhledy",
+            help=_("core.management.commands.save_single_file_from_storage.Command.add_arguments.save_thumbs_help"),
         )
         parser.add_argument(
             "--disable-antivirus",
             action="store_true",
-            help="Přeskočit antivirovou kontrolu",
+            help=_(
+                "core.management.commands.save_single_file_from_storage.Command.add_arguments.disable_antivirus_help"
+            ),
         )
 
     def handle(self, *args, **options):
@@ -68,4 +71,10 @@ class Command(BaseCommand):
             "core.management.commands.save_single_file_from_storage.end",
             extra={"pk": pk, "storage_path": storage_path},
         )
-        self.stdout.write(self.style.SUCCESS(f"Soubor s PK {pk} byl úspěšně uložen"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                _("core.management.commands.save_single_file_from_storage.Command.handle.finished_success")
+                + " "
+                + str(pk)
+            )
+        )

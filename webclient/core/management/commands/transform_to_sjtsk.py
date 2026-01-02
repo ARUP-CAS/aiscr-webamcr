@@ -3,6 +3,7 @@ import logging
 from core.coordTransform import transform_geom_to_sjtsk
 from django.core.management.base import BaseCommand
 from django.db import connection
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -28,21 +29,21 @@ class Command(BaseCommand):
         python manage.py transform_to_sjtsk dokument
     """
 
-    help = "Transformace souřadnic do systému S-JTSK pro vybraný model"
+    help = _("core.management.commands.transform_to_sjtsk.Command.help")
 
     def add_arguments(self, parser):
         parser.add_argument(
             "model",
             type=str,
             choices=["pian", "nalez", "projekt", "dokument"],
-            help="Typ modelu pro transformaci (pian, nalez, projekt, dokument)",
+            help=_("core.management.commands.transform_to_sjtsk.Command.add_arguments.model_help"),
         )
 
     def handle(self, *args, **options):
         model_type = options["model"]
 
         logger.debug(
-            "cron.management.commands.transform_to_sjtsk.start",
+            "core.management.commands.transform_to_sjtsk.start",
             extra={"model": model_type},
         )
 
@@ -56,14 +57,14 @@ class Command(BaseCommand):
             self._transform_dokument()
 
         logger.debug(
-            "cron.management.commands.transform_to_sjtsk.end",
+            "core.management.commands.transform_to_sjtsk.end",
             extra={"model": model_type},
         )
 
     def _transform_pian(self):
         from pian.models import Pian
 
-        self.stdout.write("Transformace geometrie pro PIAN...")
+        self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_pian.processing"))
 
         query_select = (
             "select pian.id,ST_AsText(pian.geom) as geometry "
@@ -84,12 +85,21 @@ class Command(BaseCommand):
         success_count = 0
         error_count = 0
 
-        self.stdout.write(f"Nalezeno {total} PIANů k transformaci...")
+        self.stdout.write(
+            _("core.management.commands.transform_to_sjtsk.Command._transform_pian.found") + " " + str(total)
+        )
 
         for idx, pian in enumerate(pians):
             if total > 0 and idx % max(total // 100, 1) == 0:
                 percentage = round(idx / total * 100)
-                self.stdout.write(f"\rProgress: {percentage}%", ending="")
+                self.stdout.write(
+                    "\r"
+                    + _("core.management.commands.transform_to_sjtsk.Command._transform_pian.progress")
+                    + " "
+                    + str(percentage)
+                    + "%",
+                    ending="",
+                )
 
             geom = transform_geom_to_sjtsk(pian.geometry)
             if geom[1] == "OK":
@@ -99,18 +109,37 @@ class Command(BaseCommand):
             else:
                 error_count += 1
                 logger.error(
-                    "cron.management.commands.transform_to_sjtsk.pian.error",
+                    "core.management.commands.transform_to_sjtsk.pian.error",
                     extra={"pian_id": pian.id, "error": geom[1]},
                 )
-                self.stdout.write(self.style.ERROR(f"\nChyba PIAN id {pian.id}: {geom[1]}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        "\n"
+                        + _("core.management.commands.transform_to_sjtsk.Command._transform_pian.error")
+                        + " "
+                        + str(pian.id)
+                        + ": "
+                        + str(geom[1])
+                    )
+                )
 
         self.stdout.write("")
-        self.stdout.write(self.style.SUCCESS(f"Dokončeno. Transformováno: {success_count}, Chyby: {error_count}"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                _("core.management.commands.transform_to_sjtsk.Command._transform_pian.finished_transformed")
+                + " "
+                + str(success_count)
+                + ", "
+                + _("core.management.commands.transform_to_sjtsk.Command._transform_pian.finished_errors")
+                + " "
+                + str(error_count)
+            )
+        )
 
     def _transform_nalez(self):
         from pas.models import SamostatnyNalez
 
-        self.stdout.write("Transformace geometrie pro samostatné nálezy...")
+        self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_nalez.processing"))
 
         query_select = (
             "select samostatny_nalez.id, ST_AsText(samostatny_nalez.geom) as geometry "
@@ -131,12 +160,21 @@ class Command(BaseCommand):
         success_count = 0
         error_count = 0
 
-        self.stdout.write(f"Nalezeno {total} nálezů k transformaci...")
+        self.stdout.write(
+            _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.found") + " " + str(total)
+        )
 
         for idx, SN in enumerate(SNs):
             if total > 0 and idx % max(total // 100, 1) == 0:
                 percentage = round(idx / total * 100)
-                self.stdout.write(f"\rProgress: {percentage}%", ending="")
+                self.stdout.write(
+                    "\r"
+                    + _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.progress")
+                    + " "
+                    + str(percentage)
+                    + "%",
+                    ending="",
+                )
 
             geom = transform_geom_to_sjtsk(SN.geometry)
             if geom[1] == "OK":
@@ -146,18 +184,37 @@ class Command(BaseCommand):
             else:
                 error_count += 1
                 logger.error(
-                    "cron.management.commands.transform_to_sjtsk.nalez.error",
+                    "core.management.commands.transform_to_sjtsk.nalez.error",
                     extra={"nalez_id": SN.id, "error": geom[1]},
                 )
-                self.stdout.write(self.style.ERROR(f"\nChyba SN id {SN.id}: {geom[1]}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        "\n"
+                        + _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.error")
+                        + " "
+                        + str(SN.id)
+                        + ": "
+                        + str(geom[1])
+                    )
+                )
 
         self.stdout.write("")
-        self.stdout.write(self.style.SUCCESS(f"Dokončeno. Transformováno: {success_count}, Chyby: {error_count}"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.finished_transformed")
+                + " "
+                + str(success_count)
+                + ", "
+                + _("core.management.commands.transform_to_sjtsk.Command._transform_nalez.finished_errors")
+                + " "
+                + str(error_count)
+            )
+        )
 
     def _transform_projekt(self):
         from projekt.models import Projekt
 
-        self.stdout.write("Transformace geometrie pro projekty...")
+        self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_projekt.processing"))
 
         query_select = (
             "select projekt.id,projekt.ident_cely,ST_AsText(projekt.geom) as geometry,ST_AsText(projekt.geom_sjtsk) as geometry_sjtsk "
@@ -178,12 +235,21 @@ class Command(BaseCommand):
         success_count = 0
         error_count = 0
 
-        self.stdout.write(f"Nalezeno {total} projektů k transformaci...")
+        self.stdout.write(
+            _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.found") + " " + str(total)
+        )
 
         for idx, PRJ in enumerate(PRJs):
             if total > 100 and idx % max(total // 100, 1) == 0:
                 percentage = round(idx / total * 100)
-                self.stdout.write(f"\rProgress: {percentage}%", ending="")
+                self.stdout.write(
+                    "\r"
+                    + _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.progress")
+                    + " "
+                    + str(percentage)
+                    + "%",
+                    ending="",
+                )
 
             geom = transform_geom_to_sjtsk(PRJ.geometry)
             if geom[1] == "OK":
@@ -193,18 +259,37 @@ class Command(BaseCommand):
             else:
                 error_count += 1
                 logger.error(
-                    "cron.management.commands.transform_to_sjtsk.projekt.error",
+                    "core.management.commands.transform_to_sjtsk.projekt.error",
                     extra={"projekt_id": PRJ.id, "ident_cely": PRJ.ident_cely, "error": geom[1]},
                 )
-                self.stdout.write(self.style.ERROR(f"\nChyba PRJ id {PRJ.id}: {geom[1]}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        "\n"
+                        + _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.error")
+                        + " "
+                        + str(PRJ.id)
+                        + ": "
+                        + str(geom[1])
+                    )
+                )
 
         self.stdout.write("")
-        self.stdout.write(self.style.SUCCESS(f"Dokončeno. Transformováno: {success_count}, Chyby: {error_count}"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.finished_transformed")
+                + " "
+                + str(success_count)
+                + ", "
+                + _("core.management.commands.transform_to_sjtsk.Command._transform_projekt.finished_errors")
+                + " "
+                + str(error_count)
+            )
+        )
 
     def _transform_dokument(self):
         from dokument.models import DokumentExtraData
 
-        self.stdout.write("Transformace geometrie pro dokumenty...")
+        self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_dokument.processing"))
 
         query_select = (
             "select dokument_extra_data.dokument,ST_AsText(dokument_extra_data.geom) as geometry,ST_AsText(dokument_extra_data.geom_sjtsk) as geometry_sjtsk "
@@ -225,12 +310,21 @@ class Command(BaseCommand):
         success_count = 0
         error_count = 0
 
-        self.stdout.write(f"Nalezeno {total} dokumentů k transformaci...")
+        self.stdout.write(
+            _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.found") + " " + str(total)
+        )
 
         for idx, DOC in enumerate(DOCs):
             if total > 100 and idx % max(total // 100, 1) == 0:
                 percentage = round(idx / total * 100)
-                self.stdout.write(f"\rProgress: {percentage}%", ending="")
+                self.stdout.write(
+                    "\r"
+                    + _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.progress")
+                    + " "
+                    + str(percentage)
+                    + "%",
+                    ending="",
+                )
 
             try:
                 geom = transform_geom_to_sjtsk(DOC.geometry)
@@ -241,17 +335,45 @@ class Command(BaseCommand):
                 else:
                     error_count += 1
                     logger.error(
-                        "cron.management.commands.transform_to_sjtsk.dokument.error",
+                        "core.management.commands.transform_to_sjtsk.dokument.error",
                         extra={"dokument_id": DOC.pk, "error": geom[1]},
                     )
-                    self.stdout.write(self.style.ERROR(f"\nChyba DOC id {DOC.pk}: {geom[1]}"))
+                    self.stdout.write(
+                        self.style.ERROR(
+                            "\n"
+                            + _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.error")
+                            + " "
+                            + str(DOC.pk)
+                            + ": "
+                            + str(geom[1])
+                        )
+                    )
             except Exception as err:
                 error_count += 1
                 logger.warning(
-                    "cron.management.commands.transform_to_sjtsk.dokument.exception",
+                    "core.management.commands.transform_to_sjtsk.dokument.exception",
                     extra={"dokument_id": DOC.pk, "error": str(err)},
                 )
-                self.stdout.write(self.style.ERROR(f"\nVýjimka DOC id {DOC.pk}: {err}"))
+                self.stdout.write(
+                    self.style.ERROR(
+                        "\n"
+                        + _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.exception")
+                        + " "
+                        + str(DOC.pk)
+                        + ": "
+                        + str(err)
+                    )
+                )
 
         self.stdout.write("")
-        self.stdout.write(self.style.SUCCESS(f"Dokončeno. Transformováno: {success_count}, Chyby: {error_count}"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.finished_transformed")
+                + " "
+                + str(success_count)
+                + ", "
+                + _("core.management.commands.transform_to_sjtsk.Command._transform_dokument.finished_errors")
+                + " "
+                + str(error_count)
+            )
+        )

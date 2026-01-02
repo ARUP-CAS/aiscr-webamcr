@@ -2,6 +2,7 @@ import logging
 from typing import Union
 
 from django.core.management.base import BaseCommand
+from django.utils.translation import gettext as _
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
@@ -27,25 +28,25 @@ class Command(BaseCommand):
         python manage.py generate_metadata --model Adb --start-with-pk 1000 --limit 50
     """
 
-    help = "Generování XML metadat pro modely a jejich uložení do Fedora repozitáře"
+    help = _("core.management.commands.generate_metadata.Command.help")
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--model",
             type=str,
-            help="Model class name (e.g., Projekt, ArcheologickyZaznam)",
+            help=_("core.management.commands.generate_metadata.Command.add_arguments.model_help"),
             default=None,
         )
         parser.add_argument(
             "--limit",
             type=int,
-            help="Limit number of records to process",
+            help=_("core.management.commands.generate_metadata.Command.add_arguments.limit_help"),
             default=None,
         )
         parser.add_argument(
             "--start-with-pk",
             type=int,
-            help="Start processing from this primary key",
+            help=_("core.management.commands.generate_metadata.Command.add_arguments.start_with_pk_help"),
             default=None,
         )
 

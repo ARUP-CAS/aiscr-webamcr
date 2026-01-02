@@ -4,6 +4,7 @@ from core.repository_connector import FedoraTransaction
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import GeometryCollection, LineString, MultiPolygon, Point, Polygon
 from django.core.management.base import BaseCommand
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +31,14 @@ class Command(BaseCommand):
         python manage.py check_pian_properties
     """
 
-    help = "Kontrola a oprava vlastností PIANů (typ geometrie, ZM10, ZM50)"
+    help = _("core.management.commands.check_pian_properties.Command.help")
 
     def handle(self, *args, **options):
         from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
         from heslar.models import Heslar
         from pian.models import Pian, get_ZM_from_point
 
-        logger.debug("cron.management.commands.check_pian_properties.start")
+        logger.debug("core.management.commands.check_pian_properties.start")
 
         # Prepare geometry type mapping
         geom_type = {}
@@ -52,8 +53,10 @@ class Command(BaseCommand):
         pocet_pians = query.count()
         index = 0
 
-        self.stdout.write(f"Celkový počet PIANů: {pocet_pians}")
-        self.stdout.write("Zpracovávám PIANy...")
+        self.stdout.write(
+            _("core.management.commands.check_pian_properties.Command.handle.total_pian") + " " + str(pocet_pians)
+        )
+        self.stdout.write(_("core.management.commands.check_pian_properties.Command.handle.processing_pian"))
         self.stdout.write("")
 
         for item in query.iterator(chunk_size=1000):
@@ -63,10 +66,16 @@ class Command(BaseCommand):
 
             # Check geometry type
             if item.typ.pk != geom_type[str(type(geom))].pk:
-                old_typ = item.typ.nazev
+                old_typ = str(item.typ)
                 item.typ = geom_type[str(type(geom))]
                 save = True
-                changes.append(f"typ: {old_typ} -> {item.typ.nazev}")
+                changes.append(
+                    _("core.management.commands.check_pian_properties.Command.handle.change_typ")
+                    + " "
+                    + old_typ
+                    + " -> "
+                    + str(item.typ)
+                )
 
             # Calculate representative point based on geometry type
             if isinstance(geom, Point):
@@ -80,22 +89,48 @@ class Command(BaseCommand):
             zm10, zm50 = get_ZM_from_point(point)
             if zm10 is not None and zm50 is not None:
                 if item.zm10.pk != zm10.pk:
-                    old_zm10 = item.zm10.nazev
+                    old_zm10 = str(item.zm10)
                     item.zm10 = zm10
                     save = True
-                    changes.append(f"ZM10: {old_zm10} -> {zm10.nazev}")
+                    changes.append(
+                        _("core.management.commands.check_pian_properties.Command.handle.change_zm10")
+                        + " "
+                        + old_zm10
+                        + " -> "
+                        + str(zm10)
+                    )
                 if item.zm50.pk != zm50.pk:
-                    old_zm50 = item.zm50.nazev
+                    old_zm50 = str(item.zm50)
                     item.zm50 = zm50
                     save = True
-                    changes.append(f"ZM50: {old_zm50} -> {zm50.nazev}")
+                    changes.append(
+                        _("core.management.commands.check_pian_properties.Command.handle.change_zm50")
+                        + " "
+                        + old_zm50
+                        + " -> "
+                        + str(zm50)
+                    )
 
             # Save if there were changes
             if save is True:
                 pocet_zmenenych += 1
                 self.stdout.write(
-                    f"\rZměněno: {pocet_zmenenych} | Zpracováno: {index}/{pocet_pians} | "
-                    f"PIAN {item.pk}: {', '.join(changes)}",
+                    "\r"
+                    + _("core.management.commands.check_pian_properties.Command.handle.changed")
+                    + " "
+                    + str(pocet_zmenenych)
+                    + " | "
+                    + _("core.management.commands.check_pian_properties.Command.handle.processed")
+                    + " "
+                    + str(index)
+                    + "/"
+                    + str(pocet_pians)
+                    + " | "
+                    + _("core.management.commands.check_pian_properties.Command.handle.pian")
+                    + " "
+                    + str(item.pk)
+                    + ": "
+                    + ", ".join(changes),
                     ending="",
                 )
 
@@ -110,7 +145,16 @@ class Command(BaseCommand):
             # Show periodic progress even when no changes
             if index % 100 == 0:
                 self.stdout.write(
-                    f"\rZměněno: {pocet_zmenenych} | Zpracováno: {index}/{pocet_pians}",
+                    "\r"
+                    + _("core.management.commands.check_pian_properties.Command.handle.changed")
+                    + " "
+                    + str(pocet_zmenenych)
+                    + " | "
+                    + _("core.management.commands.check_pian_properties.Command.handle.processed")
+                    + " "
+                    + str(index)
+                    + "/"
+                    + str(pocet_pians),
                     ending="",
                 )
 
@@ -118,17 +162,37 @@ class Command(BaseCommand):
         self.stdout.write("")
 
         logger.debug(
-            "cron.management.commands.check_pian_properties.end",
+            "core.management.commands.check_pian_properties.end",
             extra={"total": pocet_pians, "changed": pocet_zmenenych},
         )
 
         self.stdout.write("=" * 50)
-        self.stdout.write(f"Celkem zpracováno PIANů: {pocet_pians}")
-        self.stdout.write(f"Počet PIANů se změnami:  {pocet_zmenenych}")
+        self.stdout.write(
+            _("core.management.commands.check_pian_properties.Command.handle.total_processed") + " " + str(pocet_pians)
+        )
+        self.stdout.write(
+            _("core.management.commands.check_pian_properties.Command.handle.changed_count")
+            + " "
+            + str(pocet_zmenenych)
+        )
         self.stdout.write("=" * 50)
         self.stdout.write("")
 
         if pocet_zmenenych > 0:
-            self.stdout.write(self.style.SUCCESS(f"Dokončeno. Opraveno {pocet_zmenenych} PIANů z {pocet_pians}"))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    _("core.management.commands.check_pian_properties.Command.handle.finished_fixed")
+                    + " "
+                    + str(pocet_zmenenych)
+                    + " "
+                    + _("core.management.commands.check_pian_properties.Command.handle.of_total")
+                    + " "
+                    + str(pocet_pians)
+                )
+            )
         else:
-            self.stdout.write(self.style.SUCCESS("Dokončeno. Žádné změny nebyly nutné"))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    _("core.management.commands.check_pian_properties.Command.handle.finished_no_changes")
+                )
+            )
