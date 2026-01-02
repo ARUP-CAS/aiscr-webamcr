@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class AkceVedouciFormSetHelper(FormHelper):
     """
-    Form helper pro správne vykreslení formuláře vedoucích.
+    Form helper pro správné vykreslení formuláře vedoucích.
     """
 
     def __init__(self, *args, **kwargs):
@@ -137,7 +137,7 @@ class CreateArchZForm(forms.ModelForm):
         **kwargs,
     ):
         """
-        Prepis init metódy pro vyplnení init hodnot, nastanvení readonly.
+        Prepis init metody pro vyplnení init hodnot, nastanvení readonly.
         """
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
@@ -295,7 +295,7 @@ class CreateAkceForm(forms.ModelForm):
 
     def clean(self):
         """
-        Přepis clean metódy s custom oveřením datumu ukončení a zahájení.
+        Přepis clean metody s custom oveřením datumu ukončení a zahájení.
         """
         cleaned_data = super().clean()
         if cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_zahajeni") is None:
@@ -402,7 +402,7 @@ class CreateAkceForm(forms.ModelForm):
         super(CreateAkceForm, self).__init__(*args, **kwargs)
         self.fields["specifikace_data"].choices = list(self.fields["specifikace_data"].choices)[1:]
         """
-        Prepis init metódy pro vyplnení init hodnot, nastanvení readonly.
+        Prepis init metody pro vyplnení init hodnot, nastanvení readonly.
         """
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = TwoLevelSelectField(
@@ -434,9 +434,9 @@ class CreateAkceForm(forms.ModelForm):
             self.fields["organizace"].initial = projekt.organizace
             self.fields["datum_zahajeni"].initial = projekt.datum_zahajeni
             self.fields["datum_ukonceni"].initial = projekt.datum_ukonceni
-            self.fields[
-                "lokalizace_okolnosti"
-            ].initial = f"{projekt.lokalizace}. Parcelní číslo: {projekt.parcelni_cislo}"
+            self.fields["lokalizace_okolnosti"].initial = (
+                f"{projekt.lokalizace}. Parcelní číslo: {projekt.parcelni_cislo}"
+            )
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
             self.fields["specifikace_data"].disabled = True
@@ -492,7 +492,7 @@ class CreateAkceForm(forms.ModelForm):
 
     def clean_odlozena_nz(self):
         """
-        Custom clean metóda pro ověření že je_nz a odlozena_nz nejsou oba True.
+        Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True.
         """
         je_nz = self.cleaned_data["je_nz"]
         odlozena_nz = self.cleaned_data["odlozena_nz"]
@@ -502,7 +502,7 @@ class CreateAkceForm(forms.ModelForm):
 
     def clean_datum_zahajeni(self):
         """
-        Custom clean metóda pro ověření:
+        Custom clean metoda pro ověření:
 
             ak je specifikace_data=přesně tak datum_zahájení nesmí být prázdne
 
@@ -517,7 +517,7 @@ class CreateAkceForm(forms.ModelForm):
 
     def clean_datum_ukonceni(self):
         """
-        Custom clean metóda pro ověření:
+        Custom clean metoda pro ověření:
 
             ak je specifikace_data=přesně tak datum_ukončení nesmí být prázdne
 

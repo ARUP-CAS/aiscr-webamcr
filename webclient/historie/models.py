@@ -235,7 +235,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
 
     def get_last_transaction_date(self, transaction_type, anonymized: bool = True, user_protected: bool = True) -> dict:
         """
-        Metóda pro zjištení datumu posledné transakce daného typu.
+        Metoda pro zjištení datumu posledné transakce daného typu.
         """
         resp = {}
         if isinstance(transaction_type, list):

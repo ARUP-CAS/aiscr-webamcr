@@ -193,7 +193,6 @@ window.onload = function () {
         init: function () {
             this.on("success", function (file, response) {
                 file.id = response.id;
-                file.previewElement.lastChild.style.display = null;
                 let result = null;
                 let message = "";
                 if (response.duplicate && response.file_renamed) {
@@ -214,37 +213,53 @@ window.onload = function () {
                     show_action_result_message(file, result, message);
                 }
             });
-            this.on("complete", function (file, response) {
-                if (this.files.every(file => (file.status === 'success' || file.status === 'error' ))) {
-                    let submitButton = $(".btn-disable-when-running-upload");
-                    submitButton.prop('disabled', false); 
-                    submitButton.removeClass("disabled"); 
-                }
-            });
-            this.on("removedfile", function (file) {
-                if (file.id) {
-                    xhttp.open("POST", "/soubor/smazat-DZ/" + typ_vazby + "/" + object_id + "/" + file.id);
-                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
-                    xhttp.onreadystatechange = () => {
-                        if (xhttp.readyState === XMLHttpRequest.DONE) {
-                            if (xhttp.status === 200) {
-                                show_action_result_message(file, ActionResultsEnum.success, "success",ActionTypeEnum.delete);
-                            } else {
-                                show_action_result_message(file, ActionResultsEnum.error, "success",ActionTypeEnum.delete);
-                            }
-                        }
-                    };
-                    xhttp.send("dropzone=true");
-                }
-            });
-            this.on("sending", function (file) {
-                file.previewElement.lastChild.style.display = "none"
-            });
             this.on("addedfile", function (file) {
-                let submitButton = $(".btn-disable-when-running-upload");
-                submitButton.prop('disabled', true);
-                submitButton.addClass("disabled"); 
+                toggleButtonsDisabled(true);
+                const btn = file.previewElement.querySelector("[data-dz-remove]");
+
+                //přepíše tlačítko delete
+                if(btn){
+                    const clone = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(clone, btn);
+                    
+                    //vloží událost na tlačítko delete
+                    clone.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (!file.id) return;
+
+                        toggleAllLocked(true);
+                        btn.style.pointerEvents = "none";
+
+                        const xhttp = new XMLHttpRequest();
+                        xhttp.open("POST", "/soubor/smazat-DZ/" + typ_vazby + "/" + object_id + "/" + file.id);
+                        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                        xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
+                        xhttp.onreadystatechange = () => {
+                            if (xhttp.readyState === XMLHttpRequest.DONE) {
+                                if (xhttp.status === 200) {
+                                    show_action_result_message(file, ActionResultsEnum.success, "success", ActionTypeEnum.delete);
+                                    //smaže ikonu až po fyzickém smazání na serveru
+                                    this.removeFile(file);
+                                } else {
+                                    show_action_result_message(file, ActionResultsEnum.error, "error", ActionTypeEnum.delete);
+                                    btn.style.pointerEvents = "auto";
+                                }
+                                toggleAllLocked(false);
+                            }
+                        };
+
+                        xhttp.send("dropzone=true");
+                    });
+                }
+            });
+            this.on("processing", function (file) {
+                toggleFileRemoving(true);
+            });
+            this.on("queuecomplete", function () {
+                toggleButtonsDisabled(false);
+                toggleFileRemoving(false);
             });
 
         },
@@ -266,7 +281,15 @@ window.onload = function () {
     };
     const uploader = document.querySelector('#my-awesome-dropzone');
     newDropzone = new Dropzone(uploader, dropzoneOptions);
-    mock=JSON.parse(mock_str);
+    //vloží do dropzone soubory, které už byly nahrány dříve
+    let mock = [];
+    if (mock_str) {
+        try {
+            mock = JSON.parse(mock_str);
+        } catch(e) {            
+            mock = [];
+        }
+    }
     mock.forEach(file => {
         let mockFile = {
             name: file.name,
@@ -276,5 +299,27 @@ window.onload = function () {
         newDropzone.emit("addedfile", mockFile);
         newDropzone.emit("complete", mockFile);
     });
+
+    //zablokuje tlačítka mazání
+    function toggleFileRemoving(lock) {
+        $("[data-dz-remove]").css({
+            "pointer-events": lock ? "none" : "auto",
+            "opacity": lock ? "0.4" : "1"
+        });
+    }
+
+    //zablokuje vše - nahrávání,  mazání a tlačítka
+    function toggleAllLocked(lock) {
+        toggleButtonsDisabled(lock)
+        lock ? newDropzone.disable() : newDropzone.enable();
+        toggleFileRemoving(lock);
+    }
+    //zablokuje tlačítka
+    function toggleButtonsDisabled(lock) {
+        const submitButton = $(".btn-disable-when-running-upload");
+        submitButton
+            .prop("disabled", lock)
+            .toggleClass("disabled", lock);
+    }
 
 };

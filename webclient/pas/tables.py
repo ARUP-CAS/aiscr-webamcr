@@ -130,7 +130,7 @@ class SamostatnyNalezTable(SearchTable):
 
     def render_nahled(self, value, record):
         """
-        Metóda pro správne zobrazení náhledu souboru.
+        Metoda pro správně zobrazení náhledu souboru.
         """
         soubor = record.nahled_soubor
         if soubor is not None:
@@ -270,6 +270,6 @@ class UzivatelSpolupraceTable(SearchTable):
 
     def get_all_idents(self):
         """
-        Vrátí prázdnu hodnotu. Metóda je zde kvůli kompatibilitě s ostatními tabulkami.
+        Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
         """
         return ""

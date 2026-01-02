@@ -74,7 +74,7 @@ class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní kontextu podlehu.
+        Metoda pro získaní kontextu podlehu.
         """
         context = {
             "toolbar_name": _("ez.views.externiZdrojIndexView.toolbarName"),

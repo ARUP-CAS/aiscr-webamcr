@@ -45,8 +45,8 @@
 <script src="{% static 'js/form_fields_disabling.js' %}"></script>
   <script>
       window.addEventListener("DOMContentLoaded", function() {
-        var checked_field = document.getElementById("id_typ");
-        var fields = new Map()
+        const checked_field = document.getElementById("id_typ");
+        const fields = new Map()
         fields.set("id_editori", "")
         fields.set("id_casopis_denik_nazev", "")
         fields.set("id_casopis_rocnik", "")
@@ -60,13 +60,13 @@
         fields.set("id_issn", "")
         fields.set("id_typ_dokumentu", "")
         fields.set("id_organizace", "")
-        var required = new Map();
+        const required = new Map();
         required.set("{% get_value_from_heslar "externi_zdroj_typ" "kniha" %}", ["id_misto"]);
         required.set("{% get_value_from_heslar "externi_zdroj_typ" "cast_knihy" %}", ["id_editori","id_paginace_titulu","id_sbornik_nazev","id_misto"]);
         required.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_casopise" %}", ["id_casopis_denik_nazev", "id_casopis_rocnik","id_paginace_titulu"]);
         required.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_novinach" %}", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"]);
         required.set("{% get_value_from_heslar "externi_zdroj_typ" "nepublikovana_zprava" %}", []);
-        var allowed = new Map();
+        const allowed = new Map();
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "kniha" %}", ["id_edice_rada", "id_vydavatel","id_isbn","id_misto"]);
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "cast_knihy" %}", ["id_editori", "id_misto","id_paginace_titulu","id_sbornik_nazev","id_edice_rada","id_vydavatel","id_isbn"]);
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_casopise" %}", ["id_casopis_denik_nazev", "id_casopis_rocnik", "id_paginace_titulu","id_issn"]);
@@ -82,8 +82,8 @@
     </script>
     <script type="text/javascript" id="js-id-create-osoba">
       //var create autor and editor
-      var successFunctionAutor = function(settings, response) {
-        var newOption = new Option(response.text, response.value, true, true);
+      const successFunctionAutor = function(settings, response) {
+        const newOption = new Option(response.text, response.value, true, true);
         $('#id_autori').append(newOption).trigger('change');
         $('#id_autori').trigger({
         type: 'select2:select',
@@ -93,8 +93,8 @@
     })
     $(settings.modalIDD).modal("hide");
       };
-      var successFunctionEditor = function(settings, response) {
-        var newOption = new Option(response.text, response.value, true, true);
+      const successFunctionEditor = function(settings, response) {
+        const newOption = new Option(response.text, response.value, true, true);
         $('#id_editori').append(newOption).trigger('change');
         $('#id_editori').trigger({
           type: 'select2:select',
@@ -112,7 +112,7 @@
           $('#create-editor').on('click', function () {
               $.fn.modal.Constructor.prototype._enforceFocus = function () {};
           })
-          var options = Object.assign(Object.create(defaults), {
+          const optionsAutor = Object.assign(Object.create(defaults), {
           modalID: "modal-form",
           formURL: "{% url 'heslar:create_osoba' %}",
           formID: "create-osoba-form",
@@ -120,8 +120,8 @@
           modalIDD : "#modal-form",
           successFunc: successFunctionAutor,
         })
-        new Modal(options, "create-autor");
-        var options = Object.assign(Object.create(defaults), {
+        new Modal(optionsAutor, "create-autor");
+        const optionsEditor = Object.assign(Object.create(defaults), {
           modalID: "modal-form",
           formURL: "{% url 'heslar:create_osoba' %}",
           formID: "create-osoba-form",
@@ -129,7 +129,7 @@
           modalIDD : "#modal-form",
           successFunc: successFunctionEditor,
         })
-        new Modal(options, "create-editor");  
+        new Modal(optionsEditor, "create-editor");  
       });
     </script>
 {% endblock %}

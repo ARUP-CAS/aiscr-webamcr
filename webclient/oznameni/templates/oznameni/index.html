@@ -7,7 +7,7 @@
 
 {% block head %}
   <script>
-      var global_csrftoken = '{{ csrf_token }}';
+      const global_csrftoken = '{{ csrf_token }}';
   </script>
   <!-- Map imports -->
   <link rel="stylesheet" href="{% static 'js/Leaflet1.9.4/leaflet.css' %}"/>
@@ -18,7 +18,7 @@
   <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
   <!-- Date picker imports -->
   <script>
-    var drp_translations = {
+    const drp_translations = {
 	cancelLabel: '{% trans "drp.cancelLabel" %}',
 	applyLabel: '{% trans "drp.applyLabel" %}'
     }
@@ -134,10 +134,10 @@
 
 {% block script %}
   <script >
-    var static_url = "{% get_static_prefix %}";
+    const static_url = "{% get_static_prefix %}";
   </script>
   <script>
-    var map_translations = {
+    const map_translations = {
       CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
       cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
       cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
@@ -161,7 +161,7 @@
       mimoCR: '{% trans "mapa.mimoCR" %}'
     };
 
-    var leaflet_search_translations = {
+    const leaflet_search_translations = {
       KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
       Okres: '{% trans "leaflet_search.Okres" %}',
       Obec: '{% trans "leaflet_search.Obec" %}',
@@ -188,11 +188,11 @@
   <script>
     window.onload = function (){
       load_daterangepicker("div_id_planovane_zahajeni")
-      var addPointToPoiLayer = (point_leaf, text) => {
+      const addPointToPoiLayer = (point_leaf, text) => {
             L.marker(point_leaf,{icon: pinIconRedProject}).bindPopup(text).addTo(poi);
         }
-      x1=document.getElementById('id_coordinate_x1').value;
-      x2=document.getElementById('id_coordinate_x2').value;
+      const x1=document.getElementById('id_coordinate_x1').value;
+      const x2=document.getElementById('id_coordinate_x2').value;
       if(x1>0 ){
         addPointToPoiLayer([x2, x1], 'Vámi vybraná poloha záměru');
       }

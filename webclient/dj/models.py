@@ -58,7 +58,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     def get_absolute_url(self):
         """
-        Metóda pro získaní absolute url pro arch záznam pro dokumentační jednotku.
+        Metoda pro získaní absolute url pro arch záznam pro dokumentační jednotku.
         """
         if self.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             return reverse("arch_z:detail-dj", args=[self.archeologicky_zaznam.ident_cely, self.ident_cely])
@@ -71,7 +71,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     def has_adb(self):
         """
-        Metóda pro ověření jestli dokumentační jednotka má ADB.
+        Metoda pro ověření jestli dokumentační jednotka má ADB.
         """
         has_adb = False
         try:

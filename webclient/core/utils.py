@@ -364,9 +364,11 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
                             "lat": str(bod[1]),
                             "lng": str(bod[0]),
                             "zoom": 12 if dj.typ.id == TYP_DJ_KATASTR else 17,
-                            "geom": ""
-                            if dj.typ.id == TYP_DJ_KATASTR
-                            else str(dj.pian.geom).split(";")[1].replace(", ", ","),
+                            "geom": (
+                                ""
+                                if dj.typ.id == TYP_DJ_KATASTR
+                                else str(dj.pian.geom).split(";")[1].replace(", ", ",")
+                            ),
                             "presnost": str(dj.pian.presnost.zkratka),
                             "pian_ident_cely": str(dj.pian.ident_cely),
                             "color": "gold" if akce_ident_cely == dj.ident_cely else "green",
@@ -888,7 +890,7 @@ def get_message(az, message):
 class SearchTable(ColumnShiftTableBootstrap4):
     """
     Základní setup pro tabulky používané v aplikaci.
-    Obsahuje metódu na získaní sloupců které mají byt zobrazeny.
+    Obsahuje metodu na získaní sloupců které mají byt zobrazeny.
     """
 
     columns_to_hide = []
@@ -901,7 +903,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
 
     def render_nahled(self, value, record):
         """
-        Metóda pro správne zobrazení náhledu souboru.
+        Metoda pro správně zobrazení náhledu souboru.
         """
         from pas.models import SamostatnyNalez
 

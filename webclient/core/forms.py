@@ -54,7 +54,7 @@ class TwoLevelSelectField(forms.CharField):
 
 class HeslarChoiceFieldField(forms.ChoiceField):
     """
-    Potrebná úprava metód pro ChoiceField ve formuláři, pro správne zobrazení a spracováni predmetu specifikace.
+    Potrebná úprava metód pro ChoiceField ve formuláři, pro správně zobrazení a spracováni predmetu specifikace.
     """
 
     def clean(self, selected_value):

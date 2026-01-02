@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Projekt, weak=False)
 def projekt_pre_save(sender, instance: Projekt, **kwargs):
     """
-    Metóda pro volání dílčích metod pro nastavení projektu pred uložením.
+    Metoda pro volání dílčích metod pro nastavení projektu pred uložením.
     """
     create_projekt_vazby(sender, instance)
     change_termin_odevzdani_NZ(sender, instance)
@@ -37,7 +37,7 @@ def projekt_pre_save(sender, instance: Projekt, **kwargs):
 
 def change_termin_odevzdani_NZ(sender, instance, **kwargs):
     """
-    Metóda pro nastavení terminu odevzdání NZ.
+    Metoda pro nastavení terminu odevzdání NZ.
     """
     try:
         instance_db = sender.objects.get(pk=instance.pk)
@@ -55,8 +55,8 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
 
 def create_projekt_vazby(sender, instance, **kwargs):
     """
-    Metóda pro vytvoření historických vazeb projektu.
-    Metóda se volá pred uložením projektu.
+    Metoda pro vytvoření historických vazeb projektu.
+    Metoda se volá pred uložením projektu.
     """
     if instance.pk is None:
         logger.debug("projekt.signals.create_projekt_vazby.history_created", extra={"instance": instance})
@@ -104,7 +104,7 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
 @receiver(post_save, sender=Projekt, weak=False)
 def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
-    Metóda pro odeslání emailu hlídacího psa pri založení projektu.
+    Metoda pro odeslání emailu hlídacího psa pri založení projektu.
     """
     # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
