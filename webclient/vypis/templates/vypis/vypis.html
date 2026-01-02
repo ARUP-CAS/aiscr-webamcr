@@ -58,9 +58,9 @@
         const minutes = String(currentDateTime.getMinutes()).padStart(2, '0');
         const seconds = String(currentDateTime.getSeconds()).padStart(2, '0');
         const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-        var htmlToRtfLocal = new window.htmlToRtf();
-        var rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
-        var rtfContent = rtfContent.replace(/ \\\'20/g, "\\\'20");
+        const htmlToRtfLocal = new window.htmlToRtf();
+        let rtfContent = htmlToRtfLocal.convertHtmlToRtf(htmlContent);
+        rtfContent = rtfContent.replace(/ \\\'20/g, "\\\'20");
         // console.log(rtfContent); only for debug
         const blob = new Blob([rtfContent], { type: 'application/rtf' });
         const url = URL.createObjectURL(blob);

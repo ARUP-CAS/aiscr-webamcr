@@ -142,8 +142,8 @@
               set_pian_by_id(ident, false)
           }
           ;
-          string = document.getElementById("djEditForm").action
-          replaced_action = string.replace(/lokalita_dj_zakladni|lokalita_pripojit_pian_mapa|lokalita_pripojit_pian_id/g, new_action)
+          const string = document.getElementById("djEditForm").action
+          const replaced_action = string.replace(/lokalita_dj_zakladni|lokalita_pripojit_pian_mapa|lokalita_pripojit_pian_id/g, new_action)
           document.getElementById("djEditForm").action = replaced_action
       }
   </script>
@@ -153,11 +153,11 @@
           map_show_edit(false)
       }
 
-      var getFiltrType = () => {
+      const getFiltrType = () => {
           return document.forms[0].querySelector('[data-id="dj_typ_id"]').title
       }
 
-      var getFiltrTypeIsKuSafe = () => {
+      const getFiltrTypeIsKuSafe = () => {
           try {
               return getFiltrType().includes("Katastrální území")
           } catch (e) {
@@ -165,9 +165,9 @@
           }
       }
 
-      var filtrAkci = () => {
-          var positive = getFiltrTypeIsKuSafe() ? 'none' : '';
-          var negative = positive === '' ? 'none' : '';
+      const filtrAkci = () => {
+          const positive = getFiltrTypeIsKuSafe() ? 'none' : '';
+          const negative = positive === '' ? 'none' : '';
 
           ["show_menu_pian_from_map_id", "show_menu_pian_new_id", "pian-pripojit-" + '{{j.pian_ident_cely }}', "pian-upravit-" + '{{j.pian_ident_cely }}', "pian-potvrdit-" + '{{j.pian_ident_cely }}']
               .forEach(element => {
@@ -179,8 +179,8 @@
       }
   </script>
   <script>
-      var set_pian_by_id = function (dj_ident, disabled = true) {
-          id = "#id_" + dj_ident + "-pian"
+      const set_pian_by_id = function (dj_ident, disabled = true) {
+          const id = "#id_" + dj_ident + "-pian"
           $(id).prop('disabled', disabled);
           document.getElementById("pian_text").style.display = "none";
           document.getElementById("pian_select").style.display = "block";
