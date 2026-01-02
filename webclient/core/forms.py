@@ -54,7 +54,7 @@ class TwoLevelSelectField(forms.CharField):
 
 class HeslarChoiceFieldField(forms.ChoiceField):
     """
-    Potrebná úprava metód pro ChoiceField ve formuláři, pro správne zobrazení a spracováni predmetu specifikace.
+    Potrebná úprava metód pro ChoiceField ve formuláři, pro správně zobrazení a spracováni predmetu specifikace.
     """
 
     def clean(self, selected_value):
@@ -266,7 +266,13 @@ class PermissionImportForm(forms.Form):
         label=_("core.forms.permissionImport.file.label"),
         widget=forms.FileInput(
             attrs={
-                "accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                "accept": (
+                    ".csv,"
+                    "application/csv,"
+                    "text/csv,"
+                    "application/vnd.ms-excel,"
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
             }
         ),
     )

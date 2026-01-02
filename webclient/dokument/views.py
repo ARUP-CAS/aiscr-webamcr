@@ -388,12 +388,12 @@ class DokumentListView(SearchListView):
 
 class RelatedContext(LoginRequiredMixin, TemplateView):
     """
-    Třida, která se dedí a která obsahuje metódy pro získaní relací dokumentů.
+    Třida, která se dedí a která obsahuje metody pro získaní relací dokumentů.
     """
 
     def get_cast(self, context, cast, **kwargs):
         """
-        Metóda pro získaní informací ohlědně části dokumentu.
+        Metoda pro získaní informací ohlědně části dokumentu.
         """
         context["cast"] = cast
         cast_form = DokumentCastForm(
@@ -435,7 +435,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní contextu dokumentu pro template.
+        Metoda pro získaní contextu dokumentu pro template.
         """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
@@ -496,7 +496,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
     def render_to_response(self, context, **response_kwargs):
         """
-        Metóda pro render response, kvúli správnemu zobrazení zpět možnosti.
+        Metoda pro render response, kvúli správnemu zobrazení zpět možnosti.
         """
         response = super().render_to_response(context, **response_kwargs)
         referer = urlparse(self.request.META.get("HTTP_REFERER", False)).path

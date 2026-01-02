@@ -325,7 +325,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metóda pro filtrování podle popisu, poznámky, odkazu a poznámek v objektech a předmětech.
+        Metoda pro filtrování podle popisu, poznámky, odkazu a poznámek v objektech a předmětech.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -338,7 +338,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     def filter_roky(self, queryset, name, value):
         """
-        Metóda pro filtrování podle roku revize a popisu ADB.
+        Metoda pro filtrování podle roku revize a popisu ADB.
         """
         if value:
             if value.start is not None and value.stop is not None:
@@ -358,7 +358,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     def filter_roky_range(self, queryset, name, value):
         """
-        Metóda pro filtrování podle roku revize a popisu ADB.
+        Metoda pro filtrování podle roku revize a popisu ADB.
         """
         if value:
             if value.start is not None:
@@ -471,7 +471,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
 class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
     """
-    Třída pro správne zobrazení filtru.
+    Třída pro správně zobrazení filtru.
     """
 
     form_method = "GET"
@@ -937,7 +937,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """
-        Metóda pro filtrování podle územní príslušnosti.
+        Metoda pro filtrování podle územní príslušnosti.
         """
         logger.debug("dokument.filters.DokumentFilter.filter_uzemni_prislusnost", extra={"value": value})
         query = reduce(operator.or_, (Q(ident_cely__contains=item) for item in value))
@@ -945,7 +945,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metóda pro filtrování podle popisu, poznámky, licence, čísla objektu, regiónu a události.
+        Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regiónu a události.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -959,7 +959,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         """
-        Metóda pro filtrování podle poznámky a počtu predmětu.
+        Metoda pro filtrování podle poznámky a počtu predmětu.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
@@ -968,7 +968,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_objekt_pozn_pocet(self, queryset, name, value):
         """
-        Metóda pro filtrování podle poznámky a počtu objektu.
+        Metoda pro filtrování podle poznámky a počtu objektu.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
@@ -977,7 +977,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_jistota(self, queryset, name, value):
         """
-        Metóda pro filtrování podle jistoty.
+        Metoda pro filtrování podle jistoty.
         """
         if "True" in value and "False" in value:
             return queryset.distinct()
@@ -990,7 +990,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_neident_poznamka(self, queryset, name, value):
         """
-        Metóda pro filtrování podle neident akce.
+        Metoda pro filtrování podle neident akce.
         """
         return queryset.filter(
             Q(casti__neident_akce__poznamka__icontains=value)
@@ -1001,7 +1001,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_let_poznamka(self, queryset, name, value):
         """
-        Metóda pro filtrování podle letu.
+        Metoda pro filtrování podle letu.
         """
         return queryset.filter(
             Q(let__typ_letounu__icontains=value)
@@ -1012,19 +1012,19 @@ class DokumentFilter(Model3DFilter):
 
     def filter_id_AZ(self, queryset, name, value):
         """
-        Metóda pro filtrování podle id AZ.
+        Metoda pro filtrování podle id AZ.
         """
         return queryset.filter(Q(casti__archeologicky_zaznam__ident_cely__icontains=value)).distinct()
 
     def filter_id_projekt(self, queryset, name, value):
         """
-        Metóda pro filtrování podle id projektu.
+        Metoda pro filtrování podle id projektu.
         """
         return queryset.filter(Q(casti__projekt__ident_cely__icontains=value)).distinct()
 
     def filter_exist_neident_akce(self, queryset, name, value):
         """
-        Metóda pro filtrování podle existence neident akce.
+        Metoda pro filtrování podle existence neident akce.
         """
         if len(value) == 1:
             akce = NeidentAkce.objects.filter(dokument_cast=models.OuterRef("pk"))
@@ -1041,7 +1041,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_exist_komponenty(self, queryset, name, value):
         """
-        Metóda pro filtrování podle existence komponenty.
+        Metoda pro filtrování podle existence komponenty.
         """
         if len(value) == 1:
             komponenty = Komponenta.objects.filter(komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
@@ -1057,7 +1057,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_exist_nalezy(self, queryset, name, value):
         """
-        Metóda pro filtrování podle existence nálezu.
+        Metoda pro filtrování podle existence nálezu.
         """
         if len(value) == 1:
             objekty = NalezObjekt.objects.filter(komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
@@ -1080,7 +1080,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_exist_tvary(self, queryset, name, value):
         """
-        Metóda pro filtrování podle existence tvaru.
+        Metoda pro filtrování podle existence tvaru.
         """
         if len(value) == 1:
             tvar = Tvar.objects.filter(dokument=models.OuterRef("pk"))
@@ -1094,7 +1094,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_exist_soubory(self, queryset, name, value):
         """
-        Metóda pro filtrování podle existence souboru.
+        Metoda pro filtrování podle existence souboru.
         """
         if len(value) == 1:
             soubor = Soubor.objects.filter(vazba__dokument_souboru=models.OuterRef("pk"))
@@ -1113,7 +1113,7 @@ class DokumentFilter(Model3DFilter):
 
 class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     """
-    Třída pro správne zobrazení filtru.
+    Třída pro správně zobrazení filtru.
     """
 
     form_method = "GET"

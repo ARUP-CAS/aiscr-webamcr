@@ -31,11 +31,11 @@
   //modal scripts
   document.addEventListener('DOMContentLoaded', function (event) {
     if ("{{show.pripojit_eo}}"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-eo-doaz-form",
         modalFormID: "#pripojit-eo-doaz-form",
       })
-      dokument_pripojit_modal = new Modal(options, "eo-pripojit-do-az");
+      let dokument_pripojit_modal = new Modal(options, "eo-pripojit-do-az");
     };
     $('#modal-form').on('shown.bs.modal', function(event) {
         $(document).off('focusin.modal');
