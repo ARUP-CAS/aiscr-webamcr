@@ -134,8 +134,8 @@
               }
             })
           {% endif %}
-          var successFunction = function(settings, response) {
-            var newOption = new Option(response.text, response.value, true, true);
+          const successFunction = function(settings, response) {
+            const newOption = new Option(response.text, response.value, true, true);
             $('#id_autori').append(newOption).trigger('change');
             $('#id_autori').trigger({
               type: 'select2:select',
@@ -150,7 +150,7 @@
               };
           })
           document.addEventListener('DOMContentLoaded', function (event) {
-            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+            const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
             formURL: "{% url 'heslar:create_osoba' %}",
             formID: "create-osoba-form",
             modalFormID: "#create-osoba-form",
@@ -161,7 +161,7 @@
           
         });
 
-    url = '{% url "dokument:zjisti-licenci-organizace" %}' + "?organizace="
+    const url = '{% url "dokument:zjisti-licenci-organizace" %}' + "?organizace="
     get_vychozi_licence("#id_organizace","#id_licence",url)
   </script>
 
