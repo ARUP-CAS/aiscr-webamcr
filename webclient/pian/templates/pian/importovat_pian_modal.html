@@ -62,7 +62,7 @@
     $('#modal-pian-import-table').empty();
   })
   $('#importovat_pian').on('show.bs.modal', function(e) {
-    var actionId = $(e.relatedTarget).data('action-id');
+    const actionId = $(e.relatedTarget).data('action-id');
     if (actionId) {
       $(e.currentTarget).find('input[name="action"]').val(actionId)
     }

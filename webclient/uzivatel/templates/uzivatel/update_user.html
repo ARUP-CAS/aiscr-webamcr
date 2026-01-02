@@ -72,11 +72,11 @@
 
 {% block script %}
     <script>
-      var options = Object.assign(Object.create(defaults), {
+      const options = Object.assign(Object.create(defaults), {
         modalID: "modal-form",
         formURL: "{% url 'uzivatel:delete-uzivatel-request' %}",
         modalFormID: "#user-delete-request-dialog",
       })
-      delete_user_request_modal = new Modal(options, "uzivatel-delete-request-btn");
+      const delete_user_request_modal = new Modal(options, "uzivatel-delete-request-btn");
     </script>
 {% endblock %}

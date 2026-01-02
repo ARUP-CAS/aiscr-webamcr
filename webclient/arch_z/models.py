@@ -99,7 +99,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_zapsany(self, user):
         """
-        Metóda pro nastavení stavu zapsaný a uložení změny do historie.
+        Metoda pro nastavení stavu zapsaný a uložení změny do historie.
         """
         self.stav = AZ_STAV_ZAPSANY
         Historie(
@@ -111,7 +111,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_odeslany(self, user, request, messages):
         """
-        Metóda pro nastavení stavu odeslaný a uložení změny do historie.
+        Metoda pro nastavení stavu odeslaný a uložení změny do historie.
         Dokumenty se taky posouvají do stavu odeslaný.
         Externí zdroje se posouvají do stavu zapsaný.
         """
@@ -143,7 +143,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_archivovany(self, user):
         """
-        Metóda pro nastavení stavu archivovaný a uložení změny do historie.
+        Metoda pro nastavení stavu archivovaný a uložení změny do historie.
         Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
         """
         self.suppress_signal = True
@@ -159,7 +159,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_vraceny(self, user, new_state, poznamka):
         """
-        Metóda pro vrácení o jeden stav méně a uložení změny do historie.
+        Metoda pro vrácení o jeden stav méně a uložení změny do historie.
         """
         self.stav = new_state
         Historie(
@@ -172,7 +172,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def check_pred_odeslanim(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+        Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
 
             polia: datum_zahajeni, datum_ukonceni, lokalizace_okolnosti, specifikace_data, hlavni_katastr, hlavni_vedouci a hlavni_typ jsou vyplněna.
 
@@ -260,7 +260,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def check_pred_archivaci(self):
         """
-        Metóda na kontrolu prerekvizit pred archivací:
+        Metoda na kontrolu prerekvizit pred archivací:
 
             kontrola jako před odesláním a navíc
 
@@ -290,7 +290,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_lokalita_permanent_ident_cely(self):
         """
-        Metóda pro nastavení permanentního ident celý pro lokality z lokality sekvence.
+        Metoda pro nastavení permanentního ident celý pro lokality z lokality sekvence.
         """
         MAXIMUM: int = 9999999
         region = self.hlavni_katastr.okres.kraj.rada_id
@@ -342,8 +342,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_akce_ident(self, ident=None, delete_container=True):
         """
-        Metóda pro nastavení ident celý pro akci a její relace.
-        Nastaví ident z předaného argumentu ident nebo z metódy get_akce_ident.
+        Metoda pro nastavení ident celý pro akci a její relace.
+        Nastaví ident z předaného argumentu ident nebo z metody get_akce_ident.
         """
         old_ident_cely = self.ident_cely
         if ident:
@@ -358,7 +358,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def get_absolute_url(self, dj_ident_cely=None):
         """
-        Metóda pro získaní absolut url záznamu podle typu arch záznamu a argumentu dj_ident_cely.
+        Metoda pro získaní absolut url záznamu podle typu arch záznamu a argumentu dj_ident_cely.
         """
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if dj_ident_cely is None:
@@ -373,13 +373,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def get_redirect(self, dj_ident_cely=None):
         """
-        Metóda pro získaní redirect záznamu podle typu arch záznamu a argumentu dj_ident_cely.
+        Metoda pro získaní redirect záznamu podle typu arch záznamu a argumentu dj_ident_cely.
         """
         return redirect(self.get_absolute_url(dj_ident_cely))
 
     def __str__(self):
         """
-        Metóda vráti jako str reprezentaci modelu ident_cely.
+        Metoda vráti jako str reprezentaci modelu ident_cely.
         """
         if self.ident_cely:
             return self.ident_cely
@@ -594,7 +594,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     def get_absolute_url(self):
         """
-        Metóda pro získaní absolut url záznamu.
+        Metoda pro získaní absolut url záznamu.
         """
         return reverse("arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely})
 
@@ -663,13 +663,13 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
 
     def __str__(self):
         """
-        Metóda vráti jako str reprezentaci modelu vedouci.
+        Metoda vráti jako str reprezentaci modelu vedouci.
         """
         return f"{self.vedouci.vypis_cely} ({self.organizace})"
 
     def vypis_name(self):
         """
-        Metóda vráti jako str reprezentaci modelu vedouci pro vypis.
+        Metoda vráti jako str reprezentaci modelu vedouci pro vypis.
         """
         return f"{self.vedouci.vypis_cely} ({self.organizace.get_nazev()})"
 
@@ -714,7 +714,7 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
 
 def get_akce_ident(region):
     """
-    Metóda pro získaní permanentního ident celý pro akci z akce sekvence.
+    Metoda pro získaní permanentního ident celý pro akci z akce sekvence.
     """
     MAXIMUM: int = 999999
     try:

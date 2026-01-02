@@ -393,9 +393,9 @@ class DocumentGenerator:
             if parsed_comment.attribute_field_names is not None:
                 for attribute_field_name in parsed_comment.attribute_field_names:
                     attribute_name = self.get_ref_type_attribute_name(ref_type)
-                    new_sub_element.attrib[
-                        attribute_name
-                    ] = f"{id_field_prefix}{self._get_attribute_of_record(attribute_field_name, document_object)}"
+                    new_sub_element.attrib[attribute_name] = (
+                        f"{id_field_prefix}{self._get_attribute_of_record(attribute_field_name, document_object)}"
+                    )
 
     def _create_many_to_many_ref_elements(
         self, schema_element, parent_element, related_records, parsed_comment: ParsedComment, prefix="", ref_type=None
@@ -429,9 +429,9 @@ class DocumentGenerator:
                 new_sub_element.attrib["id"] = f"{prefix}{related_records[parsed_comment.attribute_field_names[0]][i]}"
                 if len(parsed_comment.attribute_field_names) == 2:
                     attribute_name = self.get_ref_type_attribute_name(ref_type)
-                    new_sub_element.attrib[
-                        attribute_name
-                    ] = f"{prefix}{related_records[parsed_comment.attribute_field_names[1]][i]}"
+                    new_sub_element.attrib[attribute_name] = (
+                        f"{prefix}{related_records[parsed_comment.attribute_field_names[1]][i]}"
+                    )
 
     def _parse_scheme_create_element(self, schema_element, parent_element):
         if schema_element.__class__.__name__ == "_Element":

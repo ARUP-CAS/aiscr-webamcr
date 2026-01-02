@@ -27,40 +27,40 @@
       <amcr:geom_wkt EPSG="4326">POINT(15.6436434 50.1338188)</amcr:geom_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1458395</amcr:id>
-      <amcr:datum_zmeny>2021-12-24T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1639348</amcr:id>
-      <amcr:datum_zmeny>2021-12-24T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
-      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2011436</amcr:id>
-      <amcr:datum_zmeny>2021-12-24T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
-      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2119387</amcr:id>
-      <amcr:datum_zmeny>2021-12-24T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
-      <amcr:typ_zmeny>P34</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2219142</amcr:id>
-      <amcr:datum_zmeny>2021-12-25T12:49:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-1911671</amcr:id>
-      <amcr:datum_zmeny>2022-06-15T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
+      <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
+      <amcr:typ_zmeny>P34</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
       <amcr:typ_zmeny>P45</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000554">U-000554</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:archeologicky_zaznam id="C-202114070A">C-202114070A</amcr:archeologicky_zaznam>
     <amcr:dokument id="M-TX-194300151">M-TX-194300151</amcr:dokument>

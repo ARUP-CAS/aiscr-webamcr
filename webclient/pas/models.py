@@ -174,7 +174,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def set_zapsany(self, user):
         """
-        Metóda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
+        Metoda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
         """
         self.stav = SN_ZAPSANY
         Historie(
@@ -186,7 +186,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def set_vracen(self, user, new_state, poznamka):
         """
-        Metóda pro vrácení o jeden stav méně a uložení změny do historie pro samostatný nález.
+        Metoda pro vrácení o jeden stav méně a uložení změny do historie pro samostatný nález.
         """
         self.stav = new_state
         Historie(
@@ -199,7 +199,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def set_odeslany(self, user):
         """
-        Metóda pro nastavení stavu odeslaný a uložení změny do historie pro samostatný nález.
+        Metoda pro nastavení stavu odeslaný a uložení změny do historie pro samostatný nález.
         """
         self.stav = SN_ODESLANY
         Historie(
@@ -211,7 +211,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def set_potvrzeny(self, user):
         """
-        Metóda pro nastavení stavu potvrzený a uložení změny do historie pro samostatný nález.
+        Metoda pro nastavení stavu potvrzený a uložení změny do historie pro samostatný nález.
         """
         self.stav = SN_POTVRZENY
         Historie(
@@ -223,7 +223,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def set_archivovany(self, user):
         """
-        Metóda pro nastavení stavu archivovaný a uložení změny do historie pro samostatný nález.
+        Metoda pro nastavení stavu archivovaný a uložení změny do historie pro samostatný nález.
         """
         self.stav = SN_ARCHIVOVANY
         Historie(
@@ -235,7 +235,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def get_absolute_url(self):
         """
-        Metóda pro získaní absolut url záznamu podle identu.
+        Metoda pro získaní absolut url záznamu podle identu.
         """
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
@@ -255,7 +255,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def check_pred_odeslanim(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+        Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
 
             polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
 
@@ -458,7 +458,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def set_aktivni(self, user):
         """
-        Metóda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
+        Metoda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
         """
         self.stav = SPOLUPRACE_AKTIVNI
         Historie(
@@ -470,7 +470,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def set_neaktivni(self, user, duvod):
         """
-        Metóda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
+        Metoda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
         """
         self.stav = SPOLUPRACE_NEAKTIVNI
         Historie(
@@ -483,7 +483,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def check_pred_aktivaci(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu aktivní.
+        Metoda na kontrolu prerekvizit pred posunem do stavu aktivní.
         Kontrola že stav není aktivný.
         """
         result = []
@@ -493,7 +493,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def check_pred_deaktivaci(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu neaktivní.
+        Metoda na kontrolu prerekvizit pred posunem do stavu neaktivní.
         Kontrola že stav není neaktivný.
         """
         result = []

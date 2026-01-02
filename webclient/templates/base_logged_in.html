@@ -481,10 +481,10 @@
 <script src="{% static 'js/create_message.js' %}"></script>
 <script>
   // for autologout functionality timer and messages
-    var time = {% if seconds_until_idle_end %} {{ seconds_until_idle_end|unlocalize }} {% else %} 60 * 60 {% endif %};
-    var maintenance = "{{ maintenance }}"
-    var timer = new Timer();
-    var interval = null;
+    const time = {% if seconds_until_idle_end %} {{ seconds_until_idle_end|unlocalize }} {% else %} 60 * 60 {% endif %};
+    const maintenance = "{{ maintenance }}"
+    const timer = new Timer();
+    let interval = null;
     let document_title = document.title;
 
   const change_class_list = (sideber_shown) => {
@@ -520,10 +520,10 @@
 
     document.head = document.head || document.getElementsByTagName('head')[0];
 
-    var fav_not = "{%  static 'loga/favicon-dot.png' %}"
-    var fav = "{%  static 'loga/favicon.png' %}"
+    const fav_not = "{%  static 'loga/favicon-dot.png' %}"
+    const fav = "{%  static 'loga/favicon.png' %}"
     function changeFavicon(src) {
-      var link = document.createElement('link'),
+      const link = document.createElement('link'),
       oldLink = document.getElementById('dynamic-favicon');
       link.id = 'dynamic-favicon';
       link.rel = 'shortcut icon';
@@ -553,15 +553,15 @@
       document.title = document_title;
       notifyShown = false
     }
-    var notifyShown = false
+    let notifyShown = false
     
     timer.start({countdown: true, startValues: {seconds: time}});
     $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
     
     timer.addEventListener('secondsUpdated', function (e) {
-      var actual_time = timer.getTimeValues().toString(['minutes', 'seconds']).padStart(5,"0")
+      const actual_time = timer.getTimeValues().toString(['minutes', 'seconds']).padStart(5,"0")
       $('#time').html(actual_time);
-      var idle_warning = {% if IDLE_WARNING_TIME %} '{{IDLE_WARNING_TIME}}' {%else%} false {% endif%};
+      const idle_warning = {% if IDLE_WARNING_TIME %} '{{IDLE_WARNING_TIME}}' {%else%} false {% endif%};
       if (idle_warning !== false) {
         if (timer.getTotalTimeValues().seconds <= idle_warning && notifyShown === false) { 
           startNotify(fav_not)               

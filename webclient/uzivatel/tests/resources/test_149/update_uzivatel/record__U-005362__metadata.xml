@@ -12,24 +12,24 @@
     <amcr:admin>false</amcr:admin>
     <amcr:superadmin>false</amcr:superadmin>
     <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
-    <amcr:datum_registrace>2024-03-21T08:26:09.709807+00:00</amcr:datum_registrace>
+    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
     <amcr:historie>
-      <amcr:id>hist-2803094</amcr:id>
-      <amcr:datum_zmeny>2024-03-21T08:26:11.188352+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
-      <amcr:poznamka>role: Badatel</amcr:poznamka>
-      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2803095</amcr:id>
-      <amcr:datum_zmeny>2024-03-21T08:26:11.195288+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
       <amcr:poznamka>email: badatel2@arup.cas.cz, is_active: True, organizace: Archeologický ústav Praha, first_name: test, last_name: badatel</amcr:poznamka>
       <amcr:typ_zmeny>ZUA</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803184</amcr:id>
-      <amcr:datum_zmeny>2025-06-26T18:16:41.150675+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
+      <amcr:poznamka>role: Badatel</amcr:poznamka>
+      <amcr:typ_zmeny>HR</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005362">U-005362</amcr:uzivatel>
       <amcr:poznamka>telefon: 608456654</amcr:poznamka>
       <amcr:typ_zmeny>ZUU</amcr:typ_zmeny>

@@ -40,7 +40,7 @@ class CreateDJForm(forms.ModelForm):
         typ_akce=None,
     ):
         """
-        Metóda formuláře pro získaní querysetu pro typ DJ podle typu akce.
+        Metoda formuláře pro získaní querysetu pro typ DJ podle typu akce.
         """
         logger.debug(
             "dj.forms.CreateDJForm.__init__.cannot_get_typ_akce",

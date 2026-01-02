@@ -29,8 +29,8 @@
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-760447">Stará Voda v Jeseníkách</amcr:dalsi_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-760455">Suchá Rudná</amcr:dalsi_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-760463">Světlá ve Slezsku</amcr:dalsi_katastr>
-      <amcr:dalsi_katastr xml:lang="cs" id="ruian-762644">Široká Niva</amcr:dalsi_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-786080">Vrbno pod Pradědem</amcr:dalsi_katastr>
+      <amcr:dalsi_katastr xml:lang="cs" id="ruian-762644">Široká Niva</amcr:dalsi_katastr>
       <amcr:dalsi_katastr xml:lang="cs" id="ruian-786098">Železná pod Pradědem</amcr:dalsi_katastr>
       <amcr:lokalizace>okres Bruntál - katastry obcí Rudná pod Pradědem, malá Morávka, Ludvíkov pod Pradědem, Karlova Studánka, Andělská Hora ve Slezsku, Vrbno pod Pradědem, Světlá Hora, Široká Niva</amcr:lokalizace>
       <amcr:parcelni_cislo>-</amcr:parcelni_cislo>
@@ -42,35 +42,38 @@
       <amcr:geom_wkt EPSG="4326">POINT(17.3872744 50.0735522)</amcr:geom_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1604145</amcr:id>
-      <amcr:datum_zmeny>2023-06-04T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1738573</amcr:id>
-      <amcr:datum_zmeny>2023-06-04T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
-      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2296035</amcr:id>
-      <amcr:datum_zmeny>2023-06-05T12:59:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2092093</amcr:id>
-      <amcr:datum_zmeny>2023-08-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
       <amcr:typ_zmeny>P23</amcr:typ_zmeny>
     </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000976">U-000976</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
     <amcr:soubor>
       <amcr:id>soub-584786</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/M-202302810/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>Projekt_2022_M_202105907.docx</amcr:nazev>
       <amcr:mimetype>application/zip</amcr:mimetype>
       <amcr:rozsah>1</amcr:rozsah>
       <amcr:size_mb>0.0158243179</amcr:size_mb>
+      <amcr:sha_512>9149c92482c73b4bc88b92040614198fa547377da1446b792eb7a068c4447d44ef963b3a6aae2347391875fa705f8e4879b58e7ea09a39f0e27e821e4e53897a</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/M-202302810/file/UUID-REMOVED</amcr:url>
     </amcr:soubor>
     <amcr:archeologicky_zaznam id="M-202302810A">M-202302810A</amcr:archeologicky_zaznam>
     <amcr:samostatny_nalez id="M-202302810-N00001">M-202302810-N00001</amcr:samostatny_nalez>

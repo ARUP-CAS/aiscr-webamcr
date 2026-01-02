@@ -226,14 +226,16 @@ class ModelSerializer(ABC):
                     "language": self._get_language() or "",
                     "types": self._serialize_types(),
                     "relatedIdentifiers": self._serialize_related_identifiers(),
-                    "sizes": [
-                        f"{sum([soubor.size_mb for soubor in self._get_soubory_queryset().all()])} MB",
-                        f"{sum([soubor.rozsah for soubor in self._get_soubory_queryset().all()])} pages",
-                    ]
-                    if isinstance(self.record, Dokument)
-                    and self._get_soubory_queryset()
-                    and self._get_soubory_queryset().exists()
-                    else [],
+                    "sizes": (
+                        [
+                            f"{sum([soubor.size_mb for soubor in self._get_soubory_queryset().all()])} MB",
+                            f"{sum([soubor.rozsah for soubor in self._get_soubory_queryset().all()])} pages",
+                        ]
+                        if isinstance(self.record, Dokument)
+                        and self._get_soubory_queryset()
+                        and self._get_soubory_queryset().exists()
+                        else []
+                    ),
                     "formats": self._get_formats(),
                     "version": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "rightsList": self._serialize_rightslist(),
@@ -292,9 +294,9 @@ def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool
         )
     if katastr:
         if verejne:
-            serialized_geom[
-                "geoLocationPlace"
-            ] = f"{katastr.nazev}, {katastr.okres.nazev}, {katastr.okres.kraj.nazev}, Czech Republic"
+            serialized_geom["geoLocationPlace"] = (
+                f"{katastr.nazev}, {katastr.okres.nazev}, {katastr.okres.kraj.nazev}, Czech Republic"
+            )
         else:
             serialized_geom["geoLocationPlace"] = f"{katastr.okres.nazev}, {katastr.okres.kraj.nazev}, Czech Republic"
     return frozenset(serialized_geom.items())
@@ -315,15 +317,17 @@ def serialize_organizace_contributor(organizace: Organizace, contributor_type: s
         "nameType": "Organizational",
         "contributorType": contributor_type,
         "lang": "cs",
-        "nameIdentifiers": [
-            {
-                "nameIdentifier": organizace.ror,
-                "nameIdentifierScheme": "ROR",
-                "schemeUri": "https://ror.org/",
-            }
-        ]
-        if organizace.ror
-        else [],
+        "nameIdentifiers": (
+            [
+                {
+                    "nameIdentifier": organizace.ror,
+                    "nameIdentifierScheme": "ROR",
+                    "schemeUri": "https://ror.org/",
+                }
+            ]
+            if organizace.ror
+            else []
+        ),
     }
 
 
@@ -354,9 +358,9 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
         "nameType": "Personal",
         "givenName": osoba.jmeno if osoba.pk != OSOBA_ANONYM else "",
         "familyName": osoba.prijmeni if osoba.pk != OSOBA_ANONYM else "",
-        "affiliation": [serialize_affiliation(organizace)]
-        if organizace and organizace.pk not in ORGANIZACE_OBECNE
-        else [],
+        "affiliation": (
+            [serialize_affiliation(organizace)] if organizace and organizace.pk not in ORGANIZACE_OBECNE else []
+        ),
         "nameIdentifiers": serialize_osoba_identifiers(osoba) if osoba.pk != OSOBA_ANONYM else [],
     }
     if contributor_type:

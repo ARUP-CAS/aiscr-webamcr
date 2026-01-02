@@ -27,13 +27,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_osoba(self, obj):
         """
-        Metóda pro správne vrácení hodnot o osobe.
+        Metoda pro správně vrácení hodnot o osobe.
         """
         return {"value": str(obj.osoba) if obj.osoba else None, "idRef": obj.osoba.ident_cely if obj.osoba else ""}
 
     def to_representation(self, instance):
         """
-        Override reprezentace do dict pro správne zobrazení label.
+        Override reprezentace do dict pro správně zobrazení label.
         """
         ret = OrderedDict()
         fields = self._readable_fields

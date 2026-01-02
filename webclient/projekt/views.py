@@ -636,9 +636,9 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
                 "hlavni_katastr",
                 "organizace",
                 "vedouci_projektu",
-                "hlavni_katastr__okres",
+                "hlavni_katastr__okres__kraj",
             )
-            .prefetch_related("katastry__okres")
+            .prefetch_related("katastry__okres__kraj")
             .defer("geom")
         )
         return self.check_filter_permission(qs)
@@ -1466,7 +1466,6 @@ def get_detail_template_shows(projekt, user):
         "generovat_exp_list": check_permissions(p.actionChoices.projekt_generovat_exp_list, user, projekt.ident_cely),
         "smazat_link": check_permissions(p.actionChoices.projekt_smazat, user, projekt.ident_cely),
         "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_projekt, user, projekt.ident_cely),
-        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, projekt.ident_cely),
         "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_projekt, user, projekt.ident_cely),
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_projekt, user, projekt.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),

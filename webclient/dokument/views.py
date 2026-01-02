@@ -388,12 +388,12 @@ class DokumentListView(SearchListView):
 
 class RelatedContext(LoginRequiredMixin, TemplateView):
     """
-    Třida, která se dedí a která obsahuje metódy pro získaní relací dokumentů.
+    Třida, která se dedí a která obsahuje metody pro získaní relací dokumentů.
     """
 
     def get_cast(self, context, cast, **kwargs):
         """
-        Metóda pro získaní informací ohlědně části dokumentu.
+        Metoda pro získaní informací ohlědně části dokumentu.
         """
         context["cast"] = cast
         cast_form = DokumentCastForm(
@@ -435,7 +435,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní contextu dokumentu pro template.
+        Metoda pro získaní contextu dokumentu pro template.
         """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
@@ -496,7 +496,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
     def render_to_response(self, context, **response_kwargs):
         """
-        Metóda pro render response, kvúli správnemu zobrazení zpět možnosti.
+        Metoda pro render response, kvúli správnemu zobrazení zpět možnosti.
         """
         response = super().render_to_response(context, **response_kwargs)
         referer = urlparse(self.request.META.get("HTTP_REFERER", False)).path
@@ -1925,7 +1925,6 @@ def get_detail_template_shows(dokument, user):
         "tvary_smazat": show_tvary and check_permissions(p.actionChoices.dok_tvary_smazat, user, dokument.ident_cely),
         "zapsat_cast": check_permissions(p.actionChoices.dok_cast_zapsat, user, dokument.ident_cely),
         "nalez_smazat": check_permissions(p.actionChoices.nalez_smazat_dokument, user, dokument.ident_cely),
-        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, dokument.ident_cely),
         "soubor_stahnout": soubor_stahnout_dokument,
         "soubor_nahled": soubor_nahled,
         "soubor_smazat": soubor_smazat,
@@ -2167,33 +2166,41 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         dokument_ids = request.POST.getlist("dokument")
         if len(dokument_ids) > 0:
             fedora_transaction = zaznam.create_transaction(request.user)
-            for dokument_id in dokument_ids:
-                dokument = get_object_or_404(Dokument, id=dokument_id)
-                dokument.active_transaction = fedora_transaction
-                relace = casti_zaznamu.filter(dokument__id=dokument_id)
-                if not relace.exists():
-                    dc_ident = get_cast_dokumentu_ident(dokument)
-                    if isinstance(zaznam, ArcheologickyZaznam):
-                        dc = DokumentCast(
-                            archeologicky_zaznam=zaznam,
-                            dokument=dokument,
-                            ident_cely=dc_ident,
+            try:
+                for dokument_id in dokument_ids:
+                    dokument = get_object_or_404(Dokument, id=dokument_id)
+                    dokument.active_transaction = fedora_transaction
+                    relace = casti_zaznamu.filter(dokument__id=dokument_id)
+                    if not relace.exists():
+                        dc_ident = get_cast_dokumentu_ident(dokument)
+                        if isinstance(zaznam, ArcheologickyZaznam):
+                            dc = DokumentCast(
+                                archeologicky_zaznam=zaznam,
+                                dokument=dokument,
+                                ident_cely=dc_ident,
+                            )
+                        else:
+                            dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
+                        dc.active_transaction = fedora_transaction
+                        dc.save()
+                        dokument.save()
+                        logger.debug(
+                            "dokument.views.pripojit.pripojit",
+                            extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                        )
+                        messages.add_message(
+                            request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
                         )
                     else:
-                        dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
-                    dc.active_transaction = fedora_transaction
-                    dc.save()
-                    dokument.save()
-                    logger.debug(
-                        "dokument.views.pripojit.pripojit",
-                        extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
-                    )
-                    messages.add_message(
-                        request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
-                    )
-                else:
-                    messages.add_message(request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}")
-            fedora_transaction.mark_transaction_as_closed()
+                        messages.add_message(
+                            request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
+                        )
+            except Exception as err:
+                logger.error("dokument.views.pripojit.error", extra={"error": err, "ident_cely": dokument.ident_cely})
+                transaction.set_rollback(True)
+                fedora_transaction.rollback_transaction()
+            else:
+                fedora_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": redirect_name})
     else:
         if proj_ident_cely:

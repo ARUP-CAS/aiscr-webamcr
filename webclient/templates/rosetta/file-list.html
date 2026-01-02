@@ -124,9 +124,9 @@
         
         document.addEventListener('DOMContentLoaded', function (event) {
             if (document.getElementsByClassName("objekt-smazat-btn")){
-                elements = document.getElementsByClassName("objekt-smazat-btn")
+                const elements = document.getElementsByClassName("objekt-smazat-btn")
                 for (let i = 0; i < elements.length; i++){
-                  var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+                  const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                   formID: "smazat-translation-form",
                   modalFormID: "#smazat-translation-form",
                   })

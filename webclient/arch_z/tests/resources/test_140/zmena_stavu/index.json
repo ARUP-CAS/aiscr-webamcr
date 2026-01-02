@@ -1,1 +1,28 @@
-{"pagination":{"offset":0,"maxResults":100,"totalResults":-1},"items":[{"rdf_type":["http://fedora.info/definitions/v4/repository#Binary","http://fedora.info/definitions/v4/repository#Resource","http://mementoweb.org/ns#OriginalResource","http://mementoweb.org/ns#TimeGate","http://www.w3.org/ns/ldp#NonRDFSource","http://www.w3.org/ns/ldp#Resource"],"content_size":3006,"mime_type":"application/xml","created":"2025-07-26T12:02:36.772Z","fedora_id":"http://192.168.1.28:8081/rest/AMCR-selenium-test/record/M-9002352A/metadata","modified":"2025-07-26T12:05:45.102Z"},{"rdf_type":["http://fedora.info/definitions/v4/repository#Binary","http://fedora.info/definitions/v4/repository#Resource","http://mementoweb.org/ns#OriginalResource","http://mementoweb.org/ns#TimeGate","http://www.w3.org/ns/ldp#NonRDFSource","http://www.w3.org/ns/ldp#Resource"],"content_size":1646,"mime_type":"application/xml","created":"2025-07-26T12:02:35.309Z","fedora_id":"http://192.168.1.28:8081/rest/AMCR-selenium-test/record/ADB-OPAV13-000001/metadata","modified":"2025-07-26T12:05:44.908Z"}]}
+{
+  "items": [
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/ADB-OPAV13-000001/metadata",
+      "mime_type": "application/xml",
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Binary",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#NonRDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/M-9002352A/metadata",
+      "mime_type": "application/xml",
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Binary",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#NonRDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    }
+  ]
+}

@@ -160,6 +160,12 @@ def send_account_confirmed_email(sender, instance: User, created):
 def delete_user_connections(sender, instance, *args, **kwargs):
     logger.debug("uzivatel.signals.delete_user_connections.start", extra={"ident_cely": instance.ident_cely})
     Historie.save_record_deletion_record(record=instance)
+    if instance.active_transaction:
+        fedora_transaction = instance.active_transaction
+    else:
+        fedora_transaction = FedoraTransaction()
+        instance.active_transaction = fedora_transaction
+    instance.save_metadata(fedora_transaction)
     logger.debug(
         "uzivatel.signals.delete_user_connections.end",
         extra={"ident_cely": instance.ident_cely},
@@ -174,12 +180,7 @@ def delete_profile(sender, instance: User, *args, **kwargs):
     logger.debug("uzivatel.signals.delete_profile.start", extra={"ident_cely": instance.ident_cely})
     Mailer.send_eu03(user=instance)
     NotificationsLog.objects.filter(user=instance).update(user=None)
-    if instance.active_transaction:
-        fedora_transaction = instance.active_transaction
-    else:
-        fedora_transaction = FedoraTransaction()
-        instance.active_transaction = fedora_transaction
-    instance.save_metadata(fedora_transaction)
+    fedora_transaction = instance.active_transaction
     if instance.history_vazba and instance.history_vazba.pk:
         instance.history_vazba.delete()
     instance.record_deletion(fedora_transaction)

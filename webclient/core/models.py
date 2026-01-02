@@ -3,8 +3,10 @@ import io
 import logging
 import os
 import re
-import socket
+import time
 import zipfile
+import zoneinfo
+from enum import Enum
 from typing import Optional, Union
 
 import magic
@@ -17,6 +19,7 @@ from django.contrib.auth.models import Group
 from django.db import models
 from django.forms import ValidationError
 from django.http import FileResponse
+from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -33,6 +36,7 @@ from PIL import Image
 from uzivatel.models import User
 from xml_generator.models import ModelWithMetadata
 
+from .connectors import ClamdConnectionError, ClamdNetworkSocket, ClamdResponseError
 from .constants import (
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
@@ -43,6 +47,17 @@ from .constants import (
 from .repository_connector import RepositoryBinaryFile
 
 logger = logging.getLogger(__name__)
+
+
+class AntivirusCheckResult(Enum):
+    # Antivirus vrátil odpověď, že soubor je v pořádku
+    PASSES = 0
+    # Antivirus nalezl v souboru virus
+    VIRUS_FOUND = 1
+    # Kontrola antivirem selhala kvůli chybě
+    CHECK_FAILED = 2
+    # Kontrola antivirem byla přeskočena, protože není nakonfigurován žádný antivirus
+    SKIPPED = 3
 
 
 def get_upload_to(instance, filename):
@@ -166,7 +181,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def create_soubor_vazby(self):
         """
-        Metóda pro vytvoření vazby na historii.
+        Metoda pro vytvoření vazby na historii.
         """
         logger.debug("core.models.Soubor.create_soubor_vazby.start")
         hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
@@ -185,7 +200,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return None
 
     def get_repository_content(
-        self, ident_cely_old=None, thumb_small=False, thumb_large=False
+        self, ident_cely_old=None, thumb_small=False, thumb_large=False, timestamp=None
     ) -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
 
@@ -196,7 +211,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 extra={"ident_cely": record.ident_cely, "uuid": self.repository_uuid},
             )
             conector = FedoraRepositoryConnector(record, skip_container_check=False)
-            rep_bin_file = conector.get_binary_file(self.repository_uuid, ident_cely_old, thumb_small, thumb_large)
+            rep_bin_file = conector.get_binary_file(
+                self.repository_uuid, ident_cely_old, thumb_small, thumb_large, timestamp
+            )
             return rep_bin_file
         logger.debug(
             "core.models.Soubor.get_repository_content.not_found",
@@ -206,7 +223,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def zaznamenej_nahrani(self, user, file_name=None):
         """
-        Metóda pro zapsáni vytvoření souboru do historie.
+        Metoda pro zapsáni vytvoření souboru do historie.
         """
         self.create_soubor_vazby()
         hist = Historie(
@@ -219,7 +236,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
-        Metóda pro zapsáni nahrání nové verze souboru do historie.
+        Metoda pro zapsáni nahrání nové verze souboru do historie.
         """
         if self.historie is None:
             self.create_soubor_vazby()
@@ -463,23 +480,48 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def check_antivirus(cls, bytes_io: io.BytesIO):
-        buffer_size = 4096
+        """
+        Zkontroluje soubor na přítomnost virů pomocí ClamAV.
+
+        Args:
+            bytes_io: souborový objekt ke skenování
+
+        Returns:
+            AntivirusCheckResult: výsledek kontroly
+        """
         if settings.CLAMD_HOST and settings.CLAMD_PORT:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((settings.CLAMD_HOST, settings.CLAMD_PORT))
-            s.send(b"zINSTREAM\0")
-            bytes_io.seek(0)
-            while True:
-                chunk = bytes_io.read(buffer_size)
-                if not chunk:
-                    break
-                s.send(len(chunk).to_bytes(4, byteorder="big") + chunk)
-            s.send(b"\0\0\0\0")
-            response = s.recv(buffer_size).decode("utf-8").rstrip("\u0000")
-            s.close()
-            logger.debug("core.models.Soubor.check_antivirus.response", extra={"response": response})
-            return response.upper() == "OK" or response.upper().endswith("OK")
-        return None
+            try:
+                clamd = ClamdNetworkSocket()
+                bytes_io.seek(0)
+                start_time = time.time()
+                result = clamd.instream(bytes_io)
+                duration_ms = (time.time() - start_time) * 1000
+                filename, (status, reason) = next(iter(result.items()))
+                if status == "OK":
+                    logger.debug(
+                        "core.models.Soubor.check_antivirus.passes",
+                        extra={"response": status, "duration_ms": duration_ms},
+                    )
+                    return AntivirusCheckResult.PASSES
+                elif status == "ERROR":
+                    logger.debug(
+                        "core.models.Soubor.check_antivirus.error",
+                        extra={"response": status, "duration_ms": duration_ms},
+                    )
+                    return AntivirusCheckResult.CHECK_FAILED
+                else:
+                    logger.debug(
+                        "core.models.Soubor.check_antivirus.virus_found",
+                        extra={"response": status, "reason": reason, "duration_ms": duration_ms},
+                    )
+                    return AntivirusCheckResult.VIRUS_FOUND
+            except ClamdConnectionError as err:
+                logger.error("core.models.Soubor.check_antivirus.connection_error", extra={"error": str(err)})
+                return AntivirusCheckResult.CHECK_FAILED
+            except ClamdResponseError as err:
+                logger.error("core.models.Soubor.check_antivirus.response_error", extra={"error": str(err)})
+                return AntivirusCheckResult.CHECK_FAILED
+        return AntivirusCheckResult.SKIPPED
 
     def _create_file_response(self, rep_bin_file: RepositoryBinaryFile) -> FileResponse:
         content = rep_bin_file.content
@@ -520,6 +562,49 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def getMock(self):
         return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
 
+    def get_historicke_verze(self):
+        """
+        Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        record = self.vazba.navazany_objekt
+        results = []
+        if record is not None and self.repository_uuid is not None:
+            logger.debug(
+                "core.models.Soubor.get_repository_content",
+                extra={"ident_cely": record.ident_cely, "uuid": self.repository_uuid},
+            )
+            connector = FedoraRepositoryConnector(record)
+            dt_list = connector.get_historie_file(self.repository_uuid)
+            for dt in dt_list:
+                local_dt = dt.astimezone(zoneinfo.ZoneInfo("Europe/Prague"))
+                url_date = dt.strftime("%Y%m%d%H%M%S")
+                url = reverse(
+                    "core:stahnout_data_historicka",
+                    kwargs={
+                        "model_name": self.__class__.__name__,
+                        "ident_cely": self.pk,
+                        "timestamp": url_date,
+                    },
+                )
+                results.append(
+                    {
+                        "datum": local_dt,
+                        "url": url,
+                    }
+                )
+        return results
+
+    def get_soubor_historicky(self, timestamp) -> FileResponse | None:
+        """
+        Metoda k získání vlastního souboru dané verze z Fedory
+        """
+        rep_bin_file: RepositoryBinaryFile = self.get_repository_content(timestamp=timestamp)
+        if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
+            return self._create_file_response(rep_bin_file)
+        return None
+
 
 class ProjektSekvence(models.Model):
     """
@@ -554,7 +639,7 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
 
     def clean(self):
         """
-        Metóda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
+        Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
         """
         odstavky = OdstavkaSystemu.objects.filter(status=True)
         if odstavky.count() > 0 and self.status:
@@ -626,7 +711,6 @@ class Permissions(models.Model):
         model_edit = "model_edit", _("core.models.permissions.actionChoices.model_edit")
         neident_akce_edit = "neident_akce_edit", _("core.models.permissions.actionChoices.neident_akce_edit")
         neident_akce_smazat = "neident_akce_smazat", _("core.models.permissions.actionChoices.neident_akce_smazat")
-        stahnout_metadata = "stahnout_metadata", _("core.models.permissions.actionChoices.stahnout_metadata")
         ez_edit = "ez_edit", _("core.models.permissions.actionChoices.ez_edit")
         ez_odeslat = "ez_odeslat", _("core.models.permissions.actionChoices.ez_odeslat")
         ez_potvrdit = "ez_potvrdit", _("core.models.permissions.actionChoices.ez_potvrdit")
@@ -822,6 +906,7 @@ class Permissions(models.Model):
         vypis_pas = "vypis_pas", _("core.models.permissions.actionChoices.vypis_pas")
         vypis_model3d = "vypis_model3d", _("core.models.permissions.actionChoices.vypis_model3d")
         vypis_ez = "vypis_ez", _("core.models.permissions.actionChoices.vypis_ez")
+        historie_fedora = "historie_fedora", _("core.models.permissions.actionChoices.historie_fedora")
 
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,

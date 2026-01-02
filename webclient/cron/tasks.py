@@ -413,7 +413,9 @@ def cancel_old_projects():
             project.active_transaction = FedoraTransaction()
             project.set_zruseny(User.objects.get(pk=hesla_dynamicka.ADMIN_USER), cancelled_string, RUSENI_STARE_PROJ)
             if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and project.has_oznamovatel():
-                rep_bin_file = project.create_cancel_confirmation_document(User.objects.get(pk=hesla_dynamicka.ADMIN_USER))
+                rep_bin_file = project.create_cancel_confirmation_document(
+                    User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
+                )
             else:
                 rep_bin_file = None
             project.close_active_transaction_when_finished = True
@@ -606,9 +608,9 @@ def pians_properties_check():
         if item.typ.pk != geom_type[str(type(geom))].pk:
             item.typ = geom_type[str(type(geom))]
             save = True
-        if type(geom) == Point:
+        if isinstance(geom, Point):
             point = geom
-        elif type(geom) == LineString:
+        elif isinstance(geom, LineString):
             point = geom.interpolate_normalized(0.5)
         else:
             point = Centroid(geom)
@@ -664,9 +666,9 @@ def run_data_import(job_id, user_id):
                     if mapper_class == SouborMapper:
                         import_files_list += records
                         record: Soubor = records[0]
-                        import_results[
-                            record_id
-                        ] = f"{_('cron.tasks.run_data_import.file')}, {str(record.nazev)} ({record.vazba.navazany_objekt.ident_cely})"
+                        import_results[record_id] = (
+                            f"{_('cron.tasks.run_data_import.file')}, {str(record.nazev)} ({record.vazba.navazany_objekt.ident_cely})"
+                        )
                         redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
                         continue
                     for record in records:
@@ -724,9 +726,9 @@ def run_data_import(job_id, user_id):
                             record.save_metadata(fedora_transaction)
                     fedora_transaction.mark_transaction_as_closed()
                     logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id, "job_id": job_id})
-                    import_results[
-                        record_id
-                    ] = f"{_('cron.tasks.run_data_import.success')}, {[', '.join(str(record.pk) for record in records if record.pk)]}"
+                    import_results[record_id] = (
+                        f"{_('cron.tasks.run_data_import.success')}, {[', '.join(str(record.pk) for record in records if record.pk)]}"
+                    )
                     redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
                 except Exception as err:
                     logger.info(

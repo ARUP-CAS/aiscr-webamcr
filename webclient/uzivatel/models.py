@@ -57,7 +57,7 @@ def get_default_licence():
     return DOKUMENT_LICENCE_NEZNAMA
 
 
-class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin):
+class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin, ModelWithMetadata):
     """
     Class pro db model user.
     """
@@ -207,7 +207,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("uzivatel.User.save.start", extra={"option": self._state.adding})
         # Random string is temporary before the id is assigned
@@ -414,7 +414,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("Organizace.save.start")
         if self._state.adding and not self.ident_cely:
@@ -496,7 +496,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("Osoba.save.start")
         # Random string is temporary before the id is assigned

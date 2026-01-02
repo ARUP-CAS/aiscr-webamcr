@@ -44,7 +44,7 @@ jobs:
           private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: dev
           token: ${{ steps.app-token.outputs.token }}
@@ -124,7 +124,7 @@ jobs:
       name: ${{ inputs.environment }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: dev
 
