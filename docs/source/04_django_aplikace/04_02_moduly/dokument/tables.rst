@@ -30,3 +30,4 @@ Třídy
       Metoda pro správně zobrazení náhledu souboru.
 
    .. py:method:: __init__()
+

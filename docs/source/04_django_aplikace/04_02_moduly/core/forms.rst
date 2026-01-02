@@ -128,3 +128,4 @@ Vrámci načítáni formuláře se doplní načítají hodnoty z template odstá
 .. py:class:: ImportDataAdminForm
 
    Popis není k dispozici.
+

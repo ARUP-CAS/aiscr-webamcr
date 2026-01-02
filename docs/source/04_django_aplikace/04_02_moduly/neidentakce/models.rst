@@ -18,3 +18,4 @@ Třídy
 .. py:class:: NeidentAkceVedouci
 
    Class pro db model vedouciho neident akce.
+

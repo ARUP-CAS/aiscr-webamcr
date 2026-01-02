@@ -163,3 +163,4 @@ Třídy
    Class pro db model dalších katastru proketu.
 
    **Metody:**
+

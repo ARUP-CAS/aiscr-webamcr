@@ -46,3 +46,4 @@ Třídy
 .. py:class:: AutocompleteModelSelect2Multiple
 
    Popis není k dispozici.
+

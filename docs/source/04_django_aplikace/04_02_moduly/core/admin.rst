@@ -114,3 +114,4 @@ Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
       Creates a view for importing data from a zip file.
 
    .. py:method:: get_urls()
+

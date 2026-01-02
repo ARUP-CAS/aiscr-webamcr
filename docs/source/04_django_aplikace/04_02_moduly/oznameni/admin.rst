@@ -9,3 +9,4 @@ Třídy
 .. py:class:: OznamovatelAdmin
 
    Popis není k dispozici.
+

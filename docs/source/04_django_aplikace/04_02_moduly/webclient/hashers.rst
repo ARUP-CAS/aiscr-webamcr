@@ -15,3 +15,4 @@ Třídy
    .. py:method:: encode_sha1_hash()
 
    .. py:method:: encode()
+

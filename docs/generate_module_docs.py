@@ -258,7 +258,7 @@ def generate_url_routing_rst() -> bool:
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        new_content = "\n".join(rst_lines).rstrip() + "\n"
+        new_content = "\n".join(rst_lines)
         if check_content_changed(new_content, output_file):
             changes_detected = True
             print("    ⚠ URL routing documentation needs update")
@@ -417,7 +417,7 @@ def generate_signals_rst() -> bool:
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        new_content = "\n".join(rst_lines).rstrip() + "\n"
+        new_content = "\n".join(rst_lines)
         if check_content_changed(new_content, output_file):
             changes_detected = True
             print("    ⚠ Signals documentation needs update")
@@ -551,7 +551,7 @@ def generate_permissions_rst() -> bool:
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        final_text = "\n".join(final_content).rstrip() + "\n"
+        final_text = "\n".join(final_content)
         if check_content_changed(final_text, output_file):
             changes_detected = True
             print("    ⚠ Permissions documentation needs update")
@@ -842,7 +842,7 @@ def generate_export_structure_rst() -> bool:
 
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        new_content = "\n".join(rst_lines).rstrip() + "\n"
+        new_content = "\n".join(rst_lines)
         if check_content_changed(new_content, output_file):
             changes_detected = True
             print("    ⚠ Export structure documentation needs update")
@@ -980,7 +980,7 @@ def generate_rst_explicit(source_file: Path, module_name: str, module_title: str
                 rst_lines.append(f"   {line}")
             rst_lines.append("")
 
-    return "\n".join(rst_lines).rstrip() + "\n"
+    return "\n".join(rst_lines)
 
 
 def generate_rst_autodoc(module_name: str, module_title: str, module_description: str) -> str:

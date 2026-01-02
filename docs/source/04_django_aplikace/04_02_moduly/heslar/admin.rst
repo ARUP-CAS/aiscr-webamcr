@@ -140,3 +140,4 @@ Práva na změnu jsou zakázaná.
 .. py:class:: HeslarRuianKatastrAdmin
 
    Admin část pro správu modelu ruian katastr.
+

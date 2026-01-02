@@ -21,3 +21,4 @@ Třídy
    .. py:method:: form_valid()
 
    .. py:method:: form_invalid()
+

@@ -31,3 +31,4 @@ Třídy
    .. py:method:: generate_document()
 
    .. py:method:: __init__()
+

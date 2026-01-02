@@ -18,3 +18,4 @@ Třídy
    **Metody:**
 
    .. py:method:: get_readonly_fields()
+

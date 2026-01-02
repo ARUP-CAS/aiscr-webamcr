@@ -97,3 +97,4 @@ Třídy
    .. py:method:: ident_cely()
 
    .. py:method:: save()
+

@@ -23,3 +23,4 @@ Třídy
    **Metody:**
 
    .. py:method:: render_url()
+

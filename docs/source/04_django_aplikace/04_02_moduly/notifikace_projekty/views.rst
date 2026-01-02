@@ -39,3 +39,4 @@ Třídy
    .. py:method:: get()
 
    .. py:method:: post()
+

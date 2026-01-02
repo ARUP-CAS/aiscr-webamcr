@@ -13,3 +13,4 @@ Třídy
    **Metody:**
 
    .. py:method:: filter()
+

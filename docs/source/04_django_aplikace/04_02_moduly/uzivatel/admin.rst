@@ -126,3 +126,4 @@ Třídy
    **Metody:**
 
    .. py:method:: has_delete_permission()
+

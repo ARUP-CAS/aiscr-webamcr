@@ -153,3 +153,4 @@ Třída se dědí pro jednotlivá historie.
    **Metody:**
 
    .. py:method:: get_header_config()
+

@@ -15,3 +15,4 @@ Třídy
    .. py:method:: get_queryset()
 
    .. py:method:: filter()
+

@@ -33,3 +33,4 @@ Model se používa k napojení na jednotlivé záznamy.
       Metoda pro zjištení datumu posledné transakce daného typu.
 
    .. py:method:: navazany_objekt()
+

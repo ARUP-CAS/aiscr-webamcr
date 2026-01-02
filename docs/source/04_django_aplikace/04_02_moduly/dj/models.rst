@@ -29,3 +29,4 @@ Třídy
    .. py:method:: initial_pian()
 
       Vrátí objekt Pian na základě initial_pian_id (lazy-load).
+

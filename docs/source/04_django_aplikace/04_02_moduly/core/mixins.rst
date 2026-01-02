@@ -23,3 +23,4 @@ Hledá jestli má model nejakou many to many vazbu.
    **Metody:**
 
    .. py:method:: dispatch()
+
