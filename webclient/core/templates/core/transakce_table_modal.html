@@ -86,35 +86,38 @@
 {% endblock %}
 {% block script %}
 <script>
+    let base_url;
+    let tag;
+    let cl;
     if ("{{ id_tag }}" == "pripojit-dokument-form"){
-        base_url = '{% url "dokument:get_dokument_table_row" %}'
-        tag = $('#id_dokument')
-        cl = '.add-dokument-table'
+        base_url = '{% url "dokument:get_dokument_table_row" %}';
+        tag = $('#id_dokument');
+        cl = '.add-dokument-table';
     }
     else if ("{{ id_tag }}" == "pripojit-eo-form"){
-        base_url = '{% url "arch_z:get_archz_table_row" %}'
-        tag = $('#id_arch_z')
-        cl = '.add-eo-table'
+        base_url = '{% url "arch_z:get_archz_table_row" %}';
+        tag = $('#id_arch_z');
+        cl = '.add-eo-table';
     }
     else if ("{{ id_tag }}" == "pripojit-eo-doaz-form"){
-        base_url = '{% url "ez:get_ez_table_row" %}'
-        tag = $('#id_ez')
-        cl = '.add-ez-table'
+        base_url = '{% url "ez:get_ez_table_row" %}';
+        tag = $('#id_ez');
+        cl = '.add-ez-table';
     }
     else if ("{{ id_tag }}" == "vratit-akci-form"){
-        base_url = '{% url "dokument:get_dokument_table_row_vratit" %}'
-        tag = $('#id_dokument')
-        cl = '.vratit-dokument-table'
+        base_url = '{% url "dokument:get_dokument_table_row_vratit" %}';
+        tag = $('#id_dokument');
+        cl = '.vratit-dokument-table';
     }
     else{
-        base_url = '{% url "projekt:get_projekt_table_row" %}'
-        tag = $('#id_projekt')
-        cl = '.add-projekt-table'
+        base_url = '{% url "projekt:get_projekt_table_row" %}';
+        tag = $('#id_projekt');
+        cl = '.add-projekt-table';
     }
     
     tag.on('select2:select', function (e) {
-        var data = e.params.data;
-        var first_row = $(cl + " table tbody tr:first")
+        const data = e.params.data;
+        const first_row = $(cl + " table tbody tr:first")
         $.ajax({
             type: "GET",
             url: base_url, 
@@ -298,14 +301,14 @@ window.addEventListener("modalLoaded", function () {
 
             if ('MutationObserver' in window) {
                 new MutationObserver(function (mutations) {
-                    var mutationRecord;
-                    var addedNode;
+                    let mutationRecord;
+                    let addedNode;
 
-                    for (var i = 0; i < mutations.length; i++) {
+                    for (let i = 0; i < mutations.length; i++) {
                         mutationRecord = mutations[i];
 
                         if (mutationRecord.addedNodes.length > 0) {
-                            for (var j = 0; j < mutationRecord.addedNodes.length; j++) {
+                            for (let j = 0; j < mutationRecord.addedNodes.length; j++) {
                                 addedNode = mutationRecord.addedNodes[j];
 
                                 $(addedNode).find('[data-autocomplete-light-function]').excludeTemplateForms().each(initialize);
@@ -351,7 +354,7 @@ window.addEventListener("modalLoaded", function () {
     // Does the same thing as django's admin/js/autocomplete.js, but uses yl.jQuery.
     (function ($) {
         'use strict';
-        var init = ($element, options) => {
+        const init = ($element, options) => {
             let settings = $.extend({
                 ajax: {
                     data: function (params) {
@@ -468,7 +471,7 @@ window.addEventListener("modalLoaded", function () {
                 $(field).prop('disabled', true);
             }
 
-            var getSerializedFieldElementAt = (index) => {
+            const getSerializedFieldElementAt = (index) => {
                 // Return serializedField[index]
                 // or null if something went wrong
                 if (serializedField.length > index) {
@@ -478,7 +481,7 @@ window.addEventListener("modalLoaded", function () {
                 }
             };
 
-            var getValueOf = (elem) => {
+            const getValueOf = (elem) => {
                 // Return elem.value
                 // or null if something went wrong
                 if (elem.hasOwnProperty("value") &&
@@ -490,7 +493,7 @@ window.addEventListener("modalLoaded", function () {
                 }
             };
 
-            var getSerializedFieldValueAt = (index) => {
+            const getSerializedFieldValueAt = (index) => {
                 // Return serializedField[index].value
                 // or null if something went wrong
                 const elem = getSerializedFieldElementAt(index);
