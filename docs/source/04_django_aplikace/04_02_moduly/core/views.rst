@@ -38,7 +38,7 @@ Třídy
    .. py:method:: get_context_data()
 
 
-.. py:class:: Uploadfileview
+.. py:class:: UploadFileView
 
    Třída pohledu pro zobrazení stránky s uploadem souboru.
 
@@ -51,6 +51,35 @@ Třídy
    .. py:method:: dispatch()
 
    .. py:method:: post()
+
+
+.. py:class:: BasePostUploadView
+
+   Společná logika pro upload nového souboru i nahrazení existujícího.
+
+   **Metody:**
+
+   .. py:method:: post()
+
+   .. py:method:: handle_upload()
+
+
+.. py:class:: NewFileUploadView
+
+   Upload nového souboru k záznamu.
+
+   **Metody:**
+
+   .. py:method:: handle_upload()
+
+
+.. py:class:: UpdateExistingFileUploadView
+
+   Nahrazení existujícího souboru novou verzí.
+
+   **Metody:**
+
+   .. py:method:: handle_upload()
 
 
 .. py:class:: ExportMixinDate
@@ -258,10 +287,6 @@ Funkce
 .. py:function:: delete_file(request, typ_vazby, ident_cely, pk)
 
    Funkce pohledu pro smazání souboru. Funkce maže jak záznam v DB tak i soubor na disku.
-
-.. py:function:: post_upload(request)
-
-   Funkce pohledu pro upload souboru a k navázaní ke správnemu záznamu.
 
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 

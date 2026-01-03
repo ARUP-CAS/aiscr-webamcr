@@ -581,7 +581,6 @@ class NewFileUploadView(BasePostUploadView):
         )
         soubor_instance.active_transaction = self.fedora_transaction
         soubor_instance.binary_data = soubor_data
-        duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
         response_data = {"filename": soubor_instance.nazev}
         logger.debug("core.views.post_upload.saving", extra={"instance": soubor_instance})
         soubor_instance.save()
@@ -590,6 +589,7 @@ class NewFileUploadView(BasePostUploadView):
             soubor_instance.zaznamenej_nahrani(user_admin, self.original_filename)
         else:
             soubor_instance.zaznamenej_nahrani(request.user, self.original_filename)
+        duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk").exclude(id=soubor_instance.id)
         response_data = self._append_duplicate_message(response_data, duplikat)
         response_data = self._append_rename_message(response_data, renamed, new_name)
         logger.debug("core.views.post_upload.end", extra={"pk": soubor_instance.pk})
@@ -716,9 +716,7 @@ class UpdateExistingFileUploadView(BasePostUploadView):
             soubor_instance.save()
             soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
         if rep_bin_file is not None:
-            duplikat = (
-                Soubor.objects.filter(sha_512=rep_bin_file.sha_512).filter(~Q(id=soubor_instance.id)).order_by("pk")
-            )
+            duplikat = Soubor.objects.filter(sha_512=rep_bin_file.sha_512).exclude(id=soubor_instance.id).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
             response_data = self._append_duplicate_message(response_data, duplikat)
             response_data = self._append_rename_message(response_data, renamed, new_name)
