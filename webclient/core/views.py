@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import re
+import tempfile
 import unicodedata
 import zipfile
 from datetime import datetime
@@ -1394,12 +1395,36 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     form_class = TransaltionImportForm
 
     def form_valid(self, form):
+        new_pofile = form.cleaned_data["file"]
+        tmp_path = None
+        try:
+            # Write uploaded InMemoryUploadedFile to a temporary file and pass its path to pofile
+            tmp = tempfile.NamedTemporaryFile(delete=False)
+            tmp_path = tmp.name
+            for chunk in new_pofile.chunks():
+                tmp.write(chunk)
+            tmp.flush()
+            tmp.close()
+            po_file = pofile(tmp_path)
+            # remove temp file once polib has loaded it
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
+        except Exception as e:
+            # cleanup on error
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
+            logger.error("core.views.TranslationImportView.form_valid", extra={"error": str(e)})
+            messages.add_message(self.request, messages.ERROR, str(e))
+            return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
         p = Path(self.po_file_path)
         date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M")
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
-        new_pofile = form.cleaned_data["file"]
         self.handle_uploaded_file(new_pofile)
-        po_file = pofile(self.po_file_path)
         po_filepath, ext = os.path.splitext(self.po_file_path)
         po_file.save_as_mofile(po_filepath + ".mo")
         messages.add_message(self.request, messages.SUCCESS, TRANSLATION_UPLOAD_SUCCESS)
@@ -1586,9 +1611,7 @@ class DataImportProgress(LoginRequiredMixin, View):
         redis_connector = RedisConnector().get_connection_decode()
         try:
             record_count = int(redis_connector.get(f"import_data_count_{job_id}"))
-            import_data_progress_files = int(
-                redis_connector.get(f"import_data_progress_files_{job_id}")
-            )
+            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}"))
             status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
