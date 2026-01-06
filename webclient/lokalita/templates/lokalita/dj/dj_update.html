@@ -21,7 +21,7 @@
               </a>
             {% endif %}
             {% if j.show_import_pian_new %}
-              <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian">
+              <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#importovat_pian">
                 {% trans "lokalita.templates.lokalita.dj.partials.dj_update.editButtons.importovatPianNew.label" %}
               </button>
             {% endif %}
@@ -48,7 +48,7 @@
               </a>
             {% endif %}
           </div>
-          <button class="btn" type="button" id="add_others" type="button" data-toggle="dropdown" aria-haspopup="true"
+          <button class="btn" type="button" id="add_others" type="button" data-bs-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false" rel="tooltip" data-placement="top"
                   title="{% trans 'lokalita.templates.dj.djUpdate.moreActions.label' %}"
                   onclick="filtrAkci()">
@@ -64,7 +64,7 @@
               </a>
             {% endif %}
             {% if j.show_import_pian_change %}
-              <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian" data-action-id="change">
+              <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#importovat_pian" data-action-id="change">
                 {% trans "lokalita.templates.lokalita.dj.partials.dj_update.editButtons.importovatPianChange.label" %}
               </button>
             {% endif %}            
@@ -106,7 +106,7 @@
               {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatDj.label' %}
             </button>
           </div>
-          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+          <button class="btn" type="button" id="others" type="button" data-bs-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false" rel="tooltip" data-placement="top"
                   title="{% trans 'lokalita.templates.dj.djUpdate.moreActions.label' %}"
                   onclick="filtrAkci()">
