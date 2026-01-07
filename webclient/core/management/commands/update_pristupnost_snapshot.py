@@ -16,13 +16,13 @@ class Command(BaseCommand):
     výkonu a zamezení přílišnému zatížení databáze.
 
     Parametry:
-        --batch-size: Velikost dávky pro zpracování (výchozí: 100)
+        - --batch-size: Velikost dávky pro zpracování (výchozí: 100)
 
     Poznámka:
-        Pro projekty je dočasně potlačen signál (suppress_signal=True) aby nedošlo
-        k nežádoucím vedlejším efektům během hromadné aktualizace.
+        - Pro projekty je dočasně potlačen signál (suppress_signal=True) aby nedošlo k nežádoucím vedlejším efektům během hromadné aktualizace
 
-    Příklady použití:
+    Příklady použití::
+
         python manage.py update_pristupnost_snapshot
         python manage.py update_pristupnost_snapshot --batch-size 200
         python manage.py update_pristupnost_snapshot --batch-size 50

@@ -14,20 +14,23 @@ class Command(BaseCommand):
     Django management příkaz pro kontrolu a opravu vlastností PIANů.
 
     Tento příkaz kontroluje a případně opravuje:
-    1. Typ geometrie (typ) - musí odpovídat skutečnému typu geometrie (bod/linie/plocha)
-    2. Základní mapy ZM10 a ZM50 - určí se podle pozice geometrie
+
+    - Typ geometrie (typ) - musí odpovídat skutečnému typu geometrie (bod/linie/plocha)
+    - Základní mapy ZM10 a ZM50 - určí se podle pozice geometrie
 
     Pro každý PIAN:
+
     - Ověří, zda typ geometrie odpovídá skutečnosti
     - Vypočítá reprezentativní bod geometrie (střed u linie, centroid u plochy)
     - Určí příslušnost k základním mapám ZM10 a ZM50
     - Pokud se některá hodnota liší, provede aktualizaci
 
     Poznámka:
-        Aktualizace jsou prováděny včetně Fedora transakcí a metadat.
-        Proces může trvat delší dobu v závislosti na počtu PIANů.
+        - Aktualizace jsou prováděny včetně Fedora transakcí a metadat
+        - Proces může trvat delší dobu v závislosti na počtu PIANů
 
-    Příklad použití:
+    Příklady použití::
+
         python manage.py check_pian_properties
     """
 

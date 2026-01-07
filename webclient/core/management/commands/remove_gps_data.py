@@ -19,9 +19,10 @@ class Command(BaseCommand):
     CSV soubor musí obsahovat sloupec "record" s cestami k souborům.
 
     Argumenty:
-        csv_file: Cesta k CSV souboru se seznamem souborů
+        - csv_file: Cesta k CSV souboru se seznamem souborů
 
-    Formát CSV souboru:
+    Formát CSV souboru::
+
         record
         /path/to/image1.jpg
         /path/to/image2.jpg
@@ -30,9 +31,9 @@ class Command(BaseCommand):
     Poznámka:
         - Pouze soubory, které mají GPS data, budou aktualizovány
         - Pro každou aktualizaci se zaznamená nová verze souboru
-        - Operace vyžaduje administrátorské oprávnění
 
-    Příklady použití:
+    Příklady použití::
+
         python manage.py remove_gps_data /tmp/files_with_gps.csv
         python manage.py remove_gps_data /var/data/images.csv
     """

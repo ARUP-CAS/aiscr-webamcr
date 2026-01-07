@@ -15,10 +15,11 @@ class Command(BaseCommand):
     provede zápis do Redis (asynchronně s nízkou prioritou).
 
     Parametry:
-        key: Redis klíč
-        value: Hodnota, která se pod klíčem uloží
+        - key: Redis klíč
+        - value: Hodnota, která se pod klíčem uloží
 
-    Příklady použití:
+    Příklady použití::
+
         python manage.py write_value_to_redis foo bar
     """
 

@@ -16,14 +16,15 @@ class Command(BaseCommand):
     včetně aktualizace metadat v databázi.
 
     Argumenty:
-        pk: Primární klíč záznamu souboru v databázi
-        storage_path: Cesta k adresáři obsahujícímu soubory
+        - pk: Primární klíč záznamu souboru v databázi
+        - storage_path: Cesta k adresáři obsahujícímu soubory
 
     Parametry:
-        --save-thumbs: Generovat náhledy pro obrazové soubory
-        --disable-antivirus: Přeskočit antivirovou kontrolu
+        - --save-thumbs: Generovat náhledy pro obrazové soubory
+        - --disable-antivirus: Přeskočit antivirovou kontrolu
 
-    Příklady použití:
+    Příklady použití::
+
         python manage.py save_single_file_from_storage 123 /tmp/files
         python manage.py save_single_file_from_storage 456 /var/storage --save-thumbs
     """

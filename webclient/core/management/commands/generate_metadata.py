@@ -17,12 +17,12 @@ class Command(BaseCommand):
     prostřednictvím metody save_metadata.
 
     Parametry:
-        --model: Název třídy modelu (např. Projekt, ArcheologickyZaznam)
-                 Pokud není zadán, zpracují se všechny dostupné modely.
-        --limit: Maximální počet záznamů ke zpracování
-        --start-with-pk: Primární klíč, od kterého začít zpracování
+        - --model: Název třídy modelu (např. Projekt, ArcheologickyZaznam). Pokud není zadán, zpracují se všechny dostupné modely
+        - --limit: Maximální počet záznamů ke zpracování
+        - --start-with-pk: Primární klíč, od kterého začít zpracování
 
-    Příklady použití:
+    Příklady použití::
+
         python manage.py generate_metadata
         python manage.py generate_metadata --model Projekt --limit 100
         python manage.py generate_metadata --model Adb --start-with-pk 1000 --limit 50

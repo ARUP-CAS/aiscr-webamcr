@@ -12,9 +12,14 @@ class Command(BaseCommand):
     Django management příkaz pro spuštění aktualizace snapshot fields.
 
     Tento příkaz spustí sdílený cron task ``update_snapshot_fields``, který
-    provede potřebné přepočty a uložení snapshot hodnot.
+    provede potřebné přepočty a uložení snapshot hodnot do databáze.
 
-    Příklad použití:
+    Poznámka:
+        - Příkaz nespouští aktualizaci synchronně, ale předává úlohu do asynchronního cron systému
+        - Snapshot fields zahrnují předpočítané hodnoty pro optimalizaci výkonu
+
+    Příklady použití::
+
         python manage.py update_snapshot_fields
     """
 

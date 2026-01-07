@@ -17,15 +17,16 @@ class Command(BaseCommand):
     vygeneruje je ze zdrojového souboru.
 
     Parametry (vzájemně se vylučují):
-        --pks: Seznam primárních klíčů souborů (odděleno mezerami)
-        --range: Rozsah primárních klíčů ve formátu "start end"
-        --csv: Cesta k CSV souboru s listem cest v sloupci "record" (repository path)
+        - --pks: Seznam primárních klíčů souborů (odděleno mezerami)
+        - --range: Rozsah primárních klíčů ve formátu "start end"
+        - --csv: Cesta k CSV souboru s listem cest v sloupci "record" (repository path)
 
     Poznámka:
-        Musí být zadán právě jeden z parametrů --pks, --range, nebo --csv.
-        Náhledy jsou generovány pouze pro obrazové formáty podporované systémem.
+        - Musí být zadán právě jeden z parametrů --pks, --range, nebo --csv
+        - Náhledy jsou generovány pouze pro obrazové formáty podporované systémem
 
-    Příklady použití:
+    Příklady použití::
+
         python manage.py generate_thumbs --pks 1 2 3
         python manage.py generate_thumbs --range 100 200
         python manage.py generate_thumbs --range 1 1000
@@ -59,159 +60,164 @@ class Command(BaseCommand):
         pk_range = options.get("range")
         csv_file = options.get("csv")
 
+        # Validate arguments
+        provided_options = sum([pks is not None, pk_range is not None, csv_file is not None])
+        if provided_options != 1:
+            raise CommandError(_("core.management.commands.generate_thumbs.Command.handle.argument_error"))
+
+        logger.debug(
+            "core.management.commands.generate_thumbs.start",
+            extra={"pks": pks, "range": pk_range, "csv_file": csv_file},
+        )
+
         from core.models import Soubor
 
-        success_count = 0
-        error_count = 0
-
-        sources_selected = [src for src in [pks, pk_range, csv_file] if src]
-        if len(sources_selected) > 1:
-            raise CommandError(_("core.management.commands.generate_thumbs.Command.handle.multiple_sources_error"))
-        if len(sources_selected) == 0:
-            raise CommandError(_("core.management.commands.generate_thumbs.Command.handle.missing_params_error"))
-
-        if csv_file:
-            logger.debug(
-                "core.management.commands.generate_thumbs.start",
-                extra={"type": "csv", "csv_file": csv_file},
-            )
+        # Determine which soubory to process
+        if pks:
+            soubory = Soubor.objects.filter(pk__in=pks)
+            total = len(pks)
+        elif pk_range:
+            start_pk, end_pk = pk_range
+            soubory = Soubor.objects.filter(pk__gte=start_pk, pk__lte=end_pk)
+            total = soubory.count()
+        else:  # csv_file
             try:
                 sheet = pd.read_csv(csv_file, sep=",")
-            except Exception as err:
+                soubory = Soubor.objects.filter(path__in=sheet["record"].tolist())
+                total = len(sheet)
+            except Exception as e:
                 logger.error(
                     "core.management.commands.generate_thumbs.csv_read_error",
-                    extra={"csv_file": csv_file, "error": str(err)},
+                    extra={"csv_file": csv_file, "error": str(e)},
                 )
                 self.stdout.write(
                     self.style.ERROR(
-                        _("core.management.commands.generate_thumbs.Command.handle.csv_read_error") + str(err)
+                        _("core.management.commands.generate_thumbs.Command.handle.csv_read_error") + " " + str(e)
                     )
                 )
                 return
 
-            total = len(sheet)
-            self.stdout.write(
-                _("core.management.commands.generate_thumbs.Command.handle.processing_total") + " " + str(total)
-            )
+        success_count = 0
+        skipped_count = 0
+        error_count = 0
 
-            for index, row in sheet.iterrows():
-                if total > 0 and index % max(total // 100, 1) == 0:
-                    percentage = round(index / total * 100)
-                    self.stdout.write(
-                        "\r"
-                        + _("core.management.commands.generate_thumbs.Command.handle.progress")
+        self.stdout.write(
+            _("core.management.commands.generate_thumbs.Command.handle.processing_total") + " " + str(total)
+        )
+
+        for index, soubor in enumerate(soubory):
+            # Show progress
+            if index % max(total // 100, 1) == 0:
+                percentage = round(index / total * 100)
+                self.stdout.write(
+                    "\r"
+                    + _("core.management.commands.generate_thumbs.Command.handle.progress")
+                    + " "
+                    + str(percentage)
+                    + "%",
+                    ending="",
+                )
+
+            try:
+                related_record = soubor.vazba.navazany_objekt
+                conn = FedoraRepositoryConnector(related_record, None)
+
+                # Check if thumbnails exist
+                thumbnails_exist = conn.check_thumbs_exist(soubor.repository_uuid)
+
+                if not thumbnails_exist:
+                    # Generate thumbnails
+                    rep_bin_file = conn.get_binary_file(soubor.repository_uuid)
+                    if rep_bin_file:
+                        try:
+                            conn.generate_and_save_thumbs(
+                                soubor.nazev, soubor.mimetype, rep_bin_file.content, soubor.repository_uuid
+                            )
+                            success_count += 1
+                            logger.info(
+                                "core.management.commands.generate_thumbs.thumbs_generated",
+                                extra={"pk": soubor.pk, "path": soubor.path},
+                            )
+                        except Exception as thumb_error:
+                            error_count += 1
+                            logger.error(
+                                "core.management.commands.generate_thumbs.thumb_generation_error",
+                                extra={"pk": soubor.pk, "error": str(thumb_error)},
+                            )
+                    else:
+                        skipped_count += 1
+                        logger.warning(
+                            "core.management.commands.generate_thumbs.binary_file_not_found",
+                            extra={"pk": soubor.pk, "uuid": soubor.repository_uuid},
+                        )
+                else:
+                    skipped_count += 1
+
+            except Exception as err:
+                error_count += 1
+                logger.error(
+                    "core.management.commands.generate_thumbs.error",
+                    extra={"pk": soubor.pk, "error": str(err)},
+                )
+                self.stdout.write(
+                    self.style.ERROR(
+                        "\n"
+                        + _("core.management.commands.generate_thumbs.Command.handle.error")
                         + " "
-                        + str(percentage)
-                        + "%",
-                        ending="",
+                        + str(soubor.pk)
+                        + " - "
+                        + str(err)
                     )
-
-                try:
-                    item = Soubor.objects.get(path=row["record"])
-                except Soubor.DoesNotExist:
-                    error_count += 1
-                    logger.warning(
-                        "core.management.commands.generate_thumbs.file_not_found",
-                        extra={"path": row["record"]},
-                    )
-                    self.stdout.write(
-                        self.style.WARNING(
-                            "\n"
-                            + _("core.management.commands.generate_thumbs.Command.handle.file_not_found")
-                            + " "
-                            + str(row["record"])
-                        )
-                    )
-                    continue
-
-                try:
-                    FedoraRepositoryConnector.generate_thumb_for_single_file(item)
-                    success_count += 1
-                except Exception as e:
-                    error_count += 1
-                    logger.error(
-                        "core.management.commands.generate_thumbs.error",
-                        extra={"pk": item.pk, "error": str(e)},
-                    )
-                    self.stdout.write(
-                        self.style.ERROR(
-                            "\n"
-                            + _("core.management.commands.generate_thumbs.Command.handle.error_prefix")
-                            + " "
-                            + str(item.pk)
-                            + ": "
-                            + str(e)
-                        )
-                    )
-
-            self.stdout.write("")
-        else:
-            if pks:
-                records = pks
-                logger.debug(
-                    "core.management.commands.generate_thumbs.start",
-                    extra={"count": len(records), "type": "pks"},
-                )
-            else:
-                records = range(pk_range[0], pk_range[1] + 1)
-                logger.debug(
-                    "core.management.commands.generate_thumbs.start",
-                    extra={"count": len(records), "type": "range"},
                 )
 
-            queryset = Soubor.objects.filter(pk__in=records).order_by("pk")
-            total = queryset.count()
-
-            self.stdout.write(
-                _("core.management.commands.generate_thumbs.Command.handle.processing_total") + " " + str(total)
-            )
-
-            for index, item in enumerate(queryset, 1):
-                try:
-                    FedoraRepositoryConnector.generate_thumb_for_single_file(item)
-                    success_count += 1
-                    if index % 10 == 0 or index == total:
-                        self.stdout.write(
-                            _("core.management.commands.generate_thumbs.Command.handle.processed")
-                            + " "
-                            + str(index)
-                            + "/"
-                            + str(total)
-                        )
-                except Exception as e:
-                    error_count += 1
-                    logger.error(
-                        "core.management.commands.generate_thumbs.error",
-                        extra={"pk": item.pk, "error": str(e)},
-                    )
-                    self.stdout.write(
-                        self.style.ERROR(
-                            _("core.management.commands.generate_thumbs.Command.handle.error_prefix")
-                            + " "
-                            + str(item.pk)
-                            + ": "
-                            + str(e)
-                        )
-                    )
+        # Final newline after progress indicator
+        self.stdout.write("")
 
         logger.debug(
             "core.management.commands.generate_thumbs.end",
-            extra={"count": total, "success": success_count, "errors": error_count},
+            extra={
+                "total": total,
+                "success": success_count,
+                "skipped": skipped_count,
+                "errors": error_count,
+            },
         )
+
+        # Summary output
+        self.stdout.write("")
+        self.stdout.write("=" * 50)
+        self.stdout.write(_("core.management.commands.generate_thumbs.Command.handle.summary_header"))
+        self.stdout.write(_("core.management.commands.generate_thumbs.Command.handle.summary_total") + " " + str(total))
+        self.stdout.write(
+            _("core.management.commands.generate_thumbs.Command.handle.summary_success") + " " + str(success_count)
+        )
+        self.stdout.write(
+            _("core.management.commands.generate_thumbs.Command.handle.summary_skipped") + " " + str(skipped_count)
+        )
+        self.stdout.write(
+            _("core.management.commands.generate_thumbs.Command.handle.summary_errors") + " " + str(error_count)
+        )
+        self.stdout.write("=" * 50)
 
         if error_count > 0:
             self.stdout.write(
                 self.style.WARNING(
-                    _("core.management.commands.generate_thumbs.Command.handle.finished_with_errors")
+                    "\n"
+                    + _("core.management.commands.generate_thumbs.Command.handle.finished_with_errors")
+                    + " "
                     + str(success_count)
                     + ", "
                     + _("core.management.commands.generate_thumbs.Command.handle.errors")
+                    + " "
                     + str(error_count)
                 )
             )
         else:
             self.stdout.write(
                 self.style.SUCCESS(
-                    _("core.management.commands.generate_thumbs.Command.handle.finished_success") + str(success_count)
+                    "\n"
+                    + _("core.management.commands.generate_thumbs.Command.handle.finished_success")
+                    + " "
+                    + str(success_count)
                 )
             )

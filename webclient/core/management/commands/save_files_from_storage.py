@@ -16,19 +16,19 @@ class Command(BaseCommand):
     do Fedora repozitáře včetně aktualizace metadat v databázi.
 
     Argumenty:
-        storage_path: Cesta k adresáři obsahujícímu soubory
-        (každý soubor musí mít název rovný PK záznamu v DB včetně přípony, např. 123.jpg)
+        - storage_path: Cesta k adresáři obsahujícímu soubory (každý soubor musí mít název rovný PK záznamu v DB včetně přípony, např. 123.jpg)
 
     Parametry:
-        --pks: Seznam primárních klíčů souborů (odděleno mezerami)
-        --range: Rozsah primárních klíčů ve formátu "start end"
-        --save-thumbs: Generovat náhledy pro obrazové soubory
-        --disable-antivirus: Přeskočit antivirovou kontrolu
+        - --pks: Seznam primárních klíčů souborů (odděleno mezerami)
+        - --range: Rozsah primárních klíčů ve formátu "start end"
+        - --save-thumbs: Generovat náhledy pro obrazové soubory
+        - --disable-antivirus: Přeskočit antivirovou kontrolu
 
     Poznámka:
-        Musí být zadán buď --pks nebo --range, ne oba současně.
+        - Musí být zadán buď --pks nebo --range, ne oba současně
 
-    Příklady použití:
+    Příklady použití::
+
         python manage.py save_files_from_storage /tmp/files --pks 1 2 3
         python manage.py save_files_from_storage /tmp/files --range 100 200
         python manage.py save_files_from_storage /tmp/files --pks 10 20 --save-thumbs

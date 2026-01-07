@@ -121,14 +121,6 @@ Třídy
 
    .. py:method:: generate_thumb_for_single_file()
 
-   .. py:method:: generate_thumbs()
-
-   .. py:method:: save_files_from_storage()
-
-   .. py:method:: create_missing_thumbnail()
-
-   .. py:method:: remove_GPS_data_from_existing_files()
-
 
 .. py:class:: FedoraTransactionQueueClosedError
 

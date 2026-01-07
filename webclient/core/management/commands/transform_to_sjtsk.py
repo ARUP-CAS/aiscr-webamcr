@@ -16,13 +16,13 @@ class Command(BaseCommand):
     pro různé typy záznamů (PIAN, nález, projekt, dokument).
 
     Parametry:
-        model: Typ modelu pro transformaci (pian, nalez, projekt, dokument)
+        - model: Typ modelu pro transformaci (pian, nalez, projekt, dokument)
 
     Poznámka:
-        Transformuje pouze záznamy, které mají vyplněnou geometrii (geom)
-        ale nemají vyplněnou S-JTSK geometrii (geom_sjtsk).
+        - Transformuje pouze záznamy, které mají vyplněnou geometrii (geom) ale nemají vyplněnou S-JTSK geometrii (geom_sjtsk)
 
-    Příklady použití:
+    Příklady použití::
+
         python manage.py transform_to_sjtsk pian
         python manage.py transform_to_sjtsk nalez
         python manage.py transform_to_sjtsk projekt
