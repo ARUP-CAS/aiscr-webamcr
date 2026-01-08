@@ -125,7 +125,7 @@ def extract_url_patterns(urls_file: Path) -> Tuple[Optional[str], List[Dict[str,
         return app_name, url_patterns
 
     except Exception as e:
-        print(f"  ⚠ Warning: Could not parse {urls_file}: {e}")
+        print(f"   Warning: Could not parse {urls_file}: {e}")
         return None, []
 
 
@@ -215,7 +215,7 @@ def generate_url_routing_rst() -> bool:
                 modules.append((item.name, urls_file))
 
     if not modules:
-        print("  ⊝ No urls.py files found")
+        print("   No urls.py files found")
         return False
 
     # Process each module
@@ -253,7 +253,7 @@ def generate_url_routing_rst() -> bool:
                 ]
             )
 
-        print(f"    ✓ {module_name}: {len(url_patterns)} URLs")
+        print(f"    OK {module_name}: {len(url_patterns)} URLs")
 
     # Write the file
     try:
@@ -261,13 +261,13 @@ def generate_url_routing_rst() -> bool:
         new_content = "\n".join(rst_lines)
         if check_content_changed(new_content, output_file):
             changes_detected = True
-            print("    ⚠ URL routing documentation needs update")
+            print("     URL routing documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print("    ✓ URL routing documentation generated")
+        print("    OK URL routing documentation generated")
         return True
     except Exception as e:
-        print(f"    ✗ Error writing URL routing documentation: {e}")
+        print(f"    ERR Error writing URL routing documentation: {e}")
         return False
 
 
@@ -302,7 +302,7 @@ def extract_signals(signals_file: Path) -> List[Dict[str, str]]:
         return signals
 
     except Exception as e:
-        print(f"  ⚠ Warning: Could not parse {signals_file}: {e}")
+        print(f"   Warning: Could not parse {signals_file}: {e}")
         return []
 
 
@@ -374,7 +374,7 @@ def generate_signals_rst() -> bool:
                 modules.append((item.name, signals_file))
 
     if not modules:
-        print("  ⊝ No signals.py files found")
+        print("   No signals.py files found")
         return False
 
     # Process each module
@@ -412,7 +412,7 @@ def generate_signals_rst() -> bool:
                 ]
             )
 
-        print(f"    ✓ {module_name}: {len(signals_list)} signals")
+        print(f"    OK {module_name}: {len(signals_list)} signals")
 
     # Write the file
     try:
@@ -420,13 +420,13 @@ def generate_signals_rst() -> bool:
         new_content = "\n".join(rst_lines)
         if check_content_changed(new_content, output_file):
             changes_detected = True
-            print("    ⚠ Signals documentation needs update")
+            print("     Signals documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print("    ✓ Signals documentation generated")
+        print("    OK Signals documentation generated")
         return True
     except Exception as e:
-        print(f"    ✗ Error writing signals documentation: {e}")
+        print(f"    ERR Error writing signals documentation: {e}")
         return False
 
 
@@ -469,7 +469,7 @@ def extract_permissions(models_file: Path) -> List[str]:
         return actions
 
     except Exception as e:
-        print(f"  ⚠ Warning: Could not parse {models_file}: {e}")
+        print(f"   Warning: Could not parse {models_file}: {e}")
         return []
 
 
@@ -492,14 +492,14 @@ def generate_permissions_rst() -> bool:
     # Find core/models.py
     models_file = webclient_dir / "core" / "models.py"
     if not models_file.exists():
-        print("  ⊝ core/models.py not found")
+        print("   core/models.py not found")
         return False
 
     # Extract actions
     actions = extract_permissions(models_file)
 
     if not actions:
-        print("  ⊝ No actions found in Permissions.actionChoices")
+        print("   No actions found in Permissions.actionChoices")
         return False
 
     rst_lines = [
@@ -528,14 +528,14 @@ def generate_permissions_rst() -> bool:
         new_content = "\n".join(rst_lines)
         if check_content_changed(new_content, output_file):
             changes_detected = True
-            print("    ⚠ Permissions documentation needs update")
+            print("     Permissions documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print(f"    ✓ Found {len(actions)} actions")
-        print("    ✓ Permissions documentation generated")
+        print(f"    OK Found {len(actions)} actions")
+        print("    OK Permissions documentation generated")
         return True
     except Exception as e:
-        print(f"    ✗ Error writing permissions documentation: {e}")
+        print(f"    ERR Error writing permissions documentation: {e}")
         return False
 
 
@@ -685,14 +685,14 @@ def generate_export_structure_rst() -> bool:
     print(f"  Output: {output_file}")
 
     if not xsd_file.exists():
-        print("  ⊝ XSD schema not found")
+        print("   XSD schema not found")
         return False
 
     try:
         parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
         tree = ET.parse(xsd_file, parser=parser)
     except Exception as exc:
-        print(f"  ✗ Failed to parse XSD: {exc}")
+        print(f"  ERR Failed to parse XSD: {exc}")
         return False
 
     schema_root = tree.getroot()
@@ -819,13 +819,13 @@ def generate_export_structure_rst() -> bool:
         new_content = "\n".join(rst_lines)
         if check_content_changed(new_content, output_file):
             changes_detected = True
-            print("    ⚠ Export structure documentation needs update")
+            print("     Export structure documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(new_content)
-        print("    ✓ Export structure documentation generated")
+        print("    OK Export structure documentation generated")
         return True
     except Exception as exc:
-        print(f"    ✗ Error writing export structure documentation: {exc}")
+        print(f"    ERR Error writing export structure documentation: {exc}")
         return False
 
 
@@ -856,7 +856,7 @@ def has_meaningful_code(source_file: Path) -> bool:
 
         return has_code
     except Exception as e:
-        print(f"  ⚠ Warning: Could not parse {source_file}: {e}")
+        print(f"   Warning: Could not parse {source_file}: {e}")
         return False
 
 
@@ -1039,11 +1039,11 @@ def generate_rst_for_file(source_file: Path, module_dir_name: str, output_dir: P
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(rst_content)
 
-        print(f"    ✓ {output_file.name}")
+        print(f"    OK {output_file.name}")
         return True
 
     except Exception as e:
-        print(f"    ✗ Error generating RST for {filename}: {e}")
+        print(f"    ERR Error generating RST for {filename}: {e}")
         import traceback
 
         traceback.print_exc()
@@ -1117,10 +1117,10 @@ Dokumentace modulu {module_dir_name}.
             changes_detected = True
         with open(index_file, "w", encoding="utf-8") as f:
             f.write(index_content)
-        print("    ✓ index.rst")
+        print("    OK index.rst")
         return True
     except Exception as e:
-        print(f"    ✗ Error updating index.rst: {e}")
+        print(f"    ERR Error updating index.rst: {e}")
         return False
 
 
@@ -1140,7 +1140,7 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
 
     # Check if source directory exists
     if not source_dir.exists() or not source_dir.is_dir():
-        print(f"  ⊝ Skipping {module_dir_name}: source directory not found")
+        print(f"   Skipping {module_dir_name}: source directory not found")
         return False
 
     # Create output directory if it doesn't exist
@@ -1157,7 +1157,7 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
     py_files = sorted(source_dir.glob("*.py"))
 
     if not py_files:
-        print("    ⊝ No Python files found")
+        print("     No Python files found")
         return False
 
     for source_file in py_files:
@@ -1235,7 +1235,7 @@ def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] =
                 successful_modules.append(module_name)
                 total_generated += 1
         except Exception as e:
-            print(f"  ✗ Error processing module {module_name}: {e}")
+            print(f"  Error processing module {module_name}: {e}")
             failed_modules.append(module_name)
 
     print("\n" + "=" * 60)
@@ -1266,23 +1266,23 @@ def build_docs() -> bool:
         result = subprocess.run(["make", "html"], cwd=docs_dir, capture_output=True, text=True)
 
         if result.returncode == 0:
-            print("✓ Documentation built successfully!")
+            print("OK Documentation built successfully!")
             html_dir = Path(docs_dir) / "build/html/04_django_aplikace/04_02_moduly"
             if html_dir.exists():
-                print(f"✓ Generated HTML files in: {html_dir}")
+                print(f"OK Generated HTML files in: {html_dir}")
             return True
         else:
-            print(f"✗ Build failed with return code {result.returncode}")
+            print(f"ERR Build failed with return code {result.returncode}")
             if result.stderr:
                 print(f"Error output: {result.stderr[-1000:]}")  # Last 1000 chars
             return False
 
     except FileNotFoundError:
-        print("✗ sphinx-build not found. Please activate the virtual environment:")
+        print("ERR sphinx-build not found. Please activate the virtual environment:")
         print("  source .venv/bin/activate")
         return False
     except Exception as e:
-        print(f"✗ Error building documentation: {e}")
+        print(f"ERR Error building documentation: {e}")
         return False
 
 
@@ -1302,7 +1302,7 @@ def main() -> None:
 
     # Generate RST files
     if not generate_all_modules(mode=args.mode, specific_module=args.module):
-        print("\n✗ No documentation files were generated")
+        print("\nERR No documentation files were generated")
         sys.exit(1)
 
     # Generate URL routing documentation
@@ -1333,7 +1333,7 @@ def main() -> None:
 
     # Exit with code 1 if changes were detected
     if changes_detected:
-        print("\n⚠ Documentation changes detected!")
+        print("\n Documentation changes detected!")
         print("The documentation files have been updated.")
         print("Please review and commit these changes.")
         sys.exit(1)
