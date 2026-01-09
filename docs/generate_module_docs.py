@@ -524,20 +524,17 @@ def generate_permissions_rst() -> bool:
 
     # If marker not found, create default structure
     if not marker_found:
-        existing_content = [
-            "Oprávnění",
-            "==========",
-            "",
-            "Dokumentace všech definovaných akcí v systému oprávnění.",
-            "",
-            marker_heading,
-            "-" * len(marker_heading),
-        ]
+        existing_content.extend(
+            [
+                marker_heading,
+                "-" * len(marker_heading),
+            ]
+        )
 
     # Build the new content to append
     new_content = [
         "",
-        "Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:",
+        "Používá se pro bližší specifikaci akce či součásti view, pro které se oprávnění uplatňuje. Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:",
         "",
     ]
 
@@ -554,12 +551,12 @@ def generate_permissions_rst() -> bool:
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        new_content = "\n".join(rst_lines)
-        if check_content_changed(new_content, output_file):
+        final_text = "\n".join(final_content)
+        if check_content_changed(final_text, output_file):
             changes_detected = True
             print("    ⚠ Permissions documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write(new_content)
+            f.write(final_text)
         print(f"    ✓ Found {len(actions)} actions")
         print("    ✓ Permissions documentation updated (preserved existing content)")
         return True
