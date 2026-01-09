@@ -60,5 +60,5 @@ sphinxcontrib-googleanalytics==0.5
 sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0
 freezegun==1.5.5
-sphinx==9.0.4
+sphinx==8.2.3
 sphinx-rtd-theme==3.0.2
