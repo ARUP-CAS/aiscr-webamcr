@@ -57,6 +57,7 @@ setuptools==80.9.0
 Werkzeug==3.1.4
 pyOpenSSL==25.3.0
 sphinxcontrib-googleanalytics==0.5
+sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0
 freezegun==1.5.5
 sphinx==8.2.3

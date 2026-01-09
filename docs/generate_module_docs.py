@@ -477,8 +477,9 @@ def generate_permissions_rst() -> bool:
     """
     Generate permissions documentation.
 
-    Creates docs/source/04_django_aplikace/04_01_core/permissions.rst
-    with a list of all defined actions from Permissions.actionChoices
+    Updates docs/source/04_django_aplikace/04_01_core/permissions.rst
+    by appending the list of all defined actions from Permissions.actionChoices
+    after the "Uživatelské akce řízené pomocí oprávnění" heading.
 
     Returns:
         bool: True if successful, False otherwise
@@ -502,37 +503,62 @@ def generate_permissions_rst() -> bool:
         print("  ⊝ No actions found in Permissions.actionChoices")
         return False
 
-    rst_lines = [
-        "Oprávnění",
-        "==========",
+    # Read existing content if file exists
+    existing_content = []
+    marker_heading = "Uživatelské akce řízené pomocí oprávnění"
+    marker_found = False
+
+    if output_file.exists():
+        with open(output_file, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # Find the marker heading and keep everything before it (including the heading and separator)
+        for i, line in enumerate(lines):
+            existing_content.append(line.rstrip())
+            if line.strip() == marker_heading:
+                marker_found = True
+                # Also include the separator line (dashes) after the heading
+                if i + 1 < len(lines) and lines[i + 1].strip().startswith("-"):
+                    existing_content.append(lines[i + 1].rstrip())
+                break
+
+    # If marker not found, create default structure
+    if not marker_found:
+        existing_content.extend(
+            [
+                marker_heading,
+                "-" * len(marker_heading),
+            ]
+        )
+
+    # Build the new content to append
+    new_content = [
         "",
-        "Dokumentace všech definovaných akcí v systému oprávnění.",
-        "",
-        "Uživatelské akce řízené pomocí oprávnění",
-        "-----------------------------------------",
-        "",
-        "Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:",
+        "Používá se pro bližší specifikaci akce či součásti view, pro které se oprávnění uplatňuje. Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:",
         "",
     ]
 
     # Add actions as bullet list
     for action in actions:
-        rst_lines.append(f"- ``{action}``")
+        new_content.append(f"- ``{action}``")
 
-    rst_lines.append("")
-    rst_lines.append(f"**Celkem:** {len(actions)} akcí")
+    new_content.append("")
+    new_content.append(f"**Celkem:** {len(actions)} akcí")
+
+    # Combine existing and new content
+    final_content = existing_content + new_content
 
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        new_content = "\n".join(rst_lines)
-        if check_content_changed(new_content, output_file):
+        final_text = "\n".join(final_content)
+        if check_content_changed(final_text, output_file):
             changes_detected = True
             print("    ⚠ Permissions documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write(new_content)
+            f.write(final_text)
         print(f"    ✓ Found {len(actions)} actions")
-        print("    ✓ Permissions documentation generated")
+        print("    ✓ Permissions documentation updated (preserved existing content)")
         return True
     except Exception as e:
         print(f"    ✗ Error writing permissions documentation: {e}")
