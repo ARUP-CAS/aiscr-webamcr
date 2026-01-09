@@ -34,7 +34,7 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
 
 class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     """
-    Class pre db model ADB.
+    Class pro db model ADB.
     Obsahuje vazbu na dokumentační jednotku.
     """
 
@@ -121,12 +121,12 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
     """
     Funkce pro výpočet ident celý pro VB.
-    Obsahuje test na pretečení hodnot.
+    Obsahuje test na přetečení hodnot.
 
     Args:
         adb (adb): adb objekt pro získaní základu identu.
 
-        offset (int): offset k pripočtení k poslednímu VB
+        offset (int): offset k připočtení k poslednímu VB
 
     Returns:
         string: nový ident celý
@@ -153,7 +153,7 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
 
 class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
     """
-    Class pre db model vyškový bod.
+    Class pro db model vyškový bod.
     Obsahuje vazbu na ADB.
     """
 
@@ -170,7 +170,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
 
     def set_geom(self, northing, easting, niveleta):
         """
-        Metóda na nastavení geomu (súradnic).
+        Metoda na nastavení geomu (souřadnic).
         """
 
         logger.debug(
@@ -188,7 +188,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
 
     def save(self, *args, **kwargs):
         """
-        Override save metódy na nastavení ident celý pokud je prázdny.
+        Override save metody na nastavení ident celý pokud je prázdny.
         """
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
@@ -196,7 +196,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
 
     def __init__(self, *args, **kwargs):
         """
-        Override init metody pro úpravu súradnic.
+        Override init metody pro úpravu souřadnic.
         """
         super(VyskovyBod, self).__init__(*args, **kwargs)
         self.northing = None

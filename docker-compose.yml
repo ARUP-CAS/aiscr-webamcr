@@ -10,7 +10,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
       - /opt/selenium_test:/vol/web/selenium_test
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
@@ -85,7 +85,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
     networks:
       - prod-net
     healthcheck:
@@ -110,7 +110,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
     networks:
       - prod-net
     healthcheck:
@@ -167,6 +167,7 @@ services:
     command:
       - "--config.file=/run/secrets/prometheus_config"
       - "--storage.tsdb.retention.time=365d"
+      - "--web.enable-admin-api"
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.19.0

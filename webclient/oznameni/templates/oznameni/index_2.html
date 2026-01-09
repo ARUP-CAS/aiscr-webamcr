@@ -8,9 +8,9 @@
 
 {% block head %}
   <script>
-  var maxFiles = 40;
-  var object_id = "{{ ident_cely }}";
-  var addRemoveLinks = true;
+  let maxFiles = 40;
+  let object_id = "{{ ident_cely }}";
+  const addRemoveLinks = true;
   </script>
   <link rel="stylesheet" type="text/css" href="{% static 'css/dropzone.min.css' %}"/>
   <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
@@ -114,7 +114,7 @@
   <form method="post">
     {% csrf_token %}
     <input name="ident_cely" type="hidden" value="{{ projekt.ident_cely }}">
-    <a href="{% url 'oznameni:index' ident_cely=projekt.ident_cely %}" class="btn btn-secondary">{% trans "oznameni.templates.oznameni.index_2.upravitOznameni" %}</a>
+    <a href="{% url 'oznameni:index' ident_cely=projekt.ident_cely %}" class="btn btn-secondary btn-disable-when-running-upload">{% trans "oznameni.templates.oznameni.index_2.upravitOznameni" %}</a>
     <button type="submit" class="btn btn-success btn-disable-when-running-upload" id="submit_btn">{% trans "oznameni.templates.oznameni.index_2.dokoncitOznameni" %}
       <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
       style="display: none"></span>
@@ -125,28 +125,28 @@
 
 {% block script %}
   <script src="{% static 'js/dropzone.min.js' %}"></script>
-  <script>var object_id = "{{ projekt.ident_cely }}";</script>
+  <script>object_id = "{{ projekt.ident_cely }}";</script>
   {% if file_id %}
-        <script>var maxFiles = 1;</script>
-        <script>var file_id = "{{ file_id }}";
-          var typ_vazby = "{{ typ_vazby }}";
-          var typ_uploadu = "nahradit";
+        <script>maxFiles = 1;</script>
+        <script>let file_id = "{{ file_id }}";
+          let typ_vazby = "{{ typ_vazby }}";
+          let typ_uploadu = "nahradit";
         </script>
     {% else %}
-        <script>var maxFiles = 40;</script>
+        <script>maxFiles = 40;</script>
         <script>
-          var typ_vazby = "projekt";
-          var typ_uploadu = "upload";
+          let typ_vazby = "projekt";
+          let typ_uploadu = "upload";
         </script>
     {% endif %}
   <script>
-  var reject_dict = {
+  const reject_dict = {
     "rejected_pas" : "{% get_message 'UPLOADFILE_REJECTED_PAS' %}",
     "rejected_dokument" : "{% get_message 'UPLOADFILE_REJECTED_DOKUMENT' %}",
     "rejected_dokument_model" : "{% get_message 'UPLOADFILE_REJECTED_DOKUMENT_MODEL' %}",
     "rejected_all" : "{% get_message 'UPLOADFILE_REJECTED_ALL' %}"
   };
-  var upload_error = "{% get_message 'UPLOADFILE_ERROR' %}"
+  const upload_error = "{% get_message 'UPLOADFILE_ERROR' %}"
   const dz_trans = {
       descriptionUpload: '{% trans "core.templates.core.upload_file.dz.descriptionUpload" %}',
       descriptionNahradit: '{% trans "core.templates.core.upload_file.dz.descriptionNahradit" %}',
@@ -169,7 +169,7 @@
   $(document).ready(function() {
     $('form').on('submit', function() {
         if (confirm('{% trans "oznameni.templates.oznameni.index_2.nahraliSteVsechnyDokumenty" %}')) {
-          var submitButton = $(this).find('button[type=submit]');
+          const submitButton = $(this).find('button[type=submit]');
           submitButton.prop('disabled', true); // Zablokuje tlačítko
           submitButton.find('.spinner-border').show(); // Zobrazí spinner
           $(".submit-remove").hide();
@@ -177,7 +177,7 @@
         else return false;
     });
   });
-  mock_str='{{seznam_mock|safe}}';
+  const mock_str='{{seznam_mock|safe}}';
   </script>
   <script src="{% static 'js/dz.js' %}"></script>
 {% endblock %}

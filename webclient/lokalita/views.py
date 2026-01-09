@@ -59,7 +59,7 @@ class LokalitaIndexView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní kontextu podlehu.
+        Metoda pro získaní kontextu podlehu.
         """
         context = {
             "toolbar_name": _("ez.views.lokalitaIndexView.toolbarName"),
@@ -160,7 +160,7 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
 
     def get_archeologicky_zaznam(self):
         """
-        Metóda pro získaní akce z db.
+        Metoda pro získaní akce z db.
         """
         return self.object.archeologicky_zaznam
 
@@ -169,7 +169,7 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní contextu akci pro template.
+        Metoda pro získaní contextu akci pro template.
         """
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
@@ -436,7 +436,7 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
         if not dj.komponenty == komponenta.komponenta_vazby:
-            logger.error("Komponenta - Dokumentacni jednotka wrong relation")
+            logger.warning("Komponenta - Dokumentacni jednotka wrong relation")
             messages.add_message(request, messages.ERROR, SPATNY_ZAZNAM_ZAZNAM_VAZBA)
             if url_has_allowed_host_and_scheme(
                 request.GET.get("next", "core:home"), allowed_hosts=settings.ALLOWED_HOSTS

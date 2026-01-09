@@ -458,7 +458,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokument")
 
         # U detail let
-        self.createFedoraRecord("C-LET-00001")
+        self.createFedoraRecord("C-LET-00001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_let .btn")
@@ -468,7 +468,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_let")
 
         # C dokument_cast akce
-        self.createFedoraRecord("C-200810821A")
+        self.createFedoraRecord("C-200810821A", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -485,7 +485,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_akce")
 
         # C dokument_cast lokalita
-        self.createFedoraRecord("C-K9000001")
+        self.createFedoraRecord("C-K9000001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -502,7 +502,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_lokalita")
 
         # C dokument_cast projekt
-        self.createFedoraRecord("C-201911202")
+        self.createFedoraRecord("C-201911202", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -545,7 +545,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, f"id_{ident}-K001_o-0-pocet").send_keys("1")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-19 > .text")
-        self.ElementClick(By.CSS_SELECTOR, ".dropup > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-specifikace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-4 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
@@ -697,7 +697,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument")
 
         # U neident_akce
-        self.createFedoraRecord("C-TX-197602290")
+        self.createFedoraRecord("C-TX-197602290", "archivar")
         time = self.getTime()
         self.goToAddress("/id/C-TX-197602290")
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
@@ -720,11 +720,11 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_neident_akce")
 
         # D dokument X-C-TX-201801164
-        self.createFedoraRecord("X-C-TX-201801164")
-        self.createFedoraRecord("C-201125635A")
-        self.createFedoraRecord("C-202010506")
-        self.createFedoraRecord("C-K9000010")
-        self.createFedoraRecord("C-LET-00010")
+        self.createFedoraRecord("X-C-TX-201801164", "archivar")
+        self.createFedoraRecord("C-201125635A", "archivar")
+        self.createFedoraRecord("C-202010506", "archivar")
+        self.createFedoraRecord("C-K9000010", "archivar")
+        self.createFedoraRecord("C-LET-00010", "archivar")
         self.goToAddress("/id/X-C-TX-201801164")
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
@@ -738,10 +738,10 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_1")
 
         # odpojeni akce
-        self.createFedoraRecord("X-C-TX-201801166")
-        self.createFedoraRecord("C-201226860A")
-        self.createFedoraRecord("C-K9000024")
-        self.createFedoraRecord("C-202104117")
+        self.createFedoraRecord("X-C-TX-201801166", "archivar")
+        self.createFedoraRecord("C-201226860A", "archivar")
+        self.createFedoraRecord("C-K9000024", "archivar")
+        self.createFedoraRecord("C-202104117", "archivar")
         self.goToAddress("/dokument/detail/X-C-TX-201801166/cast/X-C-TX-201801166-D001")
         time = self.getTime()
         self.ElementClick(By.ID, "others")

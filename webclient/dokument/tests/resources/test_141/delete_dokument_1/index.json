@@ -1,1 +1,107 @@
-{"pagination":{"offset":0,"maxResults":100,"totalResults":-1},"items":[{"rdf_type":["http://fedora.info/definitions/v4/repository#Resource","http://mementoweb.org/ns#OriginalResource","http://mementoweb.org/ns#TimeGate","http://www.w3.org/ns/ldp#BasicContainer","http://www.w3.org/ns/ldp#Container","http://www.w3.org/ns/ldp#RDFSource","http://fedora.info/definitions/v4/repository#ArchivalGroup","http://www.w3.org/ns/ldp#Resource","http://fedora.info/definitions/v4/repository#Container"],"content_size":101,"mime_type":null,"created":"2025-09-15T05:40:02.137Z","fedora_id":"http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164","modified":"2025-09-15T05:40:13.481Z"},{"rdf_type":["http://mementoweb.org/ns#TimeGate","http://mementoweb.org/ns#OriginalResource","http://fedora.info/definitions/v4/repository#Resource","http://www.w3.org/ns/ldp#Resource","http://www.w3.org/ns/ldp#NonRDFSource","http://fedora.info/definitions/v4/repository#Binary"],"content_size":3710,"mime_type":"application/xml","created":"2025-09-15T05:40:02.426Z","fedora_id":"http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/metadata","modified":"2025-09-15T05:40:12.518Z"},{"rdf_type":["http://mementoweb.org/ns#TimeGate","http://fedora.info/definitions/v4/repository#Resource","http://fedora.info/definitions/v4/repository#Binary","http://www.w3.org/ns/ldp#Resource","http://www.w3.org/ns/ldp#NonRDFSource","http://mementoweb.org/ns#OriginalResource"],"content_size":2153,"mime_type":"application/xml","created":"2025-09-15T05:40:03.122Z","fedora_id":"http://172.16.16.136:8081/rest/AMCR-selenium-test/record/C-201125635A/metadata","modified":"2025-09-15T05:40:12.737Z"},{"rdf_type":["http://mementoweb.org/ns#OriginalResource","http://fedora.info/definitions/v4/repository#Resource","http://fedora.info/definitions/v4/repository#Binary","http://www.w3.org/ns/ldp#Resource","http://www.w3.org/ns/ldp#NonRDFSource","http://mementoweb.org/ns#TimeGate"],"content_size":2880,"mime_type":"application/xml","created":"2025-09-15T05:40:03.724Z","fedora_id":"http://172.16.16.136:8081/rest/AMCR-selenium-test/record/C-202010506/metadata","modified":"2025-09-15T05:40:13.123Z"},{"rdf_type":["http://mementoweb.org/ns#OriginalResource","http://www.w3.org/ns/ldp#NonRDFSource","http://www.w3.org/ns/ldp#Resource","http://fedora.info/definitions/v4/repository#Binary","http://fedora.info/definitions/v4/repository#Resource","http://mementoweb.org/ns#TimeGate"],"content_size":1687,"mime_type":"application/xml","created":"2025-09-15T05:40:04.314Z","fedora_id":"http://172.16.16.136:8081/rest/AMCR-selenium-test/record/C-K9000010/metadata","modified":"2025-09-15T05:40:12.920Z"},{"rdf_type":["http://mementoweb.org/ns#TimeGate","http://fedora.info/definitions/v4/repository#Binary","http://fedora.info/definitions/v4/repository#Resource","http://mementoweb.org/ns#OriginalResource","http://www.w3.org/ns/ldp#NonRDFSource","http://www.w3.org/ns/ldp#Resource"],"content_size":3812,"mime_type":"application/xml","created":"2025-09-15T05:40:05.002Z","fedora_id":"http://172.16.16.136:8081/rest/AMCR-selenium-test/record/C-LET-00010/metadata","modified":"2025-09-15T05:40:13.324Z"},{"rdf_type":["http://www.w3.org/ns/ldp#Resource","http://www.w3.org/ns/ldp#RDFSource","http://www.w3.org/ns/ldp#Container","http://www.w3.org/ns/ldp#BasicContainer","http://mementoweb.org/ns#TimeGate","http://mementoweb.org/ns#OriginalResource","http://fedora.info/definitions/v4/repository#Resource","http://fedora.info/definitions/v4/repository#Container"],"content_size":143,"mime_type":null,"created":"2025-09-15T05:40:06.520Z","fedora_id":"http://172.16.16.136:8081/rest/AMCR-selenium-test/record/X-C-TX-201801164/file/9b760689-3585-4555-8f31-013efbc6a4c8","modified":"2025-09-15T05:40:13.377Z"},{"rdf_type":["http://www.w3.org/ns/ldp#RDFSource","http://www.w3.org/ns/ldp#Resource","http://fedora.info/definitions/v4/repository#Container","http://fedora.info/definitions/v4/repository#Resource","http://mementoweb.org/ns#OriginalResource","http://mementoweb.org/ns#TimeGate","http://www.w3.org/ns/ldp#BasicContainer","http://www.w3.org/ns/ldp#Container"],"content_size":179,"mime_type":null,"created":"2025-09-15T05:40:13.548Z","fedora_id":"http://172.16.16.136:8081/rest/AMCR-selenium-test/model/deleted/member/X-C-TX-201801164","modified":"2025-09-15T05:40:13.548Z"}]}
+{
+  "items": [
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/model/deleted/member/X-C-TX-201801164",
+      "mime_type": null,
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Container",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#BasicContainer",
+        "http://www.w3.org/ns/ldp#Container",
+        "http://www.w3.org/ns/ldp#RDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-201125635A/metadata",
+      "mime_type": "application/xml",
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Binary",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#NonRDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-202010506/metadata",
+      "mime_type": "application/xml",
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Binary",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#NonRDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-K9000010/metadata",
+      "mime_type": "application/xml",
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Binary",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#NonRDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/C-LET-00010/metadata",
+      "mime_type": "application/xml",
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Binary",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#NonRDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-201801164",
+      "mime_type": null,
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#ArchivalGroup",
+        "http://fedora.info/definitions/v4/repository#Container",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#BasicContainer",
+        "http://www.w3.org/ns/ldp#Container",
+        "http://www.w3.org/ns/ldp#RDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-201801164/file/UUID-REMOVED",
+      "mime_type": null,
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Container",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#BasicContainer",
+        "http://www.w3.org/ns/ldp#Container",
+        "http://www.w3.org/ns/ldp#RDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/X-C-TX-201801164/metadata",
+      "mime_type": "application/xml",
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Binary",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#NonRDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    }
+  ]
+}

@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 class AutoriField(forms.models.ModelMultipleChoiceField):
     """
-    Třída pro správne zaobcházení s autormi, tak aby jejich uložení pořadí bylo stejné jako zadané uživatelem.
+    Třída pro správně zaobcházení s autormi, tak aby jejich uložení pořadí bylo stejné jako zadané uživatelem.
     """
 
     def clean(self, value):
@@ -732,14 +732,16 @@ class PripojitDokumentForm(forms.Form):
     Hlavní formulář připojení dokumentu do projektu nebo arch záznamu.
     """
 
-    def __init__(self, projekt=None, *args, **kwargs):
-        super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
+    def __init__(self, ident_zaznam, *args, **kwargs):
+        super(PripojitDokumentForm, self).__init__(*args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
             label=_("dokument.forms.pripojitDokumentForm.dokument.label"),
             choices=list(
                 Dokument.objects.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)).values_list("id", "ident_cely")
             ),
-            widget=AutocompleteSelect2Multiple(url=reverse("dokument:dokument-autocomplete")),
+            widget=AutocompleteSelect2Multiple(
+                url=reverse("dokument:dokument-autocomplete") + f"?ident={ident_zaznam}"
+            ),
             help_text=_("dokument.forms.pripojitDokumentForm.dokument.tooltip"),
         )
         self.fields["dokument"].required = True
@@ -839,7 +841,7 @@ def create_tvar_form(not_readonly=True):
 
 class TvarFormSetHelper(FormHelper):
     """
-    Form helper pro správne vykreslení formuláře tvarů.
+    Form helper pro správné vykreslení formuláře tvarů.
     """
 
     def __init__(self, *args, **kwargs):

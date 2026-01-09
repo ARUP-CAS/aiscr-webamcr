@@ -10,8 +10,8 @@
     <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
     <amcr:chranene_udaje/>
     <amcr:historie>
-      <amcr:id>hist-2803191</amcr:id>
-      <amcr:datum_zmeny>2025-07-28T16:29:56.460455+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>SN01</amcr:typ_zmeny>
     </amcr:historie>

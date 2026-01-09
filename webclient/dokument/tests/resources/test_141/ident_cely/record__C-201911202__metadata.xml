@@ -27,51 +27,54 @@
       <amcr:geom_wkt EPSG="4326">POINT(14.7859126 50.1481996)</amcr:geom_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1566245</amcr:id>
-      <amcr:datum_zmeny>2019-10-21T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2275454</amcr:id>
-      <amcr:datum_zmeny>2019-10-22T05:42:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2177032</amcr:id>
-      <amcr:datum_zmeny>2019-11-15T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-      <amcr:typ_zmeny>P34</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1712246</amcr:id>
-      <amcr:datum_zmeny>2021-09-09T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
       <amcr:typ_zmeny>P12</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2070529</amcr:id>
-      <amcr:datum_zmeny>2021-09-09T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
       <amcr:typ_zmeny>P23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-1858522</amcr:id>
-      <amcr:datum_zmeny>2021-09-09T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>P34</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000454">U-000454</amcr:uzivatel>
       <amcr:poznamka>Projekt bude realizován v jiném časovém rozsahu, než jak bylo původně zamýšleno. Dojde k jeho opětovnému přihlášení. O. Švejcar</amcr:poznamka>
       <amcr:typ_zmeny>P*7</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:soubor>
       <amcr:id>soub-211627</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-201911202/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>oznameni_C-201911202.pdf</amcr:nazev>
       <amcr:mimetype>application/pdf</amcr:mimetype>
       <amcr:rozsah>3</amcr:rozsah>
       <amcr:size_mb>0.1358165741</amcr:size_mb>
+      <amcr:sha_512>9149c92482c73b4bc88b92040614198fa547377da1446b792eb7a068c4447d44ef963b3a6aae2347391875fa705f8e4879b58e7ea09a39f0e27e821e4e53897a</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-201911202/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
-        <amcr:id>hist-2462169</amcr:id>
-        <amcr:datum_zmeny>2019-10-21T22:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
         <amcr:poznamka>oznameni_C-201911202.pdf</amcr:poznamka>
         <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
@@ -99,30 +102,30 @@
     <amcr:samostatny_nalez id="C-201911202-N00020">C-201911202-N00020</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00021">C-201911202-N00021</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00022">C-201911202-N00022</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="C-201911202-N00026">C-201911202-N00026</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="C-201911202-N00027">C-201911202-N00027</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="C-201911202-N00028">C-201911202-N00028</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="C-201911202-N00035">C-201911202-N00035</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="C-201911202-N00041">C-201911202-N00041</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00023">C-201911202-N00023</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00024">C-201911202-N00024</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00025">C-201911202-N00025</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="C-201911202-N00026">C-201911202-N00026</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="C-201911202-N00027">C-201911202-N00027</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="C-201911202-N00028">C-201911202-N00028</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="C-201911202-N00029">C-201911202-N00029</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00030">C-201911202-N00030</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00031">C-201911202-N00031</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00032">C-201911202-N00032</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00033">C-201911202-N00033</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00034">C-201911202-N00034</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="C-201911202-N00035">C-201911202-N00035</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00036">C-201911202-N00036</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00037">C-201911202-N00037</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00038">C-201911202-N00038</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00039">C-201911202-N00039</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00040">C-201911202-N00040</amcr:samostatny_nalez>
+    <amcr:samostatny_nalez id="C-201911202-N00041">C-201911202-N00041</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00042">C-201911202-N00042</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00043">C-201911202-N00043</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00044">C-201911202-N00044</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00045">C-201911202-N00045</amcr:samostatny_nalez>
     <amcr:samostatny_nalez id="C-201911202-N00046">C-201911202-N00046</amcr:samostatny_nalez>
-    <amcr:samostatny_nalez id="C-201911202-N00029">C-201911202-N00029</amcr:samostatny_nalez>
     <amcr:dokument id="C-DL-202500001">C-DL-202500001</amcr:dokument>
   </amcr:projekt>
 </amcr:amcr>

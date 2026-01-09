@@ -37,6 +37,11 @@ notification_settings = {
         "predmet": "AMČR: nová uživatelská role či oprávnění | AMCR: new user role or permissions",
         "cesta_sablony": "emails/E-U-06.html",
     },
+    "E-U-07": {
+        "zasilat_neaktivnim": True,
+        "predmet": "AMČR: uživatel {ident_cely} - žádost o odstranění účtu | AMCR: user {ident_cely} - request to delete account",
+        "cesta_sablony": "emails/E-U-07.html",
+    },
     "E-NZ-01": {
         "zasilat_neaktivnim": False,
         "predmet": "AMČR: projekt {ident_cely} - blíží se lhůta pro odevzdání NZ | AMCR: project {ident_cely} - report submission deadline approaching",
@@ -181,5 +186,10 @@ notification_settings = {
         "zasilat_neaktivnim": True,
         "predmet": "AMČR: ukončení projektu {ident_cely} | AMCR: project {ident_cely} finished",
         "cesta_sablony": "emails/E-P-10.html",
+    },
+    "E-P-11": {
+        "zasilat_neaktivnim": True,
+        "predmet": "AMČR: projekt {ident_cely} - žádost o zrušení | AMCR: project {ident_cely} cancellation request",
+        "cesta_sablony": "emails/E-P-11.html",
     },
 }

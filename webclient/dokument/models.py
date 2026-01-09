@@ -198,7 +198,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def get_absolute_url(self):
         """
-        Metóda pro získaní absolut url záznamu podle typu dokumentu.
+        Metoda pro získaní absolut url záznamu podle typu dokumentu.
         """
         if "3D" in self.ident_cely:
             return reverse("dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely})
@@ -209,7 +209,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_zapsany(self, user):
         """
-        Metóda pro nastavení stavu zapsaný a uložení změny do historie.
+        Metoda pro nastavení stavu zapsaný a uložení změny do historie.
         """
         self.stav = D_STAV_ZAPSANY
         Historie(
@@ -243,7 +243,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_odeslany(self, user, old_ident):
         """
-        Metóda pro nastavení stavu odeslaný a uložení změny do historie.
+        Metoda pro nastavení stavu odeslaný a uložení změny do historie.
         """
         self.stav = D_STAV_ODESLANY
         if old_ident != self.ident_cely:
@@ -260,7 +260,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_archivovany(self, user, old_ident):
         """
-        Metóda pro nastavení stavu archivovaný a uložení změny do historie.
+        Metoda pro nastavení stavu archivovaný a uložení změny do historie.
         """
         self.stav = D_STAV_ARCHIVOVANY
         if not self.datum_zverejneni:
@@ -279,7 +279,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_vraceny(self, user, new_state, poznamka):
         """
-        Metóda pro vrácení o jeden stav méně a uložení změny do historie.
+        Metoda pro vrácení o jeden stav méně a uložení změny do historie.
         """
         self.stav = new_state
         Historie(
@@ -292,7 +292,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def check_pred_odeslanim(self):
         """
-        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+        Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
 
             polia: format, popis, duveryhodnost, obdobi, areal jsou vyplněna pro model 3D.
 
@@ -330,7 +330,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def check_pred_archivaci(self):
         """
-        Metóda na kontrolu prerekvizit pred archivací:
+        Metoda na kontrolu prerekvizit pred archivací:
 
             kontrola jako před odesláním
 
@@ -341,7 +341,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def has_extra_data(self):
         """
-        Metóda na zjištení že dokument má extra data.
+        Metoda na zjištení že dokument má extra data.
         """
         has_extra_data = False
         try:
@@ -352,7 +352,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def get_komponenta(self):
         """
-        Metóda na získaní všech komponent dokumentu.
+        Metoda na získaní všech komponent dokumentu.
         """
         if "3D" in self.ident_cely:
             try:
@@ -365,9 +365,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_permanent_ident_cely(self, region, rada):
         """
-        Metóda pro nastavení permanentního ident celý pro dokument.
-        Metóda bere pořadoví číslo z db dokument sekvence.
-        Metóda zmení i ident připojených souborů.
+        Metoda pro nastavení permanentního ident celý pro dokument.
+        Metoda bere pořadoví číslo z db dokument sekvence.
+        Metoda zmení i ident připojených souborů.
         """
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
@@ -432,7 +432,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_datum_zverejneni(self):
         """
-        metóda pro nastavení datumu zvěřejnení.
+        metoda pro nastavení datumu zvěřejnení.
         """
         new_date = datetime.date.today()
         new_month = new_date.month + self.organizace.mesicu_do_zverejneni
@@ -607,7 +607,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     def get_absolute_url(self):
         """
-        Metóda pro získaní absolut url.
+        Metoda pro získaní absolut url.
         """
         if "3D" in self.dokument.ident_cely:
             return self.dokument.get_absolute_url()

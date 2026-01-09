@@ -1,14 +1,17 @@
 import logging
 
 from bs4 import BeautifulSoup
+from core.constants import AZ_STAV_ODESLANY, D_STAV_ODESLANY
 from core.message_constants import TRANSLATION_FILE_TOOSMALL, TRANSLATION_FILE_WRONG_FORMAT
 from core.models import OdstavkaSystemu
+from core.widgets import AutocompleteSelect2Multiple
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
 from django.conf import settings
 from django.utils import formats
 from django.utils.translation import gettext_lazy as _
+from dokument.models import Dokument
 from heslar.models import Heslar
 from polib import pofile
 
@@ -51,7 +54,7 @@ class TwoLevelSelectField(forms.CharField):
 
 class HeslarChoiceFieldField(forms.ChoiceField):
     """
-    Potrebná úprava metód pro ChoiceField ve formuláři, pro správne zobrazení a spracováni predmetu specifikace.
+    Potrebná úprava metód pro ChoiceField ve formuláři, pro správně zobrazení a spracováni predmetu specifikace.
     """
 
     def clean(self, selected_value):
@@ -146,6 +149,40 @@ class VratitForm(forms.Form):
         self.helper.form_tag = False
 
 
+class VratitFormDokument(VratitForm):
+    ident_cely = forms.CharField(required=True, widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["reason"].widget = forms.Textarea(
+            attrs={"rows": 3, "cols": 150, "required": "required", "class": "textinput form-control"}
+        )
+
+
+class VratitFormAZ(VratitForm):
+    """
+    Formulář pro vrácení záznamu Akce nebo Lokality. Obsahuje text pole pro zdůvodnění vrácení a výběr dokumentů pro vrácení.
+    """
+
+    dokument = forms.ModelMultipleChoiceField(
+        queryset=Dokument.objects.none(),
+        widget=AutocompleteSelect2Multiple,
+        label=_("core.forms.VratitFormAZ.dokument.label"),
+        help_text=_("core.forms.VratitFormAZ.dokument.tooltip"),
+        required=False,
+    )
+
+    def __init__(self, *args, az, **kwargs):
+        super().__init__(*args, **kwargs)
+        if az.stav != AZ_STAV_ODESLANY:
+            self.fields.pop("dokument", None)
+            self.helper.layout.fields.remove("dokument")
+            return
+        self.fields["dokument"].queryset = Dokument.objects.filter(
+            stav=D_STAV_ODESLANY, casti__archeologicky_zaznam__ident_cely=az.ident_cely
+        ).distinct()
+
+
 class DecimalTextWideget(forms.widgets.TextInput):
     """
     Třida pro formátování hodnoty velikosti souboru na 3 desetiná místa.
@@ -229,7 +266,13 @@ class PermissionImportForm(forms.Form):
         label=_("core.forms.permissionImport.file.label"),
         widget=forms.FileInput(
             attrs={
-                "accept": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                "accept": (
+                    ".csv,"
+                    "application/csv,"
+                    "text/csv,"
+                    "application/vnd.ms-excel,"
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
             }
         ),
     )

@@ -102,14 +102,14 @@
             <a class="dropdown-item" href="{{Digi_archiv_link|add:projekt.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarProjekt.digiArchivLink.label" %}</a>
           {% endif %}
           <a class="dropdown-item" href="{{OAPI_link|add:projekt.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarProjekt.OAIAPI.label" %}</a>
-          {% if show.stahnout_metadata%}
-            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.ident_cely %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
-          {% endif %}
           {% if show.zadost_udaje_oznamovatel %}
             <button id="zadost-udaje-oznamovatel" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.zadostUdajeOznamovatel.label" %}</button>
           {% endif %}
           {% if show.zadost_odhlaseni_projektu %}
             <button id="zadost-odhlaseni-projektu" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.ZadostOdhlaseniProjektu.label" %}</button>
+          {% endif %}
+          {% if show.zadost_zruseni_projektu %}
+            <button id="zadost-zruseni-projektu" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.ZadostZruseniProjektu.label" %}</button>
           {% endif %}
           {% if show.vypis%}
           <a class="dropdown-item" href="{% url 'vypis:vypis' 'projekt' projekt.ident_cely %}" target=”_blank”>{% trans "templates.toolbarProjekt.vypis.label" %}</a>

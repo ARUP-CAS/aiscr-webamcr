@@ -43,10 +43,8 @@ django-model-utils==5.0.0
 pandas==2.3.3
 tablib[all]==3.9.0
 pre-commit==4.5.1
-isort==7.0.0
 coverage==7.13.1
 django-debug-toolbar==6.1.0
-black==25.9.0
 django-livereload-server==0.5.1
 django-debug-toolbar-template-profiler==2.1.0
 django-object-actions==5.0.0
@@ -59,5 +57,8 @@ setuptools==80.9.0
 Werkzeug==3.1.4
 pyOpenSSL==25.3.0
 sphinxcontrib-googleanalytics==0.5
+sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0
 freezegun==1.5.5
+sphinx==8.2.3
+sphinx-rtd-theme==3.0.2

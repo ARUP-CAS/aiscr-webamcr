@@ -61,7 +61,7 @@ class PianCreateForm(forms.ModelForm):
         logger.debug("pian.forms.clean_geom.start")
         try:
             c.execute("BEGIN")
-            c.callproc("validateGeom", [validation_geom])
+            c.callproc("validateGeom", [validation_geom, "4326"])
             validation_results = c.fetchone()[0]
             logger.debug(
                 "pian.forms.clean_geom.detail",

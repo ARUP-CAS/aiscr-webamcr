@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import re
+import tempfile
 import unicodedata
 import zipfile
 from datetime import datetime
@@ -39,7 +40,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.models import Soubor
+from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
     FedoraError,
     FedoraRepositoryConnector,
@@ -512,10 +513,21 @@ def post_upload(request):
         return JsonResponse({"error": help_translation}, status=400)
     soubor_data = BytesIO(soubor.read())
     check_antivirus_result = Soubor.check_antivirus(soubor_data)
-    if check_antivirus_result is False:
-        logger.warning("core.views.post_upload.check_antivirus_result")
-        help_translation = _("core.views.post_upload.antivirus_check_failed")
+    if check_antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
+        logger.warning(
+            "core.views.post_upload.check_antivirus_result.virus_found",
+            extra={"soubor": soubor.name, "user": request.user.pk},
+        )
+        help_translation = _("core.views.post_upload.antivirus_check.virus_found")
         return JsonResponse({"error": help_translation}, status=400)
+    if check_antivirus_result == AntivirusCheckResult.CHECK_FAILED:
+        logger.warning(
+            "core.views.post_upload.check_antivirus_result.check_failed",
+            extra={"soubor": soubor.name, "user": request.user.pk},
+        )
+        help_translation = _("core.views.post_upload.antivirus_check.check_failed")
+        return JsonResponse({"error": help_translation}, status=400)
+    soubor.seek(0)
     rep_bin_file = None
     if soubor:
         if not update:
@@ -1195,31 +1207,40 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return super().get(request, *args, **kwargs)
 
 
-class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
-    def get(self, request, model_name, ident_cely):
-        if model_name == "pian":
-            record: Pian = Pian.objects.get(ident_cely=ident_cely)
-        elif model_name == "projekt":
-            record: Projekt = Projekt.objects.get(ident_cely=ident_cely)
-        elif model_name == "archeologicky_zaznam":
-            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
-        elif model_name == "adb":
-            record: Adb = Adb.objects.get(ident_cely=ident_cely)
-        elif model_name == "dokument":
-            record: Dokument = Dokument.objects.get(ident_cely=ident_cely)
-        elif model_name == "samostatny_nalez":
-            record: SamostatnyNalez = SamostatnyNalez.objects.get(ident_cely=ident_cely)
-        elif model_name == "externi_zdroj":
-            record: ExterniZdroj = ExterniZdroj.objects.get(ident_cely=ident_cely)
-        else:
+class StahnoutDataHistorickaView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro stažení historické verze souboru nebo metadat z Fedory
+    """
+
+    MODEL_MAP = {
+        "Pian": Pian,
+        "Projekt": Projekt,
+        "ArcheologickyZaznam": ArcheologickyZaznam,
+        "Adb": Adb,
+        "Dokument": Dokument,
+        "SamostatnyNalez": SamostatnyNalez,
+        "ExterniZdroj": ExterniZdroj,
+        "User": User,
+        "Soubor": Soubor,
+    }
+
+    def get(self, request, model_name, ident_cely, timestamp):
+        Model = self.MODEL_MAP.get(model_name)
+        if Model is None:
             raise Http404
-        metadata = record.metadata
 
         def context_processor(content):
             yield content
 
-        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
+        if model_name == "Soubor":
+            record = Model.objects.get(pk=ident_cely)
+            response = record.get_soubor_historicky(timestamp)
+        else:
+            record = Model.objects.get(ident_cely=ident_cely)
+            metadata = record.get_metadata_historicka(timestamp)
+            response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+            response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
+
         return response
 
 
@@ -1394,12 +1415,36 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     form_class = TransaltionImportForm
 
     def form_valid(self, form):
+        new_pofile = form.cleaned_data["file"]
+        tmp_path = None
+        try:
+            # Write uploaded InMemoryUploadedFile to a temporary file and pass its path to pofile
+            tmp = tempfile.NamedTemporaryFile(delete=False)
+            tmp_path = tmp.name
+            for chunk in new_pofile.chunks():
+                tmp.write(chunk)
+            tmp.flush()
+            tmp.close()
+            po_file = pofile(tmp_path)
+            # remove temp file once polib has loaded it
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
+        except Exception as e:
+            # cleanup on error
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
+            logger.error("core.views.TranslationImportView.form_valid", extra={"error": str(e)})
+            messages.add_message(self.request, messages.ERROR, str(e))
+            return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
         p = Path(self.po_file_path)
         date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M")
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
-        new_pofile = form.cleaned_data["file"]
         self.handle_uploaded_file(new_pofile)
-        po_file = pofile(self.po_file_path)
         po_filepath, ext = os.path.splitext(self.po_file_path)
         po_file.save_as_mofile(po_filepath + ".mo")
         messages.add_message(self.request, messages.SUCCESS, TRANSLATION_UPLOAD_SUCCESS)
@@ -1586,9 +1631,7 @@ class DataImportProgress(LoginRequiredMixin, View):
         redis_connector = RedisConnector().get_connection_decode()
         try:
             record_count = int(redis_connector.get(f"import_data_count_{job_id}"))
-            import_data_progress_files = int(
-                redis_connector.get(f"import_data_progress_files_{job_id}")
-            )
+            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}"))
             status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 

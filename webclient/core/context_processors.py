@@ -57,7 +57,7 @@ def logout_next_url(request):
 # for autologout function redirect immediatelly
 def auto_logout_client(request):
     """
-    Automatický výpočet a import kontextu potrebného pro správne zobrzazení automatického logoutu na všech stránkach.
+    Automatický výpočet a import kontextu potrebného pro správně zobrzazení automatického logoutu na všech stránkach.
     """
     if request.user.is_anonymous:
         return {}

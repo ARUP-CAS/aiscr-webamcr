@@ -142,7 +142,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metóda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
+        Metoda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
         """
         return queryset.filter(
             Q(nazev__icontains=value)
@@ -157,7 +157,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
     def filter_akce_ident(self, queryset, name, value):
         """
-        Metóda pro filtrování podle identu celý akce.
+        Metoda pro filtrování podle identu celý akce.
         """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
@@ -166,7 +166,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
     def filter_lokalita_ident(self, queryset, name, value):
         """
-        Metóda pro filtrování podle identu celý lokality.
+        Metoda pro filtrování podle identu celý lokality.
         """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
@@ -200,7 +200,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
 class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
     """
-    Třída pro správne zobrazení filtru.
+    Třída pro správně zobrazení filtru.
     """
 
     form_method = "GET"

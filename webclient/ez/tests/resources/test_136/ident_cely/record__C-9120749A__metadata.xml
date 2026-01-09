@@ -23,29 +23,29 @@
       </amcr:chranene_udaje>
     </amcr:akce>
     <amcr:historie>
-      <amcr:id>hist-67472</amcr:id>
-      <amcr:datum_zmeny>2021-03-20T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004403">U-004403</amcr:uzivatel>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-308842</amcr:id>
-      <amcr:datum_zmeny>2021-03-20T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-      <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-470844</amcr:id>
-      <amcr:datum_zmeny>2022-12-08T23:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000203">U-000203</amcr:uzivatel>
       <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2781327</amcr:id>
-      <amcr:datum_zmeny>2024-02-28T00:51:17.954917+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:poznamka>PODLESICE -&gt; VELIKÁ VES</amcr:poznamka>
       <amcr:typ_zmeny>KAT</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004403">U-004403</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:dokumentacni_jednotka>
       <amcr:ident_cely>C-9120749A-D01</amcr:ident_cely>
