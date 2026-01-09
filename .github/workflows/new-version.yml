@@ -77,11 +77,11 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git config --global pull.rebase true
-          git add docs/source/knihovny_read_only.rst
+          git add docs/source/12_zavislosti/python_knihovny.rst
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update knihovny_read_only.rst for release $VERSION"
+            git commit -m "Update python_knihovny.rst for release $VERSION"
             git pull
             git push
             echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
