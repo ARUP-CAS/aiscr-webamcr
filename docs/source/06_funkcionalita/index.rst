@@ -7,18 +7,15 @@ Tato sekce popisuje funkcionalitu aplikace WebAMČR.
    :maxdepth: 2
    :caption: Obsah:
 
-   login_page
    identy
-   workflow_projektu
-   workflow_dokumentu
-   sprava_souboru
+   workflow_zaznamy
    ukladani_souboru
+   sprava_souboru
+   mapove_prostredi   
    export_data
    notifikace
    preklady
    cookies
    chybove_stranky
    administrace
-   presnost_souradnic
-
 

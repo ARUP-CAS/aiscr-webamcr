@@ -15,17 +15,18 @@ Obsahuje následující položky:
 8. Aplikace ``Uzivatel``
 9. Správa repozitáře
 10. Správa PID
-11. Rosetta (překlady)
+11. Hromadný import
+12. Rosetta (překlady)
 
 Autentizace a autorizace
 -------------------------
 
-Obsahují hlavní role, které mohou být přiřazeny uživatelům.
+Obsahují hlavní a pomocné role, které mohou být přiřazeny uživatelům.
 
 Autentizační token
 ------------------
 
-Správa autentizačních tokenů pro API přístup.
+Správa autentizačních tokenů pro API.
 
 Asynchronní úlohy (``Celery``)
 ------------------------------
@@ -35,18 +36,19 @@ Přehled a správa asynchronních úloh běžících v systému.
 Aplikace ``Core``
 -----------------
 
-Odstavky systému
+Odstávky systému
 ~~~~~~~~~~~~~~~~
 
-Obsahují plánované a historické odstavky systému.
+Obsahuje nastavení plánované odstávky systému.
 
 Záznam obsahuje:
 
 * Od kdy se má zobrazovat informativní hláška na portálu
 * Na kdy je odstavka plánována (hodinu před ní se zakáže přihlašování (text je nastavován v Translations) a začne uživatele automaticky odhlašovat)
 * Status jestli je odstavka aktivní/neaktivní
-* EN a CS texty pro zobrazení přihlášenému uživateli
-* EN a CS texty v případě odstavky pro login page a pro oznámení samostatně
+* CS a EN texty pro zobrazení přihlášenému uživateli
+* CS a EN texty v případě odstavky pro login page a pro oznámení samostatně
+* CS a EN texty pro zobrazení o blížící se odstávce
 
 Aplikace Dokument
 -----------------
@@ -123,29 +125,26 @@ Users
 ~~~~~
 
 * Obsahují data z DB tabulky ``auth_user``
-* List se zobrazuje jako seznam tvořen sloupci ``email``, ``is_staff``, ``is_active``, ``organizace``, ``ident_cely``
-* Na listu je možné filtrovat podle ``is_staff``, ``is_active``, ``organizace``
-* Záznamy jsou seřazeny podle pole ``email``
-* Je možné vyhledávání fulltext v poli ``email``
-* Každý záznam je možné upravit/smazat. Nebo je možné přidat nový záznam
-* Hodnota ``is_staff`` určuje, zda má uživatel přístup do administrátorského rozhraní
-* Hodnota ``is_active`` se změní na ``True`` poté, co proběhne potvrzení e-mailové adresy
+* Na listu je možné filtrovat podle ``is_staff``, ``is_active``, ``organizace`` a přiděleného oprávnění
+* Hodnota ``is_staff`` společně s rolí ``Administrátor`` určuje, zda má uživatel přístup do administrátorského rozhraní
+* Hodnota ``is_active`` značí, zda je uživatel aktivní (může se přihlásit)
 
 
 Správa repozitáře
 -----------------
 
-Obsahuje možnost hromadné aktualizace metadat.
+Obsahuje možnost hromadné aktualizace metadat ukládaných v repozitáři Fedora. Jako vstup slouží CSV soubor s identifikátory záznamů.
 
 Správa PID
 ----------
 
-Obsahuje možnost hromadné změny DOI a IGSN.
+Obsahuje možnost hromadné změny DOI a IGSN. Jako vstup slouží CSV soubor s identifikátory záznamů.
 
 Rosetta (Translations)
 ----------------------
 
-* Obsahuje překlik do části aplikace kde je možné upravovat překlady aplikace
-* Část aplikace obsahuje 1 soubor pro každý jazyk aplikace
-* Po kliknutí na soubor jazyku se zobrazí editovací tabulka v které je možné editovat překlad
+* Přechod do části aplikace kde je možné upravovat překlady jednotlivých textových klíčů používaných v aplikaci
+* Obsahuje samostatný soubor s definicí pro každý jazyk aplikace
+* Po kliknutí na soubor jazyka se zobrazí editovací tabulka v které je možné editovat překlad
 * Po uložení překladu se automaticky pregenerují soubory pro překlad, které používá aplikace
+* Překlady je možné importovat a exportovat pomocí standardních PO souborů
