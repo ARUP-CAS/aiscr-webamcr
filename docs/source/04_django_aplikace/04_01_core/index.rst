@@ -12,5 +12,6 @@ Tato sekce popisuje základní komponenty Django aplikace.
    middleware
    permissions
    signals
+   management_commands
 
 

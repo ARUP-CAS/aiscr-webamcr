@@ -17,22 +17,6 @@ Funkce
 
    Každý den kontrola a odeslání emailů E-N-01 a E-N-02
 
-.. py:function:: pian_to_sjtsk()
-
-   Popis není k dispozici.
-
-.. py:function:: nalez_to_sjtsk()
-
-   Popis není k dispozici.
-
-.. py:function:: projekt_to_sjtsk()
-
-   Popis není k dispozici.
-
-.. py:function:: dokument_to_sjtsk()
-
-   Popis není k dispozici.
-
 .. py:function:: delete_personal_data_canceled_projects()
 
    Rok po zrušení projektu nahradit související údaje v tabulce oznamovatel řetězcem “RRRR-MM-DD: údaj odstraněn”,
@@ -82,14 +66,6 @@ Funkce
 .. py:function:: call_digiarchiv_update_task()
 
    Popis není k dispozici.
-
-.. py:function:: set_pristupnost_snapshot()
-
-   Popis není k dispozici.
-
-.. py:function:: pians_properties_check()
-
-   Jednorázová oprava dat PIANů v rámci issue 2940
 
 .. py:function:: run_data_import(job_id, user_id)
 

@@ -22,8 +22,6 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: generate_metadata()
-
    .. py:method:: get_path_to_schema()
 
    .. py:method:: get_ref_type_attribute_name()
