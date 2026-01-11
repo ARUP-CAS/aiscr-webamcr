@@ -28,6 +28,7 @@ from core.message_constants import (
     APPLICATION_RESTART_ERROR,
     APPLICATION_RESTART_SUCCESS,
     DOKUMENT_NEKDO_ZMENIL_STAV,
+    PRISTUP_ZAKAZAN,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
     SPATNY_ZAZNAM_SOUBOR_VAZBA,
@@ -117,7 +118,7 @@ from uzivatel.models import User
 from .connectors import RedisConnector
 from .exceptions import ZaznamSouborNotmatching
 from .mixins import IPWhitelistMixin
-from .models import Permissions, PermissionsSkip
+from .models import Permissions, PermissionsSkip, check_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -449,12 +450,71 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
 
 class BasePostUploadView(View):
     """
-    Společná logika pro upload nového souboru i nahrazení existujícího.
+    Základní třída pro zpracování nahrávání souborů.
+
+    Poskytuje společnou logiku pro upload nového souboru i nahrazení existujícího souboru.
+    Tato třída implementuje kompletní workflow pro validaci a zpracování nahrávaných souborů,
+    včetně kontroly MIME typů, antivirové kontroly a detekce šifrovaných souborů.
+
+    Proces nahrávání souboru:
+    1. Kontrola přítomnosti souboru v requestu
+    2. Validace MIME typu a detekce šifrování
+    3. Antivirová kontrola nahrávaného obsahu
+    4. Předání validovaného souboru potomkům pro konkrétní zpracování
+
+    Atributy:
+        http_method_names (list): Povolené HTTP metody - pouze POST
+        source_url (str): URL zdroje souboru (pokud je specifikována)
+        fedora_transaction (FedoraTransaction): Instance transakce pro práci s Fedora repository
+        original_filename (str): Původní název nahrávaného souboru
+
+    Poznámky:
+        - Tato třída je abstraktní a měla by být použita jako základ pro konkrétní implementace
+        - Potomci musí implementovat metodu handle_upload()
+        - Všechny nahrané soubory procházejí automatickou antivirovou kontrolou
+        - Kontroluje se soulad MIME typu se skutečným obsahem souboru
     """
 
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
+        """
+        Zpracuje POST request s nahrávaným souborem.
+
+        Metoda provádí kompletní validaci nahrávaného souboru před jeho uložením:
+        - Kontroluje přítomnost souboru v requestu
+        - Validuje MIME typ a detekuje šifrované soubory
+        - Provádí antivirovou kontrolu obsahu
+        - Deleguje finální zpracování na potomky prostřednictvím handle_upload()
+
+        Args:
+            request (HttpRequest): Django HTTP request objekt obsahující nahrávaný soubor
+            *args: Poziční argumenty předané z URL dispatcheru
+            **kwargs: Klíčové argumenty z URL patternu (např. ident_cely, typ_vazby)
+
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace:
+                - V případě úspěchu: výsledek z handle_upload() metody potomka
+                - V případě chyby: {"error": <chybová zpráva>} se status kódem 400/500
+
+        Raises:
+            Žádné výjimky nejsou vyvolány přímo, všechny chyby jsou vráceny jako JSON response
+
+        Response Status Codes:
+            200: Soubor byl úspěšně validován a zpracován
+            400: Validační chyba (chybějící soubor, šifrovaný, virus, neplatný MIME typ)
+            500: Neznámá chyba při zpracování
+
+        Příklad:
+            V případě detekce viru:
+            {"error": "V nahraném souboru byl detekován virus", status: 400}
+
+        Poznámky:
+            - Metoda nastavuje instanční atributy: source_url, fedora_transaction, original_filename
+            - Soubor je automaticky převeden do BytesIO pro další zpracování
+            - Všechny chyby jsou logovány s příslušným severity levelem
+            - Po antivirové kontrole je soubor vrácen na začátek (seek(0))
+        """
         self.source_url = request.POST.get("source-url", "")
         self.fedora_transaction = FedoraTransaction()
         soubor: TemporaryUploadedFile = request.FILES.get("file")
@@ -492,9 +552,60 @@ class BasePostUploadView(View):
         return self.handle_upload(request, soubor, soubor_data, *args, **kwargs)
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
+        """
+        Abstraktní metoda pro implementaci konkrétního zpracování nahraného souboru.
+
+        Tato metoda musí být implementována potomky třídy. Je volána z post() metody
+        po úspěšné validaci souboru (MIME typ, antivirus). Potomci zde implementují
+        specifickou logiku pro nové nahrání nebo aktualizaci existujícího souboru.
+
+        Args:
+            request (HttpRequest): Django HTTP request objekt s informacemi o uživateli a sessions
+            soubor (TemporaryUploadedFile): Nahraný soubor z requestu
+            soubor_data (BytesIO): Binární obsah souboru jako BytesIO objekt
+            *args: Poziční argumenty z URL dispatcheru
+            **kwargs: Klíčové argumenty z URL (např. ident_cely, typ_vazby, file_id)
+
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace nahrání
+
+        Raises:
+            NotImplementedError: Pokud potomek tuto metodu neimplementuje
+
+        Poznámky:
+            - V okamžiku volání této metody je soubor již validovaný
+            - Fedora transakce je dostupná přes self.fedora_transaction
+            - Původní název souboru je dostupný přes self.original_filename
+            - URL zdroje je dostupná přes self.source_url
+        """
         raise NotImplementedError
 
     def _append_duplicate_message(self, response_data, duplikat):
+        """
+        Přidá informaci o duplicitním souboru do odpovědi.
+
+        Kontroluje, zda v systému již existuje soubor se stejným SHA-512 hashem.
+        Pokud ano, přidá do response_data varovnou zprávu s informací o duplicitě
+        včetně identifikátoru záznamu, ke kterému je duplicitní soubor připojen.
+
+        Args:
+            response_data (dict): Slovník s daty odpovědi, do kterého bude přidána zpráva
+            duplikat (QuerySet): QuerySet s duplicitními soubory (Soubor objekty)
+
+        Returns:
+            dict: Upravený response_data slovník s přidanou duplicitní zprávou.
+                  Pokud není nalezen žádný duplikát, vrací nezměněný slovník.
+
+        Response Data Keys:
+            duplicate (tuple): Tuple obsahující zprávu o duplicitě ve formátu:
+                "Soubor {original_filename} byl již nahrán k záznamu {parent_ident}. Zpráva..."
+
+        Poznámky:
+            - Zpráva je lokalizována pomocí gettext
+            - Používá se SHA-512 hash pro detekci duplicit
+            - Zobrazuje ident_cely prvního nalezeného duplicitního záznamu
+            - Metoda neblokuje nahrání, pouze informuje uživatele
+        """
         if duplikat is not None and duplikat.exists():
             parent_ident = (
                 duplikat.first().vazba.navazany_objekt.ident_cely
@@ -511,6 +622,31 @@ class BasePostUploadView(View):
         return response_data
 
     def _append_rename_message(self, response_data, renamed, new_name):
+        """
+        Přidá informaci o přejmenování souboru do odpovědi.
+
+        Pokud byl soubor během uploadu přejmenován (typicky kvůli úpravě přípony
+        pro soulad s MIME typem), přidá do response_data informační zprávu.
+
+        Args:
+            response_data (dict): Slovník s daty odpovědi, do kterého bude přidána zpráva
+            renamed (bool): True pokud došlo k přejmenování, False jinak
+            new_name (str): Nový název souboru po přejmenování
+
+        Returns:
+            dict: Upravený response_data slovník s přidanou zprávou o přejmenování.
+                  Pokud nedošlo k přejmenování (renamed=False), vrací nezměněný slovník.
+
+        Response Data Keys:
+            file_renamed (tuple): Tuple obsahující zprávu o přejmenování ve formátu:
+                "Soubor {original_filename} byl přejmenován na {new_name}"
+
+        Poznámky:
+            - Přejmenování typicky nastává při nesouladu přípony souboru s MIME typem
+            - Zpráva je lokalizována pomocí gettext
+            - Zachovává původní název souboru v self.original_filename pro zpětnou referenci
+            - Použito pro informování uživatele o automatických úpravách názvů
+        """
         if renamed:
             help_translation = _("core.views.post_upload.renamed.text1")
             help_translation2 = _("core.views.post_upload.renamed.text2")
@@ -520,6 +656,33 @@ class BasePostUploadView(View):
         return response_data
 
     def _unknown_error_response(self):
+        """
+        Vrátí JSON odpověď pro neznámou chybu během nahrávání souboru.
+
+        Metoda je volána když nastane neočekávaná situace při zpracování souboru,
+        která není pokryta specifickými error handlery (např. chybějící soubor,
+        neočekávaná výjimka apod.).
+
+        Returns:
+            JsonResponse: JSON odpověď s chybovou zprávou a HTTP status 500
+
+        Response Format:
+            {
+                "error": "Lokalizovaná zpráva o neznámé chybě"
+            }
+
+        Status Code:
+            500 (Internal Server Error): Indikuje neočekávanou chybu na straně serveru
+
+        Vedlejší efekty:
+            - Loguje chybu na ERROR levelu pro monitoring a debugování
+            - Zpráva je lokalizována pomocí gettext podle jazyka uživatele
+
+        Poznámky:
+            - Tato metoda by měla být používána pouze jako poslední záchranná síť
+            - Pro známé chyby by měly být použity specifičtější error response metody
+            - Vždy předchází logování chyby pro účely troubleshootingu
+        """
         help_translation = _("core.views.post_upload.unknown_error")
         logger.error("core.views.post_upload.unknown_error")
         return JsonResponse({"error": help_translation}, status=500)
@@ -527,16 +690,99 @@ class BasePostUploadView(View):
 
 class NewFileUploadView(BasePostUploadView):
     """
-    Upload nového souboru k záznamu.
+    Třída pohledu pro nahrání nového souboru k záznamu.
+
+    Rozšiřuje BasePostUploadView o specifickou logiku pro upload nových souborů
+    k různým typům záznamů (projekt, dokument, samostatný nález). Implementuje
+    kompletní workflow pro vytvoření nového souboru včetně generování názvu,
+    uložení do Fedora repository a vytvoření záznamu v databázi.
+
+    Proces nahrání nového souboru:
+    1. Kontrola oprávnění uživatele (nebo anonymního přístupu pro projekty)
+    2. Rozlišení typu záznamu a generování názvu souboru
+    3. Validace a případná úprava přípony souboru podle MIME typu
+    4. Odstranění GPS dat z obrázků samostatných nálezů
+    5. Uložení do Fedora repository
+    6. Vytvoření záznamu v databázi s metadaty
+    7. Detekce duplicit podle SHA-512 hashe
+    8. Zaznamenání události nahrání do historie
+
+    URL parametry:
+        ident_cely (str): Identifikátor záznamu, ke kterému má být soubor nahrán
+        typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+
+    Atributy:
+        Dědí všechny atributy z BasePostUploadView
+
+    Poznámky:
+        - Podporuje anonymní nahrávání souborů pouze pro projekty
+        - Automaticky odstraňuje GPS metadata z obrázků u samostatných nálezů
+        - Generuje unikátní názvy souborů podle typu záznamu
+        - Detekuje duplicity na základě SHA-512 hashe
+        - Ukládá referenci na soubor do session pro možnost rollbacku
+        - Každé nahrání je logováno do historie s informací o uživateli
     """
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
+        """
+        Implementuje nahrání nového souboru k záznamu.
+
+        Provádí kompletní workflow pro vytvoření nového souboru včetně kontroly oprávnění,
+        generování názvu, uložení do repository a vytvoření databázového záznamu.
+        Podporuje anonymní upload pro projekty a automaticky zpracovává metadata obrázků.
+
+        Args:
+            request (HttpRequest): HTTP request s informacemi o uživateli a session
+            soubor (TemporaryUploadedFile): Nahraný soubor z requestu
+            soubor_data (BytesIO): Binární obsah souboru
+            *args: Poziční argumenty z URL
+            **kwargs: Obsahuje 'ident_cely' (identifikátor záznamu) a 'typ_vazby' (typ vazby)
+
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace:
+                - Při úspěchu (200): {
+                    "filename": str,  # Název nahraného souboru
+                    "id": int,  # Primary key nového Soubor objektu
+                    "duplicate": str (optional),  # Zpráva o duplicitě
+                    "file_renamed": str (optional)  # Zpráva o přejmenování
+                  }
+                - Při chybě (400/403/500): {"error": str}
+
+        Response Status Codes:
+            200: Soubor úspěšně nahrán
+            400: Chyba při nahrávání (transakční konflikt, MIME typ, atd.)
+            403: Nedostatečná oprávnění nebo překročen limit souborů
+            500: Neexistující záznam nebo jiná interní chyba
+
+        Raises:
+            Žádné výjimky nejsou vyvolány přímo, všechny chyby jsou vráceny jako JSON
+
+        Poznámky:
+            - Anonymní uživatelé mohou nahrávat pouze k projektům s vlastnictvím v session
+            - GPS metadata jsou automaticky odstraňována z obrázků samostatných nálezů
+            - Přípona souboru je upravena, pokud neodpovídá MIME typu
+            - Soubor je zařazen do Fedora transakce, která je uzavřena po save()
+            - Reference na soubor je uložena do session pro možnost smazání při odchodu
+            - Při anonymním uploadu je jako autor zaznamenán admin uživatel
+        """
         ident_cely = kwargs.get("ident_cely")
         logger.debug(
             "core.views.post_upload.start",
             extra={"pk": ident_cely, "source_url": self.source_url},
         )
-        resolved = self._resolve_object_and_name(ident_cely, soubor.name)
+
+        if not request.user.is_authenticated:
+            typ_vazby = kwargs.get("typ_vazby")
+            session_identifier = SessionIdentifier(request)
+            if typ_vazby != "projekt" or not session_identifier.verify_project_ownership(ident_cely):
+                logger.warning(
+                    "core.views.post_upload.permission_denied_anonymous",
+                    extra={"ident_cely": ident_cely},
+                )
+                return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
+
+        typ_vazby = kwargs.get("typ_vazby")
+        resolved = self._resolve_object_and_name(request, ident_cely, soubor.name, typ_vazby)
         if isinstance(resolved, JsonResponse):
             return resolved
         objekt, new_name = resolved
@@ -600,26 +846,104 @@ class NewFileUploadView(BasePostUploadView):
         SessionIdentifier(request).add_file_reference(soubor_instance.pk)
         return JsonResponse(response_data, status=200)
 
-    def _resolve_object_and_name(self, ident_cely, filename):
-        projekt = Projekt.objects.filter(ident_cely=ident_cely)
-        dokument = Dokument.objects.filter(ident_cely=ident_cely)
-        samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=ident_cely)
-        if projekt.exists():
-            objekt = projekt[0]
-            new_name = get_projekt_soubor_name(objekt, filename)
-        elif dokument.exists():
-            objekt = dokument[0]
-            new_name = get_dokument_soubor_name(objekt, filename)
-        elif samostatny_nalez.exists():
-            objekt = samostatny_nalez[0]
-            new_name = get_finds_soubor_name(objekt, filename)
-        else:
+    def _resolve_object_and_name(self, request, ident_cely, filename, typ_vazby):
+        """
+        Rozliší typ záznamu, zkontroluje oprávnění a vygeneruje standardizovaný název souboru.
+
+        Na základě ident_cely a typ_vazby načte odpovídající záznam z databáze,
+        ověří konzistenci mezi typ_vazby a skutečným typem objektu, zkontroluje
+        oprávnění uživatele k nahrání souboru a vygeneruje standardizovaný název
+        souboru podle příslušných konvencí.
+
+        Args:
+            request (HttpRequest): HTTP request s informacemi o uživateli
+            ident_cely (str): Úplný identifikátor záznamu (např. "C-202400001")
+            filename (str): Původní název nahrávaného souboru
+            typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+
+        Returns:
+            tuple | JsonResponse: Při úspěchu vrací tuple (objekt, new_name):
+                - objekt (Projekt|Dokument|SamostatnyNalez): Instance nalezeného záznamu
+                - new_name (str): Vygenerovaný standardizovaný název souboru
+            Při chybě vrací JsonResponse s chybovou zprávou a status kódem 403/500
+
+        Return Status Codes (v případě JsonResponse):
+            400: Neplatná hodnota typ_vazby (není "projekt", "dokument", "model3d" ani "pas")
+            403: Nedostatečná oprávnění nebo překročen maximální počet souborů projektu
+            500: Záznam s daným ident_cely neexistuje nebo typ_vazby neodpovídá objektu
+
+        Poznámky:
+            - Validuje hodnotu typ_vazby před zpracováním
+            - Provádí dotaz do DB pouze pro typ objektu specifikovaný v typ_vazby
+            - Ověřuje konzistenci mezi typ_vazby a skutečným typem objektu
+            - Pro projekty: normalizuje název na ASCII znaky, zachovává příponu
+            - Pro dokumenty a model3d: používá get_dokument_soubor_name()
+            - Pro samostatné nálezy (pas): generuje sekvenci ve formátu {ident}F{číslo}
+            - Kontroluje oprávnění pomocí check_permissions s akcemi soubor_nahrat_*
+            - Při chybě automaticky provádí rollback Fedora transakce
+            - Kontroluje limity počtu souborů u projektů
+        """
+        # Mapování typu vazby na permission action
+        action_map = {
+            "projekt": Permissions.actionChoices.soubor_nahrat_projekt,
+            "dokument": Permissions.actionChoices.soubor_nahrat_dokument,
+            "model3d": Permissions.actionChoices.soubor_nahrat_model3d,
+            "pas": Permissions.actionChoices.soubor_nahrat_pas,
+        }
+
+        # Kontrola platnosti typu vazby
+        action = action_map.get(typ_vazby)
+        if action is None:
             self.fedora_transaction.rollback_transaction()
-            logger.error("core.views.post_upload.error.object_does_not_exist")
+            logger.error(
+                "core.views.post_upload.error.invalid_typ_vazby",
+                extra={"typ_vazby": typ_vazby, "ident_cely": ident_cely},
+            )
+            return JsonResponse(
+                {"error": _("core.views.post_upload.error.invalid_typ_vazby") + f": {typ_vazby}"},
+                status=400,
+            )
+
+        # Rozlišení objektu podle typu vazby - dotazy pouze pro relevantní typ
+        objekt = None
+        new_name = None
+
+        if typ_vazby == "projekt":
+            projekt = Projekt.objects.filter(ident_cely=ident_cely).first()
+            if projekt:
+                objekt = projekt
+                new_name = get_projekt_soubor_name(objekt, filename)
+        elif typ_vazby in ("dokument", "model3d"):
+            dokument = Dokument.objects.filter(ident_cely=ident_cely).first()
+            if dokument:
+                objekt = dokument
+                new_name = get_dokument_soubor_name(objekt, filename)
+        elif typ_vazby == "pas":
+            samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=ident_cely).first()
+            if samostatny_nalez:
+                objekt = samostatny_nalez
+                new_name = get_finds_soubor_name(objekt, filename)
+
+        if objekt is None:
+            self.fedora_transaction.rollback_transaction()
+            logger.error(
+                "core.views.post_upload.error.object_does_not_exist_or_type_mismatch",
+                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby},
+            )
             return JsonResponse(
                 {"error": _("core.views.post_upload.error.object_does_not_exist") + " " + ident_cely},
                 status=500,
             )
+
+        if request.user.is_authenticated:
+            if not check_permissions(action, request.user, objekt.ident_cely):
+                self.fedora_transaction.rollback_transaction()
+                logger.warning(
+                    "core.views._resolve_object_and_name.permission_denied",
+                    extra={"user": request.user.pk, "action": action, "ident_cely": ident_cely},
+                )
+                return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
+
         if new_name is False:
             self.fedora_transaction.rollback_transaction()
             return JsonResponse(
@@ -635,16 +959,102 @@ class NewFileUploadView(BasePostUploadView):
         return objekt, new_name
 
 
-class UpdateExistingFileUploadView(BasePostUploadView):
+class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
     """
-    Nahrazení existujícího souboru novou verzí.
+    Třída pohledu pro nahrazení existujícího souboru novou verzí.
+
+    Rozšiřuje BasePostUploadView o specifickou logiku pro aktualizaci již existujících
+    souborů. Na rozdíl od NewFileUploadView zachovává původní název souboru (pouze
+    aktualizuje příponu) a vytváří novou verzi souboru v Fedora repository. Vyžaduje
+    přihlášení uživatele.
+
+    Proces aktualizace souboru:
+    1. Kontrola oprávnění (vyžaduje LoginRequiredMixin)
+    2. Validace vazby mezi souborem a záznamem
+    3. Načtení existujícího Soubor objektu z databáze
+    4. Validace a případná úprava přípony podle MIME typu
+    5. Odstranění GPS dat z obrázků u samostatných nálezů
+    6. Aktualizace binárních dat v Fedora repository
+    7. Aktualizace metadat v databázi (velikost, SHA-512, MIME typ)
+    8. Zaznamenání události do historie jako nová verze
+    9. Detekce duplicit podle SHA-512 hashe
+
+    URL parametry:
+        typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+        ident_cely (str): Identifikátor záznamu, ke kterému soubor patří
+        file_id (int): Primary key existujícího Soubor objektu
+
+    Atributy:
+        Dědí všechny atributy z BasePostUploadView
+
+    Poznámky:
+        - VYŽADUJE přihlášeného uživatele (LoginRequiredMixin)
+        - Nahrazení souborů NENÍ podporováno pro projekty (pouze dokument, model3d, pas)
+        - Kontroluje oprávnění pomocí check_permissions s akcemi soubor_nahradit_*
+        - Zachovává základní název souboru, aktualizuje pouze příponu
+        - Aktualizuje repository_uuid existujícího souboru, nevytváří nový
+        - Automaticky odstraňuje GPS metadata z obrázků samostatných nálezů
+        - Validuje vazbu mezi souborem a záznamem před aktualizací
+        - Historie zaznamenává aktualizaci jako novou verzi, ne nový soubor
+        - Detekuje duplicity i po aktualizaci
     """
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
+        """
+        Implementuje aktualizaci existujícího souboru novou verzí.
+
+        Provádí kompletní workflow pro nahrazení obsahu existujícího souboru včetně
+        validace vazeb, aktualizace v repository a databázi. Zachovává původní název
+        souboru (s možnou úpravou přípony) a vytváří novou verzi v historii.
+
+        Args:
+            request (HttpRequest): HTTP request s informacemi o přihlášeném uživateli
+            soubor (TemporaryUploadedFile): Nový nahraný soubor z requestu
+            soubor_data (BytesIO): Binární obsah nového souboru
+            *args: Poziční argumenty z URL
+            **kwargs: Obsahuje 'typ_vazby', 'ident_cely' a 'file_id'
+
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace:
+                - Při úspěchu (200): {
+                    "filename": str,  # Aktuální název souboru
+                    "id": int,  # Primary key aktualizovaného Soubor objektu
+                    "duplicate": str (optional),  # Zpráva o duplicitě
+                    "file_renamed": str (optional)  # Zpráva o změně přípony
+                  }
+                - Při chybě (400/500): {"error": str}
+
+        Response Status Codes:
+            200: Soubor úspěšně aktualizován
+            400: Chyba vazby, transakční konflikt, MIME typ nebo neplatný typ_vazby
+            403: Nedostatečná oprávnění k nahrazení souboru
+            500: Chybějící vazba nebo jiná interní chyba
+
+        Raises:
+            Http404: Pokud soubor s daným file_id neexistuje (get_object_or_404)
+            ZaznamSouborNotmatching: Pokud soubor nepatří k danému záznamu
+
+        Poznámky:
+            - Kontroluje oprávnění před nahrazením souboru
+            - Nahrazení není podporováno pro projekty
+            - Vyžaduje platnou vazbu mezi souborem a záznamem
+            - Zachovává základní část názvu, aktualizuje pouze příponu
+            - GPS metadata jsou odstraňována pouze u obrázků samostatných nálezů
+            - Přípona je upravena podle MIME typu nového souboru
+            - Historie zaznamenává jako 'nahrání nové verze', ne nový soubor
+            - Soubor musí mít repository_uuid pro úspěšnou aktualizaci
+            - Fedora transakce je automaticky uzavřena nebo rollbackována
+        """
         typ_vazby = kwargs.get("typ_vazby")
         ident_cely = kwargs.get("ident_cely")
         file_id = kwargs.get("file_id")
         logger.debug("core.views.post_upload.updating", extra={"pk": file_id, "source_url": self.source_url})
+
+        # Kontrola platnosti typu vazby a oprávnění
+        permission_check = self._check_update_permissions(request, typ_vazby, ident_cely, file_id)
+        if isinstance(permission_check, JsonResponse):
+            return permission_check
+
         try:
             check_soubor_vazba(typ_vazby, ident_cely, file_id)
         except ZaznamSouborNotmatching as err:
@@ -730,6 +1140,92 @@ class UpdateExistingFileUploadView(BasePostUploadView):
             soubor_instance.save()
             logger.error("core.views.post_upload.rep_bin_file_is_none")
             return self._unknown_error_response()
+
+    def _check_update_permissions(self, request, typ_vazby, ident_cely, file_id):
+        """
+        Zkontroluje platnost typu vazby a oprávnění uživatele k nahrazení souboru.
+
+        Na základě typ_vazby ověří, zda je nahrazení souboru povoleno pro daný typ
+        záznamu, a zkontroluje oprávnění uživatele pomocí check_permissions.
+        Na rozdíl od nahrání nového souboru není nahrazení povoleno pro projekty.
+
+        Args:
+            request (HttpRequest): HTTP request s informacemi o uživateli
+            typ_vazby (str): Typ vazby - "dokument", "model3d", nebo "pas"
+            ident_cely (str): Úplný identifikátor záznamu
+            file_id (int): Primary key existujícího souboru
+
+        Returns:
+            bool | JsonResponse: True pokud je vše v pořádku,
+                                 JsonResponse s chybovou zprávou při problému
+
+        Response Status Codes (v případě JsonResponse):
+            400: Neplatná hodnota typ_vazby nebo nahrazení není pro tento typ podporováno
+            403: Nedostatečná oprávnění k nahrazení souboru
+
+        Poznámky:
+            - Nahrazení souborů projektu není podporováno (pouze dokument, model3d, pas)
+            - Provádí dotaz do DB pouze pro typ objektu specifikovaný v typ_vazby
+            - Ověřuje konzistenci mezi typ_vazby a skutečným typem objektu
+            - Kontroluje oprávnění pomocí check_permissions s akcemi soubor_nahradit_*
+            - Při chybě automaticky provádí rollback Fedora transakce
+        """
+        # Mapování typu vazby na permission action
+        # Poznámka: projekt není v mapování - nahrazení souborů projektu není povoleno
+        action_map = {
+            "dokument": Permissions.actionChoices.soubor_nahradit_dokument,
+            "model3d": Permissions.actionChoices.soubor_nahradit_model3d,
+            "pas": Permissions.actionChoices.soubor_nahradit_pas,
+        }
+
+        # Kontrola platnosti typu vazby
+        action = action_map.get(typ_vazby)
+        if action is None:
+            self.fedora_transaction.rollback_transaction()
+            logger.error(
+                "core.views.post_upload.error.invalid_typ_vazby_for_update",
+                extra={"typ_vazby": typ_vazby, "ident_cely": ident_cely, "file_id": file_id},
+            )
+            return JsonResponse(
+                {"error": _("core.views.post_upload.error.invalid_typ_vazby") + f": {typ_vazby}"},
+                status=400,
+            )
+
+        # Rozlišení objektu podle typu vazby - dotazy pouze pro relevantní typ
+        objekt = None
+
+        if typ_vazby in ("dokument", "model3d"):
+            dokument = Dokument.objects.filter(ident_cely=ident_cely).first()
+            if dokument:
+                objekt = dokument
+        elif typ_vazby == "pas":
+            samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=ident_cely).first()
+            if samostatny_nalez:
+                objekt = samostatny_nalez
+
+        # Kontrola, zda byl objekt nalezen
+        if objekt is None:
+            self.fedora_transaction.rollback_transaction()
+            logger.error(
+                "core.views.post_upload.error.object_does_not_exist_or_type_mismatch_update",
+                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "file_id": file_id},
+            )
+            return JsonResponse(
+                {"error": _("core.views.post_upload.error.object_does_not_exist") + " " + ident_cely},
+                status=500,
+            )
+
+        # Kontrola oprávnění pro autentifikované uživatele
+        if request.user.is_authenticated:
+            if not check_permissions(action, request.user, objekt.ident_cely):
+                self.fedora_transaction.rollback_transaction()
+                logger.warning(
+                    "core.views._check_update_permissions.permission_denied",
+                    extra={"user": request.user.pk, "action": action, "ident_cely": ident_cely, "file_id": file_id},
+                )
+                return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
+
+        return True
 
 
 def get_finds_soubor_name(find, filename, add_to_index=1):

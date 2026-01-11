@@ -55,31 +55,263 @@ Třídy
 
 .. py:class:: BasePostUploadView
 
-   Společná logika pro upload nového souboru i nahrazení existujícího.
+   Základní třída pro zpracování nahrávání souborů.
+
+Poskytuje společnou logiku pro upload nového souboru i nahrazení existujícího souboru.
+Tato třída implementuje kompletní workflow pro validaci a zpracování nahrávaných souborů,
+včetně kontroly MIME typů, antivirové kontroly a detekce šifrovaných souborů.
+
+Proces nahrávání souboru:
+1. Kontrola přítomnosti souboru v requestu
+2. Validace MIME typu a detekce šifrování
+3. Antivirová kontrola nahrávaného obsahu
+4. Předání validovaného souboru potomkům pro konkrétní zpracování
+
+Atributy:
+    http_method_names (list): Povolené HTTP metody - pouze POST
+    source_url (str): URL zdroje souboru (pokud je specifikována)
+    fedora_transaction (FedoraTransaction): Instance transakce pro práci s Fedora repository
+    original_filename (str): Původní název nahrávaného souboru
+
+Poznámky:
+    - Tato třída je abstraktní a měla by být použita jako základ pro konkrétní implementace
+    - Potomci musí implementovat metodu handle_upload()
+    - Všechny nahrané soubory procházejí automatickou antivirovou kontrolou
+    - Kontroluje se soulad MIME typu se skutečným obsahem souboru
 
    **Metody:**
 
    .. py:method:: post()
 
+      Zpracuje POST request s nahrávaným souborem.
+      
+      Metoda provádí kompletní validaci nahrávaného souboru před jeho uložením:
+      - Kontroluje přítomnost souboru v requestu
+      - Validuje MIME typ a detekuje šifrované soubory
+      - Provádí antivirovou kontrolu obsahu
+      - Deleguje finální zpracování na potomky prostřednictvím handle_upload()
+      
+      Args:
+          request (HttpRequest): Django HTTP request objekt obsahující nahrávaný soubor
+          *args: Poziční argumenty předané z URL dispatcheru
+          **kwargs: Klíčové argumenty z URL patternu (např. ident_cely, typ_vazby)
+      
+      Returns:
+          JsonResponse: JSON odpověď s výsledkem operace:
+              - V případě úspěchu: výsledek z handle_upload() metody potomka
+              - V případě chyby: {"error": <chybová zpráva>} se status kódem 400/500
+      
+      Raises:
+          Žádné výjimky nejsou vyvolány přímo, všechny chyby jsou vráceny jako JSON response
+      
+      Response Status Codes:
+          200: Soubor byl úspěšně validován a zpracován
+          400: Validační chyba (chybějící soubor, šifrovaný, virus, neplatný MIME typ)
+          500: Neznámá chyba při zpracování
+      
+      Příklad:
+          V případě detekce viru:
+          {"error": "V nahraném souboru byl detekován virus", status: 400}
+      
+      Poznámky:
+          - Metoda nastavuje instanční atributy: source_url, fedora_transaction, original_filename
+          - Soubor je automaticky převeden do BytesIO pro další zpracování
+          - Všechny chyby jsou logovány s příslušným severity levelem
+          - Po antivirové kontrole je soubor vrácen na začátek (seek(0))
+
    .. py:method:: handle_upload()
+
+      Abstraktní metoda pro implementaci konkrétního zpracování nahraného souboru.
+      
+      Tato metoda musí být implementována potomky třídy. Je volána z post() metody
+      po úspěšné validaci souboru (MIME typ, antivirus). Potomci zde implementují
+      specifickou logiku pro nové nahrání nebo aktualizaci existujícího souboru.
+      
+      Args:
+          request (HttpRequest): Django HTTP request objekt s informacemi o uživateli a sessions
+          soubor (TemporaryUploadedFile): Nahraný soubor z requestu
+          soubor_data (BytesIO): Binární obsah souboru jako BytesIO objekt
+          *args: Poziční argumenty z URL dispatcheru
+          **kwargs: Klíčové argumenty z URL (např. ident_cely, typ_vazby, file_id)
+      
+      Returns:
+          JsonResponse: JSON odpověď s výsledkem operace nahrání
+      
+      Raises:
+          NotImplementedError: Pokud potomek tuto metodu neimplementuje
+      
+      Poznámky:
+          - V okamžiku volání této metody je soubor již validovaný
+          - Fedora transakce je dostupná přes self.fedora_transaction
+          - Původní název souboru je dostupný přes self.original_filename
+          - URL zdroje je dostupná přes self.source_url
 
 
 .. py:class:: NewFileUploadView
 
-   Upload nového souboru k záznamu.
+   Třída pohledu pro nahrání nového souboru k záznamu.
+
+Rozšiřuje BasePostUploadView o specifickou logiku pro upload nových souborů
+k různým typům záznamů (projekt, dokument, samostatný nález). Implementuje
+kompletní workflow pro vytvoření nového souboru včetně generování názvu,
+uložení do Fedora repository a vytvoření záznamu v databázi.
+
+Proces nahrání nového souboru:
+1. Kontrola oprávnění uživatele (nebo anonymního přístupu pro projekty)
+2. Rozlišení typu záznamu a generování názvu souboru
+3. Validace a případná úprava přípony souboru podle MIME typu
+4. Odstranění GPS dat z obrázků samostatných nálezů
+5. Uložení do Fedora repository
+6. Vytvoření záznamu v databázi s metadaty
+7. Detekce duplicit podle SHA-512 hashe
+8. Zaznamenání události nahrání do historie
+
+URL parametry:
+    ident_cely (str): Identifikátor záznamu, ke kterému má být soubor nahrán
+    typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+
+Atributy:
+    Dědí všechny atributy z BasePostUploadView
+
+Poznámky:
+    - Podporuje anonymní nahrávání souborů pouze pro projekty
+    - Automaticky odstraňuje GPS metadata z obrázků u samostatných nálezů
+    - Generuje unikátní názvy souborů podle typu záznamu
+    - Detekuje duplicity na základě SHA-512 hashe
+    - Ukládá referenci na soubor do session pro možnost rollbacku
+    - Každé nahrání je logováno do historie s informací o uživateli
 
    **Metody:**
 
    .. py:method:: handle_upload()
+
+      Implementuje nahrání nového souboru k záznamu.
+      
+      Provádí kompletní workflow pro vytvoření nového souboru včetně kontroly oprávnění,
+      generování názvu, uložení do repository a vytvoření databázového záznamu.
+      Podporuje anonymní upload pro projekty a automaticky zpracovává metadata obrázků.
+      
+      Args:
+          request (HttpRequest): HTTP request s informacemi o uživateli a session
+          soubor (TemporaryUploadedFile): Nahraný soubor z requestu
+          soubor_data (BytesIO): Binární obsah souboru
+          *args: Poziční argumenty z URL
+          **kwargs: Obsahuje 'ident_cely' (identifikátor záznamu) a 'typ_vazby' (typ vazby)
+      
+      Returns:
+          JsonResponse: JSON odpověď s výsledkem operace:
+              - Při úspěchu (200): {
+                  "filename": str,  # Název nahraného souboru
+                  "id": int,  # Primary key nového Soubor objektu
+                  "duplicate": str (optional),  # Zpráva o duplicitě
+                  "file_renamed": str (optional)  # Zpráva o přejmenování
+                }
+              - Při chybě (400/403/500): {"error": str}
+      
+      Response Status Codes:
+          200: Soubor úspěšně nahrán
+          400: Chyba při nahrávání (transakční konflikt, MIME typ, atd.)
+          403: Nedostatečná oprávnění nebo překročen limit souborů
+          500: Neexistující záznam nebo jiná interní chyba
+      
+      Raises:
+          Žádné výjimky nejsou vyvolány přímo, všechny chyby jsou vráceny jako JSON
+      
+      Poznámky:
+          - Anonymní uživatelé mohou nahrávat pouze k projektům s vlastnictvím v session
+          - GPS metadata jsou automaticky odstraňována z obrázků samostatných nálezů
+          - Přípona souboru je upravena, pokud neodpovídá MIME typu
+          - Soubor je zařazen do Fedora transakce, která je uzavřena po save()
+          - Reference na soubor je uložena do session pro možnost smazání při odchodu
+          - Při anonymním uploadu je jako autor zaznamenán admin uživatel
 
 
 .. py:class:: UpdateExistingFileUploadView
 
-   Nahrazení existujícího souboru novou verzí.
+   Třída pohledu pro nahrazení existujícího souboru novou verzí.
+
+Rozšiřuje BasePostUploadView o specifickou logiku pro aktualizaci již existujících
+souborů. Na rozdíl od NewFileUploadView zachovává původní název souboru (pouze
+aktualizuje příponu) a vytváří novou verzi souboru v Fedora repository. Vyžaduje
+přihlášení uživatele.
+
+Proces aktualizace souboru:
+1. Kontrola oprávnění (vyžaduje LoginRequiredMixin)
+2. Validace vazby mezi souborem a záznamem
+3. Načtení existujícího Soubor objektu z databáze
+4. Validace a případná úprava přípony podle MIME typu
+5. Odstranění GPS dat z obrázků u samostatných nálezů
+6. Aktualizace binárních dat v Fedora repository
+7. Aktualizace metadat v databázi (velikost, SHA-512, MIME typ)
+8. Zaznamenání události do historie jako nová verze
+9. Detekce duplicit podle SHA-512 hashe
+
+URL parametry:
+    typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+    ident_cely (str): Identifikátor záznamu, ke kterému soubor patří
+    file_id (int): Primary key existujícího Soubor objektu
+
+Atributy:
+    Dědí všechny atributy z BasePostUploadView
+
+Poznámky:
+    - VYŽADUJE přihlášeného uživatele (LoginRequiredMixin)
+    - Nahrazení souborů NENÍ podporováno pro projekty (pouze dokument, model3d, pas)
+    - Kontroluje oprávnění pomocí check_permissions s akcemi soubor_nahradit_*
+    - Zachovává základní název souboru, aktualizuje pouze příponu
+    - Aktualizuje repository_uuid existujícího souboru, nevytváří nový
+    - Automaticky odstraňuje GPS metadata z obrázků samostatných nálezů
+    - Validuje vazbu mezi souborem a záznamem před aktualizací
+    - Historie zaznamenává aktualizaci jako novou verzi, ne nový soubor
+    - Detekuje duplicity i po aktualizaci
 
    **Metody:**
 
    .. py:method:: handle_upload()
+
+      Implementuje aktualizaci existujícího souboru novou verzí.
+      
+      Provádí kompletní workflow pro nahrazení obsahu existujícího souboru včetně
+      validace vazeb, aktualizace v repository a databázi. Zachovává původní název
+      souboru (s možnou úpravou přípony) a vytváří novou verzi v historii.
+      
+      Args:
+          request (HttpRequest): HTTP request s informacemi o přihlášeném uživateli
+          soubor (TemporaryUploadedFile): Nový nahraný soubor z requestu
+          soubor_data (BytesIO): Binární obsah nového souboru
+          *args: Poziční argumenty z URL
+          **kwargs: Obsahuje 'typ_vazby', 'ident_cely' a 'file_id'
+      
+      Returns:
+          JsonResponse: JSON odpověď s výsledkem operace:
+              - Při úspěchu (200): {
+                  "filename": str,  # Aktuální název souboru
+                  "id": int,  # Primary key aktualizovaného Soubor objektu
+                  "duplicate": str (optional),  # Zpráva o duplicitě
+                  "file_renamed": str (optional)  # Zpráva o změně přípony
+                }
+              - Při chybě (400/500): {"error": str}
+      
+      Response Status Codes:
+          200: Soubor úspěšně aktualizován
+          400: Chyba vazby, transakční konflikt, MIME typ nebo neplatný typ_vazby
+          403: Nedostatečná oprávnění k nahrazení souboru
+          500: Chybějící vazba nebo jiná interní chyba
+      
+      Raises:
+          Http404: Pokud soubor s daným file_id neexistuje (get_object_or_404)
+          ZaznamSouborNotmatching: Pokud soubor nepatří k danému záznamu
+      
+      Poznámky:
+          - Kontroluje oprávnění před nahrazením souboru
+          - Nahrazení není podporováno pro projekty
+          - Vyžaduje platnou vazbu mezi souborem a záznamem
+          - Zachovává základní část názvu, aktualizuje pouze příponu
+          - GPS metadata jsou odstraňována pouze u obrázků samostatných nálezů
+          - Přípona je upravena podle MIME typu nového souboru
+          - Historie zaznamenává jako 'nahrání nové verze', ne nový soubor
+          - Soubor musí mít repository_uuid pro úspěšnou aktualizaci
+          - Fedora transakce je automaticky uzavřena nebo rollbackována
 
 
 .. py:class:: ExportMixinDate

@@ -51,6 +51,25 @@ Obsahuje metodu na získaní sloupců které mají byt zobrazeny.
 
    .. py:method:: get_cached_files()
 
+   .. py:method:: set_project_ownership()
+
+      Uloží vlastnictví projektu pro anonymního uživatele do Redis.
+      Používá se pro ověření, že anonymní uživatel může nahrávat soubory pouze k projektu, který sám vytvořil.
+      
+      Args:
+          ident_cely: identifikátor projektu
+          timeout: timeout v sekundách (defaultně 2 hodiny)
+
+   .. py:method:: verify_project_ownership()
+
+      Ověří, zda anonymní uživatel vlastní daný projekt.
+      
+      Args:
+          ident_cely: identifikátor projektu
+      
+      Returns:
+          bool: True pokud uživatel vlastní projekt, jinak False
+
 
 Funkce
 ------
