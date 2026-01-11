@@ -477,8 +477,9 @@ def generate_permissions_rst() -> bool:
     """
     Generate permissions documentation.
 
-    Creates docs/source/04_django_aplikace/04_01_core/permissions.rst
-    with a list of all defined actions from Permissions.actionChoices
+    Updates docs/source/04_django_aplikace/04_01_core/permissions.rst
+    by appending the list of all defined actions from Permissions.actionChoices
+    after the "Uživatelské akce řízené pomocí oprávnění" heading.
 
     Returns:
         bool: True if successful, False otherwise
@@ -502,37 +503,62 @@ def generate_permissions_rst() -> bool:
         print("  ⊝ No actions found in Permissions.actionChoices")
         return False
 
-    rst_lines = [
-        "Oprávnění",
-        "==========",
+    # Read existing content if file exists
+    existing_content = []
+    marker_heading = "Uživatelské akce řízené pomocí oprávnění"
+    marker_found = False
+
+    if output_file.exists():
+        with open(output_file, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # Find the marker heading and keep everything before it (including the heading and separator)
+        for i, line in enumerate(lines):
+            existing_content.append(line.rstrip())
+            if line.strip() == marker_heading:
+                marker_found = True
+                # Also include the separator line (dashes) after the heading
+                if i + 1 < len(lines) and lines[i + 1].strip().startswith("-"):
+                    existing_content.append(lines[i + 1].rstrip())
+                break
+
+    # If marker not found, create default structure
+    if not marker_found:
+        existing_content.extend(
+            [
+                marker_heading,
+                "-" * len(marker_heading),
+            ]
+        )
+
+    # Build the new content to append
+    new_content = [
         "",
-        "Dokumentace všech definovaných akcí v systému oprávnění.",
-        "",
-        "Uživatelské akce řízené pomocí oprávnění",
-        "-----------------------------------------",
-        "",
-        "Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:",
+        "Používá se pro bližší specifikaci akce či součásti view, pro které se oprávnění uplatňuje. Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:",
         "",
     ]
 
     # Add actions as bullet list
     for action in actions:
-        rst_lines.append(f"- ``{action}``")
+        new_content.append(f"- ``{action}``")
 
-    rst_lines.append("")
-    rst_lines.append(f"**Celkem:** {len(actions)} akcí")
+    new_content.append("")
+    new_content.append(f"**Celkem:** {len(actions)} akcí")
+
+    # Combine existing and new content
+    final_content = existing_content + new_content
 
     # Write the file
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        new_content = "\n".join(rst_lines)
-        if check_content_changed(new_content, output_file):
+        final_text = "\n".join(final_content)
+        if check_content_changed(final_text, output_file):
             changes_detected = True
             print("    ⚠ Permissions documentation needs update")
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write(new_content)
+            f.write(final_text)
         print(f"    ✓ Found {len(actions)} actions")
-        print("    ✓ Permissions documentation generated")
+        print("    ✓ Permissions documentation updated (preserved existing content)")
         return True
     except Exception as e:
         print(f"    ✗ Error writing permissions documentation: {e}")
@@ -672,6 +698,240 @@ def extract_xsd_version(schema_root: ET.Element) -> str:
         str: Version string (e.g., "2.2") or "neznámá" if not found
     """
     return schema_root.attrib.get("version", "neznámá")
+
+
+def extract_django_command_info(command_file: Path) -> Dict[str, str]:
+    """
+    Extract documentation information from a Django management command file.
+
+    Args:
+        command_file (Path): Path to command file
+
+    Returns:
+        dict: {'name': str, 'help': str, 'docstring': str, 'arguments': list}
+    """
+    try:
+        with open(command_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        tree = ast.parse(content)
+        command_name = command_file.stem
+        command_help = ""
+        command_docstring = ""
+        arguments = []
+
+        # Find Command class
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef) and node.name == "Command":
+                # Get class docstring
+                command_docstring = ast.get_docstring(node) or "Popis není k dispozici."
+
+                # Find help attribute
+                for item in node.body:
+                    if isinstance(item, ast.Assign):
+                        for target in item.targets:
+                            if isinstance(target, ast.Name) and target.id == "help":
+                                if isinstance(item.value, ast.Constant):
+                                    command_help = item.value.value
+                                elif isinstance(item.value, ast.Call):
+                                    # Help uses gettext(_())
+                                    if item.value.args and isinstance(item.value.args[0], ast.Constant):
+                                        command_help = item.value.args[0].value
+
+                    # Find add_arguments method to extract argument info
+                    elif isinstance(item, ast.FunctionDef) and item.name == "add_arguments":
+                        arguments = extract_command_arguments(item)
+                break
+
+        return {
+            "name": command_name,
+            "help": command_help,
+            "docstring": command_docstring,
+            "arguments": arguments,
+        }
+
+    except Exception as e:
+        print(f"  ⚠ Warning: Could not parse {command_file}: {e}")
+        return {
+            "name": command_file.stem,
+            "help": "",
+            "docstring": "Popis není k dispozici.",
+            "arguments": [],
+        }
+
+
+def extract_command_arguments(add_arguments_node: ast.FunctionDef) -> List[Dict[str, str]]:
+    """
+    Extract argument definitions from add_arguments method.
+
+    Args:
+        add_arguments_node: AST node of add_arguments method
+
+    Returns:
+        list: List of argument info dicts with keys: 'name', 'type', 'help', 'default'
+    """
+    arguments = []
+
+    for item in add_arguments_node.body:
+        if isinstance(item, ast.Expr) and isinstance(item.value, ast.Call):
+            call = item.value
+            # Check if this is parser.add_argument()
+            if isinstance(call.func, ast.Attribute) and call.func.attr == "add_argument":
+                if call.args and isinstance(call.args[0], ast.Constant):
+                    arg_name = call.args[0].value
+
+                    # Extract keyword arguments
+                    arg_type = ""
+                    arg_help = ""
+                    arg_default = ""
+
+                    for keyword in call.keywords:
+                        if keyword.arg == "type":
+                            if isinstance(keyword.value, ast.Name):
+                                arg_type = keyword.value.id
+                        elif keyword.arg == "help":
+                            if isinstance(keyword.value, ast.Constant):
+                                arg_help = keyword.value.value
+                            elif isinstance(keyword.value, ast.Call):
+                                # Help uses gettext(_())
+                                if keyword.value.args and isinstance(keyword.value.args[0], ast.Constant):
+                                    arg_help = keyword.value.args[0].value
+                        elif keyword.arg == "default":
+                            if isinstance(keyword.value, ast.Constant):
+                                arg_default = str(keyword.value.value)
+
+                    arguments.append(
+                        {
+                            "name": arg_name,
+                            "type": arg_type,
+                            "help": arg_help,
+                            "default": arg_default,
+                        }
+                    )
+
+    return arguments
+
+
+def generate_management_commands_rst() -> bool:
+    """
+    Generate management commands documentation.
+
+    Creates docs/source/04_django_aplikace/04_01_core/management_commands.rst
+    with documentation for all Django management commands in core/management/commands
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    global changes_detected
+    output_file = docs_dir / "source/04_django_aplikace/04_01_core/management_commands.rst"
+    commands_dir = webclient_dir / "core" / "management" / "commands"
+
+    print("\n  Generating management commands documentation")
+    print(f"  Source: {commands_dir}")
+    print(f"  Output: {output_file}")
+
+    if not commands_dir.exists():
+        print("  ⊝ Commands directory not found")
+        return False
+
+    # Get all command files
+    command_files = []
+    for item in sorted(commands_dir.iterdir()):
+        if item.is_file() and item.suffix == ".py" and item.name != "__init__.py":
+            command_files.append(item)
+
+    if not command_files:
+        print("  ⊝ No command files found")
+        return False
+
+    rst_lines = [
+        "Management příkazy",
+        "==================",
+        "",
+        "Dokumentace všech Django management příkazů v aplikaci.",
+        "",
+        "Příkazy se spouští pomocí ``python manage.py <název_příkazu> [parametry]``",
+        "",
+    ]
+
+    # Process each command
+    for command_file in command_files:
+        command_info = extract_django_command_info(command_file)
+
+        # Add command section
+        command_title = f"``{command_info['name']}``"
+        rst_lines.extend(
+            [
+                "",
+                command_title,
+                "-" * len(command_title),
+                "",
+            ]
+        )
+
+        # Add docstring
+        if command_info["docstring"]:
+            for line in command_info["docstring"].split("\n"):
+                rst_lines.append(line)
+            rst_lines.append("")
+
+        # Add module reference for autodoc
+        rst_lines.extend(
+            [
+                f".. automodule:: core.management.commands.{command_info['name']}",
+                "   :members: Command",
+                "   :undoc-members:",
+                "   :show-inheritance:",
+                "",
+            ]
+        )
+
+        # Add arguments table if any
+        if command_info["arguments"]:
+            rst_lines.extend(
+                [
+                    "**Parametry:**",
+                    "",
+                    ".. list-table::",
+                    "   :header-rows: 1",
+                    "   :widths: 30 20 20 30",
+                    "",
+                    "   * - Název",
+                    "     - Typ",
+                    "     - Výchozí hodnota",
+                    "     - Popis",
+                ]
+            )
+
+            for arg in command_info["arguments"]:
+                rst_lines.extend(
+                    [
+                        f"   * - ``{arg['name']}``",
+                        f"     - ``{arg['type']}``" if arg["type"] else "     - ",
+                        f"     - ``{arg['default']}``" if arg["default"] else "     - ",
+                        f"     - {arg['help']}" if arg["help"] else "     - ",
+                    ]
+                )
+
+            rst_lines.append("")
+
+        print(f"    ✓ {command_info['name']}")
+
+    # Write the file
+    try:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        new_content = "\n".join(rst_lines)
+        if check_content_changed(new_content, output_file):
+            changes_detected = True
+            print("    ⚠ Management commands documentation needs update")
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(new_content)
+        print(f"    ✓ Found {len(command_files)} commands")
+        print("    ✓ Management commands documentation generated")
+        return True
+    except Exception as e:
+        print(f"    ✗ Error writing management commands documentation: {e}")
+        return False
 
 
 def generate_export_structure_rst() -> bool:
@@ -1313,6 +1573,9 @@ def main() -> None:
 
     # Generate permissions documentation
     generate_permissions_rst()
+
+    # Generate management commands documentation
+    generate_management_commands_rst()
 
     # Generate export structure documentation
     generate_export_structure_rst()

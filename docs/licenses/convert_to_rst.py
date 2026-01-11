@@ -27,9 +27,9 @@ def csv_to_rst_table():
     with open("docs/source/knihovny_for_edit.rst", encoding="utf-8") as rst_file:
         content = rst_file.read()
     content = content.replace("@licence_table", rest_table_data)
-    with open("docs/source/knihovny_read_only.rst", "w", encoding="utf-8") as rst_file:
+    with open("docs/source/12_zavislosti/python_knihovny.rst", "w", encoding="utf-8") as rst_file:
         rst_file.write(content)
-    print(f"{len(data_to_write)} libraries written to file 'docs/source/knihovny_read_only.rst'.")
+    print(f"{len(data_to_write)} libraries written to file 'docs/source/12_zavislosti/python_knihovny.rst'.")
 
 
 csv_to_rst_table()

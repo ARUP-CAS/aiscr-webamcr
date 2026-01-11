@@ -9,7 +9,7 @@ Tato sekce popisuje instalaci a nasazení aplikace WebAMČR.
 
    nasazovani
    dockerfile_stages
-   konfigurace
+   secrets
    nasazeni_databaze
    fedora_repository
 
