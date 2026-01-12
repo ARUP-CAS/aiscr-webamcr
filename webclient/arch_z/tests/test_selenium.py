@@ -9,6 +9,7 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.utils.translation import gettext as _
 from dokument.models import DokumentCast
+from freezegun import freeze_time
 from komponenta.models import Komponenta
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.models import Pian
@@ -23,16 +24,13 @@ class AkceTestClass(BaseSeleniumTestClass):
     __test__ = False
 
     def go_to_Projekty_vyper(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def go_to_Akce_zapsat(self):
-        self.ElementClick(By.ID, "menuSamostatneAkce")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.zapsat"))
+        self.goToAddress("/arch-z/akce/zapsat")
 
     def go_to_Akce_vybrat(self):
-        self.ElementClick(By.ID, "menuSamostatneAkce")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneAkce.vybrat"))
+        self.goToAddress("/arch-z/akce/vyber?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely")
 
     def draw_polygon(self):
         self.wait(1)
@@ -58,6 +56,8 @@ class AkceProjektoveAkce(AkceTestClass):
         logger.info("AkceProjektoveAkce.test_024_pridani_dokumentacni_jednotky_p_001.start")
 
         self.login()
+        self.createFedoraRecord("C-202307816")
+        self.uploadFileToFedora(592645, "projekt/tests/resources/test.pdf")
         self.go_to_Projekty_vyper()
 
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202307816A").count()
@@ -88,6 +88,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_34 Přidání dokumentační jednotky celek akce (negativní scénář 1)
         logger.info("AkceProjektoveAkce.test_034_pridani_dokumentacni_jednotky_n_001.start")
         self.login()
+        self.createFedoraRecord("C-202401502")
+        self.uploadFileToFedora(643547, "projekt/tests/resources/test.pdf")
         self.go_to_Projekty_vyper()
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401502A").count()
@@ -109,7 +111,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
 
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newDjSubmitButton")
         except Exception:
             pass
@@ -124,6 +126,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_35 Přidání dokumentační jednotky část akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_035_pridani_dokumentacni_jednotky_p_002.start")
         self.login()
+        self.createFedoraRecord("C-202309552")
+        self.uploadFileToFedora(605456, "projekt/tests/resources/test.pdf")
         self.go_to_Projekty_vyper()
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
@@ -156,6 +160,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_36 Přidání dokumentační jednotky část akce (negativní scénář 1)
         logger.info("AkceProjektoveAkce.test_036_pridani_dokumentacni_jednotky_n_002.start")
         self.login()
+        self.createFedoraRecord("C-202309552")
+        self.uploadFileToFedora(605456, "projekt/tests/resources/test.pdf")
         self.go_to_Projekty_vyper()
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
@@ -175,7 +181,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
 
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newDjSubmitButton")
         except Exception:
             pass
@@ -190,6 +196,9 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_37 Přidání komponenty k dokumentační jednotce celek akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_037_pridani_komponenty_dokumentacni_jednotky_p_001.start")
         self.login()
+        self.createFedoraRecord("C-202309027")
+        self.uploadFileToFedora(601604, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(601608, "projekt/tests/resources/test.pdf")
         self.go_to_Projekty_vyper()  # C-202309027
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         # count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
@@ -230,6 +239,9 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_40 Přidání komponenty k dokumentační jednotce celek akce (negativní scénář 1)
         logger.info("AkceProjektoveAkce.test_040_pridani_komponenty_dokumentacni_jednotky_n_001.start")
         self.login()
+        self.createFedoraRecord("C-202309027")
+        self.uploadFileToFedora(601604, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(601608, "projekt/tests/resources/test.pdf")
         self.go_to_Projekty_vyper()  # C-202309027
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         # count_old=DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202309552A").count()
@@ -255,7 +267,7 @@ class AkceProjektoveAkce(AkceTestClass):
         # self.ElementClick(By.CSS_SELECTOR, "#div_id_areal .filter-option-inner-inner")
         # self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
 
-        with WaitForPageLoad(self.driver):
+        with WaitForPageLoad(self.driver, 5):
             self.ElementClick(By.ID, "createCompotSubmitButton")
 
         # self.assertNotEqual(self.driver.find_element(By.ID, "el_komponenta_C_202309027A_K001"), None)
@@ -271,7 +283,9 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_41 Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_041_pridani_objektu_komponente_p_001.start")
         self.login()
-        self.go_to_Projekty_vyper()  # C-202309027
+        self.createFedoraRecord("C-202004814")
+        self.uploadFileToFedora(253674, "projekt/tests/resources/test.pdf")
+        self.go_to_Projekty_vyper()
         count_old = NalezObjekt.objects.filter(
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01"
         ).count()
@@ -302,8 +316,9 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_42 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_042_pridani_predmetu_komponente_p_001.start")
         self.login()
-        self.go_to_Projekty_vyper()  # C-202309027
-
+        self.createFedoraRecord("C-202004814")
+        self.uploadFileToFedora(253674, "projekt/tests/resources/test.pdf")
+        self.go_to_Projekty_vyper()
         count_old = NalezPredmet.objects.filter(
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="C-202004814A-D01"
         ).count()
@@ -340,7 +355,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_43 Smazání objektu u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_043_smazani_objektu_komponente_p_001.start")
         self.login()
-
+        self.createFedoraRecord("X-C-TX-202107588")
+        self.uploadFileToFedora(339739, "projekt/tests/resources/test.pdf")
         count_old = NalezObjekt.objects.filter(
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01"
         ).count()
@@ -368,7 +384,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_44 Smazání předmětu u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_044_smazani_predmetu_komponente_p_001.start")
         self.login()
-
+        self.createFedoraRecord("X-C-TX-202107588")
+        self.uploadFileToFedora(339739, "projekt/tests/resources/test.pdf")
         count_old = NalezPredmet.objects.filter(
             komponenta__komponenta_vazby__dokumentacni_jednotka__ident_cely="X-C-91277520A-D01"
         ).count()
@@ -398,7 +415,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_79 Přidání dokumentu (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_079_pridani_dokumentu_projektove_akci_p_001.start")
         self.login("archeolog")
-
+        self.createFedoraRecord("C-202207641")
+        self.uploadFileToFedora(435547, "projekt/tests/resources/test.pdf")
         count_old = DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202207641A").count()
         self.goToAddress("/id/C-202207641")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
@@ -440,7 +458,10 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_80 Připojení existujícího dokumentu (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_080_pridani_existujiciho_dokumentu_projektove_akci_p_001.start")
         self.login("archeolog")
-
+        self.createFedoraRecord("C-202207641")
+        self.uploadFileToFedora(435547, "projekt/tests/resources/test.pdf")
+        self.createFedoraRecord("M-TX-194300151")
+        self.uploadFileToFedora(534769, "projekt/tests/resources/test.pdf")
         count_old = DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202207641A").count()
         self.go_to_Projekty_vyper()
 
@@ -467,7 +488,8 @@ class AkceProjektoveAkce(AkceTestClass):
     def test_081_pridani_existujiciho_dokumentu_z_projektu_projektove_akci_p_001(self):
         # Scenar_81 Připojení existujícího dokumentu z projektu (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_081_pridani_existujiciho_dokumentu_z_projektu_projektove_akci_p_001.start")
-
+        self.createFedoraRecord("C-202401979")
+        self.uploadFileToFedora(646252, "projekt/tests/resources/test.pdf")
         self.login("archeolog")
 
         count_old = DokumentCast.objects.filter(archeologicky_zaznam__ident_cely="C-202401979B").count()
@@ -494,7 +516,10 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_84 Připojení externího zdroje k projektové akci (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_084_pripojeni_externiho_zdroje_projektove_akci_p_001.start")
         self.login("archeolog")
-
+        self.createFedoraRecord("C-202301164")
+        self.uploadFileToFedora(553894, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(553892, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(553893, "projekt/tests/resources/test.pdf")
         count_old = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="C-202301164A").count()
         self.go_to_Projekty_vyper()
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
@@ -527,6 +552,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_86 Vytvoření PIAN u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_086_vytvoreni_PIAN_projektove_akce_p_001.start")
         self.login("archeolog")
+        self.createFedoraRecord("C-202401980")
+        self.uploadFileToFedora(646253, "projekt/tests/resources/test.pdf")
         pian_old = DokumentacniJednotka.objects.filter(ident_cely="C-202401980A-D01")[0].pian
         self.assertEqual(pian_old, None)
 
@@ -556,6 +583,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_87 Editace PIAN u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_087_editace_PIAN_projektove_akce_p_001.start")
         self.login("archeolog")
+        self.createFedoraRecord("C-202401981")
+        self.uploadFileToFedora(646254, "projekt/tests/resources/test.pdf")
         pian_old = str(DokumentacniJednotka.objects.filter(ident_cely="C-202401981A-D01")[0].pian.geom)
 
         self.go_to_Projekty_vyper()
@@ -583,6 +612,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_88 Smazání PIAN u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_088_smazani_PIAN_projektove_akce_p_001.start")
         self.login("archeolog")
+        self.createFedoraRecord("C-202401981")
+        self.uploadFileToFedora(646254, "projekt/tests/resources/test.pdf")
         pian = DokumentacniJednotka.objects.filter(ident_cely="C-202401981A-D01")[0].pian
         self.assertNotEqual(pian, None)
 
@@ -609,6 +640,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_89 Připojení PIAN z mapy u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_089_pripojeni_PIAN_projektove_akce_p_001.start")
         self.login("archeolog")
+        self.createFedoraRecord("C-202401980")
+        self.uploadFileToFedora(646253, "projekt/tests/resources/test.pdf")
         pian_old = DokumentacniJednotka.objects.filter(ident_cely="C-202401980A-D01")[0].pian
         self.assertEqual(pian_old, None)
 
@@ -624,13 +657,36 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.ID, "show_menu_pian_from_map_id")
         self.wait(0.5)
         self.driver.execute_script("""map.setView([50.357377039,  13.795522698],19)""")
-        self.wait(2)
-        self.driver.execute_script(
-            """ var latlng = L.latLng(50.357377039,  13.795522698);Object.values(poi_pian._layers)[0].fire('click', {
-    latlng: latlng, layerPoint: map.latLngToLayerPoint(latlng), containerPoint: map.latLngToContainerPoint(latlng),
-    originalEvent: { clientX: map.latLngToContainerPoint(latlng).x, clientY: map.latLngToContainerPoint(latlng).y}})"""
-        )
-        self.wait(1)
+        js = """
+const done = arguments[arguments.length - 1];
+const deadline = Date.now() + 10000;
+
+(function tick() {
+  const layers = (window.poi_pian && poi_pian._layers) ? Object.values(poi_pian._layers) : [];
+  const first = layers[0];
+   console.log(layers[0]);
+  if (window.L && window.map && first && typeof first.fire === "function") {
+    const latlng = L.latLng(50.357377039, 13.795522698);
+    console.log("log1");
+    first.fire("click", {
+      latlng,
+      layerPoint: map.latLngToLayerPoint(latlng),
+      containerPoint: map.latLngToContainerPoint(latlng),
+      originalEvent: {
+        clientX: map.latLngToContainerPoint(latlng).x,
+        clientY: map.latLngToContainerPoint(latlng).y
+      }
+    });
+    return done(true);
+  }
+
+  if (Date.now() > deadline) return done(false);
+  setTimeout(tick, 50);
+})();
+"""
+        self.driver.set_script_timeout(10)
+        self.driver.execute_async_script(js)
+        self.wait(0.5)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editDjSubmitButton")
 
@@ -644,6 +700,9 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_90 Odpojení potvrzeného PIAN u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_090_odpojeni_PIAN_projektove_akce_p_001.start")
         self.login("archeolog")
+        self.createFedoraRecord("C-202007232")
+        self.uploadFileToFedora(264976, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(265018, "projekt/tests/resources/test.pdf")
         pian = DokumentacniJednotka.objects.filter(ident_cely="C-202007232A-D01")[0].pian
         self.assertNotEqual(pian, None)
 
@@ -674,7 +733,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.goToAddress("/arch-z/akce/detail/C-202309724A/dj/C-202309724A-D01")
         self.ElementClick(By.CSS_SELECTOR, "#detail_dj_form_C-202309724A-D01 .btn-group:nth-child(1) .material-icons")
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
-        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv")
+        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv", "application/csv")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
@@ -693,6 +752,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_92 Editace PIAN k projektové akci importem (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_092_editace_PIAN_projektove_akce_importem_p_001.start")
         self.login("archeolog")
+        self.createFedoraRecord("C-202005190")
+        self.uploadFileToFedora(255492, "projekt/tests/resources/test.pdf")
         pian_old = str(DokumentacniJednotka.objects.filter(ident_cely="C-202005190A-D01")[0].pian.geom)
         self.go_to_Projekty_vyper()
         self.ElementClick(By.ID, "buttonFiltr")
@@ -704,7 +765,7 @@ class AkceProjektoveAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#el_dokumentacni_jednotka_C_202005190A_D01 > strong")
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
-        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv")
+        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv", "application/csv")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         with WaitForPageLoad(self.driver):
@@ -718,6 +779,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_93 Připojení PIAN k projektové akci podle ID (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_093_pripojeni_PIAN_projektove_akce_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-202401980")
+        self.uploadFileToFedora(646253, "projekt/tests/resources/test.pdf")
         pian_old = DokumentacniJednotka.objects.filter(ident_cely="C-202401980A-D01")[0].pian
         self.assertEqual(pian_old, None)
 
@@ -775,6 +838,8 @@ class AkceProjektoveAkce(AkceTestClass):
         # Scenar_95 Smazání dokumentační jednotky u projektové akce (pozitivní scénář 1)
         logger.info("AkceProjektoveAkce.test_095_smazani_DJ_projektove_akce_p_001.start")
         self.login("archeolog")
+        self.createFedoraRecord("C-202401980")
+        self.uploadFileToFedora(646253, "projekt/tests/resources/test.pdf")
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401980A").count()
         self.go_to_Projekty_vyper()
 
@@ -907,7 +972,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.ID, "id_lokalizace_okolnosti")
         self.driver.find_element(By.ID, "id_lokalizace_okolnosti").send_keys("Hora")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "actionSubmitBtn")
         except Exception:
             pass
@@ -954,7 +1019,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
         # self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newDjSubmitButton")
         except Exception:
             pass
@@ -1370,7 +1435,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
 
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
-        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv")
+        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv", "application/csv")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         with WaitForPageLoad(self.driver):
@@ -1399,7 +1464,7 @@ class AkceSamostatneAkce(AkceTestClass):
             By.CSS_SELECTOR, "#detail_dj_form_X-C-9000000002A-D01 .btn-group:nth-child(1) .material-icons"
         )
         self.ElementClick(By.CSS_SELECTOR, ".show > .dropdown-item:nth-child(2)")
-        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv")
+        self.upload_file("arch_z/tests/resources/geom.csv", "geom.csv", "application/csv")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-1 > .text")
@@ -1746,8 +1811,9 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         self.goToAddress("/id/X-C-91468414A")
         self.ElementClick(By.ID, "akce-odeslat")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/ident_cely")
         self.check_fedora_delete(["record/X-C-91468414A", "record/X-C-TX-000000008"])
 
@@ -1767,6 +1833,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # C dokument_cast existujici
         self.createFedoraRecord("X-M-91558334A", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
+        self.uploadFileToFedora(534769, "projekt/tests/resources/test.pdf", "archivar")
         time = self.getTime()
         self.goToAddress("/id/X-M-91558334A")
         self.ElementClick(By.ID, "others_doc")
@@ -1978,7 +2045,7 @@ class AkceSamostatneAkce(AkceTestClass):
         time = self.getTime()
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "zmenit-katastr-X-C-9000000011A-D01")
-        self.ElementClick(By.CSS_SELECTOR, ".modelselect2 b")
+        self.ElementClick(By.ID, "select2-id_katastr-container")
         self.ElementSendKeys(By.CSS_SELECTOR, ".select2-search__field", "Louny")
         self.wait_for_select2_results()
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)

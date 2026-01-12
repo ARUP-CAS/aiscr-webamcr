@@ -399,11 +399,12 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         cast_form = DokumentCastForm(
             instance=cast,
             readonly=True,
+            prefix="cast",
         )
         context["cast_form"] = cast_form
         neident_akce = NeidentAkce.objects.filter(dokument_cast=cast)
         if neident_akce.exists():
-            context["neident_akce_form"] = NeidentAkceForm(instance=neident_akce[0], readonly=True)
+            context["neident_akce_form"] = NeidentAkceForm(instance=neident_akce[0], prefix="neident", readonly=True)
         context["show_edit_cast"] = check_permissions(
             p.actionChoices.dok_cast_edit, self.request.user, cast.dokument.ident_cely
         )

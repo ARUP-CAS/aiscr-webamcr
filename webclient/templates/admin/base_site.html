@@ -5,6 +5,11 @@
 {% load compress %}
 {% load static %}
 
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="shortcut icon" id="dynamic-favicon" href="{% static 'loga/favicon.png' %}">
+{% endblock %}
+
 {% block extrastyle %}
 {{ block.super }}
 {% compress css %}

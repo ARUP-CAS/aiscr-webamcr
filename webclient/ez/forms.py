@@ -91,14 +91,12 @@ class ExterniZdrojForm(forms.ModelForm):
                 attrs={
                     "class": "selectpicker",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "typ_dokumentu": forms.Select(
                 attrs={
                     "class": "selectpicker",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "rok_vydani_vzniku": forms.TextInput(),
