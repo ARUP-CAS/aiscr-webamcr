@@ -67,7 +67,7 @@
       <amcr:email>-</amcr:email>
     </amcr:oznamovatel>
     <amcr:soubor>
-      <amcr:id>soub-364200</amcr:id>
+      <amcr:id>soub-0000001</amcr:id>
       <amcr:path>rest/AMCR-selenium-test/record/C-202111043/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>oznameni_C-202111043.pdf</amcr:nazev>
       <amcr:mimetype>application/pdf</amcr:mimetype>
