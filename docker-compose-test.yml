@@ -248,7 +248,7 @@ services:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
   selenium:
-    image: selenium/standalone-chrome
+    image: selenium/standalone-chromium:143.0
     ports:
       - 4444:4444
       - 7900:7900

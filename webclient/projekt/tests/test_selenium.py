@@ -152,7 +152,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_adresa", "test")
         self.ElementSendKeys(By.ID, "id_telefon", "xxx")
         self.ElementSendKeys(By.ID, "id_email", "test@example.com")
-        # self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with freeze_time("2025-07-26 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "actionSubmitBtn")
@@ -175,14 +175,6 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/update_oznamovatel")
 
-        # D soubor
-        time = self.getTime()
-        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
-        self.ElementClick(By.ID, f"file-smazat-{file}")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
-
         # C soubor
         time = self.getTime()
         self.ElementClick(By.ID, "add_dokumentace")
@@ -190,6 +182,14 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/create_soubor")
+
+        # D soubor
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"file-smazat-{file}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
 
         # C projektova akce
         self.createFedoraRecord("C-201121404", "archivar")
@@ -270,6 +270,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.goToAddress(f"/id/{ident}")
         time = self.getTime()
         self.ElementClick(By.ID, "projekt-schvalit")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")

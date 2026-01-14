@@ -33,9 +33,12 @@ from selenium import webdriver
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     ElementNotInteractableException,
+    InvalidSessionIdException,
     NoSuchElementException,
     StaleElementReferenceException,
+    WebDriverException,
 )
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.common.by import By
 from uzivatel.models import User
 from xml_generator.generator import DocumentGenerator
@@ -108,6 +111,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         ("/dokument/stav/odeslat/", 403),
         ("/dokument/stav/archivovat/", 403),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_RESET"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_CLOSED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_HTTP2_PROTOCOL_ERROR"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_FAILED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_SOCKET_NOT_CONNECTED"),
     ]
 
     @classmethod
@@ -153,6 +160,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         if settings.USE_REMOTE_WEB_BROWSER:
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-gpu")
+            # options.add_argument("--headless=new")
+            options.add_argument("--window-size=1760,1020")
+            # options.add_argument("--disable-dev-shm-usage")
             self.driver = webdriver.Remote(
                 command_executor=f"http://{settings.SELENIMUM_ADDRESS}:{settings.SELENIUM_PORT}/wd/hub", options=options
             )
@@ -479,34 +489,46 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
         return False
 
-    def tearDown(self):
-        self.driver.save_screenshot(f"{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png")
+    def _collect_js_errors_at_end(self):
+        """Sbírá javascript chyby"""
         try:
-            from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
-
             logs = ChromeDriver.get_log(self.driver, "browser")
-            # logs = self.driver.get_log("browser")
             severe = [entry for entry in logs if entry["level"] == "SEVERE"]
-            js_errors = [entry for entry in severe if not self._is_ignored_browser_error(entry)]
-            if js_errors:
-                logger.error(
-                    "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.javascript_error",
-                    extra={"error": js_errors},
-                )
-                raise AssertionError(f"JS errors found: {js_errors}")
-        finally:
-            self.driver.quit()
-        if hasattr(self._outcome, "errors"):
-            # Python 3.4 - 3.10  (These two methods have no side effects)
-            result = self.defaultTestResult()
-            self._feedErrorsToResult(result, self._outcome.errors)
-        else:
-            # Python 3.11+
-            result = self._outcome.result
-        ok = all(test != self for test, text in result.errors + result.failures)
+            self._js_errors = [entry for entry in severe if not self._is_ignored_browser_error(entry)]
+        except (InvalidSessionIdException, WebDriverException):
+            self._js_errors = []
 
-        if os.path.isfile(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx"):
-            data = pandas.read_excel(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx")
+    def tearDown(self):
+        self._collect_js_errors_at_end()
+
+        result = self._outcome.result
+
+        def has_issue():
+            return any(t is self and exc for t, exc in (result.errors + result.failures))
+
+        # Pokud test zatím OK a máme JS chyby => přidej FAILURE
+        if not has_issue() and getattr(self, "_js_errors", None):
+            result.addFailure(
+                self,
+                (
+                    AssertionError,
+                    AssertionError(f"JavaScript errors found: {self._js_errors}"),
+                    None,
+                ),
+            )
+
+        ok = not has_issue()
+
+        try:
+            self.driver.save_screenshot(f"{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png")
+        except Exception as js_errors:
+            logger.error(
+                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.save_screenshot_error",
+                extra={"error": js_errors},
+            )
+        path = f"{settings.TEST_SCREENSHOT_PATH}results.xlsx"
+        if os.path.isfile(path):
+            data = pandas.read_excel(path)
             d = data.values.tolist()
         else:
             d = []
@@ -526,7 +548,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         data = pandas.DataFrame(d)
         data.columns = ["index", "date", "test name", "result"]
         try:
-            data.to_excel(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx", index=False)
+            data.to_excel(path, index=False)
+        except Exception:
+            pass
+
+        try:
+            self.driver.quit()
         except Exception:
             pass
         super().tearDown()
@@ -698,7 +725,6 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.driver.find_element(By.ID, "id_password").send_keys(self._password(type))
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".btn")
-        self.driver.set_window_rect(0, 0, 1360, 1020)
 
     def logout(self):
         self.ElementClick(By.ID, "buttonLogout")
