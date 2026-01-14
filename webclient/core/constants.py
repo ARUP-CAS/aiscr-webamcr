@@ -85,6 +85,8 @@ ZMENA_HESLA_UZIVATEL: Final = "ZHU"
 # Katastr
 ZMENA_KATASTRU: Final = "KAT"
 
+IMPORT = "IMP"
+
 # Uzivatel
 ROLE_BADATEL_ID = 1
 ROLE_ARCHEOLOG_ID = 2

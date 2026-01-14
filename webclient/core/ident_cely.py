@@ -40,7 +40,7 @@ def get_next_sequence(sequence_name: str) -> str:
 
 def get_temporary_project_ident(region: str) -> str:
     """
-    Metóda pro výpočet dočasného identu projektu. Přiděluje se pro projekty vytvoření v rámci oznámení.
+    Metoda pro výpočet dočasného identu projektu. Přiděluje se pro projekty vytvoření v rámci oznámení.
 
     Logika složení je: "X-" + region (M anebo C) + "-" + 9 místne číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
     Příklad: "X-M-000001234"
@@ -51,7 +51,7 @@ def get_temporary_project_ident(region: str) -> str:
 
 def get_project_event_ident(project: Projekt) -> Optional[str]:
     """
-    Metóda pro výpočet identu projektové akce.
+    Metoda pro výpočet identu projektové akce.
 
     Logika složení je: ident_cely projektu + písmeno abecedy v posloupnosti od A po Z
     Pri překročení maxima čísla sekvence (99999) se vráti uživateli na web chybová hláška.
@@ -203,7 +203,7 @@ def get_komponenta_ident(zaznam, fedora_transaction: FedoraTransaction) -> str:
 
 def get_sm_from_point(point):
     """
-    Metóda pro získaní kladu sm5 pro pian z bodu.
+    Metoda pro získání kladu sm5 pro pian z bodu.
     """
     mapovy_list = Kladysm5.objects.filter(geom__contains=point)
     if mapovy_list.count() == 1:
@@ -227,7 +227,7 @@ def get_temporary_pian_ident(zm50) -> str:
 
 def get_sn_ident(projekt: Projekt) -> str:
     """
-    Metóda pro výpočet identu samostatního nálezu projektu.
+    Metoda pro výpočet identu samostatního nálezu projektu.
 
     Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 číslic nulama.
     Pri prekročení maxima SN u projektu (99999) se vráti uživateli na web chybová hláška.
@@ -249,19 +249,19 @@ def get_sn_ident(projekt: Projekt) -> str:
 
 def get_adb_ident(pian: Pian) -> str:
     """
-    Metóda pro výpočet identu ADB.
+    Metoda pro výpočet identu ADB.
 
-    Logika složení je: "ADB-" + mapno pre sm5 + "-" + číslo sekvence z tabulky 'adb_sekvence' (podle kladysm5) doplněno na 6 číslic nulama.
+    Logika složení je: "ADB-" + mapno pro sm5 + "-" + číslo sekvence z tabulky 'adb_sekvence' (podle kladysm5) doplněno na 6 číslic nulama.
     Pri prekročení maxima sekvence u ADB (999999) se vráti uživateli na web chybová hláška.
     Příklad: "ADB-PRAH43-000012"
     """
     MAXIMAL_ADBS: int = 999999
     point = None
-    if type(pian.geom) == LineString:
+    if isinstance(pian.geom, LineString):
         point = pian.geom.interpolate_normalized(0.5)
-    elif type(pian.geom) == Point:
+    elif isinstance(pian.geom, Point):
         point = pian.geom
-    elif type(pian.geom) == Polygon:
+    elif isinstance(pian.geom, Polygon):
         point = Centroid(pian.geom)
     else:
         logger.error("core.ident_cely.get_adb_ident.error", extra={"info": str(type(pian.geom))})
@@ -294,9 +294,9 @@ def get_adb_ident(pian: Pian) -> str:
         raise MaximalIdentNumberError(sequence.sekvence)
 
 
-def get_temp_lokalita_ident(typ, region, lokalita):
+def get_temp_lokalita_ident(typ, region):
     """
-    Metóda pro výpočet dočasného identu lokality.
+    Metoda pro výpočet dočasného identu lokality.
 
     Logika složení je: "X-" + region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence lokalita_xident_seq doplněno na 9 číslic.
 
@@ -309,7 +309,7 @@ def get_temp_lokalita_ident(typ, region, lokalita):
 
 def get_temp_akce_ident(region):
     """
-    Metóda pro výpočet dočasného identu samostatný akce.
+    Metoda pro výpočet dočasného identu samostatný akce.
 
     Logika složení je: "X-" + region (M anebo C) + "-9" + 9 místní číslo ze sekvence akce_xident_seq doplněno na 9 číslic -A.
 
@@ -321,7 +321,7 @@ def get_temp_akce_ident(region):
 
 def get_temp_ez_ident():
     """
-    Metóda pro výpočet dočasného identu externího zdroje.
+    Metoda pro výpočet dočasného identu externího zdroje.
 
     Logika složení je: "X-BIB" + 9 místní číslo ze sekvence externi_zdroj_xident_seq doplněno na 9 číslic.
 

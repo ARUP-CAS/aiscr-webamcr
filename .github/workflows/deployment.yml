@@ -42,7 +42,7 @@ jobs:
       SSH_KNOWN_HOST: ${{ inputs.environment == 'DEV' && secrets.SSH_KNOWN_HOST_DEV || inputs.environment == 'TEST' && secrets.SSH_KNOWN_HOST_TEST }}
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: v${{ inputs.tag }}
 

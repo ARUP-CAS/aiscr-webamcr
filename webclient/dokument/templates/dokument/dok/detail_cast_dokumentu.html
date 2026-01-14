@@ -105,52 +105,53 @@
 {% endif %}
     <script>
         //modal scripts
-        var modal;
-        var heslar_url = "{% url 'heslar:create_osoba' %}";
+        let modal;
+        const heslar_url = "{% url 'heslar:create_osoba' %}";
         document.addEventListener('DOMContentLoaded', function (event) {
+          let options;
           if ("{{show_edit_cast}}" != "False"){
-            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+            options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "edit-cast-form",
               modalFormID: "#edit-cast-form",
             })
             new Modal(options, "button-edit-cast");
           };
-            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+            options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-eo-form",
                 modalFormID: "#pripojit-eo-form",
               })
             {% if show_pripojit_archz or show_pripojit_proj %}
               new Modal(options, "button-pripojit-akci");
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-eo-form",
                 modalFormID: "#pripojit-eo-form",
               })
               new Modal(options, "button-pripojit-lokalitu");
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-projekt-form",
                 modalFormID: "#pripojit-projekt-form",
               })
               new Modal(options, "pripojit-projekt-btn");
               {% endif %}
               {% if show_odpojit %}
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "odpojit-cast-form",
                 modalFormID: "#odpojit-cast-form",
               })
               new Modal(options, "odpojit-cast-btn");
               {% endif %}
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "smazat-cast-form",
                 modalFormID: "#smazat-cast-form",
               })
               new Modal(options, "smazat-cast-btn");
               if ("{{cast.neident_akce}}" != ""){
-                var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+                options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                   formID: "edit-neident-form",
                   modalFormID: "#edit-neident-form",
                 })
                 modal = new Modal(options, "button-edit-neident");
-                var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+                options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                     formID: "smazat-neident-akce-form",
                     modalFormID: "#smazat-neident-akce-form",
                   })
@@ -159,9 +160,9 @@
           
           
           if (document.getElementsByClassName("komponenta-smazat-btn")){
-            elements = document.getElementsByClassName("komponenta-smazat-btn")
+            const elements = document.getElementsByClassName("komponenta-smazat-btn")
             for (let i = 0; i < elements.length; i++){
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "smazat-komponenta-form",
               modalFormID: "#smazat-komponenta-form",
               })
@@ -173,8 +174,5 @@
               $(document).off('focusin.modal');
           });
       });
-      function show_form(form_id, form_to_show_next) {
-          document.getElementById("karta-dokumentacni-cast").scrollIntoView();
-      }
     </script>
 {% endblock %}

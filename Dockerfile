@@ -1,8 +1,50 @@
-# Dockerfile
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1 AS python-builder
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.11.0
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ="Europe/Prague"
 
-# Load arguments
+RUN echo $TZ > /etc/timezone && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3-pip \
+        python3-dev \
+        build-essential \
+        gcc \
+        libpq-dev \
+        tzdata \
+        cron \
+        sudo \
+        libgdal-dev \
+        locales \
+        gettext \
+        poppler-utils \
+        unrar \
+        jq \
+        postgresql-client \
+        curl \
+        libmagic1 \
+        redis-tools && \
+    locale-gen cs_CZ.utf8 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY ./webclient/requirements.txt /tmp/requirements.txt
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
+
+FROM python-builder AS app-builder
+
+COPY --from=python-builder /wheels /wheels
+RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --break-system-packages --ignore-installed && \
+    rm -rf /wheels ~/.cache/pip
+
+COPY ./webclient /code
+WORKDIR /code
+
+RUN python3 -m compileall -b /code
+
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1 AS runtime
+
 ARG VERSION_APP
 ARG TAG_APP
 
@@ -15,20 +57,21 @@ LABEL maintainer="Archaeological Information System of the Czech Republic (AIS C
       org.opencontainers.image.url="https://github.com/ARUP-CAS/aiscr-webamcr" \
       org.opencontainers.image.documentation="https://aiscr-webamcr.readthedocs.io/"
 
-# Set environmental variables
 ENV VERSION=${VERSION_APP} \
     TAG=${TAG_APP} \
     TZ="Europe/Prague" \
     LC_ALL='cs_CZ.utf8' \
-    PATH="/scripts:${PATH}"
+    PATH="/scripts:${PATH}" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Configure timezone and install packages
 RUN echo $TZ > /etc/timezone && \
     apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
         tzdata \
         cron \
         sudo \
+        python3 \
         python3-pip \
         libgdal-dev \
         locales \
@@ -38,44 +81,37 @@ RUN echo $TZ > /etc/timezone && \
         jq \
         postgresql-client \
         curl \
-        build-essential \
-        python3-dev \
         libmagic1 \
         redis-tools && \
     locale-gen cs_CZ.utf8 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Python dependencies
-COPY ./webclient/requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt --break-system-packages && \
-    rm /tmp/requirements.txt
+COPY --from=python-builder /wheels /wheels
+RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --break-system-packages --ignore-installed && \
+    rm -rf /wheels ~/.cache/pip
 
-# Set up application code
-COPY ./webclient /code
-COPY ./scripts /scripts
-RUN chmod +x /scripts/*
-COPY ./proxy/custom_html /custom_html
-WORKDIR /code
+COPY --from=app-builder /code /code
 
-# Create necessary dirs (images, static files, locales for translations)
-RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale/cs/LC_MESSAGES /vol/web/locale/en/LC_MESSAGES
-
-# Create non-root user
-RUN userdel ubuntu && \
+RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale/cs/LC_MESSAGES /vol/web/locale/en/LC_MESSAGES && \
+    userdel ubuntu && \
     adduser --disabled-password --gecos "" user && \
     passwd -d user && \
-    usermod -aG sudo user && \
+    usermod -aG sudo user
+
+WORKDIR /code
+COPY --chown=user:user ./scripts /scripts
+COPY --chown=user:user ./proxy/custom_html /custom_html
+
+RUN chmod +x /scripts/* && \
+    chmod -R 755 /vol/web /code /custom_html && \
     chown -R user:user /vol /code /custom_html && \
-    chmod -R 755 /vol/web /code /custom_html
-
-# Apply cron
-RUN crontab -u user /scripts/crontab.txt
-
-# Update version info
-RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt && \
+    crontab -u user /scripts/crontab.txt && \
+    echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt && \
     sed -i "s/1.0.0/${VERSION}/g" ./templates/base_logged_in.html && \
     sed -i "s/YYYY/$(date +%Y)/g" ./templates/base_logged_in.html
 
-# Set entrypoint and user
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
 USER user
 CMD ["entrypoint.sh"]

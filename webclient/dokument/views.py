@@ -21,7 +21,7 @@ from core.constants import (
 )
 from core.coordTransform import convertToJTSK
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
-from core.forms import CheckStavNotChangedForm, VratitForm
+from core.forms import CheckStavNotChangedForm, VratitForm, VratitFormDokument
 from core.ident_cely import get_cast_dokumentu_ident, get_dokument_rada, get_temp_dokument_ident
 from core.message_constants import (
     DOKUMENT_AZ_USPESNE_PRIPOJEN,
@@ -66,7 +66,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.forms import inlineformset_factory
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -388,12 +388,12 @@ class DokumentListView(SearchListView):
 
 class RelatedContext(LoginRequiredMixin, TemplateView):
     """
-    Třida, která se dedí a která obsahuje metódy pro získaní relací dokumentů.
+    Třida, která se dedí a která obsahuje metody pro získaní relací dokumentů.
     """
 
     def get_cast(self, context, cast, **kwargs):
         """
-        Metóda pro získaní informací ohlědně části dokumentu.
+        Metoda pro získaní informací ohlědně části dokumentu.
         """
         context["cast"] = cast
         cast_form = DokumentCastForm(
@@ -435,7 +435,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """
-        Metóda pro získaní contextu dokumentu pro template.
+        Metoda pro získaní contextu dokumentu pro template.
         """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
@@ -496,7 +496,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
     def render_to_response(self, context, **response_kwargs):
         """
-        Metóda pro render response, kvúli správnemu zobrazení zpět možnosti.
+        Metoda pro render response, kvúli správnemu zobrazení zpět možnosti.
         """
         response = super().render_to_response(context, **response_kwargs)
         referer = urlparse(self.request.META.get("HTTP_REFERER", False)).path
@@ -1052,6 +1052,7 @@ class DokumentCastOdpojitView(TransakceView):
     def post(self, request, *args, **kwargs):
         cast = self.get_zaznam()
         fedora_transaction = cast.create_transaction(request.user, self.success_message)
+        fedora_transaction.redirect_url = cast.get_absolute_url()
         archeologicky_zaznam = cast.archeologicky_zaznam
         cast.archeologicky_zaznam = None
         cast.projekt = None
@@ -1608,6 +1609,7 @@ def odeslat(request, ident_cely):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ODESLAN, DOKUMENT_NELZE_ODESLAT)
+        fedora_transaction.redirect_url = get_detail_json_view(ident_cely)
         old_ident = dokument.ident_cely
         # Nastav identifikator na permanentny
         returned_value = Dokument.set_permanent_identificator(dokument, request, messages, fedora_transaction)
@@ -1747,18 +1749,19 @@ def vratit(request, ident_cely):
                 if dokument.stav == D_STAV_ARCHIVOVANY:
                     dokument.doi_hide()
                 duvod = form.cleaned_data["reason"]
-                if dokument.stav == D_STAV_ODESLANY:
-                    Mailer.send_ek02(document=dokument, reason=duvod)
+                before_save_state = dokument.stav
                 dokument.set_vraceny(request.user, dokument.stav - 1, duvod)
                 dokument.close_active_transaction_when_finished = True
                 dokument.save()
+                if before_save_state == D_STAV_ODESLANY:
+                    Mailer.send_ek02(document=dokument, reason=duvod)
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
             except (DoiWriteError, FedoraError) as err:
                 logger.info("dokument.views.vratit.post_error", extra={"error": err, "ident_cely": ident_cely})
-                fedora_transaction.set_rollback(True)
                 fedora_transaction.rollback_transaction()
                 if isinstance(err, FedoraError):
                     dokument.doi_publish(False)
+                transaction.set_rollback(True)
                 return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
             logger.debug("dokument.views.vratit.not_valid", extra={"error": form.errors})
@@ -1845,7 +1848,12 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
-        qs = Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES).order_by("ident_cely")
+        ident = self.request.GET.get("ident")
+        qs = Dokument.objects.exclude(
+            Q(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES)
+            | Q(casti__archeologicky_zaznam__ident_cely=ident)
+            | Q(casti__projekt__ident_cely=ident)
+        ).order_by("ident_cely")
         if self.q:
             qs = qs.filter(
                 Q(ident_cely__icontains=self.q) | Q(autori_snapshot__icontains=self.q) | Q(rok_vzniku__icontains=self.q)
@@ -1917,7 +1925,6 @@ def get_detail_template_shows(dokument, user):
         "tvary_smazat": show_tvary and check_permissions(p.actionChoices.dok_tvary_smazat, user, dokument.ident_cely),
         "zapsat_cast": check_permissions(p.actionChoices.dok_cast_zapsat, user, dokument.ident_cely),
         "nalez_smazat": check_permissions(p.actionChoices.nalez_smazat_dokument, user, dokument.ident_cely),
-        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, dokument.ident_cely),
         "soubor_stahnout": soubor_stahnout_dokument,
         "soubor_nahled": soubor_nahled,
         "soubor_smazat": soubor_smazat,
@@ -2157,54 +2164,59 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         }
     if request.method == "POST":
         dokument_ids = request.POST.getlist("dokument")
-
-        for dokument_id in dokument_ids:
-            dokument = get_object_or_404(Dokument, id=dokument_id)
-            fedora_transaction = zaznam.create_transaction(request.user, DOKUMENT_USPESNE_PRIPOJEN)
-            dokument.active_transaction = fedora_transaction
-            relace = casti_zaznamu.filter(dokument__id=dokument_id)
-            if not relace.exists():
-                dc_ident = get_cast_dokumentu_ident(dokument)
-                if isinstance(zaznam, ArcheologickyZaznam):
-                    dc = DokumentCast(
-                        archeologicky_zaznam=zaznam,
-                        dokument=dokument,
-                        ident_cely=dc_ident,
-                    )
-                    dc.active_transaction = fedora_transaction
-                    dc.save()
-                else:
-                    dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
-                    dc.active_transaction = fedora_transaction
-                    dc.save()
-                dokument.close_active_transaction_when_finished = True
-                dokument.save()
-                logger.debug(
-                    "dokument.views.pripojit.pripojit",
-                    extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
-                )
-            else:
-                fedora_transaction.error_message = DOKUMENT_JIZ_BYL_PRIPOJEN
+        if len(dokument_ids) > 0:
+            fedora_transaction = zaznam.create_transaction(request.user)
+            try:
+                for dokument_id in dokument_ids:
+                    dokument = get_object_or_404(Dokument, id=dokument_id)
+                    dokument.active_transaction = fedora_transaction
+                    relace = casti_zaznamu.filter(dokument__id=dokument_id)
+                    if not relace.exists():
+                        dc_ident = get_cast_dokumentu_ident(dokument)
+                        if isinstance(zaznam, ArcheologickyZaznam):
+                            dc = DokumentCast(
+                                archeologicky_zaznam=zaznam,
+                                dokument=dokument,
+                                ident_cely=dc_ident,
+                            )
+                        else:
+                            dc = DokumentCast(projekt=zaznam, dokument=dokument, ident_cely=dc_ident)
+                        dc.active_transaction = fedora_transaction
+                        dc.save()
+                        dokument.save()
+                        logger.debug(
+                            "dokument.views.pripojit.pripojit",
+                            extra={"value": debug_name, "zaznam": ident_zaznam, "ident_cely": dokument.ident_cely},
+                        )
+                        messages.add_message(
+                            request, messages.SUCCESS, f"{dokument.ident_cely} {DOKUMENT_USPESNE_PRIPOJEN}"
+                        )
+                    else:
+                        messages.add_message(
+                            request, messages.ERROR, f"{dokument.ident_cely} {DOKUMENT_JIZ_BYL_PRIPOJEN}"
+                        )
+            except Exception as err:
+                logger.error("dokument.views.pripojit.error", extra={"error": err, "ident_cely": dokument.ident_cely})
+                transaction.set_rollback(True)
                 fedora_transaction.rollback_transaction()
+            else:
+                fedora_transaction.mark_transaction_as_closed()
         return JsonResponse({"redirect": redirect_name})
     else:
         if proj_ident_cely:
             # Pridavam projektove dokumenty
-            projektove_dokumenty = set()
-            proj_dok_list = set()
-            dokumenty_akce = set(Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_zaznam))
             projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
-            for akce in projekt.akce_set.all().exclude(archeologicky_zaznam__ident_cely=ident_zaznam):
-                for cast in akce.archeologicky_zaznam.casti_dokumentu.all():
-                    if cast.dokument not in dokumenty_akce:
-                        projektove_dokumenty.add((cast.dokument.id, cast.dokument.ident_cely))
-                        proj_dok_list.add(cast.dokument)
+            proj_dok_list = (
+                Dokument.objects.filter(casti__archeologicky_zaznam__akce__projekt=projekt)
+                .exclude(casti__archeologicky_zaznam__ident_cely=ident_zaznam)
+                .distinct()
+            )
             context["dokumenty"] = proj_dok_list
-            context["pripojit"] = proj_dok_list
+            context["pripojit"] = True
             return render(request, "core/transakce_table_modal.html", context)
         else:
             # Pridavam vsechny dokumenty
-            form = PripojitDokumentForm()
+            form = PripojitDokumentForm(ident_zaznam)
         context["form"] = form
         context["hide_table"] = True
     return render(request, "core/transakce_table_modal.html", context)
@@ -2217,6 +2229,34 @@ def get_dokument_table_row(request):
     Funkce pohledu pro získaní řádku dokumentu pro vykreslení v modalu.
     """
     context = {"d": Dokument.objects.get(id=request.GET.get("id", ""))}
+    return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_dokument_table_row_vratit(request):
+    """
+    AJAX pohled pro načtení jednoho řádku dokumentu do tabulky pro "vrácení dokumentu".
+    """
+    dokument_id = request.GET.get("id")
+    index = request.GET.get("index")
+    if not dokument_id:
+        return HttpResponse(status=400)
+    qs = Dokument.objects.filter(id=dokument_id)
+    perm_object = PermissionFilterMixin()
+    perm_object.request = request
+    qs = perm_object.check_filter_permission(qs)
+    dokument = qs.first()
+    if dokument is None:
+        raise Http404("Dokument neexistuje.")
+    form = VratitFormDokument(
+        initial={"old_stav": dokument.stav, "ident_cely": dokument.ident_cely}, prefix=f"form-{index}"
+    )
+    context = {
+        "vratit": True,
+        "d": dokument,
+        "form": form,
+    }
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
 
@@ -2348,20 +2388,24 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
             prefix=komponenta.ident_cely,
             readonly=not show["editovat"],
         ),
-        "form_nalezy_objekty": NalezObjektFormset(
-            old_nalez_post,
-            instance=komponenta,
-            prefix=komponenta.ident_cely + "_o",
-        )
-        if komponenta.ident_cely == komp_ident_cely
-        else NalezObjektFormset(instance=komponenta, prefix=komponenta.ident_cely + "_o"),
-        "form_nalezy_predmety": NalezPredmetFormset(
-            old_nalez_post,
-            instance=komponenta,
-            prefix=komponenta.ident_cely + "_p",
-        )
-        if komponenta.ident_cely == komp_ident_cely
-        else NalezPredmetFormset(instance=komponenta, prefix=komponenta.ident_cely + "_p"),
+        "form_nalezy_objekty": (
+            NalezObjektFormset(
+                old_nalez_post,
+                instance=komponenta,
+                prefix=komponenta.ident_cely + "_o",
+            )
+            if komponenta.ident_cely == komp_ident_cely
+            else NalezObjektFormset(instance=komponenta, prefix=komponenta.ident_cely + "_o")
+        ),
+        "form_nalezy_predmety": (
+            NalezPredmetFormset(
+                old_nalez_post,
+                instance=komponenta,
+                prefix=komponenta.ident_cely + "_p",
+            )
+            if komponenta.ident_cely == komp_ident_cely
+            else NalezPredmetFormset(instance=komponenta, prefix=komponenta.ident_cely + "_p")
+        ),
         "helper_predmet": NalezFormSetHelper(typ="predmet"),
         "helper_objekt": NalezFormSetHelper(typ="objekt"),
     }

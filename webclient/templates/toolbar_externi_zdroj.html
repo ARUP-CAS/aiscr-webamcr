@@ -49,9 +49,6 @@
           <a class="dropdown-item" href="{{Digi_archiv_link|add:zaznam.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarExterniZdroj.digiArchivLink.label" %}</a>          
           {% endif %}
           <a class="dropdown-item" href="{{OAPI_link|add:zaznam.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarExterniZdroj.OAIAPI.label" %}</a>
-          {% if show.stahnout_metadata%}
-          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'externi_zdroj' zaznam.ident_cely %}">{% trans "templates.toolbarExterniZdroj.metadataDownload.label" %}</a>
-          {% endif %}
           {% if show.vypis%}
           <a class="dropdown-item" href="{% url 'vypis:vypis' 'ez' zaznam.ident_cely %}" target=”_blank”>{% trans "templates.toolbarExterniZdroj.vypis.label" %}</a>
           {% endif %}

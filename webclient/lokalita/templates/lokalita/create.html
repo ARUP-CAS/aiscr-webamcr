@@ -8,7 +8,7 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block head %}
 <script>
-    var global_csrftoken = '{{ csrf_token }}';
+    const global_csrftoken = '{{ csrf_token }}';
 </script>
  <!-- Autocomplete media files -->
  <link href="{% static 'admin/css/vendor/select2/select2.css' %}" media="screen" rel="stylesheet" type="text/css">
@@ -45,21 +45,21 @@
 
 {% block script %}
   <script >
-    var static_url = "{% get_static_prefix %}";
+    const static_url = "{% get_static_prefix %}";
   </script>
   <script src="{% static 'js/ajax_functions.js' %}"></script>
   <script>
     $(document).ready(function () {
-        var sel = document.getElementById('id_katastry');
+        const sel = document.getElementById('id_katastry');
         if (sel && "options" in sel) {
-          for(var i = 0; i < sel.options.length; i++){
+          for(let i = 0; i < sel.options.length; i++){
             if(sel.options[i].value === ""){
             sel.remove(i--);//decrease i to preserve future index references after removal
             }
           }
         }
         // get value for typ
-        url = '{% url "heslar:get-nadrazena-value" %}' + "?iterace=2&podrazene="
+        const url = '{% url "heslar:get-nadrazena-value" %}' + "?iterace=2&podrazene="
         get_vychozi_hodnota_podrazeneho("#id_druh","#id_typ_lokality",url)
     })
     //add value from select typ to char field

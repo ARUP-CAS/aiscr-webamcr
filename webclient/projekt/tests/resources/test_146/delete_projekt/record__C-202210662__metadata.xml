@@ -25,32 +25,32 @@
       <amcr:geom_wkt EPSG="4326">POINT(14.7500168 50.1539564)</amcr:geom_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1469262</amcr:id>
-      <amcr:datum_zmeny>2022-09-14T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1647307</amcr:id>
-      <amcr:datum_zmeny>2022-09-14T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2224138</amcr:id>
-      <amcr:datum_zmeny>2022-09-15T07:03:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2018231</amcr:id>
-      <amcr:datum_zmeny>2022-11-07T23:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
       <amcr:typ_zmeny>P23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803197</amcr:id>
-      <amcr:datum_zmeny>2025-07-28T11:41:59.030663+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-004415">U-004415</amcr:uzivatel>
       <amcr:poznamka>C-202210662</amcr:poznamka>
       <amcr:typ_zmeny>DEL</amcr:typ_zmeny>

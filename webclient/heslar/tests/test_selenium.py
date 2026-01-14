@@ -69,8 +69,8 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslar_datace")
 
         # C heslar_hierarchie
-        self.createFedoraRecord("HES-000886")
-        self.createFedoraRecord("HES-001066")
+        self.createFedoraRecord("HES-000886", "administrator")
+        self.createFedoraRecord("HES-001066", "administrator")
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarhierarchie/add/")
         self.ElementClick(By.ID, "select2-id_heslar_nazev_podrazene-container")
@@ -107,7 +107,7 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslar_hierarchie")
 
         # C heslar_odkaz
-        self.createFedoraRecord("HES-001065")
+        self.createFedoraRecord("HES-001065", "administrator")
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarodkaz/add/")
         self.ElementClick(By.ID, "select2-id_heslar_nazev-container")

@@ -9,6 +9,7 @@ from core.message_constants import (
     MAINTENANCE_AFTER_LOGOUT,
     OSOBA_JIZ_EXISTUJE,
     OSOBA_USPESNE_PRIDANA,
+    ZADOST_SMAZANI_UZIVATELE_SUCCESS,
 )
 from core.models import Permissions as p
 from core.models import check_permissions
@@ -21,14 +22,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import CharField, F, IntegerField, Q, Value
 from django.db.models.functions import Concat
 from django.forms.renderers import BaseRenderer
 from django.http import HttpRequest, JsonResponse
 from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import get_language
@@ -507,12 +508,42 @@ class GetUserInfo(APIView):
 
 @method_decorator(odstavka_in_progress, name="post")
 class ObtainAuthTokenWithUpdate(ObtainAuthToken):
+    """
+    Třída pohledu pro získaní tokenu pro API.
+    """
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
         if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
-            token.delete()
-            token.save()
+            try:
+                with transaction.atomic():
+                    Token.objects.filter(user=user).delete()
+                    token = Token.objects.create(user=user)
+            except IntegrityError:
+                # pokud mezitím druhý request token vytvořil,
+                # jen si ho načteme
+                token = Token.objects.get(user=user)
         return Response({"token": token.key})
+
+
+class UserDeleteRequest(LoginRequiredMixin, UpdateView):
+    """
+    Třída pohledu pro požádání o smazání účtu
+    """
+
+    def post(self, request, *args, **kwargs):
+        user: User = request.user
+        Mailer.send_eu07(user, request)
+        messages.add_message(request, messages.SUCCESS, ZADOST_SMAZANI_UZIVATELE_SUCCESS)
+        return JsonResponse({"redirect": reverse("uzivatel:update-uzivatel")})
+
+    def get(self, request, *args, **kwargs):
+        context = {
+            "title": _("uzivatel.views.UserDeleteRequest.title.text"),
+            "id_tag": "user-delete-request-dialog",
+            "button": _("uzivatel.views.UserDeleteRequest.submitButton.text"),
+        }
+        return render(request, "core/transakce_modal.html", context)

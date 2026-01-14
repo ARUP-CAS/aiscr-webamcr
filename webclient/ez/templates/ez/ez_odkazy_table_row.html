@@ -1,5 +1,5 @@
 {% load template_filters %}
-<tr>
+<tr id="d{{arch_z.id}}">
     <td class="app-ident-cely">
       <a href="{% url type|add:':detail' arch_z.ident_cely %}">
         {% if card_type == "akce" %}

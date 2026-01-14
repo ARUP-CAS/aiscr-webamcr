@@ -1,4 +1,4 @@
-<tr>
+<tr id="d{{d.id}}">
   <td>
   {% if d.thumbnail_image %}
       <img src="{% url 'core:download_thumbnail' 'dokument' d.ident_cely d.thumbnail_image %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'dokument' d.ident_cely d.thumbnail_image %}" loading="lazy" style="opacity:0" onload="this.style.opacity=100">
@@ -32,5 +32,8 @@
     {% endif %}
     {% if pripojit %}
     <td><input type="checkbox" name="dokument" value="{{d.id}}"></td>
+    {% endif %}
+    {% if vratit %}
+    <td>{{ form.old_stav }}{{ form.ident_cely }}{{ form.reason }}</td>
     {% endif %}
 </tr>

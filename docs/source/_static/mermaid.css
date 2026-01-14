@@ -1,0 +1,12 @@
+:root {
+  --mermaid-font-size: 20px;
+}
+
+.mermaid,
+.mermaid svg {
+  font-size: var(--mermaid-font-size);
+}
+
+.mermaid * {
+  font-size: var(--mermaid-font-size) !important;
+}

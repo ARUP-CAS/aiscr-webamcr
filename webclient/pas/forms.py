@@ -47,7 +47,7 @@ def validate_uzivatel_email(email):
 
 class ProjectModelChoiceField(ModelChoiceField):
     """
-    Třída pro správne zobrazení label.
+    Třída pro správně zobrazení label.
     """
 
     def label_from_instance(self, obj):

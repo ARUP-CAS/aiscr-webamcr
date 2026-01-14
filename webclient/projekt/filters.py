@@ -101,7 +101,7 @@ class KatastrFilterMixin(FilterSet):
 
     def filtr_katastr(self, queryset, name, value):
         """
-        Metóda pro filtrování podle názvu hlavního a dalších katastrů.
+        Metoda pro filtrování podle názvu hlavního a dalších katastrů.
         """
         if value:
             return queryset.filter(Q(hlavni_katastr__in=value) | Q(katastry__in=value)).distinct()
@@ -109,19 +109,19 @@ class KatastrFilterMixin(FilterSet):
 
     def filtr_katastr_kraj(self, queryset, name, value):
         """
-        Metóda pro filtrování podle názvu okresu hlavního a dalších katastrů.
+        Metoda pro filtrování podle názvu okresu hlavního a dalších katastrů.
         """
         return queryset.filter(Q(hlavni_katastr__okres__kraj__in=value) | Q(katastry__okres__kraj__in=value)).distinct()
 
     def filtr_katastr_okres(self, queryset, name, value):
         """
-        Metóda pro filtrování podle názvu kraje hlavního a dalších katastrů.
+        Metoda pro filtrování podle názvu kraje hlavního a dalších katastrů.
         """
         return queryset.filter(Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)).distinct()
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metóda pro filtrování podle popisních údajů.
+        Metoda pro filtrování podle popisních údajů.
         """
         return queryset.filter(
             Q(lokalizace__icontains=value)
@@ -526,7 +526,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_planovane_zahajeni(self, queryset, name, value):
         """
-        Metóda pro filtrování podle plánovaného zahájení.
+        Metoda pro filtrování podle plánovaného zahájení.
         """
         if value.start and value.stop:
             rng = DateRange(
@@ -546,7 +546,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_popisne_udaje_akce(self, queryset, name, value):
         """
-        Metóda pro filtrování podle popisních údajů akce.
+        Metoda pro filtrování podle popisních údajů akce.
         """
         return queryset.filter(
             Q(akce__lokalizace_okolnosti__icontains=value)
@@ -558,7 +558,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_has_positive_find(self, queryset, name, value):
         """
-        Metóda pro filtrování podle pozitivního nálezu akce.
+        Metoda pro filtrování podle pozitivního nálezu akce.
         """
         if "True" in value and "False" in value:
             return queryset.filter(akce__archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False).distinct()
@@ -573,7 +573,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_by_oblast(self, queryset, name, value):
         """
-        Metóda pro filtrování podle oblasti projektu.
+        Metoda pro filtrování podle oblasti projektu.
         """
         if OBLAST_CECHY in value and OBLAST_MORAVA in value:
             return queryset
@@ -585,7 +585,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_announced_after(self, queryset, name, value):
         """
-        Metóda pro filtrování podle datumu oznámení od.
+        Metoda pro filtrování podle datumu oznámení od.
         """
         return queryset.filter(historie__historie__typ_zmeny=OZNAMENI_PROJ).filter(
             historie__historie__datum_zmeny__gte=value
@@ -593,7 +593,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_announced_before(self, queryset, name, value):
         """
-        Metóda pro filtrování podle datumu oznámení do.
+        Metoda pro filtrování podle datumu oznámení do.
         """
         return queryset.filter(historie__historie__typ_zmeny=OZNAMENI_PROJ).filter(
             historie__historie__datum_zmeny__lte=value
@@ -601,7 +601,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_approved_after(self, queryset, name, value):
         """
-        Metóda pro filtrování podle datumu schválení od.
+        Metoda pro filtrování podle datumu schválení od.
         """
         return queryset.filter(historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ).filter(
             historie__historie__datum_zmeny__gte=value
@@ -609,7 +609,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_approved_before(self, queryset, name, value):
         """
-        Metóda pro filtrování podle datumu schválení do.
+        Metoda pro filtrování podle datumu schválení do.
         """
         return queryset.filter(historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ).filter(
             historie__historie__datum_zmeny__lte=value
@@ -617,13 +617,13 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_akce_typ(self, queryset, name, value):
         """
-        Metóda pro filtrování podle typu akce.
+        Metoda pro filtrování podle typu akce.
         """
         return queryset.filter(Q(akce__hlavni_typ__in=value) | Q(akce__vedlejsi_typ__in=value)).distinct()
 
     def filtr_akce_katastr(self, queryset, name, value):
         """
-        Metóda pro filtrování podle katastru akce.
+        Metoda pro filtrování podle katastru akce.
         """
         if value:
             return queryset.filter(
@@ -634,7 +634,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filtr_akce_katastr_kraj(self, queryset, name, value):
         """
-        Metóda pro filtrování podle kraje katastru akce.
+        Metoda pro filtrování podle kraje katastru akce.
         """
         return queryset.filter(
             Q(akce__archeologicky_zaznam__hlavni_katastr__okres__kraj__in=value)
@@ -643,7 +643,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filtr_akce_katastr_okres(self, queryset, name, value):
         """
-        Metóda pro filtrování podle okresu katastru akce.
+        Metoda pro filtrování podle okresu katastru akce.
         """
         return queryset.filter(
             Q(akce__archeologicky_zaznam__hlavni_katastr__okres__in=value)
@@ -652,7 +652,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filtr_akce_vedouci(self, queryset, name, value):
         """
-        Metóda pro filtrování podle vedoucího akce.
+        Metoda pro filtrování podle vedoucího akce.
         """
         if not value:
             return queryset
@@ -660,7 +660,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filtr_akce_organizace(self, queryset, name, value):
         """
-        Metóda pro filtrování podle organizace akce.
+        Metoda pro filtrování podle organizace akce.
         """
         if value:
             return queryset.filter(
@@ -671,7 +671,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filtr_dokumenty_ident(self, queryset, name, value):
         """
-        Metóda pro filtrování podle identu dokumentu.
+        Metoda pro filtrování podle identu dokumentu.
         """
         return queryset.filter(
             Q(akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely__icontains=value)
@@ -698,7 +698,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
 class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     """
-    Třída pro správne zobrazení filtru.
+    Třída pro správně zobrazení filtru.
     """
 
     form_method = "GET"

@@ -57,7 +57,7 @@ def get_default_licence():
     return DOKUMENT_LICENCE_NEZNAMA
 
 
-class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin):
+class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin, ModelWithMetadata):
     """
     Class pro db model user.
     """
@@ -66,15 +66,19 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     IDENT_PREFIX = "U"
     SEQUENCE_NAME = "auth_user_ident_seq"
 
-    password = models.CharField(max_length=128)
+    password = models.CharField(max_length=128, verbose_name=_("uzivatel.models.User.heslo"))
     last_login = models.DateTimeField(blank=True, null=True)
-    is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor", db_index=True)
+    is_superuser = models.BooleanField(
+        default=False, verbose_name=_("uzivatel.models.User.globalnyAdministrator"), db_index=True
+    )
     ident_cely = models.CharField(unique=True, max_length=150)
-    first_name = models.CharField(max_length=150, verbose_name="Jméno", db_index=True)
-    last_name = models.CharField(max_length=150, verbose_name="Příjmení", db_index=True)
-    email = models.CharField(max_length=254, unique=True)
-    is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní", db_index=True)
-    is_active = models.BooleanField(default=False, verbose_name="Aktivní", db_index=True)
+    first_name = models.CharField(max_length=150, verbose_name=_("uzivatel.models.User.jmeno"), db_index=True)
+    last_name = models.CharField(max_length=150, verbose_name=_("uzivatel.models.User.prijmeni"), db_index=True)
+    email = models.CharField(max_length=254, unique=True, verbose_name=_("uzivatel.models.User.email"))
+    is_staff = models.BooleanField(
+        default=False, verbose_name=_("uzivatel.models.User.pristupDoAdminRozhrani"), db_index=True
+    )
+    is_active = models.BooleanField(default=False, verbose_name=_("uzivatel.models.User.aktivni"), db_index=True)
     date_joined = models.DateTimeField(default=timezone.now)
     osoba = models.ForeignKey("Osoba", models.RESTRICT, db_column="osoba", blank=True, null=True, db_index=True)
     organizace = models.ForeignKey("Organizace", models.RESTRICT, db_column="organizace", db_index=True)
@@ -86,9 +90,16 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         null=True,
         db_index=True,
     )
-    jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
+    jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY, verbose_name=_("uzivatel.models.User.jazyk"))
     sha_1 = models.TextField(blank=True, null=True)
-    telefon = models.CharField(max_length=100, blank=True, null=True, validators=[validate_phone_number], db_index=True)
+    telefon = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        validators=[validate_phone_number],
+        db_index=True,
+        verbose_name=_("uzivatel.models.User.telefon"),
+    )
     notification_types = models.ManyToManyField(
         "UserNotificationType",
         blank=True,
@@ -207,7 +218,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("uzivatel.User.save.start", extra={"option": self._state.adding})
         # Random string is temporary before the id is assigned
@@ -346,7 +357,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
     Class pro db model organizace.
     """
 
-    IDENT_PREFIX = "HES"
+    IDENT_PREFIX = "ORG"
     SEQUENCE_NAME = "organizace_ident_seq"
 
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
@@ -414,7 +425,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("Organizace.save.start")
         if self._state.adding and not self.ident_cely:
@@ -478,7 +489,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
     Class pro db model osoba.
     """
 
-    IDENT_PREFIX = "HES"
+    IDENT_PREFIX = "OS"
     SEQUENCE_NAME = "osoba_ident_seq"
 
     jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
@@ -496,7 +507,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("Osoba.save.start")
         # Random string is temporary before the id is assigned

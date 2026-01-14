@@ -1,6 +1,9 @@
 import datetime
+import json
 import logging
 import traceback
+from ftplib import FTP
+from io import BytesIO
 
 import requests
 from arch_z.models import Akce
@@ -8,6 +11,8 @@ from cacheops import invalidate_model
 from celery import shared_task
 from core.connectors import RedisConnector
 from core.constants import (
+    IMPORT,
+    OBLAST_CECHY,
     PRISTUPNOST_MIN_RAZENI,
     PROJEKT_STAV_VYTVORENY,
     PROJEKT_STAV_ZAPSANY,
@@ -19,15 +24,19 @@ from core.constants import (
     UDAJ_ODSTRANEN,
     ZAPSANI_PROJ,
 )
-from core.coordTransform import transform_geom_to_sjtsk
-from core.models import SouborVazby
+from core.forms import ImportDataAdminForm
+from core.import_data_mappers import ImportModelMapper, SouborMapper, UzivatelNotifikaceMapper, UzivatelOpravneniMapper
+from core.models import Soubor, SouborVazby
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
+from core.setting_models import CustomAdminSettings
 from django.conf import settings
-from django.db import connection
-from django.db.models import F, Min, Prefetch, Q
+from django.contrib.auth.models import Group
+from django.db import connection, transaction
+from django.db.models import F, Min, Model, Prefetch, Q
 from django.db.models.functions import Coalesce, Upper
 from django.utils import timezone
-from dokument.models import Dokument, DokumentExtraData
+from django.utils.translation import gettext as _
+from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from heslar import hesla_dynamicka
 from heslar.hesla import HESLAR_PRISTUPNOST
@@ -36,10 +45,10 @@ from heslar.models import Heslar
 from historie.models import Historie
 from lokalita.models import Lokalita
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
-from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Osoba, User
+from uzivatel.models import Osoba, User, UserNotificationType
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -82,120 +91,6 @@ def send_notifications_en():
         logger.error(
             "cron.tasks.send_notifications_en.do.error", extra={"error": str(err), "traceback": traceback.format_exc()}
         )
-
-
-@shared_task
-def pian_to_sjtsk():
-
-    query_select = (
-        "select pian.id,ST_AsText(pian.geom) as geometry "
-        " from public.pian pian "
-        " where pian.geom is not null "
-        " and (pian.geom_sjtsk is null)"
-        " order by pian.id"
-    )
-    query_update = (
-        "update public.pian pian "
-        " set geom_sjtsk = ST_GeomFromText(%s)"
-        " where pian.geom_sjtsk is null and pian.id=%s "
-    )
-    pians = Pian.objects.raw(query_select)
-    c = len(pians)
-    for idx, pian in enumerate(pians):
-        if idx % (c // 100) == 0:
-            print(f"\r{round(idx / c * 100)}%", end="")
-        geom = transform_geom_to_sjtsk(pian.geometry)
-        if geom[1] == "OK":
-            with connection.cursor() as cursor:
-                cursor.execute(query_update, [geom[0], pian.id])
-        else:
-            print("chyba pian id {pian.id}")
-
-
-@shared_task
-def nalez_to_sjtsk():
-    query_select = (
-        "select samostatny_nalez.id, ST_AsText(samostatny_nalez.geom) as geometry "
-        " from public.samostatny_nalez "
-        " where samostatny_nalez.geom is not null "
-        " and (samostatny_nalez.geom_sjtsk is null)"
-        " order by samostatny_nalez.id"
-    )
-    query_update = (
-        "update public.samostatny_nalez "
-        " set geom_sjtsk = ST_GeomFromText(%s) "
-        " where samostatny_nalez.geom_sjtsk is null and samostatny_nalez.id=%s "
-    )
-    SNs = SamostatnyNalez.objects.raw(query_select)
-    c = len(SNs)
-    for idx, SN in enumerate(SNs):
-        if idx % (c // 100) == 0:
-            print(f"\r{round(idx / c * 100)}%", end="")
-
-        geom = transform_geom_to_sjtsk(SN.geometry)
-        if geom[1] == "OK":
-            with connection.cursor() as cursor:
-                cursor.execute(query_update, [geom[0], SN.id])
-        else:
-            print("chyba SN id {SN.id}")
-
-
-@shared_task
-def projekt_to_sjtsk():
-    query_select = (
-        "select projekt.id,projekt.ident_cely,ST_AsText(projekt.geom) as geometry,ST_AsText(projekt.geom_sjtsk) as geometry_sjtsk "
-        " from public.projekt "
-        " where projekt.geom is not null "
-        " and projekt.geom_sjtsk is null "
-        " order by projekt.id"
-    )
-    query_update = (
-        "update public.projekt "
-        " set geom_sjtsk = ST_GeomFromText(%s) "
-        " where projekt.geom_sjtsk is null and projekt.id=%s "
-    )
-    PRJs = Projekt.objects.raw(query_select)
-    c = len(PRJs)
-    for idx, PRJ in enumerate(PRJs):
-        if c > 100 and idx % (c // 100) == 0:
-            print(f"\r{round(idx / c * 100)}%", end="")
-
-        geom = transform_geom_to_sjtsk(PRJ.geometry)
-        if geom[1] == "OK":
-            with connection.cursor() as cursor:
-                cursor.execute(query_update, [geom[0], PRJ.id])
-        else:
-            print("chyba PRJ id {PRJ.id}")
-
-
-@shared_task
-def dokument_to_sjtsk():
-    query_select = (
-        "select dokument_extra_data.dokument,ST_AsText(dokument_extra_data.geom) as geometry,ST_AsText(dokument_extra_data.geom_sjtsk) as geometry_sjtsk "
-        " from public.dokument_extra_data "
-        " where dokument_extra_data.geom is not null "
-        " and dokument_extra_data.geom_sjtsk is null "
-        " order by dokument_extra_data.dokument"
-    )
-    query_update = (
-        "update public.dokument_extra_data "
-        " set geom_sjtsk = ST_GeomFromText(%s) "
-        " where dokument_extra_data.geom_sjtsk is null and dokument_extra_data.dokument=%s "
-    )
-    DOCs = DokumentExtraData.objects.raw(query_select)
-    c = len(DOCs)
-    for idx, DOC in enumerate(DOCs):
-        if c > 100 and idx % (c // 100) == 0:
-            print(f"\r{round(idx / c * 100)}%", end="")
-        try:
-            geom = transform_geom_to_sjtsk(DOC.geometry)
-            if geom[1] == "OK":
-                with connection.cursor() as cursor:
-                    cursor.execute(query_update, [geom[0], DOC.pk])
-            else:
-                print("chyba DOC id {DOC.pk}")
-        except Exception as err:
-            logger.warning("core.cron.dokument_to_sjtsk.warning", extra={"error": err})
 
 
 @shared_task
@@ -403,9 +298,18 @@ def cancel_old_projects():
             project.active_transaction = FedoraTransaction()
             project.set_zruseny(User.objects.get(pk=hesla_dynamicka.ADMIN_USER), cancelled_string, RUSENI_STARE_PROJ)
             if project.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID and project.has_oznamovatel():
-                project.create_cancel_confirmation_document(User.objects.get(pk=hesla_dynamicka.ADMIN_USER))
+                rep_bin_file = project.create_cancel_confirmation_document(
+                    User.objects.get(pk=hesla_dynamicka.ADMIN_USER)
+                )
+            else:
+                rep_bin_file = None
             project.close_active_transaction_when_finished = True
             project.save()
+            reason = STARY_PROJEKT_ZRUSEN
+            if project.ident_cely[0] == OBLAST_CECHY:
+                Mailer.send_ep06a(project=project, reason=reason, rep_bin_file=rep_bin_file)
+            else:
+                Mailer.send_ep06b(project=project, reason=reason, rep_bin_file=rep_bin_file)
             logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
         logger.debug("core.cron.cancel_old_projects.do.end")
     except Exception as err:
@@ -548,69 +452,269 @@ def call_digiarchiv_update_task():
 
 
 @shared_task
-def set_pristupnost_snapshot():
-    from django.db import transaction
+def run_data_import(job_id, user_id):
+    logger.debug("cron.tasks.run_data_import.start", extra={"job_id": job_id})
 
-    BATCH_SIZE = 100
-    projekt_count = Projekt.objects.all().count()
-    for i in range(projekt_count // BATCH_SIZE + 1):
-        print(f"\r{i} / {projekt_count // BATCH_SIZE}", end="", flush=True)
+    redis_connector = RedisConnector().get_connection()
+
+    record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
+    performed_action = redis_connector.get(f"import_performed_action_{job_id}").decode("utf-8")
+    redis_connector.set(f"import_data_progress_{job_id}", json.dumps([]))
+    redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
+    failed = False
+    import_results = {}
+    mapper_classes = {}
+    all_records = []
+    import_files_list: list[Soubor] = []
+    stopped = False
+
+    try:
         with transaction.atomic():
-            projekty = list(Projekt.objects.order_by("id")[i * BATCH_SIZE : (i + 1) * BATCH_SIZE])
-            for projekt in projekty:
-                projekt.suppress_signal = True
-                projekt.set_pristupnost()
-            Projekt.objects.bulk_update(projekty, ["pristupnost_snapshot"])
+            for record_id in range(record_count):
+                try:
+                    fedora_transaction = FedoraTransaction()
+                    serialized_record = json.loads(
+                        redis_connector.get(f"import_data_{job_id}_record_{record_id}").decode("utf-8")
+                    )
+                    mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
+                    mapper_classes[record_id] = mapper_class
+                    records = mapper_class(serialized_record).create_records(performed_action)
+                    if mapper_class == SouborMapper:
+                        import_files_list += records
+                        record: Soubor = records[0]
+                        import_results[record_id] = (
+                            f"{_('cron.tasks.run_data_import.file')}, {str(record.nazev)} ({record.vazba.navazany_objekt.ident_cely})"
+                        )
+                        redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
+                        continue
+                    for record in records:
+                        redis_connector.set(
+                            f"import_data_status_message_{job_id}",
+                            _("cron.tasks.run_data_import.importing_record_data") + f" {record_id + 1}/{record_count}",
+                        )
+                        all_records.append(record)
+                        if mapper_class == UzivatelOpravneniMapper:
+                            record: User
+                            group = Group.objects.get(name=serialized_record["skupina"])
+                            if performed_action in (
+                                ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                                ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                            ):
+                                record.groups.add(group)
+                            elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                                record.groups.remove(group)
+                        if mapper_class == UzivatelNotifikaceMapper:
+                            record: User
+                            group = UserNotificationType.objects.get(ident_cely=serialized_record["notifikace"])
+                            if performed_action in (
+                                ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                                ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                            ):
+                                record.notification_types.add(group)
+                            elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                                record.notification_types.remove(group)
+                        else:
+                            if performed_action in (
+                                ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                                ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                            ):
+                                if isinstance(record, Model):
+                                    record.suppress_signal = True
+                                    mapper_class.create_relations(record)
+                                    mapper_class.record_postprocessing(record, performed_action, fedora_transaction)
+                                    if hasattr(record, "historie"):
+                                        record.save()
+                                        Historie(
+                                            typ_zmeny=IMPORT,
+                                            uzivatel=User.objects.get(pk=user_id),
+                                            vazba=record.historie,
+                                            poznamka=serialized_record,
+                                        ).save()
+                                    else:
+                                        record.save()
+                                else:
+                                    raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
+                            elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                                record.suppress_signal = False
+                                record.active_transaction = fedora_transaction
+                                record.delete()
+                        if isinstance(record, ModelWithMetadata):
+                            record.save_metadata(fedora_transaction)
+                    fedora_transaction.mark_transaction_as_closed()
+                    logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id, "job_id": job_id})
+                    import_results[record_id] = (
+                        f"{_('cron.tasks.run_data_import.success')}, {[', '.join(str(record.pk) for record in records if record.pk)]}"
+                    )
+                    redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
+                except Exception as err:
+                    logger.info(
+                        "cron.tasks.run_data_import.error",
+                        extra={"error": err, "record_id": record_id, "job_id": job_id},
+                    )
+                    fedora_transaction.rollback_transaction()
+                    transaction.set_rollback(True)
+                    import_results[record_id] = (
+                        f"{_('cron.tasks.run_data_import.error.part_1')}: {err}, "
+                        f"{_('cron.tasks.run_data_import.error.part_2')} {serialized_record}, "
+                        f"{_('cron.tasks.run_data_import.error.part_3')} {performed_action}" + traceback.format_exc()
+                    )
+                    redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
+                    failed = True
+                    break
+                stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
+                if stopped:
+                    redis_connector.set(
+                        f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.stopped_by_user")
+                    )
+                    redis_connector.set(f"import_data_stop_{job_id}", 1)
+                    logger.info("cron.tasks.run_data_import.files.insert.stopped", extra={"job_id": job_id})
+                    break
+    except Exception as err:
+        redis_connector.set(f"import_data_stop_{job_id}", 1)
+        logger.error("cron.tasks.run_data_import.database_error", extra={"error": err, "job_id": job_id})
+        for record_id in range(record_count):
+            import_results[record_id] = f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, "
+        failed = True
 
+    import_results_files = []
+    if (
+        not failed
+        and not stopped
+        and performed_action
+        in (
+            ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+        )
+    ):
+        redis_connector.set(
+            f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.file_import.starting")
+        )
+        ftp_settings = json.loads(CustomAdminSettings.objects.get(item_id="ftp_import_settings").value)
+        try:
+            with FTP(
+                host=ftp_settings["FILE_IMPORT_FTP_HOSTNAME"],
+                user=ftp_settings["FILE_IMPORT_FTP_USER_NAME"],
+                passwd=ftp_settings["FILE_IMPORT_FTP_PASSWORD"],
+            ) as ftp:
+                ftp.cwd(ftp_settings["FILE_IMPORT_FTP_PATH"])
+                redis_connector.set(
+                    f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.file_import.connected")
+                )
+                for soubor in import_files_list:
+                    soubor: Soubor
+                    if stopped:
+                        break
+                    ident_cely = soubor.vazba.navazany_objekt.ident_cely
+                    if ident_cely in ftp.nlst():
+                        ftp.cwd(ident_cely)
+                        filename = soubor.nazev
+                        stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
+                        if stopped:
+                            logger.info("cron.tasks.run_data_import.files.insert.stopped", extra={"job_id": job_id})
+                            redis_connector.set(
+                                f"import_data_status_message_{job_id}",
+                                _("cron.tasks.run_data_import.stopped_by_user"),
+                            )
+                            break
+                        soubor_query = Soubor.objects.filter(nazev=filename, vazba=soubor.vazba)
+                        if (
+                            not soubor_query.exists()
+                            and performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+                        ):
+                            import_results_files.append(
+                                {
+                                    "ident_cely": ident_cely,
+                                    "file_name": filename,
+                                    "size_mb": None,
+                                    "additional_info": _("cron.tasks.run_data_import.does_not_exist"),
+                                }
+                            )
+                            redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
+                            continue
+                        elif soubor_query.exists() and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+                            import_results_files.append(
+                                {
+                                    "ident_cely": ident_cely,
+                                    "file_name": filename,
+                                    "size_mb": None,
+                                    "additional_info": _("cron.tasks.run_data_import.already_exists"),
+                                }
+                            )
+                            redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
+                            continue
+                        else:
+                            soubor = soubor_query.first() or soubor
+                        redis_connector.set(
+                            f"import_data_status_message_{job_id}",
+                            _("cron.tasks.run_data_import.importing_file") + f" {filename} ({ident_cely})",
+                        )
+                        fedora_transaction = FedoraTransaction()
+                        conn = FedoraRepositoryConnector(
+                            soubor.vazba.navazany_objekt, fedora_transaction, skip_container_check=False
+                        )
+                        bio = BytesIO()
+                        ftp.retrbinary(f"RETR {filename}", bio.write)
+                        mimetype = Soubor.get_mime_types(bio)
+                        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+                            rep_bin_file = conn.save_binary_file(filename, mimetype, bio)
+                        else:
+                            rep_bin_file = conn.update_binary_file(filename, mimetype, bio, soubor.repository_uuid)
+                        soubor.mimetype = mimetype
+                        soubor.size_mb = rep_bin_file.size_mb
+                        soubor.sha_512 = rep_bin_file.sha_512
+                        soubor.path = rep_bin_file.url_without_domain
+                        soubor.suppress_signal = True
+                        soubor.save()
+                        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
+                            soubor.create_soubor_vazby()
+                        Historie(
+                            typ_zmeny=IMPORT,
+                            uzivatel=User.objects.get(pk=user_id),
+                            vazba=soubor.historie,
+                            poznamka=f"{_('cron.tasks.run_data_import.imported_file')} "
+                            f"{ftp_settings['FILE_IMPORT_FTP_PATH']}/{ident_cely}/{filename}",
+                        ).save()
+                        logger.info(
+                            "cron.tasks.run_data_import.files.insert.saved",
+                            extra={
+                                "imported_filename": filename,
+                                "ident_cely": ident_cely,
+                                "job_id": job_id,
+                            },
+                        )
+                        soubor.active_transaction = fedora_transaction
+                        soubor.save()
+                        fedora_transaction.mark_transaction_as_closed()
+                        import_results_files.append(
+                            {
+                                "ident_cely": ident_cely,
+                                "file_name": filename,
+                                "size_mb": round(rep_bin_file.size_mb, 3),
+                                "additional_info": mimetype,
+                            }
+                        )
+                        redis_connector.set(f"import_data_files_{job_id}", json.dumps(import_results_files))
+                        ftp.cwd("..")
+                    redis_connector.set(f"import_data_progress_files_{job_id}", round((record_id + 1) / record_count))
+        except Exception as err:
+            logger.error("cron.tasks.run_data_import.fpt_error", extra={"error": err, "job_id": job_id})
+            redis_connector.set(f"import_data_stop_{job_id}", 1)
+            redis_connector.set(
+                f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.cannot_connect_to_ftp")
+            )
+            failed = True
 
-@shared_task
-def pians_properties_check():
-    """
-    Jednorázová oprava dat PIANů v rámci issue 2940
-    """
-    from django.contrib.gis.db.models.functions import Centroid
-    from django.contrib.gis.geos import GeometryCollection, LineString, MultiPolygon, Point, Polygon
-    from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
-    from pian.models import get_ZM_from_point
+    if not stopped and not failed:
+        redis_connector.set(f"import_data_progress_files_{job_id}", 1)
+        redis_connector.set(f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.finished"))
+    expiration_seconds = 300
+    redis_connector.expire(f"import_data_count_{job_id}", expiration_seconds)
+    redis_connector.expire(f"import_data_files_{job_id}", expiration_seconds)
+    redis_connector.expire(f"import_data_progress_files_{job_id}", expiration_seconds)
+    redis_connector.expire(f"import_data_status_message_{job_id}", expiration_seconds)
+    for record_id in range(record_count):
+        redis_connector.expire(f"import_data_{job_id}_record_{record_id}", expiration_seconds)
 
-    geom_type = {}
-    geom_type[str(Point)] = Heslar.objects.get(id=GEOMETRY_BOD)
-    geom_type[str(LineString)] = Heslar.objects.get(id=GEOMETRY_LINIE)
-    geom_type[str(Polygon)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
-    geom_type[str(MultiPolygon)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
-    geom_type[str(GeometryCollection)] = Heslar.objects.get(id=GEOMETRY_PLOCHA)
-    query = Pian.objects.all()
-    pocet = 0
-    pocet_pians = query.count()
-    index = 0
-    for item in query.iterator(chunk_size=1000):
-        save = False
-        geom = item.geom
-        if item.typ.pk != geom_type[str(type(geom))].pk:
-            item.typ = geom_type[str(type(geom))]
-            save = True
-        if type(geom) == Point:
-            point = geom
-        elif type(geom) == LineString:
-            point = geom.interpolate_normalized(0.5)
-        else:
-            point = Centroid(geom)
-        zm10, zm50 = get_ZM_from_point(point)
-        if zm10 is not None and zm50 is not None:
-            if item.zm10.pk != zm10.pk:
-                item.zm10 = zm10
-                save = True
-            if item.zm50.pk != zm50.pk:
-                item.zm50 = zm50
-                save = True
-        if save is True:
-            pocet = pocet + 1
-            print(f"\r{pocet} {index}/{pocet_pians}", end="")
-            fedora_transaction = FedoraTransaction()
-            item.active_transaction = fedora_transaction
-            item.update_all_azs = False
-            item.close_active_transaction_when_finished = True
-            item.save()
-        index = index + 1
-
-    print(f"pocet zmen {pocet}")
+    logger.debug(
+        "cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "record_count": record_count}
+    )

@@ -28,8 +28,8 @@ def invalidate_arch_z_related_models():
 @receiver(pre_save, sender=ArcheologickyZaznam, weak=False)
 def create_arch_z_vazby(sender, instance, **kwargs):
     """
-    Metóda pro vytvoření historických vazeb arch záznamu.
-    Metóda se volá pred uložením arch záznamu.
+    Metoda pro vytvoření historických vazeb arch záznamu.
+    Metoda se volá pred uložením arch záznamu.
     """
     logger.debug("arch_z.signals.create_arch_z_vazby.start")
     if instance.pk is None:
@@ -112,7 +112,10 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
             save_metadata()
     logger.debug(
         "arch_z.signals.create_arch_z_metadata.end",
-        extra={"pk": instance.pk, "transaction": fedora_transaction.uid},
+        extra={
+            "ident_cely": instance.ident_cely,
+            "transaction": fedora_transaction.uid if fedora_transaction else None,
+        },
     )
 
 

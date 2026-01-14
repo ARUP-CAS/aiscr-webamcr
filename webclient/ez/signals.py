@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=ExterniZdroj, weak=False)
 def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
     """
-    Metóda pro vytvoření historických vazeb externího zdroje.
-    Metóda se volá pred uložením záznamu.
+    Metoda pro vytvoření historických vazeb externího zdroje.
+    Metoda se volá pred uložením záznamu.
     """
     logger.debug("ez.signals.create_ez_vazby.start", extra={"ident_cely": instance.ident_cely})
     if instance.pk is None:

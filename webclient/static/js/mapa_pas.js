@@ -36,34 +36,39 @@ map.on('click', function (e) {
     if (!global_measuring_toolbox._measuring) {
         if (global_map_can_edit) {
             if (map.getZoom() > 11) {
-                point_global_WGS84= amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
-                point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
-                point_leaf= [...point_global_WGS84].reverse();
-                if (document.getElementById('visible_ss_combo').value == 1) {
-                        document.getElementById('visible_x1').value = point_global_WGS84[0];
-                        document.getElementById('visible_x2').value = point_global_WGS84[1];
-                    }
-                    else if (document.getElementById('visible_ss_combo').value == 3) {
-                        document.getElementById('visible_x1').value = degToDmsString(point_global_WGS84[0]);
-                        document.getElementById('visible_x2').value = degToDmsString(point_global_WGS84[1]);
-                    }
-                    else if (document.getElementById('visible_ss_combo').value == 2) {
-                        document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0]);
-                        document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1]);
-                }
-                replace_coor();
-                document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
-                document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
-                document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
-                document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
-                addUniquePointToPoiLayer(point_leaf, '', false, true)
-                fill_katastr();
+                setPositionPAS(e.latlng.lng, e.latlng.lat);                                
             } else {
                 map.setView(e.latlng, map.getZoom() + 2)
             }        
         }
     }
 });
+
+function setPositionPAS(lng, lat) {
+    point_global_WGS84 = amcr_static_coordinate_precision_wgs84([lng, lat]);
+    point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
+    point_leaf = [...point_global_WGS84].reverse();
+    if (document.getElementById('visible_ss_combo').value == 1) {
+        document.getElementById('visible_x1').value = point_global_WGS84[0];
+        document.getElementById('visible_x2').value = point_global_WGS84[1];
+    }
+    else if (document.getElementById('visible_ss_combo').value == 3) {
+        document.getElementById('visible_x1').value = degToDmsString(point_global_WGS84[0]);
+        document.getElementById('visible_x2').value = degToDmsString(point_global_WGS84[1]);
+    }
+    else if (document.getElementById('visible_ss_combo').value == 2) {
+        document.getElementById('visible_x1').value = -1 * Math.abs(point_global_JTSK[0]);
+        document.getElementById('visible_x2').value = -1 * Math.abs(point_global_JTSK[1]);
+    }
+    replace_coor();
+    document.getElementById('id_coordinate_wgs84_x1').value = point_global_WGS84[0]
+    document.getElementById('id_coordinate_wgs84_x2').value = point_global_WGS84[1]
+    document.getElementById('id_coordinate_sjtsk_x1').value = point_global_JTSK[0]
+    document.getElementById('id_coordinate_sjtsk_x2').value = point_global_JTSK[1]
+    addUniquePointToPoiLayer(point_leaf, '', false, true)
+    fill_katastr();
+}
+
 
 // Načtení stavu při načtení stránky
 loadMapState('pas');
@@ -318,24 +323,7 @@ function showPosition(position) {
     var latlng = new L.LatLng(latitude, longitude);
 
     map.setView(latlng, 10);
-    addUniquePointToPoiLayer([latitude, longitude], '', false, true)
-
-    point_global_WGS84 = [longitude,latitude];
-    point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0], point_global_WGS84[1]));
-    if (document.getElementById('visible_ss_combo').value == 1) {
-        document.getElementById('visible_x1').value = point_global_WGS84[0]
-        document.getElementById('visible_x2').value = point_global_WGS84[1]
-    }
-    else if (document.getElementById('visible_ss_combo').value == 3) {
-        document.getElementById('visible_x1').value = degToDmsString(point_global_WGS84[0]);
-        document.getElementById('visible_x2').value = degToDmsString(point_global_WGS84[1]);
-    }
-    else if (document.getElementById('visible_ss_combo').value == 2) {
-        document.getElementById('visible_x1').value = -1*Math.abs(point_global_JTSK[0])
-        document.getElementById('visible_x2').value = -1*Math.abs(point_global_JTSK[1])
-    }
-    replace_coor();
-
+    setPositionPAS(longitude, latitude);  
     L.marker(latlng,{icon:pinIconGreenPin}).addTo(poi_sugest)
         .bindPopup("Vaše současná poloha")
         .openPopup();

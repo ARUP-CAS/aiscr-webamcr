@@ -37,14 +37,14 @@ jobs:
       sha: ${{ steps.set-sha.outputs.sha }}
     steps:
       - name: Log-in as AMCR app
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         id: app-token
         with:
           app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
           private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: dev
           token: ${{ steps.app-token.outputs.token }}
@@ -55,7 +55,7 @@ jobs:
 
       - name: Set up Python
         if: ${{ inputs.pip_update }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -77,11 +77,11 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git config --global pull.rebase true
-          git add docs/source/knihovny_read_only.rst
+          git add docs/source/12_zavislosti/python_knihovny.rst
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update knihovny_read_only.rst for release $VERSION"
+            git commit -m "Update python_knihovny.rst for release $VERSION"
             git pull
             git push
             echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
@@ -124,7 +124,7 @@ jobs:
       name: ${{ inputs.environment }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: dev
 

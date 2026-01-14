@@ -97,7 +97,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:7
+    image: redis:8.4.0
     ports:
       - "6379:6379"
     secrets:
@@ -105,7 +105,7 @@ services:
     command: sh -c 'redis-server /home/redis/redis.conf'
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.61.0-alpine
+    image: oliver006/redis_exporter:v1.80.1-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -116,7 +116,7 @@ services:
     entrypoint: [ '/bin/sh', '-c', 'export REDIS_ADDR=$$(cat /var/run/secrets/redis_host) ; export REDIS_PASSWORD=$$(cat /run/secrets/redis_pass) ; /redis_exporter' ]
 
   grafana:
-    image: grafana/grafana-enterprise:10.2.8
+    image: grafana/grafana-enterprise:12.3.1
     restart: always
     depends_on:
       - prometheus
@@ -131,7 +131,7 @@ services:
       - "3000:3000"
 
   prometheus:
-    image: prom/prometheus:v2.45.6
+    image: prom/prometheus:v3.8.1
     volumes:
       - ./prometheus:/etc/prometheus
     ports:
@@ -178,7 +178,7 @@ services:
         condition: service_started
         
   celery_exporter:
-    image: danihodovic/celery-exporter:0.10.8
+    image: danihodovic/celery-exporter:0.10.14
     secrets:
       - redis_pass
       - redis_host
@@ -189,14 +189,14 @@ services:
     entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
 
   selenium:
-    image: selenium/standalone-chrome-debug
+    image: selenium/standalone-firefox
     ports:
       - 4444:4444
       - 5900:5900
     shm_size: '1gb'
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.14.1
+    image: docker.elastic.co/logstash/logstash:8.19.0
     depends_on:
       - elasticsearch
     ports:
@@ -207,7 +207,7 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
     environment:
       - discovery.type=single-node
       - http.host=0.0.0.0
@@ -219,7 +219,7 @@ services:
       - elasticsearch_volume:/usr/share/elasticsearch/data
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.14.1
+    image: docker.elastic.co/kibana/kibana:8.19.0
     restart: always
     ports:
       - 5601:5601

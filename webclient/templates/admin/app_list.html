@@ -62,6 +62,19 @@
           </tbody>
       </table>
     </div>
+    <div class="app-rosetta module">
+      <table>
+        <caption>
+          {% trans "core.templates.admin.appList.import_data" %}
+        </caption>
+        <tbody>
+          <tr>
+            <th scope="row" colspan="3"><a href="{% url 'admin:import_data' %}">{% trans "core.templates.admin.appList.import_data" %}</a></th>
+            <td></td>
+            </tr>
+          </tbody>
+      </table>
+    </div>
   {% endif %}
   {% if request.user|can_translate  %}
     <div class="app-rosetta module">

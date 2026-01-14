@@ -1,0 +1,164 @@
+# Python cache and compiled files
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.so
+**/*.egg
+**/*.egg-info
+.Python
+dist/
+build/
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+virtualenv/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.pytest/
+
+# Django specific
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+*.db
+*.sqlite
+media/
+staticfiles/
+static_root/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Documentation
+docs/_build/
+docs/.build/
+*.md
+README*
+CHANGELOG*
+LICENSE*
+CONTRIBUTING*
+*.rst
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+azure-pipelines.yml
+.circleci/
+
+# Docker files (don't include other Dockerfiles in build context)
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+.dockerignore
+
+# Environment and config files (security)
+.env
+.env.*
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+*.crt
+.secrets/
+secrets/
+
+# Temporary and backup files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.old
+*.backup
+.cache/
+
+# Node modules (if using frontend build tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Development and linting
+.pylintrc
+.flake8
+.mypy_cache/
+.pytype/
+.pyre/
+pyrightconfig.json
+.ruff_cache/
+.black/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Migration files (optional - exclude if regenerating)
+# **/migrations/
+
+# Test files (optional - uncomment to exclude)
+# **/tests/
+# **/test_*.py
+# **/*_test.py
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Translations (exclude compiled)
+*.mo
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Assets source files (if you compile them)
+# scss/
+# sass/
+# less/
+
+# Volume mount directories
+vol/
+volumes/

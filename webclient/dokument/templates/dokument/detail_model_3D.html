@@ -184,13 +184,13 @@
 <script src="{% static 'js/ajax_functions.js' %}"></script>
   <script>
       $(document).ready(function () {
-          ident_cely = "{{dokument.ident_cely}}";
+          const ident_cely = "{{dokument.ident_cely}}";
           const url = '{% url "heslar:get-initial-value" %}' + "?nadrazene=";
-          objekty = document.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
+          const objekty = document.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
           for (let i = 0; i < objekty.length; i++) {
             get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-K001_o-${i}-druh`,`#id_${ident_cely}-K001_o-${i}-specifikace`,url);
           }
-          predmety = document.querySelector('#predmet_table').querySelector('tbody').querySelectorAll('tr');
+          const predmety = document.querySelector('#predmet_table').querySelector('tbody').querySelectorAll('tr');
           for (let i = 0; i < predmety.length; i++) {
             get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-K001_p-${i}-druh`,`#id_${ident_cely}-K001_p-${i}-specifikace`,url);
           } 
@@ -198,9 +198,14 @@
   </script>
   <script>
     //modal scripts
+    let odeslat_akci_modal;
+    let vratit_akci_modal;
+    let archivovat_akci_modal;
+    let smazat_akci_modal;
     document.addEventListener('DOMContentLoaded', function (event) {
+      let options;
       if ("{{show.odeslat_link}}" != "False"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'dokument:odeslat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
         formID: "odeslat-dokument-form",
         modalFormID: "#odeslat-dokument-form",
@@ -208,7 +213,7 @@
       odeslat_akci_modal = new Modal(options, "dokument-odeslat");
       };
       if ("{{show.vratit_link}}" != "False"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'dokument:vratit' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
         formID: "vratit-dokument-form",
         modalFormID: "#vratit-dokument-form",
@@ -216,23 +221,23 @@
       vratit_akci_modal = new Modal(options, "dokument-vratit");
       }
       if ("{{show.archivovat_link}}" != "False"){
-        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'dokument:archivovat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
           formID: "archivovat-dokument-form",
           modalFormID: "#archivovat-dokument-form",
         })
       archivovat_akci_modal = new Modal(options, "dokument-archivovat");
       }
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'dokument:smazat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
         formID: "smazat-dokument-form",
         modalFormID: "#smazat-dokument-form",
       })
       smazat_akci_modal = new Modal(options, "dokument-smazat");
       if (document.getElementsByClassName("objekt-smazat-btn")){
-        elements = document.getElementsByClassName("objekt-smazat-btn")
+        const elements = document.getElementsByClassName("objekt-smazat-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formID: "smazat-objekt-form",
           modalFormID: "#smazat-objekt-form",
           })

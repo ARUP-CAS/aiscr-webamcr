@@ -235,16 +235,16 @@ class DocumentCreator(ABC):
         self.texts["data_part_3"] = f"<strong>Lokalizace</strong>: {self.projekt.lokalizace}"
         self.texts["data_part_4"] = f"<strong>Parcelní číslo</strong>: {self.projekt.parcelni_cislo}"
         self.texts["data_part_5"] = f"<strong>Označení stavby</strong>: {self.projekt.oznaceni_stavby}"
-        self.texts[
-            "data_part_6"
-        ] = f"<strong>Plánované zahájení</strong>: {self.format_date(self.projekt.planovane_zahajeni.lower) if self.projekt.planovane_zahajeni else ''} - {self.format_date(self.projekt.planovane_zahajeni.upper) if self.projekt.planovane_zahajeni else ''}"
+        self.texts["data_part_6"] = (
+            f"<strong>Plánované zahájení</strong>: {self.format_date(self.projekt.planovane_zahajeni.lower) if self.projekt.planovane_zahajeni else ''} - {self.format_date(self.projekt.planovane_zahajeni.upper) if self.projekt.planovane_zahajeni else ''}"
+        )
 
     def _create_signature(self):
         self.texts["doc_sign_1"] = "S pozdravem"
         self.texts["doc_sign_2"] = DOC_REDITEL[self.dok_index]
-        self.texts[
-            "doc_sign_3"
-        ] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i."
+        self.texts["doc_sign_3"] = (
+            f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i."
+        )
 
     def _create_signature_doc(self):
         return [
@@ -691,9 +691,9 @@ class ZruseniPDFCreator(DocumentCreator):
     def _generate_text(self):
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
-        self.texts[
-            "doc_vec"
-        ] = "Věc: Zrušení evidence záměru v&nbsp;informačním systému Archeologická mapa České republiky"
+        self.texts["doc_vec"] = (
+            "Věc: Zrušení evidence záměru v&nbsp;informačním systému Archeologická mapa České republiky"
+        )
         self._create_data_document_part()
 
         self.texts[

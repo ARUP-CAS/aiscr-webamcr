@@ -36,9 +36,9 @@ urlpatterns = [
     path("id/<str:ident_cely>", views.redirect_ident_view, name="redirect_ident"),
     path("session/prodlouzit/", views.prolong_session, name="prolong_session"),
     path(
-        "metadata/stahnout/<str:model_name>/<str:ident_cely>",
-        views.StahnoutMetadataIdentCelyView.as_view(),
-        name="stahnout_metadata",
+        "data-historicka/stahnout/<str:model_name>/<str:ident_cely>/<str:timestamp>",
+        views.StahnoutDataHistorickaView.as_view(),
+        name="stahnout_data_historicka",
     ),
     path(
         "mapa-pian-pas",
@@ -79,5 +79,15 @@ urlpatterns = [
         "application-restart",
         views.ApplicationRestartView.as_view(),
         name="application-restart",
+    ),
+    path(
+        "data-import-progress/<str:job_id>",
+        views.DataImportProgress.as_view(),
+        name="data-import-progress",
+    ),
+    path(
+        "data-import-stop/<str:job_id>",
+        views.DataImportStop.as_view(),
+        name="data-import-stop",
     ),
 ]

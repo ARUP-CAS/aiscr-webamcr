@@ -57,7 +57,9 @@ class LogMiddleware:
     def __call__(self, request):
         start = time.monotonic()
         log_request_data.url = request.get_full_path()
-        log_request_data.user_id = request.user.ident_cely if request.user.is_authenticated else None
+        log_request_data.user_id = (
+            request.user.ident_cely if request.user.is_authenticated else "anonymous"
+        )  # slouží také pro zaznamenání ve Fedoře
         try:
             response = self.get_response(request)
             status = getattr(response, "status_code", None)
@@ -99,4 +101,4 @@ class LogMiddleware:
 
     @staticmethod
     def get_user_id():
-        return getattr(log_request_data, "user_id", None)
+        return getattr(log_request_data, "user_id", "anonymous")

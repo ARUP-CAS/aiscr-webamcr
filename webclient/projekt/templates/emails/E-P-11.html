@@ -1,0 +1,23 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% load template_tags %}
+{% load template_filters %}
+{% block content %}
+    <p>Dobrý den,</p>
+    <p>
+        uživatel {{uzivatel.first_name}} {{uzivatel.last_name}} ({{uzivatel.ident_cely}}) z organizace {{uzivatel.organizace}} žádá o zrušení projektu <b><a href="{{ projekt_ident_cely_url }}">{{ projekt.ident_cely }}</a></b> na katastru <b>{{ projekt.hlavni_katastr }}</b>. 
+    </p>
+    <p>
+        Jedná se o již zahájený projekt, návrh na zrušení je proto možné provést pouze archivářem po vyhodnocení důvodů.
+    </p>
+    <p>
+        <b>Důvod zrušení:</b> {{reason}}
+    </p>
+    <p>
+        V případě důvodnosti návrhu zrušení proveďte v AMČR. O způsobu vypořádání uživatele vždy informujte v odpovědi na tento email.
+    </p>
+{% endblock %}
+{% block content_en %}
+  <!-- add English version -->
+{% endblock %}
+

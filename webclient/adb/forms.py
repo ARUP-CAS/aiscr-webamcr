@@ -103,7 +103,7 @@ class CreateADBForm(forms.ModelForm):
 
     def __init__(self, *args, readonly=False, **kwargs):
         """
-        Init metóda pro vytvoření formuláře.
+        Init metoda pro vytvoření formuláře.
         Args:
             readonly (boolean): nastavuje formulář na readonly.
         """
@@ -183,7 +183,7 @@ class CreateADBForm(forms.ModelForm):
 
 class VyskovyBodFormSetHelper(FormHelper):
     """
-    Form helper pro správne vykreslení formuláře výškovího bodu.
+    Form helper pro správné vykreslení formuláře výškovího bodu.
     """
 
     def __init__(self, *args, **kwargs):
@@ -261,7 +261,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def _has_initial_values(self):
             """
-            Metóda která vrací či ma formulář vyplnená initial hodnota
+            Metoda která vrací či ma formulář vyplnená initial hodnota
             Args:
             pian (pian): pian objeckt.
             niveleta (niveleta): niveleta objekt
@@ -297,7 +297,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def is_valid(self):
             """
-            Metóda která vrací či je formulář správne vyplněn, zakomponována metóda na vyplnení initial hodnoty.
+            Metoda která vrací zda je formulář správně vyplněn, zakomponována metoda na vyplnení initial hodnoty.
             """
             parent_is_valid = super().is_valid()
             if self._has_initial_values():
@@ -306,7 +306,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def save(self, commit=True):
             """
-            Metóda která ukladá formulář do modelu, zakomponována metóda na vyplnení initial hodnoty.
+            Metoda která ukládá formulář do modelu, zakomponována metoda na vyplnení initial hodnoty.
             """
             if self._has_initial_values():
                 return None
@@ -314,7 +314,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def __init__(self, *args, **kwargs):
             """
-            Init metóda pro vytvoření formuláře.
+            Init metoda pro vytvoření formuláře.
             Args:
             not_readonly (boolean): nastavuje formulář na readonly.
             """

@@ -67,6 +67,8 @@ from core.message_constants import (
     PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS,
     PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR,
     PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS,
+    PROJEKT_ZADOST_ZRUSENI_PROJEKTU_ERROR,
+    PROJEKT_ZADOST_ZRUSENI_PROJEKTU_SUCCESS,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
@@ -634,9 +636,9 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
                 "hlavni_katastr",
                 "organizace",
                 "vedouci_projektu",
-                "hlavni_katastr__okres",
+                "hlavni_katastr__okres__kraj",
             )
-            .prefetch_related("katastry__okres")
+            .prefetch_related("katastry__okres__kraj")
             .defer("geom")
         )
         return self.check_filter_permission(qs)
@@ -1464,7 +1466,6 @@ def get_detail_template_shows(projekt, user):
         "generovat_exp_list": check_permissions(p.actionChoices.projekt_generovat_exp_list, user, projekt.ident_cely),
         "smazat_link": check_permissions(p.actionChoices.projekt_smazat, user, projekt.ident_cely),
         "zapsat_dokumenty": check_permissions(p.actionChoices.dok_zapsat_do_projekt, user, projekt.ident_cely),
-        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, projekt.ident_cely),
         "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_projekt, user, projekt.ident_cely),
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_projekt, user, projekt.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_projekt, user, projekt.ident_cely),
@@ -1475,6 +1476,9 @@ def get_detail_template_shows(projekt, user):
         ),
         "zadost_odhlaseni_projektu": check_permissions(
             p.actionChoices.projekt_zadost_odhlaseni_projektu, user, projekt.ident_cely
+        ),
+        "zadost_zruseni_projektu": check_permissions(
+            p.actionChoices.projekt_zadost_zruseni_projektu, user, projekt.ident_cely
         ),
         "vypis": check_permissions(p.actionChoices.vypis_projekt, user, projekt.ident_cely),
     }
@@ -1799,4 +1803,46 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS)
         else:
             messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR)
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})
+
+
+class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro odeslání žádosti pro zrušení projektu.
+    """
+
+    template_name = "core/transakce_modal.html"
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        zaznam = get_object_or_404(
+            Projekt,
+            ident_cely=ident_cely,
+        )
+        return zaznam
+
+    def get(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        form = ZadostProjektForm(
+            _("projekt.forms.ZadostZruseniProjektu.duvod.label"),
+            _("projekt.forms.ZadostZruseniProjektu.duvod.tooltip"),
+        )
+        context = {
+            "object": zaznam,
+            "title": _("projekt.views.ZadostZruseniProjektuView.title.text"),
+            "id_tag": "zadost-zruseni-projektu-form",
+            "button": _("projekt.views.ZadostZruseniProjektuView.submitButton.text"),
+            "form": form,
+        }
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        form = ZadostProjektForm(data=request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            zaznam = self.get_zaznam()
+            Mailer.send_ep11(zaznam, duvod, request.user, request)
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ZRUSENI_PROJEKTU_SUCCESS)
+        else:
+            messages.add_message(request, messages.SUCCESS, PROJEKT_ZADOST_ZRUSENI_PROJEKTU_ERROR)
         return JsonResponse({"redirect": zaznam.get_absolute_url()})
