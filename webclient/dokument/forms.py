@@ -486,6 +486,7 @@ class EditDokumentForm(forms.ModelForm):
                 Heslar.objects.filter(nazev_heslare=HESLAR_LICENCE).order_by("razeni").first()
             )
         self.helper = FormHelper(self)
+        self.helper.include_media = False
         self.helper.layout = Layout(
             Div(
                 autori_div,
@@ -747,6 +748,7 @@ class PripojitDokumentForm(forms.Form):
         self.fields["dokument"].required = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.include_media = False
 
 
 class DokumentCastForm(forms.ModelForm):
@@ -769,6 +771,7 @@ class DokumentCastForm(forms.ModelForm):
 
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.include_media = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if self.fields[key].disabled is True:

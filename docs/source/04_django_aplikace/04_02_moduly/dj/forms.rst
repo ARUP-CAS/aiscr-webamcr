@@ -6,15 +6,6 @@ Definice formulářů.
 Třídy
 ------
 
-.. py:class:: MyAutocompleteWidget
-
-   Popis není k dispozici.
-
-   **Metody:**
-
-   .. py:method:: media()
-
-
 .. py:class:: CreateDJForm
 
    Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky.

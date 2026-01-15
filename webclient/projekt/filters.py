@@ -11,7 +11,7 @@ from core.constants import (
     SCHVALENI_OZNAMENI_PROJ,
 )
 from core.forms import SelectMultipleSeparator
-from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
+from core.widgets import AutocompleteModelSelect2Multiple
 from crispy_forms.layout import HTML, Div, Layout
 from django.db.models import Q, QuerySet
 from django.forms import SelectMultiple
@@ -35,15 +35,6 @@ from psycopg2._range import DateRange
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
-
-
-class MyAutocompleteWidget(AutocompleteModelSelect2):
-    """
-    Override na třídu atocomplete widgetu pro nevrácení media objektů - js scriptů.
-    """
-
-    def media(self):
-        return ()
 
 
 class Users(QuerySet):
