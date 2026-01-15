@@ -17,7 +17,7 @@ usage() {
 
 
 test_all(){
-docker exec -t -i $(docker ps -q -f name=swarm_webamcr_web)  python3 run_tests.py
+docker exec -i $(docker ps -q -f name=swarm_webamcr_web) script -q -c "python3 run_tests.py"
 }
 
 test_all_background(){
@@ -25,11 +25,11 @@ nohup docker exec $(docker ps -q -f name=swarm_webamcr_web)  python3 run_tests.p
 }
 
 test_failed(){
-docker exec -t -i $(docker ps -q -f name=swarm_webamcr_web)  python3 run_tests.py -f 
+docker exec -i $(docker ps -q -f name=swarm_webamcr_web) script -q -c "python3 run_tests.py -f"
 }
 
 test_number(){
-docker exec -t -i $(docker ps -q -f name=swarm_webamcr_web)  python3 run_tests.py -t $1  
+docker exec -i $(docker ps -q -f name=swarm_webamcr_web) script -q -c "python3 run_tests.py -t $1"
 }
 
 
