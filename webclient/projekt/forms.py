@@ -828,6 +828,7 @@ class PripojitProjektForm(forms.Form):
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.include_media = False
         self.helper.layout = Layout(
             Div(
                 Div(

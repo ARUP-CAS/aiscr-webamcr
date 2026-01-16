@@ -312,6 +312,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
             ),
         )
         self.helper.form_tag = False
+        self.helper.include_media = False
 
 
 class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
@@ -338,3 +339,4 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
             ),
         )
         self.helper.form_tag = False
+        self.helper.include_media = False
