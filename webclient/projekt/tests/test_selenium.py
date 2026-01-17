@@ -16,6 +16,7 @@ from core.constants import (
 from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
+from django.core import mail
 from django.utils.translation import gettext as _
 from freezegun import freeze_time
 from oznameni.tests.test_selenium import OznameniSeleniumTest
@@ -497,19 +498,22 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.start")
 
         pian = OznameniSeleniumTest.oznameni_projektu(self)
+        # validate email
+        self.assertEqual(len(mail.outbox), 1)
         self.login("archivar")
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, "Schválit oznámení")
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys(pian)
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, pian)
+        self.goToAddress(f"/id/{pian}")
         self.ElementClick(By.ID, "projekt-schvalit")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        pian_new = self.driver.find_element(By.ID, "id-app-entity-item").text
+        # validate email
+        self.assertEqual(len(mail.outbox), 2)
+        pian_new = self.driver.current_url.split("/")[-1]
         self.assertNotEqual(pian, pian_new)
+        oznameni = Soubor.objects.filter(
+            vazba__projekt_souboru__ident_cely=pian_new, nazev__startswith="oznameni", nazev__endswith=".pdf"
+        )
+        self.assertEqual(oznameni.count(), 1)
+        self.assertGreater(oznameni.first().size_mb, 0.1)
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.end")
 
 
