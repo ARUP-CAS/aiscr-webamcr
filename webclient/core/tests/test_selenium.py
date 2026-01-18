@@ -801,20 +801,20 @@ return new Date('2025-06-28T12:00:00Z');}};
                 hodnoty.append(v.strip())
         return "|".join(hodnoty)
 
-    def nahrad_hist_id_rekurzivne(self, element):
+    def nahrad_element_id_rekurzivne(self, element, element_name):
         """
-        Rekurzivně upraví všechny elementy <amcr:id> s textem 'hist-XXX' na 'hist-'.
+        Rekurzivně upraví všechny elementy <amcr:id> s textem 'element_name-XXX' na 'element_name-0000001'.
         Nezávislé na konkrétní verzi namespace.
         """
         # Zjisti namespace prefix 'amcr' z tagu
         if element.tag.endswith("id") and "}" in element.tag:
             lokalni_jmeno = element.tag.split("}", 1)[1]
-            if lokalni_jmeno == "id" and element.text and element.text.startswith("hist-"):
-                element.text = "hist-0000001"
+            if lokalni_jmeno == "id" and element.text and element.text.startswith(f"{element_name}-"):
+                element.text = f"{element_name}-0000001"
 
         # Rekurzivně zpracuj podřízené elementy
         for child in element:
-            self.nahrad_hist_id_rekurzivne(child)
+            self.nahrad_element_id_rekurzivne(child, element_name)
 
     def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy, filename):
         """
@@ -827,7 +827,8 @@ return new Date('2025-06-28T12:00:00Z');}};
             ignorovane_tagy_trans.update({key.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"): item})
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
-        self.nahrad_hist_id_rekurzivne(root)
+        self.nahrad_element_id_rekurzivne(root, "hist")
+        self.nahrad_element_id_rekurzivne(root, "soub")
         self.serad_xml_podle_tagu_a_obsahu(root)
         if BaseSeleniumTestClass.xmlschema is None:
             with open(DocumentGenerator.get_path_to_schema(), "rb") as f:

@@ -147,6 +147,7 @@ class VratitForm(forms.Form):
         super(VratitForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.include_media = False
 
 
 class VratitFormDokument(VratitForm):

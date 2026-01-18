@@ -102,6 +102,7 @@ class NeidentAkceForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        self.helper.include_media = False
         self.readonly = readonly
         for key in self.fields.keys():
             self.fields[key].disabled = readonly

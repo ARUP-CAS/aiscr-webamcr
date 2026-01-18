@@ -6,15 +6,6 @@ Definice filtrů.
 Třídy
 ------
 
-.. py:class:: MyAutocompleteWidget
-
-   Override na třídu atocomplete widgetu pro nevrácení media objektů - js scriptů.
-
-   **Metody:**
-
-   .. py:method:: media()
-
-
 .. py:class:: Users
 
    Popis není k dispozici.
