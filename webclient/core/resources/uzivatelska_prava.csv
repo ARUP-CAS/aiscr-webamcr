@@ -82,7 +82,7 @@ core,soubor/nahrat/<str:typ_vazby>/<str:ident_cely>,soubor_nahrat_projekt,X,X,*,
 core,soubor/nahrat/<str:typ_vazby>/nahradit/<str:ident_cely>/<int:file_id>,soubor_nahradit_dokument,X,*,*,*,*,D1,D1,<D3,<D3,D.my,D.ours,*,*,*,*,*,*,
 core,soubor/nahrat/<str:typ_vazby>/nahradit/<str:ident_cely>/<int:file_id>,soubor_nahradit_model3d,X,*,*,*,*,D1,D1,<D3,<D3,D.my,D.ours,*,*,*,*,*,*,
 core,soubor/nahrat/<str:typ_vazby>/nahradit/<str:ident_cely>/<int:file_id>,soubor_nahradit_pas,X,*,*,*,*,SN1,<SN3,<SN4,<SN4,SN.my,SN.ours,*,*,*,*,*,*,
-core,soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>,soubor_nahrat_oznameni,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,pouze pro aktuálně oznamovaný projekt
+core,soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>,,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,pouze pro aktuálně oznamovaný projekt
 core,soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>,soubor_nahrat_model3d,X,*,*,*,*,D1,D1,<D3,<D3,D.my,D.ours,*,*,*,*,*,*,
 core,soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>,soubor_nahrat_dokument,X,*,*,*,*,D1,D1,<D3,<D3,D.my,D.ours,*,*,*,*,*,*,
 core,soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>,soubor_nahrat_pas,X,*,*,*,*,SN1,<SN3,<SN4,<SN4,SN.my,SN.ours,*,*,*,*,*,*,
