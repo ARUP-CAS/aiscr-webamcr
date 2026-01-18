@@ -1,6 +1,11 @@
 import json
 import subprocess
 
+LICENSES_MANUAL_FIXES = {
+    "wrapt": "Copyright (c) 2013-2025, Graham Dumpleton",
+}
+
+
 
 def csv_to_rst_table():
     output = subprocess.run(
@@ -12,10 +17,12 @@ def csv_to_rst_table():
     data_to_write = []
 
     for package in packages:
+        package_name = package["Name"]
+        license_value = LICENSES_MANUAL_FIXES.get(package_name, package["License"])
         row = {
-            "Název knihovny": package["Name"],
+            "Název knihovny": package_name,
             "Verze": package["Version"],
-            "Licence": package["License"],
+            "Licence": license_value,
             "Odkaz": package.get("URL", ""),
         }
         data_to_write.append(row)
