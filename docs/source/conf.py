@@ -31,6 +31,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinxcontrib.googleanalytics",
+    "sphinxcontrib.mermaid",
 ]
 
 templates_path = ["_templates"]
@@ -43,6 +44,7 @@ language = "cs"
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+html_css_files = ["mermaid.css"]
 
 autodoc_default_options = {
     "members": True,

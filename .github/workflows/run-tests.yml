@@ -1,0 +1,104 @@
+name: Run tests
+
+permissions:
+  contents: read
+  packages: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      testuj_pouze_neuspesne:
+        description: 'Testuj pouze neúspěšné testy bez nového nasazení'
+        required: true
+        type: boolean
+        default: false
+
+
+env:
+  server_deploy_root: /home/amcr/aiscr-webamcr
+  dep_script: scripts/ci_deployment/deploy_test_server.sh
+  test_script: scripts/start_selenium_tests.sh
+
+jobs:
+  deployment:
+    name: Deploy to DEV Server and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install OpenVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get --assume-yes --no-install-recommends install openvpn iputils-ping dnsutils          
+
+      - name: Setup VPN config
+        run: |
+          mkdir -p .github/vpn
+          curl -o .github/vpn/openvpn20_huldio_ci.ovpn \
+            https://raw.githubusercontent.com/ARUP-CAS/aiscr-webamcr/dev/.github/vpn/openvpn20_huldio_ci.ovpn
+          echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
+          echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
+          echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
+          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
+
+      - name: Connect VPN
+        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --daemon --askpass secret.txt
+
+      - name: Wait for VPN & DNS resolve
+        shell: bash
+        timeout-minutes: 2
+        run: |
+          for i in {1..10}; do
+            dig ${{ secrets.DNS_RESOLVER }} ${{ secrets.DEPLOYMENT_SERVER_DEV }} A +time=1 && break
+            sleep 2
+          done
+
+      - name: SSH deployment a testy
+        shell: bash
+        run: |
+          echo "Použitá větev: ${{ github.ref_name }}"
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          sleep 2          
+          ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}          
+          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << 'EOF'
+            sudo su - root << 'AOF'
+              cd ${{ env.server_deploy_root }}
+              chmod +x ${{ env.dep_script }}
+              chmod +x ${{ env.test_script }}
+              if [ "${{ inputs.testuj_pouze_neuspesne }}" != "true" ]; then
+                ./${{ env.dep_script }} ${{ env.server_deploy_root }} ${{ github.ref_name }}
+                echo "Spustit testy"              
+                ./${{ env.test_script }}
+              else
+                echo "Testuji pouze neuspesne bez noveho nasazeni"
+                ./${{ env.test_script }} -f
+              fi
+            AOF
+          EOF
+
+      - name: Stáhnout výsledky testů ze serveru
+        shell: bash
+        run: |
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
+
+      - name: Nahrát výsledky testů jako artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-vysledky
+          path: ./results.xlsx
+
+      - name: Disconnect VPN
+        if: always()
+        run: |
+          sudo killall openvpn

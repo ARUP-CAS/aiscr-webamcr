@@ -8,13 +8,14 @@ Tato sekce popisuje funkcionalitu aplikace WebAMČR.
    :caption: Obsah:
 
    identy
-   workflow_projektu
-   workflow_dokumentu
+   workflow_zaznamy
+   ukladani_souboru
    sprava_souboru
+   mapove_prostredi   
    export_data
    notifikace
    preklady
    cookies
    chybove_stranky
-
+   administrace
 
