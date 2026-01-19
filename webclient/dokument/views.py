@@ -2228,7 +2228,7 @@ def get_dokument_table_row(request):
     """
     Funkce pohledu pro získaní řádku dokumentu pro vykreslení v modalu.
     """
-    context = {"d": Dokument.objects.get(id=request.GET.get("id", ""))}
+    context = {"d": Dokument.objects.get(id=request.GET.get("id", "")), "prefix": "modaldoc"}
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
 
@@ -2256,6 +2256,7 @@ def get_dokument_table_row_vratit(request):
         "vratit": True,
         "d": dokument,
         "form": form,
+        "prefix": "modaldoc",
     }
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
@@ -2487,6 +2488,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
             "show": {"dokument_odpojit": dokument_odpojit},
             "zaznam": zaznam,
             "type": typ_vazby,
+            "prefix": "doc",
         }
         logger.debug(context)
         return HttpResponse(render_to_string("dokument/dokument_table_only.html", context))
