@@ -15,10 +15,6 @@ args = parser.parse_args()
 
 SETTINGS = "webclient.settings.dev_test"
 
-test_preparation_path = os.path.join("scripts", "test_preparation.sh")
-if os.path.exists(test_preparation_path):
-    subprocess.run(f"./{test_preparation_path}")
-
 logger = logging.getLogger("webamcr.test_runner")
 # logger.setLevel(logging.INFO)
 logger.addHandler(logstash.TCPLogstashHandler(host="logstash", version=1, tags="dev_test"))
