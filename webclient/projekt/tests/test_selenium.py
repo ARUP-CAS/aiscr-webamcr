@@ -497,20 +497,20 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
 
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.start")
 
-        pian = OznameniSeleniumTest.oznameni_projektu(self)
+        ident_cely = OznameniSeleniumTest.oznameni_projektu(self)
         # validate email
         self.assertEqual(len(mail.outbox), 1)
         self.login("archivar")
-        self.goToAddress(f"/id/{pian}")
+        self.goToAddress(f"/id/{ident_cely}")
         self.ElementClick(By.ID, "projekt-schvalit")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         # validate email
         self.assertEqual(len(mail.outbox), 2)
-        pian_new = self.driver.current_url.split("/")[-1]
-        self.assertNotEqual(pian, pian_new)
+        ident_cely_new = self.driver.current_url.split("/")[-1]
+        self.assertNotEqual(ident_cely, ident_cely_new)
         oznameni = Soubor.objects.filter(
-            vazba__projekt_souboru__ident_cely=pian_new, nazev__startswith="oznameni", nazev__endswith=".pdf"
+            vazba__projekt_souboru__ident_cely=ident_cely_new, nazev__startswith="oznameni", nazev__endswith=".pdf"
         )
         self.assertEqual(oznameni.count(), 1)
         self.assertGreater(oznameni.first().size_mb, 0.1)
