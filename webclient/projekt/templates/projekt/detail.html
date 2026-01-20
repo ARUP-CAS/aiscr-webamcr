@@ -71,7 +71,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_oznameni.uzivatel }}">
                     {{ history_dates.datum_oznameni.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -97,7 +97,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_zapsani.uzivatel }}">
                     {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -123,7 +123,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_prihlaseni.uzivatel }}">
                     {{ history_dates.datum_prihlaseni.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -149,7 +149,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_zahajeni_v_terenu.uzivatel }}">
                     {{ history_dates.datum_zahajeni_v_terenu.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -175,7 +175,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_ukonceni_v_terenu.uzivatel }}">
                     {{ history_dates.datum_ukonceni_v_terenu.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -201,7 +201,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_uzavreni.uzivatel }}">
                     {{ history_dates.datum_uzavreni.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -227,7 +227,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_archivace.uzivatel }}">
                     {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -253,7 +253,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_navrhu_ke_zruseni.uzivatel }}">
                     {{ history_dates.datum_navrhu_ke_zruseni.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -279,7 +279,7 @@
                 </span>
                 </div>
                 <div class="col-12 pl-0 pr-0 app-stepper-date-container">
-                <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
+                <span class="app-stepper-date" rel="tooltip" data-bs-placement="bottom"
                       title="{{ history_dates.datum_zruseni.uzivatel }}">
                     {{ history_dates.datum_zruseni.datum|date:'Y-m-d'|default_if_none:"" }}
                 </span>
@@ -299,7 +299,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-projekt" href="{% url 'projekt:edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" data-offset="0px, 1px" title="{% trans 'projekt.templates.detail.upravit.button.text' %}">
+            <a class="btn app-entity-projekt" href="{% url 'projekt:edit' projekt.ident_cely %}" rel="tooltip" data-bs-placement="top" data-offset="0px, 1px" title="{% trans 'projekt.templates.detail.upravit.button.text' %}">
               <span id="edit-btn" class="material-icons">edit</span>
             </a>
           </div>
@@ -336,8 +336,8 @@
                   <label>{% trans "projekt.templates.detail.detailPart.dalsiKatastry.label" %}</label>
                   <div class="input-group">
                     <input id="other_cadastre_id" class="form-control app-ellipsis" stype="text" value="{{ dalsi_katastry|katastry_to_list|check_if_none }}" readonly>
-                    <div class="input-group-append" data-bs-toggle="popover" data-placement="top"
-                    data-content="<strong>{% trans 'projekt.templates.detail.detailPart.seznamKatastru.label' %}:</strong> {{ dalsi_katastry|katastry_to_list|check_if_none }}">
+                    <div class="input-group-append" data-bs-toggle="popover" data-bs-placement="top" title="{% trans 'projekt.templates.detail.detailPart.seznamKatastru.label' %}"
+                    data-bs-content="{{ dalsi_katastry|katastry_to_list|check_if_none }}">
                       <span class="input-group-text">
                         <span class="material-icons">info</span>
                       </span>
@@ -531,7 +531,7 @@
           {% if show.oznamovatel_editovat %}
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
-              <a class="btn app-entity-projekt" href="{% url 'oznameni_edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.oznamovatel.upravit' %}">
+              <a class="btn app-entity-projekt" href="{% url 'oznameni_edit' projekt.ident_cely %}" rel="tooltip" data-bs-placement="top" title="{% trans 'projekt.templates.detail.oznamovatel.upravit' %}">
                 <span id="edit-btn2" class="material-icons">edit</span>
               </a>
             </div>
@@ -589,7 +589,7 @@
         {% if show.soubor_nahrat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-projekt" href="{% url 'core:upload_file' 'projekt' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.dokumentacePart.nahrat' %}">
+            <a class="btn app-entity-projekt" href="{% url 'core:upload_file' 'projekt' projekt.ident_cely %}" rel="tooltip" data-bs-placement="top" title="{% trans 'projekt.templates.detail.dokumentacePart.nahrat' %}">
               <span id="add_dokumentace" class="material-icons">publish</span>
             </a>
           </div>
@@ -617,7 +617,7 @@
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             {% if show.pridat_akci == True %}
-            <a class="btn app-entity-projekt" href="{% url 'arch_z:zapsat' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.akcePart.pridat' %}">
+            <a class="btn app-entity-projekt" href="{% url 'arch_z:zapsat' projekt.ident_cely %}" rel="tooltip" data-bs-placement="top" title="{% trans 'projekt.templates.detail.akcePart.pridat' %}">
               <span id="add_akce" class="material-icons">add</span>
             </a>
             {% endif %}
@@ -646,7 +646,7 @@
         {% if show.pridat_sam_nalez == True %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a id="add_PAS" class="btn app-entity-projekt" href="{% url 'pas:create-from-project' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'projekt.templates.detail.nalezyPart.vlozit' %}">
+            <a id="add_PAS" class="btn app-entity-projekt" href="{% url 'pas:create-from-project' projekt.ident_cely %}" rel="tooltip" data-bs-placement="top" title="{% trans 'projekt.templates.detail.nalezyPart.vlozit' %}">
               <span class="material-icons">add</span>
             </a>
           </div>

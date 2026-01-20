@@ -156,7 +156,6 @@ INSTALLED_APPS = [
     "django_tables2",
     "django_tables2_column_shifter",
     "crispy_forms",
-    "crispy_bootstrap4",
     "django_registration",
     "compressor",
     "django_recaptcha",

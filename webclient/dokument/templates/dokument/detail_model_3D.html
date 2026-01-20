@@ -27,7 +27,7 @@
           <div class="btn-group" role="group">
             <a id="buttonUpload" class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file' 'model3d' dokument.ident_cely %}"
                rel="tooltip"
-               data-placement="top" title="{% trans 'dokument.templates.detail_model_3D.nahledy3dModelu.nahratSoubor.tooltip' %}">
+               data-bs-placement="top" title="{% trans 'dokument.templates.detail_model_3D.nahledy3dModelu.nahratSoubor.tooltip' %}">
               <span class="material-icons">publish</span>
             </a>
           </div>
@@ -55,7 +55,7 @@
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <a id="buttonEdit" class="btn" href="{% url 'dokument:edit-model-3D' dokument.ident_cely %}" rel="tooltip"
-                 data-placement="top" title="{% trans 'dokument.templates.detail_model_3D.detail.upravit.tooltip' %}">
+                 data-bs-placement="top" title="{% trans 'dokument.templates.detail_model_3D.detail.upravit.tooltip' %}">
                 <span id="edit-btn" class="material-icons">edit</span>
               </a>
             </div>

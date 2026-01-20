@@ -317,7 +317,7 @@
     <div class="collapse navbar-collapse" id="navbarMobile">
       <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
         <li class="nav-item d-lg-none d-xl-block">
-          <span class="nav-link" rel="tooltip" data-placement="top"  title="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
+          <span class="nav-link" rel="tooltip" data-bs-placement="top"  title="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <small>
               <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}</strong> {{ user.ident_cely }}
             </small>
@@ -332,15 +332,15 @@
           </span>
         </li>
         <li class="nav-item d-none d-lg-block d-xl-none">
-          <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-bs-toggle="popover" data-placement="bottom"
-            data-content="<strong>{% trans 'templates.baseLogedIn.navbar.informace.prihlasen' %}</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
+          <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-bs-toggle="popover" data-bs-placement="bottom" title="{% trans 'templates.baseLogedIn.navbar.informace.prihlasen' %}"
+            data-bs-content="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <span class="material-icons">info</span>
             {% trans "templates.baseLogedIn.navbar.informace" %}
           </a>
         </li>
         <li class="nav-item app-pipe"></li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'uzivatel:update-uzivatel' %}" rel="tooltip" data-placement="top" title="{% trans 'templates.baseLogedIn.navbar.uzivatel.title' %}">
+          <a class="nav-link" href="{% url 'uzivatel:update-uzivatel' %}" rel="tooltip" data-bs-placement="top" title="{% trans 'templates.baseLogedIn.navbar.uzivatel.title' %}">
             <span class="material-icons">person</span>
             <span>{% trans "templates.baseLogedIn.navbar.uzivatel" %}</span>
           </a>
@@ -432,13 +432,12 @@
     }
     $("#sidebar-toggle").click(sidebar_toggle_func);
     $("#sidebar-toggle-2").click(sidebar_toggle_func);
-    $('[rel="tooltip"]').tooltip({
-      container : '#app-page-wrapper',
-      html : true,
-    });
-    $('[data-bs-toggle="popover"]').popover({
-      html : true
-    });
+    const tooltipTriggerList = document.querySelectorAll('[rel="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+      return new bootstrap.Popover(popoverTriggerEl)
+    })
   </script>
   <script>
 

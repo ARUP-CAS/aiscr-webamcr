@@ -13,7 +13,7 @@
         {% if show_edit_cast %}
         <div class="btn-group" role="group">
             <button id="button-edit-cast" class="btn" href="{% url 'dokument:edit-cast' cast.ident_cely %}"
-            rel="tooltip" data-placement="top"
+            rel="tooltip" data-bs-placement="top"
             title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.editCastDokumentu.tooltip' %}">
             <span class="material-icons">edit</span>
             </button>
@@ -51,7 +51,7 @@
             {% endif %}
           </div>
           <button class="btn" type="button" id="others" type="button" data-bs-toggle="dropdown" aria-haspopup="true"
-                  aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.dalsiNabidka.label' %}">
+                  aria-expanded="false" rel="tooltip" data-bs-placement="top" title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.dalsiNabidka.label' %}">
             <span class="material-icons">more_vert</span>
           </button>
         </div>
@@ -71,7 +71,7 @@
         <div class="btn-group" role="group">
           {% if show_neident_akce_edit %}
             <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.ident_cely %}"
-            rel="tooltip" data-placement="top"
+            rel="tooltip" data-bs-placement="top"
             title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.editNeidentAkci.tooltip' %}">
             <span class="material-icons">edit</span>
             </button>
@@ -86,7 +86,7 @@
             {% endif %}
           </div>
           <button class="btn" type="button" id="others_neident" data-bs-toggle="dropdown" aria-haspopup="true"
-                  aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.neidentAkce.DalsiNabidka.label' %}">
+                  aria-expanded="false" rel="tooltip" data-bs-placement="top" title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.neidentAkce.DalsiNabidka.label' %}">
             <span class="material-icons">more_vert</span>
           </button>
         </div>

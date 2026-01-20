@@ -125,8 +125,7 @@
       {% for message in messages %}
         <div class="alert alert-{% if message.tags == "notclosing warning" %}warning notclosing{% elif message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert" style="top: {%  message_top forloop.counter0 %}px">
           {{ message }}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
           </button>
         </div>
       {% endfor %}

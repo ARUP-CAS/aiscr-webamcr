@@ -60,6 +60,6 @@ sphinxcontrib-googleanalytics==0.5
 sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0
 freezegun==1.5.5
-sphinx==9.1.0
 sphinx-rtd-theme==3.1.0
+sphinx==8.2.3
 crispy-bootstrap5==2025.4
