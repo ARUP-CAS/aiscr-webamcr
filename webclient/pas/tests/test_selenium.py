@@ -7,7 +7,6 @@ from core.models import Soubor
 # from core.tests.runner import EXISTING_PROJECT_IDENT_ZACHRANNY, EXISTING_PROJECT_IDENT_STATUS
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
-from django.utils.translation import gettext as _
 from pas.models import SamostatnyNalez
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -18,8 +17,7 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneNalezy(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuSamostatneNalezy")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.zapsat"))
+        self.goToAddress("/pas/zapsat")
 
     def create_PAS(self):
         self.go_to_form()
@@ -42,16 +40,16 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.wait(0.5)
         self.ElementClick(By.ID, "div_id_lokalizace")
         self.ElementClick(By.ID, "id_lokalizace")
-        self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
-        self.driver.find_element(By.ID, "id_obdobi").send_keys("kultura púchovská")
-        self.driver.find_element(By.ID, "id_obdobi").send_keys(Keys.ENTER)
+        self.ElementSendKeys(By.ID, "id_lokalizace", "test")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  button", "kultura púchovská")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  div.bs-searchbox > input", Keys.ENTER)
 
-        self.driver.find_element(By.ID, "id_druh_nalezu").send_keys("lahev")
-        self.driver.find_element(By.ID, "id_druh_nalezu").send_keys(Keys.ENTER)
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  button", "lahev")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  div.bs-searchbox > input", Keys.ENTER)
 
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace .filter-option-inner-inner")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("jantar")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace button")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_specifikace input", "jantar")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_specifikace  div.bs-searchbox > input", Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         return self.driver.current_url.split("/")[-1]
@@ -95,20 +93,17 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "visible_x1").send_keys("16,7494989")
         self.ElementClick(By.ID, "visible_x2")
         self.driver.find_element(By.ID, "visible_x2").send_keys("49,2941092")
-        self.ElementClick(By.ID, "div_id_lokalizace")
-        self.ElementClick(By.ID, "id_lokalizace")
-        self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
+        self.ElementSendKeys(By.ID, "id_lokalizace", "test")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  button", "kultura púchovská")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  div.bs-searchbox > input", Keys.ENTER)
 
-        self.driver.find_element(By.ID, "id_obdobi").send_keys("kultura púchovská")
-        self.driver.find_element(By.ID, "id_obdobi").send_keys(Keys.ENTER)
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  button", "lahev")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  div.bs-searchbox > input", Keys.ENTER)
 
-        self.driver.find_element(By.ID, "id_druh_nalezu").send_keys("lahev")
-        self.driver.find_element(By.ID, "id_druh_nalezu").send_keys(Keys.ENTER)
-
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace .filter-option-inner-inner")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("jantar")
-        self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
-        with WaitForPageLoad(self.driver):
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace button")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_specifikace input", "jantar")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_specifikace  div.bs-searchbox > input", Keys.ENTER)
+        with WaitForPageLoad(self.driver, 5):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         SN_count_new = SamostatnyNalez.objects.count()
         self.assertEqual(SN_count_old, SN_count_new)
@@ -120,10 +115,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="M-202105907-N00091").first().stav, SN_ZAPSANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy"))
-        self.ElementClick(By.LINK_TEXT, "M-202105907-N00091")
-
+        self.goToAddress("/pas/detail/M-202105907-N00091")
         self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")
         self.upload_file("pas/tests/resources/test_foto_1.jpg", "test_foto_1.jpg")
         with WaitForPageLoad(self.driver):
@@ -143,10 +135,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="M-202105907-N00091").first().stav, SN_ZAPSANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy"))
-        self.ElementClick(By.LINK_TEXT, "M-202105907-N00091")
-
+        self.goToAddress("/pas/detail/M-202105907-N00091")
         # self.ElementClick(By.CSS_SELECTOR, ".app-entity-dokument > .material-icons")
 
         # with open("pas/tests/resources/test_foto_1.jpg", "rb") as image_file:
@@ -159,7 +148,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # self.ElementClick(By.LINK_TEXT, _("core.templates.upload_file.submitButton.text"))
         try:
             self.ElementClick(By.CSS_SELECTOR, "#pas-odeslat > .app-controls-button-text")
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
 
         except Exception:
@@ -172,17 +161,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Scenar_30 Potvrzení samostatného nálezu (pozitivní scénář 1)
         logger.info("AkceSamostatneNalezy.test_030_potvrzeni_samostatneho_nalezu_p_001.start")
         self.login("archeolog")
+        self.createFedoraRecord("C-202211308-N00213")
+        self.uploadFileToFedora(606453, "dokument/tests/resources/test.jpg")
+        self.uploadFileToFedora(606455, "dokument/tests/resources/test.jpg")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="C-202211308-N00213").first().stav, SN_ODESLANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
-
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
+        self.goToAddress("/pas/detail/C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         self.wait(1)
         self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
@@ -204,18 +188,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Scenar_31 Potvrzení samostatného nálezu (negativní scénář 1)
         logger.info("AkceSamostatneNalezy.test_031_potvrzeni_samostatneho_nalezu_n_001.start")
         self.login("archeolog")
-
+        self.createFedoraRecord("C-202211308-N00213")
+        self.uploadFileToFedora(606453, "dokument/tests/resources/test.jpg")
+        self.uploadFileToFedora(606455, "dokument/tests/resources/test.jpg")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="C-202211308-N00213").first().stav, SN_ODESLANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
-
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
+        self.goToAddress("/pas/detail/C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         self.wait(1)
         self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
@@ -228,7 +206,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -240,18 +218,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Scenar_32 Potvrzení samostatného nálezu (negativní scénář 2)
         logger.info("AkceSamostatneNalezy.test_032_potvrzeni_samostatneho_nalezu_n_002.start")
         self.login("archeolog")
-
+        self.createFedoraRecord("C-202211308-N00213")
+        self.uploadFileToFedora(606453, "dokument/tests/resources/test.jpg")
+        self.uploadFileToFedora(606455, "dokument/tests/resources/test.jpg")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="C-202211308-N00213").first().stav, SN_ODESLANY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-1 > .text")
-
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202211308-N00213")
+        self.goToAddress("/pas/detail/C-202211308-N00213")
         self.ElementClick(By.CSS_SELECTOR, "#pas-potvrdit > .app-controls-button-text")
         # self.ElementClick(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo")
         # self.driver.find_element(By.CSS_SELECTOR, ".col-sm-3:nth-child(1) > #div_id_evidencni_cislo #id_evidencni_cislo").send_keys("123")
@@ -262,7 +234,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-3 > .text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -274,17 +246,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Scenar_38 Archivace samostatného nálezu (pozitivní scénář 1)
         logger.info("AkceSamostatneNalezy.test_038_archivace_samostatneho_nalezu_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-202010474-N00002")
+        self.uploadFileToFedora(518731, "dokument/tests/resources/test.jpg")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="C-202010474-N00002").first().stav, SN_POTVRZENY)
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
 
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-2 > .text")
-
-        self.ElementClick(By.CSS_SELECTOR, ".card > .card-body")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
+        self.goToAddress("/pas/detail/C-202010474-N00002")
         self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
         self.wait(1)
         self.ElementClick(By.CSS_SELECTOR, ".custom-control-label")
@@ -298,15 +264,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Scenar_39 Archivace samostatného nálezu (negativní scénář 1)
         logger.info("AkceSamostatneNalezy.test_039_archivace_samostatneho_nalezu_n_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-202010474-N00002")
+        self.uploadFileToFedora(518731, "dokument/tests/resources/test.jpg")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="C-202010474-N00002").first().stav, SN_POTVRZENY)
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-202010474-N00002")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202010474-N00002")
+        self.goToAddress("/pas/detail/C-202010474-N00002")
         self.ElementClick(By.CSS_SELECTOR, "#file-smazat-518731 > .material-icons")
         self.wait(1)
         with WaitForPageLoad(self.driver):
@@ -314,7 +276,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         try:
             self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -326,15 +288,12 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         # Scenar_45 Vrácení samostatného nálezu (pozitivní scénář 1)
         logger.info("AkceSamostatneNalezy.test_045_vraceni_samostatneho_nalezu_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("M-202301371-N00015")
+        self.uploadFileToFedora(645376, "dokument/tests/resources/test.jpg")
+        self.uploadFileToFedora(645377, "dokument/tests/resources/test.jpg")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="M-202301371-N00015").first().stav, SN_POTVRZENY)
 
-        self.ElementClick(By.CSS_SELECTOR, ".app-entity-samostatny_nalez > .card-body")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.samostatneNalezy.vybrat"))
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-202301371-N00015")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "M-202301371-N00015")
+        self.goToAddress("/pas/detail/M-202301371-N00015")
         self.ElementClick(By.CSS_SELECTOR, "#pas-vratit > .app-controls-button-text")
         self.wait(1)
         self.ElementClick(By.ID, "id_reason")
