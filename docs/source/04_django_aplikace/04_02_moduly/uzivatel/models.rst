@@ -20,6 +20,10 @@ Třídy
 
    .. py:method:: user_str_en()
 
+   .. py:method:: display_name()
+
+      Textová reprezentace uživatele pro tabulky.
+
    .. py:method:: moje_spolupracujici_organizace()
 
    .. py:method:: moje_stavy_pruzkumnych_projektu()

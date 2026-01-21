@@ -153,6 +153,23 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         else:
             return self.user_str
 
+    def display_name(self, viewer=None):
+        """
+        Textová reprezentace uživatele pro tabulky.
+        """
+        lang = get_language()
+
+        if viewer and viewer.hlavni_role and viewer.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            base = f"{self.last_name}, {self.first_name}"
+        else:
+            base = self.ident_cely
+
+        if self.organizace:
+            org = self.organizace.nazev_zkraceny_en if lang == "en" else self.organizace.nazev_zkraceny
+            return f"{base} ({self.ident_cely}, {org})" if "," in base else f"{base} ({org})"
+
+        return base
+
     def moje_spolupracujici_organizace(self):
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
         archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)

@@ -2,16 +2,12 @@ import logging
 
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from core.models import Permissions as p
 from core.models import Soubor, check_permissions
 from core.views import ExportMixinDate
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import CharField, F, Value
-from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 from django.views.generic import ListView
 from django_tables2 import RequestConfig, SingleTableMixin
@@ -66,46 +62,11 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         lookup = self.get_lookup_value()
         qs = self.model.objects.filter(**{self.queryset_filter: lookup})
         qs = self.prepare_queryset(qs)
-        return self._annotate_queryset(qs)
+        return qs
 
     def get_header_config(self, context):
         """Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}"""
         return None
-
-    def _annotate_queryset(self, queryset):
-        user = self.request.user
-        if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
-            return queryset.annotate(
-                uzivatel_custom=Concat(
-                    F("uzivatel__last_name"),
-                    Value(", "),
-                    F("uzivatel__first_name"),
-                    Value(" ("),
-                    F("uzivatel__ident_cely"),
-                    Value(", "),
-                    (
-                        F("uzivatel__organizace__nazev_zkraceny_en")
-                        if get_language() == "en"
-                        else F("uzivatel__organizace__nazev_zkraceny")
-                    ),
-                    Value(")"),
-                    output_field=CharField(),
-                )
-            )
-        else:
-            return queryset.annotate(
-                uzivatel_custom=Concat(
-                    F("uzivatel__ident_cely"),
-                    Value(" ("),
-                    (
-                        F("uzivatel__organizace__nazev_zkraceny_en")
-                        if get_language() == "en"
-                        else F("uzivatel__organizace__nazev_zkraceny")
-                    ),
-                    Value(")"),
-                    output_field=CharField(),
-                )
-            )
 
     def add_fedora_history(self, context):
         """
