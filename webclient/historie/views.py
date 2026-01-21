@@ -343,8 +343,9 @@ class UzivatelHistorieListView(HistorieListView):
     fedora_model = User
 
     def get_header_config(self, context):
+        next_url = self.request.GET.get("next", reverse("uzivatel:update-uzivatel"))
         return {
-            "url": reverse("uzivatel:update-uzivatel"),
+            "url": next_url,
             "icon": "person",
             "text": _("historie.templates.historieList.uzivatele.cardHeader"),
         }

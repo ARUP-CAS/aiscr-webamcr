@@ -6,6 +6,12 @@
     <a href="/admin/uzivatel/user/{{ object_id }}/actions/metadata/"
        title="{% trans 'admin.admin_user_change.download_metadata.title' %}">{% trans 'admin.admin_user_change.download_metadata' %}</a>
   </li>
+  <li class="objectaction-item" data-tool-name="metadata">
+    <a href="{% url 'historie:uzivatel' original.ident_cely %}?next={{ request.get_full_path|urlencode }}"
+        title="{% trans 'admin.admin_user_change.historieUzivatele.title' %}">
+        {% trans 'admin.admin_user_change.historieUzivatele' %}
+    </a>
+  </li>
   {{ block.super }}
 {% endblock %}
 
