@@ -241,7 +241,7 @@ services:
     environment:
       - UMASK=002
       - TOMCAT_USERS_FILE=/var/run/secrets/tomcat_users
-      - CATALINA_OPTS="-Dfcrepo.config.file=/opt/fcrepo/conf/fcrepo.properties"
+      - JAVA_TOOL_OPTIONS=-Dfcrepo.config.file=/opt/fcrepo/conf/fcrepo.properties -Dfcrepo.log=DEBUG
     container_name: fcrepo
     logging:
       driver: "json-file"    
