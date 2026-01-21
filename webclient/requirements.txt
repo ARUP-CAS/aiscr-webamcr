@@ -36,7 +36,7 @@ lxml==6.0.2
 python-magic==0.4.27
 pdf2image==1.17.0
 phonenumbers==9.0.22
-py7zr==1.1.0
+py7zr==1.1.2
 rarfile==4.2
 django-cacheops==7.2
 django-model-utils==5.0.0
