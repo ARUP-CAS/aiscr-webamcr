@@ -549,8 +549,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         data.columns = ["index", "date", "test name", "result"]
         try:
             data.to_excel(path, index=False)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.to_excel_error",
+                extra={"error": exc},
+            )
 
         try:
             self.driver.quit()
