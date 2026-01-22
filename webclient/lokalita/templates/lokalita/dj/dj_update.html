@@ -11,9 +11,8 @@
       {% trans "lokalita.templates.dj.djUpdate.cardHeader.dokumentacniJednotka" %} {{ j.ident_cely }}
     </div>
     <div class="app-fx app-right">
-      {% if show.editovat %}
         <div class="btn-group" role="group">
-          <div class="dropdown-menu" aria-labelledby="others">
+          <div class="dropdown-menu" aria-labelledby="add_others">
             {% if j.show_add_pian %}
               <a id="show_menu_pian_new_id" class="dropdown-item"
                  href="{% url 'lokalita:create-pian' zaznam.ident_cely j.ident_cely %}">
@@ -50,8 +49,7 @@
           </div>
           <button class="btn" type="button" id="add_others" type="button" data-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false" rel="tooltip" data-placement="top"
-                  title="{% trans 'lokalita.templates.dj.djUpdate.moreActions.label' %}"
-                  onclick="filtrAkci()">
+                  title="{% trans 'lokalita.templates.dj.djUpdate.moreActions.label' %}">
             <span class="material-icons">add</span>
           </button>
         </div>
@@ -101,19 +99,19 @@
                 {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatAdb.label' %}
               </button>
             {% endif %}
-            <button id="dj-smazat-{{ j.ident_cely }}" class="dropdown-item dj-smazat-btn" type="button" name="button"
-                    href="{% url 'dj:smazat' j.ident_cely %}">
-              {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatDj.label' %}
-            </button>
+            {% if j.show_dj_smazat %}
+              <button id="dj-smazat-{{ j.ident_cely }}" class="dropdown-item dj-smazat-btn" type="button" name="button"
+                      href="{% url 'dj:smazat' j.ident_cely %}">
+                {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatDj.label' %}
+              </button>
+            {% endif %}
           </div>
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false" rel="tooltip" data-placement="top"
-                  title="{% trans 'lokalita.templates.dj.djUpdate.moreActions.label' %}"
-                  onclick="filtrAkci()">
+                  title="{% trans 'lokalita.templates.dj.djUpdate.moreActions.label' %}">
             <span class="material-icons">more_vert</span>
           </button>
         </div>
-      {% endif %}
     </div>
   </div>
   <div class="card-body">
@@ -152,31 +150,12 @@
           global_map_can_grab_geom_from_map = dj;
           map_show_edit(false)
       }
-
-      const getFiltrType = () => {
-          return document.forms[0].querySelector('[data-id="dj_typ_id"]').title
+    $(document).ready(function () {
+      //skryje přázdné menu
+      if ($('.dropdown-menu[aria-labelledby="add_others"]').children().length === 0) {
+          $("#add_others").hide();
       }
-
-      const getFiltrTypeIsKuSafe = () => {
-          try {
-              return getFiltrType().includes("Katastrální území")
-          } catch (e) {
-              return false;
-          }
-      }
-
-      const filtrAkci = () => {
-          const positive = getFiltrTypeIsKuSafe() ? 'none' : '';
-          const negative = positive === '' ? 'none' : '';
-
-          ["show_menu_pian_from_map_id", "show_menu_pian_new_id", "pian-pripojit-" + '{{j.pian_ident_cely }}', "pian-upravit-" + '{{j.pian_ident_cely }}', "pian-potvrdit-" + '{{j.pian_ident_cely }}']
-              .forEach(element => {
-                  if (document.getElementById(element) != null) {
-                      document.getElementById(element).style.display = positive;
-                  }
-              });
-          
-      }
+    });
   </script>
   <script>
       const set_pian_by_id = function (dj_ident, disabled = true) {

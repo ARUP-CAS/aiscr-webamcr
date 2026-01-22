@@ -12,7 +12,7 @@
                   aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'dokument.templates.dokument_table.dalsiNabidka.tooltip' %}">
             <span class="material-icons">add</span>
           </button>
-          <div class="dropdown-menu" aria-labelledby="others">
+          <div class="dropdown-menu" aria-labelledby="others_doc">
             {% if type == "arch_z"%}
               {% if show.zapsat_dokumenty %}
                 <a class="dropdown-item"
@@ -87,6 +87,10 @@
 <script type="text/javascript">
   // projekt pass load
   $(document).ready(function() {
+    //skryje přázdné menu
+    if ($('.dropdown-menu[aria-labelledby="others_doc"]').children().length === 0) {
+        $("#others_doc").hide();
+    }
     if ({{dokumenty.count}} > 0) {
       $.ajax({
         type: "GET",
