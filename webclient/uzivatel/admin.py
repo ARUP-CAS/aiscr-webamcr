@@ -19,11 +19,11 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponseRedirect, StreamingHttpResponse
+from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
-from django_object_actions import DjangoObjectActions, action
+from django_object_actions import DjangoObjectActions
 from historie.models import Historie
 from notifikace_projekty.forms import (
     KATASTR_CONTENT_TYPE,
@@ -304,19 +304,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         "orcid",
     )
     ordering = ("email",)
-    change_actions = ("metadata",)
     change_form_template = "admin/admin_user_change.html"
-
-    @action(label="Metadata", description="Download of metadata")
-    def metadata(self, request, obj):
-        metadata = obj.metadata
-
-        def context_processor(content):
-            yield content
-
-        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
-        return response
 
     def has_delete_permission(self, request, obj=None):
         if obj:
