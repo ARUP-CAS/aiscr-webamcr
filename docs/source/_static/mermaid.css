@@ -10,3 +10,8 @@
 .mermaid * {
   font-size: var(--mermaid-font-size) !important;
 }
+
+table td .line-block,
+table th .line-block {
+  margin-bottom: 0 !important;
+}
