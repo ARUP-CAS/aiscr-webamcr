@@ -5,7 +5,6 @@ import os
 import re
 import time
 import zipfile
-import zoneinfo
 from enum import Enum
 from typing import Optional, Union
 
@@ -607,7 +606,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
         """
         from core.repository_connector import FedoraRepositoryConnector
+        from core.utils import get_timezone
 
+        timezone = get_timezone()
         record = self.vazba.navazany_objekt
         results = []
         if record is not None and self.repository_uuid is not None:
@@ -618,7 +619,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             connector = FedoraRepositoryConnector(record)
             history_list = connector.get_historie_file(self.repository_uuid)
             for history_item in history_list:
-                local_dt = history_item["datetime"].astimezone(zoneinfo.ZoneInfo("Europe/Prague"))
+                local_dt = history_item["datetime"].astimezone(timezone)
                 url = reverse(
                     "core:stahnout_data_historicka",
                     kwargs={
