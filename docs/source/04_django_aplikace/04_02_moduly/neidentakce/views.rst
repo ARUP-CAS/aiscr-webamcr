@@ -12,6 +12,8 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: get_form_kwargs()
+
    .. py:method:: get_context_data()
 
    .. py:method:: get_success_url()

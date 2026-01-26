@@ -5,7 +5,6 @@ from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.constants import EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
-from django.utils.translation import gettext as _
 from ez.models import ExterniZdroj
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -16,12 +15,10 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceExterniZdroj(BaseSeleniumTestClass):
     def go_to_form_zapsat(self):
-        self.ElementClick(By.ID, "menuExterniZdroje")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.externiZdroje.zapsat"))
+        self.goToAddress("/ext-zdroj/zapsat")
 
     def go_to_form_vybrat(self):
-        self.ElementClick(By.ID, "menuExterniZdroje")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.externiZdroje.vybrat"))
+        self.goToAddress("/ext-zdroj/vyber?sort=autori&sort=rok_vydani_vzniku&sort=nazev")
 
     def zapsat_zaznam(self):
         self.go_to_form_zapsat()
