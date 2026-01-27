@@ -80,8 +80,22 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     )
     is_active = models.BooleanField(default=False, verbose_name=_("uzivatel.models.User.aktivni"), db_index=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    osoba = models.ForeignKey("Osoba", models.RESTRICT, db_column="osoba", blank=True, null=True, db_index=True)
-    organizace = models.ForeignKey("Organizace", models.RESTRICT, db_column="organizace", db_index=True)
+    osoba = models.ForeignKey(
+        "Osoba",
+        models.RESTRICT,
+        verbose_name=_("uzivatel.models.User.osoba"),
+        db_column="osoba",
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    organizace = models.ForeignKey(
+        "Organizace",
+        models.RESTRICT,
+        verbose_name=_("uzivatel.models.User.organizace"),
+        db_column="organizace",
+        db_index=True,
+    )
     history_vazba = models.OneToOneField(
         "historie.HistorieVazby",
         db_column="historie",

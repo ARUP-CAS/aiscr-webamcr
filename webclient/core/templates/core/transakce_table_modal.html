@@ -144,8 +144,7 @@
         });
     });
     tag.off('select2:unselect.modalrow').on('select2:unselect.modalrow', function (e) {
-        $("#d" + e.params.data.id).remove();
-
+        $("#modaldoc" + e.params.data.id).remove();
         if (idTag === "vratit-akci-form") {
             $('input[name="form-TOTAL_FORMS"]').val($(cl + " table tbody tr").length);
         }
