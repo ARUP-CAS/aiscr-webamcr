@@ -22,7 +22,7 @@ Třídy
 
    .. py:method:: display_name()
 
-      Textová reprezentace uživatele pro tabulky.
+      Textová reprezentace uživatele pro tabulky a autocomplete pole.
 
    .. py:method:: moje_spolupracujici_organizace()
 

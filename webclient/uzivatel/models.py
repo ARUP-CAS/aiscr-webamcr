@@ -169,7 +169,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def display_name(self, viewer=None):
         """
-        Textová reprezentace uživatele pro tabulky.
+        Textová reprezentace uživatele pro tabulky a autocomplete pole.
         """
         lang = get_language()
 
