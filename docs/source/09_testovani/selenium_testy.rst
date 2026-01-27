@@ -1319,8 +1319,8 @@ Arch Z
 
 .. _selenium-test-arch-z-024-test-024-p-id-n-dokumenta-n-jednotky-celek-akce-pozitiv:
 
-Test 024 Test 024 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 024 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření dokumentační jednotky typu celek akce u projektové akce ve stavu A1. Scénář končí vytvořením dokumentační jednotky D01 typu celek akce.
 
@@ -1368,8 +1368,8 @@ Implementován v
 
 .. _selenium-test-arch-z-034-test-034-p-id-n-dokumenta-n-jednotky-celek-akce-negativ:
 
-Test 034 Test 034 Přidání dokumentační jednotky celek akce (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 034 Přidání dokumentační jednotky celek akce (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření dokumentační jednotky typu celek akce u projektové akce ve stavu A1. Scénář končí nevytvořením dokumentační jednotky D01 typu celek akce.
 
@@ -1416,8 +1416,8 @@ Implementován v
 
 .. _selenium-test-arch-z-035-test-035-p-id-n-dokumenta-n-jednotky-st-akce-pozitivn-s:
 
-Test 035 Test 035 Přidání dokumentační jednotky část akce (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 035 Přidání dokumentační jednotky část akce (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření dokumentační jednotky typu část akce u projektové akce ve stavu A1. Scénář končí vytvořením dokumentační jednotky D02 typu část akce.
 
@@ -1464,8 +1464,8 @@ Implementován v
 
 .. _selenium-test-arch-z-036-test-036-p-id-n-dokumenta-n-jednotky-st-akce-negativn-s:
 
-Test 036 Test 036 Přidání dokumentační jednotky část akce (negativní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 036 Přidání dokumentační jednotky část akce (negativní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření dokumentační jednotky typu část akce u projektové akce ve stavu A1. Scénář končí nevytvořením dokumentační jednotky D02 typu část akce.
 
@@ -1512,8 +1512,8 @@ Implementován v
 
 .. _selenium-test-arch-z-037-test-037-p-id-n-komponenty-k-dokumenta-n-jednotce-celek:
 
-Test 037 Test 037 Přidání komponenty k dokumentační jednotce celek akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 037 Přidání komponenty k dokumentační jednotce celek akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření komponenty u dokumentační jednotky typu celek akce u projektové akce ve stavu A1. Scénář končí vytvořením komponenty K001 u dokumentační jednotky D01.
 
@@ -1561,8 +1561,8 @@ Implementován v
 
 .. _selenium-test-arch-z-040-test-040-p-id-n-komponenty-k-dokumenta-n-jednotce-celek:
 
-Test 040 Test 040 Přidání komponenty k dokumentační jednotce celek akce (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 040 Přidání komponenty k dokumentační jednotce celek akce (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření komponenty u dokumentační jednotky typu celek akce u projektové akce ve stavu A1. Scénář končí nevytvořením komponenty K001 u dokumentační jednotky D01.
 
@@ -1610,8 +1610,8 @@ Implementován v
 
 .. _selenium-test-arch-z-041-test-041-p-id-n-objektu-k-pozitivn-komponent-pozitivn-s:
 
-Test 041 Test 041  Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 041  Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření objektu u komponenty připojené k dokumentační jednotce projektové akce. Scénář končí vytvořením objektu u komponenty K001 u dokumentační jednotky D01.
 
@@ -1658,8 +1658,8 @@ Implementován v
 
 .. _selenium-test-arch-z-042-test-042-p-id-n-p-edm-tu-k-pozitivn-komponent-pozitivn:
 
-Test 042 Test 042 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 042 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření předmětu u komponenty připojené k dokumentační jednotce projektové akce. Scénář končí vytvořením předmětu u komponenty K001 u dokumentační jednotky D01.
 
@@ -1707,8 +1707,8 @@ Implementován v
 
 .. _selenium-test-arch-z-043-test-043-smaz-n-objektu-u-projektov-akce-pozitivn-sc-n:
 
-Test 043 Test 043 Smazání objektu u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 043 Smazání objektu u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test smazání objektu u komponenty připojené k dokumentační jednotce projektové akce. Scénář končí smazáním objektu.
 
@@ -1755,8 +1755,8 @@ Implementován v
 
 .. _selenium-test-arch-z-044-test-044-smaz-n-p-edm-tu-u-projektov-akce-pozitivn-sc-n:
 
-Test 044 Test 044 Smazání předmětu u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 044 Smazání předmětu u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test smazání předmětu u komponenty připojené k dokumentační jednotce projektové akce. Scénář končí smazáním předmětu.
 
@@ -1803,8 +1803,8 @@ Implementován v
 
 .. _selenium-test-arch-z-046-test-046-vytvo-en-samostan-akce-pozitivn-sc-n-1:
 
-Test 046 Test 046 Vytvoření samostané akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 046 Vytvoření samostané akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření samostatné akce. Scénář končí vytvořením samostatné akce akce ve stavu A1.
 
@@ -1841,8 +1841,8 @@ Implementován v
 
 .. _selenium-test-arch-z-047-test-047-vytvo-en-samostatn-akce-negativn-sc-n-1:
 
-Test 047 Test 047 Vytvoření samostatné akce (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 047 Vytvoření samostatné akce (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření samostatné akce. Scénář nekončí vytvořením samostatné akce ve stavu A1.
 
@@ -1874,8 +1874,8 @@ Implementován v
 
 .. _selenium-test-arch-z-048-test-048-p-id-n-dokumenta-n-jednotky-celek-akce-pozitiv:
 
-Test 048 Test 048 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 048 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření dokumentační jednotky typu celek akce u samostané akce ve stavu A1. Scénář končí vytvořením dokumentační jednotky D01.
 
@@ -1920,8 +1920,8 @@ Implementován v
 
 .. _selenium-test-arch-z-049-test-049-p-id-n-dokumenta-n-jednotky-celek-akce-negativ:
 
-Test 049 Test 049  Přidání dokumentační jednotky “Celek akce” (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 049  Přidání dokumentační jednotky “Celek akce” (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření dokumentační jednotky typu celek akce u samostatné akce ve stavu A1. Scénář nekončí vytvořením dokumentační jednotky D01.
 
@@ -1966,8 +1966,8 @@ Implementován v
 
 .. _selenium-test-arch-z-050-test-050-p-id-n-komponenty-k-dj-u-samostatn-akce-poziti:
 
-Test 050 Test 050 Přidání komponenty k DJ u samostatné akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 050 Přidání komponenty k DJ u samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření komponenty k DJ u samostatné akce ve stavu A1. Scénář    končí vytvořením komponenty K01.
 
@@ -2013,8 +2013,8 @@ Implementován v
 
 .. _selenium-test-arch-z-074-test-074-p-id-n-komponenty-k-dj-u-samostatn-akce-negati:
 
-Test 074 Test 074 Přidání komponenty k DJ u samostatné akce (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 074 Přidání komponenty k DJ u samostatné akce (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření komponenty k DJ u samostatné akce ve stavu A1. Scénář nekončí vytvořením komponenty.
 
@@ -2060,8 +2060,8 @@ Implementován v
 
 .. _selenium-test-arch-z-075-test-075-p-id-n-objektu-k-pozitivn-komponent-pozitivn-s:
 
-Test 075 Test 075 Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 075 Přidání objektu k pozitivní komponentě (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření objektu u komponenty připojené k dokumentační jednotce samostatné akce. Scénář končí vytvořením objektu u komponenty K001 u dokumentační jednotky D01.
 
@@ -2108,8 +2108,8 @@ Implementován v
 
 .. _selenium-test-arch-z-076-test-076-p-id-n-p-edm-tu-k-pozitivn-komponent-pozitivn:
 
-Test 076 Test 076 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 076 Přidání předmětu k pozitivní komponentě (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření předmětu u komponenty připojené k dokumentační jednotce samostatné akce. Scénář končí vytvořením předmětu u komponenty K001 u dokumentační jednotky D01.
 
@@ -2157,8 +2157,8 @@ Implementován v
 
 .. _selenium-test-arch-z-077-test-077-smaz-n-objektu-u-samostatn-akce-pozitivn-sc-n:
 
-Test 077 Test 077 Smazání objektu u samostatné akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 077 Smazání objektu u samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test smazání objektu u komponenty připojené k dokumentační jednotce samostatné akce. Scénář končí smazáním objektu.
 
@@ -2205,8 +2205,8 @@ Implementován v
 
 .. _selenium-test-arch-z-078-test-078-smaz-n-p-edm-tu-u-samostatn-akce-pozitivn-sc-n:
 
-Test 078 Test 078 Smazání předmětu u samostatné akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 078 Smazání předmětu u samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test smazání předmětu u komponenty připojené k dokumentační jednotce samostatné akce. Scénář končí smazáním předmětu.
 
@@ -2253,8 +2253,8 @@ Implementován v
 
 .. _selenium-test-arch-z-079-test-079-p-id-n-dokumentu-pozitivn-sc-n-1:
 
-Test 079 Test 079 Přidání dokumentu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 079 Přidání dokumentu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání dokumentu k projektové akci. Scénář končí vytvořením záznamu dokumentu a jeho připojením k projektové akci.
 
@@ -2300,8 +2300,8 @@ Implementován v
 
 .. _selenium-test-arch-z-080-test-080-p-ipojen-existuj-c-ho-dokumentu-pozitivn-sc-n:
 
-Test 080 Test 080 Připojení existujícího dokumentu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 080 Připojení existujícího dokumentu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení existujícího dokumentu k projektové akci. Scénář končí vytvořením vazby mezi dokumentem a projektovou akcí.
 
@@ -2348,8 +2348,8 @@ Implementován v
 
 .. _selenium-test-arch-z-081-test-081-p-ipojen-existuj-c-ho-dokumentu-z-projektu-poz:
 
-Test 081 Test 081 Připojení existujícího dokumentu z projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 081 Připojení existujícího dokumentu z projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení existujícího dokumentu z projektu k projektové akci. Scénář končí vytvořením vazby mezi dokumentem a projektovou akcí.
 
@@ -2396,8 +2396,8 @@ Implementován v
 
 .. _selenium-test-arch-z-082-test-082-p-id-n-dokumentu-k-samostatn-akci-pozitivn-sc:
 
-Test 082 Test 082 Přidání dokumentu k samostatné akci (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 082 Přidání dokumentu k samostatné akci (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání dokumentu k samostatné akci. Scénář končí vytvořením záznamu dokumentu a jeho připojením k samostatné akci.
 
@@ -2441,8 +2441,8 @@ Implementován v
 
 .. _selenium-test-arch-z-083-test-083-p-ipojen-existuj-c-ho-dokumentu-k-samostatn-ak:
 
-Test 083 Test 083 Připojení existujícího dokumentu k samostatné akci (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 083 Připojení existujícího dokumentu k samostatné akci (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení existujícího dokumentu k samostatné akci.Scénář končí vytvořením vazby mezi dokumentem a samostatnou akcí.
 
@@ -2486,8 +2486,8 @@ Implementován v
 
 .. _selenium-test-arch-z-084-test-084-p-ipojen-extern-ho-zdroje-k-projektov-akci-poz:
 
-Test 084 Test 084 Připojení externího zdroje k projektové akci (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 084 Připojení externího zdroje k projektové akci (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení externího zdroje k projektové akci. Scénář končí vytvořením vazby mezi samostatnou akcí a externím zdrojem.
 
@@ -2532,8 +2532,8 @@ Implementován v
 
 .. _selenium-test-arch-z-085-test-085-p-ipojen-extern-ho-zdroje-k-samostatn-akci-poz:
 
-Test 085 Test 085 Připojení externího zdroje k samostatné akci (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 085 Připojení externího zdroje k samostatné akci (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení externího zdroje k samostatné akci..Scénář končí vytvořením vazby mezi samostatnou akcí a externím zdrojem.
 
@@ -2578,8 +2578,8 @@ Implementován v
 
 .. _selenium-test-arch-z-086-test-086-vytvo-en-pian-u-projektov-akce-pozitivn-sc-n-1:
 
-Test 086 Test 086 Vytvoření PIAN u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 086 Vytvoření PIAN u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření PIAN k projektové akci.Scénář končí vytvořením nového PIAN připojeného k DJ 01 u projektové akce.
 
@@ -2623,8 +2623,8 @@ Implementován v
 
 .. _selenium-test-arch-z-087-test-087-editace-pian-u-projektov-akce-pozitivn-sc-n-1:
 
-Test 087 Test 087 Editace PIAN u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 087 Editace PIAN u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test editace PIAN u projektové akci. Scénář končí novu geometrií PIAN u dokumentační jednotky DJ 01 u projektové akce.
 
@@ -2668,8 +2668,8 @@ Implementován v
 
 .. _selenium-test-arch-z-088-test-088-smaz-n-pian-u-projektov-akce-pozitivn-sc-n-1:
 
-Test 088 Test 088 Smazání PIAN u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 088 Smazání PIAN u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test smazání PIAN u projektové akci. Scénář končí smazáním nepotvrzeného PIAN u dokumentační jednotky D01 u projektové akce.
 
@@ -2712,8 +2712,8 @@ Implementován v
 
 .. _selenium-test-arch-z-089-test-089-p-ipojen-pian-z-mapy-u-projektov-akce-pozitivn:
 
-Test 089 Test 089 Připojení PIAN z mapy u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 089 Připojení PIAN z mapy u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení PIAN z mapy u projektové akci. Scénář končí připojením existujícího PIAN k dokumentační jednotce D01 u projektové akce.
 
@@ -2756,8 +2756,8 @@ Implementován v
 
 .. _selenium-test-arch-z-090-test-090-odpojen-potvrzen-ho-pian-u-projektov-akce-pozi:
 
-Test 090 Test 090 Odpojení potvrzeného PIAN u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 090 Odpojení potvrzeného PIAN u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odpojení potvrzeného PIAN projektové akci. Scénář končí odpojením existujícího PIAN od dokumentační jednotky D01 u projektové akce.
 
@@ -2800,8 +2800,8 @@ Implementován v
 
 .. _selenium-test-arch-z-091-test-091-import-pian-k-projektov-akci-pozitivn-sc-n-1:
 
-Test 091 Test 091 Import PIAN k projektové akci (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 091 Import PIAN k projektové akci (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test importu PIAN k projektové akci. Scénář končí vytvořením PIAN u dokumentační jednotky D01 u projektové akce.
 
@@ -2846,8 +2846,8 @@ Implementován v
 
 .. _selenium-test-arch-z-092-test-092-editace-pian-k-projektov-akci-importem-pozitiv:
 
-Test 092 Test 092 Editace PIAN k projektové akci importem (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 092 Editace PIAN k projektové akci importem (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test editace PIAN k projektové akci importem. Scénář končí upraveným PIAN u dokumentační jednotky D01 u projektové akce.
 
@@ -2892,8 +2892,8 @@ Implementován v
 
 .. _selenium-test-arch-z-093-test-093-p-ipojen-pian-k-projektov-akci-podle-id-poziti:
 
-Test 093 Test 093 Připojení PIAN k projektové akci podle ID (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 093 Připojení PIAN k projektové akci podle ID (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení PIAN k projektové akci podel ID. Scénář končí připojením PIAN podle ID u dokumentační jednotky D01 u projektové akce.
 
@@ -2938,8 +2938,8 @@ Implementován v
 
 .. _selenium-test-arch-z-094-test-094-smaz-n-komponenty-u-projektov-akce-pozitivn-sc:
 
-Test 094 Test 094 Smazání komponenty u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 094 Smazání komponenty u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test smazání komponenty u projektové akce. Scénář končí smazáním komponenty K001 u dokumentační jednotky D01 u projektové akce.
 
@@ -2982,8 +2982,8 @@ Implementován v
 
 .. _selenium-test-arch-z-095-test-095-smaz-n-dokumenta-n-jednotky-u-projektov-akce-p:
 
-Test 095 Test 095 Smazání dokumentační jednotky u projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 095 Smazání dokumentační jednotky u projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test smazání dokumentační jednotky u projektové akce. Scénář končí smazáním dokumentační jednotky D01 u projektové akce.
 
@@ -3026,8 +3026,8 @@ Implementován v
 
 .. _selenium-test-arch-z-096-test-096-vytvo-en-pian-u-samostatn-akce-pozitivn-sc-n-1:
 
-Test 096 Test 096 Vytvoření PIAN u samostatné akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 096 Vytvoření PIAN u samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření PIAN k samostatné akci.Scénář končí vytvořením nového PIAN připojeného k DJ D01 u samostatné akce.
 
@@ -3066,8 +3066,8 @@ Implementován v
 
 .. _selenium-test-arch-z-097-test-097-editace-pian-u-samostatn-akce-pozitivn-sc-n-1:
 
-Test 097 Test 097 Editace PIAN u samostatné akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 097 Editace PIAN u samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test editace PIAN u samostatné akce. Scénář končí novou geometrií PIAN u dokumentační jednotky D01 u samostatné akce.
 
@@ -3110,8 +3110,8 @@ Implementován v
 
 .. _selenium-test-arch-z-098-test-098-editace-pian-k-samostatn-akci-importem-pozitiv:
 
-Test 098 Test 098 Editace PIAN k samostatné akci importem (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 098 Editace PIAN k samostatné akci importem (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test editace PIAN k samostatné akci importem. Scénář končí upraveným PIAN u dokumentační jednotky D01 u samostatné akce.
 
@@ -3156,8 +3156,8 @@ Implementován v
 
 .. _selenium-test-arch-z-099-test-099-import-pian-k-samostatn-akci-pozitivn-sc-n-1:
 
-Test 099 Test 099 Import PIAN k samostatné akci (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 099 Import PIAN k samostatné akci (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test importu PIAN k samostatné akci. Scénář končí vytvořením PIAN u dokumentační jednotky D01 u samostatné akce.
 
@@ -3202,8 +3202,8 @@ Implementován v
 
 .. _selenium-test-arch-z-100-test-100-odpojen-potvrzen-ho-pian-u-samostatn-akce-pozi:
 
-Test 100 Test 100 Odpojení potvrzeného PIAN u samostatné akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 100 Odpojení potvrzeného PIAN u samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odpojení potvrzeného PIAN u samostatné akce. Scénář končí odpojením existujícího PIAN od dokumentační jednotky D01 u samostatné akce.
 
@@ -3246,8 +3246,8 @@ Implementován v
 
 .. _selenium-test-arch-z-101-test-101-smaz-n-pian-u-samostatn-akce-pozitivn-sc-n-1:
 
-Test 101 Test 101 Smazání PIAN u samostatné akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 101 Smazání PIAN u samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test smazání PIAN u samostatné akce. Scénář končí smazáním nepotvrzeného PIAN u dokumentační jednotky D01 u samostatné akce.
 
@@ -3290,8 +3290,8 @@ Implementován v
 
 .. _selenium-test-arch-z-102-test-102-archivace-projektov-akce-pozitivn-sc-n-1:
 
-Test 102 Test 102 Archivace projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 102 Archivace projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace projektové akce. Scénář končí posunem projektové akce ze stavu A2 do stavu A3.
 
@@ -3335,8 +3335,8 @@ Implementován v
 
 .. _selenium-test-arch-z-103-test-103-archivace-samostatn-akce-pozitivn-sc-n-1:
 
-Test 103 Test 103 Archivace samostatné akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 103 Archivace samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace samostatné akce. Scénář končí posunem projektové akce ze stavu A2 do stavu A3.
 
@@ -3379,8 +3379,8 @@ Implementován v
 
 .. _selenium-test-arch-z-138-test-138-test-fedory-pro-samostatne-akce-pozitivn-sc-n:
 
-Test 138 Test 138 Test Fedory pro Samostatne akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 138 Test Fedory pro Samostatne akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test Fedory pro Samostatne akce
 
@@ -3443,8 +3443,8 @@ Implementován v
 
 .. _selenium-test-arch-z-139-test-139-test-fedory-pro-pian-adb-vyskovy-bod-pozitivn:
 
-Test 139 Test 139 Test Fedory pro PIAN, ADB, vyskovy bod (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 139 Test Fedory pro PIAN, ADB, vyskovy bod (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -3496,8 +3496,8 @@ Implementován v
 
 .. _selenium-test-arch-z-140-test-140-test-fedory-pro-adb-pozitivn-sc-n-1:
 
-Test 140 Test 140 Test Fedory pro ADB (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 140 Test Fedory pro ADB (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -3533,8 +3533,8 @@ Core
 
 .. _selenium-test-core-001-test-001-p-ihl-en-do-am-r:
 
-Test 001 Test 001 Přihlášení do AMČR
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 001 Přihlášení do AMČR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Testuje přihlášení uživatele.
 
@@ -3570,8 +3570,8 @@ Dokument
 
 .. _selenium-test-dokument-064-test-064-zaps-n-dokumentu-pozitivn-sc-n-1:
 
-Test 064 Test 064 Zapsání dokumentu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 064 Zapsání dokumentu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání dokumentu na stránce /dokument/zapsat. Končí zapsáním dokumentu do databáze.
 
@@ -3608,8 +3608,8 @@ Implementován v
 
 .. _selenium-test-dokument-065-test-065-zaps-n-dokumentu-negativn-sc-n-1:
 
-Test 065 Test 065 Zapsání dokumentu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 065 Zapsání dokumentu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání dokumentu na stránce /dokument/zapsat. Končí neúspěšným zapsáním dokumentu do databáze.
 
@@ -3646,8 +3646,8 @@ Implementován v
 
 .. _selenium-test-dokument-066-test-066-odesl-n-dokumentu-pozitivn-sc-n-1:
 
-Test 066 Test 066 Odeslání dokumentu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 066 Odeslání dokumentu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit úspěšným odesláním dokumentu a jeho posunutím do stavu D2.
 
@@ -3689,8 +3689,8 @@ Implementován v
 
 .. _selenium-test-dokument-067-test-067-odesl-n-dokumentu-negativn-sc-n-1:
 
-Test 067 Test 067 Odeslání dokumentu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 067 Odeslání dokumentu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit neúspěšným odesláním dokumentu a jeho ponecháním ve stavu D1.
 
@@ -3732,8 +3732,8 @@ Implementován v
 
 .. _selenium-test-dokument-068-test-068-archivace-dokumentu-pozitivn-sc-n-1:
 
-Test 068 Test 068 Archivace dokumentu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 068 Archivace dokumentu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace dokumentu ve stavu D2 na stránce /dokument/detail/. Měl by končit archivací dokumentu a změnou jeho stavu na D3.
 
@@ -3775,8 +3775,8 @@ Implementován v
 
 .. _selenium-test-dokument-069-test-069-archivace-dokumentu-negativn-sc-n-1:
 
-Test 069 Test 069 Archivace dokumentu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 069 Archivace dokumentu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace dokumentu ve stavu D2 na stránce /dokument/detail/. Měl by končit neúspěšnou archivací dokumentu a jeho ponecháním ve stavu D2.
 
@@ -3818,8 +3818,8 @@ Implementován v
 
 .. _selenium-test-dokument-070-test-070-vr-cen-odeslan-ho-dokumentu-pozitivn-sc-n-1:
 
-Test 070 Test 070 Vrácení odeslaného dokumentu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 070 Vrácení odeslaného dokumentu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení dokumentu ve stavu D2 na stránce /dokument/detail. Měl by končit vrácením dokumentu a změnou jeho stavu na D1.
 
@@ -3861,8 +3861,8 @@ Implementován v
 
 .. _selenium-test-dokument-071-test-071-vr-cen-odeslan-ho-dokumentu-negativn-sc-n-1:
 
-Test 071 Test 071 Vrácení odeslaného dokumentu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 071 Vrácení odeslaného dokumentu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení dokumentu ve stavu D2 na stránce /dokument/detail. Měl by končit neúspěšným vrácením a ponecháním dokumentu ve stavu D2.
 
@@ -3905,8 +3905,8 @@ Implementován v
 
 .. _selenium-test-dokument-072-test-072-vr-cen-archivovan-ho-dokumentu-pozitivn-sc-n:
 
-Test 072 Test 072 Vrácení archivovaného dokumentu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 072 Vrácení archivovaného dokumentu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení dokumentu ve stavu D3 na stránce /dokument/detail. Měl by končit vrácením dokumentu a změnou jeho stavu na D2.
 
@@ -3948,8 +3948,8 @@ Implementován v
 
 .. _selenium-test-dokument-073-test-073-vr-cen-archivovan-ho-dokumentu-negativn-sc-n:
 
-Test 073 Test 073 Vrácení archivovaného dokumentu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 073 Vrácení archivovaného dokumentu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení dokumentu ve stavu D3 na stránce /dokument/detail. Měl by končit neúspěšným vrácením a ponecháním dokumentu ve stavu D3.
 
@@ -3992,8 +3992,8 @@ Implementován v
 
 .. _selenium-test-dokument-104-test-104-z-pis-z-znamu-do-knihovny-3d-pozitivn-sc-n-1:
 
-Test 104 Test 104 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 104 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zápisu nového záznamu do Knihovny 3D. Scénář končí vytvořením nového záznamu v Knihovně 3D.
 
@@ -4028,8 +4028,8 @@ Implementován v
 
 .. _selenium-test-dokument-105-test-105-odesl-n-z-znamu-do-knihovny-3d-pozitivn-sc-n:
 
-Test 105 Test 105 Odeslání záznamu do knihovny 3D (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 105 Odeslání záznamu do knihovny 3D (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání záznamu do Knihovny 3D. Scénář končí posunem záznamu ze stavu D1 do stavu D2.
 
@@ -4074,8 +4074,8 @@ Implementován v
 
 .. _selenium-test-dokument-106-test-106-p-id-n-objektu-k-z-znamu-v-knihovn-3d-poziti:
 
-Test 106 Test 106 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 106 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání objektu k záznamu v Knihovně 3D. Scénář končí přidání objektu k záznamu v Knihovně 3D - v databázi je o jeden záznam více.
 
@@ -4116,8 +4116,8 @@ Implementován v
 
 .. _selenium-test-dokument-107-test-107-p-id-n-p-edm-tu-k-z-znamu-v-knihovn-3d-pozit:
 
-Test 107 Test 107 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 107 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání objektu k záznamu v Knihovně 3D. Scénář končí přidáním předmětu k záznamu v Knihovně 3D - v databázi je o jeden záznam více.
 
@@ -4158,8 +4158,8 @@ Implementován v
 
 .. _selenium-test-dokument-108-test-108-p-id-n-prostorov-ho-vymezen-k-z-znamu-v-knih:
 
-Test 108 Test 108 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 108 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání prostorového vymezení k záznamu v Knihovně 3D.
 
@@ -4200,8 +4200,8 @@ Implementován v
 
 .. _selenium-test-dokument-109-test-109-p-id-n-souboru-k-z-znamu-v-knihovn-3d-poziti:
 
-Test 109 Test 109 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 109 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání souboru k záznamu v Knihovně 3D.
 
@@ -4243,8 +4243,8 @@ Implementován v
 
 .. _selenium-test-dokument-110-test-110-archivace-z-znamu-v-knihovn-3d-pozitivn-sc-n:
 
-Test 110 Test 110 Archivace záznamu v Knihovně 3D (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 110 Archivace záznamu v Knihovně 3D (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace záznamu v Knihovně 3D. Test končí posunem záznamu ze stavu D2 do D3.
 
@@ -4280,8 +4280,8 @@ Implementován v
 
 .. _selenium-test-dokument-111-test-111-z-pis-z-znamu-do-knihovny-3d-pozitivn-sc-n-2:
 
-Test 111 Test 111 Zápis záznamu do knihovny 3D (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 111 Zápis záznamu do knihovny 3D (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zápisu nového záznamu do Knihovny 3D. Scénář končí vytvořením nového záznamu v Knihovně 3D.
 
@@ -4316,8 +4316,8 @@ Implementován v
 
 .. _selenium-test-dokument-112-test-112-odesl-n-z-znamu-do-knihovny-3d-pozitivn-sc-n:
 
-Test 112 Test 112 Odeslání záznamu do knihovny 3D (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 112 Odeslání záznamu do knihovny 3D (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání záznamu do Knihovny 3D. Scénář končí posunem záznamu ze stavu D1 do stavu D2.
 
@@ -4362,8 +4362,8 @@ Implementován v
 
 .. _selenium-test-dokument-113-test-113-p-id-n-objektu-k-z-znamu-v-knihovn-3d-poziti:
 
-Test 113 Test 113 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 113 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání objektu k záznamu v Knihovně 3D. Scénář končí přidání objektu k záznamu v Knihovně 3D - v databázi je o jeden záznam více.
 
@@ -4404,8 +4404,8 @@ Implementován v
 
 .. _selenium-test-dokument-114-test-114-p-id-n-p-edm-tu-k-z-znamu-v-knihovn-3d-pozit:
 
-Test 114 Test 114 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 114 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání objektu k záznamu v Knihovně 3D. Scénář končí přidáním předmětu k záznamu v Knihovně 3D - v databázi je o jeden záznam více.
 
@@ -4446,8 +4446,8 @@ Implementován v
 
 .. _selenium-test-dokument-115-test-115-p-id-n-prostorov-ho-vymezen-k-z-znamu-v-knih:
 
-Test 115 Test 115 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 115 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání prostorového vymezení k záznamu v Knihovně 3D.
 
@@ -4488,8 +4488,8 @@ Implementován v
 
 .. _selenium-test-dokument-116-test-116-p-id-n-souboru-k-z-znamu-v-knihovn-3d-poziti:
 
-Test 116 Test 116 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 116 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test přidání souboru k záznamu v Knihovně 3D.
 
@@ -4531,8 +4531,8 @@ Implementován v
 
 .. _selenium-test-dokument-132-test-132-zaps-n-dokumentu-pozitivn-sc-n-2:
 
-Test 132 Test 132 Zapsání dokumentu (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 132 Zapsání dokumentu (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání dokumentu na stránce /dokument/zapsat. Končí zapsáním dokumentu do databáze.
 
@@ -4569,8 +4569,8 @@ Implementován v
 
 .. _selenium-test-dokument-133-test-133-zaps-n-dokumentu-negativn-sc-n-2:
 
-Test 133 Test 133 Zapsání dokumentu (negativní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 133 Zapsání dokumentu (negativní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání dokumentu na stránce /dokument/zapsat. Končí neúspěšným zapsáním dokumentu do databáze.
 
@@ -4615,8 +4615,8 @@ Implementován v
 
 .. _selenium-test-dokument-134-test-134-odesl-n-dokumentu-pozitivn-sc-n-2:
 
-Test 134 Test 134 Odeslání dokumentu (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 134 Odeslání dokumentu (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit úspěšným odesláním dokumentu a jeho posunutím do stavu D2.
 
@@ -4658,8 +4658,8 @@ Implementován v
 
 .. _selenium-test-dokument-135-test-135-odesl-n-dokumentu-negativn-sc-n-2:
 
-Test 135 Test 135 Odeslání dokumentu (negativní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 135 Odeslání dokumentu (negativní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit neúspěšným odesláním dokumentu a jeho ponecháním ve stavu D1.
 
@@ -4701,8 +4701,8 @@ Implementován v
 
 .. _selenium-test-dokument-141-test-141-test-fedory-pro-dokument-pozitivn-sc-n-1:
 
-Test 141 Test 141 Test Fedory pro Dokument (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 141 Test Fedory pro Dokument (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -4774,8 +4774,8 @@ Implementován v
 
 .. _selenium-test-dokument-142-test-142-test-fedory-pro-let-pozitivn-sc-n-1:
 
-Test 142 Test 142 Test Fedory pro LET (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 142 Test Fedory pro LET (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -4810,8 +4810,8 @@ Implementován v
 
 .. _selenium-test-dokument-144-test-144-test-fedory-pro-3d-dokumenty-pozitivn-sc-n-1:
 
-Test 144 Test 144 Test Fedory pro 3D dokumenty (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 144 Test Fedory pro 3D dokumenty (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -4850,8 +4850,8 @@ Ez
 
 .. _selenium-test-ez-117-test-117-z-ps-n-nov-ho-extern-ho-zdroje-typu-kniha-pozitivn:
 
-Test 117 Test 117 Zápsání nového externího zdroje typu kniha (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 117 Zápsání nového externího zdroje typu kniha (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -4887,8 +4887,8 @@ Implementován v
 
 .. _selenium-test-ez-118-test-118-odesl-n-z-znamu-extern-zdroj-pozitivn-sc-n-1:
 
-Test 118 Test 118 Odeslání záznamu Externí zdroj (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 118 Odeslání záznamu Externí zdroj (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání záznamu Externí zdroj. Scénář končí posunem záznamu ze stavu EZ1 do stavu EZ2.
 
@@ -4929,8 +4929,8 @@ Implementován v
 
 .. _selenium-test-ez-119-test-119-p-ipojen-akce-k-extern-mu-zdroji-pozitivn-sc-n-1:
 
-Test 119 Test 119 Připojení akce k externímu zdroji (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 119 Připojení akce k externímu zdroji (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení záznamu Akce k záznamu Externí zdroj. Scénář končí vytvořením vazby mezi záznamy.
 
@@ -4971,8 +4971,8 @@ Implementován v
 
 .. _selenium-test-ez-120-test-120-p-ipojen-lokality-k-extern-mu-zdroji-pozitivn-sc-n:
 
-Test 120 Test 120 Připojení lokality k externímu zdroji (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 120 Připojení lokality k externímu zdroji (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test připojení záznamu Akce k záznamu Externí zdroj. Scénář končí vytvořením vazby mezi záznamy.
 
@@ -5014,8 +5014,8 @@ Implementován v
 
 .. _selenium-test-ez-121-test-121-potvrzen-extern-ho-zdroje-pozitivn-sc-n-1:
 
-Test 121 Test 121 Potvrzení externího zdroje (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 121 Potvrzení externího zdroje (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test potvrzení záznamu v modulu Externí zdroje. Test končí posunem záznamu ze stavu EZ2 do EZ3.
 
@@ -5056,8 +5056,8 @@ Implementován v
 
 .. _selenium-test-ez-122-test-122-zaps-n-nov-ho-extern-ho-zdroje-pozitivn-sc-n-2:
 
-Test 122 Test 122 Zapsání nového externího zdroje (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 122 Zapsání nového externího zdroje (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5093,8 +5093,8 @@ Implementován v
 
 .. _selenium-test-ez-123-test-123-odesl-n-z-znamu-extern-zdroj-pozitivn-sc-n-1:
 
-Test 123 Test 123 Odeslání záznamu Externí zdroj (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 123 Odeslání záznamu Externí zdroj (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání záznamu Externí zdroj. Scénář končí posunem záznamu ze stavu EZ1 do stavu EZ2.
 
@@ -5135,8 +5135,8 @@ Implementován v
 
 .. _selenium-test-ez-124-test-124-z-ps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit:
 
-Test 124 Test 124 Zápsání nového externího zdroje typu část knihy (pozitivní scénář 3)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 124 Zápsání nového externího zdroje typu část knihy (pozitivní scénář 3)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5172,8 +5172,8 @@ Implementován v
 
 .. _selenium-test-ez-125-test-125-zaps-n-nov-ho-extern-ho-zdroje-typu-l-nek-v-asopis:
 
-Test 125 Test 125 Zapsání nového externího zdroje typu článek v časopise (pozitivní scénář 4)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 125 Zapsání nového externího zdroje typu článek v časopise (pozitivní scénář 4)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5209,8 +5209,8 @@ Implementován v
 
 .. _selenium-test-ez-126-test-126-zaps-n-nov-ho-extern-ho-zdroje-typu-l-nek-v-novin:
 
-Test 126 Test 126 Zapsání nového externího zdroje typu článek v novinách (pozitivní scénář 5)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 126 Zapsání nového externího zdroje typu článek v novinách (pozitivní scénář 5)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5246,8 +5246,8 @@ Implementován v
 
 .. _selenium-test-ez-127-test-127-zaps-n-nov-ho-extern-ho-zdroje-typu-jin-zdroj-pozi:
 
-Test 127 Test 127 Zapsání nového externího zdroje typu jiný zdroj (pozitivní scénář 6)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 127 Zapsání nového externího zdroje typu jiný zdroj (pozitivní scénář 6)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5283,8 +5283,8 @@ Implementován v
 
 .. _selenium-test-ez-128-test-128-z-ps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit:
 
-Test 128 Test 128 Zápsání nového externího zdroje typu část knihy (pozitivní scénář 7)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 128 Zápsání nového externího zdroje typu část knihy (pozitivní scénář 7)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5320,8 +5320,8 @@ Implementován v
 
 .. _selenium-test-ez-129-test-129-zaps-n-nov-ho-extern-ho-zdroje-typu-l-nek-v-asopis:
 
-Test 129 Test 129 Zapsání nového externího zdroje typu článek v časopise (pozitivní scénář 8)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 129 Zapsání nového externího zdroje typu článek v časopise (pozitivní scénář 8)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5357,8 +5357,8 @@ Implementován v
 
 .. _selenium-test-ez-130-test-130-zaps-n-nov-ho-extern-ho-zdroje-typu-l-nek-v-novin:
 
-Test 130 Test 130 Zapsání nového externího zdroje typu článek v novinách (pozitivní scénář 9)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 130 Zapsání nového externího zdroje typu článek v novinách (pozitivní scénář 9)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5394,8 +5394,8 @@ Implementován v
 
 .. _selenium-test-ez-131-test-131-zaps-n-nov-ho-extern-ho-zdroje-typu-jin-zdroj-pozi:
 
-Test 131 Test 131 Zapsání nového externího zdroje typu jiný zdroj (pozitivní scénář 10)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 131 Zapsání nového externího zdroje typu jiný zdroj (pozitivní scénář 10)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -5431,8 +5431,8 @@ Implementován v
 
 .. _selenium-test-ez-136-test-136-test-fedory-pro-ez-pozitivn-sc-n-1:
 
-Test 136 Test 136 Test Fedory pro EZ (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 136 Test Fedory pro EZ (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání dat do Fedory v EZ
 
@@ -5470,8 +5470,8 @@ Implementován v
 
 .. _selenium-test-ez-137-test-137-test-fedory-pro-ez-pozitivn-sc-n-2:
 
-Test 137 Test 137 Test Fedory pro EZ (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 137 Test Fedory pro EZ (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání dat do Fedory v EZ
 
@@ -5514,8 +5514,8 @@ Heslar
 
 .. _selenium-test-heslar-151-test-151-test-fedory-pro-hesl-e-pozitivn-sc-n-1:
 
-Test 151 Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -5562,8 +5562,8 @@ Lokalita
 
 .. _selenium-test-lokalita-051-test-051-zaps-n-lokality-pozitivn-sc-n-1:
 
-Test 051 Test 051 Zapsání lokality (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 051 Zapsání lokality (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání lokality na stránce /arch-z/lokalita/zapsat. Končí zapsáním lokality do databáze.
 
@@ -5599,8 +5599,8 @@ Implementován v
 
 .. _selenium-test-lokalita-052-test-052-zaps-n-lokality-negativn-sc-n-1:
 
-Test 052 Test 052 Zapsání lokality (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 052 Zapsání lokality (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání lokality na stránce /arch-z/lokalita/zapsat. Nekončí zapsáním lokality do databáze.
 
@@ -5637,8 +5637,8 @@ Implementován v
 
 .. _selenium-test-lokalita-053-test-053-p-id-n-dokumenta-n-jednotky-lokalita-pozitiv:
 
-Test 053 Test 053 Přidání dokumentační jednotky lokalita (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 053 Přidání dokumentační jednotky lokalita (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření dokumentační jednotky typu lokalita u lokalita ve stavu L1. Scénář končí vytvořením dokumentační jednotky D01 typu lokalita.
 
@@ -5683,8 +5683,8 @@ Implementován v
 
 .. _selenium-test-lokalita-054-test-054-p-id-n-dokumenta-n-jednotky-lokalita-negativ:
 
-Test 054 Test 054 Přidání dokumentační jednotky lokalita (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 054 Přidání dokumentační jednotky lokalita (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření dokumentační jednotky typu lokalita u lokalita ve stavu L1. Scénář nekončí vytvořením dokumentační jednotky D01 typu lokalita.
 
@@ -5729,8 +5729,8 @@ Implementován v
 
 .. _selenium-test-lokalita-055-test-055-p-id-n-komponenty-k-dokumenta-n-jednotce-lok:
 
-Test 055 Test 055 Přidání komponenty k dokumentační jednotce lokalita (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 055 Přidání komponenty k dokumentační jednotce lokalita (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření komponenty u dokumentační jednotky typu lokalita u lokality ve stavu L1. Scénář končí vytvořením komponenty K001 u dokumentační jednotky D01.
 
@@ -5776,8 +5776,8 @@ Implementován v
 
 .. _selenium-test-lokalita-056-test-056-odesl-n-lokality-pozitivn-sc-n-1:
 
-Test 056 Test 056 Odeslání lokality (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 056 Odeslání lokality (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání lokality ve stavu L1 na stránce /arch-z/lokalita/detail. Měl by končit odesláním lokality a změnou jeho stavu na L2.
 
@@ -5819,8 +5819,8 @@ Implementován v
 
 .. _selenium-test-lokalita-057-test-057-odesl-n-dokumentu-negativn-sc-n-1:
 
-Test 057 Test 057 Odeslání dokumentu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 057 Odeslání dokumentu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit neúspěšným odesláním dokumentu a jeho ponecháním ve stavu D1.
 
@@ -5862,8 +5862,8 @@ Implementován v
 
 .. _selenium-test-lokalita-058-test-058-archivace-lokality-pozitivn-sc-n-1:
 
-Test 058 Test 058 Archivace lokality (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 058 Archivace lokality (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace lokality ve stavu L2 na stránce /arch-z/lokalita/detail. Měl by končit archivací lokality a změnou jeho stavu na L3.
 
@@ -5907,8 +5907,8 @@ Implementován v
 
 .. _selenium-test-lokalita-059-test-059-archivace-lokality-negativn-sc-n-1:
 
-Test 059 Test 059 Archivace lokality (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 059 Archivace lokality (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace lokality ve stavu L2 na stránce /arch-z/lokalita/detail. Měl by končit ponecháním lokality ve stavu L2.
 
@@ -5951,8 +5951,8 @@ Implementován v
 
 .. _selenium-test-lokalita-060-test-060-vr-cen-odeslan-lokality-pozitivn-sc-n-1:
 
-Test 060 Test 060 Vrácení odeslané lokality (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 060 Vrácení odeslané lokality (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení lokality ve stavu L2 na stránce /arch-z/lokalita/detail. Měl by končit vrácením lokality a změnou jejího stavu na L1.
 
@@ -5994,8 +5994,8 @@ Implementován v
 
 .. _selenium-test-lokalita-061-test-061-vr-cen-odeslan-lokality-negativn-sc-n-1:
 
-Test 061 Test 061 Vrácení odeslané lokality (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 061 Vrácení odeslané lokality (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení lokality ve stavu L2 na stránce /arch-z/lokalita/detail. Měl by končit neúspěšným vrácením a ponecháním lokality ve stavu L2.
 
@@ -6038,8 +6038,8 @@ Implementován v
 
 .. _selenium-test-lokalita-062-test-062-vr-cen-archivovan-lokality-pozitivn-sc-n-1:
 
-Test 062 Test 062 Vrácení archivované lokality (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 062 Vrácení archivované lokality (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení lokality ve stavu L3 na stránce /arch-z/lokalita/detail. Měl by končit vrácením lokality a změnou jejího stavu na L2.
 
@@ -6081,8 +6081,8 @@ Implementován v
 
 .. _selenium-test-lokalita-063-test-063-vr-cen-archivovan-lokality-negativn-sc-n-1:
 
-Test 063 Test 063 Vrácení archivované lokality (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 063 Vrácení archivované lokality (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení lokality ve stavu L3 na stránce /arch-z/lokalita/detail. Měl by končit neúspěšným vrácením a ponecháním lokality ve stavu L3.
 
@@ -6125,8 +6125,8 @@ Implementován v
 
 .. _selenium-test-lokalita-143-test-143-test-fedory-pro-lokalitu-pozitivn-sc-n-1:
 
-Test 143 Test 143 Test Fedory pro lokalitu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 143 Test Fedory pro lokalitu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -6186,8 +6186,8 @@ Oznameni
 
 .. _selenium-test-oznameni-027-test-027-proces-ozn-men-projektu-pozitivn-sc-n-1:
 
-Test 027 Test 027 Proces oznámení projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 027 Proces oznámení projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Oznámení projektu stavebníkem
 
@@ -6228,8 +6228,8 @@ Pas
 
 .. _selenium-test-pas-025-test-025-zaps-n-samostatn-ho-n-lezu-pozitivn-sc-n-1:
 
-Test 025 Test 025 Zapsání samostatného nálezu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 025 Zapsání samostatného nálezu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání samostatného nálezu na stránce /pas/zapsat. Končí zapsáním samostatného nálezu do databáze.
 
@@ -6266,8 +6266,8 @@ Implementován v
 
 .. _selenium-test-pas-026-test-026-zaps-n-samostatn-ho-n-lezu-negativn-sc-n-1:
 
-Test 026 Test 026 Zapsání samostatného nálezu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 026 Zapsání samostatného nálezu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání samostatného nálezu na stránce /pas/zapsat. Test simuluje zadání nevalidních dat a měl by končit nezapsáním projektu do databáze.
 
@@ -6305,8 +6305,8 @@ Implementován v
 
 .. _selenium-test-pas-028-test-028-odesl-n-samostatn-ho-n-lezu-pozitivn-sc-n-1:
 
-Test 028 Test 028 Odeslání samostatného nálezu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 028 Odeslání samostatného nálezu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání samostatného nálezu ve stavu SN1 na stránce /pas/detail. Měl by končit odesláním samostatného nálezu a změnou jeho stavu na SN2.
 
@@ -6348,8 +6348,8 @@ Implementován v
 
 .. _selenium-test-pas-029-test-029-odesl-n-samostatn-ho-n-lezu-negativn-sc-n-1:
 
-Test 029 Test 029 Odeslání samostatného nálezu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 029 Odeslání samostatného nálezu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání samostatného nálezu ve stavu SN1 na stránce /pas/detail. Test simuluje zadání nevalidních dat a měl by končit neodesláním samostatného nálezu a jeho ponecháním ve stavu SN1.
 
@@ -6391,8 +6391,8 @@ Implementován v
 
 .. _selenium-test-pas-030-test-030-potvrzen-samostatn-ho-n-lezu-pozitivn-sc-n-1:
 
-Test 030 Test 030 Potvrzení samostatného nálezu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 030 Potvrzení samostatného nálezu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test odeslání samostatného nálezu ve stavu SN2 na stránce /pas/detail. Měl by končit potvrzením samostatného nálezu a změnou jeho stavu na SN3.
 
@@ -6434,8 +6434,8 @@ Implementován v
 
 .. _selenium-test-pas-031-test-031-potvrzen-samostatn-ho-n-lezu-negativn-sc-n-1:
 
-Test 031 Test 031 Potvrzení samostatného nálezu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 031 Potvrzení samostatného nálezu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test potvrzení samostatného nálezu ve stavu SN2 na stránce /pas/detail. Test simuluje zadání nevalidních dat a měl by končit nepotvrzením samostatného nálezu a jeho ponecháním ve stavu SN2.
 
@@ -6479,8 +6479,8 @@ Implementován v
 
 .. _selenium-test-pas-032-test-032-potvrzen-samostatn-ho-n-lezu-negativn-sc-n-2:
 
-Test 032 Test 032 Potvrzení samostatného nálezu (negativní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 032 Potvrzení samostatného nálezu (negativní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test potvrzení samostatného nálezu ve stavu SN2 na stránce /pas/detail. Test simuluje zadání nevalidních dat a měl by končit nepotvrzením samostatného nálezu a jeho ponecháním ve stavu SN2.
 
@@ -6524,8 +6524,8 @@ Implementován v
 
 .. _selenium-test-pas-038-test-038-archivace-samostatn-ho-n-lezu-pozitivn-sc-n-1:
 
-Test 038 Test 038 Archivace samostatného nálezu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 038 Archivace samostatného nálezu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace samostatného nálezu ve stavu SN3 na stránce /pas/detail. Měl by končit potvrzením samostatného nálezu a změnou jeho stavu na SN4.
 
@@ -6567,8 +6567,8 @@ Implementován v
 
 .. _selenium-test-pas-039-test-039-archivace-samostatn-ho-n-lezu-negativn-sc-n-1:
 
-Test 039 Test 039 Archivace samostatného nálezu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 039 Archivace samostatného nálezu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace samostatného nálezu ve stavu SN3 na stránce /pas/detail. Test simuluje zadání nevalidních dat a měl by končit nepotvrzením samostatného nálezu a jeho ponecháním ve stavu SN3.
 
@@ -6612,8 +6612,8 @@ Implementován v
 
 .. _selenium-test-pas-045-test-045-vr-cen-samostatn-ho-n-lezu-pozitivn-sc-n-1:
 
-Test 045 Test 045 Vrácení samostatného nálezu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 045 Vrácení samostatného nálezu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení samostatného nálezu ve stavu SN3 na stránce /pas/detail. Měl by končit vrácením samostatného nálezu a změnou jeho stavu na SN2.
 
@@ -6655,8 +6655,8 @@ Implementován v
 
 .. _selenium-test-pas-147-test-147-test-fedory-pas-pozitivn-sc-n-1:
 
-Test 147 Test 147 Test Fedory PAS (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 147 Test Fedory PAS (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -6695,8 +6695,8 @@ Implementován v
 
 .. _selenium-test-pas-154-test-154-zobrazebn-spolupr-ce-badatel-archeolog-pozitivn-s:
 
-Test 154 Test 154 Zobrazební spolupráce Badatel - Archeolog (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 154 Zobrazební spolupráce Badatel - Archeolog (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test  "Badatel" vidí jen své spolupráce a "Archeolog" vidí jen spolupráce své organizace
 
@@ -6742,8 +6742,8 @@ Projekt
 
 .. _selenium-test-projekt-002-test-002-otev-en-tabulky-projekty:
 
-Test 002 Test 002 Otevření tabulky projekty
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 002 Otevření tabulky projekty
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Testuje tabulku s projekty. Ověřuje, zda funguje řazení podle
 jednotlivých sloupců a zobrazení/skrývání sloupců.
@@ -6790,8 +6790,8 @@ Implementován v
 
 .. _selenium-test-projekt-003-test-003-zaps-n-projektu-pozitivn-sc-n-1:
 
-Test 003 Test 003 Zapsání projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 003 Zapsání projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání projektu na stránce ``/projekt/zapsat``. Test simuluje
 zadání validních data měl by končit zapsáním projektu do databáze.
@@ -6862,8 +6862,8 @@ Implementován v
 
 .. _selenium-test-projekt-006-test-006-schv-len-projektu-pozitivn-sc-n-1:
 
-Test 006 Test 006 Schválení projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 006 Schválení projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test schválení projektu
 
@@ -6905,8 +6905,8 @@ Implementován v
 
 .. _selenium-test-projekt-007-test-007-zah-jen-v-zkumu-pozitivn-sc-n-1:
 
-Test 007 Test 007 Zahájení výzkumu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 007 Zahájení výzkumu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zahájení výzkumu u projektu ve stavu P2 s pozitivním výsledkem. Měl by končit posunem projektu do stavu P3
 
@@ -6950,8 +6950,8 @@ Implementován v
 
 .. _selenium-test-projekt-008-test-008-ukon-en-v-zkumu-pozitivn-sc-n-1:
 
-Test 008 Test 008 Ukončení výzkumu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 008 Ukončení výzkumu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test ukončení výzkumu u projektu ve stavu P3 s pozitivním výsledkem. Měl by končit posunem projektu do stavu P4.
 
@@ -6995,8 +6995,8 @@ Implementován v
 
 .. _selenium-test-projekt-009-test-009-ukon-en-v-zkumu-negativn-sc-n-1:
 
-Test 009 Test 009 Ukončení výzkumu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 009 Ukončení výzkumu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test ukončení výzkumu u projektu ve stavu P3 s negativním výsledkem. Měl by končit neposunutím projektu do stavu P4.
 
@@ -7040,8 +7040,8 @@ Implementován v
 
 .. _selenium-test-projekt-010-test-010-uzav-en-projektu-pozitivn-sc-n-1:
 
-Test 010 Test 010 Uzavření projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 010 Uzavření projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test uzavření projektu ve stavu P4 s pozitivním výsledkem. Měl by končin posunem projektu do stavu P5.
 
@@ -7080,8 +7080,8 @@ Implementován v
 
 .. _selenium-test-projekt-011-test-011-uzav-en-projektu-negativn-sc-n-1:
 
-Test 011 Test 011 Uzavření projektu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 011 Uzavření projektu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test uzavření projektu ve stavu P4 s negativním výsledkem. Měl by končin neposunutím projektu do stavu P5.
 
@@ -7121,8 +7121,8 @@ Implementován v
 
 .. _selenium-test-projekt-012-test-012-archivace-projektu-pozitivn-sc-n-1:
 
-Test 012 Test 012 Archivace projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 012 Archivace projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace projektu ve stavu P5 s pozitivním výsledkem. Scénář končí pousnem projektu do stavu P6,
 
@@ -7161,8 +7161,8 @@ Implementován v
 
 .. _selenium-test-projekt-013-test-013-archivace-projektu-negativn-sc-n-1:
 
-Test 013 Test 013 Archivace projektu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 013 Archivace projektu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test archivace projektu ve stavu P5 s negativním výsledkem. Scénář končí nepousnutím projektu do stavu P6,
 
@@ -7203,8 +7203,8 @@ Implementován v
 
 .. _selenium-test-projekt-014-test-014-vr-cen-stavu-u-archivovan-ho-projektu-pozitiv:
 
-Test 014 Test 014 Vrácení stavu u archivovaného projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 014 Vrácení stavu u archivovaného projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení projektu do stavu P5 s pozitivním výsledkem. Scénář končí posunem do stavu P5.
 
@@ -7247,8 +7247,8 @@ Implementován v
 
 .. _selenium-test-projekt-015-test-015-vr-cen-stavu-u-uzav-en-ho-projektu-pozitivn-s:
 
-Test 015 Test 015 Vrácení stavu u uzavřeného projektu (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 015 Vrácení stavu u uzavřeného projektu (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení projektu do stavu P4 s pozitivním výsledkem. Scénář končí posunem do stavu P4.
 
@@ -7291,8 +7291,8 @@ Implementován v
 
 .. _selenium-test-projekt-016-test-016-vr-cen-stavu-u-ukon-en-ho-projektu-pozitivn-s:
 
-Test 016 Test 016  Vrácení stavu u ukončeného projektu (pozitivní scénář 3)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 016  Vrácení stavu u ukončeného projektu (pozitivní scénář 3)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení projektu do stavu P3 s pozitivním výsledkem. Scénář končí posunem do stavu P3.
 
@@ -7335,8 +7335,8 @@ Implementován v
 
 .. _selenium-test-projekt-017-test-017-vr-cen-stavu-u-zah-jen-ho-projektu-pozitivn-s:
 
-Test 017 Test 017 Vrácení stavu u zahájeného projektu (pozitivní scénář 4)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 017 Vrácení stavu u zahájeného projektu (pozitivní scénář 4)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení projektu do stavu P2 s pozitivním výsledkem. Scénář končí posunem do stavu P2.
 
@@ -7379,8 +7379,8 @@ Implementován v
 
 .. _selenium-test-projekt-018-test-018-vr-cen-stavu-u-p-ihl-en-ho-projektu-pozitivn:
 
-Test 018 Test 018 Vrácení stavu u přihlášeného projektu (pozitivní scénář 5)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 018 Vrácení stavu u přihlášeného projektu (pozitivní scénář 5)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vrácení projektu do stavu P2 s pozitivním výsledkem. Scénář končí posunem do stavu A1.
 
@@ -7423,8 +7423,8 @@ Implementován v
 
 .. _selenium-test-projekt-019-test-019-navr-en-zru-en-projektu-pozitivn-sc-n-1:
 
-Test 019 Test 019 Navržení zrušení projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 019 Navržení zrušení projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test navržení zrušení projektu s pozitivním výsledkem. Scénář končí posunem projektu do stavu A7.
 
@@ -7467,8 +7467,8 @@ Implementován v
 
 .. _selenium-test-projekt-020-test-020-navr-en-zru-en-projektu-pozitivn-sc-n-2:
 
-Test 020 Test 020 Navržení zrušení projektu (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 020 Navržení zrušení projektu (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test navržení zrušení projektu s pozitivním výsledkem. Scénář končí posunem projektu do stavu A7.
 
@@ -7512,8 +7512,8 @@ Implementován v
 
 .. _selenium-test-projekt-021-test-021-navr-en-zru-en-projektu-negativn-sc-n-1:
 
-Test 021 Test 021 Navržení zrušení projektu (negativní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 021 Navržení zrušení projektu (negativní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test navržení zrušení projektu s negativním výsledkem. Scénář končí neposunutím projektu do stavu A7.
 
@@ -7557,8 +7557,8 @@ Implementován v
 
 .. _selenium-test-projekt-022-test-022-zru-en-projektu-pozitivn-sc-n-1:
 
-Test 022 Test 022 Zrušení projektu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 022 Zrušení projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zrušení projektu s pozitivním výsledkem. Scénář končí posunem projektu do stavu A8
 
@@ -7601,8 +7601,8 @@ Implementován v
 
 .. _selenium-test-projekt-023-test-023-vytvo-en-projektov-akce-pozitivn-sc-n-1:
 
-Test 023 Test 023 Vytvoření projektové akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 023 Vytvoření projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření projektové akce. Scénář končí vytvořením projektové akce ve stavu A1.
 
@@ -7645,8 +7645,8 @@ Implementován v
 
 .. _selenium-test-projekt-145-test-145-test-fedory-pro-projekty-pozitivn-sc-n-1:
 
-Test 145 Test 145 Test Fedory pro projekty (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 145 Test Fedory pro projekty (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání dat do Fedory v projektech
 
@@ -7688,8 +7688,8 @@ Implementován v
 
 .. _selenium-test-projekt-146-test-146-test-fedory-pro-projekty-pozitivn-sc-n-2:
 
-Test 146 Test 146 Test Fedory pro projekty (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 146 Test Fedory pro projekty (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 test zapsání dat do Fedory v projektech
 
@@ -7737,8 +7737,8 @@ Uzivatel
 
 .. _selenium-test-uzivatel-148-test-148-test-fedory-pro-u-ivatele-pozitivn-sc-n-1:
 
-Test 148 Test 148 Test Fedory pro uživatele (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 148 Test Fedory pro uživatele (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -7776,8 +7776,8 @@ Implementován v
 
 .. _selenium-test-uzivatel-149-test-149-test-fedory-pro-u-ivatele-pozitivn-sc-n-2:
 
-Test 149 Test 149 Test Fedory pro uživatele (pozitivní scénář 2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 149 Test Fedory pro uživatele (pozitivní scénář 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -7816,8 +7816,8 @@ Implementován v
 
 .. _selenium-test-uzivatel-150-test-150-test-fedory-pro-spolupr-ci-pas-pozitivn-sc-n:
 
-Test 150 Test 150 Test Fedory pro spolupráci PAS (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 150 Test Fedory pro spolupráci PAS (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -7855,8 +7855,8 @@ Implementován v
 
 .. _selenium-test-uzivatel-152-test-152-test-fedory-pro-organizaci-pozitivn-sc-n-1:
 
-Test 152 Test 152 Test Fedory pro organizaci (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 152 Test Fedory pro organizaci (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -7884,8 +7884,8 @@ Implementován v
 
 .. _selenium-test-uzivatel-153-test-153-test-fedory-pro-osobu-pozitivn-sc-n-1:
 
-Test 153 Test 153 Test Fedory pro osobu (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 153 Test Fedory pro osobu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^

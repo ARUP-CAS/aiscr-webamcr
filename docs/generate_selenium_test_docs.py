@@ -364,12 +364,10 @@ def _render_detail_for_test(t: TestDoc) -> str:
     - volitelný popis,
     - sekce (Role/Preconditions/TestData/Steps/Expected/Notes),
     - a nakonec „Stav testu“ s cestou na implementaci."""
-    no_txt = f"{t.test_no:03d}" if t.test_no is not None else "???"
-    title = f"Test {no_txt} {t.summary}"
 
     out: List[str] = []
     out.append(f".. _{t.anchor}:\n\n")
-    out.append(_rst_title(title, "~"))
+    out.append(_rst_title(t.summary, "~"))
     out.append("\n")
 
     if t.description.strip():
