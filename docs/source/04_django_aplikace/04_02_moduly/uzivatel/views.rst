@@ -32,7 +32,7 @@ Třídy
 
 .. py:class:: UzivatelAutocompletePublic
 
-   Popis není k dispozici.
+   Třída pohledu pro získaní uživatelů pro autocomplete - verze pouze s ident_cely uživatele, beze jména.
 
    **Metody:**
 
