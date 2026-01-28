@@ -955,7 +955,7 @@ def aktivace(request, pk):
             spoluprace.set_aktivni(request.user)
             messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
             Mailer.send_en06(cooperation=spoluprace)
-            return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+            return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
         except FedoraError as err:
             logger.info("pas.views.aktivace.error", extra={"error": err})
             fedora_transaction.rollback_transaction()

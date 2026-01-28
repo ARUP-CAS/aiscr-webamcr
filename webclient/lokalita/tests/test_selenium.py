@@ -8,6 +8,7 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.utils.translation import gettext as _
 from dokument.models import Dokument
+from freezegun import freeze_time
 from komponenta.models import Komponenta
 from lokalita.models import Lokalita
 from nalez.models import NalezObjekt, NalezPredmet
@@ -21,12 +22,10 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceLokality(BaseSeleniumTestClass):
     def go_to_form_zapsat(self):
-        self.ElementClick(By.ID, "menuLokality")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.zapsat"))
+        self.goToAddress("/arch-z/lokalita/zapsat")
 
     def go_to_form_vybrat(self):
-        self.ElementClick(By.ID, "menuLokality")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.vybrat"))
+        self.goToAddress("/arch-z/lokalita/vyber?sort=nazev")
 
     def test_051_zapsani_lokality_p_001(self):
         # Scenar_51 Zapsání lokality (pozitivní scénář 1)
@@ -82,7 +81,7 @@ class AkceLokality(BaseSeleniumTestClass):
         # self.ElementClick(By.ID, "id_nazev")
         # self.driver.find_element(By.ID, "id_nazev").send_keys("test")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newEntitySubmitBtn")
         except Exception:
             pass
@@ -137,7 +136,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-2-0")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newDjSubmitButton")
         except Exception:
             pass
@@ -207,6 +206,10 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_057_odeslani_lokality_n_001.start")
 
         self.login("archeolog")
+        self.createFedoraRecord("C-DT-100000146")
+        self.createFedoraRecord("C-DT-100000147")
+        self.uploadFileToFedora(81227, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(81228, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000145").first().stav, AZ_STAV_ZAPSANY)
 
@@ -218,7 +221,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N9000145")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-odeslat > .app-controls-button-text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -230,6 +233,10 @@ class AkceLokality(BaseSeleniumTestClass):
         # Scenar_58 Archivace lokality (pozitivní scénář 1)
         logger.info("AkceLokality.test_058_archivace_lokality_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-DT-100005206")
+        self.createFedoraRecord("C-DY-100000065")
+        self.uploadFileToFedora(187330, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(63104, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
         self.ElementClick(By.ID, "buttonFiltr")
@@ -250,6 +257,10 @@ class AkceLokality(BaseSeleniumTestClass):
         # Scenar_59 Archivace lokality (negativní scénář 1)
         logger.info("AkceLokality.test_059_archivace_lokality_n_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-DT-100005454")
+        self.createFedoraRecord("C-DY-100000058")
+        self.uploadFileToFedora(187349, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(63179, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").first().stav, AZ_STAV_ODESLANY)
         self.ElementClick(By.ID, "buttonFiltr")
@@ -259,7 +270,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N1000109")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-archivovat > .material-icons")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -271,6 +282,10 @@ class AkceLokality(BaseSeleniumTestClass):
         # Scenar_60 Vrácení odeslané lokality (pozitivní scénář 1)
         logger.info("AkceLokality.test_060_vraceni_odeslane_lokality_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-DT-100005206")
+        self.createFedoraRecord("C-DY-100000065")
+        self.uploadFileToFedora(187330, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(63104, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
 
@@ -293,6 +308,10 @@ class AkceLokality(BaseSeleniumTestClass):
         # Scenar_61 Vrácení odeslané lokality (negativní scénář 1)
         logger.info("AkceLokality.test_061_vraceni_odeslane_lokality_n_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-DT-100005206")
+        self.createFedoraRecord("C-DY-100000065")
+        self.uploadFileToFedora(187330, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(63104, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
 
@@ -305,7 +324,7 @@ class AkceLokality(BaseSeleniumTestClass):
         # self.ElementClick(By.ID, "id_reason")
         # self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -352,7 +371,7 @@ class AkceLokality(BaseSeleniumTestClass):
         # self.ElementClick(By.ID, "id_reason")
         # self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -574,8 +593,9 @@ class AkceLokality(BaseSeleniumTestClass):
         # ident_cely
         time = self.getTime()
         self.ElementClick(By.ID, "lokalita-odeslat")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "submit-btn")
         new_ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/ident_cely")
         self.check_fedora_delete(["record/X-C-L000000003", "record/X-C-TX-000000009"])
@@ -649,6 +669,10 @@ class AkceLokality(BaseSeleniumTestClass):
         # změna ident_cely PIAN
         self.createFedoraRecord("X-C-K0751147", "archivar")
         self.createFedoraRecord("N-1412-000000007", "archivar")
+        self.createFedoraRecord("C-DT-100005023", "archivar")
+        self.createFedoraRecord("C-DT-100005024", "archivar")
+        self.uploadFileToFedora(187083, "dokument/tests/resources/test.tif", "archivar")
+        self.uploadFileToFedora(187080, "dokument/tests/resources/test.tif", "archivar")
         time = self.getTime()
         self.goToAddress("/arch-z/lokalita/detail/X-C-K0751147/dj/C-K0751147-D01")
         self.ElementClick(By.ID, "others")
@@ -661,6 +685,9 @@ class AkceLokality(BaseSeleniumTestClass):
         # C dokument_cast existujici
         self.createFedoraRecord("M-L9000181", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
+        self.createFedoraRecord("M-LN-000000803", "archivar")
+        self.uploadFileToFedora(418643, "dokument/tests/resources/test.tif", "archivar")
+        self.uploadFileToFedora(534769, "dokument/tests/resources/test.tif", "archivar")
         time = self.getTime()
         self.goToAddress("/id/M-L9000181")
         self.ElementClick(By.ID, "others_doc")

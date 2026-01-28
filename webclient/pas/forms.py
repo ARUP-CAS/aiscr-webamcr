@@ -184,7 +184,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "presna_datace": forms.TextInput(),

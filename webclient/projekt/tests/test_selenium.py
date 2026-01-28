@@ -16,6 +16,7 @@ from core.constants import (
 from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
+from django.core import mail
 from django.utils.translation import gettext as _
 from freezegun import freeze_time
 from oznameni.tests.test_selenium import OznameniSeleniumTest
@@ -58,8 +59,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # test 2.1
         self.login()
         # Go to projects
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
         # Test sorting by all table columns
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.stav.label"))
@@ -153,7 +153,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_adresa", "test")
         self.ElementSendKeys(By.ID, "id_telefon", "xxx")
         self.ElementSendKeys(By.ID, "id_email", "test@example.com")
-        # self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with freeze_time("2025-07-26 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "actionSubmitBtn")
@@ -176,14 +176,6 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/update_oznamovatel")
 
-        # D soubor
-        time = self.getTime()
-        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
-        self.ElementClick(By.ID, f"file-smazat-{file}")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
-
         # C soubor
         time = self.getTime()
         self.ElementClick(By.ID, "add_dokumentace")
@@ -191,6 +183,14 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/create_soubor")
+
+        # D soubor
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"file-smazat-{file}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
 
         # C projektova akce
         self.createFedoraRecord("C-201121404", "archivar")
@@ -231,6 +231,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # reC projektova akce
         self.createFedoraRecord("C-202111043", "archivar")
         self.createFedoraRecord("C-202111043A", "archivar")
+        self.uploadFileToFedora(364200, "projekt/tests/resources/test.pdf", "archivar")
         self.goToAddress("/id/C-202111043A")
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "akce-smazat")
@@ -270,6 +271,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.goToAddress(f"/id/{ident}")
         time = self.getTime()
         self.ElementClick(By.ID, "projekt-schvalit")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
@@ -291,8 +293,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_parcelni_cislo", "test")
         self.ElementSendKeys(By.ID, "id_planovane_zahajeni", "11.6.2025 - 12.6.2025")
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ESCAPE)
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "actionSubmitBtn")
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt_pruzkum")
         ident = self.driver.current_url.split("/")[-1]
 
@@ -370,6 +373,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.login("administrator")
         self.createFedoraRecord("C-202210662")
         self.createFedoraRecord("C-200810918A-DT-15")
+        self.uploadFileToFedora(411126, "dokument/tests/resources/test.tif")
         self.goToAddress("/id/C-202210662")
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
@@ -383,6 +387,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.createFedoraRecord("M-202302810", "archivar")
         self.createFedoraRecord("M-202302810-N00001", "archivar")
+        self.uploadFileToFedora(584786, "projekt/tests/resources/test.pdf", "archivar")
         self.goToAddress("/id/M-202302810-N00001")
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "pas-smazat")
@@ -399,6 +404,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # C dokument_cast existujici
         self.createFedoraRecord("C-202114070", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
+        self.uploadFileToFedora(534769, "projekt/tests/resources/test.pdf", "archivar")
         time = self.getTime()
         self.goToAddress("/id/C-202114070")
         self.ElementClick(By.ID, "others_doc")
@@ -454,8 +460,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         return [project_count_old, project_count_new]
 
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zapsat"))
+        self.goToAddress("/projekt/zapsat")
 
     def test_003_projekt_zapsat_p_001(self):
         # Scenar_3 Zapsání projektu (pozitivní scénář 1)
@@ -492,34 +497,39 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
 
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.start")
 
-        pian = OznameniSeleniumTest.oznameni_projektu(self)
+        ident_cely = OznameniSeleniumTest.oznameni_projektu(self)
+        # validate email
+        self.assertEqual(len(mail.outbox), 1)
         self.login("archivar")
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, "Schválit oznámení")
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys(pian)
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, pian)
+        self.goToAddress(f"/id/{ident_cely}")
         self.ElementClick(By.ID, "projekt-schvalit")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        pian_new = self.driver.find_element(By.ID, "id-app-entity-item").text
-        self.assertNotEqual(pian, pian_new)
+        # validate email
+        self.assertEqual(len(mail.outbox), 2)
+        ident_cely_new = self.driver.current_url.split("/")[-1]
+        self.assertNotEqual(ident_cely, ident_cely_new)
+        oznameni = Soubor.objects.filter(
+            vazba__projekt_souboru__ident_cely=ident_cely_new, nazev__startswith="oznameni", nazev__endswith=".pdf"
+        )
+        self.assertEqual(oznameni.count(), 1)
+        self.assertGreater(oznameni.first().size_mb, 0.1)
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zahajitVyzkum"))
+        self.goToAddress("/projekt/vyber?stav=2&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_007_projekt_zahajit_vyzkum_p_001(self):
         # Scenar_7 Zahájení výzkumu (pozitivní scénář 1)
         # test 2.6
         logger.info("ProjektZahajitVyzkumSeleniumTest.test_007_projekt_zahajit_vyzkum_p_001.start")
         self.login()
+        self.createFedoraRecord("C-202211750")
+        self.uploadFileToFedora(459668, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(459775, "projekt/tests/resources/test.pdf")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".odd:nth-child(2) a")
@@ -544,14 +554,16 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.ukoncitTeren"))
+        self.goToAddress("/projekt/vyber?stav=3&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_008_projekt_ukoncit_vyzkum_p_001(self):
         # Scenar_8 Ukončení výzkumu (pozitivní scénář 1)
         # test 2.7
         logger.info("ProjektUkoncitVyzkumSeleniumTest.test_008_projekt_ukoncit_vyzkum_p_001.start")
         self.login()
+        self.createFedoraRecord("C-202006194")
+        self.uploadFileToFedora(260183, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(260151, "projekt/tests/resources/test.pdf")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(7) a")
@@ -572,6 +584,9 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         # test 2.8
         logger.info("ProjektUkoncitVyzkumSeleniumTest.test_009_projekt_ukoncit_vyzkum_n_001.start")
         self.login()
+        self.createFedoraRecord("C-202006194")
+        self.uploadFileToFedora(260183, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(260151, "projekt/tests/resources/test.pdf")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(7) a")
@@ -594,8 +609,7 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.UzavritProjekt"))
+        self.goToAddress("/projekt/vyber?stav=4&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_010_projekt_uzavrit_p_001(self):
         # Scenar_10 Uzavření projektu (pozitivní scénář 1)
@@ -623,7 +637,7 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, "#projekt-uzavrit > .app-controls-button-text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -638,8 +652,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
     next_stav_projektu = PROJEKT_STAV_ARCHIVOVANY
 
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.archivovatProjekty"))
+        self.goToAddress("/projekt/vyber?stav=5&sort=datum_ukonceni&sort=ident_cely")
 
     def test_012_projekt_archivovat_p_001(self):
         # Scenar_12 Archivace projektu (pozitivní scénář 1)
@@ -667,7 +680,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "M-201400072")
 
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.CSS_SELECTOR, "#projekt-archivovat > .app-controls-button-text")
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
@@ -683,14 +696,15 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_014_projekt_vratit_p_001(self):
         # Scenar_14 Vrácení stavu u archivovaného projektu (pozitivní scénář 1)
         # 2.13
         logger.info("ProjektVratitSeleniumTest.test_014_projekt_vratit_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-202205168")
+        self.uploadFileToFedora(520356, "projekt/tests/resources/test.pdf")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
@@ -784,6 +798,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         # 2.17
         logger.info("ProjektVratitSeleniumTest.test_018_projekt_vratit_p_005.start")
         self.login("archivar")
+        self.createFedoraRecord("C-201665792")
+        self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
@@ -805,14 +821,16 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_019_projekt_zrusit_p_001(self):
         # Scenar_19 Navržení zrušení projektu (pozitivní scénář 1)
         # 2.18
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_019_projekt_zrusit_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-201665792")
+        self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
+
         self.go_to_form()
         self.ElementClick(By.LINK_TEXT, "C-201665792")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
@@ -829,6 +847,9 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         # 2.19
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_020_projekt_zrusit_p_002.start")
         self.login("archivar")
+        self.createFedoraRecord("C-201665792")
+        self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
+
         self.go_to_form()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, "C-201665792")
@@ -847,6 +868,9 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         # 2.20
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_021_projekt_zrusit_n_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-202401104")
+        self.uploadFileToFedora(639669, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(639688, "projekt/tests/resources/test.pdf")
         self.go_to_form()
         self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
@@ -855,7 +879,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-202401104")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label")
                 self.ElementClick(By.CSS_SELECTOR, ".btn-primary:nth-child(2)")
         except Exception:
@@ -869,14 +893,16 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_022_projekt_zrusit_p_001(self):
         # Scenar_22 Zrušení projektu (pozitivní scénář 1)
         # 2.21
         logger.info("ProjektZrusitSeleniumTest.test_022_projekt_zrusit_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("M-202202919")
+        self.uploadFileToFedora(424158, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(424159, "projekt/tests/resources/test.pdf")
         self.go_to_form()
         self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
@@ -899,13 +925,15 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_023_projekt_vytvori_akci_p_001(self):
         # Scenar_23 Vytvoření projektové akce (pozitivní scénář 1)
         logger.info("ProjektVytvoreniProjektoveAkce.test_023_projekt_vytvori_akci_p_001.start")
         self.login()
+        self.createFedoraRecord("C-202401502")
+        self.uploadFileToFedora(643547, "projekt/tests/resources/test.pdf")
+
         self.go_to_form()
         arch_z_count_old = Akce.objects.count()
         self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
@@ -916,8 +944,8 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         # self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
         self.ElementClick(By.LINK_TEXT, "C-202401502")
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(6) .app-fx .material-icons")
         with WaitForPageLoad(self.driver):
-            self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(6) .app-fx .material-icons")
             self.ElementClick(By.ID, "actionSubmitBtn")
         arch_z_count_new = Akce.objects.count()
         self.assertEqual(arch_z_count_old + 1, arch_z_count_new)

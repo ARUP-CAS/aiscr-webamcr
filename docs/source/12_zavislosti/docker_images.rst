@@ -50,12 +50,9 @@ Docker images
    * - ``docker.elastic.co/kibana/kibana:8.19.0``
      - 8.19.0
      - Kibana pro vizualizaci a analýzu logů z Elasticsearch. Poskytuje webové rozhraní pro prohlížení a vyhledávání v logech.
-   * - ``selenium/standalone-firefox``
-     - latest
+   * - ``selenium/standalone-chromium:143.0``
+     - 143.0
      - Selenium standalone Firefox pro automatizované testování. Používá se pro end-to-end testy webové aplikace.
-   * - ``selenium/standalone-chrome-debug``
-     - latest
-     - Selenium standalone Chrome s debug rozhraním pro testování. Umožňuje vzdálené připojení pro debugging testů.
    * - ``gcr.io/cadvisor/cadvisor:v0.52.1``
      - v0.52.1
      - cAdvisor pro monitorování využití zdrojů kontejnerů. Shromažďuje metriky o CPU, paměti a síti.
