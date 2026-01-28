@@ -264,14 +264,16 @@ Funkce
 .. py:function:: get_required_fields()
 
    Funkce pro získaní dictionary povinných polí podle stavu externího zdroje.
-   
-   Args:
-       zaznam (Externí zdroj): model ExterniZdroj pro který se dané pole počítají.
-   
-       next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-   
-   Returns:
-       required_fields: list polí.
+
+
+   **Argumenty:**
+
+   - ``zaznam`` (*Externí zdroj*): model ExterniZdroj pro který se dané pole počítají.
+   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+   **Návratová hodnota:**
+
+   *required_fields*: list polí.
 
 .. py:function:: save_autor_editor(zaznam, form)
 

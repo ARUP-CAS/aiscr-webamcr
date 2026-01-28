@@ -70,18 +70,18 @@ Třídy
    .. py:method:: clean_datum_zahajeni()
 
       Custom clean metoda pro ověření:
-      
-          ak je specifikace_data=přesně tak datum_zahájení nesmí být prázdne
-      
-          datum zahájení není dále něž mesíc v budoucnu
+
+      ak je specifikace_data=přesně tak datum_zahájení nesmí být prázdne
+
+      datum zahájení není dále něž mesíc v budoucnu
 
    .. py:method:: clean_datum_ukonceni()
 
       Custom clean metoda pro ověření:
-      
-          ak je specifikace_data=přesně tak datum_ukončení nesmí být prázdne
-      
-          datum ukončení není dále něž mesíc v budoucnu
+
+      ak je specifikace_data=přesně tak datum_ukončení nesmí být prázdne
+
+      datum ukončení není dále něž mesíc v budoucnu
 
 
 .. py:class:: ArchzFilterForm
@@ -95,9 +95,12 @@ Funkce
 .. py:function:: create_akce_vedouci_objekt_form(readonly)
 
    Funkce která vrací formulář VB pro formset.
-   
-   Args:
-       readonly (boolean): nastavuje formulář na readonly.
-   
-   Returns:
-       CreateAkceVedouciObjektForm: django model formulář AkceVedouci
+
+
+   **Argumenty:**
+
+   - ``readonly`` (*boolean*): nastavuje formulář na readonly.
+
+   **Návratová hodnota:**
+
+   *CreateAkceVedouciObjektForm*: django model formulář AkceVedouci

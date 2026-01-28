@@ -23,7 +23,7 @@ Třídy
 .. py:class:: HeslarNazevAdmin
 
    Admin část pro prohlížení modelu heslař název.
-Práva na změnu jsou zakázaná.
+   Práva na změnu jsou zakázaná.
 
    **Metody:**
 
@@ -63,7 +63,7 @@ Práva na změnu jsou zakázaná.
 .. py:class:: HeslarDokumentTypMaterialRadaAdmin
 
    Admin část pro prohlížení modelu heslař dokument typ material.
-Práva na změnu jsou zakázaná.
+   Práva na změnu jsou zakázaná.
 
    **Metody:**
 

@@ -344,40 +344,45 @@ Funkce
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
    Funkce pro získaní dátumů pro historii.
-   
-   Args:
-       historie_vazby (HistorieVazby): model historieVazby dané akce.
-   
-   Returns:
-       historie: dictionary dátumů k historii.
+
+
+   **Argumenty:**
+
+   - ``historie_vazby`` (*HistorieVazby*): model historieVazby dané akce.
+
+   **Návratová hodnota:**
+
+   *historie*: dictionary dátumů k historii.
 
 .. py:function:: get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app)
 
    Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
-   
-   Args:
-       archeologicky_zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se dané akce počítají.
-   
-       dok_jednotky (DokumentacniJednotka): model DokumentacniJednotka pro který se dané akce počítají.
-   
-       user (AuthUser): uživatel pro kterého se dané akce počítají.
-   
-       app (string): druh archeologického záznamu ro který se dané akce počítají.
-   
-   Returns:
-       historie: dictionary možností pro zobrazení.
+
+
+   **Argumenty:**
+
+   - ``archeologicky_zaznam`` (*ArcheologickyZaznam*): model ArcheologickyZaznam pro který se dané akce počítají.
+   - ``dok_jednotky`` (*DokumentacniJednotka*): model DokumentacniJednotka pro který se dané akce počítají.
+   - ``user`` (*AuthUser*): uživatel pro kterého se dané akce počítají.
+   - ``app`` (*string*): druh archeologického záznamu ro který se dané akce počítají.
+
+   **Návratová hodnota:**
+
+   *historie*: dictionary možností pro zobrazení.
 
 .. py:function:: get_required_fields(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu arch záznamů.
-   
-   Args:
-       zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se dané pole počítají.
-   
-       next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-   
-   Returns:
-       required_fields: list polí.
+
+
+   **Argumenty:**
+
+   - ``zaznam`` (*ArcheologickyZaznam*): model ArcheologickyZaznam pro který se dané pole počítají.
+   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+   **Návratová hodnota:**
+
+   *required_fields*: list polí.
 
 .. py:function:: smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id)
 
@@ -386,17 +391,16 @@ Funkce
 .. py:function:: get_dj_form_detail(app, jednotka, jednotky, show, old_adb_post, user)
 
    Funkce pro získaní dictionary contextu dokumentační jednotky.
-   
-   Args:
-       app (string): druh archeologického záznamu ro který se daný context počítá.
-   
-       jednotka (DokumentacniJednotka): model DokumentacniJednotka pro který se daný context počítá.
-   
-       jednotky (DokumentacniJednotka): list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
-   
-       show (dictionary): dictionary pro zobrazení možnosti uživatele na stránce.
-   
-       old_adb_post (CreateADBForm): staré volání CreateADBForm pro správně zobrazení chyb formuláře.
-   
-   Returns:
-       dj_form_detail: dictionary kontextu DJ pro správné zobrazení stránky.
+
+
+   **Argumenty:**
+
+   - ``app`` (*string*): druh archeologického záznamu ro který se daný context počítá.
+   - ``jednotka`` (*DokumentacniJednotka*): model DokumentacniJednotka pro který se daný context počítá.
+   - ``jednotky`` (*DokumentacniJednotka*): list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
+   - ``show`` (*dictionary*): dictionary pro zobrazení možnosti uživatele na stránce.
+   - ``old_adb_post`` (*CreateADBForm*): staré volání CreateADBForm pro správně zobrazení chyb formuláře.
+
+   **Návratová hodnota:**
+
+   *dj_form_detail*: dictionary kontextu DJ pro správné zobrazení stránky.

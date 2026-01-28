@@ -16,6 +16,8 @@ Třídy
 
       Metoda pro získaní absolut url záznamu podle identu.
 
+   .. py:method:: __str__()
+
    .. py:method:: set_odeslany()
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.

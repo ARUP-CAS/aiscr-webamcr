@@ -74,6 +74,8 @@ Třídy
 
    .. py:method:: get_context_data()
 
+   .. py:method:: _change_password()
+
    .. py:method:: invalid_form_context()
 
    .. py:method:: post()

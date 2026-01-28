@@ -10,8 +10,8 @@ Funkce
 
    Každý den zkontrolovat a případně odeslat upozornění uživatelům na základě pole projekt.datum_odevzdani_NZ,
    pokud je projekt ve stavu <P5 a zároveň:
-      -- pokud [dnes] + 90 dní = datum_odevzdani_NZ => email E-NZ-01
-      -- pokud [dnes] - 1 den = datum_odevzdani_NZ => email E-NZ-02
+   -- pokud [dnes] + 90 dní = datum_odevzdani_NZ => email E-NZ-01
+   -- pokud [dnes] - 1 den = datum_odevzdani_NZ => email E-NZ-02
 
 .. py:function:: send_notifications_en()
 

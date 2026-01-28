@@ -14,6 +14,10 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: _get_initial_value_from_instance()
+
+   .. py:method:: _set_initial_values()
+
 
 .. py:class:: DoiAutocompleteField
 
@@ -31,6 +35,8 @@ Třídy
    Popis není k dispozici.
 
    **Metody:**
+
+   .. py:method:: _get_initial_value_from_instance()
 
    .. py:method:: prepare_value()
 
@@ -55,6 +61,8 @@ Třídy
    Popis není k dispozici.
 
    **Metody:**
+
+   .. py:method:: _get_initial_value_from_instance()
 
    .. py:method:: prepare_value()
 
