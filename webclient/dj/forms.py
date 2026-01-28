@@ -15,11 +15,6 @@ from heslar.models import Heslar, RuianKatastr
 logger = logging.getLogger(__name__)
 
 
-class MyAutocompleteWidget(AutocompleteModelSelect2):
-    def media(self):
-        return ()
-
-
 class CreateDJForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky.
@@ -107,11 +102,10 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "nazev": forms.TextInput(),
-            "pian": MyAutocompleteWidget(
+            "pian": AutocompleteModelSelect2(
                 url="pian:pian-autocomplete",
             ),
             "negativni_jednotka": forms.Select(
@@ -123,7 +117,6 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 },
             ),
         }
@@ -158,7 +151,6 @@ class CreateDJForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
         )
@@ -168,6 +160,7 @@ class CreateDJForm(forms.ModelForm):
             self.fields["pian_text"].initial = self.instance.pian
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.include_media = False
         self.helper.layout = Layout(
             Div(
                 Div("typ", css_class="col-sm-2"),

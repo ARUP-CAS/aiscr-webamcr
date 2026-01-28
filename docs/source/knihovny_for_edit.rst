@@ -253,8 +253,8 @@ Docker image
      - 1.80.1-alpine
      - MIT license
      - https://github.com/oliver006/redis_exporter
-   * - Selenium Grid Server
-     - Firefox
+   * - Selenium Grid Standalone with Chromium
+     - 143.0
      - Apache License 2.0
      - https://github.com/SeleniumHQ/docker-selenium
 

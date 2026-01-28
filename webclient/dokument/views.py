@@ -399,11 +399,12 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         cast_form = DokumentCastForm(
             instance=cast,
             readonly=True,
+            prefix="cast",
         )
         context["cast_form"] = cast_form
         neident_akce = NeidentAkce.objects.filter(dokument_cast=cast)
         if neident_akce.exists():
-            context["neident_akce_form"] = NeidentAkceForm(instance=neident_akce[0], readonly=True)
+            context["neident_akce_form"] = NeidentAkceForm(instance=neident_akce[0], prefix="neident", readonly=True)
         context["show_edit_cast"] = check_permissions(
             p.actionChoices.dok_cast_edit, self.request.user, cast.dokument.ident_cely
         )
@@ -2228,7 +2229,7 @@ def get_dokument_table_row(request):
     """
     Funkce pohledu pro získaní řádku dokumentu pro vykreslení v modalu.
     """
-    context = {"d": Dokument.objects.get(id=request.GET.get("id", ""))}
+    context = {"d": Dokument.objects.get(id=request.GET.get("id", "")), "prefix": "modaldoc"}
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
 
@@ -2256,6 +2257,7 @@ def get_dokument_table_row_vratit(request):
         "vratit": True,
         "d": dokument,
         "form": form,
+        "prefix": "modaldoc",
     }
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
@@ -2487,6 +2489,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
             "show": {"dokument_odpojit": dokument_odpojit},
             "zaznam": zaznam,
             "type": typ_vazby,
+            "prefix": "doc",
         }
         logger.debug(context)
         return HttpResponse(render_to_string("dokument/dokument_table_only.html", context))

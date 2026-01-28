@@ -96,5 +96,8 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
     def initial_pian(self):
         """Vrátí objekt Pian na základě initial_pian_id (lazy-load)."""
         if self.initial_pian_id is not None:
-            return Pian.objects.get(pk=self.initial_pian_id)
+            try:
+                return Pian.objects.get(pk=self.initial_pian_id)
+            except Pian.DoesNotExist:
+                return None
         return None

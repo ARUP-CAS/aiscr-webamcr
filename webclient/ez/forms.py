@@ -91,14 +91,12 @@ class ExterniZdrojForm(forms.ModelForm):
                 attrs={
                     "class": "selectpicker",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "typ_dokumentu": forms.Select(
                 attrs={
                     "class": "selectpicker",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "rok_vydani_vzniku": forms.TextInput(),
@@ -314,6 +312,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
             ),
         )
         self.helper.form_tag = False
+        self.helper.include_media = False
 
 
 class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
@@ -340,3 +339,4 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
             ),
         )
         self.helper.form_tag = False
+        self.helper.include_media = False

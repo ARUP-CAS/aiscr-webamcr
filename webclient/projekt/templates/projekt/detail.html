@@ -21,8 +21,8 @@
     <link rel="stylesheet" href="{% static 'css/MarkerCluster.css' %}" />
     <link rel="stylesheet" href="{% static 'css/MarkerCluster.Default.css' %}" />
   <!--Leaflet FullScreen-->
-  <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
-  <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
+    <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
+    <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
 
   <script>
   const global_csrftoken = '{{ csrf_token }}';
@@ -33,12 +33,20 @@
 
   <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
   <!-- static leaflet additional import-->
-<link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
-<script src="{% static 'js/leaflet.measure.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/leaflet.coor.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
-<link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
-<script src="{% static 'js/leaflet-search.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
+    <script src="{% static 'js/leaflet.measure.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/leaflet.coor.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/leaflet.coor.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/leaflet-search.css' %}"/>
+    <script src="{% static 'js/leaflet-search.js' %}"></script>
+  <!-- Autocomplete media files -->
+    <link href="{% static 'admin/css/vendor/select2/select2.css' %}" media="screen" rel="stylesheet" type="text/css">
+    <link href="{% static 'admin/css/autocomplete.css' %}" media="screen" rel="stylesheet" type="text/css">
+    <link href="{% static 'autocomplete_light/select2.css' %}" media="screen" rel="stylesheet" type="text/css">
+    <script src="{% static 'admin/js/vendor/select2/select2.full.js' %}"></script>
+    <script src="{% static 'autocomplete_light/autocomplete_light.js' %}"></script>
+    <script src="{% static 'autocomplete_light/select2.js' %}"></script>
+    <script src="{% static 'autocomplete_light/i18n/cs.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -849,22 +857,22 @@
       }
     });
     </script>
-    <script type="text/javascript">
-      // projekt pass load
-      $(document).ready(function() {
-        if ("{{show.samostatne_nalezy}}" != "False" && {{samostatne_nalezy.count}} > 0) {
-          $.ajax({
-            type: "GET",
-            url: '{% url "pas:get_projekt_pas_table" projekt.ident_cely %}', 
-            data: {},
-            success : function(data) {
-              $('.app-card-samostatny_nalez .loader').css("display", "none");
-              $('.app-card-samostatny_nalez table thead').css("display", "table-header-group");
-              $('.app-card-samostatny_nalez table tbody').append(data);
-             }
-    });
+    {% if show.samostatne_nalezy and samostatne_nalezy and samostatne_nalezy.count > 0 %}
+      <script type="text/javascript">
+        // projekt pass load
+        $(document).ready(function() {
+            $.ajax({
+              type: "GET",
+              url: '{% url "pas:get_projekt_pas_table" projekt.ident_cely %}', 
+              data: {},
+              success : function(data) {
+                $('.app-card-samostatny_nalez .loader').css("display", "none");
+                $('.app-card-samostatny_nalez table thead').css("display", "table-header-group");
+                $('.app-card-samostatny_nalez table tbody').append(data);
+              }
+      });          
         }
-      }
-      )
-    </script>
+        )
+      </script>
+    {% endif %}
 {% endblock %}

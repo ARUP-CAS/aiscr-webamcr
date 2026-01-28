@@ -28,13 +28,13 @@
       <amcr:typ_zmeny>D23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:soubor>
-      <amcr:id>soub-534769</amcr:id>
+      <amcr:id>soub-0000001</amcr:id>
       <amcr:path>rest/AMCR-selenium-test/record/M-TX-194300151/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>MTX194300151.pdf</amcr:nazev>
       <amcr:mimetype>application/pdf</amcr:mimetype>
       <amcr:rozsah>13</amcr:rozsah>
-      <amcr:size_mb>21.1753644943</amcr:size_mb>
-      <amcr:sha_512>9149c92482c73b4bc88b92040614198fa547377da1446b792eb7a068c4447d44ef963b3a6aae2347391875fa705f8e4879b58e7ea09a39f0e27e821e4e53897a</amcr:sha_512>
+      <amcr:size_mb>0.0004634857</amcr:size_mb>
+      <amcr:sha_512>232dc43a3dd702ea91a855a3a85f5ba8ae63fee60ab7190c3377b69c83e5db4f8a8993e67577a346b448358197112903afb4d1ccabbdfdcd6cd96d51bc4e33f8</amcr:sha_512>
       <amcr:url>https://digiarchiv-dev.aiscr.cz/id/M-TX-194300151/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
         <amcr:id>hist-0000001</amcr:id>

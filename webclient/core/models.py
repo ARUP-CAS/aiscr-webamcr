@@ -387,6 +387,19 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
+        """
+        Odstraní GPS metadata z fotografie uložené v paměti.
+
+        Funkce načte EXIF data z obrázku, odstraní GPS informace a pokusí se
+        znovu uložit EXIF. Pokud narazí na nevalidní nebo nekompatibilní EXIF
+        tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
+        aby bylo možné obrázek úspěšně uložit.
+
+        V případě jakékoli chyby vrací původní vstupní soubor beze změny.
+
+        :param bytes_io: Vstupní obrázek jako BytesIO objekt
+        :return: BytesIO objekt s odstraněnými GPS daty (nebo původní soubor při chybě)
+        """
         try:
             img = Image.open(bytes_io)
             exif_data = img.info.get("exif")
@@ -396,7 +409,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                 bytes_io.seek(0)
                 return bytes_io
         except Exception as err:
-            logger.warning("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
+            logger.error("core.models.Soubor.remove_gps_data.cannot_open_file", extra={"error": err})
             bytes_io.seek(0)
             return bytes_io
         # Odstranění GPS dat, pokud existují
@@ -408,9 +421,36 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return bytes_io
         if 41729 in exif_dict["Exif"] and isinstance(exif_dict["Exif"][41729], int):
             exif_dict["Exif"][41729] = str(exif_dict["Exif"][41729]).encode("utf-8")
+        MAX_FIX_ATTEMPTS = 10
+        for attempt in range(MAX_FIX_ATTEMPTS):
+            try:
+                new_exif_bytes = piexif.dump(exif_dict)
+                break
+            except ValueError as err:
+                msg = str(err)
+                # hledáme "37890 in Exif IFD"
+                match = re.search(r"(\d+)\s+in\s+(\w+)\s+IFD", msg)
+                if not match:
+                    logger.error(
+                        "core.models.Soubor.remove_gps_data.unhandled_exif_error",
+                        extra={"error": msg},
+                    )
+                    bytes_io.seek(0)
+                    return bytes_io
+                tag = int(match.group(1))
+                ifd = match.group(2)
+                logger.info(
+                    "core.models.Soubor.remove_gps_data.removing_broken_exif_tag",
+                    extra={"tag": tag, "ifd": ifd},
+                )
+                # odstranění problémového tagu
+                exif_dict.get(ifd, {}).pop(tag, None)
+        else:
+            # nepodařilo se opravit ani po několika pokusech
+            logger.error("core.models.Soubor.remove_gps_data.exif_cleanup_failed")
+            bytes_io.seek(0)
+            return bytes_io
         try:
-            exif_dict["Exif"].pop(37500, None)  # smazání proprietálního tagu MakerNote
-            new_exif_bytes = piexif.dump(exif_dict)
             output_io = io.BytesIO()
             img.save(output_io, format=img.format, exif=new_exif_bytes)
             output_io.seek(0)
