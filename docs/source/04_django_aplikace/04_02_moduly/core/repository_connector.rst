@@ -116,6 +116,7 @@ Třídy
    .. py:method:: parse_historie()
 
       Metoda k parsování odpovědi s verzemi
+      Vrací list dictů: {"datetime": datetime, "timestamp": str}
 
    .. py:method:: get_historie_metadat()
 

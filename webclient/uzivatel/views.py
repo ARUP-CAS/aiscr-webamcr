@@ -23,8 +23,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import IntegrityError, transaction
-from django.db.models import CharField, F, IntegerField, Q, Value
-from django.db.models.functions import Concat
+from django.db.models import Q
 from django.forms.renderers import BaseRenderer
 from django.http import HttpRequest, JsonResponse
 from django.http.response import HttpResponse as HttpResponse
@@ -32,7 +31,6 @@ from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import UpdateView
@@ -82,43 +80,28 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     """
 
     def get_result_label(self, result):
-        if get_language() == "en":
-            return (
-                f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny_en})"
-            )
-        else:
-            return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
+        return result.display_name(viewer=self.request.user)
 
     def get_queryset(self):
-        qs = User.objects.all().order_by("last_name")
-        if self.q and " " not in self.q:
-            qs = qs.filter(
-                Q(first_name__icontains=self.q)
-                | Q(last_name__icontains=self.q)
-                | Q(ident_cely__icontains=self.q)
-                | Q(organizace__nazev_zkraceny__icontains=self.q)
-            )
-        elif self.q:
-            qs = qs.annotate(
-                grand_name=Concat(
-                    F("last_name"),
-                    Value(", "),
-                    F("first_name"),
-                    Value(" ("),
-                    F("ident_cely"),
-                    Value(", "),
-                    F("organizace__nazev_zkraceny"),
-                    Value(")"),
-                    output_field=CharField(),
+        qs = User.objects.select_related("organizace")
+
+        if self.q:
+            terms = self.q.strip().split()
+
+            q_obj = Q()
+            for term in terms:
+                q_obj &= (
+                    Q(first_name__icontains=term)
+                    | Q(last_name__icontains=term)
+                    | Q(ident_cely__icontains=term)
+                    | Q(organizace__nazev_zkraceny__icontains=term)
+                    | Q(organizace__nazev_zkraceny_en__icontains=term)
                 )
-            )
-            new_qs = qs.filter(grand_name__istartswith=self.q).annotate(qs_order=Value(0, IntegerField()))
-            new_qs2 = (
-                qs.filter(grand_name__icontains=self.q)
-                .exclude(grand_name__istartswith=self.q)
-                .annotate(qs_order=Value(2, IntegerField()))
-            )
-            qs = new_qs.union(new_qs2).order_by("qs_order", "grand_name")
+
+            qs = qs.filter(q_obj)
+
+        qs = qs.order_by("last_name", "first_name")
+
         return self.check_filter_permission(qs)
 
     def add_accessibility_lookup(self, permission, qs):
@@ -129,14 +112,15 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
 
 class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro získaní uživatelů pro autocomplete - verze pouze s ident_cely uživatele, beze jména.
+    """
+
     def get_result_label(self, result):
-        if get_language() == "en":
-            return f"{result.ident_cely} ({result.organizace.nazev_zkraceny_en})"
-        else:
-            return f"{result.ident_cely} ({result.organizace.nazev_zkraceny})"
+        return result.display_name()
 
     def get_queryset(self):
-        qs = User.objects.all().order_by("ident_cely")
+        qs = User.objects.all().select_related("organizace").order_by("ident_cely")
         if self.q:
             qs = qs.filter(Q(ident_cely__icontains=self.q) | Q(organizace__nazev_zkraceny__icontains=self.q))
         return qs

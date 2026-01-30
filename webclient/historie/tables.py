@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django_tables2 import columns
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from historie.models import Historie
+from uzivatel.models import User
 
 
 class HistorieTable(ColumnShiftTableBootstrap4):
@@ -16,7 +17,14 @@ class HistorieTable(ColumnShiftTableBootstrap4):
     )
     typ_zmeny = columns.Column(default="", verbose_name=_("core.tables.HistorieTable.typ_zmeny"))
     poznamka = columns.Column(default="", verbose_name=_("core.tables.HistorieTable.poznamka"))
-    uzivatel_custom = columns.Column(default="", verbose_name=_("core.tables.HistorieTable.uzivatel_custom"))
+    uzivatel_custom = columns.Column(
+        accessor="uzivatel", default="", verbose_name=_("core.tables.HistorieTable.uzivatel_custom")
+    )
+
+    def render_uzivatel_custom(self, record):
+        if not record.uzivatel:
+            return ""
+        return record.uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
 
     class Meta:
         model = Historie
@@ -66,6 +74,17 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         },
         orderable=False,
     )
+    uzivatel = columns.Column(
+        default="",
+        verbose_name=_("historie.templates.historieList.fedora.uzivatel"),
+        orderable=True,
+    )
+
+    def render_uzivatel(self, record):
+        uzivatel = User.objects.filter(ident_cely=record["uzivatel"]).first()
+        if uzivatel is None:
+            return record["uzivatel"]
+        return uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
 
     def render_url(self, value, record):
         return format_html(
@@ -77,5 +96,5 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
 
     class Meta:
         attrs = {"class": "table-shifter table fedora-table"}
-        fields = ("url", "datum")
+        fields = ("url", "datum", "uzivatel")
         order_by = ("-datum",)

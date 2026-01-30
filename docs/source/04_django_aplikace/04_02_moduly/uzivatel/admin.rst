@@ -96,8 +96,6 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: metadata()
-
    .. py:method:: has_delete_permission()
 
    .. py:method:: save_model()
