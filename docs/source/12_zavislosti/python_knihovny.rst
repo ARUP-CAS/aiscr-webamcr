@@ -84,11 +84,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - W3C License
      - http://rdflib.github.io/sparqlwrapper
    * - Sphinx
-     - 8.2.3
+     - 9.1.0
      - BSD-2-Clause
      - https://www.sphinx-doc.org/
    * - Werkzeug
-     - 3.1.4
+     - 3.1.5
      - BSD-3-Clause
      - https://github.com/pallets/werkzeug/
    * - alabaster
@@ -103,6 +103,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 3.11.0
      - BSD License
      - https://github.com/django/asgiref/
+   * - async-generator
+     - 1.10
+     - Apache Software License; MIT License
+     - https://github.com/python-trio/async_generator
    * - attrs
      - 25.4.0
      - MIT
@@ -168,7 +172,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.13.1
+     - 7.13.2
      - Apache-2.0
      - https://github.com/coveragepy/coveragepy
    * - crispy-bootstrap4
@@ -180,7 +184,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 46.0.3
+     - 46.0.4
      - Apache-2.0 OR BSD-3-Clause
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -300,8 +304,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/jpadilla/django-rest-framework-xml
    * - docutils
-     - 0.21.2
-     - BSD License; GNU General Public License (GPL); Public Domain; Python Software Foundation License
+     - 0.22.4
+     - BSD License; GNU General Public License (GPL); Public Domain
      - https://docutils.sourceforge.io
    * - et_xmlfile
      - 2.0.0
@@ -324,7 +328,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.15
+     - 2.6.16
      - MIT
      - https://github.com/pre-commit/identify
    * - idna
@@ -335,6 +339,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.4.1
      - MIT License
      - https://github.com/shibukawa/imagesize_py
+   * - importlib_metadata
+     - 8.7.1
+     - Apache-2.0
+     - https://github.com/python/importlib_metadata
    * - inflate64
      - 1.0.4
      - GNU Lesser General Public License v2 or later (LGPLv2+)
@@ -355,12 +363,16 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.2.3
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://github.com/miurahr/multivolume
+   * - mypy_extensions
+     - 1.1.0
+     - MIT
+     - https://github.com/python/mypy_extensions
    * - nodeenv
      - 1.10.0
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.4.0
+     - 2.4.1
      - BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
      - https://numpy.org
    * - odfpy
@@ -376,8 +388,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; MIT License
      - https://github.com/python-trio/outcome
    * - packaging
-     - 25.0
-     - Apache Software License; BSD License
+     - 26.0
+     - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
      - 2.3.3
@@ -388,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.21
+     - 9.0.22
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -404,8 +416,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://pip.pypa.io/
    * - pip-licenses
-     - 5.5.0
-     - MIT License
+     - 5.5.1
+     - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
      - 4.5.1
@@ -424,7 +436,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/prettytable/prettytable
    * - prometheus_client
-     - 0.23.1
+     - 0.24.1
      - Apache-2.0 AND BSD-2-Clause
      - https://github.com/prometheus/client_python
    * - prompt_toolkit
@@ -440,7 +452,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Library or Lesser General Public License (LGPL)
      - https://psycopg.org/
    * - py7zr
-     - 1.1.0
+     - 1.1.2
      - LGPL-2.1-or-later
      - https://py7zr.readthedocs.io/
    * - pyOpenSSL
@@ -452,19 +464,19 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://pypi.org/project/pybcj
    * - pycparser
-     - 2.23
-     - BSD License
+     - 3.0
+     - BSD-3-Clause
      - https://github.com/eliben/pycparser
    * - pycryptodomex
      - 3.23.0
      - BSD License; Public Domain
      - https://www.pycryptodome.org
    * - pyparsing
-     - 3.3.1
+     - 3.3.2
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.5.0
+     - 6.6.2
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -508,7 +520,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.4.7
+     - 4.4.9
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -523,16 +535,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 4.1.0
      - 0BSD OR CC0-1.0
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
-   * - roman-numerals-py
-     - 4.1.0
-     - 0BSD OR CC0-1.0
-     - UNKNOWN
    * - selenium
-     - 4.39.0
+     - 4.40.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
-     - 80.9.0
+     - 80.10.2
      - MIT
      - https://github.com/pypa/setuptools
    * - simplejson
@@ -556,11 +564,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.grantjenks.com/docs/sortedcontainers/
    * - soupsieve
-     - 2.8.1
+     - 2.8.3
      - MIT
      - https://github.com/facelessuser/soupsieve
-   * - sphinx-rtd-theme
-     - 3.0.2
+   * - sphinx_rtd_theme
+     - 3.1.0
      - MIT License
      - https://github.com/readthedocs/sphinx_rtd_theme
    * - sphinxcontrib-applehelp
@@ -588,7 +596,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://sphinx-doc.org/
    * - sphinxcontrib-mermaid
-     - 1.2.3
+     - 2.0.0
      - BSD License
      - https://github.com/mgaitan/sphinxcontrib-mermaid
    * - sphinxcontrib-qthelp
@@ -623,10 +631,22 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.32.0
      - MIT OR Apache-2.0
      - https://github.com/python-trio/trio
+   * - trio-typing
+     - 0.10.0
+     - Apache Software License; MIT License
+     - https://github.com/python-trio/trio-typing
    * - trio-websocket
      - 0.12.2
      - MIT License
      - https://github.com/python-trio/trio-websocket
+   * - types-certifi
+     - 2021.10.8.3
+     - Apache Software License
+     - https://github.com/python/typeshed
+   * - types-urllib3
+     - 1.26.25.14
+     - Apache Software License
+     - https://github.com/python/typeshed
    * - typing_extensions
      - 4.15.0
      - PSF-2.0
@@ -656,8 +676,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.2.14
-     - MIT License
+     - 0.5.0
+     - MIT
      - https://github.com/jquast/wcwidth
    * - websocket-client
      - 1.9.0
@@ -679,6 +699,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.3.0
      - BSD License
      - http://www.python-excel.org/
+   * - zipp
+     - 3.23.0
+     - MIT
+     - https://github.com/jaraco/zipp
 
 
 Knihovny vkládané jako statické soubory
@@ -881,8 +905,8 @@ Docker image
      - 1.80.1-alpine
      - MIT license
      - https://github.com/oliver006/redis_exporter
-   * - Selenium Grid Server
-     - Firefox
+   * - Selenium Grid Standalone with Chromium
+     - 143.0
      - Apache License 2.0
      - https://github.com/SeleniumHQ/docker-selenium
 
