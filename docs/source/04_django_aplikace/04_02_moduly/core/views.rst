@@ -154,9 +154,8 @@ Třídy
 
       **Klíče odpovědi:**
 
-
-      **duplicate (tuple): Tuple obsahující zprávu o duplicitě ve formátu:**
-
+      - ``duplicate`` (*tuple*): Tuple obsahující zprávu o duplicitě ve formátu:
+        "Soubor {original_filename} byl již nahrán k záznamu {parent_ident}. Zpráva..."
 
    .. py:method:: _append_rename_message()
 
@@ -179,9 +178,8 @@ Třídy
 
       **Klíče odpovědi:**
 
-
-      **file_renamed (tuple): Tuple obsahující zprávu o přejmenování ve formátu:**
-
+      - ``file_renamed`` (*tuple*): Tuple obsahující zprávu o přejmenování ve formátu:
+        "Soubor {original_filename} byl přejmenován na {new_name}"
 
    .. py:method:: _unknown_error_response()
 
@@ -264,12 +262,10 @@ Třídy
 
       **Návratová hodnota:**
 
-
-      **tuple | JsonResponse: Při úspěchu vrací tuple (objekt, new_name):**
-
+      *tuple | JsonResponse*: Při úspěchu vrací tuple (objekt, new_name):
       - objekt (Projekt|Dokument|SamostatnyNalez): Instance nalezeného záznamu
       - new_name (str): Vygenerovaný standardizovaný název souboru
-        Při chybě vrací JsonResponse s chybovou zprávou a status kódem 403/500
+      Při chybě vrací JsonResponse s chybovou zprávou a status kódem 403/500
 
 
 .. py:class:: UpdateExistingFileUploadView

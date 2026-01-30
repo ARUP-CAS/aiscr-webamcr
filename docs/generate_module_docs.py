@@ -1265,7 +1265,11 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             continue
 
         # Check if we're entering a custom section (e.g., "Rozdíly oproti NewFileUploadView:")
-        if is_custom_section(stripped, i):
+        # Only detect custom sections when not already inside a known section
+        in_any_section = (
+            in_args_section or in_returns_section or in_status_codes_section or in_process_section or in_custom_section
+        )
+        if not in_any_section and is_custom_section(stripped, i):
             in_args_section = False
             in_returns_section = False
             in_status_codes_section = False
