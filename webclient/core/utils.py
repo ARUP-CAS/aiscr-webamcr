@@ -1102,6 +1102,38 @@ class SessionIdentifier:
         files = cache.get(f"{self.cache_key}_files", set())
         return files
 
+    def set_project_ownership(self, ident_cely, timeout=7200):
+        """
+        Uloží vlastnictví projektu pro anonymního uživatele do Redis.
+        Používá se pro ověření, že anonymní uživatel může nahrávat soubory pouze k projektu, který sám vytvořil.
+
+        Args:
+            ident_cely: identifikátor projektu
+            timeout: timeout v sekundách (defaultně 2 hodiny)
+        """
+        from core.connectors import RedisConnector
+
+        r = RedisConnector.get_connection_decode()
+        key = f"anonymous_project_owner_{self.cache_key}"
+        r.set(key, ident_cely, ex=timeout)
+
+    def verify_project_ownership(self, ident_cely):
+        """
+        Ověří, zda anonymní uživatel vlastní daný projekt.
+
+        Args:
+            ident_cely: identifikátor projektu
+
+        Returns:
+            bool: True pokud uživatel vlastní projekt, jinak False
+        """
+        from core.connectors import RedisConnector
+
+        r = RedisConnector.get_connection_decode()
+        key = f"anonymous_project_owner_{self.cache_key}"
+        stored_ident = r.get(key)
+        return stored_ident == ident_cely
+
 
 def get_set_maintenance_in_cache():
     """

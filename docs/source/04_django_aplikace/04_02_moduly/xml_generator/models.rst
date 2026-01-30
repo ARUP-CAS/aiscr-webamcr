@@ -12,6 +12,8 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: __str__()
+
    .. py:method:: get_ident_cely_link()
 
 
@@ -38,6 +40,8 @@ Třídy
    .. py:method:: save_metadata()
 
    .. py:method:: save_record_deletion_record()
+
+   .. py:method:: _get_fedora_transaction()
 
    .. py:method:: record_deletion()
 

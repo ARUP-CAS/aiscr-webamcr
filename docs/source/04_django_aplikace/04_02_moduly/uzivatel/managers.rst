@@ -9,8 +9,8 @@ Třídy
 .. py:class:: CustomUserManager
 
    Custom user model manager where email is the unique identifiers
-for authentication instead of usernames.
-https://testdriven.io/blog/django-custom-user-model/
+   for authentication instead of usernames.
+   https://testdriven.io/blog/django-custom-user-model/
 
    **Metody:**
 

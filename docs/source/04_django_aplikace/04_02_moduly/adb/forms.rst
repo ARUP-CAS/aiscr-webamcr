@@ -24,8 +24,10 @@ Třídy
    .. py:method:: __init__()
 
       Init metoda pro vytvoření formuláře.
-      Args:
-          readonly (boolean): nastavuje formulář na readonly.
+
+      **Argumenty:**
+
+      - ``readonly`` (*boolean*): nastavuje formulář na readonly.
 
 
 .. py:class:: VyskovyBodFormSetHelper
@@ -43,13 +45,14 @@ Funkce
 .. py:function:: create_vyskovy_bod_form(pian, niveleta, not_readonly)
 
    Funkce která vrací formulář VB pro formset.
-   
-   Args:
-       pian (pian): pian objeckt.
-   
-       niveleta (niveleta): niveleta objekt.
-   
-       not_readonly (boolean): nastavuje formulář na readonly.
-   
-   Returns:
-       CreateVysovyBodForm: django model formulář VB
+
+
+   **Argumenty:**
+
+   - ``pian`` (*pian*): pian objeckt.
+   - ``niveleta`` (*niveleta*): niveleta objekt.
+   - ``not_readonly`` (*boolean*): nastavuje formulář na readonly.
+
+   **Návratová hodnota:**
+
+   *CreateVysovyBodForm*: django model formulář VB

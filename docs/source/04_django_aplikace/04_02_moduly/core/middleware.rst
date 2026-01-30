@@ -14,6 +14,8 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: __call__()
+
    .. py:method:: process_view()
 
       Metoda pro kontrolu oprvávnení pro každý view.
@@ -27,6 +29,8 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: __call__()
+
    .. py:method:: process_exception()
 
 
@@ -37,6 +41,10 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+   .. py:method:: __call__()
+
+   .. py:method:: _show_message()
 
    .. py:method:: process_view()
 

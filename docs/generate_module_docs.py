@@ -24,6 +24,7 @@ Usage:
 
 import argparse
 import ast
+import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -1161,6 +1162,319 @@ def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Di
     return classes, functions
 
 
+def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
+    """
+    Format a Google-style docstring for RST output.
+
+    Converts Args:, Returns:, etc. sections into proper RST formatting
+    with argument names wrapped in backticks. Section names are translated
+    to Czech.
+
+    Args:
+        docstring (str): The docstring to format
+        indent (str): Indentation prefix for each line
+
+    Returns:
+        list: List of formatted RST lines
+    """
+    if not docstring:
+        return []
+
+    lines = docstring.split("\n")
+    result = []
+    in_args_section = False
+    in_returns_section = False
+    in_status_codes_section = False
+    in_process_section = False
+    in_custom_section = False
+    in_other_section = False
+
+    # Section keywords that format items as lists with backticks around names
+    args_like_sections = {"Args:", "Attributes:", "Response Data Keys:", "URL Parameters:"}
+    # Section keywords that format items with italic type
+    returns_like_sections = {"Returns:", "Raises:", "Yields:"}
+    # Section keywords that format items as lists with backticks around codes
+    status_codes_sections = {"Response Status Codes:"}
+    # Section keywords that format items as numbered lists (process steps)
+    process_sections = {"Process Description:"}
+    # Section keywords that just pass through text
+    other_sections = {"Examples:", "Note:", "Notes:"}
+
+    all_section_keywords = (
+        args_like_sections | returns_like_sections | status_codes_sections | process_sections | other_sections
+    )
+
+    # Translation of section names to Czech
+    section_translations = {
+        "Args": "Argumenty",
+        "Attributes": "Atributy",
+        "Response Data Keys": "Klíče odpovědi",
+        "URL Parameters": "URL parametry",
+        "Returns": "Návratová hodnota",
+        "Raises": "Výjimky",
+        "Yields": "Generuje",
+        "Response Status Codes": "Stavové kódy odpovědi",
+        "Process Description": "Popis procesu",
+        "Examples": "Příklady",
+        "Note": "Poznámka",
+        "Notes": "Poznámky",
+    }
+
+    def is_section_keyword(text: str) -> bool:
+        """Check if text matches a section keyword."""
+        return text in all_section_keywords
+
+    def is_custom_section(text: str, line_index: int) -> bool:
+        """Check if text looks like a custom section header (ends with colon, has content below)."""
+        if not text.endswith(":"):
+            return False
+        # Must not be a known section
+        if text in all_section_keywords:
+            return False
+        # Check if next line exists and is indented (indicates section content)
+        if line_index + 1 < len(lines):
+            next_line = lines[line_index + 1]
+            if next_line.startswith("    ") or next_line.startswith("\t"):
+                return True
+        return False
+
+    def translate_section(section_name: str) -> str:
+        """Translate section name to Czech."""
+        name_without_colon = section_name.rstrip(":")
+        return section_translations.get(name_without_colon, name_without_colon)
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+
+        # Check if we're entering a new section
+        if is_section_keyword(stripped):
+            in_args_section = stripped in args_like_sections
+            in_returns_section = stripped in returns_like_sections
+            in_status_codes_section = stripped in status_codes_sections
+            in_process_section = stripped in process_sections
+            in_custom_section = False
+            in_other_section = stripped in other_sections
+
+            translated_name = translate_section(stripped)
+            result.append("")
+            result.append(f"{indent}**{translated_name}:**")
+            result.append("")
+            i += 1
+            continue
+
+        # Check if we're entering a custom section (e.g., "Rozdíly oproti NewFileUploadView:")
+        # Only detect custom sections when not already inside a known section
+        in_any_section = (
+            in_args_section or in_returns_section or in_status_codes_section or in_process_section or in_custom_section
+        )
+        if not in_any_section and is_custom_section(stripped, i):
+            in_args_section = False
+            in_returns_section = False
+            in_status_codes_section = False
+            in_process_section = False
+            in_custom_section = True
+            in_other_section = False
+
+            # Use the section name as-is (no translation needed for custom sections)
+            section_name = stripped.rstrip(":")
+            result.append("")
+            result.append(f"{indent}**{section_name}:**")
+            result.append("")
+            i += 1
+            continue
+
+        # Handle Args-like sections - format as list with backticks
+        if in_args_section and stripped:
+            # Check if this is an argument line (name (type): description)
+            # or (name: description) format
+            # Supports: name, *args, **kwargs
+            arg_match = re.match(r"^(\*{0,2}\w+)\s*(?:\(([^)]+)\))?\s*:\s*(.*)$", stripped)
+            if arg_match:
+                arg_name = arg_match.group(1)
+                arg_type = arg_match.group(2)
+                arg_desc = arg_match.group(3)
+
+                if arg_type:
+                    result.append(f"{indent}- ``{arg_name}`` (*{arg_type}*): {arg_desc}")
+                else:
+                    result.append(f"{indent}- ``{arg_name}``: {arg_desc}")
+
+                # Check for continuation lines (indented more than the argument)
+                i += 1
+                while i < len(lines):
+                    next_line = lines[i]
+                    next_stripped = next_line.strip()
+                    # If next line is empty or a new section, break
+                    if not next_stripped or is_section_keyword(next_stripped):
+                        break
+                    # Check if it's a continuation (starts with whitespace in original)
+                    if next_line.startswith("    ") or next_line.startswith("\t"):
+                        # Check if it's a new argument (supports *args, **kwargs)
+                        if re.match(r"^\s+\*{0,2}\w+\s*(?:\([^)]+\))?\s*:", next_line):
+                            break
+                        result.append(f"{indent}  {next_stripped}")
+                    else:
+                        break
+                    i += 1
+                continue
+            elif not stripped:
+                in_args_section = False
+
+        # Handle Response Status Codes section - format as list with backticks around codes
+        if in_status_codes_section and stripped:
+            # Check if this is a status code line (code: description)
+            status_match = re.match(r"^(\d{3})\s*:\s*(.*)$", stripped)
+            if status_match:
+                status_code = status_match.group(1)
+                status_desc = status_match.group(2)
+                result.append(f"{indent}- ``{status_code}``: {status_desc}")
+
+                # Check for continuation lines
+                i += 1
+                while i < len(lines):
+                    next_line = lines[i]
+                    next_stripped = next_line.strip()
+                    if not next_stripped or is_section_keyword(next_stripped):
+                        break
+                    if next_line.startswith("    ") or next_line.startswith("\t"):
+                        # Check if it's a new status code
+                        if re.match(r"^\s+\d{3}\s*:", next_line):
+                            break
+                        result.append(f"{indent}  {next_stripped}")
+                    else:
+                        break
+                    i += 1
+                continue
+            elif not stripped:
+                in_status_codes_section = False
+
+        # Handle Process Description section - format as numbered list
+        if in_process_section and stripped:
+            # Check if this is a numbered step (e.g., "1. Step description")
+            step_match = re.match(r"^(\d+)\.\s+(.*)$", stripped)
+            if step_match:
+                step_num = step_match.group(1)
+                step_desc = step_match.group(2)
+                result.append(f"{indent}{step_num}. {step_desc}")
+
+                # Check for continuation lines
+                i += 1
+                while i < len(lines):
+                    next_line = lines[i]
+                    next_stripped = next_line.strip()
+                    if not next_stripped or is_section_keyword(next_stripped):
+                        break
+                    if next_line.startswith("    ") or next_line.startswith("\t"):
+                        # Check if it's a new numbered step
+                        if re.match(r"^\s+\d+\.\s+", next_line):
+                            break
+                        result.append(f"{indent}   {next_stripped}")
+                    else:
+                        break
+                    i += 1
+                continue
+            elif not stripped:
+                in_process_section = False
+
+        # Handle custom sections - format bullet points and numbered lists
+        if in_custom_section and stripped:
+            # Check if this is a bullet point (starts with -)
+            bullet_match = re.match(r"^-\s+(.*)$", stripped)
+            # Check if this is a numbered item (e.g., "1. description")
+            number_match = re.match(r"^(\d+)\.\s+(.*)$", stripped)
+
+            if bullet_match:
+                bullet_desc = bullet_match.group(1)
+                result.append(f"{indent}- {bullet_desc}")
+
+                # Check for continuation lines
+                i += 1
+                while i < len(lines):
+                    next_line = lines[i]
+                    next_stripped = next_line.strip()
+                    if not next_stripped or is_section_keyword(next_stripped) or is_custom_section(next_stripped, i):
+                        break
+                    if next_line.startswith("    ") or next_line.startswith("\t"):
+                        # Check if it's a new bullet or numbered item
+                        if re.match(r"^\s+-\s+", next_line) or re.match(r"^\s+\d+\.\s+", next_line):
+                            break
+                        result.append(f"{indent}  {next_stripped}")
+                    else:
+                        break
+                    i += 1
+                continue
+            elif number_match:
+                num = number_match.group(1)
+                num_desc = number_match.group(2)
+                result.append(f"{indent}{num}. {num_desc}")
+
+                # Check for continuation lines
+                i += 1
+                while i < len(lines):
+                    next_line = lines[i]
+                    next_stripped = next_line.strip()
+                    if not next_stripped or is_section_keyword(next_stripped) or is_custom_section(next_stripped, i):
+                        break
+                    if next_line.startswith("    ") or next_line.startswith("\t"):
+                        # Check if it's a new bullet or numbered item
+                        if re.match(r"^\s+-\s+", next_line) or re.match(r"^\s+\d+\.\s+", next_line):
+                            break
+                        result.append(f"{indent}   {next_stripped}")
+                    else:
+                        break
+                    i += 1
+                continue
+            elif not stripped:
+                in_custom_section = False
+
+        # Handle Returns/Raises section
+        if in_returns_section and stripped:
+            # Check if this looks like a type: description format
+            # Supports: Type, Type[inner], Type | Type2, Optional[Type], etc.
+            ret_match = re.match(r"^([\w\[\], |]+)\s*:\s*(.*)$", stripped)
+            if ret_match:
+                ret_type = ret_match.group(1).strip()
+                ret_desc = ret_match.group(2)
+                result.append(f"{indent}*{ret_type}*: {ret_desc}")
+
+                # Check for continuation lines
+                i += 1
+                while i < len(lines):
+                    next_line = lines[i]
+                    next_stripped = next_line.strip()
+                    if not next_stripped or is_section_keyword(next_stripped):
+                        break
+                    if next_line.startswith("    ") or next_line.startswith("\t"):
+                        # Check if it's a new type entry
+                        if re.match(r"^\s+[\w\[\], |]+\s*:", next_line):
+                            break
+                        result.append(f"{indent}{next_stripped}")
+                    else:
+                        break
+                    i += 1
+                continue
+            elif not stripped:
+                in_returns_section = False
+
+        # Handle other sections or regular text
+        if in_other_section and stripped:
+            result.append(f"{indent}{stripped}")
+        elif (
+            not in_args_section
+            and not in_returns_section
+            and not in_status_codes_section
+            and not in_process_section
+            and not in_custom_section
+        ):
+            result.append(f"{indent}{stripped}" if stripped else "")
+
+        i += 1
+
+    return result
+
+
 def generate_rst_explicit(source_file: Path, module_name: str, module_title: str, module_description: str) -> str:
     """
     Generate RST file with explicit docstring content.
@@ -1184,20 +1498,20 @@ def generate_rst_explicit(source_file: Path, module_name: str, module_title: str
         for cls in classes:
             rst_lines.append(f".. py:class:: {cls['name']}")
             rst_lines.append("")
-            rst_lines.append(f"   {cls['docstring']}")
+            # Format class docstring
+            formatted_class_doc = format_docstring_for_rst(cls["docstring"], "   ")
+            rst_lines.extend(formatted_class_doc)
             rst_lines.append("")
 
             if cls["methods"]:
                 rst_lines.append("   **Metody:**")
                 rst_lines.append("")
                 for method in cls["methods"]:
-                    if method["name"].startswith("_") and method["name"] != "__init__":
-                        continue  # Skip private methods except __init__
                     rst_lines.append(f"   .. py:method:: {method['name']}()")
                     rst_lines.append("")
                     if method["docstring"]:
-                        for line in method["docstring"].split("\n"):
-                            rst_lines.append(f"      {line}")
+                        formatted_method_doc = format_docstring_for_rst(method["docstring"], "      ")
+                        rst_lines.extend(formatted_method_doc)
                         rst_lines.append("")
             rst_lines.append("")
 
@@ -1210,8 +1524,8 @@ def generate_rst_explicit(source_file: Path, module_name: str, module_title: str
             args_str = ", ".join(func["args"])
             rst_lines.append(f".. py:function:: {func['name']}({args_str})")
             rst_lines.append("")
-            for line in func["docstring"].split("\n"):
-                rst_lines.append(f"   {line}")
+            formatted_func_doc = format_docstring_for_rst(func["docstring"], "   ")
+            rst_lines.extend(formatted_func_doc)
             rst_lines.append("")
 
     return "\n".join(rst_lines)

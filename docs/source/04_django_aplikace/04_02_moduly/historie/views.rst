@@ -9,7 +9,7 @@ Třídy
 .. py:class:: HistorieListView
 
    Třida pohledu pro zobrazení historie záznamu.
-Třída se dědí pro jednotlivá historie.
+   Třída se dědí pro jednotlivá historie.
 
    **Metody:**
 
@@ -30,6 +30,8 @@ Třída se dědí pro jednotlivá historie.
    .. py:method:: get_header_config()
 
       Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
+
+   .. py:method:: _annotate_queryset()
 
    .. py:method:: add_fedora_history()
 

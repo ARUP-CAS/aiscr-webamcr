@@ -14,7 +14,7 @@ Třídy
 .. py:class:: SearchTable
 
    Základní setup pro tabulky používané v aplikaci.
-Obsahuje metodu na získaní sloupců které mají byt zobrazeny.
+   Obsahuje metodu na získaní sloupců které mají byt zobrazeny.
 
    **Metody:**
 
@@ -37,6 +37,8 @@ Obsahuje metodu na získaní sloupců které mají byt zobrazeny.
 
    .. py:method:: __init__()
 
+   .. py:method:: _generate_session_key()
+
    .. py:method:: clear_cached_files()
 
    .. py:method:: set_ident()
@@ -50,6 +52,30 @@ Obsahuje metodu na získaní sloupců které mají byt zobrazeny.
    .. py:method:: remove_file_reference()
 
    .. py:method:: get_cached_files()
+
+   .. py:method:: set_project_ownership()
+
+      Uloží vlastnictví projektu pro anonymního uživatele do Redis.
+      Používá se pro ověření, že anonymní uživatel může nahrávat soubory pouze k projektu, který sám vytvořil.
+
+
+      **Argumenty:**
+
+      - ``ident_cely``: identifikátor projektu
+      - ``timeout``: timeout v sekundách (defaultně 2 hodiny)
+
+   .. py:method:: verify_project_ownership()
+
+      Ověří, zda anonymní uživatel vlastní daný projekt.
+
+
+      **Argumenty:**
+
+      - ``ident_cely``: identifikátor projektu
+
+      **Návratová hodnota:**
+
+      *bool*: True pokud uživatel vlastní projekt, jinak False
 
 
 Funkce

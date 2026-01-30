@@ -9,7 +9,7 @@ Třídy
 .. py:class:: KomponentaVazby
 
    Class pro db model komponenta vazby.
-Model se používa k napojení na jednotlivé záznamy.
+   Model se používa k napojení na jednotlivé záznamy.
 
    **Metody:**
 

@@ -3,9 +3,6 @@ const get_params = () => {
     if (typeof object_id !== 'undefined') {
         return { 'objectID': object_id };
     }
-    if (typeof file_id !== 'undefined') {
-        return { 'fileID': file_id };
-    }
     return {}
 };
 const get_description = () => {
