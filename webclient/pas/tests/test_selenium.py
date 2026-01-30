@@ -55,7 +55,26 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         return self.driver.current_url.split("/")[-1]
 
     def test_025_zapsani_samostatneho_nalezu_p_001(self):
-        # Scenar_25 Zapsání samostatného nálezu (pozitivní scénář 1)
+        """Test 025 Zapsání samostatného nálezu (pozitivní scénář 1)
+
+        Test zapsání samostatného nálezu na stránce /pas/zapsat. Končí zapsáním samostatného nálezu do databáze.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Projekt typu “průzkum” je ve stavu P3
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel klikne na menu Samostatné nálezy -> Zapsat nález
+            - Uživatel vyplní data do formuláře a kliknutím na mapu vybere lokalizaci nálezu
+            - Uživatel klikne na tlačítko Uložit
+
+        Expected:
+            -  Po kliknutí na tlačítko Uložit je v databázi o jeden samostatný nález více.
+        """
         logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.start")
         self.login("badatel1")
         SN_count_old = SamostatnyNalez.objects.count()
@@ -65,7 +84,27 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_025_zapsani_samostatneho_nalezu_p_001.end")
 
     def test_026_zapsani_samostatneho_nalezu_n_001(self):
-        # Scenar_26 Zapsání samostatného nálezu (negativní scénář 1)
+        """Test 026 Zapsání samostatného nálezu (negativní scénář 1)
+
+        Test zapsání samostatného nálezu na stránce /pas/zapsat. Test simuluje zadání nevalidních dat a měl by končit nezapsáním projektu do databáze.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Projekt typu “průzkum” je ve stavu P3
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel klikne na menu Samostatné nálezy -> Zapsat nález
+            - Uživatel vyplní data do formuláře a kliknutím na mapu vybere lokalizaci nálezu
+            - Uživatel klikne na tlačítko Uložit
+
+        Expected:
+            - Neuspěšné zapsání projektu, počet projektů v databázi se nezměnil.
+            - Zobrazena chyba “Chybí Projekt”
+        """
         logger.info("AkceSamostatneNalezy.test_026_zapsani_samostatneho_nalezu_n_001.start")
         self.login("badatel1")
         self.go_to_form()
@@ -110,7 +149,29 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_026_zapsani_samostatneho_nalezu_n_001.end")
 
     def test_028_odeslani_samostatneho_nalezu_p_001(self):
-        # Scenar_28 Odeslání samostatného nálezu (pozitivní scénář 1)
+        """Test 028 Odeslání samostatného nálezu (pozitivní scénář 1)
+
+        Test odeslání samostatného nálezu ve stavu SN1 na stránce /pas/detail. Měl by končit odesláním samostatného nálezu a změnou jeho stavu na SN2.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN1
+
+        TestData:
+            test_foto_1.jpg
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatný nález ve stavu SN1
+            - Uživatel nahraje k nálezu fotografii
+            - Uživatel klikne na tlačítko Odeslat a volbu potvrdí
+
+        Expected:
+            -  Odeslání samostatného nálezu a změna jeho stavu na SN2.
+        """
         logger.info("AkceSamostatneNalezy.test_028_odeslani_samostatneho_nalezu_p_001.start")
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="M-202105907-N00091").first().stav, SN_ZAPSANY)
@@ -130,7 +191,29 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_028_odeslani_samostatneho_nalezu_p_001.end")
 
     def test_029_odeslani_samostatneho_nalezu_n_001(self):
-        # Scenar_29 Odeslání samostatného nálezu (negativní scénář 1)
+        """Test 029 Odeslání samostatného nálezu (negativní scénář 1)
+
+        Test odeslání samostatného nálezu ve stavu SN1 na stránce /pas/detail. Test simuluje zadání nevalidních dat a měl by končit neodesláním samostatného nálezu a jeho ponecháním ve stavu SN1.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN1
+
+        TestData:
+            M-202105907-N00091
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatný nález ve stavu SN1 (číslo SN)
+            - Vybrat → Filtr → ID obsahuje „číslo SN“ → Vybrat → otevřít SN
+            - Uživatel klikne na tlačítko Odeslat
+
+        Expected:
+            -  Neodeslání samostatného nálezu a jeho ponechání ve stavu SN1.
+        """
         logger.info("AkceSamostatneNalezy.test_029_odeslani_samostatneho_nalezu_n_001.start")
         self.login("badatel1")
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="M-202105907-N00091").first().stav, SN_ZAPSANY)
@@ -158,7 +241,29 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_029_odeslani_samostatneho_nalezu_n_001.end")
 
     def test_030_potvrzeni_samostatneho_nalezu_p_001(self):
-        # Scenar_30 Potvrzení samostatného nálezu (pozitivní scénář 1)
+        """Test 030 Potvrzení samostatného nálezu (pozitivní scénář 1)
+
+        Test odeslání samostatného nálezu ve stavu SN2 na stránce /pas/detail. Měl by končit potvrzením samostatného nálezu a změnou jeho stavu na SN3.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN2
+
+        TestData:
+            C-202211308-N00213
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatný nález ve stavu SN2 (číslo SN) → Vybrat → Filtr → ID obsahuje „číslo SN“ → Vybrat → otevřít SN
+            - Uživatel vyplní testovací data do formuláře
+            - Uživatel klikne na tlačítko Odeslat a volbu potvrdí
+
+        Expected:
+            -  Odeslání samostatného nálezu a změna jeho stavu na SN3.
+        """
         logger.info("AkceSamostatneNalezy.test_030_potvrzeni_samostatneho_nalezu_p_001.start")
         self.login("archeolog")
         self.createFedoraRecord("C-202211308-N00213")
@@ -185,7 +290,31 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_030_potvrzeni_samostatneho_nalezu_p_001.end")
 
     def test_031_potvrzeni_samostatneho_nalezu_n_001(self):
-        # Scenar_31 Potvrzení samostatného nálezu (negativní scénář 1)
+        """Test 031 Potvrzení samostatného nálezu (negativní scénář 1)
+
+        Test potvrzení samostatného nálezu ve stavu SN2 na stránce /pas/detail. Test simuluje zadání nevalidních dat a měl by končit nepotvrzením samostatného nálezu a jeho ponecháním ve stavu SN2.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN2
+
+        TestData:
+            PAS C-202211308-N00213
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatný nález ve stavu SN2 (čílso SN)
+            - Samostatné nálezy → Vybrat → Filtr → ID obsahuje „čílso SN“ → Vybrat → otevřít SN
+            - Uživatel vyplní testovací data do formuláře
+            - Uživatel klikne na tlačítko Odeslat a volbu potvrdí
+
+        Expected:
+            - Nepotvrzení samostatného nálezu a jeho ponechání ve stavu SN2.
+            - Zobrazena chyba “Před potvrzením musí být nález předán”
+        """
         logger.info("AkceSamostatneNalezy.test_031_potvrzeni_samostatneho_nalezu_n_001.start")
         self.login("archeolog")
         self.createFedoraRecord("C-202211308-N00213")
@@ -215,7 +344,31 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_031_potvrzeni_samostatneho_nalezu_n_001.end")
 
     def test_032_potvrzeni_samostatneho_nalezu_n_002(self):
-        # Scenar_32 Potvrzení samostatného nálezu (negativní scénář 2)
+        """Test 032 Potvrzení samostatného nálezu (negativní scénář 2)
+
+        Test potvrzení samostatného nálezu ve stavu SN2 na stránce /pas/detail. Test simuluje zadání nevalidních dat a měl by končit nepotvrzením samostatného nálezu a jeho ponecháním ve stavu SN2.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN2
+
+        TestData:
+            PAS C-202211308-N00213
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatný nález ve stavu SN2 (číslo SN)
+            - Samostatný nález → Vybrat → Filtr → ID obsahuje „číslo SN“ → Vybrat → otevřít SN
+            - Uživatel vyplní tetovací data do formuláře
+            - Uživatel klikne na tlačítko Odeslat a volbu potvrdí
+
+        Expected:
+            - Nepotvrzení samostatného nálezu a jeho ponechání ve stavu SN2.
+            - Zobrazena chyba “Vyplňte prosím toto pole”
+        """
         logger.info("AkceSamostatneNalezy.test_032_potvrzeni_samostatneho_nalezu_n_002.start")
         self.login("archeolog")
         self.createFedoraRecord("C-202211308-N00213")
@@ -243,7 +396,29 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_032_potvrzeni_samostatneho_nalezu_n_002.end")
 
     def test_038_archivace_samostatneho_nalezu_p_001(self):
-        # Scenar_38 Archivace samostatného nálezu (pozitivní scénář 1)
+        """Test 038 Archivace samostatného nálezu (pozitivní scénář 1)
+
+        Test archivace samostatného nálezu ve stavu SN3 na stránce /pas/detail. Měl by končit potvrzením samostatného nálezu a změnou jeho stavu na SN4.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN3
+
+        TestData:
+            C-202010474-N00002
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatný nález ve stavu SN3
+            - Samostatné nálezy → Vybrat → Filtr → ID obsahuje „C-202010474-N00002“ → Vybrat → otevřít samostatný nález
+            - Uživatel klikne na tlačítko Archivovat a volbu potvrdí
+
+        Expected:
+            -  Archivace samostatného nálezu a jeho posunutí do stavu SN4.
+        """
         logger.info("AkceSamostatneNalezy.test_038_archivace_samostatneho_nalezu_p_001.start")
         self.login("archivar")
         self.createFedoraRecord("C-202010474-N00002")
@@ -261,7 +436,31 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_038_archivace_samostatneho_nalezu_p_001.end")
 
     def test_039_archivace_samostatneho_nalezu_n_001(self):
-        # Scenar_39 Archivace samostatného nálezu (negativní scénář 1)
+        """Test 039 Archivace samostatného nálezu (negativní scénář 1)
+
+        Test archivace samostatného nálezu ve stavu SN3 na stránce /pas/detail. Test simuluje zadání nevalidních dat a měl by končit nepotvrzením samostatného nálezu a jeho ponecháním ve stavu SN3.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN3
+            - Uživatel smaže přiloženou fotografii
+
+        TestData:
+            C-202010474-N00002
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatný nález ve stavu SN3
+            - Samostatné nálezy → Vybrat → Filtr → ID obsahuje „samostatný nález v SN3“ → Vybrat → otevřít samostatný nález
+            - Uživatel klikne na tlačítko Archivovat
+
+        Expected:
+            - Nepotvrzení samostatného nálezu a jeho ponechání ve stavu SN2.
+            - Zobrazena chyba “Chybí fotografie”
+        """
         logger.info("AkceSamostatneNalezy.test_039_archivace_samostatneho_nalezu_n_001.start")
         self.login("archivar")
         self.createFedoraRecord("C-202010474-N00002")
@@ -285,7 +484,29 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_039_archivace_samostatneho_nalezu_n_001.end")
 
     def test_045_vraceni_samostatneho_nalezu_p_001(self):
-        # Scenar_45 Vrácení samostatného nálezu (pozitivní scénář 1)
+        """Test 045 Vrácení samostatného nálezu (pozitivní scénář 1)
+
+        Test vrácení samostatného nálezu ve stavu SN3 na stránce /pas/detail. Měl by končit vrácením samostatného nálezu a změnou jeho stavu na SN2.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN3
+
+        TestData:
+            M-202301371-N00015
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatný nález ve stavu SN3
+            - Samostatné nálezy → Vybrat → Filtr → ID obsahuje „M-202301371-N00015“ → Vybrat → otevřít samostatný nález
+            - Uživatel klikne na tlačítko Vrátit, vyplní důvod a volbu potvrdí
+
+        Expected:
+            - Vrácení samostatného nálezu do stavu SN2.
+        """
         logger.info("AkceSamostatneNalezy.test_045_vraceni_samostatneho_nalezu_p_001.start")
         self.login("archivar")
         self.createFedoraRecord("M-202301371-N00015")
@@ -305,7 +526,28 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_045_vraceni_samostatneho_nalezu_p_001.end")
 
     def test_147_test_Fedora_PAS_001(self):
-        # Scenar_147 Test Fedory pro PAS
+        """Test 147 Test Fedory PAS (pozitivní scénář 1)
+
+        Role:
+            Badatel, Archivář
+
+        TestData:
+            M-202105907
+            test.jpg
+            test1.jpg
+
+        Steps:
+            - Vytvoření PAS
+            - Editace PAS
+            - Vytvoření souboru
+            - Reload soubor
+            - Smazání souboru
+            - Editace Uložení
+            - Smazání PAS
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.start")
         # C PAS
         self.login("badatel1")
@@ -373,7 +615,30 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.end")
 
     def test_154_zobrazeni_spoluprace_p_001(self):
-        # Scenar_25 Zobrazební spolupráce badatel archeolog (pozitivní scénář 1)
+        """Test 154 Zobrazební spolupráce Badatel - Archeolog (pozitivní scénář 1)
+
+        Test  "Badatel" vidí jen své spolupráce a "Archeolog" vidí jen spolupráce své organizace
+
+        Role:
+            Badatel, Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+
+        TestData:
+            žádné.
+
+        Steps:
+            Uživatel se přihlásí jako Badatel
+            Uživatel klikne na menu PAS -> Spolupráce
+            Uživatel Badatel vidí jen své spolupráce
+            Uživatel se přihlásí jako Archeolog
+            Uživatel klikne na menu PAS -> Spolupráce
+            Uživatel Archeolog vidí jen spolupráce své organizace
+
+        Expected:
+            - Badatel a Archeolog vidí správný počet záznamů
+        """
         logger.info("AkceSamostatneNalezy.test_154_zobrazeni_spoluprace_p_001.start")
         self.login("badatel1")
         self.goToAddress("/pas/spoluprace/vyber")
