@@ -24,9 +24,33 @@
         UPOZORNĚNÍ: Registrace v AMČR uživatele neopravňuje k provádění archeologických výzkumů na území České republiky, a to vč. vyhledávání archeologických nálezů. Tuto činnost mohu vykonávat pouze oprávněné archeologické organizace a jejich oficiální spolupracovníci.
     </p>
     <p>
-        K možnostem spolupráce více viz: <a href="https://amcr-info.aiscr.cz/pas">https://amcr-info.aiscr.cz/pas</a>
+        K možnostem spolupráce při terénním výzkumu více viz: <a href="https://amcr-info.aiscr.cz/pas">https://amcr-info.aiscr.cz/pas</a>
     </p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>
+        Hello,
+    </p>
+    <p>
+        for this email address a new user account has been registered in AMCR with the following details:
+    </p>
+    <ul style="list-style: none">
+        <li><b>ID:</b> {{ id }}</li>
+        <li><b>Name:</b> {{ name }}</li>
+        <li><b>Surname:</b> {{ surname }}</li>
+        <li><b>Organisation:</b> {{ organization }}</li>
+        <li><b>Email (login name):</b> {{ email }}</li>
+        <li><b>Phone:</b> {{ phone }}</li>
+        <li><b>Password:</b> <i>your chosen password</i></li>
+        <li><b>User role:</b> {{ role }}</li>
+    </ul>
+    <p>
+        Wait for the account to be activated by an administrator, which will be confirmed to you via this email (usually the next working day during regular working hours).
+    </p>
+    <p>
+        WARNING: Registration of a user in the AMCR does not authorize conducting archaeological fieldwork on the territory of the Czech Republic, including searching for archaeological finds. This activity can only be performed by authorized archaeological organisations and their official collaborators.
+    </p>
+    <p>
+        For more information on fieldwork collaboration opportunities, see: <a href="https://amcr-info.aiscr.cz/pas">https://amcr-info.aiscr.cz/pas</a>
+    </p>
 {% endblock %}

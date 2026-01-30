@@ -21,7 +21,7 @@ notification_settings = {
     },
     "E-U-04": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: uživatelský účet čeká na aktivaci | AMCR: user account waiting for activation",
+        "predmet": "AMČR: uživatelský účet čeká na aktivaci | AMCR: user account awaiting activation",
         "cesta_sablony": "emails/E-U-04.html",
     },
     "E-U-05": {
@@ -39,7 +39,7 @@ notification_settings = {
     },
     "E-U-07": {
         "zasilat_neaktivnim": True,
-        "predmet": "AMČR: uživatel {ident_cely} - žádost o odstranění účtu | AMCR: user {ident_cely} - request to delete account",
+        "predmet": "AMČR: uživatel {ident_cely} - žádost o odstranění účtu | AMCR: user {ident_cely} - request for account deletion",
         "cesta_sablony": "emails/E-U-07.html",
     },
     "E-NZ-01": {
@@ -69,22 +69,22 @@ notification_settings = {
     },
     "E-O-01": {
         "zasilat_neaktivnim": True,
-        "predmet": "AMČR: přijetí oznámení {ident_cely} | AMCR: receipt of notification {ident_cely}",
+        "predmet": "AMČR: přijetí oznámení {ident_cely} | AMCR: receipt of announcement {ident_cely}",
         "cesta_sablony": "emails/E-O-01.html",
     },
     "E-O-02": {
         "zasilat_neaktivnim": True,
-        "predmet": "AMČR: přijetí oznámení {ident_cely} | AMCR: receipt of notification {ident_cely}",
+        "predmet": "AMČR: přijetí oznámení {ident_cely} | AMCR: receipt of announcement {ident_cely}",
         "cesta_sablony": "emails/E-O-02.html",
     },
     "E-P-01a": {
         "zasilat_neaktivnim": True,
-        "predmet": "AMČR: oznámení {ident_cely} schváleno | AMCR: notification {ident_cely} accepted",
+        "predmet": "AMČR: oznámení {ident_cely} schváleno | AMCR: announcement {ident_cely} accepted",
         "cesta_sablony": "emails/E-P-01a.html",
     },
     "E-P-01b": {
         "zasilat_neaktivnim": True,
-        "predmet": "AMČR: oznámení {ident_cely} schváleno | AMCR: notification {ident_cely} accepted",
+        "predmet": "AMČR: oznámení {ident_cely} schváleno | AMCR: announcement {ident_cely} accepted",
         "cesta_sablony": "emails/E-P-01b.html",
     },
     "E-P-02": {
@@ -104,7 +104,7 @@ notification_settings = {
     },
     "E-P-07": {
         "zasilat_neaktivnim": True,
-        "predmet": "AMČR: projekt {ident_cely} - žádost o odhlášení | AMCR: project {ident_cely} - request for deregistration",
+        "predmet": "AMČR: projekt {ident_cely} - žádost o odhlášení | AMCR: project {ident_cely} - request for unsubscription",
         "cesta_sablony": "emails/E-P-07.html",
     },
     "E-P-04": {
@@ -164,7 +164,7 @@ notification_settings = {
     },
     "E-K-01": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR - Knihovna 3D: dokument {ident_cely} archivován | AMCR - 3D Library: document {ident_cely} archived",
+        "predmet": "AMČR: dokument {ident_cely} archivován | AMCR: document {ident_cely} archived",
         "cesta_sablony": "emails/E-K-01.html",
     },
     "E-K-02": {
