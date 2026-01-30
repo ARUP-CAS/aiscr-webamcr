@@ -18,5 +18,18 @@
     </p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Hello,</p>
+    <p>a new user is requesting to be added as a collaborator:</p>
+    <ul style="list-style: none">
+        <li><b>ID:</b> {{ ident_cely }}</li>
+        <li><b>First name:</b> {{ name }}</li>
+        <li><b>Last name:</b> {{ surname }}</li>
+        <li><b>Organisation:</b> {{ organization }}</li>
+        <li><b>Email:</b> {{ email }}</li>
+        <li><b>Phone:</b> {{ phone }}</li>
+        <li><b>Justification:</b> {{ message }}</li>
+    </ul>
+    <p>
+        You can confirm the collaboration after logging into AMCR-PAS, or by clicking on this link: <a href="{% get_site_url %}{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}">{% get_site_url %}{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}</a>
+    </p>
 {% endblock %}

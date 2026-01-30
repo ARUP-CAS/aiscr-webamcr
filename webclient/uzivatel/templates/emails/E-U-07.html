@@ -12,5 +12,13 @@
     </p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>
+        Hello,
+    </p>
+    <p>
+        user <b>{{uzivatel.first_name}} {{uzivatel.last_name}}</b> (<a href="{{ uzivatel_admin_url }}">{{uzivatel.ident_cely}}</a>) from organization <b>{{uzivatel.organizace}}</b> is requesting deletion of their user account. 
+    </p>
+    <p>
+        Always inform the user about the method of settlement in your reply to this email.
+    </p>
 {% endblock %}

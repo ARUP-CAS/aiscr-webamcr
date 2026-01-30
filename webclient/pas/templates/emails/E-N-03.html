@@ -10,5 +10,10 @@
     <p>Detaily zjistíte po přihlášení do AMČR-PAS.</p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Hello,</p>
+    <p>
+        the individual find you submitted <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> in the cadastre of <b>{{ katastr }}</b> has been returned to the state of <b>{{ state }}</b>.
+    </p>
+    <p><b>Reason:</b> {{ reason }}</p>
+    <p>You can find the details after logging into AMCR-PAS.</p>
 {% endblock %}
