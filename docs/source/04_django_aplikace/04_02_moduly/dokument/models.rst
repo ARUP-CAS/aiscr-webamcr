@@ -14,6 +14,8 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: __str__()
+
    .. py:method:: get_absolute_url()
 
       Metoda pro získaní absolut url záznamu podle typu dokumentu.
@@ -41,18 +43,18 @@ Třídy
    .. py:method:: check_pred_odeslanim()
 
       Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
-      
-          polia: format, popis, duveryhodnost, obdobi, areal jsou vyplněna pro model 3D.
-      
-          polia: pristupnost, popis, ulozeni_originalu jsou vyplněna pro model 3D.
-      
-          Dokument má aspoň jeden dokument.
+
+      polia: format, popis, duveryhodnost, obdobi, areal jsou vyplněna pro model 3D.
+
+      polia: pristupnost, popis, ulozeni_originalu jsou vyplněna pro model 3D.
+
+      Dokument má aspoň jeden dokument.
 
    .. py:method:: check_pred_archivaci()
 
       Metoda na kontrolu prerekvizit pred archivací:
-      
-          kontrola jako před odesláním
+
+      kontrola jako před odesláním
 
    .. py:method:: has_extra_data()
 
@@ -91,6 +93,8 @@ Třídy
    .. py:method:: redis_snapshot_id()
 
    .. py:method:: generate_redis_snapshot()
+
+   .. py:method:: _get_doi_client()
 
    .. py:method:: doi_exists()
 
@@ -146,6 +150,8 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: __str__()
+
 
 .. py:class:: DokumentOsoba
 
@@ -157,6 +163,8 @@ Třídy
    Class pro db model dokument posudky.
 
    **Metody:**
+
+   .. py:method:: __str__()
 
 
 .. py:class:: Tvar
@@ -180,6 +188,8 @@ Třídy
    Class pro db model let.
 
    **Metody:**
+
+   .. py:method:: __str__()
 
    .. py:method:: save()
 

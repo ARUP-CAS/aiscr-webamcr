@@ -102,13 +102,18 @@
     </tbody>
   </table>
 
-  <form action="{% url 'core:post_upload' %}" class="dropzone mb-0" id="my-awesome-dropzone"
-        enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="fallback">
-      <input name="file" type="file" multiple/>
-    </div>
-  </form>
+  {% if file_id %}
+    <form action="{% url 'core:post_upload_update' typ_vazby='projekt' ident_cely=projekt.ident_cely file_id=file_id %}" class="dropzone mb-0" id="my-awesome-dropzone"
+          enctype="multipart/form-data">
+  {% else %}
+    <form action="{% url 'core:post_upload' typ_vazby='projekt' ident_cely=projekt.ident_cely %}" class="dropzone mb-0" id="my-awesome-dropzone"
+          enctype="multipart/form-data">
+  {% endif %}
+      {% csrf_token %}
+      <div class="fallback">
+        <input name="file" type="file" multiple/>
+      </div>
+    </form>
   <small class="form-text text-muted">{% trans "oznameni.templates.oznameni.index_2.file_upload.tooltip" %}</small>
 
   <form method="post">

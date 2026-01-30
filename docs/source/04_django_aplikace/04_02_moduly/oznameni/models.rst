@@ -12,3 +12,5 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: __str__()
+

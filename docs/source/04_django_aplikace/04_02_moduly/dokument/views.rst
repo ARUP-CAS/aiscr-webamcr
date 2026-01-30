@@ -354,26 +354,30 @@ Funkce
 .. py:function:: get_required_fields_model3D(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu modelu 3D.
-   
-   Args:
-       zaznam (Dokument): model Dokument pro který se dané pole počítají.
-   
-       next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-   
-   Returns:
-       required_fields: list polí.
+
+
+   **Argumenty:**
+
+   - ``zaznam`` (*Dokument*): model Dokument pro který se dané pole počítají.
+   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+   **Návratová hodnota:**
+
+   *required_fields*: list polí.
 
 .. py:function:: get_required_fields_dokument(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu dokumentu.
-   
-   Args:
-       zaznam (Dokument): model Dokument pro který se dané pole počítají.
-   
-       next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-   
-   Returns:
-       required_fields: list polí.
+
+
+   **Argumenty:**
+
+   - ``zaznam`` (*Dokument*): model Dokument pro který se dané pole počítají.
+   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+   **Návratová hodnota:**
+
+   *required_fields*: list polí.
 
 .. py:function:: get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
 

@@ -47,6 +47,8 @@ Třídy
 
    .. py:method:: uuid()
 
+   .. py:method:: _calculate_sha_512()
+
    .. py:method:: size_mb()
 
    .. py:method:: mime_type()
@@ -67,17 +69,43 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: _get_model_name()
+
+   .. py:method:: _get_rdf_inset_data()
+
+   .. py:method:: _get_creator()
+
+   .. py:method:: _update_creator()
+
    .. py:method:: get_base_url()
+
+   .. py:method:: _get_request_url()
 
    .. py:method:: check_container_deleted()
 
    .. py:method:: check_container_deleted_or_not_exists()
 
+   .. py:method:: _get_auth()
+
+   .. py:method:: _send_request()
+
+   .. py:method:: _create_container()
+
    .. py:method:: create_link()
 
    .. py:method:: container_exists()
 
+   .. py:method:: _connect_deleted_container()
+
    .. py:method:: link_exists()
+
+   .. py:method:: _check_container()
+
+   .. py:method:: _create_binary_file_container()
+
+   .. py:method:: _check_binary_file_container()
+
+   .. py:method:: _generate_metadata()
 
    .. py:method:: get_metadata()
 
@@ -102,6 +130,8 @@ Třídy
 
    .. py:method:: save_binary_file()
 
+   .. py:method:: __generate_thumb()
+
    .. py:method:: save_thumbs()
 
    .. py:method:: migrate_binary_file()
@@ -115,6 +145,8 @@ Třídy
    .. py:method:: delete_binary_file_completely()
 
    .. py:method:: delete_container()
+
+   .. py:method:: _delete_link()
 
    .. py:method:: record_deletion()
 
@@ -171,13 +203,25 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: __str__()
+
    .. py:method:: get_transaction_redis_key()
 
+   .. py:method:: _transaction_redis_key()
+
    .. py:method:: status()
+
+   .. py:method:: _save_transaction_result_to_redis()
+
+   .. py:method:: _send_transaction_request()
 
    .. py:method:: rollback_transaction()
 
    .. py:method:: mark_transaction_as_closed()
+
+   .. py:method:: _perform_post_commit_tasks()
+
+   .. py:method:: __create_transaction()
 
    .. py:method:: call_digiarchiv_update()
 

@@ -14,7 +14,7 @@ Třídy
 .. py:class:: Adb
 
    Class pro db model ADB.
-Obsahuje vazbu na dokumentační jednotku.
+   Obsahuje vazbu na dokumentační jednotku.
 
    **Metody:**
 
@@ -30,7 +30,7 @@ Obsahuje vazbu na dokumentační jednotku.
 .. py:class:: VyskovyBod
 
    Class pro db model vyškový bod.
-Obsahuje vazbu na ADB.
+   Obsahuje vazbu na ADB.
 
    **Metody:**
 
@@ -63,11 +63,13 @@ Funkce
 
    Funkce pro výpočet ident celý pro VB.
    Obsahuje test na přetečení hodnot.
-   
-   Args:
-       adb (adb): adb objekt pro získaní základu identu.
-   
-       offset (int): offset k připočtení k poslednímu VB
-   
-   Returns:
-       string: nový ident celý
+
+
+   **Argumenty:**
+
+   - ``adb`` (*adb*): adb objekt pro získaní základu identu.
+   - ``offset`` (*int*): offset k připočtení k poslednímu VB
+
+   **Návratová hodnota:**
+
+   *string*: nový ident celý

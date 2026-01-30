@@ -9,7 +9,7 @@ Třídy
 .. py:class:: ProjectPasFromEnvelopeView
 
    Trida pohledu pro získaní heatmapy pas.
-@jiri-bartos presunuto z post_ajax_get_project_pas_limit
+   @jiri-bartos presunuto z post_ajax_get_project_pas_limit
 
    **Metody:**
 
@@ -19,7 +19,7 @@ Třídy
 .. py:class:: ProjectPianFromEnvelopeView
 
    Trida pohledu pro získaní heatmapy pianu.
-@jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
+   @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
 
    **Metody:**
 
@@ -86,6 +86,8 @@ Třídy
    Popis není k dispozici.
 
    **Metody:**
+
+   .. py:method:: _get_existing_record()
 
    .. py:method:: get_context_data()
 
@@ -223,24 +225,29 @@ Funkce
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
    Funkce pro získaní dátumů pro historii.
-   
-   Args:
-       historie_vazby (HistorieVazby): model historieVazby daného projektu.
-   
-   Returns:
-       historie: dictionary dátumů k historii.
+
+
+   **Argumenty:**
+
+   - ``historie_vazby`` (*HistorieVazby*): model historieVazby daného projektu.
+
+   **Návratová hodnota:**
+
+   *historie*: dictionary dátumů k historii.
 
 .. py:function:: get_detail_template_shows(projekt, user)
 
    Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
-   
-   Args:
-       projekt (Projekt): model projekt pro který se dané akce počítají.
-   
-       user (AuthUser): uživatel pro kterého se dané akce počítají.
-   
-   Returns:
-       show: dictionary možností pro zobrazení.
+
+
+   **Argumenty:**
+
+   - ``projekt`` (*Projekt*): model projekt pro který se dané akce počítají.
+   - ``user`` (*AuthUser*): uživatel pro kterého se dané akce počítají.
+
+   **Návratová hodnota:**
+
+   *show*: dictionary možností pro zobrazení.
 
 .. py:function:: get_show_oznamovatel(projekt, user)
 
@@ -249,14 +256,16 @@ Funkce
 .. py:function:: get_required_fields(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu projektu.
-   
-   Args:
-       zaznam (Projekt): model projekt pro který se dané pole počítají.
-   
-       next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-   
-   Returns:
-       required_fields: list polí.
+
+
+   **Argumenty:**
+
+   - ``zaznam`` (*Projekt*): model projekt pro který se dané pole počítají.
+   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+   **Návratová hodnota:**
+
+   *required_fields*: list polí.
 
 .. py:function:: katastr_text_to_id(request)
 

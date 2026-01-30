@@ -14,7 +14,7 @@ Třídy
 .. py:class:: SouborVazby
 
    Model pro relační tabulku mezi souborem a záznamem.
-Obsahuje typ vazby podle typu záznamu.
+   Obsahuje typ vazby podle typu záznamu.
 
    **Metody:**
 
@@ -36,6 +36,8 @@ Obsahuje typ vazby podle typu záznamu.
    .. py:method:: delete()
 
    .. py:method:: __init__()
+
+   .. py:method:: __str__()
 
    .. py:method:: create_soubor_vazby()
 
@@ -62,14 +64,14 @@ Obsahuje typ vazby podle typu záznamu.
    .. py:method:: remove_gps_data()
 
       Odstraní GPS metadata z fotografie uložené v paměti.
-      
+
       Funkce načte EXIF data z obrázku, odstraní GPS informace a pokusí se
       znovu uložit EXIF. Pokud narazí na nevalidní nebo nekompatibilní EXIF
       tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
       aby bylo možné obrázek úspěšně uložit.
-      
+
       V případě jakékoli chyby vrací původní vstupní soubor beze změny.
-      
+
       :param bytes_io: Vstupní obrázek jako BytesIO objekt
       :return: BytesIO objekt s odstraněnými GPS daty (nebo původní soubor při chybě)
 
@@ -78,12 +80,17 @@ Obsahuje typ vazby podle typu záznamu.
    .. py:method:: check_antivirus()
 
       Zkontroluje soubor na přítomnost virů pomocí ClamAV.
-      
-      Args:
-          bytes_io: souborový objekt ke skenování
-      
-      Returns:
-          AntivirusCheckResult: výsledek kontroly
+
+
+      **Argumenty:**
+
+      - ``bytes_io``: souborový objekt ke skenování
+
+      **Návratová hodnota:**
+
+      *AntivirusCheckResult*: výsledek kontroly
+
+   .. py:method:: _create_file_response()
 
    .. py:method:: large_thumbnail()
 
@@ -116,6 +123,8 @@ Obsahuje typ vazby podle typu záznamu.
    .. py:method:: clean()
 
       Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
+
+   .. py:method:: __str__()
 
 
 .. py:class:: Permissions

@@ -41,8 +41,8 @@ Třídy
 .. py:class:: ImportDataIntegrityError
 
    Exception raised in two cases.
-During the import action: when a record with the same primary key already exists in the database
-During the update action: when a record with the specified primary key does not exist in the database.
+   During the import action: when a record with the same primary key already exists in the database
+   During the update action: when a record with the specified primary key does not exist in the database.
 
    **Metody:**
 
@@ -88,7 +88,7 @@ During the update action: when a record with the specified primary key does not 
 .. py:class:: BaseImportField
 
    Base class for import fields. Does not perform any validation or processing of the value.
-Used mostly for text fields.
+   Used mostly for text fields.
 
    **Metody:**
 
@@ -104,12 +104,18 @@ Used mostly for text fields.
 
    .. py:method:: serialized_value()
 
+   .. py:method:: _process_value()
+
 
 .. py:class:: IntegerImportField
 
    Class for import fields that should contain integer values.
 
    **Metody:**
+
+   .. py:method:: _process_value()
+
+      If the value is not a number, then the method raises ImportDataError. Otherwise it converts value to int.
 
 
 .. py:class:: PositiveIntegerImportField
@@ -118,6 +124,8 @@ Used mostly for text fields.
 
    **Metody:**
 
+   .. py:method:: _process_value()
+
 
 .. py:class:: DecimalImportField
 
@@ -125,12 +133,19 @@ Used mostly for text fields.
 
    **Metody:**
 
+   .. py:method:: _process_value()
+
 
 .. py:class:: BooleanImportField
 
    Class for import fields that should contain boolean values.
 
    **Metody:**
+
+   .. py:method:: _process_value()
+
+      Tries to convert string value to bool. If the string value is not "true" or "false", then the exception
+      ImportDataError is raised.
 
 
 .. py:class:: DateImportField
@@ -145,6 +160,11 @@ Used mostly for text fields.
 
    .. py:method:: serialized_value()
 
+   .. py:method:: _process_value()
+
+      Tries to convert a string value to date. If the string value is not in the format "YYYY-MM-DD" or "DD.MM.YYYY",
+      then the exception ImportDataError is raised.
+
 
 .. py:class:: DateTimeImportField
 
@@ -158,6 +178,8 @@ Used mostly for text fields.
 
    .. py:method:: serialized_value()
 
+   .. py:method:: _process_value()
+
 
 .. py:class:: DateRangeImportField
 
@@ -166,6 +188,11 @@ Used mostly for text fields.
    **Metody:**
 
    .. py:method:: serialized_value()
+
+   .. py:method:: _process_value()
+
+      Tries to convert a string value to date. If the string value is not in the format "YYYY-MM-DD".
+      then the exception ImportDataError is raised.
 
 
 .. py:class:: LookupImportField
@@ -178,11 +205,18 @@ Used mostly for text fields.
 
    .. py:method:: instance_value()
 
+   .. py:method:: _check_limit_choices_to()
+
+   .. py:method:: _process_value()
+
+      Processes the value by checking if it exists in the database or in the imported records. If yes, it returns
+      the record. If the referenced record does not exist, it raises ImportDataMissingReferencedValueError.
+
 
 .. py:class:: RuianLookupImportField
 
    Based on the LookupImportField, this class is used for importing data from RUIAN data. It strips
-the "ruian-" prefix from the value and converts it to an integer.
+   the "ruian-" prefix from the value and converts it to an integer.
 
    **Metody:**
 
@@ -192,11 +226,13 @@ the "ruian-" prefix from the value and converts it to an integer.
 .. py:class:: VazbaLookupImportField
 
    Class for import field with referenced models for vazba (relation). This relation is 1:1 instead of 1:N
-and these fields manage relation to another model.
+   and these fields manage relation to another model.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+   .. py:method:: _process_value()
 
 
 .. py:class:: GeomImportField
@@ -209,6 +245,10 @@ and these fields manage relation to another model.
 
    .. py:method:: serialized_value()
 
+   .. py:method:: _process_value()
+
+      Tries to convert string value to geometry.
+
 
 .. py:class:: GenericForeignKeyImportField
 
@@ -220,11 +260,13 @@ and these fields manage relation to another model.
 
    .. py:method:: serialized_value()
 
+   .. py:method:: _process_value()
+
 
 .. py:class:: ImportModelMapper
 
    Base class for data import. The class loads data from the imported file, preprocesses all values based on the
-target field and creates a record.
+   target field and creates a record.
 
    **Metody:**
 
@@ -242,6 +284,14 @@ target field and creates a record.
 
       Map imported values using the map_field method.
 
+   .. py:method:: _get_filter_kwargs_primary_key()
+
+      Returns a dict with primary key field name(s) and field value(s).
+
+   .. py:method:: _parse_primary_key()
+
+   .. py:method:: _parse_primary_key_custom_prefix()
+
    .. py:method:: map_field()
 
       Maps value to a specific BaseImportField instance or BaseImportField child instance.
@@ -258,6 +308,8 @@ target field and creates a record.
       is performed. It should exist if the update action is performed. If one of the conditions is valid, the method
       returns a dict with mapped primary key field names and values.  Otherwise, the ImportDataIntegrityError
       error is raised.
+
+   .. py:method:: _check_column_structure()
 
    .. py:method:: map()
 
@@ -295,6 +347,8 @@ target field and creates a record.
    **Metody:**
 
    .. py:method:: import_validation()
+
+   .. py:method:: _get_filter_kwargs_primary_key()
 
    .. py:method:: create_records()
 
@@ -674,9 +728,13 @@ target field and creates a record.
 
    .. py:method:: get_mapping()
 
+   .. py:method:: _get_filter_kwargs_primary_key()
+
    .. py:method:: map_field()
 
    .. py:method:: create_records()
+
+   .. py:method:: _check_column_structure()
 
    .. py:method:: map()
 
@@ -697,6 +755,8 @@ target field and creates a record.
    **Metody:**
 
    .. py:method:: get_mapping()
+
+   .. py:method:: _get_filter_kwargs_primary_key()
 
    .. py:method:: create_records()
 
@@ -719,6 +779,8 @@ target field and creates a record.
    **Metody:**
 
    .. py:method:: get_mapping()
+
+   .. py:method:: _get_filter_kwargs_primary_key()
 
    .. py:method:: create_records()
 

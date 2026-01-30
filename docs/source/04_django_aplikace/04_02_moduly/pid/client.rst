@@ -14,6 +14,8 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: _check_response_status()
+
    .. py:method:: get_record_url()
 
    .. py:method:: check_record_exists()

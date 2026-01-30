@@ -34,26 +34,28 @@ Třídy
    .. py:method:: check_pred_odeslanim()
 
       Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
-      
-          polia: datum_zahajeni, datum_ukonceni, lokalizace_okolnosti, specifikace_data, hlavni_katastr, hlavni_vedouci a hlavni_typ jsou vyplněna.
-      
-          Akce má připojený dokument typu nálezová správa nebo je akce typu nz.
-      
-          Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
+
+      polia: datum_zahajeni, datum_ukonceni, lokalizace_okolnosti, specifikace_data, hlavni_katastr, hlavni_vedouci a hlavni_typ jsou vyplněna.
+
+      Akce má připojený dokument typu nálezová správa nebo je akce typu nz.
+
+      Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
 
    .. py:method:: check_pred_archivaci()
 
       Metoda na kontrolu prerekvizit pred archivací:
-      
-          kontrola jako před odesláním a navíc
-      
-          všechny pripojené dokumenty jsou archivované.
-      
-          všechny DJ mají potvrzený pian
+
+      kontrola jako před odesláním a navíc
+
+      všechny pripojené dokumenty jsou archivované.
+
+      všechny DJ mají potvrzený pian
 
    .. py:method:: set_lokalita_permanent_ident_cely()
 
       Metoda pro nastavení permanentního ident celý pro lokality z lokality sekvence.
+
+   .. py:method:: _set_connected_records_ident()
 
    .. py:method:: set_akce_ident()
 
@@ -67,6 +69,10 @@ Třídy
    .. py:method:: get_redirect()
 
       Metoda pro získaní redirect záznamu podle typu arch záznamu a argumentu dj_ident_cely.
+
+   .. py:method:: __str__()
+
+      Metoda vráti jako str reprezentaci modelu ident_cely.
 
    .. py:method:: get_permission_object()
 
@@ -132,6 +138,10 @@ Třídy
    Class pro db model akce_vedouci, který drží v sobe relace na dalších vedoucích arch záznamu.
 
    **Metody:**
+
+   .. py:method:: __str__()
+
+      Metoda vráti jako str reprezentaci modelu vedouci.
 
    .. py:method:: vypis_name()
 

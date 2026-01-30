@@ -42,7 +42,7 @@ Třídy
 .. py:class:: CheckStavNotChangedForm
 
    Formulář pro kontrolu jestli se stav záznamu nezmenil mezi jeho načtením a odeslánim zmeny.
-Celá logika je v clean metóde.
+   Celá logika je v clean metóde.
 
    **Metody:**
 
@@ -90,7 +90,7 @@ Celá logika je v clean metóde.
 .. py:class:: OdstavkaSystemuForm
 
    Formulář pro nastavení a úpravu odstávky.
-Vrámci načítáni formuláře se doplní načítají hodnoty z template odstávky.
+   Vrámci načítáni formuláře se doplní načítají hodnoty z template odstávky.
 
    **Metody:**
 

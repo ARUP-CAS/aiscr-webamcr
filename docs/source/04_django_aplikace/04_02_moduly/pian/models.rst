@@ -20,6 +20,8 @@ Třídy
 
    .. py:method:: evaluate_pristupnost_change()
 
+   .. py:method:: __str__()
+
    .. py:method:: get_absolute_url()
 
    .. py:method:: get_permission_object()

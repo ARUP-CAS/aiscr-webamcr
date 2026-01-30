@@ -11,13 +11,15 @@
 
 {% block content %}
   <div>
-    <form action="{% url 'core:post_upload' %}" class="dropzone mb-0" id="my-awesome-dropzone"
-          enctype="multipart/form-data">
+    {% if file_id %}
+      <form action="{% url 'core:post_upload_update' typ_vazby=typ_vazby ident_cely=ident_cely file_id=file_id %}" class="dropzone mb-0" id="my-awesome-dropzone"
+            enctype="multipart/form-data">
+    {% else %}
+      <form action="{% url 'core:post_upload' typ_vazby=typ_vazby ident_cely=ident_cely %}" class="dropzone mb-0" id="my-awesome-dropzone"
+            enctype="multipart/form-data">
+    {% endif %}
       {% csrf_token %}
       <input type="hidden" name="source-url" value={{request.path}}>
-      {% if file_id %}
-        <input type="hidden" name="fileID" value={{file_id}}>
-      {% endif %}
       <div class="fallback">
         <input name="file" type="file" multiple/>
       </div>

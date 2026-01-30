@@ -93,7 +93,7 @@ jobs:
           scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
 
       - name: Nahrát výsledky testů jako artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: selenium-vysledky
           path: ./results.xlsx

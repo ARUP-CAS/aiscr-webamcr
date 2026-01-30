@@ -7,7 +7,16 @@ app_name = "core"
 
 urlpatterns = [
     path("", views.index, name="home"),
-    path("soubor/nahrat/odeslat", views.post_upload, name="post_upload"),
+    path(
+        "soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>",
+        views.NewFileUploadView.as_view(),
+        name="post_upload",
+    ),
+    path(
+        "soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>/<int:file_id>",
+        views.UpdateExistingFileUploadView.as_view(),
+        name="post_upload_update",
+    ),
     path(
         "soubor/nahrat/<str:typ_vazby>/nahradit/<str:ident_cely>/<int:file_id>",
         views.UpdateFileView.as_view(),
@@ -15,7 +24,7 @@ urlpatterns = [
     ),
     path(
         "soubor/nahrat/<str:typ_vazby>/<str:ident_cely>",
-        views.Uploadfileview.as_view(),
+        views.UploadFileView.as_view(),
         name="upload_file",
     ),
     path(
