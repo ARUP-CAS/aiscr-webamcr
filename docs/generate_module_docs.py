@@ -851,7 +851,67 @@ def generate_management_commands_rst() -> bool:
         "",
         "Dokumentace všech Django management příkazů v aplikaci.",
         "",
-        "Příkazy se spouští pomocí ``python manage.py <název_příkazu> [parametry]``",
+        "Spuštění v Docker kontejneru",
+        "----------------------------",
+        "",
+        "Pokud aplikace běží v kontejneru, je možné buď nejprve spustit terminál v kontejneru a následně zadat příkaz,",
+        "případně spustit příkaz přímo bez otevření interaktivního shellu.",
+        "",
+        "**Bez swarm módu (vývoj):**",
+        "",
+        "Tento postup se využívá pro vývojové prostředí, proto se příkazy spouští s vývojovým nastavením ``--settings=webclient.settings.dev``.",
+        "",
+        "1. Zjistěte ID běžícího kontejneru:",
+        "",
+        "   .. code-block:: bash",
+        "",
+        "      docker ps",
+        "",
+        "2. Spusťte shell v kontejneru (například s ID ``fdd99a0b6c90``):",
+        "",
+        "   .. code-block:: bash",
+        "",
+        "      docker exec -it aiscr-webamcr-web /bin/sh",
+        "",
+        "3. Poté spusťte požadovaný příkaz:",
+        "",
+        "   .. code-block:: bash",
+        "",
+        "      python manage.py <název_příkazu> [parametry] --settings=webclient.settings.dev",
+        "",
+        "Alternativně je možné vše zapsat do jednoho příkazu (bez otevření interaktivního shellu):",
+        "",
+        ".. code-block:: bash",
+        "",
+        "   docker exec -it $(docker ps -q -f name=aiscr-webamcr-web) python manage.py <název_příkazu> [parametry] --settings=webclient.settings.dev",
+        "",
+        "**Se swarm módem (produkce):**",
+        "",
+        "Swarm mód se používá pro produkční nasazení, proto se příkazy spouští s produkčním nastavením ``--settings=webclient.settings.production``.",
+        "",
+        "1. Zjistěte ID běžícího kontejneru:",
+        "",
+        "   .. code-block:: bash",
+        "",
+        "      sudo docker ps",
+        "",
+        "2. Spusťte shell v kontejneru:",
+        "",
+        "   .. code-block:: bash",
+        "",
+        "      sudo docker exec -it <ID_kontejneru> /bin/sh",
+        "",
+        "3. Poté spusťte požadovaný příkaz:",
+        "",
+        "   .. code-block:: bash",
+        "",
+        "      python3 manage.py <název_příkazu> [parametry] --settings=webclient.settings.production",
+        "",
+        "Alternativně je možné vše zapsat do jednoho příkazu (bez otevření interaktivního shellu):",
+        "",
+        ".. code-block:: bash",
+        "",
+        "   docker exec -it $(sudo docker ps -q -f name=swarm_webamcr_web) python3 manage.py <název_příkazu> [parametry] --settings=webclient.settings.production",
         "",
     ]
 
@@ -870,19 +930,12 @@ def generate_management_commands_rst() -> bool:
             ]
         )
 
-        # Add docstring
-        if command_info["docstring"]:
-            for line in command_info["docstring"].split("\n"):
-                rst_lines.append(line)
-            rst_lines.append("")
-
         # Add module reference for autodoc
         rst_lines.extend(
             [
                 f".. automodule:: core.management.commands.{command_info['name']}",
                 "   :members: Command",
                 "   :undoc-members:",
-                "   :show-inheritance:",
                 "",
             ]
         )

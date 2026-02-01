@@ -31,8 +31,6 @@ Třídy
 
       Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
 
-   .. py:method:: _annotate_queryset()
-
    .. py:method:: add_fedora_history()
 
       Pokud potomek definuje fedora_model, automaticky se načte

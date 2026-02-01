@@ -63,7 +63,7 @@ class Command(BaseCommand):
         # Validate arguments
         provided_options = sum([pks is not None, pk_range is not None, csv_file is not None])
         if provided_options != 1:
-            raise CommandError(_("core.management.commands.generate_thumbs.Command.handle.argument_error"))
+            raise CommandError(_("core.management.commands.generate_thumbs.argument_error"))
 
         logger.debug(
             "core.management.commands.generate_thumbs.start",
@@ -91,9 +91,7 @@ class Command(BaseCommand):
                     extra={"csv_file": csv_file, "error": str(e)},
                 )
                 self.stdout.write(
-                    self.style.ERROR(
-                        _("core.management.commands.generate_thumbs.Command.handle.csv_read_error") + " " + str(e)
-                    )
+                    self.style.ERROR(_("core.management.commands.generate_thumbs.csv_read_error") + " " + str(e))
                 )
                 return
 
@@ -101,20 +99,14 @@ class Command(BaseCommand):
         skipped_count = 0
         error_count = 0
 
-        self.stdout.write(
-            _("core.management.commands.generate_thumbs.Command.handle.processing_total") + " " + str(total)
-        )
+        self.stdout.write(_("core.management.commands.generate_thumbs.processing_total") + " " + str(total))
 
         for index, soubor in enumerate(soubory):
             # Show progress
             if index % max(total // 100, 1) == 0:
                 percentage = round(index / total * 100)
                 self.stdout.write(
-                    "\r"
-                    + _("core.management.commands.generate_thumbs.Command.handle.progress")
-                    + " "
-                    + str(percentage)
-                    + "%",
+                    "\r" + _("core.management.commands.generate_thumbs.progress") + " " + str(percentage) + "%",
                     ending="",
                 )
 
@@ -123,16 +115,17 @@ class Command(BaseCommand):
                 conn = FedoraRepositoryConnector(related_record, None)
 
                 # Check if thumbnails exist
-                thumbnails_exist = conn.check_thumbs_exist(soubor.repository_uuid)
+                both_thumbnails_exist = (
+                    conn.get_binary_file(soubor.repository_uuid, thumb_small=True) is not None
+                    and conn.get_binary_file(soubor.repository_uuid, thumb_large=True) is not None
+                )
 
-                if not thumbnails_exist:
+                if not both_thumbnails_exist:
                     # Generate thumbnails
                     rep_bin_file = conn.get_binary_file(soubor.repository_uuid)
                     if rep_bin_file:
                         try:
-                            conn.generate_and_save_thumbs(
-                                soubor.nazev, soubor.mimetype, rep_bin_file.content, soubor.repository_uuid
-                            )
+                            conn.save_thumbs(soubor.nazev, rep_bin_file.content, soubor.repository_uuid)
                             success_count += 1
                             logger.info(
                                 "core.management.commands.generate_thumbs.thumbs_generated",
@@ -162,7 +155,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.ERROR(
                         "\n"
-                        + _("core.management.commands.generate_thumbs.Command.handle.error")
+                        + _("core.management.commands.generate_thumbs.error")
                         + " "
                         + str(soubor.pk)
                         + " - "
@@ -186,28 +179,22 @@ class Command(BaseCommand):
         # Summary output
         self.stdout.write("")
         self.stdout.write("=" * 50)
-        self.stdout.write(_("core.management.commands.generate_thumbs.Command.handle.summary_header"))
-        self.stdout.write(_("core.management.commands.generate_thumbs.Command.handle.summary_total") + " " + str(total))
-        self.stdout.write(
-            _("core.management.commands.generate_thumbs.Command.handle.summary_success") + " " + str(success_count)
-        )
-        self.stdout.write(
-            _("core.management.commands.generate_thumbs.Command.handle.summary_skipped") + " " + str(skipped_count)
-        )
-        self.stdout.write(
-            _("core.management.commands.generate_thumbs.Command.handle.summary_errors") + " " + str(error_count)
-        )
+        self.stdout.write(_("core.management.commands.generate_thumbs.summary_header"))
+        self.stdout.write(_("core.management.commands.generate_thumbs.summary_total") + " " + str(total))
+        self.stdout.write(_("core.management.commands.generate_thumbs.summary_success") + " " + str(success_count))
+        self.stdout.write(_("core.management.commands.generate_thumbs.summary_skipped") + " " + str(skipped_count))
+        self.stdout.write(_("core.management.commands.generate_thumbs.summary_errors") + " " + str(error_count))
         self.stdout.write("=" * 50)
 
         if error_count > 0:
             self.stdout.write(
                 self.style.WARNING(
                     "\n"
-                    + _("core.management.commands.generate_thumbs.Command.handle.finished_with_errors")
+                    + _("core.management.commands.generate_thumbs.finished_with_errors")
                     + " "
                     + str(success_count)
                     + ", "
-                    + _("core.management.commands.generate_thumbs.Command.handle.errors")
+                    + _("core.management.commands.generate_thumbs.errors")
                     + " "
                     + str(error_count)
                 )
@@ -215,9 +202,6 @@ class Command(BaseCommand):
         else:
             self.stdout.write(
                 self.style.SUCCESS(
-                    "\n"
-                    + _("core.management.commands.generate_thumbs.Command.handle.finished_success")
-                    + " "
-                    + str(success_count)
+                    "\n" + _("core.management.commands.generate_thumbs.finished_success") + " " + str(success_count)
                 )
             )

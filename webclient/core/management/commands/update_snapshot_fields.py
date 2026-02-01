@@ -26,6 +26,6 @@ class Command(BaseCommand):
     help = _("core.management.commands.update_snapshot_fields.Command.help")
 
     def handle(self, *args, **options):
-        logger.debug("core.views.update_snapshot_fields.start")
+        logger.debug("core.management.commands.update_snapshot_fields.start")
         update_snapshot_fields()
-        logger.debug("core.views.update_snapshot_fields.end")
+        logger.debug("core.management.commands.update_snapshot_fields.end")

@@ -32,10 +32,13 @@ class Command(BaseCommand):
         - Pouze soubory, které mají GPS data, budou aktualizovány
         - Pro každou aktualizaci se zaznamená nová verze souboru
 
-    Příklady použití::
+    Příklady použití:
 
-        python manage.py remove_gps_data /tmp/files_with_gps.csv
-        python manage.py remove_gps_data /var/data/images.csv
+        Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
+        proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
+
+            python manage.py remove_gps_data /vol/data-migrace/files_with_gps.csv
+            python manage.py remove_gps_data /vol/data-migrace/images.csv
     """
 
     help = _("core.management.commands.remove_gps_data.Command.help")
@@ -69,9 +72,7 @@ class Command(BaseCommand):
                 extra={"admin_user_pk": ADMIN_USER},
             )
             self.stdout.write(
-                self.style.ERROR(
-                    _("core.management.commands.remove_gps_data.Command.handle.admin_user_not_found") + str(ADMIN_USER)
-                )
+                self.style.ERROR(_("core.management.commands.remove_gps_data.admin_user_not_found") + str(ADMIN_USER))
             )
             return
 
@@ -84,9 +85,7 @@ class Command(BaseCommand):
                 extra={"csv_file": csv_file, "error": str(e)},
             )
             self.stdout.write(
-                self.style.ERROR(
-                    _("core.management.commands.remove_gps_data.Command.handle.csv_read_error") + " " + str(e)
-                )
+                self.style.ERROR(_("core.management.commands.remove_gps_data.csv_read_error") + " " + str(e))
             )
             return
 
@@ -96,20 +95,14 @@ class Command(BaseCommand):
         skipped_count = 0
         error_count = 0
 
-        self.stdout.write(
-            _("core.management.commands.remove_gps_data.Command.handle.processing_total") + " " + str(total)
-        )
+        self.stdout.write(_("core.management.commands.remove_gps_data.processing_total") + " " + str(total))
 
         for index, row in sheet.iterrows():
             # Show progress
             if index % max(total // 100, 1) == 0:
                 percentage = round(index / total * 100)
                 self.stdout.write(
-                    "\r"
-                    + _("core.management.commands.remove_gps_data.Command.handle.progress")
-                    + " "
-                    + str(percentage)
-                    + "%",
+                    "\r" + _("core.management.commands.remove_gps_data.progress") + " " + str(percentage) + "%",
                     ending="",
                 )
 
@@ -152,11 +145,7 @@ class Command(BaseCommand):
 
             except Soubor.DoesNotExist:
                 error_count += 1
-                error_msg = (
-                    _("core.management.commands.remove_gps_data.Command.handle.file_not_found")
-                    + " "
-                    + str(row["record"])
-                )
+                error_msg = _("core.management.commands.remove_gps_data.file_not_found") + " " + str(row["record"])
                 logger.warning(
                     "core.management.commands.remove_gps_data.file_not_found",
                     extra={"path": row["record"]},
@@ -171,7 +160,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.ERROR(
                         "\n"
-                        + _("core.management.commands.remove_gps_data.Command.handle.error")
+                        + _("core.management.commands.remove_gps_data.error")
                         + " "
                         + str(row["record"])
                         + " - "
@@ -196,31 +185,23 @@ class Command(BaseCommand):
         # Summary output
         self.stdout.write("")
         self.stdout.write("=" * 50)
-        self.stdout.write(_("core.management.commands.remove_gps_data.Command.handle.summary_header"))
-        self.stdout.write(_("core.management.commands.remove_gps_data.Command.handle.summary_total") + " " + str(total))
-        self.stdout.write(
-            _("core.management.commands.remove_gps_data.Command.handle.summary_success") + " " + str(success_count)
-        )
-        self.stdout.write(
-            _("core.management.commands.remove_gps_data.Command.handle.summary_updated") + " " + str(updated_count)
-        )
-        self.stdout.write(
-            _("core.management.commands.remove_gps_data.Command.handle.summary_skipped") + " " + str(skipped_count)
-        )
-        self.stdout.write(
-            _("core.management.commands.remove_gps_data.Command.handle.summary_errors") + " " + str(error_count)
-        )
+        self.stdout.write(_("core.management.commands.remove_gps_data.summary_header"))
+        self.stdout.write(_("core.management.commands.remove_gps_data.summary_total") + " " + str(total))
+        self.stdout.write(_("core.management.commands.remove_gps_data.summary_success") + " " + str(success_count))
+        self.stdout.write(_("core.management.commands.remove_gps_data.summary_updated") + " " + str(updated_count))
+        self.stdout.write(_("core.management.commands.remove_gps_data.summary_skipped") + " " + str(skipped_count))
+        self.stdout.write(_("core.management.commands.remove_gps_data.summary_errors") + " " + str(error_count))
         self.stdout.write("=" * 50)
 
         if error_count > 0:
             self.stdout.write(
                 self.style.WARNING(
                     "\n"
-                    + _("core.management.commands.remove_gps_data.Command.handle.finished_with_errors")
+                    + _("core.management.commands.remove_gps_data.finished_with_errors")
                     + " "
                     + str(updated_count)
                     + ", "
-                    + _("core.management.commands.remove_gps_data.Command.handle.errors")
+                    + _("core.management.commands.remove_gps_data.errors")
                     + " "
                     + str(error_count)
                 )
@@ -228,9 +209,6 @@ class Command(BaseCommand):
         else:
             self.stdout.write(
                 self.style.SUCCESS(
-                    "\n"
-                    + _("core.management.commands.remove_gps_data.Command.handle.finished_success")
-                    + " "
-                    + str(updated_count)
+                    "\n" + _("core.management.commands.remove_gps_data.finished_success") + " " + str(updated_count)
                 )
             )

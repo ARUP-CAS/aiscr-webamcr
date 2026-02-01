@@ -109,7 +109,7 @@ class Command(BaseCommand):
             else:
                 error_count += 1
                 logger.error(
-                    "core.management.commands.transform_to_sjtsk.pian.error",
+                    "core.management.commands.transform_to_sjtsk.Command._transform_pian.error",
                     extra={"pian_id": pian.id, "error": geom[1]},
                 )
                 self.stdout.write(
@@ -184,7 +184,7 @@ class Command(BaseCommand):
             else:
                 error_count += 1
                 logger.error(
-                    "core.management.commands.transform_to_sjtsk.nalez.error",
+                    "core.management.commands.transform_to_sjtsk.Command._transform_nalez.error",
                     extra={"nalez_id": SN.id, "error": geom[1]},
                 )
                 self.stdout.write(
@@ -259,7 +259,7 @@ class Command(BaseCommand):
             else:
                 error_count += 1
                 logger.error(
-                    "core.management.commands.transform_to_sjtsk.projekt.error",
+                    "core.management.commands.transform_to_sjtsk.Command._transform_projekt.error",
                     extra={"projekt_id": PRJ.id, "ident_cely": PRJ.ident_cely, "error": geom[1]},
                 )
                 self.stdout.write(
@@ -335,7 +335,7 @@ class Command(BaseCommand):
                 else:
                     error_count += 1
                     logger.error(
-                        "core.management.commands.transform_to_sjtsk.dokument.error",
+                        "core.management.commands.transform_to_sjtsk.Command._transform_dokument.error",
                         extra={"dokument_id": DOC.pk, "error": geom[1]},
                     )
                     self.stdout.write(
@@ -351,7 +351,7 @@ class Command(BaseCommand):
             except Exception as err:
                 error_count += 1
                 logger.warning(
-                    "core.management.commands.transform_to_sjtsk.dokument.exception",
+                    "core.management.commands.transform_to_sjtsk.Command._transform_dokument.exception",
                     extra={"dokument_id": DOC.pk, "error": str(err)},
                 )
                 self.stdout.write(
