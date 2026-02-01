@@ -113,14 +113,21 @@ class ImportDataIncorrectStructureError(ImportDataError):
 
     def __init__(self, missing_columns, excess_columns):
         super().__init__(
-            f'{_("core_admin.ImportDataIncorrectStructureError.message.part_1")} '
+            _("core_admin.ImportDataIncorrectStructureError.message.part_1")
+            + " "
             + (
-                f'{_("core_admin.ImportDataIncorrectStructureError.message.missing_columns")}: {", ".join(missing_columns)} '
+                _("core_admin.ImportDataIncorrectStructureError.message.missing_columns")
+                + ": "
+                + ", ".join(missing_columns)
+                + " "
                 if missing_columns
                 else ""
             )
             + (
-                f'{_("core_admin.ImportDataIncorrectStructureError.message.excess_columns")}: {", ".join(excess_columns)} '
+                _("core_admin.ImportDataIncorrectStructureError.message.excess_columns")
+                + ": "
+                + ", ".join(excess_columns)
+                + " "
                 if excess_columns
                 else ""
             )
