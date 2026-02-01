@@ -23,10 +23,13 @@ class Command(BaseCommand):
         - --save-thumbs: Generovat náhledy pro obrazové soubory
         - --disable-antivirus: Přeskočit antivirovou kontrolu
 
-    Příklady použití::
+    Příklady použití:
 
-        python manage.py save_single_file_from_storage 123 /tmp/files
-        python manage.py save_single_file_from_storage 456 /var/storage --save-thumbs
+        Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
+        proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
+
+            python manage.py save_single_file_from_storage 123 /vol/data-migrace/files
+            python manage.py save_single_file_from_storage 456 /vol/data-migrace/storage --save-thumbs
     """
 
     help = _("core.management.commands.save_single_file_from_storage.Command.help")
@@ -74,8 +77,6 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.SUCCESS(
-                _("core.management.commands.save_single_file_from_storage.Command.handle.finished_success")
-                + " "
-                + str(pk)
+                _("core.management.commands.save_single_file_from_storage.finished_success") + " " + str(pk)
             )
         )

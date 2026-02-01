@@ -56,10 +56,8 @@ class Command(BaseCommand):
         pocet_pians = query.count()
         index = 0
 
-        self.stdout.write(
-            _("core.management.commands.check_pian_properties.Command.handle.total_pian") + " " + str(pocet_pians)
-        )
-        self.stdout.write(_("core.management.commands.check_pian_properties.Command.handle.processing_pian"))
+        self.stdout.write(_("core.management.commands.check_pian_properties.total_pian") + " " + str(pocet_pians))
+        self.stdout.write(_("core.management.commands.check_pian_properties.processing_pian"))
         self.stdout.write("")
 
         for item in query.iterator(chunk_size=1000):
@@ -73,7 +71,7 @@ class Command(BaseCommand):
                 item.typ = geom_type[str(type(geom))]
                 save = True
                 changes.append(
-                    _("core.management.commands.check_pian_properties.Command.handle.change_typ")
+                    _("core.management.commands.check_pian_properties.change_typ")
                     + " "
                     + old_typ
                     + " -> "
@@ -96,7 +94,7 @@ class Command(BaseCommand):
                     item.zm10 = zm10
                     save = True
                     changes.append(
-                        _("core.management.commands.check_pian_properties.Command.handle.change_zm10")
+                        _("core.management.commands.check_pian_properties.change_zm10")
                         + " "
                         + old_zm10
                         + " -> "
@@ -107,7 +105,7 @@ class Command(BaseCommand):
                     item.zm50 = zm50
                     save = True
                     changes.append(
-                        _("core.management.commands.check_pian_properties.Command.handle.change_zm50")
+                        _("core.management.commands.check_pian_properties.change_zm50")
                         + " "
                         + old_zm50
                         + " -> "
@@ -119,17 +117,17 @@ class Command(BaseCommand):
                 pocet_zmenenych += 1
                 self.stdout.write(
                     "\r"
-                    + _("core.management.commands.check_pian_properties.Command.handle.changed")
+                    + _("core.management.commands.check_pian_properties.changed")
                     + " "
                     + str(pocet_zmenenych)
                     + " | "
-                    + _("core.management.commands.check_pian_properties.Command.handle.processed")
+                    + _("core.management.commands.check_pian_properties.processed")
                     + " "
                     + str(index)
                     + "/"
                     + str(pocet_pians)
                     + " | "
-                    + _("core.management.commands.check_pian_properties.Command.handle.pian")
+                    + _("core.management.commands.check_pian_properties.pian")
                     + " "
                     + str(item.pk)
                     + ": "
@@ -149,11 +147,11 @@ class Command(BaseCommand):
             if index % 100 == 0:
                 self.stdout.write(
                     "\r"
-                    + _("core.management.commands.check_pian_properties.Command.handle.changed")
+                    + _("core.management.commands.check_pian_properties.changed")
                     + " "
                     + str(pocet_zmenenych)
                     + " | "
-                    + _("core.management.commands.check_pian_properties.Command.handle.processed")
+                    + _("core.management.commands.check_pian_properties.processed")
                     + " "
                     + str(index)
                     + "/"
@@ -170,13 +168,9 @@ class Command(BaseCommand):
         )
 
         self.stdout.write("=" * 50)
+        self.stdout.write(_("core.management.commands.check_pian_properties.total_processed") + " " + str(pocet_pians))
         self.stdout.write(
-            _("core.management.commands.check_pian_properties.Command.handle.total_processed") + " " + str(pocet_pians)
-        )
-        self.stdout.write(
-            _("core.management.commands.check_pian_properties.Command.handle.changed_count")
-            + " "
-            + str(pocet_zmenenych)
+            _("core.management.commands.check_pian_properties.changed_count") + " " + str(pocet_zmenenych)
         )
         self.stdout.write("=" * 50)
         self.stdout.write("")
@@ -184,18 +178,16 @@ class Command(BaseCommand):
         if pocet_zmenenych > 0:
             self.stdout.write(
                 self.style.SUCCESS(
-                    _("core.management.commands.check_pian_properties.Command.handle.finished_fixed")
+                    _("core.management.commands.check_pian_properties.finished_fixed")
                     + " "
                     + str(pocet_zmenenych)
                     + " "
-                    + _("core.management.commands.check_pian_properties.Command.handle.of_total")
+                    + _("core.management.commands.check_pian_properties.of_total")
                     + " "
                     + str(pocet_pians)
                 )
             )
         else:
             self.stdout.write(
-                self.style.SUCCESS(
-                    _("core.management.commands.check_pian_properties.Command.handle.finished_no_changes")
-                )
+                self.style.SUCCESS(_("core.management.commands.check_pian_properties.finished_no_changes"))
             )
