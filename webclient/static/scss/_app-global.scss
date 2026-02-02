@@ -486,6 +486,10 @@ a.dropdown-item {
   }
 }
 
+.leaflet-top.leaflet-right {
+  z-index: 1100;
+}
+
 .leaflet-left.leaflet-top {
   z-index: 990;
 }
