@@ -451,7 +451,7 @@ class CreateAkceForm(forms.ModelForm):
                             HTML(
                                 '<a href="{% url "heslar:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'
                             ),
-                            css_class="col-sm-2 input-osoba select2-input",
+                            css_class="col-sm-2 input-osoba select2-input form-group",
                             style="display: flex; align-items: center;",
                         ),
                         css_class="row",

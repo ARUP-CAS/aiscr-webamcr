@@ -267,7 +267,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                         '<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-2 input-osoba select2-input",
+                css_class="col-sm-2 input-osoba select2-input form-group",
             )
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1
@@ -467,7 +467,7 @@ class EditDokumentForm(forms.ModelForm):
                         '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-2 input-osoba select2-input",
+                css_class="col-sm-2 input-osoba select2-input form-group",
             )
         else:
             autori_div = Div(

@@ -14,7 +14,7 @@
         <img class="mb-4" src="{% static 'img/logo-amcr-cs.svg' %}" alt="{% trans 'templates.djangoRegistration.registrationForm.logo.alt' %}" class="app-logo">
         <div class="card">
           <div class="card-body">
-            <form method="POST" class="form-group submit-spinner mb-0">
+            <form method="POST" class="form-group form-login submit-spinner mb-0">
               {% crispy form %}
               {{ form.captcha }}
               <button id="registerSumbitButton" type="submit" class="btn btn-primary btn-block">{% trans "templates.djangoRegistration.registrationForm.submitButton.text" %}

@@ -232,6 +232,16 @@ div .app-right .btn-group .btn {
   margin-top: 0.125rem !important;
 }
 
+@mixin table-small-display {
+  tbody tr td .small {
+    display: none
+  }
+
+  tbody tr:last-child td:not(.is_readonly) .small {
+    display: inherit
+  }
+}
+
 #tvar_table.table,
 .table.vedouci-table {
   th:first-child {
@@ -255,14 +265,20 @@ div .app-right .btn-group .btn {
   }
 
   td.is_readonly {
-    small {
+    .small {
       display: none;
     }
   }
 
-  td small {
+  td .small {
     grid-column: span 3;
   }
+
+  @include table-small-display;
+}
+
+#pes_table.table {
+  @include table-small-display;
 }
 
 .app-notifikace-projekty {

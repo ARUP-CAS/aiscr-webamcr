@@ -132,6 +132,12 @@
   grid-column: span 3;
 }
 
+.input-group-text {
+  i::before {
+    vertical-align: bottom;
+  }
+}
+
 table {
   font-size: $font-size-sm;
 
@@ -174,22 +180,32 @@ table {
   }
 }
 
-.formset-table form table tbody tr div small {
+.formset-table form table tbody tr div .small {
 
   display: none
 }
 
-.formset-table form table tbody tr:last-child div small {
+.formset-table form table tbody tr:last-child div .small {
 
   display: inherit
 }
 
-.formset-table table tbody tr div small {
+.formset-table table tbody tr div .small {
 
   display: none
 }
 
-.formset-table table tbody tr:last-child div small {
+.formset-table table tbody tr:last-child div .small {
+
+  display: inherit
+}
+
+.formset-table table tbody tr div.small {
+
+  display: none
+}
+
+.formset-table table tbody tr:last-child div.small {
 
   display: inherit
 }
@@ -299,13 +315,18 @@ form {
   }
 }
 
-.form-group {
+.form-group:not(.form-login) {
   margin-bottom: $app-form-group-mg-bottom;
 
   label {
     font-weight: bold;
     font-size: 0.875rem;
     margin-bottom: $app-form-label-mg-bottom;
+  }
+
+  .input-group:not(.has-validation)> :not(:last-child):not(.dropdown-toggle):not(.dropdown-menu):not(.form-floating) .select2-selection {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
   }
 
   .form-check-label {
@@ -323,7 +344,9 @@ form {
 
     .btn {
       padding: 0 !important;
-      height: unset !important;
+      margin-left: -.125rem !important;
+      margin-bottom: -.125rem !important;
+      height: 1.625rem !important;
       --bs-btn-border-radius: 0rem 0.25rem 0.25rem 0rem !important;
 
       .material-icons {
@@ -362,7 +385,7 @@ form {
   }
 
   textarea.textarea.form-control {
-    padding-top: 0;
+    padding-top: 0.25rem;
     padding-bottom: 0;
   }
 }
@@ -491,6 +514,7 @@ a.dropdown-item {
 
 .bootstrap-select {
   max-width: 100% !important;
+  width: 100% !important;
 }
 
 .app-card-cast-dokumentu {
@@ -1138,4 +1162,14 @@ h6 {
   padding: 0;
   --bs-form-select-bg-img: none;
   height: 1.5rem;
+}
+
+.form-select:disabled,
+.form-select[readonly] {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.select2-container--open {
+  z-index: 1100;
 }

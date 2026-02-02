@@ -9,7 +9,7 @@
             <div class="{% for offset in bootstrap_checkbox_offsets %}{{ offset|slice:"7:14" }}{{ offset|slice:"4:7" }}{{ offset|slice:"14:16" }} {% endfor %}{{ field_class }}">
         {% endif %}
     {% endif %}
-    <{% if tag %}{{ tag }}{% else %}div{% endif %} id="div_{{ field.auto_id }}" class="{% if field|is_checkbox and form_show_labels %}form-check{% else %}mb-3{% if 'form-horizontal' in form_class %} row{% endif %}{% endif %}{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.css_classes %} {{ field.css_classes }}{% endif %}">
+    <{% if tag %}{{ tag }}{% else %}div{% endif %} id="div_{{ field.auto_id }}" class="{% if field|is_checkbox and form_show_labels %}form-check{% else %}mb-3{% if 'form-horizontal' in form_class %} row{% endif %}{% endif %}{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.css_classes %} {{ field.css_classes }}{% endif %}{% if vedouci %} {{ vedouci }}{% endif %} {% if form.readonly %}is_readonly{% endif %}">
         {% if field.label and not field|is_checkbox and form_show_labels %}
             {% if field.use_fieldset %}<fieldset{% if 'form-horizontal' in form_class %} class="row"{% endif %}{% if field.aria_describedby %} aria-describedby="{{ field.aria_describedby }}"{% endif %}>{% endif %}
             <{% if field.use_fieldset %}legend{% else %}label{% endif %}
@@ -17,7 +17,8 @@
                 {{ field.label }}{% if field.field.required %}<span class="asteriskField">*</span>{% endif %}
             </{% if field.use_fieldset %}legend><div{% else %}label{% endif %}>
         {% endif %}
-
+        {# for append button pre dalsi vedouci #}   
+        
         {% if field|is_checkboxselectmultiple or field|is_radioselect %}
             {% include 'bootstrap5/layout/radio_checkbox_select.html' %}
         {% endif %}
@@ -34,7 +35,15 @@
                 </label>
                 {% include 'bootstrap5/layout/help_text_and_errors.html' %}
             {% else %}
-                {% if field_class %}<div class="{{ field_class }}">{% endif %}
+                {# for append button pre dalsi vedouci #} 
+                {% if not "akce_vedouci" in field.id_for_label and "vedouci" in field.id_for_label and not form.readonly%}
+                    <div class="input-osoba form-group select2-input">
+                        {% if not  "vedouci_projektu" in field.id_for_label %}
+                            <div  class="input-group">
+                        {% endif %}
+                {% elif field_class %}
+                    <div class="{{ field_class }}">
+                {% endif %}
                     {% if field|is_file %}
                         {% include 'bootstrap5/layout/field_file.html' %}
                     {% elif field|is_select %}
@@ -42,6 +51,11 @@
                             {% crispy_field field 'class' 'form-select is-invalid' %}
                         {% else %}
                             {% crispy_field field 'class' 'form-select' %}
+                        {% endif %}
+                        {% if not "akce_vedouci" in field.id_for_label and "vedouci" in field.id_for_label and not  "vedouci_projektu" in field.id_for_label and not form.readonly%}
+                        
+                            <span class="input-group-text"><button id="create-vedouci-{{field.id_for_label}}" ref="{{field.id_for_label}}" class="btn btn-sm app-btn-in-form create-vedouci" type="button" name="button"><span class="material-icons">add</span></button></span>
+                        
                         {% endif %}
                     {% elif field|is_checkbox %}
                         {% if field.errors %}
@@ -57,7 +71,14 @@
                     {% if not field|is_file %}
                         {% include 'bootstrap5/layout/help_text_and_errors.html' %}
                     {% endif %}
-                {% if field_class %}</div>{% endif %}
+                {% if not "akce_vedouci" in field.id_for_label and "vedouci" in field.id_for_label and not form.readonly%}
+                    </div>
+                        {% if not  "vedouci_projektu" in field.id_for_label %}
+                            </div>
+                        {% endif %}
+                {% elif field_class %}
+                    </div>
+                {% endif %}
             {% endif %}
         {% endif %}
         {% if field.use_fieldset and field.label and form_show_labels %}</div></fieldset>{% endif %}
