@@ -9,7 +9,7 @@ Třídy
 .. py:class:: HistorieListView
 
    Třida pohledu pro zobrazení historie záznamu.
-Třída se dědí pro jednotlivá historie.
+   Třída se dědí pro jednotlivá historie.
 
    **Metody:**
 

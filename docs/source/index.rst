@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Dokumentace webu archeologického ústavu
+Technická dokumenetace Archeologické mapy České republiky (AMČR)
 ========================================
 
-Repozitář obsahuje webovou aplikaci pro archeologický ústav České republiky.
+Repozitář obsahuje webovou aplikaci Archeologická mapa České republiky.
 Aplikace je psaná pomocí frameworku Django a je rozdelená do funkčních modulů.
 
 Dokumentace je rozdělena do logických sekcí pokrývajících všechny aspekty aplikace od instalace přes vývoj až po nasazení a údržbu.

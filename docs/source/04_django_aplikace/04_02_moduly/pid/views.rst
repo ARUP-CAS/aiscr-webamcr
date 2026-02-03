@@ -14,6 +14,10 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: _get_value_from_cache()
+
+   .. py:method:: _save_value_to_cache()
+
    .. py:method:: api_call()
 
    .. py:method:: get()
@@ -28,6 +32,14 @@ Třídy
    Popis není k dispozici.
 
    **Metody:**
+
+   .. py:method:: _api_call_data_cite()
+
+   .. py:method:: _api_call_cross_ref_doi()
+
+   .. py:method:: _api_call_cross_ref_title()
+
+   .. py:method:: _doi_item_exists()
 
    .. py:method:: api_call()
 
@@ -64,6 +76,8 @@ Třídy
    Popis není k dispozici.
 
    **Metody:**
+
+   .. py:method:: _perform_client_action()
 
    .. py:method:: process_record()
 

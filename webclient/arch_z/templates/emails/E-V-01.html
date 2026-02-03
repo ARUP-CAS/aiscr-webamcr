@@ -16,5 +16,16 @@
     </p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>
+        Hello,
+    </p>
+    <p>
+        your record <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> on the cadastral area <b>{{ katastr }}</b> was returned to state: <b>{{ state }}</b>.
+    </p>
+    <p>
+        <b>Reason:</b> {{ reason }}
+    </p>
+    <p>
+        You can find out the details of the record after logging into AMCR.
+    </p>
 {% endblock %}

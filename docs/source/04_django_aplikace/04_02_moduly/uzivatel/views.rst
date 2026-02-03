@@ -32,7 +32,7 @@ Třídy
 
 .. py:class:: UzivatelAutocompletePublic
 
-   Popis není k dispozici.
+   Třída pohledu pro získaní uživatelů pro autocomplete - verze pouze s ident_cely uživatele, beze jména.
 
    **Metody:**
 
@@ -73,6 +73,8 @@ Třídy
    .. py:method:: get_object()
 
    .. py:method:: get_context_data()
+
+   .. py:method:: _change_password()
 
    .. py:method:: invalid_form_context()
 

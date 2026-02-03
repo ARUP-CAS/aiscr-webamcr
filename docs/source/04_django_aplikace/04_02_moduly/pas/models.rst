@@ -49,10 +49,10 @@ Třídy
    .. py:method:: check_pred_odeslanim()
 
       Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
-      
-          polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
-      
-          Samostaný nález má připojený alespoň jeden soubor.
+
+      polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
+
+      Samostaný nález má připojený alespoň jeden soubor.
 
    .. py:method:: nahled_soubor()
 
@@ -61,6 +61,8 @@ Třídy
    .. py:method:: small_thumbnail()
 
    .. py:method:: generate_coord_forms_initial()
+
+   .. py:method:: __str__()
 
    .. py:method:: get_permission_object()
 
@@ -73,6 +75,8 @@ Třídy
    .. py:method:: generate_redis_snapshot()
 
    .. py:method:: set_igsn()
+
+   .. py:method:: _get_igsn_client()
 
    .. py:method:: igsn_exists()
 
@@ -114,6 +118,8 @@ Třídy
 
       Metoda na kontrolu prerekvizit pred posunem do stavu neaktivní.
       Kontrola že stav není neaktivný.
+
+   .. py:method:: __str__()
 
    .. py:method:: get_create_user()
 

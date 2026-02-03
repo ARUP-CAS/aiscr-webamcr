@@ -362,6 +362,8 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
     Třida pohledu pro získaní dokumentačních jednotek lokality, která je dedená v dalších pohledech.
     """
 
+    scroll_to_dj = True
+
     def dispatch(self, request, *args, **kwargs):
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         az = self.get_object().archeologicky_zaznam

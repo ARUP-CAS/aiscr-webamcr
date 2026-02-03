@@ -79,6 +79,20 @@
                 )
               }
         }
+        {% if scroll_to_dj is True %}
+            arch_select_perspective(
+                window.location.href,
+                document.getElementById("main_cadastre_id").value,
+                '{{ zaznam.ident_cely }}',
+                '{{ dj_ident_cely }}'
+            )
+
+            try {
+                document.getElementById("dj_list_card_header").scrollIntoView();
+            } catch (e) {
+                console.log(e);
+            }
+        {% endif %}
     });
   </script>
 {% endblock %}

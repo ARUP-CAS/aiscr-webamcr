@@ -24,9 +24,11 @@ Třídy
 .. py:class:: HistorieVazby
 
    Class pro db model historie vazby.
-Model se používa k napojení na jednotlivé záznamy.
+   Model se používa k napojení na jednotlivé záznamy.
 
    **Metody:**
+
+   .. py:method:: __str__()
 
    .. py:method:: get_last_transaction_date()
 

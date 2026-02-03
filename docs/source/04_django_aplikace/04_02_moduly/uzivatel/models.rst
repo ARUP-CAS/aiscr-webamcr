@@ -20,6 +20,12 @@ Třídy
 
    .. py:method:: user_str_en()
 
+   .. py:method:: __str__()
+
+   .. py:method:: display_name()
+
+      Textová reprezentace uživatele pro tabulky a autocomplete pole.
+
    .. py:method:: moje_spolupracujici_organizace()
 
    .. py:method:: moje_stavy_pruzkumnych_projektu()
@@ -72,6 +78,8 @@ Třídy
 
       save metoda pro přidělení identu celý.
 
+   .. py:method:: __str__()
+
    .. py:method:: get_nazev()
 
 
@@ -85,12 +93,16 @@ Třídy
 
       save metoda pro přidělení identu celý.
 
+   .. py:method:: __str__()
+
 
 .. py:class:: UserNotificationType
 
    Class pro db model typ user notifikace.
 
    **Metody:**
+
+   .. py:method:: _get_settings_dict()
 
    .. py:method:: zasilat_neaktivnim()
 
@@ -99,6 +111,8 @@ Třídy
    .. py:method:: cesta_sablony()
 
    .. py:method:: is_groups()
+
+   .. py:method:: __str__()
 
 
 .. py:class:: NotificationsLog

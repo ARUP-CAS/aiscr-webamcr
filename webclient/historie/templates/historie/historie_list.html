@@ -6,7 +6,30 @@
 {% load crispy_forms_tags %}
 
 {% block title %}{% trans "historie.templates.historieList.title" %}{% endblock %}
-{% block head %}{% endblock %}
+{% block head %}
+<style>
+.tables-page{
+  flex-direction: column;
+}
+.table-block{
+  flex-direction: column;
+}
+.table-block > .collapse.show,
+.table-block > .collapsing,
+.table-fix,
+.tables-page
+{
+flex: 1 1 auto;
+  display: flex;  
+}
+.table-block:has(.collapse.show){
+  flex: 1 1 0;
+   display: flex;
+   min-height: 148px;
+}
+</style>
+
+{% endblock %}
 
 {% block content %}
   <div id="{{ table.uniq_table_class_name }}" class="column-shifter-container app-entity-historie app-entity-{{entity}} app-table-list-container">
@@ -23,10 +46,18 @@
         </div>
       </div>
     </div>
-    {% if table %}
-    <form method="get">
+<div class="tables-page">
+{% if table %}
+  <div class="table-block">
+
+
       <div class="mb-1 d-flex flex-row align-items-center justify-content-between" style="height: 2.875rem;">
-        <div class="app-middle text-muted">
+        <div class="app-left">
+          <button id="buttonCollapseHist" class="btn btn-primary mr-1 mt-1 mb-1" type="button" data-toggle="collapse" data-target="#historie" aria-expanded="true" aria-controls="collapseExample">
+            <span class="material-icons mr-1">unfold_more</span>{% trans "templates.historieList.Historie.label" %}<span class="material-icons app-icon-expand">expand_more</span>
+          </button>
+        </div>
+        <div class="app-middle text-muted search-sum-text">
           {% trans "historie.templates.historieList.pocetZaznamu.text" %}<strong>{{ table.rows|length }}</strong>
         </div>
         <div class="app-right">
@@ -86,7 +117,7 @@
               </div>
             </div>
             <div class="btn-group" role="group">
-              <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'historie.templates.historieList.exportMuzeTrvat.text' %}">
+              <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" rel="tooltip" data-placement="top" title="{% trans 'historie.templates.historieList.exportMuzeTrvat.text' %}">
                 <span class="material-icons">download</span>
               </button>
               <div class="dropdown-menu" style="z-index:1500;" aria-labelledby="btnGroupDropDownload">
@@ -100,12 +131,30 @@
           </div>
         </div>
       </div>
-    </form>
-    {% render_table table 'bootstrap4_table.html' %}
-    {% endif %}
-    {% if fedora_table %}
-      {% render_table fedora_table 'bootstrap4_table.html' %}
-    {% endif %}
+    <div id="historie" class="collapse show">
+      <div class="table-fix">
+         {% render_table table 'bootstrap4_table.html' %}
+      </div>
+    </div>
+              </div>
+              {% endif %}
+{% if fedora_table %}
+  <div class="table-block">
+ <div class="mb-1 d-flex flex-row align-items-center justify-content-between" style="height: 2.875rem;">
+        <div class="app-left">
+          <button id="buttonCollapseFedora" class="btn btn-primary mr-1 mt-1 mb-1" type="button" data-toggle="collapse" data-target="#fedora" aria-expanded="false" aria-controls="collapseExample">
+            <span class="material-icons mr-1">unfold_more</span>{% trans "templates.historieList.Fedora.label" %}<span class="material-icons app-icon-expand">expand_more</span>
+          </button>
+        </div>
+     </div>   
+    <div id="fedora" class="collapse show">
+      <div class="table-fix">
+       {% render_table fedora_table 'bootstrap4_table.html' %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+</div>
       {% if header %}
       <nav class="table-navigation row">
         <ul class="pagination jump-page col-3">

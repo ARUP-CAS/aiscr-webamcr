@@ -137,6 +137,8 @@ class FedoraRequestType(Enum):
     GET_TOMBSTONE = 1037
     GET_METADATA_HISTORIE = 1038
     GET_BINARY_FILE_CONTENT_HISTORIE = 1039
+    GET_METADATA_VERSION = 1040
+    GET_BINARY_FILE_METADATA_VERSION = 1041
 
 
 class FedoraRepositoryConnector:
@@ -253,6 +255,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             return f"{base_url}/record/{self.record.ident_cely}/metadata/fcr:metadata"
         elif request_type == FedoraRequestType.GET_METADATA_HISTORIE:
             return f"{base_url}/record/{self.record.ident_cely}/metadata/fcr:versions"
+        elif request_type == FedoraRequestType.GET_METADATA_VERSION:
+            return f"{base_url}/record/{self.record.ident_cely}/metadata/fcr:metadata/fcr:versions"
+        elif request_type == FedoraRequestType.GET_BINARY_FILE_METADATA_VERSION:
+            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig/fcr:metadata/fcr:versions"
         elif request_type == FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE:
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig/fcr:versions"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE):
@@ -732,8 +738,9 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def parse_historie(self, response_text):
         """
         Metoda k parsování odpovědi s verzemi
+        Vrací list dictů: {"datetime": datetime, "timestamp": str}
         """
-        datetimes = []
+        result = []
         for line in response_text.splitlines():
             stripped = line.strip()
 
@@ -747,14 +754,19 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
                         try:
                             dt = datetime.strptime(ts, "%Y%m%d%H%M%S")
                             dt = dt.replace(tzinfo=timezone.utc)
-                            datetimes.append(dt)
+                            result.append(
+                                {
+                                    "datetime": dt,
+                                    "timestamp": ts,
+                                }
+                            )
                         except ValueError:
                             logger.error(
                                 "core_repository_connector.parse_historie.datetime_error",
                                 extra={"ident_cely": self.record.ident_cely, "data": ts},
                             )
 
-        return datetimes
+        return result
 
     def get_historie_metadat(self):
         """
@@ -762,7 +774,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         """
         url = self._get_request_url(FedoraRequestType.GET_METADATA_HISTORIE)
         response = self._send_request(url, FedoraRequestType.GET_METADATA_HISTORIE, headers={"Accept": "text/turtle"})
-        return self.parse_historie(response.text)
+        result = self.parse_historie(response.text)
+        url = self._get_request_url(FedoraRequestType.GET_METADATA_VERSION)
+        for item in result:
+            item["creator"] = self._get_creator(f"{url}/{item['timestamp']}")
+        return result
 
     def get_historie_file(self, uuid):
         """
@@ -772,7 +788,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         response = self._send_request(
             url, FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE, headers={"Accept": "text/turtle"}
         )
-        return self.parse_historie(response.text)
+        result = self.parse_historie(response.text)
+        url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_METADATA_VERSION, uuid=uuid)
+        for item in result:
+            item["creator"] = self._get_creator(f"{url}/{item['timestamp']}")
+        return result
 
     def save_metadata(self, update=True):
         logger.debug(

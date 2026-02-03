@@ -1,5 +1,4 @@
 import logging
-import zoneinfo
 from typing import Optional
 
 from celery import Celery
@@ -107,26 +106,27 @@ class ModelWithMetadata(BaseAmcrModel):
         Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
         """
         from core.repository_connector import FedoraRepositoryConnector
+        from core.utils import get_timezone
 
         connector = FedoraRepositoryConnector(self)
-        dt_list = connector.get_historie_metadat()
+        history_list = connector.get_historie_metadat()
         results = []
-
-        for dt in dt_list:
-            local_dt = dt.astimezone(zoneinfo.ZoneInfo("Europe/Prague"))
-            url_date = dt.strftime("%Y%m%d%H%M%S")
+        timezone = get_timezone()
+        for history_item in history_list:
+            local_dt = history_item["datetime"].astimezone(timezone)
             url = reverse(
                 "core:stahnout_data_historicka",
                 kwargs={
                     "model_name": self.__class__.__name__,
                     "ident_cely": self.ident_cely,
-                    "timestamp": url_date,
+                    "timestamp": history_item["timestamp"],
                 },
             )
             results.append(
                 {
                     "datum": local_dt,
                     "url": url,
+                    "uzivatel": history_item["creator"],
                 }
             )
         return results

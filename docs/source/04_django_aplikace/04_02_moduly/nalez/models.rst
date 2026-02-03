@@ -14,6 +14,8 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: __str__()
+
    .. py:method:: get_permission_object()
 
 
@@ -22,6 +24,10 @@ Třídy
    Class pro db model nalez predmet.
 
    **Metody:**
+
+   .. py:method:: __init_()
+
+   .. py:method:: __str__()
 
    .. py:method:: get_permission_object()
 

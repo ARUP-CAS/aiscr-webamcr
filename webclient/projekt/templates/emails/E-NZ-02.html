@@ -6,12 +6,20 @@
     Dobrý den,
 </p>
 <p>
-    v aplikaci AMČR vypršela lhůta pro odevzdání NZ u projektu <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b>
+    v aplikaci AMČR vypršela lhůta pro odevzdání nálezové zprávy u projektu <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b>
 </p>
 <p>
     Detaily projektu zjistíte po přihlášení do AMČR.
 </p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+<p>
+    Hello,
+</p>
+<p>
+    in the AMCR application, the deadline for submitting final report for project <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> on the cadastral area <b>{{ katastr }}</b> has expired.
+</p>
+<p>
+    You can find out the details of the project after logging into AMCR.
+</p>
 {% endblock %}

@@ -14,5 +14,7 @@ Třídy
 
    .. py:method:: ident_cely()
 
+   .. py:method:: __str__()
+
    .. py:method:: get_create_user()
 

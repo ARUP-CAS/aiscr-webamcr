@@ -1252,7 +1252,22 @@ done("ok");
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
     def test_001_core_001(self):
-        # Scenar_1 Přihlášení do AMČR (pozitivní scénář 1)
+        """Test 001 Přihlášení do AMČR
+
+        Testuje přihlášení uživatele.
+
+        Role:
+            Archeolog
+
+        TestData:
+            uživatelské jméno a heslo
+
+        Steps:
+            1. Vyplnění formuláře na titulní stránce
+
+        Expected:
+            1. Uživatel je přesměrován na stránku s titulkem AMČR Homepage
+        """
         logger.info("CoreSeleniumTest.test_core_001.start")
         self.login()
         self.assertEqual(self.driver.title, "AMČR Homepage")

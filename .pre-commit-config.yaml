@@ -22,4 +22,11 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+        
+      - id: generate-selenium-test-docs
+        name: Generate selenium test documentation
+        entry: python3 docs/generate_selenium_test_docs.py
+        language: system
+        pass_filenames: false
+        always_run: true
 exclude: (migrations)

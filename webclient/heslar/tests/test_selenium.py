@@ -11,7 +11,33 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceHeslar(BaseSeleniumTestClass):
     def test_151_test_Fedora_heslar_001(self):
-        # Scenar_151 Test Fedory pro heslare
+        """Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
+
+        Role:
+            Administrator
+
+        TestData:
+            HES-000886
+            HES-001066
+            HES-001065
+
+        Steps:
+            - Vytvoření záznamu Heslář
+            - Editace záznamu Heslář
+            - Vytvoření záznamu Heslář datace
+            - Editace záznamu Heslář datace
+            - Smazání záznamu Heslář datace
+            - Vytvoření záznamu Heslář hierarchie
+            - Editace záznamu Heslář hierarchie
+            - Smazání záznamu Heslář hierarchie
+            - Vytvoření záznamu Heslář odkaz
+            - Editace záznamu Heslář odkaz
+            - Smazání záznamu Heslář odkaz
+            - Smazání záznamu Heslář
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceHeslar.test_151_test_Fedora_heslar_001.start")
         self.login("administrator")
         # C heslo

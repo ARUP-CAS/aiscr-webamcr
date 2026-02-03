@@ -18,7 +18,7 @@ Třídy
 .. py:class:: KatastrFilterMixin
 
    Třída pro filtrování záznamu podle katastru, kraje, okresu a popisních údajů.
-Třída je prepoužita v dalších filtrech.
+   Třída je prepoužita v dalších filtrech.
 
    **Metody:**
 
