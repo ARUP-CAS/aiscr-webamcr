@@ -1,4 +1,4 @@
-Django==5.2.10
+Django==5.2.11
 psycopg2-binary==2.9.11
 simplejson==3.20.2
 django-crispy-forms==2.5
