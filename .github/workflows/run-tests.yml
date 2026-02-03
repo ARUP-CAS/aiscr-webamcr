@@ -6,12 +6,34 @@ permissions:
 
 on:
   workflow_dispatch:
+    #inputs:
+    #  testuj_pouze_neuspesne:
+    #    description: 'Testuj pouze neúspěšné testy bez nového nasazení'
+    #    required: true
+    #    type: boolean
+    #    default: false
+
     inputs:
-      testuj_pouze_neuspesne:
-        description: 'Testuj pouze neúspěšné testy bez nového nasazení'
+      test_mod:
+        description: 'Způsob testování'
         required: true
+        type: choice
+        options:
+          - vsechny
+          - neuspesne
+          - konkretni
+        default: vsechny
+
+      test_cislo:
+        description: 'Číslo testu (použij jen pokud zvolen režim "konkretni")'
+        required: false
+        type: string
+
+      nasadit_verzi:
+        description: 'Nasadit aktuální verzi před testováním'
+        required: false
         type: boolean
-        default: false
+        default: true
 
 
 env:
@@ -70,27 +92,62 @@ jobs:
               cd ${{ env.server_deploy_root }}
               chmod +x ${{ env.dep_script }}
               chmod +x ${{ env.test_script }}
-              if [ "${{ inputs.testuj_pouze_neuspesne }}" != "true" ]; then
+              if [ "${{ inputs.nasadit_verzi }}" == "true" ]; then
                 ./${{ env.dep_script }} ${{ env.server_deploy_root }} ${{ github.ref_name }}
-                echo "Spustit testy"              
-                ./${{ env.test_script }}
-              else
-                echo "Testuji pouze neuspesne bez noveho nasazeni"
-                ./${{ env.test_script }} -f
               fi
+              echo "Spustit testy"  
+              case "${{ inputs.test_mod }}" in
+                vsechny)
+                  echo "Testuji vse"
+                  ./${{ env.test_script }}
+                  ;;
+                neuspesne)
+                  echo "Testuji pouze neuspesne"
+                  ./${{ env.test_script }} -f
+                  ;;
+                konkretni)
+                  echo "Testuji test c ${{ inputs.test_cislo }}"
+                  ./${{ env.test_script }} -t ${{ inputs.test_cislo }}
+                  ;;
+              esac            
             AOF
           EOF
 
-      - name: Stáhnout výsledky testů ze serveru
+      - name: Stáhnout a zobrazit výsledky testů
         shell: bash
+        continue-on-error: true
         run: |
+          echo "Nastavuji SSH..."
           eval $(ssh-agent -s)
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+
+          echo "Stahuji výsledky testů ze serveru..."
           scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
+          scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/test_summary.env ./test_summary.env
+
+          echo "Načítám souhrn výsledků..."
+          source ./test_summary.env
+          echo "✅ Prošlo: $PASSED"
+          echo "❌ Selhalo: $FAILED"
+
+          {
+            echo "## 🧪 Výsledky testů"
+            echo ""
+            echo "| Stav | Počet |"
+            echo "|------|-------|"
+            echo "| ✅ Prošlo | $PASSED |"
+            echo "| ❌ Selhalo | $FAILED |"
+          } >> $GITHUB_STEP_SUMMARY
+          
+          # Pokud nějaký test selhal → celý workflow FAIL
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::error::Selhalo $FAILED testů"
+            exit 1
+          fi
 
       - name: Nahrát výsledky testů jako artifact
         uses: actions/upload-artifact@v6
