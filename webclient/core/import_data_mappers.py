@@ -619,6 +619,7 @@ class ImportModelMapper(ABC):
     komponenty_vazba = False
     require_primary_key_value = None
     primary_key_prefix = None
+    allow_update = True
 
     def __init__(self, value_dict):
         self.value_dict = value_dict
@@ -1211,6 +1212,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
 class ProjektKatastrMapper(ImportModelMapper):
     model_class = ProjektKatastr
     primary_key = ("projekt", "katastr")
+    allow_update = False
     primary_key_filter_field = ("projekt__ident_cely", "katastr__kod")
     primary_key_prefix = (None, "ruian")
 
@@ -1426,6 +1428,7 @@ class AkceVedouciMapper(ImportModelMapper):
 class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
     model_class = ArcheologickyZaznamKatastr
     primary_key = ("archeologicky_zaznam", "katastr")
+    allow_update = False
     primary_key_filter_field = ("archeologicky_zaznam__ident_cely", "katastr__kod")
     primary_key_prefix = (None, "ruian")
 
@@ -1675,6 +1678,7 @@ class DokumentAutorMapper(ImportModelMapper):
     fields = ("poradi",)
     model_class = DokumentAutor
     primary_key = ("dokument", "autor")
+    allow_update = False
     primary_key_filter_field = ("dokument__ident_cely", "autor__ident_cely")
 
     @classmethod
@@ -1688,6 +1692,7 @@ class DokumentAutorMapper(ImportModelMapper):
 class DokumentJazykMapper(ImportModelMapper):
     model_class = DokumentJazyk
     primary_key = ("dokument", "jazyk")
+    allow_update = False
     primary_key_filter_field = ("dokument__ident_cely", "jazyk__ident_cely")
 
     @classmethod
@@ -1701,6 +1706,7 @@ class DokumentJazykMapper(ImportModelMapper):
 class DokumentOsobaMapper(ImportModelMapper):
     model_class = DokumentOsoba
     primary_key = ("dokument", "osoba")
+    allow_update = False
     primary_key_filter_field = ("dokument__ident_cely", "osoba__ident_cely")
 
     @classmethod
@@ -1714,6 +1720,7 @@ class DokumentOsobaMapper(ImportModelMapper):
 class DokumentPosudekMapper(ImportModelMapper):
     model_class = DokumentPosudek
     primary_key = ("dokument", "posudek")
+    allow_update = False
     primary_key_filter_field = ("dokument__ident_cely", "posudek__ident_cely")
 
     @classmethod
@@ -1770,6 +1777,7 @@ class NeidentAkceMapper(ImportModelMapper):
 class NeidentAkceVedouciMapper(ImportModelMapper):
     model_class = NeidentAkceVedouci
     primary_key = ("neident_akce", "vedouci")
+    allow_update = False
     primary_key_filter_field = ("neident_akce__dokument_cast__ident_cely", "vedouci__ident_cely")
 
     @classmethod
@@ -1799,6 +1807,7 @@ class KomponentaMapper(ImportModelMapper):
 class KomponentaAktivitaMapper(ImportModelMapper):
     model_class = KomponentaAktivita
     primary_key = ("komponenta", "aktivita")
+    allow_update = False
     primary_key_filter_field = ("komponenta__ident_cely", "aktivita__ident_cely")
 
     @classmethod
@@ -1881,6 +1890,7 @@ class ExterniZdrojMapper(ImportModelMapper):
 class ExterniZdrojAutorMapper(ImportModelMapper):
     fields = ("poradi",)
     primary_key = ("externi_zdroj", "autor")
+    allow_update = False
     primary_key_filter_field = ("externi_zdroj__ident_cely", "autor__ident_cely")
     model_class = ExterniZdrojAutor
 
@@ -1895,6 +1905,7 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
 class ExterniZdrojEditorMapper(ImportModelMapper):
     fields = ("poradi",)
     primary_key = ("externi_zdroj", "editor")
+    allow_update = False
     primary_key_filter_field = ("externi_zdroj__ident_cely", "editor__ident_cely")
     model_class = ExterniZdrojEditor
 
@@ -1949,6 +1960,7 @@ class UzivatelMapper(ImportModelMapper):
 class UzivatelNotifikaceProjektMapper(ImportModelMapper):
     model_class = Pes
     primary_key = ("uzivatel", "ruian")
+    allow_update = False
     primary_key_prefix = (None, "ruian")
     column_to_field_mapping = {"uzivatel": "user"}
 
@@ -2030,6 +2042,7 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
 class UzivatelOpravneniMapper(ImportModelMapper):
     model_class = User
     primary_key = ("uzivatel", "skupina")
+    allow_update = False
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
@@ -2062,6 +2075,7 @@ class SouborMapper(ImportModelMapper):
 class UzivatelNotifikaceMapper(ImportModelMapper):
     model_class = User
     primary_key = ("uzivatel", "notifikace")
+    allow_update = False
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):

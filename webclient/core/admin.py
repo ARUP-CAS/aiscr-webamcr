@@ -600,7 +600,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 file_names = [name for name in zf.namelist() if not name.startswith("__MACOSX")]
                 file_names = set(file_names)
                 allowed_file_names = set(
-                    [f"{name}.csv".lower() for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
+                    [
+                        f"{name}.csv".lower()
+                        for name, mapper in ImportModelMapper.get_import_data_mapper_dict().items()
+                        if performed_action != ImportDataAdminForm.PERFORMED_ACTION_UPDATE or mapper.allow_update
+                    ]
                 )
                 normalized_imported_file_names = set([normalize_file_name(file_name) for file_name in file_names])
                 if not normalized_imported_file_names.issubset(allowed_file_names):
