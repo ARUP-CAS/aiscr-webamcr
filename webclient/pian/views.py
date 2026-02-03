@@ -80,6 +80,9 @@ def detail(request, ident_cely):
     else:
         logger.debug("pian.views.detail.form.not_valid", extra={"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(request, str(error))
         response = redirect(dj.get_absolute_url() + "/pian/edit/" + str(ident_cely))
     return response
 
@@ -241,6 +244,9 @@ def create(request, dj_ident_cely):
     else:
         logger.info("pian.views.create.not_valid", extra={"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(request, str(error))
         response = redirect(dj.get_absolute_url() + "/pian/zapsat")
     return response
 

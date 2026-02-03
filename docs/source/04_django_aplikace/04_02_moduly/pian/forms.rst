@@ -14,5 +14,9 @@ Třídy
 
    .. py:method:: __init__()
 
-   .. py:method:: clean_geom()
+   .. py:method:: clean()
+
+   .. py:method:: validate_geom()
+
+      Metoda pro validaci PIAN pomocí funkce v postgres databázi.
 

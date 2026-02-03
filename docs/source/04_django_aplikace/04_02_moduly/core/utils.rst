@@ -205,10 +205,6 @@ Funkce
 
    Funkce pro získaní heat mapy projektů ze čtverce.
 
-.. py:function:: get_validation_messages(text)
-
-   Funkce pro získaní textu validační chyby.
-
 .. py:function:: get_message(az, message)
 
    Funkce pro získaní textu správy podle záznamu.
