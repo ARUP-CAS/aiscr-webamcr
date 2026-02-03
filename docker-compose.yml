@@ -136,7 +136,7 @@ services:
     entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
 
   grafana:
-    image: grafana/grafana-enterprise:12.3.1
+    image: grafana/grafana-enterprise:12.3.2
     restart: always
     depends_on:
       - prometheus
