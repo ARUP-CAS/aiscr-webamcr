@@ -96,7 +96,7 @@ class AkceLokality(BaseSeleniumTestClass):
             - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Neuspěšné zapsání lokality, počet lokalit v databázi se nezměnil.
+            - Neúspěšné zapsání lokality, počet lokalit v databázi se nezměnil.
             - Zobrazena nápověda “Vyplňte prosím toto pole” u pole Název.
         """
         logger.info("AkceLokality.test_052_zapsani_lokality_n_001.start")
@@ -202,7 +202,7 @@ class AkceLokality(BaseSeleniumTestClass):
             - Kliknout na “uložit”
 
         Expected:
-            - Neuspěšné vytvoření DJ typu “lokalita”, počet DJ v databázi se nezměnil.
+            - Neúspěšné vytvoření DJ typu “lokalita”, počet DJ v databázi se nezměnil.
             - Zobrazena nápověda “Vyberte prosím v seznamu některou položku” u pole Typ.
         """
         logger.info("AkceLokality.test_054_pridani_DJ_lokality_n_001.start")
@@ -942,8 +942,8 @@ class AkceLokality(BaseSeleniumTestClass):
 
         # D dokument_cast
         time = self.getTime()
-        dockument_ident = Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=new_ident).first().ident_cely
-        self.ElementClick(By.ID, f"dokument-odpojit-{dockument_ident}")
+        dokument_ident = Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=new_ident).first().ident_cely
+        self.ElementClick(By.ID, f"dokument-odpojit-{dokument_ident}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_dokument_cast")
@@ -1034,3 +1034,53 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_dokument_cast_1")
 
         logger.info("AkceLokality.test_143_test_Fedory_lokalita_p_001.end")
+
+    def test_158_smazani_lokality_p_001(self):
+        """Test 158 Smazání lokality (pozitivní scénář 1)
+
+        Test smazání záznamu lokality, test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L2
+
+        TestData:
+            C-N1000109
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L2
+            - Uživatel smaže dokumenty
+            - V panelu pro akce kliknout na  “Další volby” → “Smazat záznam”
+            - V dalším dialogovém okně “Smazat lokalitu” kliknout na “Smazat”
+
+        Expected:
+            - Lokalita je vymazána z databáze.
+        """
+        logger.info("AkceLokality.test_158_smazani_lokality_p_001.start")
+
+        self.login("archivar")
+        self.createFedoraRecord("C-N1000109")
+        self.createFedoraRecord("C-DT-100005454")
+        self.createFedoraRecord("C-DY-100000058")
+        self.uploadFileToFedora(187349, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(63179, "projekt/tests/resources/test.pdf")
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").count(), 1)
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").first().stav, AZ_STAV_ODESLANY)
+        self.goToAddress("/arch-z/lokalita/detail/C-N1000109")
+        self.ElementClick(By.ID, "dokument-odpojit-C-DT-100005454")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.ID, "dokument-odpojit-C-DY-100000058")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "lokalita-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").count(), 0)
+
+        logger.info("AkceLokality.test_158_smazani_lokality_p_001.end")

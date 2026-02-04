@@ -74,13 +74,13 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         Steps:
             1. Uživatel klikne na menu Projekty -> Vybrat projekty
             2. Uživatel kliká na záhlaví jednotlivých sloupců
-            3. Uživatel skyje a znovu zobrazí jednotlivé sloupce pomocí výsuvného
+            3. Uživatel skryje a znovu zobrazí jednotlivé sloupce pomocí výsuvného
                menu
 
         Expected:
             1. Po kliknutí na název sloupce je do adresy stránky přidán řetězec
                ``sort=sloupec``
-            2. Po skytí sloupce zmizí název sloupce ze záhlaví
+            2. Po skrytí sloupce zmizí název sloupce ze záhlaví
             3. Po zobrazení sloupce je sloupec v záhlaví tabulky
         """
         self.login()
@@ -825,7 +825,7 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
             Uživatel otevře projekt ve stavu A4.
 
         Expected:
-            -  Projekt přestunut do stavu A5.
+            -  Projekt přesunut do stavu A5.
         """
         logger.info("ProjektUzavritSeleniumTest.test_010_projekt_uzavrit_p_001.start")
         self.login()
@@ -889,7 +889,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
     def test_012_projekt_archivovat_p_001(self):
         """Test 012 Archivace projektu (pozitivní scénář 1)
 
-        Test archivace projektu ve stavu P5 s pozitivním výsledkem. Scénář končí pousnem projektu do stavu P6,
+        Test archivace projektu ve stavu P5 s pozitivním výsledkem. Scénář končí posunem projektu do stavu P6,
 
         Role:
             Archivář
@@ -923,7 +923,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
     def test_013_projekt_uzavrit_n_001(self):
         """Test 013 Archivace projektu (negativní scénář 1)
 
-        Test archivace projektu ve stavu P5 s negativním výsledkem. Scénář končí nepousnutím projektu do stavu P6,
+        Test archivace projektu ve stavu P5 s negativním výsledkem. Scénář končí neposunutím projektu do stavu P6,
 
         Role:
             Archivář
@@ -1042,14 +1042,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         """
         logger.info("ProjektVratitSeleniumTest.test_015_projekt_vratit_p_002.start")
         self.login("archivar")
-        self.go_to_form()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.uzavren.label") + "')]")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
+        self.goToAddress("/projekt/detail/C-201231446")
+        self.ElementClick(By.ID, "projekt-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
 
@@ -1086,16 +1080,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         """
         logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_003.start")
         self.login("archivar")
-        self.go_to_form()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(
-            By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.ukoncenVTerenu.label") + "')]"
-        )
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
+        self.goToAddress("/projekt/detail/C-201557636")
+        self.ElementClick(By.ID, "projekt-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
 
@@ -1132,16 +1118,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         """
         logger.info("ProjektVratitSeleniumTest.test_017_projekt_vratit_p_004.start")
         self.login("archivar")
-        self.go_to_form()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(
-            By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.zahajenVTerenu.label") + "')]"
-        )
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
+        self.goToAddress("/projekt/detail/C-201121404")
+        self.ElementClick(By.ID, "projekt-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
 
@@ -1180,14 +1158,8 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.createFedoraRecord("C-201665792")
         self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
-        self.go_to_form()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.prihlasen.label") + "')]")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
+        self.goToAddress("/projekt/detail/C-201665792")
+        self.ElementClick(By.ID, "projekt-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
 
@@ -1340,8 +1312,6 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
-    def go_to_form(self):
-        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_022_projekt_zrusit_p_001(self):
         """Test 022 Zrušení projektu (pozitivní scénář 1)
@@ -1373,14 +1343,7 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         self.createFedoraRecord("M-202202919")
         self.uploadFileToFedora(424158, "projekt/tests/resources/test.pdf")
         self.uploadFileToFedora(424159, "projekt/tests/resources/test.pdf")
-        self.go_to_form()
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(
-            By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.navrzenKeZruseni.label") + "')]"
-        )
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
+        self.goToAddress("/projekt/detail/M-202202919")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-zrusit > .app-controls-button-text")
         self.ElementClick(By.ID, "id_reason_text")
         self.driver.find_element(By.ID, "id_reason_text").send_keys("test")
@@ -1390,6 +1353,48 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         ident_cely = self.driver.current_url.split("/")[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZRUSENY)
         logger.info("ProjektZrusitSeleniumTest.test_022_projekt_zrusit_p_001.end")
+
+    def test_155_smazani_projektu_p_001(self):
+        """Test 155 Smazání záznamu projektu (pozitivní scénář 1)
+
+        Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+        Role:
+            Archivář
+
+        TestData:
+            Projekt X-C-202419296
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A0.
+
+        Steps:
+            - Uživatel otevře projekt ke smazání.
+            - Smaže připojenou dokumentaci.
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat záznam”
+            - V dalším dialogovém okně “Smazat projekt” kliknout na “Smazat”
+
+        Expected:
+            -  Projekt je vymazán z databáze.
+        """
+        logger.info("ProjektZrusitSeleniumTest.test_155_smazani_projektu_p_001.start")
+        self.login("archivar")
+        ident_cely = "X-C-202419296"
+        self.createFedoraRecord(ident_cely)
+        self.uploadFileToFedora(646217, "projekt/tests/resources/test.pdf")
+        self.assertEqual(Projekt.objects.filter(ident_cely=ident_cely).count(), 1)
+        self.goToAddress(f"/projekt/detail/{ident_cely}")
+        self.ElementClick(By.ID, "file-smazat-646217")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "projekt-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.assertEqual(Projekt.objects.filter(ident_cely=ident_cely).count(), 0)
+        logger.info("ProjektZrusitSeleniumTest.test_155_smazani_projektu_p_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")

@@ -115,6 +115,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_HTTP2_PROTOCOL_ERROR"),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_FAILED"),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_SOCKET_NOT_CONNECTED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_ABORTED"),
     ]
 
     @classmethod
@@ -156,12 +157,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         options.set_capability("acceptInsecureCerts", True)
         options.add_argument("--ignore-certificate-errors")
         options.add_argument("--allow-insecure-localhost")
-
+        options.add_argument("--window-size=1760,1020")
         if settings.USE_REMOTE_WEB_BROWSER:
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-gpu")
             # options.add_argument("--headless=new")
-            options.add_argument("--window-size=1760,1020")
             # options.add_argument("--disable-dev-shm-usage")
             self.driver = webdriver.Remote(
                 command_executor=f"http://{settings.SELENIMUM_ADDRESS}:{settings.SELENIUM_PORT}/wd/hub", options=options

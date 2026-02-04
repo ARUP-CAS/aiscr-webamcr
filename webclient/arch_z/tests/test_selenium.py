@@ -1397,7 +1397,7 @@ const deadline = Date.now() + 10000;
             - Uživatel otevře projekt s připojenou akcí ve stavu A1 a otevře tuto akci (C-201015104A)
             - Projekty → Vybrat → Filtr → ID obsahuje „C-201015104“ → Vybrat → otevřít projekt → otevřít akci „C-201015104A“
             - V části “Dokumentační jednotky” kliknout na komponentu “K001” u dokumentační jednotky “D01”
-            - V části “Komponenta C-201015104A-K001 ” kliknout na Další nabídka → Smazat komponentu  → v dialogovém okne “SMazat komponetnu” kliknout na “Smazat”
+            - V části “Komponenta C-201015104A-K001 ” kliknout na Další nabídka → Smazat komponentu  → v dialogovém okne “Smazat komponentu” kliknout na “Smazat”
 
         Expected:
             - U dokumentační jednotky “C-201015104A-D01” bude smazána komponenta K001 „XXX”. V databázi bude o jeden záznam méně.
@@ -1529,6 +1529,48 @@ const deadline = Date.now() + 10000;
 
         logger.info("AkceProjektoveAkce.test_102_archivace_projektove_akce_p_001.end")
 
+    def test_156_smazani_projektove_akce_p_001(self):
+        """Test 156 Smazání projektové akce (pozitivní scénář 1)
+
+        Test smazání projektové akce. Scénář končí odstranění projektové akce z databáze.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Projektová akce ve stavu A2.
+
+        TestData:
+            C-201443939A
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře projekt s připojenou akcí ve stavu A2 a otevře tuto akci (C-201443939A)
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat záznam”
+            - V dalším dialogovém okně “Smazat archeologický záznam” kliknout na “Smazat”
+
+        Expected:
+            - Projektová akce “C-201443939A” bude smazána z databáze.
+            - Projekt “C-201443939” bude mít o jednu akci méně
+        """
+        logger.info("AkceProjektoveAkce.test_156_smazani_projektove_akce_p_001.start")
+        self.login("archivar")
+
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-201443939A").first().stav, AZ_STAV_ODESLANY)
+        pocet_akci_old = Akce.objects.filter(projekt__ident_cely="C-201443939").count()
+        self.assertEqual(Projekt.objects.get(ident_cely="C-201443939").stav, PROJEKT_STAV_UZAVRENY)
+        self.createFedoraRecord("C-201443939A")
+        self.goToAddress("/arch-z/akce/detail/C-201443939A")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "akce-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-201443939A").count(), 0)
+        pocet_akci_new = Akce.objects.filter(projekt__ident_cely="C-201443939").count()
+        self.assertEqual(pocet_akci_new, pocet_akci_old - 1)
+        logger.info("AkceProjektoveAkce.test_156_smazani_projektove_akce_p_001.end")
+
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneAkce(AkceTestClass):
@@ -1568,7 +1610,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "actionSubmitBtn")
 
     def test_046_vytvoreni_samostatne_akce_p_001(self):
-        """Test 046 Vytvoření samostané akce (pozitivní scénář 1)
+        """Test 046 Vytvoření samostatné akce (pozitivní scénář 1)
 
         Test vytvoření samostatné akce. Scénář končí vytvořením samostatné akce akce ve stavu A1.
 
@@ -1659,7 +1701,7 @@ class AkceSamostatneAkce(AkceTestClass):
     def test_048_pridani_dokumentacni_jednotky_samostatne_akce_p_001(self):
         """Test 048 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
 
-        Test vytvoření dokumentační jednotky typu celek akce u samostané akce ve stavu A1. Scénář končí vytvořením dokumentační jednotky D01.
+        Test vytvoření dokumentační jednotky typu celek akce u samostatné akce ve stavu A1. Scénář končí vytvořením dokumentační jednotky D01.
 
         Role:
             Badatel
@@ -2335,7 +2377,7 @@ class AkceSamostatneAkce(AkceTestClass):
         Steps:
             - Uživatel se přihlásí
             - Uživatel otevře projekt s připojenou akcí ve stavu A1 a otevře tuto akci (X-C-9000000002A)
-            - Samostatné acke → Vybrat → Filtr → ID obsahuje „X-C-9000000002A“ → Vybrat → otevřít akci „X-C-9000000002A“
+            - Samostatné akce → Vybrat → Filtr → ID obsahuje „X-C-9000000002A“ → Vybrat → otevřít akci „X-C-9000000002A“
             - V části “Dokumentační jednotky” kliknout na dokumentační jednotku “D01”
             - V části “Dokumentační jednotka X-C-9000000002A-D01” kliknout na Další volby → PIAN - vytvořit → vytvořit geometrii PIAN
             - V části nový PIAN nastavit přesnost na hodnotu “odchylka jednotky metrů”
@@ -2541,7 +2583,7 @@ class AkceSamostatneAkce(AkceTestClass):
 
         Preconditions:
             - Uživatel je přihlášen.
-            - amostatná akce ve stavu A1 s dokumentační jednotkou D01, která má připojen potvrzený PIAN.
+            - samostatná akce ve stavu A1 s dokumentační jednotkou D01, která má připojen potvrzený PIAN.
 
         TestData:
             X-C-9000000012A
@@ -2689,7 +2731,7 @@ class AkceSamostatneAkce(AkceTestClass):
             - Vytvoření Samostatné Akce
             - Editace Akce
             - Vytvoření vedoucího Akce
-            - Editace vedoudího Akce
+            - Editace vedoucího Akce
             - Smazání vedoucího Akce
             - Vytvoření DJ
             - Editace DJ
@@ -2706,7 +2748,7 @@ class AkceSamostatneAkce(AkceTestClass):
             - Editace EZ
             - Odpojení EZ
             - Odeslání Akce
-            - Samzání Akce
+            - Smazání Akce
             - Připojení existujícího dokumentu
 
         Expected:
@@ -3039,7 +3081,7 @@ class AkceSamostatneAkce(AkceTestClass):
             - Smazání Výškového bodu
             - Smazání ADB
             - Odpojení a smazání PIAN
-            - Pripojení existujícího PIAN
+            - Připojení existujícího PIAN
             - Odpojení PIAN bez smazání
             - Potvrzení PIAN
             - Vytvoření DJ typu katastr
@@ -3287,7 +3329,7 @@ class AkceSamostatneAkce(AkceTestClass):
             ADB-OPAV13-000001
 
         Steps:
-            - Arcivovat Akci s ADB
+            - Archivovat Akci s ADB
 
         Expected:
             - zápis dat do Fedory
@@ -3311,3 +3353,42 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_140/zmena_stavu")
 
         logger.info("AkceProjektoveAkce.test_140_test_Fedory_PIAN_p_002.end")
+
+    def test_157_smazani_samostatne_akce_p_001(self):
+        """Test 157 Smazání samostatné akce (pozitivní scénář 1)
+
+        Test smazání samostatné akce. Scénář končí odstranění samostatné akce z databáze.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatná akce ve stavu A2.
+
+        TestData:
+            M-9116053A
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře samostatnou akci ve stavu A2 (M-9116053A)
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat záznam”
+            - V dalším dialogovém okně “Smazat archeologický záznam” kliknout na “Smazat”
+
+        Expected:
+            - Samostatná akce “M-9116053A” bude smazána z databáze.
+        """
+        logger.info("AkceSamostatneAkce.test_157_smazani_samostatne_akce_p_001.start")
+        self.login("archivar")
+
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="M-9116053A").first().stav, AZ_STAV_ODESLANY)
+        self.createFedoraRecord("M-9116053A")
+        self.createFedoraRecord("M-TX-195602015")
+        self.uploadFileToFedora(540628, "projekt/tests/resources/test.pdf")
+        self.goToAddress("/arch-z/akce/detail/M-9116053A")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "akce-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="M-9116053A").count(), 0)
+        logger.info("AkceSamostatneAkce.test_157_smazani_samostatne_akce_p_001.end")
