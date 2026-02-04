@@ -43,6 +43,9 @@
       $('#id_vedouci_projektu').selectpicker('val', response.value);
       dropdown.value = response.value;
       $(settings.modalIDD).modal("hide");
+      $("#id_vedouci_projektu").getElementById("#loader-spinner").hide()
+      $("#id_vedouci_projektu").getElementById("#submit-btn").prop("disabled", false);
+      $("#id_vedouci_projektu").getElementById("#submit-btn").siblings('button').prop("disabled", false);
     };
     window.addEventListener("modalLoaded", function() {
       const options = Object.assign(Object.create(defaults), {

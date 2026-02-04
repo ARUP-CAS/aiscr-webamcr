@@ -55,21 +55,10 @@
 
     .bs-stepper {
       overflow-x: auto;
-    }
 
-    .jumbotron {
-      @extend .p-4;
-
-      h1 {
-        @extend .app-heading-thin;
-      }
-
-      .collapse {
-        p {
-          &:last-child {
-            @extend .m-0;
-          }
-        }
+      .bs-stepper-header .step {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
       }
     }
 

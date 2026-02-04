@@ -2,11 +2,12 @@
 
 @import 'scss/app-variables';
 
-@import './bootstrap5_css/bootstrap';
-
 // app styles
 @import 'bootstrap5/bootstrap';
 @import 'scss/app-mixins';
 @import 'scss/app-global';
 @import 'scss/app-layout';
 @import 'scss/app-select2';
+
+// Dark theme
+@import 'scss/app-theme-dark';

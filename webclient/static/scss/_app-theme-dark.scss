@@ -1,0 +1,241 @@
+// --- DARK THEME ---
+// Apply dark mode styles when data-theme="dark" is set
+
+@import 'app-variables-dark';
+
+// Apply dark theme styles to the entire app when theme is set to dark
+html[data-theme="dark"],
+body.app-dark-theme {
+    // Colors
+    --white: #{$white-dark};
+    --gray-100: #{$gray-100-dark};
+    --gray-200: #{$gray-200-dark};
+    --gray-300: #{$gray-300-dark};
+    --gray-400: #{$gray-400-dark};
+    --gray-500: #{$gray-500-dark};
+    --gray-600: #{$gray-600-dark};
+    --gray-700: #{$gray-700-dark};
+    --gray-800: #{$gray-800-dark};
+    --gray-900: #{$gray-900-dark};
+
+    // Body
+    color: $body-text-dark;
+    background-color: $body-bg-dark;
+
+    // Sidebar
+    .app-sidebar-wrapper {
+        background-color: $app-sidebar-bg-dark;
+
+        .app-sidebar-heading {
+            border-bottom-color: $app-sidebar-accordion-border-color-dark;
+        }
+
+        .accordion {
+            .card {
+                background-color: transparent;
+                border-color: $app-sidebar-accordion-border-color-dark;
+
+                .card-header {
+                    background-color: transparent;
+                    border-bottom-color: $app-sidebar-accordion-border-color-dark;
+
+                    .btn {
+                        color: $app-sidebar-accordion-color-dark;
+
+                        &.active {
+                            color: $app-sidebar-accordion-color-active-dark;
+                        }
+                    }
+                }
+
+                .card-body {
+                    background-color: $app-sidebar-accordion-body-color-dark;
+
+                    ul li a {
+                        color: $app-sidebar-accordion-color-dark;
+
+                        &:hover {
+                            color: $app-sidebar-accordion-color-active-dark;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Navbar
+    .navbar {
+        background-color: $navbar-bg-dark !important;
+        border-bottom-color: $card-border-dark;
+
+        .nav-link,
+        .navbar-text {
+            color: $navbar-text-dark !important;
+        }
+    }
+
+    // Main content
+    .app-page-wrapper {
+        background-color: $body-bg-dark;
+    }
+
+    // Cards
+    .card {
+        background-color: $card-bg-dark;
+        border-color: $card-border-dark;
+        color: $body-text-dark;
+
+        .card-header {
+            background-color: $gray-200-dark;
+            border-bottom-color: $card-border-dark;
+        }
+
+        .card-body {
+            color: $body-text-dark;
+        }
+    }
+
+    // Forms and inputs
+    .form-control,
+    .form-select,
+    textarea,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    input[type="search"] {
+        background-color: $input-bg-dark;
+        border-color: $input-border-color-dark;
+        color: $input-text-color-dark;
+
+        &::placeholder {
+            color: $input-placeholder-color-dark;
+        }
+
+        &:focus {
+            background-color: $input-bg-dark;
+            border-color: $primary-dark;
+            color: $input-text-color-dark;
+        }
+    }
+
+    // Buttons
+    .btn-light {
+        background-color: $gray-300-dark;
+        border-color: $gray-400-dark;
+        color: $body-text-dark;
+
+        &:hover {
+            background-color: $gray-400-dark;
+            border-color: $gray-500-dark;
+        }
+    }
+
+    // Borders
+    .border,
+    .border-top,
+    .border-bottom,
+    .border-start,
+    .border-end {
+        border-color: $border-color-dark !important;
+    }
+
+    // Tables
+    table {
+        color: $body-text-dark;
+        border-color: $border-color-dark;
+
+        thead th {
+            background-color: $gray-200-dark;
+            border-color: $border-color-dark;
+        }
+
+        tbody tr {
+            border-color: $border-color-dark;
+
+            &:hover {
+                background-color: $gray-100-dark;
+            }
+        }
+    }
+
+    // Dropdowns
+    .dropdown-menu {
+        background-color: $card-bg-dark;
+        border-color: $card-border-dark;
+
+        .dropdown-item {
+            color: $body-text-dark;
+
+            &:hover {
+                background-color: $gray-200-dark;
+                color: $body-text-dark;
+            }
+        }
+    }
+
+    // Modals
+    .modal-content {
+        background-color: $card-bg-dark;
+        border-color: $card-border-dark;
+    }
+
+    .modal-header {
+        background-color: $gray-200-dark;
+        border-bottom-color: $card-border-dark;
+    }
+
+    // Footer
+    footer {
+        background-color: $app-footer-bottom-bg-dark;
+        color: $body-text-dark;
+
+        a {
+            color: $primary-dark;
+
+            &:hover {
+                color: lighten($primary-dark, 10);
+            }
+        }
+    }
+
+    // Alerts
+    .alert {
+        background-color: rgba($gray-500-dark, 0.2);
+        border-color: rgba($gray-500-dark, 0.5);
+        color: $body-text-dark;
+    }
+
+    // Badge
+    .badge {
+        background-color: $primary-dark;
+        color: $white-dark;
+    }
+
+    // Tooltips
+    .tooltip-inner {
+        background-color: $gray-800-dark;
+        color: $white-dark;
+    }
+
+    // Scrollbar styling (for webkit browsers)
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: $gray-200-dark;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: $gray-400-dark;
+        border-radius: 5px;
+
+        &:hover {
+            background: $gray-500-dark;
+        }
+    }
+}

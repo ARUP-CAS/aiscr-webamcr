@@ -1,0 +1,53 @@
+// --- DARK THEME VARIABLES ---
+// Override light theme variables for dark mode
+
+// Colors
+$white-dark: #121212;
+$gray-100-dark: #1e1e1e;
+$gray-200-dark: #2a2a2a;
+$gray-300-dark: #3a3a3a;
+$gray-400-dark: #4a4a4a;
+$gray-500-dark: #666666;
+$gray-600-dark: #888888;
+$gray-700-dark: #aaaaaa;
+$gray-800-dark: #d0d0d0;
+$gray-900-dark: #e0e0e0;
+$black-dark: #ffffff;
+
+// Text colors
+$body-text-dark: #e0e0e0;
+$body-bg-dark: #121212;
+
+// Primary colors (adjust brightness for dark mode)
+$primary-dark: #42a5f5;
+$secondary-dark: lighten(#303641, 60);
+
+// Sidebar
+$app-sidebar-bg-dark: #1e1e1e;
+$app-sidebar-accordion-color-dark: lighten($app-sidebar-bg-dark, 40);
+$app-sidebar-accordion-color-active-dark: #e0e0e0;
+$app-sidebar-accordion-border-color-dark: rgba($black, .3);
+$app-sidebar-accordion-body-color-dark: rgba($white, .05);
+
+// Navbar
+$navbar-bg-dark: #2a2a2a;
+$navbar-text-dark: #e0e0e0;
+
+// Cards
+$card-bg-dark: #2a2a2a;
+$card-border-dark: #3a3a3a;
+$app-card-shadow-dark: 0 0.5rem 1rem rgba(0, 0, 0, .5);
+$app-card-shadow-hover-dark: 0 0.5rem 1rem rgba(0, 0, 0, .7);
+
+// Inputs
+$input-bg-dark: #2a2a2a;
+$input-border-color-dark: #3a3a3a;
+$input-text-color-dark: #e0e0e0;
+$input-placeholder-color-dark: #888888;
+
+// Borders
+$border-color-dark: #3a3a3a;
+
+// Footer
+$app-footer-top-bg-dark: rgba(#1e1e1e, .9);
+$app-footer-bottom-bg-dark: #1a1a1a;

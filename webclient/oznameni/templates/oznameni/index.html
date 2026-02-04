@@ -186,7 +186,7 @@
   <script src="{% static 'js/daterangepicker-init.js' %}"></script>
   <script>
     window.onload = function (){
-      load_daterangepicker("div_id_planovane_zahajeni")
+      load_daterangepicker("#app-page-wrapper");
       const addPointToPoiLayer = (point_leaf, text) => {
             L.marker(point_leaf,{icon: pinIconRedProject}).bindPopup(text).addTo(poi);
         }

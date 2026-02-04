@@ -116,6 +116,24 @@
   padding: 0;
 }
 
+.input-osoba.form-group #div_id_vedouci_projektu .input-group {
+  display: grid;
+  grid-template-columns: auto min-content;
+
+  .dropdown-menu.show {
+    width: inherit;
+  }
+
+  .input-group-text {
+    grid-column: 2;
+
+    .btn {
+      height: 1.5rem !important;
+      margin-bottom: unset !important;
+    }
+  }
+}
+
 .input-osoba .form-group .input-group-append .input-group-text {
   padding-left: 0rem !important;
   padding-right: 0rem !important;
@@ -354,6 +372,11 @@ form {
       }
     }
 
+  }
+
+  .input-group:has(#other_cadastre_id) .input-group-text .material-icons {
+    font-size: 16px;
+    align-content: center;
   }
 
   .input-group-append {
