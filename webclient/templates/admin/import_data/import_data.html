@@ -62,7 +62,7 @@
             <span id="progressPercentData" style="position: absolute; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
           </div>
         </div>
-        {% if ftp_configured %}
+        {% if import_directory_configured %}
         <div id="progressBarBoxFiles" class="progressBarBox" style="margin-bottom: 1rem">
           <div id="progressBarFiles" class="progressBar" style="position: relative;">
             <span id="progressPercentFiles" style="position: absolute; top: 0; transform: translateX(-50%); color: #fff; line-height: 30px; font-weight: bold;"></span>
@@ -71,11 +71,11 @@
         {% endif %}
         <p style="width: 100%;">
           <b>{% trans "core.templates.admin.import_data.status" %}:</b>
-          <span id="processCurrentStatus">{% trans "core.templates.admin.import_data.starting" %}</span>
+          <span id="processCurrentStatus">{% if invalid_records %}{% trans "core.templates.admin.import_data.validation_failed" %}{% else %}{% trans "core.templates.admin.import_data.waiting_for_approval" %}{% endif %}</span>
         </p>
         <p>
           <input type="button" id="startImport" class="default"
-                 value="{% trans "core.templates.admin.import_data.start_import" %}">
+                 value="{% trans "core.templates.admin.import_data.start_import" %}"{% if invalid_records %} disabled{% endif %}>
           <input type="submit" id="stopRequests" class="default"
                  value="{% trans "core.templates.admin.import_data.stop_request" %}" disabled>
         </p>
@@ -102,7 +102,7 @@
           </tr>
         {% endfor %}
       </table>
-      {% if ftp_configured %}
+      {% if import_directory_configured %}
       <hr style="margin: 2rem 0;">
       <table id="result_list_files" class="table table-bordered table-striped">
         <tr>
@@ -114,7 +114,7 @@
       </table>
       {% else %}
       <hr style="margin: 2rem 0;">
-      <p><strong>{% trans "core.templates.admin.import_data.ftp_not_configured" %}</strong></p>
+      <p><strong>{% trans "core.templates.admin.import_data.import_directory_not_configured" %}</strong></p>
       {% endif %}
     {% else %}
       <form method="post" enctype="multipart/form-data">
@@ -155,6 +155,7 @@
             if (stopRequestButton) {
                 stopRequestButton.disabled = false
             }
+            document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.starting' %}"
             process()
         });
       }

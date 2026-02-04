@@ -650,17 +650,14 @@ class FedoraCustomAdminSite(admin.AdminSite):
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
             try:
-                ftp_settings_obj = CustomAdminSettings.objects.get(item_id="ftp_import_settings")
-                ftp_settings = json.loads(ftp_settings_obj.value)
-                required_keys = (
-                    "FILE_IMPORT_FTP_HOSTNAME",
-                    "FILE_IMPORT_FTP_USER_NAME",
-                    "FILE_IMPORT_FTP_PASSWORD",
-                    "FILE_IMPORT_FTP_PATH",
+                import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
+                import_directory_settings = json.loads(import_directory_settings_obj.value)
+                import_directory_path = import_directory_settings.get("DIRECTORY_PATH")
+                context["import_directory_configured"] = bool(
+                    import_directory_path and os.path.isdir(import_directory_path)
                 )
-                context["ftp_configured"] = all(ftp_settings.get(key) for key in required_keys)
             except (CustomAdminSettings.DoesNotExist, json.JSONDecodeError, ValueError, KeyError):
-                context["ftp_configured"] = False
+                context["import_directory_configured"] = False
             if not invalid_records:
                 tasks.run_data_import.delay(job_id, request.user.id)
                 context["stop_request"] = False

@@ -525,8 +525,11 @@ class VazbaLookupImportField(LookupImportField):
         self.read_field_name = read_field_name
 
     def _process_value(self, value):
-        record = get_record_from_ident(value)
-        if self.lookup_model_class_list:
+        try:
+            record = get_record_from_ident(value)
+        except Exception:
+            record = None
+        if record and self.lookup_model_class_list:
             if isinstance(record, Dokument):
                 if Dokument in self.lookup_model_class_list:
                     self._instance_value = record
