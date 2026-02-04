@@ -91,36 +91,36 @@ jobs:
           ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}          
           echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
           ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
-            sudo su - root << AOF
-              cd ${{ env.server_deploy_root }}
-              chmod +x ${{ env.dep_script }}
-              chmod +x ${{ env.test_script }}
+          sudo su - root << AOF
+          cd ${{ env.server_deploy_root }}
+          chmod +x ${{ env.dep_script }}
+          chmod +x ${{ env.test_script }}
 
-              if [ "$NASADIT" == "true" ]; then
-                echo "Nasazuji verzi: $REF_NAME"
-                #./${{ env.dep_script }} ${{ env.server_deploy_root }} $REF_NAME
-              fi
+          if [ "$NASADIT" == "true" ]; then
+          echo "Nasazuji verzi: $REF_NAME"
+          #./${{ env.dep_script }} ${{ env.server_deploy_root }} $REF_NAME
+          fi
 
-              echo "Spouštím testy v režimu: $TEST_MOD"
-              case "$TEST_MOD" in
-                vsechny)
-                  echo "Testuji vše"
-                  #./${{ env.test_script }}
-                  ;;
-                neuspesne)
-                  echo "Testuji pouze neúspěšné"
-                  #./${{ env.test_script }} -f
-                  ;;
-                konkretni)
-                  echo "Testuji test č. ${{ inputs.test_cislo }}"
-                  #./${{ env.test_script }} -t ${{ inputs.test_cislo }}
-                  ;;
-                *)
-                  echo "::error::Neznámý režim testu: $TEST_MOD"
-                  exit 1
-                  ;;
-              esac
-            AOF
+          echo "Spouštím testy v režimu: $TEST_MOD"
+          case "$TEST_MOD" in
+          vsechny)
+          echo "Testuji vše"
+          #./${{ env.test_script }}
+          ;;
+          neuspesne)
+          echo "Testuji pouze neúspěšné"
+          #./${{ env.test_script }} -f
+          ;;
+          konkretni)
+          echo "Testuji test č. ${{ inputs.test_cislo }}"
+          #./${{ env.test_script }} -t ${{ inputs.test_cislo }}
+          ;;
+          *)
+          echo "::error::Neznámý režim testu: $TEST_MOD"
+          exit 1
+          ;;
+          esac
+          AOF
           EOF
 
       - name: Stáhnout a zobrazit výsledky testů
