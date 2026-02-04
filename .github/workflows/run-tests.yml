@@ -84,7 +84,7 @@ jobs:
           ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}          
           echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
           ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
-          sudo su - root << AOF
+          sudo bash -c '
           cd ${{ env.server_deploy_root }}
           chmod +x ${{ env.dep_script }}
           chmod +x ${{ env.test_script }}
@@ -113,7 +113,7 @@ jobs:
           exit 1
           ;;
           esac
-          AOF
+          '
           EOF
 
       - name: Stáhnout a zobrazit výsledky testů
