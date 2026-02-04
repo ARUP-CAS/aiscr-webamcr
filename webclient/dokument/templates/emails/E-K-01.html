@@ -7,7 +7,7 @@
         v AMČR byl archivován Vámi vložený 3D dokument <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b>.
     </p>
     <p>
-        Detaily zjistíte po přihlášení do do Knihovny 3D v AMČR. Záznam byl zveřejněn v Digitálním archivu AMČR.
+        Detaily zjistíte po přihlášení do do Knihovny 3D v AMČR. Záznam byl zveřejněn v <a href="https://digiarchiv.aiscr.cz/id/{% url 'core:redirect_ident' ident_cely %}">Digitálním archivu AMČR</a>.
     </p>
 {% endblock %}
 {% block content_en %}
@@ -16,6 +16,6 @@
         the 3D document you submitted <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> has been archived in AMCR.
     </p>
     <p>
-        You can find the details after logging into the 3D Library in AMCR. The record has been published in the AMCR Digital Archive.
+        You can find the details after logging into the 3D Library in AMCR. The record has been published in the <a href="https://digiarchiv.aiscr.cz/id/{% url 'core:redirect_ident' ident_cely %}">AMCR Digital Archive</a>.
     </p>
 {% endblock %}

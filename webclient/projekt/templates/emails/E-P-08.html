@@ -12,7 +12,7 @@
 {% block content_en %}
     <p>Hello,</p>
     <p>
-        user <b>{{auth_user.first_name}} {{auth_user.last_name}}</b> ({{auth_user.ident_cely}}) from organization <b>{{auth_user.organizace}}</b> is requesting access to the personal data of the announcer for the project <a href="{% get_site_url %}{% url 'projekt:detail' ident_cely %}">{{ ident_cely }}</a>.
+        user <b>{{auth_user.first_name}} {{auth_user.last_name}}</b> ({{auth_user.ident_cely}}) from organization <b>{{auth_user.organizace}}</b> is requesting access to the personal data of the announcer of the project <a href="{% get_site_url %}{% url 'projekt:detail' ident_cely %}">{{ ident_cely }}</a>.
     </p>
     <p><b>Reason for the request:</b> {{ reason }}</p>
     <p>After evaluating the request, the data can be sent to the user in response to this email.</p>
