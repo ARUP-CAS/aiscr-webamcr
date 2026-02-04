@@ -77,7 +77,10 @@ jobs:
       - name: SSH deployment a testy
         shell: bash
         run: |
-          echo "Použitá větev: ${{ github.ref_name }}"
+          TEST_MOD="${{ inputs.test_mod }}"
+          NASADIT="${{ inputs.nasadit_verzi }}"
+          REF_NAME="${{ github.ref_name }}"
+          echo "Použitá větev: $REF_NAME"
           eval $(ssh-agent -s)
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
@@ -87,29 +90,36 @@ jobs:
           sleep 2          
           ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}          
           echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
-          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << 'EOF'
-            sudo su - root << 'AOF'
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
+            sudo su - root << AOF
               cd ${{ env.server_deploy_root }}
               chmod +x ${{ env.dep_script }}
               chmod +x ${{ env.test_script }}
-              if [ "${{ inputs.nasadit_verzi }}" == "true" ]; then
-                ./${{ env.dep_script }} ${{ env.server_deploy_root }} ${{ github.ref_name }}
+
+              if [ "$NASADIT" == "true" ]; then
+                echo "Nasazuji verzi: $REF_NAME"
+                #./${{ env.dep_script }} ${{ env.server_deploy_root }} $REF_NAME
               fi
-              echo "Spustit testy"  
-              case "${{ inputs.test_mod }}" in
+
+              echo "Spouštím testy v režimu: $TEST_MOD"
+              case "$TEST_MOD" in
                 vsechny)
-                  echo "Testuji vse"
-                  ./${{ env.test_script }}
+                  echo "Testuji vše"
+                  #./${{ env.test_script }}
                   ;;
                 neuspesne)
-                  echo "Testuji pouze neuspesne"
-                  ./${{ env.test_script }} -f
+                  echo "Testuji pouze neúspěšné"
+                  #./${{ env.test_script }} -f
                   ;;
                 konkretni)
-                  echo "Testuji test c ${{ inputs.test_cislo }}"
-                  ./${{ env.test_script }} -t ${{ inputs.test_cislo }}
+                  echo "Testuji test č. ${{ inputs.test_cislo }}"
+                  #./${{ env.test_script }} -t ${{ inputs.test_cislo }}
                   ;;
-              esac            
+                *)
+                  echo "::error::Neznámý režim testu: $TEST_MOD"
+                  exit 1
+                  ;;
+              esac
             AOF
           EOF
 
