@@ -67,59 +67,69 @@ jobs:
             sleep 2
           done
 
-      - name: SSH deployment
+      - name: SSH prepare
         shell: bash
         run: |
-          NASADIT="${{ inputs.nasadit_verzi }}"
-          REF_NAME="${{ github.ref_name }}"
-          echo "Použitá větev: $REF_NAME"
+          echo "Použitá větev: ${{ github.ref_name }}"
+
+          # Spustit SSH agenta
           eval $(ssh-agent -s)
+
+          # Načíst privátní klíč
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
+
+          # Připravit ~/.ssh
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          sleep 2          
-          ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}          
-          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
-          sudo su - root << AOF
-          cd ${{ env.server_deploy_root }}
-          chmod +x ${{ env.dep_script }}
-          if [ "$NASADIT" == "true" ]; then
-          echo "Nasazuji verzi: $REF_NAME"
-          #./${{ env.dep_script }} ${{ env.server_deploy_root }} $REF_NAME
-          fi
-          AOF
-          EOF
 
-      - name: testovani
+          # Otestovat dostupnost serveru
+          ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}
+
+      - name: Deployment + Testovani
         shell: bash
         run: |
-          TEST_MOD="${{ inputs.test_mod }}"               
-          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
-          sudo su - root << AOF
-          cd ${{ env.server_deploy_root }}
-          chmod +x ${{ env.test_script }}
-          echo "Spouštím testy v režimu: $TEST_MOD"
-          case "$TEST_MOD" in
-          vsechny)
-          echo "Testuji vše"
-          #./${{ env.test_script }}
-          ;;
-          neuspesne)
-          echo "Testuji pouze neúspěšné"
-          #./${{ env.test_script }} -f
-          ;;
-          konkretni)
-          echo "Testuji test č. ${{ inputs.test_cislo }}"
-          #./${{ env.test_script }} -t ${{ inputs.test_cislo }}
-          ;;
-          *)
-          echo "::error::Neznámý režim testu: $TEST_MOD"
-          exit 1
-          ;;
-          esac
-          AOF
+          NASADIT="${{ inputs.nasadit_verzi }}"
+          TEST_MOD="${{ inputs.test_mod }}"
+          REF_NAME="${{ github.ref_name }}"
+          TEST_CISLO="${{ inputs.test_cislo }}"
+
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} bash << 'EOF'
+            set -e
+
+            cd '"${{ env.server_deploy_root }}"'
+
+            chmod +x '"${{ env.dep_script }}"'
+            chmod +x '"${{ env.test_script }}"'
+
+            # Deployment
+            if [ "'"$NASADIT"'" = "true" ]; then
+              echo "Nasazuji verzi: '"$REF_NAME"'"
+              # ./'"${{ env.dep_script }}"' '"${{ env.server_deploy_root }}"' '"$REF_NAME"'
+            fi
+
+            # Testování
+            echo "Spouštím testy v režimu: '"$TEST_MOD"'"
+
+            case "'"$TEST_MOD"'" in
+              vsechny)
+                echo "Testuji vše"
+                # ./'"${{ env.test_script }}"'
+                ;;
+              neuspesne)
+                echo "Testuji pouze neúspěšné"
+                # ./'"${{ env.test_script }}"' -f
+                ;;
+              konkretni)
+                echo "Testuji test č. '"$TEST_CISLO"'"
+                # ./'"${{ env.test_script }}"' -t '"$TEST_CISLO"'
+                ;;
+              *)
+                echo "::error::Neznámý režim testu: '"$TEST_MOD"'"
+                exit 1
+                ;;
+            esac
           EOF
 
       - name: Stáhnout a zobrazit výsledky testů
@@ -127,6 +137,13 @@ jobs:
         continue-on-error: true
         run: |
           echo "Nastavuji SSH..."
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
           echo "Stahuji výsledky testů ze serveru..."
           scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
           scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/test_summary.env ./test_summary.env
