@@ -45,6 +45,9 @@ Ve spodní části je ještě zaškrtávací políčko Nasadit aktuální verzi 
 Tato volba způsobí, že se před začátkem testování nasadí větev, kterou uživatel zvolil, jinak se testování spustí rovnou, bez nasazení.
 Vypnutí této volby je vhodné, pokud chceme testovat např. neúspěšné testy po provedení všech testů a chceme se ujistit, že testy opravdu neprošly.
 
+Po dokončení testování je základní výsledek testu vidět po otevření testu v Github Actions. 
+Tabulku s výsledky je možné stáhnout z Artifacts nebo je možné se podívat do protokolu na chyby. 
+
 
 Vyhodnocení výsledků testu
 --------------------------
