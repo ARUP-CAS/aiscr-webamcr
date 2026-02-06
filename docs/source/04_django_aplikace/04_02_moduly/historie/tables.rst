@@ -30,3 +30,5 @@ Třídy
 
    .. py:method:: render_url()
 
+   .. py:method:: value_url()
+

@@ -1235,9 +1235,11 @@ class ExportMixinDate(ExportMixin):
     Mixin pro získaní názvu exportovaného souboru.
     """
 
-    def get_export_filename(self, export_format):
+    def get_export_filename(self, export_format, export_name=None):
+        if export_name is None:
+            export_name = self.export_name
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        return "{}{}.{}".format(self.export_name, now, export_format)
+        return "{}{}.{}".format(export_name, now, export_format)
 
 
 class PermissionFilterMixin:
