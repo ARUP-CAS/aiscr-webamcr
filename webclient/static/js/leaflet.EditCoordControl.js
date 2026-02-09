@@ -45,7 +45,8 @@ L.Control.EditCoordControl = L.Control.extend({
         }
         this._createCoordDialog()
 
-        this._container.onclick = function () {
+        this._container.onclick = function (e) {
+            e.preventDefault();
             if (this._active === false) {
                 this._map.fire('editCoord:start')
 

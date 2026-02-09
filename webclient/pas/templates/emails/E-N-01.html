@@ -13,7 +13,7 @@
 {% endblock %}
 {% block content_en %}
     <p>Hello,</p>
-    Your colleague has sent new finds for approval in AMCR-PAS today:
+    Your collaborator has sent new finds for approval in AMCR-PAS today:
     <ul style="list-style: none">
         {% for ident in projekt_ident_list %}
             <li><a href="{% get_site_url %}{% url 'core:redirect_ident' ident %}">{{ ident }}</a></li>
