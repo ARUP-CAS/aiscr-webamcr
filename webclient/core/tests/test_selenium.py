@@ -161,7 +161,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         if settings.USE_REMOTE_WEB_BROWSER:
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-gpu")
-            # options.add_argument("--headless=new")
+            options.add_argument("--headless=new")
             # options.add_argument("--disable-dev-shm-usage")
             self.driver = webdriver.Remote(
                 command_executor=f"http://{settings.SELENIMUM_ADDRESS}:{settings.SELENIUM_PORT}/wd/hub", options=options
@@ -171,6 +171,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.driver = webdriver.Chrome(options=options)
         self.driver.implicitly_wait(2)
         self.wait_interval = 2
+        self.driver.set_page_load_timeout(120)
+        self.driver.set_script_timeout(30)
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.end")
 
     def get_container_content(self, container_path):
