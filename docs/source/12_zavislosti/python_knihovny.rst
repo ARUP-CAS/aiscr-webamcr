@@ -100,7 +100,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/celery/py-amqp
    * - asgiref
-     - 3.11.0
+     - 3.11.1
      - BSD License
      - https://github.com/django/asgiref/
    * - async-generator
@@ -112,7 +112,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://www.attrs.org/en/stable/changelog.html
    * - babel
-     - 2.17.0
+     - 2.18.0
      - BSD License
      - https://babel.pocoo.org/
    * - backports.zstd
@@ -224,7 +224,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
-     - 6.1.0
+     - 6.2.0
      - BSD License
      - https://github.com/django-commons/django-debug-toolbar
    * - django-debug-toolbar-template-profiler
@@ -372,7 +372,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/ekalinin/nodeenv
    * - numpy
-     - 2.4.1
+     - 2.4.2
      - BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
      - https://numpy.org
    * - odfpy
@@ -392,7 +392,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
-     - 2.3.3
+     - 3.0.0
      - BSD License
      - https://pandas.pydata.org
    * - pdf2image
@@ -412,7 +412,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT-CMU
      - https://python-pillow.github.io
    * - pip
-     - 25.3
+     - 26.0
      - MIT
      - https://pip.pypa.io/
    * - pip-licenses
@@ -444,7 +444,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/prompt-toolkit/python-prompt-toolkit
    * - psutil
-     - 7.2.1
+     - 7.2.2
      - BSD-3-Clause
      - https://github.com/giampaolo/psutil
    * - psycopg2-binary
@@ -676,7 +676,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.5.0
+     - 0.5.3
      - MIT
      - https://github.com/jquast/wcwidth
    * - websocket-client
@@ -684,7 +684,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/websocket-client/websocket-client.git
    * - wrapt
-     - 2.0.1
+     - 2.1.1
      - Copyright (c) 2013-2025, Graham Dumpleton
      - https://github.com/GrahamDumpleton/wrapt
    * - wsproto
