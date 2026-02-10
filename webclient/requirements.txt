@@ -53,7 +53,7 @@ requests==2.32.5
 polib==1.2.0
 pytz==2025.2
 python-dateutil==2.9.0.post0
-setuptools==80.10.2
+setuptools==82.0.0
 Werkzeug==3.1.5
 pyOpenSSL==25.3.0
 sphinxcontrib-googleanalytics==0.5
