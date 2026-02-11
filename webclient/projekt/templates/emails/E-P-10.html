@@ -26,7 +26,7 @@
 {% block content_en %}
     <p>Dear madam/sir,</p>
     <p>
-    in AMCR a project has been ended: <strong><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{project.ident_cely}}</a></strong>, completed on <strong>{{project.datum_ukonceni}}</strong>.
+    a project <strong><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{project.ident_cely}}</a></strong> has been ended in the AMCR, completed on <strong>{{project.datum_ukonceni}}</strong>.
     </p>
         <ul style="list-style: none">
             <li><strong>Project type:</strong> {{ project.typ_projektu.heslo }}</li>

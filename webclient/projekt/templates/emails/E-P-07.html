@@ -7,7 +7,7 @@
         projekt <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b>{{ katastr }}</b> byl navržen k odhlášení oprávněnou organizací <b>{{ organization }}</b>.
     </p>
     <p><b>Důvod:</b> {{ reason }}</p>
-    <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
+    <p>Detaily o projektu zjistíte po přihlášení do AMČR. O způsobu vypořádání uživatele vždy informujte v odpovědi na tento email.</p>
 {% endblock %}
 {% block content_en %}
     <p>Hello,</p>
@@ -15,5 +15,5 @@
         project <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> on cadastral area <b>{{ katastr }}</b> has been proposed for unsubscription by the authorized organization <b>{{ organization }}</b>.
     </p>
     <p><b>Reason:</b> {{ reason }}</p>
-    <p>Details about the project can be found after logging into AMCR.</p>
+    <p>Details about the project can be found after logging into AMCR. Always inform the user of how their request was handled in a reply to this email.</p>
 {% endblock %}

@@ -54,17 +54,17 @@ notification_settings = {
     },
     "E-V-01": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: záznam {ident_cely} - vrácen k doplnění | AMCR: record {ident_cely} - returned for completion",
+        "predmet": "AMČR: záznam {ident_cely} vrácen k doplnění | AMCR: record {ident_cely} returned for completion",
         "cesta_sablony": "emails/E-V-01.html",
     },
     "E-A-01": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: projekt {ident_cely} - archivován | AMCR: project {ident_cely} - archived",
+        "predmet": "AMČR: projekt {ident_cely} archivován | AMCR: project {ident_cely} archived",
         "cesta_sablony": "emails/E-A-01.html",
     },
     "E-A-02": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: záznam {ident_cely} - archivován | AMCR: record {ident_cely} - archived",
+        "predmet": "AMČR: záznam {ident_cely} archivován | AMCR: record {ident_cely} archived",
         "cesta_sablony": "emails/E-A-02.html",
     },
     "E-O-01": {
@@ -109,12 +109,12 @@ notification_settings = {
     },
     "E-P-04": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: projekt {ident_cely} - zrušen | AMCR: project {ident_cely} - cancelled",
+        "predmet": "AMČR: projekt {ident_cely} zrušen | AMCR: project {ident_cely} cancelled",
         "cesta_sablony": "emails/E-P-04.html",
     },
     "E-P-05": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: projekt {ident_cely} - opětovně zapsán | AMCR: project {ident_cely} - re-recorded",
+        "predmet": "AMČR: projekt {ident_cely} opětovně zapsán | AMCR: project {ident_cely} re-recorded",
         "cesta_sablony": "emails/E-P-05.html",
     },
     "E-P-06a": {
@@ -189,7 +189,7 @@ notification_settings = {
     },
     "E-P-11": {
         "zasilat_neaktivnim": True,
-        "predmet": "AMČR: projekt {ident_cely} - žádost o zrušení | AMCR: project {ident_cely} cancellation request",
+        "predmet": "AMČR: projekt {ident_cely} - žádost o zrušení | AMCR: project {ident_cely} - cancellation request",
         "cesta_sablony": "emails/E-P-11.html",
     },
 }

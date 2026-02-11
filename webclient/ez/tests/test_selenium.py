@@ -40,7 +40,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         return ident
 
     def test_117_zapsani_externího_zdroje_p_001(self):
-        """Test 117 Zápsání nového externího zdroje typu kniha (pozitivní scénář 1)
+        """Test 117 Zapsání nového externího zdroje typu kniha (pozitivní scénář 1)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -286,7 +286,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_123_odeslani_externího_zdroje_p_001.end")
 
     def test_124_zapsani_externího_zdroje_p_003(self):
-        """Test 124 Zápsání nového externího zdroje typu část knihy (pozitivní scénář 3)
+        """Test 124 Zapsání nového externího zdroje typu část knihy (pozitivní scénář 3)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -472,7 +472,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_127_zapsani_externího_zdroje_p_006.end")
 
     def test_128_zapsani_externího_zdroje_p_007(self):
-        """Test 128 Zápsání nového externího zdroje typu část knihy (pozitivní scénář 7)
+        """Test 128 Zapsání nového externího zdroje typu část knihy (pozitivní scénář 7)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
@@ -854,3 +854,61 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.check_fedora_change(time, "ez/tests/resources/test_137/odpojeni_lokalita")
 
         logger.info("AkceExterniZdroj.test_137_test_Fedory_externi_zdroj_p_002.end")
+
+    def test_161_smazani_externího_zdroje_p_001(self):
+        """Test 161 Smazání záznamu Externí zdroj (pozitivní scénář 1)
+
+        Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - záznam Externí zdroj ve stavu EZ2
+
+        TestData:
+            X-BIB-1408662
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře Externí zdroj ve stavu EZ2
+            - Uživatel smaže vazby na projekty a lokality
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat”
+            - V dalším dialogovém okně “Smazat externí zdroj” kliknout na “Smazat”
+
+        Expected:
+            - Externí zdroj se smaže v databázi.
+        """
+        logger.info("AkceExterniZdroj.test_161_smazani_externího_zdroje_p_001.start")
+        self.login("archivar")
+        self.createFedoraRecord("X-BIB-1408662")
+        self.assertEqual(ExterniZdroj.objects.filter(ident_cely="X-BIB-1408662").first().stav, EZ_STAV_ODESLANY)
+
+        self.assertEqual(ExterniOdkaz.objects.filter(externi_zdroj__ident_cely="X-BIB-1408662").count(), 4)
+        self.goToAddress("/id/X-BIB-1408662")
+
+        self.ElementClick(By.ID, "ez-odpojit-685")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.ElementClick(By.ID, "ez-odpojit-684")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.ElementClick(By.ID, "ez-odpojit-694")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.ElementClick(By.ID, "ez-odpojit-788")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.assertEqual(ExterniOdkaz.objects.filter(externi_zdroj__ident_cely="X-BIB-1408662").count(), 0)
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "ez-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.assertEqual(ExterniZdroj.objects.filter(ident_cely="X-BIB-1408662").count(), 0)
+        logger.info("AkceExterniZdroj.test_161_smazani_externího_zdroje_p_001.end")

@@ -40,6 +40,8 @@ Třídy
 
    .. py:method:: get_context_data()
 
+   .. py:method:: render_to_response()
+
 
 .. py:class:: ProjektHistorieListView
 

@@ -102,7 +102,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             - Uživatel klikne na tlačítko Uložit
 
         Expected:
-            - Neuspěšné zapsání projektu, počet projektů v databázi se nezměnil.
+            - Neúspěšné zapsání projektu, pocet projektů v databázi se nezměnil.
             - Zobrazena chyba “Chybí Projekt”
         """
         logger.info("AkceSamostatneNalezy.test_026_zapsani_samostatneho_nalezu_n_001.start")
@@ -306,8 +306,8 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         Steps:
             - Uživatel se přihlásí
-            - Uživatel otevře samostatný nález ve stavu SN2 (čílso SN)
-            - Samostatné nálezy → Vybrat → Filtr → ID obsahuje „čílso SN“ → Vybrat → otevřít SN
+            - Uživatel otevře samostatný nález ve stavu SN2 (číslo SN)
+            - Samostatné nálezy → Vybrat → Filtr → ID obsahuje „číslo SN“ → Vybrat → otevřít SN
             - Uživatel vyplní testovací data do formuláře
             - Uživatel klikne na tlačítko Odeslat a volbu potvrdí
 
@@ -615,7 +615,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.end")
 
     def test_154_zobrazeni_spoluprace_p_001(self):
-        """Test 154 Zobrazební spolupráce Badatel - Archeolog (pozitivní scénář 1)
+        """Test 154 Zobrazení spolupráce Badatel - Archeolog (pozitivní scénář 1)
 
         Test  "Badatel" vidí jen své spolupráce a "Archeolog" vidí jen spolupráce své organizace
 
@@ -650,3 +650,50 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         pocet_zaznamu = self.driver.find_element(By.ID, "pocet_zaznamu").text
         self.assertEqual(pocet_zaznamu, "70")
         logger.info("AkceSamostatneNalezy.test_154_zobrazeni_spoluprace_p_001.end")
+
+    def test_159_smazani_samostatneho_nalezu_p_001(self):
+        """Test 159 Smazání samostatného nálezu (pozitivní scénář 1)
+
+        Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Samostatný nález je ve stavu SN3
+
+        TestData:
+            C-202010474-N00002
+
+        Steps:
+            - Uživatel se přihlásí jako Archivář
+            - Uživatel otevře samostatný nález ve stavu SN3
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat nález”
+            - V dalším dialogovém okně “Smazat samostatný nález” kliknout na “Smazat”
+
+        Expected:
+            - Samostatný nález “C-202010474-N00002” bude smazán z databáze.
+            - Projekt bude mít o 1 samostatný nález méně
+        """
+        logger.info("AkceSamostatneNalezy.test_159_smazani_samostatneho_nalezu_p_001.start")
+        self.login("archivar")
+
+        self.createFedoraRecord("C-202010474-N00002")
+        self.uploadFileToFedora(518731, "dokument/tests/resources/test.jpg")
+        self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="C-202010474-N00002").first().stav, SN_POTVRZENY)
+        pocet_pas_old = SamostatnyNalez.objects.filter(projekt__ident_cely="C-202010474").count()
+        self.goToAddress("/pas/detail/C-202010474-N00002")
+
+        self.ElementClick(By.ID, "file-smazat-518731")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "pas-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="C-202010474-N00002").count(), 0)
+        pocet_pas_new = SamostatnyNalez.objects.filter(projekt__ident_cely="C-202010474").count()
+        self.assertEqual(pocet_pas_new, pocet_pas_old - 1)
+        logger.info("AkceSamostatneNalezy.test_159_smazani_samostatneho_nalezu_p_001.end")

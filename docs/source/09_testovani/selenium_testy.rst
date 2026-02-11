@@ -194,7 +194,7 @@ Přehled testů
      -
        .. raw:: html
        
-          <a class="reference internal" href="#selenium-test-projekt-012-test-012-archivace-projektu-pozitivn-sc-n-1" title="Test archivace projektu ve stavu P5 s pozitivním výsledkem. Scénář končí pousnem projektu do stavu P6,">Archivace projektu (pozitivní scénář 1)</a>
+          <a class="reference internal" href="#selenium-test-projekt-012-test-012-archivace-projektu-pozitivn-sc-n-1" title="Test archivace projektu ve stavu P5 s pozitivním výsledkem. Scénář končí posunem projektu do stavu P6,">Archivace projektu (pozitivní scénář 1)</a>
 
    * - 013
      - projekt
@@ -202,7 +202,7 @@ Přehled testů
      -
        .. raw:: html
        
-          <a class="reference internal" href="#selenium-test-projekt-013-test-013-archivace-projektu-negativn-sc-n-1" title="Test archivace projektu ve stavu P5 s negativním výsledkem. Scénář končí nepousnutím projektu do stavu P6,">Archivace projektu (negativní scénář 1)</a>
+          <a class="reference internal" href="#selenium-test-projekt-013-test-013-archivace-projektu-negativn-sc-n-1" title="Test archivace projektu ve stavu P5 s negativním výsledkem. Scénář končí neposunutím projektu do stavu P6,">Archivace projektu (negativní scénář 1)</a>
 
    * - 014
      - projekt
@@ -458,7 +458,7 @@ Přehled testů
      -
        .. raw:: html
        
-          <a class="reference internal" href="#selenium-test-arch-z-046-test-046-vytvo-en-samostan-akce-pozitivn-sc-n-1" title="Test vytvoření samostatné akce. Scénář končí vytvořením samostatné akce akce ve stavu A1.">Vytvoření samostané akce (pozitivní scénář 1)</a>
+          <a class="reference internal" href="#selenium-test-arch-z-046-test-046-vytvo-en-samostatn-akce-pozitivn-sc-n-1" title="Test vytvoření samostatné akce. Scénář končí vytvořením samostatné akce akce ve stavu A1.">Vytvoření samostatné akce (pozitivní scénář 1)</a>
 
    * - 047
      - arch_z
@@ -474,7 +474,7 @@ Přehled testů
      -
        .. raw:: html
        
-          <a class="reference internal" href="#selenium-test-arch-z-048-test-048-p-id-n-dokumenta-n-jednotky-celek-akce-pozitiv" title="Test vytvoření dokumentační jednotky typu celek akce u samostané akce ve stavu A1. Scénář končí vytvořením dokumentač...">Přidání dokumentační jednotky celek akce (pozitivní scénář 1)</a>
+          <a class="reference internal" href="#selenium-test-arch-z-048-test-048-p-id-n-dokumenta-n-jednotky-celek-akce-pozitiv" title="Test vytvoření dokumentační jednotky typu celek akce u samostatné akce ve stavu A1. Scénář končí vytvořením dokumenta...">Přidání dokumentační jednotky celek akce (pozitivní scénář 1)</a>
 
    * - 049
      - arch_z
@@ -1026,7 +1026,7 @@ Přehled testů
      -
        .. raw:: html
        
-          <a class="reference internal" href="#selenium-test-ez-117-test-117-z-ps-n-nov-ho-extern-ho-zdroje-typu-kniha-pozitivn" title="Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.">Zápsání nového externího zdroje typu kniha (pozitivní scénář 1)</a>
+          <a class="reference internal" href="#selenium-test-ez-117-test-117-zaps-n-nov-ho-extern-ho-zdroje-typu-kniha-pozitivn" title="Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.">Zapsání nového externího zdroje typu kniha (pozitivní scénář 1)</a>
 
    * - 118
      - ez
@@ -1082,7 +1082,7 @@ Přehled testů
      -
        .. raw:: html
        
-          <a class="reference internal" href="#selenium-test-ez-124-test-124-z-ps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit" title="Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.">Zápsání nového externího zdroje typu část knihy (pozitivní scénář 3)</a>
+          <a class="reference internal" href="#selenium-test-ez-124-test-124-zaps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit" title="Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.">Zapsání nového externího zdroje typu část knihy (pozitivní scénář 3)</a>
 
    * - 125
      - ez
@@ -1114,7 +1114,7 @@ Přehled testů
      -
        .. raw:: html
        
-          <a class="reference internal" href="#selenium-test-ez-128-test-128-z-ps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit" title="Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.">Zápsání nového externího zdroje typu část knihy (pozitivní scénář 7)</a>
+          <a class="reference internal" href="#selenium-test-ez-128-test-128-zaps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit" title="Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.">Zapsání nového externího zdroje typu část knihy (pozitivní scénář 7)</a>
 
    * - 129
      - ez
@@ -1329,7 +1329,71 @@ Přehled testů
      -
        .. raw:: html
        
-          <a class="reference internal" href="#selenium-test-pas-154-test-154-zobrazebn-spolupr-ce-badatel-archeolog-pozitivn-s" title="Test  &quot;Badatel&quot; vidí jen své spolupráce a &quot;Archeolog&quot; vidí jen spolupráce své organizace">Zobrazební spolupráce Badatel - Archeolog (pozitivní scénář 1)</a>
+          <a class="reference internal" href="#selenium-test-pas-154-test-154-zobrazen-spolupr-ce-badatel-archeolog-pozitivn-sc" title="Test  &quot;Badatel&quot; vidí jen své spolupráce a &quot;Archeolog&quot; vidí jen spolupráce své organizace">Zobrazení spolupráce Badatel - Archeolog (pozitivní scénář 1)</a>
+
+   * - 155
+     - projekt
+     - | Archivář
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-projekt-155-test-155-smaz-n-z-znamu-projektu-pozitivn-sc-n-1" title="Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat">Smazání záznamu projektu (pozitivní scénář 1)</a>
+
+   * - 156
+     - arch_z
+     - | Archivář
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-arch-z-156-test-156-smaz-n-projektov-akce-pozitivn-sc-n-1" title="Test smazání projektové akce. Scénář končí odstranění projektové akce z databáze.">Smazání projektové akce (pozitivní scénář 1)</a>
+
+   * - 157
+     - arch_z
+     - | Archivář
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-arch-z-157-test-157-smaz-n-samostatn-akce-pozitivn-sc-n-1" title="Test smazání samostatné akce. Scénář končí odstranění samostatné akce z databáze.">Smazání samostatné akce (pozitivní scénář 1)</a>
+
+   * - 158
+     - lokalita
+     - | Archivář
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-lokalita-158-test-158-smaz-n-lokality-pozitivn-sc-n-1" title="Test smazání záznamu lokality, test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat.">Smazání lokality (pozitivní scénář 1)</a>
+
+   * - 159
+     - pas
+     - | Archivář
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-pas-159-test-159-smaz-n-samostatn-ho-n-lezu-pozitivn-sc-n-1" title="Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat">Smazání samostatného nálezu (pozitivní scénář 1)</a>
+
+   * - 160
+     - dokument
+     - | Archivář
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-dokument-160-test-160-smaz-n-z-znamu-v-knihovn-3d-pozitivn-sc-n-1" title="Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat">Smazání záznamu v Knihovně 3D (pozitivní scénář 1)</a>
+
+   * - 161
+     - ez
+     - | Archivář
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-ez-161-test-161-smaz-n-z-znamu-extern-zdroj-pozitivn-sc-n-1" title="Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat.">Smazání záznamu Externí zdroj (pozitivní scénář 1)</a>
+
+   * - 162
+     - dokument
+     - | Archivář
+     -
+       .. raw:: html
+       
+          <a class="reference internal" href="#selenium-test-dokument-162-test-162-smaz-n-dokumentu-pozitivn-sc-n-1" title="Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat">Smazání dokumentu (pozitivní scénář 1)</a>
 
 Arch Z
 ------
@@ -1818,10 +1882,10 @@ Implementován v
 ``webclient.arch_z.tests.test_selenium.AkceProjektoveAkce.test_044_smazani_predmetu_komponente_p_001``.
 
 
-.. _selenium-test-arch-z-046-test-046-vytvo-en-samostan-akce-pozitivn-sc-n-1:
+.. _selenium-test-arch-z-046-test-046-vytvo-en-samostatn-akce-pozitivn-sc-n-1:
 
-Test 046 Vytvoření samostané akce (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 046 Vytvoření samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test vytvoření samostatné akce. Scénář končí vytvořením samostatné akce akce ve stavu A1.
 
@@ -1894,7 +1958,7 @@ Implementován v
 Test 048 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Test vytvoření dokumentační jednotky typu celek akce u samostané akce ve stavu A1. Scénář končí vytvořením dokumentační jednotky D01.
+Test vytvoření dokumentační jednotky typu celek akce u samostatné akce ve stavu A1. Scénář končí vytvořením dokumentační jednotky D01.
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -2983,7 +3047,7 @@ Uživatelské kroky
 - Uživatel otevře projekt s připojenou akcí ve stavu A1 a otevře tuto akci (C-201015104A)
 - Projekty → Vybrat → Filtr → ID obsahuje „C-201015104“ → Vybrat → otevřít projekt → otevřít akci „C-201015104A“
 - V části “Dokumentační jednotky” kliknout na komponentu “K001” u dokumentační jednotky “D01”
-- V části “Komponenta C-201015104A-K001 ” kliknout na Další nabídka → Smazat komponentu  → v dialogovém okne “SMazat komponetnu” kliknout na “Smazat”
+- V části “Komponenta C-201015104A-K001 ” kliknout na Další nabídka → Smazat komponentu  → v dialogovém okne “Smazat komponentu” kliknout na “Smazat”
 
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
@@ -3064,7 +3128,7 @@ Uživatelské kroky
 
 - Uživatel se přihlásí
 - Uživatel otevře projekt s připojenou akcí ve stavu A1 a otevře tuto akci (X-C-9000000002A)
-- Samostatné acke → Vybrat → Filtr → ID obsahuje „X-C-9000000002A“ → Vybrat → otevřít akci „X-C-9000000002A“
+- Samostatné akce → Vybrat → Filtr → ID obsahuje „X-C-9000000002A“ → Vybrat → otevřít akci „X-C-9000000002A“
 - V části “Dokumentační jednotky” kliknout na dokumentační jednotku “D01”
 - V části “Dokumentační jednotka X-C-9000000002A-D01” kliknout na Další volby → PIAN - vytvořit → vytvořit geometrii PIAN
 - V části nový PIAN nastavit přesnost na hodnotu “odchylka jednotky metrů”
@@ -3233,7 +3297,7 @@ Předpoklady
 ^^^^^^^^^^^
 
 - Uživatel je přihlášen.
-- amostatná akce ve stavu A1 s dokumentační jednotkou D01, která má připojen potvrzený PIAN.
+- samostatná akce ve stavu A1 s dokumentační jednotkou D01, která má připojen potvrzený PIAN.
 
 Testovací data
 ^^^^^^^^^^^^^^
@@ -3426,7 +3490,7 @@ Uživatelské kroky
 - Vytvoření Samostatné Akce
 - Editace Akce
 - Vytvoření vedoucího Akce
-- Editace vedoudího Akce
+- Editace vedoucího Akce
 - Smazání vedoucího Akce
 - Vytvoření DJ
 - Editace DJ
@@ -3443,7 +3507,7 @@ Uživatelské kroky
 - Editace EZ
 - Odpojení EZ
 - Odeslání Akce
-- Samzání Akce
+- Smazání Akce
 - Připojení existujícího dokumentu
 
 Očekávané výsledky
@@ -3491,7 +3555,7 @@ Uživatelské kroky
 - Smazání Výškového bodu
 - Smazání ADB
 - Odpojení a smazání PIAN
-- Pripojení existujícího PIAN
+- Připojení existujícího PIAN
 - Odpojení PIAN bez smazání
 - Potvrzení PIAN
 - Vytvoření DJ typu katastr
@@ -3531,7 +3595,7 @@ ADB-OPAV13-000001
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
 
-- Arcivovat Akci s ADB
+- Archivovat Akci s ADB
 
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
@@ -3543,6 +3607,93 @@ Stav testu
 
 Implementován v
 ``webclient.arch_z.tests.test_selenium.AkceSamostatneAkce.test_140_test_Fedory_ADB_p_001``.
+
+
+.. _selenium-test-arch-z-156-test-156-smaz-n-projektov-akce-pozitivn-sc-n-1:
+
+Test 156 Smazání projektové akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Test smazání projektové akce. Scénář končí odstranění projektové akce z databáze.
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Archivář
+
+Předpoklady
+^^^^^^^^^^^
+
+- Uživatel je přihlášen.
+- Projektová akce ve stavu A2.
+
+Testovací data
+^^^^^^^^^^^^^^
+
+C-201443939A
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel se přihlásí
+- Uživatel otevře projekt s připojenou akcí ve stavu A2 a otevře tuto akci (C-201443939A)
+- V panelu pro akce kliknout na  “Další akce” → “Smazat záznam”
+- V dalším dialogovém okně “Smazat archeologický záznam” kliknout na “Smazat”
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Projektová akce “C-201443939A” bude smazána z databáze.
+- Projekt “C-201443939” bude mít o jednu akci méně
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.arch_z.tests.test_selenium.AkceProjektoveAkce.test_156_smazani_projektove_akce_p_001``.
+
+
+.. _selenium-test-arch-z-157-test-157-smaz-n-samostatn-akce-pozitivn-sc-n-1:
+
+Test 157 Smazání samostatné akce (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Test smazání samostatné akce. Scénář končí odstranění samostatné akce z databáze.
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Archivář
+
+Předpoklady
+^^^^^^^^^^^
+
+- Uživatel je přihlášen.
+- Samostatná akce ve stavu A2.
+
+Testovací data
+^^^^^^^^^^^^^^
+
+M-9116053A
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel se přihlásí
+- Uživatel otevře samostatnou akci ve stavu A2 (M-9116053A)
+- V panelu pro akce kliknout na  “Další akce” → “Smazat záznam”
+- V dalším dialogovém okně “Smazat archeologický záznam” kliknout na “Smazat”
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Samostatná akce “M-9116053A” bude smazána z databáze.
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.arch_z.tests.test_selenium.AkceSamostatneAkce.test_157_smazani_samostatne_akce_p_001``.
 
 
 Core
@@ -3731,7 +3882,7 @@ Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
 
 - Uživatel se přihlásí
-- Uživatel otevře dokument ve stavu L1
+- Uživatel otevře dokument ve stavu D1
 - Dokument → Vybrat → Filtr → ID obsahuje „X-C-TX-000000003“ → Vybrat → otevřít dokument
 - Uživatel klikne na tlačítko Odeslat
 
@@ -4846,7 +4997,7 @@ Uživatelské kroky
 - Nahrání souboru
 - Upgrade souboru
 - Odeslání 3D dokumentu
-- Smazáí nálezu
+- Smazání nálezu
 - Smazání souboru
 - Smazání 3D dokumentu
 
@@ -4862,12 +5013,99 @@ Implementován v
 ``webclient.dokument.tests.test_selenium.AkceKnihovna3D.test_144_test_Fedory_3D_p_001``.
 
 
+.. _selenium-test-dokument-160-test-160-smaz-n-z-znamu-v-knihovn-3d-pozitivn-sc-n-1:
+
+Test 160 Smazání záznamu v Knihovně 3D (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Archivář
+
+Předpoklady
+^^^^^^^^^^^
+
+- Uživatel je přihlášen.
+- Záznam v Knihovně 3D ve stavu D2,
+
+Testovací data
+^^^^^^^^^^^^^^
+
+C-3D-202600001
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel se přihlásí
+- Uživatel otevře modul “Knihovna 3D”  → vybere záznam „C-3D-202600001“
+- Smaže připojený soubor
+- V panelu pro akce kliknout na  “Další akce” → “Smazat dokument”
+- V dalším dialogovém okně “Smazat dokument” kliknout na “Smazat”
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Záznam v Knihovně 3D v databázi bude smazán.
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.dokument.tests.test_selenium.AkceKnihovna3D.test_160_smazani_zaznamu_knihovny_D3_p_001``.
+
+
+.. _selenium-test-dokument-162-test-162-smaz-n-dokumentu-pozitivn-sc-n-1:
+
+Test 162 Smazání dokumentu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Archivář
+
+Předpoklady
+^^^^^^^^^^^
+
+- Uživatel je přihlášen.
+- Dokument je ve stavu D2.
+
+Testovací data
+^^^^^^^^^^^^^^
+
+C-TX-197602290
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel se přihlásí
+- Uživatel otevře dokument ve stavu D2
+- V panelu pro akce kliknout na  “Další akce” → “Smazat dokument”
+- V dalším dialogovém okně “Smazat dokument” kliknout na “Smazat”
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Dokument bude smazán z databáze
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.dokument.tests.test_selenium.AkceDokumenty.test_162_smazání_dokumentu_p_001``.
+
+
 Ez
 --
 
-.. _selenium-test-ez-117-test-117-z-ps-n-nov-ho-extern-ho-zdroje-typu-kniha-pozitivn:
+.. _selenium-test-ez-117-test-117-zaps-n-nov-ho-extern-ho-zdroje-typu-kniha-pozitivn:
 
-Test 117 Zápsání nového externího zdroje typu kniha (pozitivní scénář 1)
+Test 117 Zapsání nového externího zdroje typu kniha (pozitivní scénář 1)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
@@ -5150,9 +5388,9 @@ Implementován v
 ``webclient.ez.tests.test_selenium.AkceExterniZdroj.test_123_odeslani_externího_zdroje_p_001``.
 
 
-.. _selenium-test-ez-124-test-124-z-ps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit:
+.. _selenium-test-ez-124-test-124-zaps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit:
 
-Test 124 Zápsání nového externího zdroje typu část knihy (pozitivní scénář 3)
+Test 124 Zapsání nového externího zdroje typu část knihy (pozitivní scénář 3)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
@@ -5298,9 +5536,9 @@ Implementován v
 ``webclient.ez.tests.test_selenium.AkceExterniZdroj.test_127_zapsani_externího_zdroje_p_006``.
 
 
-.. _selenium-test-ez-128-test-128-z-ps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit:
+.. _selenium-test-ez-128-test-128-zaps-n-nov-ho-extern-ho-zdroje-typu-st-knihy-pozit:
 
-Test 128 Zápsání nového externího zdroje typu část knihy (pozitivní scénář 7)
+Test 128 Zapsání nového externího zdroje typu část knihy (pozitivní scénář 7)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
@@ -5526,6 +5764,50 @@ Implementován v
 ``webclient.ez.tests.test_selenium.AkceExterniZdroj.test_137_test_Fedory_externi_zdroj_p_002``.
 
 
+.. _selenium-test-ez-161-test-161-smaz-n-z-znamu-extern-zdroj-pozitivn-sc-n-1:
+
+Test 161 Smazání záznamu Externí zdroj (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat.
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Archivář
+
+Předpoklady
+^^^^^^^^^^^
+
+- Uživatel je přihlášen.
+- záznam Externí zdroj ve stavu EZ2
+
+Testovací data
+^^^^^^^^^^^^^^
+
+X-BIB-1408662
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel se přihlásí
+- Uživatel otevře Externí zdroj ve stavu EZ2
+- Uživatel smaže vazby na projekty a lokality
+- V panelu pro akce kliknout na  “Další akce” → “Smazat”
+- V dalším dialogovém okně “Smazat externí zdroj” kliknout na “Smazat”
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Externí zdroj se smaže v databázi.
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.ez.tests.test_selenium.AkceExterniZdroj.test_161_smazani_externího_zdroje_p_001``.
+
+
 Heslar
 ------
 
@@ -5642,7 +5924,7 @@ Uživatelské kroky
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
 
-- Neuspěšné zapsání lokality, počet lokalit v databázi se nezměnil.
+- Neúspěšné zapsání lokality, počet lokalit v databázi se nezměnil.
 - Zobrazena nápověda “Vyplňte prosím toto pole” u pole Název.
 
 Stav testu
@@ -5734,7 +6016,7 @@ Uživatelské kroky
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
 
-- Neuspěšné vytvoření DJ typu “lokalita”, počet DJ v databázi se nezměnil.
+- Neúspěšné vytvoření DJ typu “lokalita”, počet DJ v databázi se nezměnil.
 - Zobrazena nápověda “Vyberte prosím v seznamu některou položku” u pole Typ.
 
 Stav testu
@@ -6198,6 +6480,50 @@ Implementován v
 ``webclient.lokalita.tests.test_selenium.AkceLokality.test_143_test_Fedory_lokalita_p_001``.
 
 
+.. _selenium-test-lokalita-158-test-158-smaz-n-lokality-pozitivn-sc-n-1:
+
+Test 158 Smazání lokality (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Test smazání záznamu lokality, test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat.
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Archivář
+
+Předpoklady
+^^^^^^^^^^^
+
+- Uživatel je přihlášen.
+- Lokalita je ve stavu L2
+
+Testovací data
+^^^^^^^^^^^^^^
+
+C-N1000109
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel se přihlásí
+- Uživatel otevře lokalitu ve stavu L2
+- Uživatel smaže dokumenty
+- V panelu pro akce kliknout na  “Další volby” → “Smazat záznam”
+- V dalším dialogovém okně “Smazat lokalitu” kliknout na “Smazat”
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Lokalita je vymazána z databáze.
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.lokalita.tests.test_selenium.AkceLokality.test_158_smazani_lokality_p_001``.
+
+
 Oznameni
 --------
 
@@ -6310,7 +6636,7 @@ Uživatelské kroky
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
 
-- Neuspěšné zapsání projektu, počet projektů v databázi se nezměnil.
+- Neúspěšné zapsání projektu, pocet projektů v databázi se nezměnil.
 - Zobrazena chyba “Chybí Projekt”
 
 Stav testu
@@ -6476,8 +6802,8 @@ Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
 
 - Uživatel se přihlásí
-- Uživatel otevře samostatný nález ve stavu SN2 (čílso SN)
-- Samostatné nálezy → Vybrat → Filtr → ID obsahuje „čílso SN“ → Vybrat → otevřít SN
+- Uživatel otevře samostatný nález ve stavu SN2 (číslo SN)
+- Samostatné nálezy → Vybrat → Filtr → ID obsahuje „číslo SN“ → Vybrat → otevřít SN
 - Uživatel vyplní testovací data do formuláře
 - Uživatel klikne na tlačítko Odeslat a volbu potvrdí
 
@@ -6710,10 +7036,10 @@ Implementován v
 ``webclient.pas.tests.test_selenium.AkceSamostatneNalezy.test_147_test_Fedora_PAS_001``.
 
 
-.. _selenium-test-pas-154-test-154-zobrazebn-spolupr-ce-badatel-archeolog-pozitivn-s:
+.. _selenium-test-pas-154-test-154-zobrazen-spolupr-ce-badatel-archeolog-pozitivn-sc:
 
-Test 154 Zobrazební spolupráce Badatel - Archeolog (pozitivní scénář 1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Test 154 Zobrazení spolupráce Badatel - Archeolog (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test  "Badatel" vidí jen své spolupráce a "Archeolog" vidí jen spolupráce své organizace
 
@@ -6754,6 +7080,50 @@ Implementován v
 ``webclient.pas.tests.test_selenium.AkceSamostatneNalezy.test_154_zobrazeni_spoluprace_p_001``.
 
 
+.. _selenium-test-pas-159-test-159-smaz-n-samostatn-ho-n-lezu-pozitivn-sc-n-1:
+
+Test 159 Smazání samostatného nálezu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Archivář
+
+Předpoklady
+^^^^^^^^^^^
+
+- Uživatel je přihlášen.
+- Samostatný nález je ve stavu SN3
+
+Testovací data
+^^^^^^^^^^^^^^
+
+C-202010474-N00002
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel se přihlásí jako Archivář
+- Uživatel otevře samostatný nález ve stavu SN3
+- V panelu pro akce kliknout na  “Další akce” → “Smazat nález”
+- V dalším dialogovém okně “Smazat samostatný nález” kliknout na “Smazat”
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+- Samostatný nález “C-202010474-N00002” bude smazán z databáze.
+- Projekt bude mít o 1 samostatný nález méně
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.pas.tests.test_selenium.AkceSamostatneNalezy.test_159_smazani_samostatneho_nalezu_p_001``.
+
+
 Projekt
 -------
 
@@ -6787,7 +7157,7 @@ Uživatelské kroky
 
 1. Uživatel klikne na menu Projekty -> Vybrat projekty
 2. Uživatel kliká na záhlaví jednotlivých sloupců
-3. Uživatel skyje a znovu zobrazí jednotlivé sloupce pomocí výsuvného
+3. Uživatel skryje a znovu zobrazí jednotlivé sloupce pomocí výsuvného
    menu
 
 Očekávané výsledky
@@ -6795,7 +7165,7 @@ Očekávané výsledky
 
 1. Po kliknutí na název sloupce je do adresy stránky přidán řetězec
    ``sort=sloupec``
-2. Po skytí sloupce zmizí název sloupce ze záhlaví
+2. Po skrytí sloupce zmizí název sloupce ze záhlaví
 3. Po zobrazení sloupce je sloupec v záhlaví tabulky
 
 Stav testu
@@ -7086,7 +7456,7 @@ Uživatel otevře projekt ve stavu A4.
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
 
--  Projekt přestunut do stavu A5.
+-  Projekt přesunut do stavu A5.
 
 Stav testu
 ^^^^^^^^^^
@@ -7141,7 +7511,7 @@ Implementován v
 Test 012 Archivace projektu (pozitivní scénář 1)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Test archivace projektu ve stavu P5 s pozitivním výsledkem. Scénář končí pousnem projektu do stavu P6,
+Test archivace projektu ve stavu P5 s pozitivním výsledkem. Scénář končí posunem projektu do stavu P6,
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -7181,7 +7551,7 @@ Implementován v
 Test 013 Archivace projektu (negativní scénář 1)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Test archivace projektu ve stavu P5 s negativním výsledkem. Scénář končí nepousnutím projektu do stavu P6,
+Test archivace projektu ve stavu P5 s negativním výsledkem. Scénář končí neposunutím projektu do stavu P6,
 
 Uživatelská role
 ^^^^^^^^^^^^^^^^
@@ -7747,6 +8117,49 @@ Stav testu
 
 Implementován v
 ``webclient.projekt.tests.test_selenium.ProjektSeleniumTest.test_146_test_Fedora_projekt_002``.
+
+
+.. _selenium-test-projekt-155-test-155-smaz-n-z-znamu-projektu-pozitivn-sc-n-1:
+
+Test 155 Smazání záznamu projektu (pozitivní scénář 1)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+Uživatelská role
+^^^^^^^^^^^^^^^^
+
+Archivář
+
+Předpoklady
+^^^^^^^^^^^
+
+-  Uživatel je přihlášen.
+-  Existuje projekt ve stavu A0.
+
+Testovací data
+^^^^^^^^^^^^^^
+
+Projekt X-C-202419296
+
+Uživatelské kroky
+^^^^^^^^^^^^^^^^^
+
+- Uživatel otevře projekt ke smazání.
+- Smaže připojenou dokumentaci.
+- V panelu pro akce kliknout na  “Další akce” → “Smazat záznam”
+- V dalším dialogovém okně “Smazat projekt” kliknout na “Smazat”
+
+Očekávané výsledky
+^^^^^^^^^^^^^^^^^^
+
+-  Projekt je vymazán z databáze.
+
+Stav testu
+^^^^^^^^^^
+
+Implementován v
+``webclient.projekt.tests.test_selenium.ProjektZrusitSeleniumTest.test_155_smazani_projektu_p_001``.
 
 
 Uzivatel

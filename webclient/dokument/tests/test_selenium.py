@@ -6,7 +6,7 @@ from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
 from django.utils.translation import gettext as _
-from dokument.models import Dokument, Let, Tvar
+from dokument.models import Dokument, DokumentCast, Let, Tvar
 from freezegun import freeze_time
 from nalez.models import NalezObjekt, NalezPredmet
 from selenium.webdriver.common.by import By
@@ -196,7 +196,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
         Steps:
             - Uživatel se přihlásí
-            - Uživatel otevře dokument ve stavu L1
+            - Uživatel otevře dokument ve stavu D1
             - Dokument → Vybrat → Filtr → ID obsahuje „X-C-TX-000000003“ → Vybrat → otevřít dokument
             - Uživatel klikne na tlačítko Odeslat
 
@@ -1182,6 +1182,65 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
         logger.info("AkceDokumenty.test_142_test_Fedory_LET_p_001.end")
 
+    def test_162_smazání_dokumentu_p_001(self):
+        """Test 162 Smazání dokumentu (pozitivní scénář 1)
+
+        Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D2.
+
+        TestData:
+            C-TX-197602290
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D2
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat dokument”
+            - V dalším dialogovém okně “Smazat dokument” kliknout na “Smazat”
+
+        Expected:
+            - Dokument bude smazán z databáze
+        """
+        logger.info("AkceDokumenty.test_162_smazání_dokumentu_p_001.start")
+        self.login("archivar")
+
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-197602290").first().stav, D_STAV_ODESLANY)
+        self.createFedoraRecord("C-TX-197602290")
+        self.uploadFileToFedora(113981, "projekt/tests/resources/test.pdf")
+        self.assertEqual(DokumentCast.objects.filter(dokument__ident_cely="C-TX-197602290").count(), 3)
+        self.goToAddress("/dokument/detail/C-TX-197602290/cast/C-TX-197602290-D001")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "smazat-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.goToAddress("/dokument/detail/C-TX-197602290/cast/C-TX-197602290-D002")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "smazat-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.goToAddress("/dokument/detail/C-TX-197602290/cast/C-TX-197602290-D003")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "smazat-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(DokumentCast.objects.filter(dokument__ident_cely="C-TX-197602290").count(), 0)
+        self.goToAddress("/dokument/detail/C-TX-197602290")
+        self.ElementClick(By.ID, "file-smazat-113981")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "dokument-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-197602290").count(), 0)
+        logger.info("AkceDokumenty.test_162_smazání_dokumentu_p_001.end")
+
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceKnihovna3D(BaseSeleniumTestClass):
@@ -1761,7 +1820,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             - Nahrání souboru
             - Upgrade souboru
             - Odeslání 3D dokumentu
-            - Smazáí nálezu
+            - Smazání nálezu
             - Smazání souboru
             - Smazání 3D dokumentu
 
@@ -1888,3 +1947,46 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_144/delete_3D_dokument")
 
         logger.info("AkceKnihovna3D.test_144_test_Fedory_3D_p_001.end")
+
+    def test_160_smazani_zaznamu_knihovny_D3_p_001(self):
+        """Test 160 Smazání záznamu v Knihovně 3D (pozitivní scénář 1)
+
+        Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Záznam v Knihovně 3D ve stavu D2,
+
+        TestData:
+
+            C-3D-202600001
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → vybere záznam „C-3D-202600001“
+            - Smaže připojený soubor
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat dokument”
+            - V dalším dialogovém okně “Smazat dokument” kliknout na “Smazat”
+
+        Expected:
+            - Záznam v Knihovně 3D v databázi bude smazán.
+        """
+        logger.info("AkceKnihovna3D.test_160_smazani_zaznamu_knihovny_D3_p_001.start")
+        self.login("archivar")
+        self.createFedoraRecord("C-3D-202600001")
+        self.uploadFileToFedora(646257, "dokument/tests/resources/del.zip")
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-3D-202600001").first().stav, D_STAV_ODESLANY)
+        self.goToAddress("/dokument/model/detail/C-3D-202600001")
+        self.ElementClick(By.ID, "file-smazat-646257")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "dokument-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-3D-202600001").count(), 0)
+        logger.info("AkceKnihovna3D.test_160_smazani_zaznamu_knihovny_D3_p_001.end")

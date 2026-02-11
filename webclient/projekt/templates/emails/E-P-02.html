@@ -21,7 +21,7 @@
 {% block content_en %}
     <p>Hello,</p>
         <p>
-           in AMCR a new project has just been recorded <b><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{ project.ident_cely }}</a></b>.
+           a new project <b><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{ project.ident_cely }}</a></b> has just been recorded in the AMCR.
         </p>
         <ul style="list-style: none">
             <li><b>Project type:</b> {{ project.typ_projektu.heslo }}</li>

@@ -25,7 +25,7 @@
 {% block content_en %}
     <p>Dear madam/sir,</p>
     <p>
-    in AMCR a project has been started: <strong><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{project.ident_cely}}</a></strong>, initiated on <strong>{{project.datum_zahajeni}}</strong>.
+    a project <strong><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{project.ident_cely}}</a></strong> has been started in the AMCR, initiated on <strong>{{project.datum_zahajeni}}</strong>.
     </p>
         <ul style="list-style: none">
             <li><strong>Project type:</strong> {{ project.typ_projektu.heslo }}</li>
