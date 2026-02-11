@@ -31,6 +31,23 @@ V  adresáři ``/opt/selenium_test/`` se ukládají také screenshoty každého 
 
 **Pozn.** Pokud uživatel přeruší probíhající test, je potřeba před spuštěním nového testu počkat několik minut, než se ukonči Selenium.
 
+Spuštění testů pomocí Github Actions
+------------------------------------
+
+Testy se dají spouštět také pomocí Github Actions. Slouží k tomu akce Run Tests. 
+Tlačítkem Run workflow otevřeme dialog, kde nahoře vybereme větev (Branch), kterou chceme testovat. Dále máme 3 volby způsobu testování:
+
+* `vsechny`     Spustí všechny testy
+* `neuspesne`   Spustí pouze testy, které nebyly při minulém testování úspěšné
+* `konkretni`   Spustí jeden konkrétní test, jehož číslo se zapíše do textového rámečku pod výběrem
+
+Ve spodní části je ještě zaškrtávací políčko Nasadit aktuální verzi před testováním. 
+Tato volba způsobí, že se před začátkem testování nasadí větev, kterou uživatel zvolil, jinak se testování spustí rovnou, bez nasazení.
+Vypnutí této volby je vhodné, pokud chceme testovat např. neúspěšné testy po provedení všech testů a chceme se ujistit, že testy opravdu neprošly.
+
+Po dokončení testování je základní výsledek testu vidět po otevření testu v Github Actions. 
+Tabulku s výsledky je možné stáhnout z Artifacts nebo je možné se podívat do protokolu na chyby. 
+
 
 Vyhodnocení výsledků testu
 --------------------------
