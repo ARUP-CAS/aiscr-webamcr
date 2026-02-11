@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
    * - Django
-     - 5.2.10
+     - 5.2.11
      - BSD-3-Clause
      - https://www.djangoproject.com/
    * - Jinja2
@@ -172,7 +172,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/vhf/confusable_homoglyphs
    * - coverage
-     - 7.13.2
+     - 7.13.4
      - Apache-2.0
      - https://github.com/coveragepy/coveragepy
    * - crispy-bootstrap4
@@ -184,7 +184,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
-     - 46.0.4
+     - 46.0.5
      - Apache-2.0 OR BSD-3-Clause
      - https://github.com/pyca/cryptography
    * - defusedxml
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.22
+     - 9.0.23
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -412,7 +412,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT-CMU
      - https://python-pillow.github.io
    * - pip
-     - 26.0
+     - 26.0.1
      - MIT
      - https://pip.pypa.io/
    * - pip-licenses
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.6.2
+     - 6.7.0
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -516,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/RDFLib/rdflib
    * - redis
-     - 7.1.0
+     - 7.1.1
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
@@ -540,7 +540,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
-     - 80.10.2
+     - 82.0.0
      - MIT
      - https://github.com/pypa/setuptools
    * - simplejson
@@ -676,7 +676,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
-     - 0.5.3
+     - 0.6.0
      - MIT
      - https://github.com/jquast/wcwidth
    * - websocket-client
