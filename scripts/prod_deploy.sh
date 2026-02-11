@@ -49,7 +49,7 @@ check_create_network () {
     docker network inspect ${network_name} > /dev/null 2>&1
     network_status=$?
     if [ ${network_status} -eq 1  ]; then
-      er "docker network create -d overlay ${network_name}"
+      er "docker network create -d overlay --attachable ${network_name}"
       echo_dec "Network ${network_name} created"
     else
        echo_dec "Network ${network_name} already exists"
