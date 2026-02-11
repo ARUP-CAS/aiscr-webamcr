@@ -115,6 +115,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_HTTP2_PROTOCOL_ERROR"),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_FAILED"),
         ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_SOCKET_NOT_CONNECTED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_ABORTED"),
     ]
 
     @classmethod
@@ -156,12 +157,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         options.set_capability("acceptInsecureCerts", True)
         options.add_argument("--ignore-certificate-errors")
         options.add_argument("--allow-insecure-localhost")
-
+        options.add_argument("--window-size=1760,1020")
         if settings.USE_REMOTE_WEB_BROWSER:
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-gpu")
-            # options.add_argument("--headless=new")
-            options.add_argument("--window-size=1760,1020")
+            options.add_argument("--headless=new")
             # options.add_argument("--disable-dev-shm-usage")
             self.driver = webdriver.Remote(
                 command_executor=f"http://{settings.SELENIMUM_ADDRESS}:{settings.SELENIUM_PORT}/wd/hub", options=options
@@ -171,6 +171,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.driver = webdriver.Chrome(options=options)
         self.driver.implicitly_wait(2)
         self.wait_interval = 2
+        self.driver.set_page_load_timeout(120)
+        self.driver.set_script_timeout(30)
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.end")
 
     def get_container_content(self, container_path):
@@ -736,51 +738,113 @@ return new Date('2025-06-28T12:00:00Z');}};
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
-    def addFileToDropzone(self, css_selector, name, content, type="image/jpeg"):
+    def upload_file(self, file_path, file_name, mime="image/jpeg"):
         """
-        Trigger a file add with `name` and `content` to Dropzone element at `css_selector`.
+        Metoda nahraje soubor do Dropzone.
         """
-        script = """
-        const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
-        const byteCharacters = atob(b64Data);
-        const byteArrays = [];
-
-        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-            const slice = byteCharacters.slice(offset, offset + sliceSize);
-            const byteNumbers = new Array(slice.length);
-            for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            byteArrays.push(byteArray);
-        }
-        const blob = new Blob(byteArrays, {type: contentType});
-        return blob;
-        }
-        var blob = b64toBlob('%s', '%s');
-        var dropzone_instance = Dropzone.forElement('%s')
-        var new_file = new File([blob], '%s', {type: '%s'})
-        dropzone_instance.addFile(new_file)
-        """ % (
-            content,
-            type,
-            css_selector,
-            name,
-            type,
-        )
-        self.driver.execute_script(script)
-
-    def upload_file(self, file_path, file_name, type="image/jpeg"):
-        with open(file_path, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-        self.addFileToDropzone("#my-awesome-dropzone", file_name, encoded_string, type)
+        with open(file_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("ascii")
         self.driver.set_script_timeout(15)
-        self.driver.execute_async_script(
+        result = self.driver.execute_async_script(
             """
-            var done = arguments[0];
-            newDropzone.on("success", function(){ done('foo');});
-            """
+            const callback = arguments[arguments.length - 1];
+            const selector = arguments[0];
+            const name = arguments[1];
+            const b64 = arguments[2];
+            const mime = arguments[3];
+
+            const safeCallback = (() => {
+            let finished = false;
+            return (payload) => {
+                if (finished) return;
+                finished = true;
+                try { callback(payload); } catch (e) { /* swallow */ }
+            };
+            })();
+            const fail = (msg, extra) => safeCallback({status:"error", message: msg, ...extra});
+            if (!window.newDropzone) {
+            fail("window.newDropzone is not defined");
+            return;
+            }
+            const dz = window.newDropzone;
+            // helper
+            const b64toBlob = (b64Data, contentType="", sliceSize=512) => {
+            const byteCharacters = atob(b64Data);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+                byteArrays.push(new Uint8Array(byteNumbers));
+            }
+            return new Blob(byteArrays, { type: contentType });
+            };
+            // Clean up handlers when done
+            const cleanup = () => {
+            dz.off("success", onSuccess);
+            dz.off("error", onError);
+            dz.off("queuecomplete", onQueueComplete);
+            if (timeoutId) clearTimeout(timeoutId);
+            };
+            // Prefer queuecomplete (nejstabilnější), fallback na success
+            let lastSuccessFile = null;
+            const onSuccess = (file) => { lastSuccessFile = file; };
+            const onQueueComplete = () => {
+            cleanup();
+            safeCallback({status:"success", name: lastSuccessFile && lastSuccessFile.name});
+            };
+            const onError = (file, msg, xhr) => {
+            cleanup();
+            let message = "";
+            try {
+                message = (typeof msg === "string") ? msg : JSON.stringify(msg);
+            } catch (e) {
+                message = String(msg);
+            }
+            safeCallback({
+                status:"error",
+                message,
+                name: file && file.name,
+                http: xhr && xhr.status
+            });
+            };
+            dz.on("success", onSuccess);
+            dz.on("queuecomplete", onQueueComplete);
+            dz.on("error", onError);
+            const timeoutId = setTimeout(() => {
+            cleanup();
+            fail("Dropzone did not finish within internal timeout");
+            }, 12000);
+
+            // Add file
+            try {
+            const blob = b64toBlob(b64, mime);
+            const file = new File([blob], name, { type: mime });
+            // pokud Dropzone není navázaný na selector, tak aspoň ověř element existuje
+            const el = document.querySelector(selector);
+            if (!el) {
+                cleanup();
+                fail("Dropzone element not found for selector", {selector});
+                return;
+            }
+            dz.addFile(file);
+            // pokud máte autoProcessQueue:false, je potřeba tohle:
+            if (dz.options && dz.options.autoProcessQueue === false) {
+                dz.processQueue();
+            }
+            } catch (e) {
+            cleanup();
+            fail("Exception while adding file", {exception: String(e)});
+            }
+            """,
+            "#my-awesome-dropzone",
+            file_name,
+            b64,
+            mime,
         )
+
+        if result.get("status") != "success":
+            raise AssertionError(f"Upload failed: {result}")
 
     def createFedoraRecord(self, ident_cely, user_name="archeolog"):
         try:
