@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.generic import ListView
 from django_tables2 import RequestConfig, SingleTableMixin
+from django_tables2.export.export import TableExport
 from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from historie.models import Historie
@@ -29,11 +30,13 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     Třída se dědí pro jednotlivá historie.
     """
 
+    paginate_by = None
     use_history_table = True
     table_class = HistorieTable
     model = Historie
     template_name = "historie/historie_list.html"
     export_name = "export_historie_"
+    table_pagination = {"per_page": 25}  # defaultní počet záznamů v tabulce historie
 
     context_typ = None  # např. "samostatny_nalez"
     lookup_kwarg = "ident_cely"  # URL parametr obsahující identifikátor
@@ -91,7 +94,8 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         if not fedora_data:
             return
         fedora_table = FedoraHistorieTable(fedora_data, prefix="fed-")
-        RequestConfig(self.request).configure(fedora_table)
+        per_page = int(self.request.GET.get("fed-per_page", 25))  # defaultní počet záznamů v tabulce Fedora historie
+        RequestConfig(self.request, paginate={"per_page": per_page}).configure(fedora_table)
 
         context["fedora_table"] = fedora_table
 
@@ -119,6 +123,18 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
             self.add_fedora_history(context)
         context["header"] = self.get_header_config(context)
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        export_format = self.request.GET.get("_export")
+        export_table = self.request.GET.get("export_table")
+        if export_format and export_table == "fedora":
+            fedora_table = context.get("fedora_table")
+            if fedora_table is None:
+                return super().render_to_response(context, **response_kwargs)
+            # export tabulky Fedora historie
+            exporter = TableExport(export_format, fedora_table)
+            return exporter.response(filename=self.get_export_filename(export_format, "export_fedora_historie_"))
+        return super().render_to_response(context, **response_kwargs)
 
 
 class ProjektHistorieListView(HistorieListView):

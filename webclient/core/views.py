@@ -1235,9 +1235,11 @@ class ExportMixinDate(ExportMixin):
     Mixin pro získaní názvu exportovaného souboru.
     """
 
-    def get_export_filename(self, export_format):
+    def get_export_filename(self, export_format, export_name=None):
+        if export_name is None:
+            export_name = self.export_name
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        return "{}{}.{}".format(self.export_name, now, export_format)
+        return "{}{}.{}".format(export_name, now, export_format)
 
 
 class PermissionFilterMixin:
@@ -1364,7 +1366,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     """
 
     template_name = "search_list.html"
-    paginate_by = 100
     allow_empty = True
     export_formats = ["csv", "json", "xlsx"]
     app = "core"
@@ -1372,6 +1373,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     redis_value_list_field = None
     redis_snapshot_prefix = None
     vypis_app = "core"
+    paginate_by = None
+    table_pagination = {"per_page": 100}
 
     def create_export(self, export_format):
         from redis import Redis
@@ -1511,9 +1514,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         self.default_header = ""
         self.toolbar_name = ""
         self.toolbar_label = ""
-
-    def get_paginate_by(self, queryset):
-        return self.request.GET.get("per_page", self.paginate_by)
 
     def _get_sort_params(self):
         sort_params = self.request.GET.getlist("sort")

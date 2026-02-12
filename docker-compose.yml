@@ -61,7 +61,7 @@ services:
       start_period: 30s
   
   redis-exporter:
-    image: oliver006/redis_exporter:v1.80.1-alpine
+    image: oliver006/redis_exporter:v1.80.2-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -136,7 +136,7 @@ services:
     entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
 
   grafana:
-    image: grafana/grafana-enterprise:12.3.1
+    image: grafana/grafana-enterprise:12.3.2
     restart: always
     depends_on:
       - prometheus
@@ -225,7 +225,7 @@ services:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
   selenium:
-    image: selenium/standalone-chromium:143.0
+    image: selenium/standalone-chromium:144.0
     ports:
       - 4444:4444
       - 7900:7900

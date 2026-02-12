@@ -379,8 +379,6 @@ Třídy
 
    .. py:method:: init_translations()
 
-   .. py:method:: get_paginate_by()
-
    .. py:method:: _get_sort_params()
 
    .. py:method:: get_context_data()
