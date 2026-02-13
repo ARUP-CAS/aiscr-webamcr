@@ -2,6 +2,7 @@ import hashlib
 import io
 import logging
 import re
+from abc import ABC
 from datetime import datetime, timezone
 from enum import Enum
 from io import BytesIO
@@ -1403,7 +1404,27 @@ class FedoraTransactionStatus(Enum):
     ABORTED = 3
 
 
-class FedoraTransaction:
+class BaseFedoraTransaction(ABC):
+    def __init__(self):
+        self.uid = None
+
+    def mark_transaction_as_closed(self):
+        pass
+
+    def rollback_transaction(self):
+        pass
+
+
+class DryRunFedoraTransaction(BaseFedoraTransaction):
+    def __init__(self):
+        super().__init__()
+        self.updated_ident_cely: set[str] = set()
+
+    def add_updated_ident_cely(self, ident_cely: str):
+        self.updated_ident_cely.add(ident_cely)
+
+
+class FedoraTransaction(BaseFedoraTransaction):
     def __init__(
         self,
         main_record: ModelWithMetadata = None,
@@ -1417,6 +1438,7 @@ class FedoraTransaction:
         redirect_on_error=False,
         redirect_url=None,
     ):
+        super().__init__()
         from uzivatel.models import User
 
         self.main_record = main_record
@@ -1609,3 +1631,12 @@ class FedoraTransaction:
                         return
         call_digiarchiv_update_task.apply_async()
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.end")
+
+
+class FedoraDeletionOnlyTransaction(FedoraTransaction):
+    def __init__(self):
+        super().__init__()
+        self.updated_ident_cely: set[str] = set()
+
+    def add_updated_ident_cely(self, ident_cely: str):
+        self.updated_ident_cely.add(ident_cely)

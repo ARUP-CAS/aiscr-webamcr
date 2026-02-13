@@ -2,6 +2,7 @@ import datetime
 import re
 from abc import ABC
 from collections.abc import Iterable
+from dataclasses import dataclass
 from decimal import Decimal
 
 import pandas as pd
@@ -102,6 +103,15 @@ from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import Organizace, Osoba, User, UserNotificationType
 
 
+@dataclass
+class ImportDataValidationResult:
+    item_order: int
+    file_name: str
+    primary_key_import: str = ""
+    primary_key_table: str = ""
+    validation_result: str = ""
+
+
 class ImportDataError(Exception):
     pass
 
@@ -182,10 +192,15 @@ class ImportDataIntegrityError(ImportDataError):
         self.model_name = model_name
         self.performed_action = performed_action
         super().__init__(
-            f'{_("core_admin.ImportDataIntegrityError.message.part_1")} '
-            + f'{record_id} {_("core_admin.ImportDataIntegrityError.message.part_2")} '
-            + f'{model_name} {_("core_admin.ImportDataIntegrityError.message.part_3")} '
-            + f'({_("core_admin.ImportDataIntegrityError.message.part_4")} {performed_action})'
+            "{} {} {} {} {} ({} {})".format(
+                _("core_admin.ImportDataIntegrityError.message.part_1"),
+                record_id,
+                _("core_admin.ImportDataIntegrityError.message.part_2"),
+                model_name,
+                _("core_admin.ImportDataIntegrityError.message.part_3"),
+                _("core_admin.ImportDataIntegrityError.message.part_4"),
+                performed_action,
+            )
         )
 
 
@@ -194,9 +209,13 @@ class ImportDataLimitChoicesError(ImportDataError):
         self.record_id = record_id
         self.limit_choices_to = limit_choices_to
         super().__init__(
-            f'{_("core_admin.ImportDataLimitChoicesError.message.part_1")} '
-            + f'{record_id} {_("core_admin.ImportDataLimitChoicesError.message.part_2")} '
-            + f'{",".join([f"{k}: {v}" for k,v in limit_choices_to.items()])} {_("core_admin.ImportDataLimitChoicesError.message.part_3")}'
+            "{} {} {} {} {}".format(
+                _("core_admin.ImportDataLimitChoicesError.message.part_1"),
+                record_id,
+                _("core_admin.ImportDataLimitChoicesError.message.part_2"),
+                ",".join(["{}: {}".format(k, v) for k, v in limit_choices_to.items()]),
+                _("core_admin.ImportDataLimitChoicesError.message.part_3"),
+            )
         )
 
 
@@ -217,8 +236,11 @@ class ImportDataUnsupportedFileError(ImportDataError):
     def __init__(self, file_name):
         self.file_name = file_name
         super().__init__(
-            f'{_("core_admin.ImportDataUnsupportedFileError.message.part_1")} '
-            + f'{file_name} {_("core_admin.ImportDataUnsupportedFileError.message.part_2")} '
+            "{} {} {}".format(
+                _("core_admin.ImportDataUnsupportedFileError.message.part_1"),
+                file_name,
+                _("core_admin.ImportDataUnsupportedFileError.message.part_2"),
+            )
         )
 
 
@@ -230,8 +252,26 @@ class ImportDataUnsupportedMultipleFilesError(ImportDataError):
     def __init__(self, file_name):
         self.file_name = file_name
         super().__init__(
-            f'{_("core_admin.ImportDataUnsupportedFileError.message.part_1")} '
-            + f'{", ".join(file_name)} {_("core_admin.ImportDataUnsupportedFileError.message.part_2")} '
+            "{} {} {}".format(
+                _("core_admin.ImportDataUnsupportedFileError.message.part_1"),
+                ", ".join(file_name),
+                _("core_admin.ImportDataUnsupportedFileError.message.part_2"),
+            )
+        )
+
+
+class ImportDataIncorrectPrimaryKeyFormatError(ImportDataError):
+    """
+    Exception raised when the primary key value does not match the expected format.
+    """
+
+    def __init__(self, primary_key_value):
+        self.primary_key_value = primary_key_value
+        super().__init__(
+            "{} {}".format(
+                _("core_admin.ImportDataIncorrectPrimaryKeyFormatError.message"),
+                primary_key_value,
+            )
         )
 
 
@@ -747,7 +787,11 @@ class ImportModelMapper(ABC):
     @classmethod
     def _parse_primary_key(cls, value):
         if isinstance(value, str) and cls.primary_key_prefix:
-            return int(re.match(f"{cls.primary_key_prefix}-(.*)", value).group(1))
+            match = re.match(f"{cls.primary_key_prefix}-(.*)", value)
+            if match:
+                return int(match.group(1))
+            else:
+                raise ImportDataIncorrectPrimaryKeyFormatError(value)
         return value
 
     @staticmethod
@@ -1641,6 +1685,13 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             item for model, item in self.fields + self.foreign_key_fields if model == "dokument_extra_data"
         ]
         mapping_dict = self.map(performed_action, True)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            dokument = Dokument.objects.get(ident_cely=mapping_dict["ident_cely"])
+            dokument_extra_data_query = DokumentExtraData.objects.filter(dokument=dokument)
+            if dokument_extra_data_query.exists():
+                return [dokument_extra_data_query.first(), dokument]
+            else:
+                return [dokument]
         mapping_dict_dokument = {field: mapping_dict[field] for field in fields_dokument}
         mapping_dict_dokument_extra_data = {field: mapping_dict[field] for field in fields_dokument_extra_data}
         mapping_dict_dokument = {
@@ -1655,10 +1706,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             dokument_extra_data = DokumentExtraData(**mapping_dict_dokument_extra_data)
             dokument_extra_data.dokument = dokument
             return [dokument, dokument_extra_data]
-        if performed_action in (
-            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
-            ImportDataAdminForm.PERFORMED_ACTION_DELETE,
-        ):
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
             dokument = Dokument.objects.get(ident_cely=mapping_dict["ident_cely"])
             dokument_extra_data_query = DokumentExtraData.objects.filter(dokument=dokument)
             if dokument_extra_data_query.exists():

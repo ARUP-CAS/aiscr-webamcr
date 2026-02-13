@@ -6,6 +6,11 @@ Modul import_data_mappers.
 Třídy
 ------
 
+.. py:class:: ImportDataValidationResult
+
+   Popis není k dispozici.
+
+
 .. py:class:: ImportDataError
 
    Popis není k dispozici.
@@ -79,6 +84,15 @@ Třídy
 .. py:class:: ImportDataUnsupportedMultipleFilesError
 
    Exception raised when an unsupported file name is included in the imported archive.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+
+.. py:class:: ImportDataIncorrectPrimaryKeyFormatError
+
+   Exception raised when the primary key value does not match the expected format.
 
    **Metody:**
 

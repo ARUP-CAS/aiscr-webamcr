@@ -32,6 +32,12 @@
       .progressBar span {
           white-space: nowrap;
       }
+
+      input.default:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          pointer-events: none;
+      }
   </style>
 {% endblock %}
 
@@ -55,6 +61,11 @@
       <p>{% trans "core.templates.admin.import_data.not_superuser" %}</p>
     {% elif not maintenance %}
       <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
+    {% elif error_message %}
+      <p class="errornote">{{ error_message }}</p>
+      {% if error_message_details %}
+        <p>{{ error_message_details }}</p>
+      {% endif %}
     {% elif validation_results %}
       <div class="submit-row">
         <div id="progressBarBoxData" class="progressBarBox" style="margin-bottom: 1rem">
@@ -90,14 +101,20 @@
       {% endif %}
       <table id="result_list" class="table table-bordered table-striped">
         <tr>
-          <th>{% trans "core.templates.admin.import_data.id" %}</th>
+          <th>{% trans "core.templates.admin.import_data.import_order" %}</th>
+          <th>{% trans "core.templates.admin.import_data.fila_name" %}</th>
+          <th>{% trans "core.templates.admin.import_data.primary_key_import" %}</th>
+          <th>{% trans "core.templates.admin.import_data.primary_key_database" %}</th>
           <th>{% trans "core.templates.admin.validation_result" %}</th>
           <th>{% trans "core.templates.admin.status" %}</th>
         </tr>
         {% for result in validation_results %}
           <tr>
-            <td>{{ forloop.counter0 }}, {% if result.0 %}{{ result.0 }}{% endif %}</td>
-            <td>{{ result.1 }}</td>
+            <td>{{ result.item_order }}</td>
+            <td>{{ result.file_name }}</td>
+            <td>{{ result.primary_key_import }}</td>
+            <td></td>
+            <td>{{ result.validation_result }}</td>
             <td></td>
           </tr>
         {% endfor %}
@@ -146,16 +163,18 @@
   <script>
       const requestUrl = "{{ url }}"
       const stopRequestUrl = "{{ url_stop }}"
+      const startRequestUrl = "{{ url_start }}"
       let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %}
       const startImportButton = document.getElementById("startImport")
       const stopRequestButton = document.getElementById("stopRequests")
       if (startImportButton) {
-        startImportButton.addEventListener("click", () => {
+        startImportButton.addEventListener("click", async () => {
             startImportButton.disabled = true
             if (stopRequestButton) {
                 stopRequestButton.disabled = false
             }
             document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.starting' %}"
+            await fetch(startRequestUrl)
             process()
         });
       }
@@ -216,7 +235,8 @@
               const table = document.getElementById("result_list");
               for (let i = 0; i < data.finished_record_count; i++) {
                   const row = table.rows[i + 1]
-                  row.cells[2].innerText = data.serialized_results[i]
+                  row.cells[3].innerText = data.primary_keys[i]
+                  row.cells[5].innerText = data.serialized_results[i]
               }
 
               const table_files = document.getElementById("result_list_files")

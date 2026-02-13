@@ -195,6 +195,30 @@ Třídy
    Popis není k dispozici.
 
 
+.. py:class:: BaseFedoraTransaction
+
+   Popis není k dispozici.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+   .. py:method:: mark_transaction_as_closed()
+
+   .. py:method:: rollback_transaction()
+
+
+.. py:class:: DryRunFedoraTransaction
+
+   Popis není k dispozici.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+   .. py:method:: add_updated_ident_cely()
+
+
 .. py:class:: FedoraTransaction
 
    Popis není k dispozici.
@@ -224,4 +248,15 @@ Třídy
    .. py:method:: __create_transaction()
 
    .. py:method:: call_digiarchiv_update()
+
+
+.. py:class:: FedoraDeletionOnlyTransaction
+
+   Popis není k dispozici.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+   .. py:method:: add_updated_ident_cely()
 
