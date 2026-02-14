@@ -164,7 +164,7 @@ services:
       - prometheus_config
     command:
       - "--config.file=/run/secrets/prometheus_config"
-      - "--storage.tsdb.retention.time=365d"
+      - "--storage.tsdb.retention.time=${PROM_RETENTION_TIME:-365d}"
       - "--web.enable-admin-api"
 
   logstash:

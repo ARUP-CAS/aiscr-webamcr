@@ -81,7 +81,7 @@ Třídy
    .. py:method:: __init__()
 
 
-.. py:class:: ImportDataUnsupportedMultipleFilesError
+.. py:class:: ImportDataUnsupportedFilesError
 
    Exception raised when an unsupported file name is included in the imported archive.
 

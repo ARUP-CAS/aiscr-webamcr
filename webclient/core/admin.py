@@ -33,7 +33,7 @@ from .import_data_mappers import (
     ImportDataError,
     ImportDataIntegrityError,
     ImportDataUnsupportedFileError,
-    ImportDataUnsupportedMultipleFilesError,
+    ImportDataUnsupportedFilesError,
     ImportDataValidationResult,
     ImportModelMapper,
     LookupImportField,
@@ -599,20 +599,22 @@ class FedoraCustomAdminSite(admin.AdminSite):
             performed_action = cleaned_data["performed_action"]
             try:
                 with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
-                    file_names = [name for name in zf.namelist() if not name.startswith("__MACOSX")]
-                    file_names = set(file_names)
+                    file_names = [
+                        name for name in zf.namelist() if not name.startswith("__MACOSX") and not name.endswith("/")
+                    ]
+                    mapper_dict = ImportModelMapper.get_import_data_mapper_dict()
+                    mapper_key_order = {f"{name}.csv": i for i, name in enumerate(mapper_dict.keys())}
                     allowed_file_names = set(
                         [
                             f"{name}.csv".lower()
-                            for name, mapper in ImportModelMapper.get_import_data_mapper_dict().items()
+                            for name, mapper in mapper_dict.items()
                             if performed_action != ImportDataAdminForm.PERFORMED_ACTION_UPDATE or mapper.allow_update
                         ]
                     )
                     normalized_imported_file_names = set([normalize_file_name(file_name) for file_name in file_names])
                     if not normalized_imported_file_names.issubset(allowed_file_names):
-                        raise ImportDataUnsupportedMultipleFilesError(
-                            normalized_imported_file_names - allowed_file_names
-                        )
+                        raise ImportDataUnsupportedFilesError(normalized_imported_file_names - allowed_file_names)
+                    file_names.sort(key=lambda fn: mapper_key_order.get(normalize_file_name(fn), len(mapper_key_order)))
                     for file_name in file_names:
                         with zf.open(file_name) as file:
                             sheet = pd.read_csv(file)
@@ -669,19 +671,17 @@ class FedoraCustomAdminSite(admin.AdminSite):
                             else:
                                 raise ImportDataUnsupportedFileError(file_name)
             except zipfile.BadZipFile:
-                context["error_message"] = _("core.admin.import_data.error.bad_zip_file")
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = _("core.admin.import_data.error.bad_zip_file")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except ImportDataUnsupportedMultipleFilesError:
-                context["error_message"] = _("core.admin.import_data.error.unsupported_multiple_files_error")
-                context["error_message_details"] = (
-                    _("core.admin.import_data.error.file_names")
-                    + ": "
-                    + ",".join([fn for fn in normalized_imported_file_names - allowed_file_names])
-                )
+            except ImportDataUnsupportedFilesError as err:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = str(err)
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except Exception:
-                logger.exception("core.admin.FedoraCustomAdminSite.import_data.unexpected_error")
-                context["error_message"] = _("core.admin.import_data.error.unexpected_error")
+            except Exception as err:
+                logger.exception("core.admin.FedoraCustomAdminSite.import_data.unexpected_error", extra={"err": err})
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)

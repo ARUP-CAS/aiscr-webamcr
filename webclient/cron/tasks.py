@@ -497,9 +497,7 @@ def run_data_import(job_id, user_id):
                     if mapper_class == SouborMapper:
                         import_files_list += records
                         record: Soubor = records[0]
-                        import_results[record_id] = (
-                            f"{_('cron.tasks.run_data_import.file')}, {str(record.nazev)} ({record.vazba.navazany_objekt.ident_cely})"
-                        )
+                        import_results[record_id] = "cron.tasks.run_data_import.file"
                         redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
                         continue
                     for record in records:
@@ -509,6 +507,8 @@ def run_data_import(job_id, user_id):
                             _("cron.tasks.run_data_import.importing_record_data") + f" {record_id + 1}/{record_count}",
                         )
                         if isinstance(record, ModelWithMetadata):
+                            primary_key_record = record
+                        elif hasattr(record, "ident_cely") and primary_key_record is None:
                             primary_key_record = record
                         all_records.append(record)
                         if mapper_class == UzivatelOpravneniMapper:
@@ -557,7 +557,7 @@ def run_data_import(job_id, user_id):
                     fedora_transaction.mark_transaction_as_closed()
                     updated_ident_cely_set |= fedora_transaction.updated_ident_cely
                     logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id, "job_id": job_id})
-                    import_results[record_id] = _("cron.tasks.run_data_import.success")
+                    import_results[record_id] = "cron.tasks.run_data_import.success"
                     if primary_key_record:
                         import_primary_keys[record_id] = f"ident_cely: {primary_key_record.ident_cely}"
                     else:
@@ -642,7 +642,7 @@ def run_data_import(job_id, user_id):
             )
             redis_connector.set(f"import_data_stop_{job_id}", 1)
             failed = True
-        if not failed:
+        if not failed and import_files_list:
             redis_connector.set(
                 f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.file_import.starting")
             )

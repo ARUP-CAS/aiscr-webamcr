@@ -244,18 +244,18 @@ class ImportDataUnsupportedFileError(ImportDataError):
         )
 
 
-class ImportDataUnsupportedMultipleFilesError(ImportDataError):
+class ImportDataUnsupportedFilesError(ImportDataError):
     """
     Exception raised when an unsupported file name is included in the imported archive.
     """
 
-    def __init__(self, file_name):
-        self.file_name = file_name
+    def __init__(self, file_names):
+        self.file_names = file_names
         super().__init__(
             "{} {} {}".format(
-                _("core_admin.ImportDataUnsupportedFileError.message.part_1"),
-                ", ".join(file_name),
-                _("core_admin.ImportDataUnsupportedFileError.message.part_2"),
+                _("core_admin.ImportDataUnsupportedFilesError.message.part_1"),
+                ", ".join(file_names),
+                _("core_admin.ImportDataUnsupportedFilesError.message.part_2"),
             )
         )
 
