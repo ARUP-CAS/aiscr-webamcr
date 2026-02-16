@@ -191,7 +191,7 @@ services:
 
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.19.0
+    image: docker.elastic.co/logstash/logstash:9.2.0
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -206,7 +206,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.0
     hostname: elasticsearch
     restart: always
     environment:
@@ -234,7 +234,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.19.0
+    image: docker.elastic.co/kibana/kibana:9.2.0
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -279,7 +279,7 @@ services:
     restart: always
 
   postgresql_exporter:
-    image: prometheuscommunity/postgres-exporter:v0.18.1
+    image: prometheuscommunity/postgres-exporter:v0.19.0
     restart: always
     environment:
       - DATA_SOURCE_URI_FILE=/run/secrets/postgresql_exporter_uri
