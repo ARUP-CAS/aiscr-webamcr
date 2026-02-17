@@ -496,4 +496,4 @@ class TestEmailForm(forms.Form):
     Formulář pro odeslání testovacího mailu v administraci.
     """
 
-    email = forms.EmailField(label="Email adresa", required=True)
+    email = forms.EmailField(label=_("uzivatel.forms.TestEmailForm.email_address"), required=True)
