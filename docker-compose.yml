@@ -61,7 +61,7 @@ services:
       start_period: 30s
   
   redis-exporter:
-    image: oliver006/redis_exporter:v1.80.2-alpine
+    image: oliver006/redis_exporter:v1.81.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -136,7 +136,7 @@ services:
     entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
 
   grafana:
-    image: grafana/grafana-enterprise:12.3.2
+    image: grafana/grafana-enterprise:12.3.3
     restart: always
     depends_on:
       - prometheus
@@ -166,11 +166,11 @@ services:
       - prometheus_config
     command:
       - "--config.file=/run/secrets/prometheus_config"
-      - "--storage.tsdb.retention.time=365d"
+      - "--storage.tsdb.retention.time=${PROM_RETENTION_TIME:-365d}"
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.2.0
+    image: docker.elastic.co/logstash/logstash:9.3.0
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -185,7 +185,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
     hostname: elasticsearch
     restart: always
     environment:
@@ -211,7 +211,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.2.0
+    image: docker.elastic.co/kibana/kibana:9.3.0
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
