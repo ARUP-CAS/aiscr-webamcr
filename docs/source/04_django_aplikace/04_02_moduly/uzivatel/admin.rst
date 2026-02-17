@@ -125,3 +125,28 @@ Třídy
 
    .. py:method:: has_delete_permission()
 
+
+.. py:class:: NotificationsLogAdmin
+
+   Admin panel pro kontrolu odeslaných mailů s možností poslat testovací mail.
+
+   **Metody:**
+
+   .. py:method:: created()
+
+   .. py:method:: status_colored()
+
+   .. py:method:: get_readonly_fields()
+
+   .. py:method:: has_add_permission()
+
+   .. py:method:: has_change_permission()
+
+   .. py:method:: has_delete_permission()
+
+   .. py:method:: has_view_permission()
+
+   .. py:method:: get_urls()
+
+   .. py:method:: test_email_view()
+

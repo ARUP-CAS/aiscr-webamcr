@@ -12,16 +12,20 @@ from core.constants import (
 )
 from core.repository_connector import FedoraTransaction
 from django import forms
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.mail import EmailMessage, get_connection
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils.html import format_html
+from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 from django_object_actions import DjangoObjectActions
 from historie.models import Historie
@@ -35,8 +39,8 @@ from notifikace_projekty.forms import (
 from notifikace_projekty.models import Pes
 from services.mailer import Mailer
 
-from .forms import AuthUserChangeAdminForm, AuthUserCreationForm
-from .models import User, UserNotificationType
+from .forms import AuthUserChangeAdminForm, AuthUserCreationForm, TestEmailForm
+from .models import NotificationsLog, User, UserNotificationType
 
 logger = logging.getLogger(__name__)
 
@@ -562,3 +566,114 @@ class CustomGroupAdmin(admin.ModelAdmin):
 admin.site.register(User, CustomUserAdmin)
 admin.site.unregister(Group)
 admin.site.register(Group, CustomGroupAdmin)
+
+
+@admin.register(NotificationsLog)
+class NotificationsLogAdmin(admin.ModelAdmin):
+    """
+    Admin panel pro kontrolu odeslaných mailů s možností poslat testovací mail.
+    """
+
+    change_list_template = "admin/notificationslog_change_list.html"
+    list_display = ("created", "notification_type", "receiver_address", "user", "status_colored")
+    list_filter = ("status", "created_at")
+    search_fields = ("receiver_address", "exception")
+    date_hierarchy = "created_at"
+    ordering = ("-created_at",)
+    list_per_page = 50
+
+    def created(self, obj):
+        return localtime(obj.created_at).strftime("%d.%m.%Y %H:%M:%S")
+
+    created.short_description = "Created at"
+    created.admin_order_field = "created_at"
+
+    def status_colored(self, obj):
+        colors = {
+            "OK": "#2e7d32",
+            "ERR": "#c62828",
+            "SND": "#1565c0",
+        }
+        color = colors.get(obj.status, "#666")
+        return format_html('<b style="color:{}">{}</b>', color, obj.status or "-")
+
+    status_colored.short_description = "Status"
+    status_colored.admin_order_field = "status"
+
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        if request.method in ["GET", "HEAD", "OPTIONS"]:
+            return True
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "test-email/",
+                self.admin_site.admin_view(self.test_email_view),
+                name="notificationslog_test_email",
+            ),
+        ]
+        return custom_urls + urls
+
+    def test_email_view(self, request):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+
+        result = None
+        error = None
+
+        if request.method == "POST":
+            form = TestEmailForm(request.POST)
+            if form.is_valid():
+                to_email = form.cleaned_data["email"]
+                try:
+                    connection = get_connection(fail_silently=False)
+                    msg = EmailMessage(
+                        subject="Test email z administrace",
+                        body="Toto je testovací email - pokud ho čteš, odesílání funguje.",
+                        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                        to=[to_email],
+                        connection=connection,
+                    )
+                    sent = msg.send(fail_silently=False)
+
+                    result = {
+                        "to": to_email,
+                        "sent_count": sent,
+                        "backend": getattr(settings, "EMAIL_BACKEND", ""),
+                        "host": getattr(settings, "EMAIL_HOST", ""),
+                        "port": getattr(settings, "EMAIL_PORT", ""),
+                        "use_tls": getattr(settings, "EMAIL_USE_TLS", ""),
+                        "use_ssl": getattr(settings, "EMAIL_USE_SSL", ""),
+                    }
+                    messages.success(
+                        request, _("uzivatel.admin.NotificationsLogAdmin.test_email_view.email_sent_success")
+                    )
+                except Exception as e:
+                    error = repr(e)
+                    messages.error(request, _("uzivatel.admin.NotificationsLogAdmin.test_email_view.email_sent_failed"))
+        else:
+            form = TestEmailForm()
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("uzivatel.admin.NotificationsLogAdmin.test_email_view.email_test_title"),
+            "form": form,
+            "result": result,
+            "error": error,
+            "opts": self.model._meta,
+        }
+        return TemplateResponse(request, "admin/test_email.html", context)
