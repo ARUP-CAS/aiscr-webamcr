@@ -39,7 +39,7 @@ env:
 
 jobs:
   deployment:
-    name: Deploy to DEV Server and test
+    name: Run test on DEV server
     runs-on: ubuntu-latest
     timeout-minutes: 180
 
@@ -165,12 +165,8 @@ jobs:
         run: |
           sudo pkill openvpn || true
 
-      - name: Aktualizovat výsledek testu
-        shell: bash
+      - name: Zkontrolovat výsledek testů
+        if: ${{ steps.test-result.outputs.FAILED > 0 }}
         run: |
-          # Pokud nějaký test selhal → celý workflow FAIL
-          set -euo pipefail
-          if [ "${{ steps.test-result.outputs.FAILED }}" -gt 0 ]; then
-            echo "::error::Selhalo ${{ steps.test-result.outputs.FAILED }} testů"
-            exit 1
-          fi
+          echo "::error::Selhalo ${{ steps.test-result.outputs.FAILED }} testů"
+          exit 1
