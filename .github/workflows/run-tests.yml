@@ -91,32 +91,27 @@ jobs:
           echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
           
           # Pass variables explicitly to the SSH session
-          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} \
-            "NASADIT='${{ inputs.nasadit_verzi }}' \
-             TEST_MOD='${{ inputs.test_mod }}' \
-             TEST_CISLO='${{ inputs.test_cislo }}' \
-             REF_NAME='${{ github.ref_name }}' \
-             SERVER_ROOT='${{ env.server_deploy_root }}' \
-             DEP_SCRIPT='${{ env.dep_script }}' \
-             TEST_SCRIPT='${{ env.test_script }}' << EOF
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}  << EOF
              sudo bash -c '
-             set -euo pipefail
-
+              set -euo pipefail
+              NASADIT="${{ inputs.nasadit_verzi }}"
+              TEST_MOD="${{ inputs.test_mod }}" 
+              TEST_CISLO="${{ inputs.test_cislo }}" 
+              REF_NAME="${{ github.ref_name }}" 
+              SERVER_ROOT="${{ env.server_deploy_root }}" 
+              DEP_SCRIPT="${{ env.dep_script }}" 
+              TEST_SCRIPT="${{ env.test_script }}"
               cd $SERVER_ROOT
               chmod +x $DEP_SCRIPT $TEST_SCRIPT
-
-              if [ \"$NASADIT\" = \"true\" ]; then
+              if [ $NASADIT = true ]; then
                 ./$DEP_SCRIPT $SERVER_ROOT $REF_NAME
               fi
-
-              echo "Spouštím testy v režimu: $TEST_MOD"
-              
+              echo "Spouštím testy v režimu: $TEST_MOD"              
               if [ "$TEST_MOD" = "konkretni" ] && [ -z "$TEST_CISLO" ]; then
                 echo "Missing test number"
                 exit 1
               fi
-
-              case \"$TEST_MOD\" in
+              case $TEST_MOD in
                 vsechny)
                 echo "Testuji vše"
                 ./$TEST_SCRIPT
@@ -127,12 +122,12 @@ jobs:
                 ;;
                 konkretni)
                 echo "Testuji test č. $TEST_CISLO"
-                ./$TEST_SCRIPT -t \"$TEST_CISLO\" ;;
+                ./$TEST_SCRIPT -t $TEST_CISLO ;;
                 *) exit 1 ;;
               esac
             '
             EOF
-          "
+          
 
       - name: Stáhnout a zobrazit výsledky testů
         id: test-result
