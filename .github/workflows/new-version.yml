@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   update_files:
-    name: Update citation and libraries list
+    name: Update citation
     permissions:
       id-token: write
       contents: write
