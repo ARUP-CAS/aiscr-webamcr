@@ -630,8 +630,8 @@ class NotificationsLogAdmin(admin.ModelAdmin):
                 try:
                     connection = get_connection(fail_silently=False)
                     msg = EmailMessage(
-                        subject="Test email z administrace",
-                        body="Toto je testovací email - pokud ho čteš, odesílání funguje.",
+                        subject="AMČR - testovací email | AMCR - testing email",
+                        body="<p>Toto je testovací email - pokud ho čteš, odesílání funguje.</p><p>This is a test email—if you're reading this, sending is working.</p>",
                         from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
                         to=[to_email],
                         connection=connection,
