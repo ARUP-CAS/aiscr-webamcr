@@ -72,9 +72,16 @@ jobs:
         shell: bash
         timeout-minutes: 2
         run: |
-          until ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; do
+          for i in {1..10}; do
+            if ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then
+              break
+            fi
             sleep 3
           done
+          if ! ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then
+            echo "::error::VPN connection failed"
+            exit 1
+          fi
 
       - name: SSH connection
         shell: bash
