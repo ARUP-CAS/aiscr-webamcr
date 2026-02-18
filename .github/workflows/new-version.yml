@@ -7,11 +7,6 @@ on:
         description: 'Tag name following "vx.x.x" semantics (e.g. "v1.0.0"):'
         type: string
         required: true
-      pip_update:
-        description: 'Update pip package list'
-        type: boolean
-        required: true
-        default: true
       citation_update:
         description: 'Update citation'
         type: boolean
@@ -26,6 +21,10 @@ on:
         required: true
         default: testing
    
+concurrency:
+  group: release-${{ inputs.environment }}
+  cancel-in-progress: false
+
 jobs:
   update_files:
     name: Update citation and libraries list
@@ -34,8 +33,15 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     outputs:
-      sha: ${{ steps.set-sha.outputs.sha }}
+      sha: ${{ steps.final-sha.outputs.sha }}
     steps:
+      - name: Validate tag format
+        run: |
+          if [[ ! "${{ inputs.new_tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid tag format. Must be vX.Y.Z"
+            exit 1
+          fi
+      
       - name: Log-in as AMCR app
         uses: actions/create-github-app-token@v2
         id: app-token
@@ -48,70 +54,34 @@ jobs:
         with:
           ref: dev
           token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
 
-      - name: Set default SHA
-        run: |
-          echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
-
-      - name: Set up Python
-        if: ${{ inputs.pip_update }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-
-      - name: Install Dependencies
-        if: ${{ inputs.pip_update }}      
-        run: |
-          python -m pip install --upgrade pip
-          pip install pip-licenses
-          pip install -r webclient/requirements.txt
-
-      - name: Run convert_to_rst.py
-        if: ${{ inputs.pip_update }}
-        run: python docs/licenses/convert_to_rst.py
-
-      - name: Update pip package list
-        if: ${{ inputs.pip_update }}
-        run: |
-          VERSION=${{ inputs.new_tag }}
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git config --global pull.rebase true
-          git add docs/source/12_zavislosti/python_knihovny.rst
-          if git diff --staged --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "Update python_knihovny.rst for release $VERSION"
-            git pull
-            git push
-            echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
-          fi
+      - name: Install yq
+        if: ${{ inputs.citation_update }}
+        uses: mikefarah/yq@v4
 
       - name: Update CITATION.cff
         if: ${{ inputs.citation_update }}
         run: |
           VERSION=${{ inputs.new_tag }}
           DATE=$(date -I)
-          sed -i '/title:/!b;n;cversion: "'"$VERSION"'"' CITATION.cff
-          sed -i "s/date-released:.*/date-released: $DATE/" CITATION.cff
+          yq -i '.version = "'"$VERSION"'"' CITATION.cff
+          yq -i '.date-released = "'"$DATE"'"' CITATION.cff
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git config --global pull.rebase true
           git add CITATION.cff
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
             git commit -m "Update CITATION.cff for release $VERSION"
-            git pull
+            git pull --rebase origin dev
             git push
-            echo "sha=$(git log -1 --format='%h')" >> $GITHUB_ENV
           fi
 
-      - name: Set output SHA
-        id: set-sha
+      - name: Set final SHA
+        id: final-sha
         run: |
-          echo "sha=${{ env.sha }}" >> $GITHUB_OUTPUT
-          echo "Output SHA set to: ${{ env.sha }}"
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
   
   new_version:
     name: Create new tag
@@ -126,18 +96,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          ref: dev
+          fetch-depth: 0
 
-      - name: Create tag
+      - name: Ensure latest dev branch
+        run: |
+          git fetch origin dev
+          git checkout dev
+          git reset --hard origin/dev
+
+      - name: Check if tag exists
+        run: |
+          git fetch --tags
+          if git rev-parse "${{ inputs.new_tag }}" >/dev/null 2>&1; then
+            echo "Tag already exists!"
+            exit 1
+          fi
+      
+      - name: Create annotated tag
         uses: rickstaa/action-create-tag@v1
-        id: "tag_create"
+        id: tag_create
         with:
           tag: ${{ inputs.new_tag }}
           commit_sha: ${{ needs.update_files.outputs.sha }}
-          
-      - name: Check tag exists
-        run: |
-          echo "Tag already present: ${{ env.TAG_EXISTS }}"
+          message: "Release ${{ inputs.new_tag }}"
+          annotated: true
 
   docker_deploy:
     needs: new_version
