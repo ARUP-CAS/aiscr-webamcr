@@ -27,6 +27,10 @@ on:
         required: true
         default: GitHub 
 
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
 env:
   branch: dev
   server_deploy_root: /home/amcr/aiscr-webamcr
@@ -53,47 +57,54 @@ jobs:
 
       - name: Setup VPN config
         run: |
-          echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
-          echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
-          echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
-          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
+          tmpdir=$(mktemp -d)
+          echo "VPN_TMPDIR=$tmpdir" >> $GITHUB_ENV
+          cp .github/vpn/openvpn20_huldio_ci.ovpn "$tmpdir/"
+          echo "${{ secrets.VPN_CA_CRT }}" > "$tmpdir/openvpn20_huldio_ci_ca.crt"
+          echo "${{ secrets.VPN_USER_CRT }}" > "$tmpdir/openvpn20_huldio_ci_user.crt"
+          echo "${{ secrets.VPN_USER_KEY }}" > "$tmpdir/openvpn20_huldio_ci_user.key"
+          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > "$tmpdir/secret.txt"
 
       - name: Connect VPN
-        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --daemon --askpass secret.txt
+        run: sudo openvpn --config "$VPN_TMPDIR/openvpn20_huldio_ci.ovpn" --daemon --askpass "$VPN_TMPDIR/secret.txt"
 
       - name: Wait for VPN & DNS resolve
         shell: bash
         timeout-minutes: 2
         run: |
-          for i in {1..10}; do
-            dig ${{ secrets.DNS_RESOLVER }} ${{ env.DEPLOYMENT_SERVER }} A +time=1 && break
-            sleep 2
+          until ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; do
+            sleep 3
           done
 
       - name: SSH connection
         shell: bash
         run: |
+          set -euo pipefail
           eval $(ssh-agent -s)
           echo "${{ env.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "${{ env.SSH_KNOWN_HOST }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          sleep 30          
-          ping -c 10 ${{ env.DEPLOYMENT_SERVER }}          
+          for i in {1..10}; do
+            if ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then break; fi
+            sleep 3
+          done       
           echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"          
-          ssh amcr@${{ env.DEPLOYMENT_SERVER }} << EOF
-          sudo su - root << AOF
+          git fetch --tags --force
+          git rev-parse "v${{ inputs.tag }}" >/dev/null 2>&1 || {
+            echo "Tag does not exist"
+            exit 1
+          }
+          ssh amcr@${{ env.DEPLOYMENT_SERVER }} "sudo bash -s" << EOF
+          set -euo pipefail
           cd ${{ env.server_deploy_root }}
-          git stash push -m "CI_autostash_${{ inputs.tag }}_${{ env.date_stamp }}"
-          git checkout ${{ env.branch }}
-          git pull
+          git checkout -f v${{ inputs.tag }}
           chmod +x ${{ env.dep_script }}
           ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} ${{ env.branch }} ${{ inputs.source }}
-          AOF
           EOF
 
       - name: Disconnect VPN
         if: always()
         run: |
-          sudo killall openvpn
+          sudo pkill openvpn || true
