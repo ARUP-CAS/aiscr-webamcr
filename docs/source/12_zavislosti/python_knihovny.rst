@@ -312,8 +312,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.20.3
-     - Unlicense
+     - 3.24.2
+     - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
      - 1.5.5
@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.23
+     - 9.0.24
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -408,7 +408,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/hMatoba/Piexif
    * - pillow
-     - 12.1.0
+     - 12.1.1
      - MIT-CMU
      - https://python-pillow.github.io
    * - pip
@@ -420,7 +420,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.5.1
+     - 4.9.2
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -512,7 +512,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache License, Version 2.0
      - https://opensource.perlig.de/rcssmin/
    * - rdflib
-     - 7.5.0
+     - 7.6.0
      - BSD License
      - https://github.com/RDFLib/rdflib
    * - redis
@@ -520,7 +520,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.4.9
+     - 4.4.10
      - BSD License
      - https://www.reportlab.com/
    * - requests
@@ -628,7 +628,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
-     - 0.32.0
+     - 0.33.0
      - MIT OR Apache-2.0
      - https://github.com/python-trio/trio
    * - trio-typing
@@ -672,7 +672,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.36.1
+     - 20.37.0
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
