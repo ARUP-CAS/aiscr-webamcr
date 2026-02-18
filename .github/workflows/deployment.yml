@@ -28,7 +28,7 @@ on:
         default: GitHub 
 
 concurrency:
-  group: deploy-${{ inputs.environment }}
+  group: deploy-${{ github.repository }}-${{ inputs.environment }}
   cancel-in-progress: false
 
 env:
