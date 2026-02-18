@@ -40,7 +40,7 @@ py7zr==1.1.2
 rarfile==4.2
 django-cacheops==7.2
 django-model-utils==5.0.0
-pandas==3.0.0
+pandas==3.0.1
 tablib[all]==3.9.0
 pre-commit==4.5.1
 coverage==7.13.4
