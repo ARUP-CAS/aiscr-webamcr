@@ -44,7 +44,6 @@ Doporučený formát docstringu (Google‑style):
         \"\"\"
 """
 
-
 from __future__ import annotations
 
 import ast

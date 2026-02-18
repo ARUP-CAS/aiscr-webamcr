@@ -654,8 +654,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def clickAtMapCoord(self, lon, lat):
 
-        self.driver.execute_script(
-            f"""
+        self.driver.execute_script(f"""
  window.getToday = function() {{
 return new Date('2025-06-28T12:00:00Z');}};
  const latlng = L.latLng({lat}, {lon});
@@ -673,8 +672,7 @@ return new Date('2025-06-28T12:00:00Z');}};
  containerPoint: containerPoint,
  layerPoint: layerPoint,
  originalEvent: syntheticEvent
-}});"""
-        )
+}});""")
 
     def _username(self, type="archeolog"):
         return USERS[type]["USERNAME"]
@@ -1297,8 +1295,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.driver.set_script_timeout(6)
         try:
             self.driver.find_element(By.CSS_SELECTOR, ".loading-results")
-            self.driver.execute_async_script(
-                """
+            self.driver.execute_async_script("""
 var done = arguments[0];
 var $ = window.jQuery || (typeof django !== 'undefined' && django.jQuery);
 if (!$) {
@@ -1308,8 +1305,7 @@ if (!$) {
 $(document).one('ajaxSuccess', function(event, xhr, settings) {
 done("ok");
 });
-"""
-            )
+""")
         except Exception:
             pass
 
