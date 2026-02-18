@@ -2,6 +2,7 @@ import hashlib
 import io
 import logging
 import re
+from abc import ABC
 from datetime import datetime, timezone
 from enum import Enum
 from io import BytesIO
@@ -1403,7 +1404,72 @@ class FedoraTransactionStatus(Enum):
     ABORTED = 3
 
 
-class FedoraTransaction:
+class BaseFedoraTransaction(ABC):
+    """
+    Abstraktní základní třída pro Fedora transakce.
+
+    Definuje společné rozhraní pro všechny typy Fedora transakcí.
+    Podtřídy implementují konkrétní chování pro skutečné, testovací (dry-run)
+    a mazací transakce.
+    """
+
+    def __init__(self):
+        self.uid = None
+
+    def mark_transaction_as_closed(self):
+        """Označí transakci jako uzavřenou. Výchozí implementace neprovádí žádnou akci."""
+        pass
+
+    def rollback_transaction(self):
+        """Provede rollback transakce. Výchozí implementace neprovádí žádnou akci."""
+        pass
+
+
+class DryRunFedoraTransaction(BaseFedoraTransaction):
+    """
+    Testovací (dry-run) Fedora transakce, která nevytváří skutečnou transakci v repozitáři.
+
+    Používá se při importu dat, kdy se zápisy do Fedory provádí až samostatném kroku,
+    aby nedocházelo k duplicitním úpravám jednotlivých kontejnerů.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.updated_ident_cely: set[str] = set()
+
+    def add_updated_ident_cely(self, ident_cely: str):
+        """
+        Přidá identifikátor záznamu do množiny dotčených záznamů.
+
+        Args:
+            ident_cely: identifikátor záznamu (ident_cely)
+        """
+        self.updated_ident_cely.add(ident_cely)
+
+
+class FedoraTransaction(BaseFedoraTransaction):
+    """
+    Třída pro správu transakcí ve Fedora repozitáři.
+
+    Zapouzdřuje vytvoření, commit a rollback transakce v Fedora repozitáři.
+    Při inicializaci vytváří novou transakci ve Fedoře (pokud není předáno
+    existující uid). Výsledek transakce se ukládá do Redis pro zobrazení uživateli.
+
+    Args:
+        main_record: hlavní záznam (ModelWithMetadata), ke kterému se transakce váže
+        transaction_user: uživatel provádějící transakci
+        success_message: zpráva zobrazená při úspěšném dokončení
+        error_message: zpráva zobrazená při chybě
+        uid: existující UID transakce; pokud není zadáno, vytvoří se nová transakce
+        request: HTTP request pro předání kontextu
+        suppress_message: pokud True, neukládá výsledek transakce do Redis
+        redirect_on_error: pokud True, při chybě provede přesměrování
+        redirect_url: URL pro přesměrování při chybě
+
+    Raises:
+        FedoraTransactionNoIDError: pokud se nepodaří vytvořit transakci nebo získat její UID
+    """
+
     def __init__(
         self,
         main_record: ModelWithMetadata = None,
@@ -1417,6 +1483,7 @@ class FedoraTransaction:
         redirect_on_error=False,
         redirect_url=None,
     ):
+        super().__init__()
         from uzivatel.models import User
 
         self.main_record = main_record
@@ -1442,6 +1509,13 @@ class FedoraTransaction:
 
     @staticmethod
     def get_transaction_redis_key(ident_cely: str, transaction_user_id: int):
+        """
+        Vytvoří klíč pro uložení výsledku transakce do Redis.
+
+        Args:
+            ident_cely: identifikátor záznamu
+            transaction_user_id: ID uživatele provádějícího transakci
+        """
         return f"fedora-transaction-result-{ident_cely}-{transaction_user_id}"
 
     @property
@@ -1453,6 +1527,12 @@ class FedoraTransaction:
         return self.__status
 
     def _save_transaction_result_to_redis(self, result: FedoraTransactionResult):
+        """
+        Uloží výsledek transakce (COMMITED/ABORTED) do Redis.
+
+        Args:
+            result: výsledek transakce (FedoraTransactionResult)
+        """
         if self.main_record and self.transaction_user and not self.suppress_message:
             r = RedisConnector()
             redis_connection = r.get_connection()
@@ -1463,6 +1543,16 @@ class FedoraTransaction:
                 redis_connection.hset(self._transaction_redis_key, "error_message", str(self.error_message))
 
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
+        """
+        Odešle požadavek na commit nebo rollback transakce do Fedory.
+
+        Args:
+            operation: typ operace (COMMIT nebo ROLLBACK)
+
+        Raises:
+            FedoraTransactionUnsupportedOperationError: pokud je zadána neplatná operace
+            FedoraTransactionCommitFailedError: pokud Fedora vrátí chybový status
+        """
         logger.debug(
             "core_repository_connector.FedoraTransaction.commit_transaction.start", extra={"transaction": self.uid}
         )
@@ -1502,6 +1592,7 @@ class FedoraTransaction:
         )
 
     def rollback_transaction(self):
+        """Provede rollback transakce ve Fedora repozitáři, pokud transakce ještě nebyla zrušena."""
         logger.debug(
             "core_repository_connector.FedoraTransaction.rollback_transaction.start", extra={"transaction": self.uid}
         )
@@ -1513,6 +1604,9 @@ class FedoraTransaction:
         )
 
     def mark_transaction_as_closed(self):
+        """
+        Uzavře transakci: provede commit, spustí post-commit úlohy a případně aktualizaci digiarchívu.
+        """
         logger.debug(
             "core_repository_connector.FedoraTransaction.mark_transaction_as_closed.start",
             extra={"transaction": self.uid, "value": self.post_commit_tasks.keys()},
@@ -1528,6 +1622,7 @@ class FedoraTransaction:
         )
 
     def _perform_post_commit_tasks(self):
+        """Provede úlohy naplánované po commitu transakce (např. vytvoření linků) v nové transakci."""
         if len(self.post_commit_tasks) == 0:
             return
         new_transaction = FedoraTransaction()
@@ -1547,6 +1642,12 @@ class FedoraTransaction:
         new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):
+        """
+        Vytvoří novou transakci ve Fedoře.
+
+        Raises:
+            FedoraTransactionNoIDError: pokud se nepodaří vytvořit transakci nebo získat její UID
+        """
         logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")
         url = (
             f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx"
@@ -1575,6 +1676,11 @@ class FedoraTransaction:
 
     @staticmethod
     def call_digiarchiv_update():
+        """
+        Spustí asynchronní aktualizaci digiarchívu přes Celery.
+
+        Kontroluje, zda úloha již není naplánovaná nebo běží, aby nedocházelo k duplicitnímu spuštění.
+        """
         from cron.tasks import call_digiarchiv_update_task
 
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
@@ -1609,3 +1715,26 @@ class FedoraTransaction:
                         return
         call_digiarchiv_update_task.apply_async()
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.end")
+
+
+class FedoraDeletionOnlyTransaction(FedoraTransaction):
+    """
+    Fedora transakce určená pouze pro mazání záznamů při importu dat.
+
+    Na rozdíl od běžné FedoraTransaction sbírá identifikátory dotčených záznamů, které jsou navázané
+    na mazaný záznam a musejí být aktualizovány v následujícím kroku,
+    podobně jako DryRunFedoraTransaction.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.updated_ident_cely: set[str] = set()
+
+    def add_updated_ident_cely(self, ident_cely: str):
+        """
+        Přidá identifikátor záznamu do množiny dotčených záznamů.
+
+        Args:
+            ident_cely: identifikátor záznamu (ident_cely)
+        """
+        self.updated_ident_cely.add(ident_cely)

@@ -207,6 +207,9 @@ CORE
    * - ``data-import-stop``
      - ``data-import-stop/<str:job_id>``
      - ``views.DataImportStop.as_view()``
+   * - ``data-import-start``
+     - ``data-import-start/<str:job_id>``
+     - ``views.DataImportStart.as_view()``
 
 DJ
 --
