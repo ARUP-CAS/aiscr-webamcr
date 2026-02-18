@@ -400,7 +400,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.23
+     - 9.0.24
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -520,7 +520,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
-     - 4.4.9
+     - 4.4.10
      - BSD License
      - https://www.reportlab.com/
    * - requests
