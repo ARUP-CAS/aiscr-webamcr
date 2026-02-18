@@ -50,21 +50,17 @@ jobs:
       - name: Install OpenVPN
         run: |
           sudo apt-get update
-          sudo apt-get --assume-yes --no-install-recommends install openvpn iputils-ping dnsutils    
+          sudo apt-get --assume-yes --no-install-recommends install openvpn iputils-ping dnsutils          
 
       - name: Setup VPN config
-        id: vpn-config
         run: |
-          tmpdir=$(mktemp -d)
-          echo "VPN_TMPDIR=$tmpdir" >> $GITHUB_OUTPUT
-          cp .github/vpn/openvpn20_huldio_ci.ovpn "$tmpdir/"
-          echo "${{ secrets.VPN_CA_CRT }}" > "$tmpdir/openvpn20_huldio_ci_ca.crt"
-          echo "${{ secrets.VPN_USER_CRT }}" > "$tmpdir/openvpn20_huldio_ci_user.crt"
-          echo "${{ secrets.VPN_USER_KEY }}" > "$tmpdir/openvpn20_huldio_ci_user.key"
-          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > "$tmpdir/secret.txt"
+          echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
+          echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
+          echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
+          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
 
       - name: Connect VPN
-        run: sudo openvpn --config "${{ steps.vpn-config.outputs.VPN_TMPDIR }}/openvpn20_huldio_ci.ovpn" --daemon --askpass "${{ steps.vpn-config.outputs.VPN_TMPDIR }}/secret.txt"
+        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --daemon --askpass secret.txt
 
       - name: Wait for VPN & DNS resolve
         shell: bash
