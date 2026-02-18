@@ -2,6 +2,9 @@ name: Pre-commit
 
 on:
   pull_request:
+    branches:
+      - dev
+      - test
   push:
     branches:
       - dev
@@ -42,7 +45,24 @@ jobs:
           restore-keys: |
             pre-commit-${{ runner.os }}-
 
-      - run: pip install --upgrade pip pre-commit
+      - uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('webclient/requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      # 🔧 Install project dependencies
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pip-licenses
+          pip install -r webclient/requirements.txt
+          pip install pre-commit
+
+      # 📄 Regenerate license RST
+      - name: Run convert_to_rst.py
+        run: python docs/licenses/convert_to_rst.py
 
       # 🔍 Run pre-commit and capture exit code
       - name: Run pre-commit
@@ -52,16 +72,6 @@ jobs:
           pre-commit run --all-files
           echo "exit_code=$?" >> $GITHUB_OUTPUT
           exit 0
-
-      # 🔧 Install project dependencies
-      - name: Install Dependencies
-        run: |
-          pip install pip-licenses
-          pip install -r webclient/requirements.txt
-
-      # 📄 Regenerate license RST
-      - name: Run convert_to_rst.py
-        run: python docs/licenses/convert_to_rst.py
 
       # 🔎 Detect ANY changes (formatting or RST)
       - name: Check for file changes
@@ -100,8 +110,8 @@ jobs:
 
       # ❌ Fail original workflow if pre-commit failed
       - name: Fail workflow if hooks failed
-        if: steps.hooks.outputs.exit_code != '0'
+        if: ${{ steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' }}
         run: |
-          echo "Pre-commit checks failed."
+          echo "Pre-commit checks failed or changes were required."
           echo "A fix PR has been created if changes were auto-fixable."
           exit 1
