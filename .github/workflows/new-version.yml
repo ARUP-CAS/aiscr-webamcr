@@ -22,12 +22,12 @@ on:
         default: testing
    
 concurrency:
-  group: release-${{ inputs.environment }}
+  group: release-${{ github.repository }}-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
   update_files:
-    name: Update citation and libraries list
+    name: Update citation
     permissions:
       id-token: write
       contents: write
@@ -37,6 +37,7 @@ jobs:
     steps:
       - name: Validate tag format
         run: |
+          set -euo pipefail
           if [[ ! "${{ inputs.new_tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Invalid tag format. Must be vX.Y.Z"
             exit 1
@@ -63,6 +64,11 @@ jobs:
       - name: Update CITATION.cff
         if: ${{ inputs.citation_update }}
         run: |
+          set -euo pipefail
+          if [ ! -f CITATION.cff ]; then
+            echo "CITATION.cff not found"
+            exit 1
+          fi
           VERSION=${{ inputs.new_tag }}
           DATE=$(date -I)
           yq -i '.version = "'"$VERSION"'"' CITATION.cff
@@ -75,7 +81,10 @@ jobs:
           else
             git commit -m "Update CITATION.cff for release $VERSION"
             git pull --rebase origin dev
-            git push
+            git push --force-with-lease || {
+              echo "Push failed due to upstream changes. Retry release."
+              exit 1
+            }
           fi
 
       - name: Set final SHA
@@ -93,21 +102,24 @@ jobs:
     environment:
       name: ${{ inputs.environment }}
     steps:
+      - name: Log-in as AMCR app
+        uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
+          private-key: ${{ secrets.AISCR_AMCR_ACTIONS_KEY }}
+      
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          token: ${{ steps.app-token.outputs.token }}
+          ref: dev
           fetch-depth: 0
-
-      - name: Ensure latest dev branch
-        run: |
-          git fetch origin dev
-          git checkout dev
-          git reset --hard origin/dev
 
       - name: Check if tag exists
         run: |
-          git fetch --tags
-          if git rev-parse "${{ inputs.new_tag }}" >/dev/null 2>&1; then
+          git fetch --tags --force
+          if git show-ref --tags --verify --quiet "refs/tags/${{ inputs.new_tag }}"; then
             echo "Tag already exists!"
             exit 1
           fi
