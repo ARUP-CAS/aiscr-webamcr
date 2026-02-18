@@ -10,7 +10,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: pre-commit-autoupdate
+  group: pre-commit-autoupdate-${{ github.repository }}
   cancel-in-progress: true
 
 jobs:
