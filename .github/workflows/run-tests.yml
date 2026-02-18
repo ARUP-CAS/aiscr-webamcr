@@ -91,7 +91,7 @@ jobs:
           echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
           
           # Pass variables explicitly to the SSH session
-          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}  << EOF
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}  <<'EOF'
              sudo bash -c '
               set -euo pipefail
               NASADIT="${{ inputs.nasadit_verzi }}"
@@ -126,7 +126,7 @@ jobs:
                 *) exit 1 ;;
               esac
             '
-            EOF
+          EOF
           
 
       - name: Stáhnout a zobrazit výsledky testů
