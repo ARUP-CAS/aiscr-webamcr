@@ -461,10 +461,6 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 ).save()
         return super(CustomUserAdmin, self).user_change_password(request, id, form_url=form_url)
 
-    def log_deletion(self, request, object, object_repr):
-        object.deleted_by_user = request.user
-        super().log_deletion(request, object, object_repr)
-
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if obj:
@@ -606,16 +602,8 @@ class NotificationsLogAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    def has_change_permission(self, request, obj=None):
-        if request.method in ["GET", "HEAD", "OPTIONS"]:
-            return True
-        return False
-
     def has_delete_permission(self, request, obj=None):
         return False
-
-    def has_view_permission(self, request, obj=None):
-        return True
 
     def get_urls(self):
         urls = super().get_urls()
@@ -629,7 +617,7 @@ class NotificationsLogAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def test_email_view(self, request):
-        if not request.user.is_superuser:
+        if not request.user.has_perm("uzivatel.send_test_email"):
             raise PermissionDenied
 
         result = None
