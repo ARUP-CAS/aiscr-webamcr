@@ -98,10 +98,10 @@ jobs:
              REF_NAME='${{ github.ref_name }}' \
              SERVER_ROOT='${{ env.server_deploy_root }}' \
              DEP_SCRIPT='${{ env.dep_script }}' \
-             TEST_SCRIPT='${{ env.test_script }}' bash -s" << 'EOF'
-            
-            set -euo pipefail
-            sudo bash -c "
+             TEST_SCRIPT='${{ env.test_script }}' << EOF
+             sudo bash -c '
+             set -euo pipefail
+
               cd $SERVER_ROOT
               chmod +x $DEP_SCRIPT $TEST_SCRIPT
 
@@ -130,7 +130,7 @@ jobs:
                 ./$TEST_SCRIPT -t \"$TEST_CISLO\" ;;
                 *) exit 1 ;;
               esac
-            "
+            '
           EOF
 
       - name: Stáhnout a zobrazit výsledky testů
