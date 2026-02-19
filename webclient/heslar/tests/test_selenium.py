@@ -10,7 +10,7 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceHeslar(BaseSeleniumTestClass):
-    def test_151_test_Fedora_heslář_001(self):
+    def test_151_test_Fedora_heslar_001(self):
         """Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
 
         Role:
@@ -38,7 +38,7 @@ class AkceHeslar(BaseSeleniumTestClass):
         Expected:
             - zápis dat do Fedory
         """
-        logger.info("AkceHeslar.test_151_test_Fedora_heslář_001.start")
+        logger.info("AkceHeslar.test_151_test_Fedora_heslar_001.start")
         self.login("administrator")
         # Vytvoření hesla
         time = self.getTime()
@@ -75,7 +75,7 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_poznamka", "test popis en")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.NAME, "_save")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslář_datace")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslar_datace")
 
         # Úprava vazby heslář_datace
         time = self.getTime()
@@ -84,7 +84,7 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_rok_do_min", "1990")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.NAME, "_save")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslář_datace")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslar_datace")
 
         # Smazání vazby heslář_datace
         time = self.getTime()
@@ -92,29 +92,29 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".deletelink")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, "input[type=submit]:nth-child(2)")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslář_datace")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslar_datace")
 
         # Vytvoření vazby heslář_hierarchie
         self.createFedoraRecord("HES-000886", "administrator")
         self.createFedoraRecord("HES-001066", "administrator")
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarhierarchie/add/")
-        self.ElementClick(By.ID, "select2-id_heslář_nazev_podrazene-container")
+        self.ElementClick(By.ID, "select2-id_heslar_nazev_podrazene-container")
         self.wait_for_select2_results()
-        self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslář_nazev_podrazene-results > li:nth-child(4)")
+        self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslar_nazev_podrazene-results > li:nth-child(4)")
         self.ElementClick(By.ID, "select2-id_heslo_podrazene-container")
         self.wait_for_select2_results()
         self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslo_podrazene-results > li:nth-child(4)")
-        self.ElementClick(By.ID, "select2-id_heslář_nazev_nadrazene-container")
+        self.ElementClick(By.ID, "select2-id_heslar_nazev_nadrazene-container")
         self.wait_for_select2_results()
-        self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslář_nazev_nadrazene-results > li:nth-child(8)")
+        self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslar_nazev_nadrazene-results > li:nth-child(8)")
         self.ElementClick(By.ID, "select2-id_heslo_nadrazene-container")
         self.wait_for_select2_results()
         self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslo_nadrazene-results > li:nth-child(2)")
         self.ElementClick(By.CSS_SELECTOR, "option:nth-child(4)")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.NAME, "_save")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslář_hierarchie")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslar_hierarchie")
 
         # Úprava vazby heslář_hierarchie
         time = self.getTime()
@@ -122,7 +122,7 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "option:nth-child(3)")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.NAME, "_save")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslář_hierarchie")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslar_hierarchie")
 
         # Smazání vazby heslář_hierarchie
         time = self.getTime()
@@ -130,15 +130,15 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".deletelink")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, "#content input[type=submit]:nth-child(2)")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslář_hierarchie")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslar_hierarchie")
 
         # Vytvoření vazby heslář_odkaz
         self.createFedoraRecord("HES-001065", "administrator")
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarodkaz/add/")
-        self.ElementClick(By.ID, "select2-id_heslář_nazev-container")
+        self.ElementClick(By.ID, "select2-id_heslar_nazev-container")
         self.wait_for_select2_results()
-        self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslář_nazev-results > li:nth-child(4)")
+        self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslar_nazev-results > li:nth-child(4)")
         self.ElementClick(By.ID, "select2-id_heslo-container")
         self.wait_for_select2_results()
         self.ElementClick(By.CSS_SELECTOR, "#select2-id_heslo-results > li:nth-child(3)")
@@ -148,7 +148,7 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "option:nth-child(3)")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.NAME, "_save")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslář_odkaz")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslar_odkaz")
 
         # Úprava vazby heslář_odkaz
         time = self.getTime()
@@ -156,7 +156,7 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#id_skos_mapping_relation > option:nth-child(2)")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.NAME, "_save")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslář_odkaz")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslar_odkaz")
 
         # Smazání vazby heslář_odkaz
         time = self.getTime()
@@ -164,7 +164,7 @@ class AkceHeslar(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".deletelink")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, "#content input[type=submit]:nth-child(2)")
-        self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslář_odkaz")
+        self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslar_odkaz")
 
         # Smazání hesla
         time = self.getTime()
@@ -174,4 +174,4 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, "div:nth-child(2) > input:nth-child(2)")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslo")
 
-        logger.info("AkceHeslar.test_151_test_Fedora_heslář_001.end")
+        logger.info("AkceHeslar.test_151_test_Fedora_heslar_001.end")
