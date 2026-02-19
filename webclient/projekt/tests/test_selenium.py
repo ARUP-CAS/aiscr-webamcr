@@ -19,7 +19,7 @@ from django.conf import settings
 from django.core import mail
 from django.utils.translation import gettext as _
 from freezegun import freeze_time
-from oznámení.tests.test_selenium import OznameniSeleniumTest
+from oznameni.tests.test_selenium import OznameniSeleniumTest
 from projekt.models import Projekt
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
