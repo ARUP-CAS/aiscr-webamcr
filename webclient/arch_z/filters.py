@@ -86,7 +86,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
     """
 
-    # Filters by historie
+    # Filtrování podle historie
 
     TYP_VAZBY = ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
     HISTORIE_TYP_ZMENY_STARTS_WITH = "AZ"

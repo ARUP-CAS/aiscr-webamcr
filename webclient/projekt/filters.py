@@ -251,7 +251,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     )
     """
 
-    # Filters by historie
+    # Filtrování podle historie
     historie_typ_zmeny = MultipleChoiceFilter(
         choices=list(
             filter(
@@ -271,7 +271,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
-    # Filters by event
+    # Filtrování podle události
     akce_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__ident_cely",
         lookup_expr="icontains",

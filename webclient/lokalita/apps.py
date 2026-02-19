@@ -7,5 +7,5 @@ class LokalitaConfig(AppConfig):
 
     def ready(self):
         super(LokalitaConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import lokalita.signals

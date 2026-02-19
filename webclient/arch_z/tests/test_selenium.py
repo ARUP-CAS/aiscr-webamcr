@@ -2775,7 +2775,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_AZ")
 
-        # C akce_vedouci
+        # Vytvoření akce_vedoucí
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__placeholder")
@@ -2787,7 +2787,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_vedouci")
 
-        # U akce_vedouci
+        # Úprava akce_vedoucí
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.CSS_SELECTOR, "#div_id__osv-0-organizace .filter-option-inner-inner")
@@ -2799,7 +2799,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_vedouci")
 
-        # D akce_vedouci
+        # Smazání akce_vedoucí
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.CSS_SELECTOR, ".app-color-danger")
@@ -2809,7 +2809,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_vedouci")
 
-        # C DJ
+        # Vytvoření DJ
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
         self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
@@ -2818,7 +2818,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "newDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_DJ")
 
-        # U DJ
+        # Úprava DJ
         time = self.getTime()
         self.ElementClick(By.ID, "id_X-M-9922437A-D01-nazev")
         self.ElementSendKeys(By.ID, "id_X-M-9922437A-D01-nazev", "test")
@@ -2826,7 +2826,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_DJ")
 
-        # D DJ
+        # Smazání DJ
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".btn-group:nth-child(2) .material-icons")
         self.ElementClick(By.ID, "dj-smazat-X-M-9922437A-D01")
@@ -2834,7 +2834,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_DJ")
 
-        # C komponenta
+        # Vytvoření komponenty
         self.createFedoraRecord("X-C-9000000002A", "archivar")
         self.goToAddress("/id/X-C-9000000002A")
         time = self.getTime()
@@ -2858,7 +2858,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "createCompotSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_komponenta")
 
-        # U komponenta
+        # Úprava komponenty
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001-obdobi .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-6 > .text")
@@ -2874,7 +2874,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_komponenta")
 
-        # C nalez
+        # Vytvoření nálezu
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_o-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-7-8 > .text")
@@ -2888,7 +2888,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_nalez")
 
-        # U nalez
+        # Úprava nálezu
         time = self.getTime()
         self.ElementSendKeys(By.ID, "id_X-C-9000000002A-K001_o-0-pocet", "2")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000002A-K001_p-0-specifikace .filter-option-inner-inner")
@@ -2903,7 +2903,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_nalez")
 
-        # D nalez
+        # Smazání nálezu
         pk = (
             NalezObjekt.objects.filter(
                 komponenta__komponenta_vazby__dokumentacni_jednotka__archeologicky_zaznam__ident_cely="X-C-9000000002A"
@@ -2927,7 +2927,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_nalez")
 
-        # D komponenta
+        # Smazání komponenty
         time = self.getTime()
         self.ElementClick(By.ID, "others_komponenta")
         self.ElementClick(By.ID, "komponenta-smazat-X-C-9000000002A-K001")
@@ -2935,7 +2935,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_komponenta")
 
-        # C dokument_cast
+        # Vytvoření dokumentační části
         time = self.getTime()
         self.ElementClick(By.ID, "others_doc")
         with WaitForPageLoad(self.driver):
@@ -2965,7 +2965,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_dokument_cast")
 
-        # D dokument_cast
+        # Smazání dokumentační části
         time = self.getTime()
         with WaitForPageLoad(self.driver):
             self.goToAddress("/id/X-C-9000000002A")
@@ -2975,7 +2975,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_dokument_cast")
 
-        # C EZ
+        # Vytvoření záznamu EZ
         self.createFedoraRecord("BIB-0000001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "eo-pripojit-do-az")
@@ -2986,7 +2986,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_EZ")
 
-        # U EZ
+        # Úprava záznamu EZ
         time = self.getTime()
         pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000002A").first().id
         self.ElementClick(By.ID, f"ez-change-{pk}")
@@ -2996,7 +2996,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/update_EZ")
 
-        # D EZ
+        # Smazání záznamu EZ
         time = self.getTime()
         pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely="X-C-9000000002A").first().id
         self.ElementClick(By.ID, f"ez-odpojit-{pk}")
@@ -3040,7 +3040,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_AZ")
 
-        # C dokument_cast existujici
+        # Vytvoření existující dokumentační části
         self.createFedoraRecord("X-M-91558334A", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
         self.uploadFileToFedora(534769, "projekt/tests/resources/test.pdf", "archivar")
@@ -3094,7 +3094,7 @@ class AkceSamostatneAkce(AkceTestClass):
         """
         logger.info("AkceProjektoveAkce.test_139_test_Fedory_PIAN_p_001.start")
 
-        # C PIAN X-C-9000000011A
+        # Vytvoření záznamu PIAN X-C-9000000011A
         self.login("archivar")
         self.createFedoraRecord("X-C-9000000011A", "archivar")
         self.goToAddress("/id/X-C-9000000011A")
@@ -3119,7 +3119,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "createPianSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_PIAN")
 
-        # C ADB
+        # Vytvoření ADB
         time = self.getTime()
         self.ElementClick(By.ID, "add_others")
         self.ElementClick(By.LINK_TEXT, "ADB - vytvořit")
@@ -3144,7 +3144,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "createAdbSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_ADB")
 
-        # C výškový bod
+        # Vytvoření výškového bodu
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_ADB-KRAS07-000001_vb-0-typ .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-6-3 > .text")
@@ -3159,7 +3159,7 @@ class AkceSamostatneAkce(AkceTestClass):
         )
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_vyskovy_bod")
 
-        # U PIAN
+        # Úprava PIAN
         pian = Pian.objects.filter(dokumentacni_jednotky_pianu__ident_cely="X-C-9000000011A-D01").first().ident_cely
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
@@ -3176,7 +3176,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editPianButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_PIAN")
 
-        # U ADB
+        # Úprava ADB
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "id_cislo_popisne")
@@ -3194,7 +3194,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/zmena_pristupnosti")
 
-        # U  výškový bod
+        # Úprava výškového bodu
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, "id_ADB-KRAS07-000001_vb-0-niveleta")
@@ -3203,7 +3203,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_vyskovy_bod")
 
-        # D výškový bod
+        # Smazání výškového bodu
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_9000000011A_D01")
         self.ElementClick(By.ID, f"vb-smazat-{pk_vyskovy_bod}")
@@ -3211,7 +3211,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_vyskovy_bod")
 
-        # D ADB
+        # Smazání ADB
         time = self.getTime()
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "adb-smazat-ADB-KRAS07-000001")
@@ -3275,7 +3275,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/ident_cely_PIAN")
         self.check_fedora_delete([f"record/{pian}"])
 
-        # C DJ katastr
+        # Vytvoření DJ v katastru
         self.createFedoraRecord("ruian-693154", "archivar")
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000011A-D01-typ .btn")
@@ -3284,7 +3284,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_DJ_katastr")
 
-        # U DJ katastr
+        # Úprava DJ v katastru
         self.createFedoraRecord("ruian-600016", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "others")
@@ -3297,7 +3297,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_DJ_katastr")
 
-        # D DJ katastr
+        # Smazání DJ v katastru
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000011A-D01-typ .btn")
         self.ElementClick(By.ID, "bs-select-1-1")
@@ -3305,7 +3305,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/delete_DJ_katastr")
 
-        # D DJ
+        # Smazání DJ
         self.createFedoraRecord("X-C-91601363A", "archivar")
         self.createFedoraRecord("P-2212-010011", "archivar")
         self.goToAddress("/id/X-C-91601363A-D01")

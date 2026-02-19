@@ -6,5 +6,5 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         super(CoreConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import core.signals

@@ -715,7 +715,7 @@ class AkceLokality(BaseSeleniumTestClass):
         """
         logger.info("AkceLokality.test_143_test_Fedory_lokalita_p_001.start")
         self.login("archivar")
-        # C lokalita
+        # Vytvoření lokality
         self.go_to_form_zapsat()
         time = self.getTime()
         self.ElementClick(By.ID, "select2-id_hlavni_katastr-container")
@@ -739,7 +739,7 @@ class AkceLokality(BaseSeleniumTestClass):
         ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_lokalita")
 
-        # U lokalita detail
+        # Úprava detailu lokality
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.ID, "id_nazev")
@@ -748,7 +748,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_lokalita")
 
-        # C dokumentacni_jednotka
+        # Vytvoření dokumentační jednotky
         self.createFedoraRecord("ruian-679038", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-dj")
@@ -758,7 +758,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDjSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_DJ")
 
-        # U dokumentacni_jednotka
+        # Úprava dokumentační jednotky
         time = self.getTime()
         self.ElementClick(By.ID, f"id_{ident}-D01-nazev")
         self.driver.find_element(By.ID, f"id_{ident}-D01-nazev").send_keys("test")
@@ -768,7 +768,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_DJ")
 
-        # C PIAN
+        # Vytvoření záznamu PIAN
         time = self.getTime()
         self.ElementClick(By.ID, "add_others")
         with WaitForPageLoad(self.driver):
@@ -785,7 +785,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "createPianSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_PIAN")
 
-        # U PIAN
+        # Úprava záznamu PIAN
         pian = Pian.objects.filter(dokumentacni_jednotky_pianu__ident_cely="X-C-L000000003-D01").first().ident_cely
         time = self.getTime()
         self.ElementClick(By.ID, "el_dokumentacni_jednotka_X_C_L000000003_D01")
@@ -802,7 +802,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editPianButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_PIAN")
 
-        # C komponenta
+        # Vytvoření komponenty
         time = self.getTime()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, f"#el_dokumentacni_jednotka_{ident.replace('-','_')}_D01 > strong")
@@ -822,7 +822,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "createCompotSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_komponenta")
 
-        # U komponenta
+        # Úprava komponenty
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001-obdobi .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-6 > .text")
@@ -838,7 +838,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_komponenta")
 
-        # C nalez_
+        # Vytvoření nálezu
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-7-8 > .text")
@@ -852,7 +852,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_nalez")
 
-        # U nalez_
+        # Úprava nálezu
         time = self.getTime()
         self.driver.find_element(By.ID, f"id_{ident}-K001_o-0-pocet").send_keys("2")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-specifikace .filter-option-inner-inner")
@@ -867,7 +867,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/update_nalez")
 
-        # C dokument_cast
+        # Vytvoření dokumentační části
         time = self.getTime()
         self.ElementClick(By.ID, "others_doc")
         with WaitForPageLoad(self.driver):
@@ -902,7 +902,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_dokument_cast")
 
-        # C externi_odkaz
+        # Vytvoření externího odkazu
         self.createFedoraRecord("BIB-0000001", "archivar")
         time = self.getTime()
         self.goToAddress(f"/id/{ident}")
@@ -914,7 +914,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_EZ")
 
-        # U externi_odkaz
+        # Úprava externího odkazu
         time = self.getTime()
         pk = ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"ez-change-{pk}")
@@ -933,14 +933,14 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/ident_cely")
         self.check_fedora_delete(["record/X-C-L000000003", "record/X-C-TX-000000009"])
 
-        # D externi_odkaz
+        # Smazání externího odkazu
         time = self.getTime()
         self.ElementClick(By.ID, f"ez-odpojit-{pk}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_EZ")
 
-        # D dokument_cast
+        # Smazání dokumentační části
         time = self.getTime()
         dokument_ident = Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=new_ident).first().ident_cely
         self.ElementClick(By.ID, f"dokument-odpojit-{dokument_ident}")
@@ -948,7 +948,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_dokument_cast")
 
-        # D nalez_
+        # Smazání nálezu
         time = self.getTime()
         self.ElementClick(By.ID, f"el_komponenta_{new_ident.replace('-','_')}_K001")
         pk = (
@@ -973,7 +973,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_nalez")
 
-        # D komponenta
+        # Smazání komponenty
         time = self.getTime()
         self.ElementClick(By.ID, f"el_komponenta_{new_ident.replace('-','_')}_K001")
         self.ElementClick(By.ID, "others_komponenta")
@@ -982,7 +982,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_komponenta")
 
-        # D dokumentacni_jednotka
+        # Smazání dokumentační jednotky
         time = self.getTime()
         self.ElementClick(By.ID, f"el_dokumentacni_jednotka_{new_ident.replace('-','_')}_D01")
         self.ElementClick(By.ID, "others")
@@ -991,7 +991,7 @@ class AkceLokality(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_DJ")
 
-        # D lokalita
+        # Smazání lokality
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "lokalita-smazat")
@@ -1015,7 +1015,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/ident_cely_PIAN")
         self.check_fedora_delete(["record/N-1412-000000007"])
 
-        # C dokument_cast existujici
+        # Vytvoření existující dokumentační části
         self.createFedoraRecord("M-L9000181", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
         self.createFedoraRecord("M-LN-000000803", "archivar")

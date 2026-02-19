@@ -6,5 +6,5 @@ class PasConfig(AppConfig):
 
     def ready(self):
         super(PasConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import pas.signals

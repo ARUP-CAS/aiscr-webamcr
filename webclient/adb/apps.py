@@ -6,5 +6,5 @@ class AdbConfig(AppConfig):
 
     def ready(self):
         super(AdbConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import adb.signals

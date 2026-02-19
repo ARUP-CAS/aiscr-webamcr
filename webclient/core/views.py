@@ -1109,7 +1109,7 @@ def check_stav_changed(request, zaznam):
     """
     logger.debug("core.views.check_stav_changed.start", extra={"pk": zaznam.pk})
     if request.method == "POST":
-        # TODO BR-A-5
+        # TODO: vyřešit úkol BR-A-5.
         form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav)
         if form_check.is_valid():
             pass

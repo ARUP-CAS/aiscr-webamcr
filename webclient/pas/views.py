@@ -630,7 +630,7 @@ def archivovat(request, ident_cely):
                 sn.igsn_hide(False)
         return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})})
     else:
-        # TODO nejake kontroly? warnings = sn.check_pred_archivaci()
+        # TODO: doplnit případné kontroly (warnings = sn.check_pred_archivaci()).
         igsn_confirmation = sn.igsn_exists and sn.igsn is None
         form_check = CheckStavNotChangedForm(require_confirmation=igsn_confirmation, initial={"old_stav": sn.stav})
         context = {

@@ -1,3 +1,5 @@
+"""Sdílené dekorátory pro řízení přístupu a režimu odstávky."""
+
 import logging
 from functools import wraps
 
@@ -8,16 +10,19 @@ logger = logging.getLogger(__name__)
 
 
 def allowed_user_groups(allowed_groups):
-    """
-    Dekorátor funkce použitý nad pohledem, na kontrolu práv uživatele na daný pohled.
-    Na vstupe je list povolených uživatelských skupin.
-    Jestli uživatel nemá jesnou z daných skupin jako hlavní tak funkce vráti exception PermissionError a nezobrazí formulár.
+    """Omezí přístup k pohledu pouze na vybrané hlavní uživatelské role.
+
+    Args:
+        allowed_groups: Seznam ID rolí, které mohou pohled vykonat.
     """
 
     @wraps(allowed_groups)
     def _method_wrapper(func):
+        """Obalí cílovou funkci kontrolou hlavní role uživatele."""
+
         @wraps(func)
         def _arguments_wrapper(request, *args, **kwargs):
+            """Ověří oprávnění uživatele a případně předá řízení původnímu pohledu."""
             hlavni_role = request.user.hlavni_role
             if hlavni_role.id not in allowed_groups:
                 raise PermissionError("Nepovolená uživatelská role")
@@ -29,12 +34,11 @@ def allowed_user_groups(allowed_groups):
 
 
 def odstavka_in_progress(view_func):
-    """
-    Dekorátor funkce použitý nad pohledem, na zobrazení stránky o odstávke místo stránky oznámení a prihlášení pokud je nastavená odstívka.
-    """
+    """Při aktivní odstávce vrátí stránku údržby namísto cílového pohledu."""
 
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
+        """Rozhodne, zda vrátit stránku odstávky, nebo vykonat původní pohled."""
         maintenance = get_set_maintenance_in_cache()
         if maintenance:
             if is_maintenance_in_progress():

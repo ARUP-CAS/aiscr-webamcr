@@ -36,7 +36,7 @@ class HistorieTable(ColumnShiftTableBootstrap4):
             "poznamka",
         )
 
-    # TODO: Tento způsob výpisu nerespektuje časovou zónu Django.
+    # TODO: Tento způsob výpisu nerespektuje časové pásmo Django.
     # @staticmethod
     # Příklad alternativního renderu data změny je ponechán pouze jako poznámka.
 

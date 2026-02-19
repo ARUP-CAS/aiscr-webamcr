@@ -244,7 +244,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
                 }}
             """
 
-        # Inicializace SPARQL wrapperu.
+        # Inicializace klienta SPARQL dotazování.
         sparql = SPARQLWrapper(cls.API_URL)
         sparql.setQuery(query)
         sparql.setReturnFormat(JSON)

@@ -6,5 +6,5 @@ class HistorieConfig(AppConfig):
 
     def ready(self):
         super(HistorieConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import historie.signals

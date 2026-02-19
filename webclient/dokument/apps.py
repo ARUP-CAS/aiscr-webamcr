@@ -6,5 +6,5 @@ class DokumentConfig(AppConfig):
 
     def ready(self):
         super(DokumentConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import dokument.signals

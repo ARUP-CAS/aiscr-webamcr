@@ -721,7 +721,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         """
         logger.info("AkceDokumenty.test_141_test_Fedory_dokument_p_001.start")
 
-        # C dokument
+        # Vytvoření dokumentu
         self.login("archivar")
         self.go_to_form_zapsat()
         time = self.getTime()
@@ -756,7 +756,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument")
         ident = self.driver.current_url.split("/")[-1]
 
-        # U detail
+        # Úprava detailu
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.ID, "id_popis")
@@ -765,7 +765,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokument")
 
-        # U detail let
+        # Úprava detailu letu
         self.createFedoraRecord("C-LET-00001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
@@ -775,7 +775,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_let")
 
-        # C dokument_cast akce
+        # Vytvoření dokumentační části akce
         self.createFedoraRecord("C-200810821A", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
@@ -790,9 +790,9 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_akce")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokumentační část_akce")
 
-        # C dokument_cast lokalita
+        # Vytvoření dokumentační části lokality
         self.createFedoraRecord("C-K9000001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
@@ -807,9 +807,9 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_lokalita")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokumentační část_lokalita")
 
-        # C dokument_cast projekt
+        # Vytvoření dokumentační části projektu
         self.createFedoraRecord("C-201911202", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
@@ -824,9 +824,9 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_projekt")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokumentační část_projekt")
 
-        # C komponenta
+        # Vytvoření komponenty
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -845,7 +845,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "createCompotSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_komponenta")
 
-        # C nalez_objekt + předmět
+        # Vytvoření nálezového objektu + předmětu
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-7-8 > .text")
@@ -859,7 +859,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_objekt")
 
-        # C tvar
+        # Vytvoření tvaru
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}_d-0-tvar .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-26-8 > span:nth-child(2)")
@@ -867,7 +867,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editTvarSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_tvar")
 
-        # C soubor
+        # Vytvoření souboru
         time = self.getTime()
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
@@ -885,7 +885,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/ident_cely")
         self.check_fedora_delete(["record/X-C-DL-000000009"])
 
-        # U dokument_cast
+        # Úprava dokumentační části
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "button-edit-cast")
@@ -893,9 +893,9 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body > #div_id_poznamka #id_poznamka", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokument_cast")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokumentační část")
 
-        # U komponenta C-DL-202500001-D004
+        # Úprava komponenty C-DL-202500001-D004
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#el_li_komponenta_{new_ident.replace('-','_')}_K001 a")
         self.ElementClick(By.ID, f"id_{new_ident}-K001-presna_datace")
@@ -904,7 +904,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_komponenta")
 
-        # U nalez_
+        # Úprava nálezu
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#el_li_komponenta_{new_ident.replace('-','_')}_K001 a")
         self.ElementClick(By.ID, f"id_{new_ident}-K001_o-0-pocet")
@@ -915,7 +915,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editKompSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_nalez")
 
-        # D nalez_
+        # Smazání nálezu
         time = self.getTime()
         pk = (
             NalezObjekt.objects.filter(komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely=new_ident)
@@ -928,7 +928,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_nalez")
 
-        # D komponenta
+        # Smazání komponenty
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#el_li_komponenta_{new_ident.replace('-','_')}_K001 a")
         self.ElementClick(By.ID, "others_komponenta")
@@ -937,34 +937,34 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_komponenta")
 
-        # D dokument_cast
+        # Smazání dokumentační části
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "smazat-cast-btn")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokumentační část")
 
-        # D dokument_cast projekt
+        # Smazání dokumentační části projekt
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(2) strong")
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "smazat-cast-btn")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast_projekt")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokumentační část_projekt")
 
-        # D dokument_cast lokalita
+        # Smazání dokumentační části lokalita
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "others")
         self.ElementClick(By.ID, "smazat-cast-btn")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast_lokalita")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokumentační část_lokalita")
 
-        # U tvar
+        # Úprava tvaru
         time = self.getTime()
         self.ElementClick(By.ID, f"id_{new_ident}_d-0-poznamka")
         self.driver.find_element(By.ID, f"id_{new_ident}_d-0-poznamka").send_keys("test")
@@ -972,7 +972,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editTvarSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_tvar")
 
-        # D tvar
+        # Smazání tvaru
         time = self.getTime()
         tvar = Tvar.objects.filter(dokument__ident_cely=new_ident).first().pk
         self.ElementClick(By.ID, f"tvar-smazat-{tvar}")
@@ -980,7 +980,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_tvar")
 
-        # U soubor
+        # Úprava souboru
         time = self.getTime()
         file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely=new_ident).first().pk
         self.ElementClick(By.ID, f"file-upgrade-{file}")
@@ -989,7 +989,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_soubor")
 
-        # D soubor
+        # Smazání souboru
         time = self.getTime()
         file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely=new_ident).first().pk
         self.ElementClick(By.ID, f"file-smazat-{file}")
@@ -997,7 +997,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_soubor")
 
-        # D dokument
+        # Smazání dokumentu
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "dokument-smazat")
@@ -1005,7 +1005,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument")
 
-        # U neident_akce
+        # Úprava neidentifikované akce
         self.createFedoraRecord("C-TX-197602290", "archivar")
         self.uploadFileToFedora(113981, "projekt/tests/resources/test.pdf", "archivar")
         time = self.getTime()
@@ -1020,7 +1020,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_neident_akce")
 
-        # D neident_akce
+        # Smazání neidentifikované akce
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "others_neident")
@@ -1029,7 +1029,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_neident_akce")
 
-        # D dokument X-C-TX-201801164
+        # Smazání dokumentu X-C-TX-201801164
         self.createFedoraRecord("X-C-TX-201801164", "archivar")
         self.createFedoraRecord("C-201125635A", "archivar")
         self.createFedoraRecord("C-202010506", "archivar")
@@ -1101,7 +1101,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             - zápis dat do Fedory
         """
         logger.info("AkceDokumenty.test_142_test_Fedory_LET_p_001.start")
-        # C Let
+        # Vytvoření letu
         self.login("administrator")
         self.goToAddress("/admin/dokument/let/add/")
         time = self.getTime()
@@ -1138,7 +1138,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "dokument/tests/resources/test_142/create_let")
 
-        # U Let
+        # Úprava letu
         time = self.getTime()
         self.ElementClick(By.LINK_TEXT, "C-LET-00413")
         self.ElementClick(By.ID, "id_fotoaparat")
@@ -1170,7 +1170,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_142/odpojeni_dokument")
 
-        # D Let
+        # Smazání letu
         time = self.getTime()
         let = Let.objects.filter(ident_cely="C-LET-00413").first().pk
         self.goToAddress(f"/admin/dokument/let/{let}/change/")
@@ -1830,12 +1830,12 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_144_test_Fedory_3D_p_001.start")
 
         self.login("archivar")
-        # C 3D dokument
+        # Vytvoření 3D dokumentu
         time = self.getTime()
         ident = self.zapsat_zaznam()
         self.check_fedora_change(time, "dokument/tests/resources/test_144/create_3D_dokument")
 
-        # U detail
+        # Úprava detailu
         time = self.getTime()
         self.ElementClick(By.ID, "buttonEdit")
         self.ElementClick(By.ID, "id_popis")
@@ -1846,7 +1846,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/update_3D_dokument")
 
-        # U komponenta
+        # Úprava komponenty
         time = self.getTime()
         self.ElementClick(By.ID, "buttonEdit")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_komponenta-obdobi .filter-option-inner-inner")
@@ -1859,7 +1859,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/update_komponenta")
 
-        # C nalez_
+        # Vytvoření nálezu
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
@@ -1881,7 +1881,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editNalezSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/create_nalez")
 
-        # U nalez_
+        # Úprava nálezu
         time = self.getTime()
         self.goToAddress(f"/id/{ident}")
         self.ElementClick(By.ID, f"id_{ident}-K001_o-0-pocet")
@@ -1892,7 +1892,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editNalezSubmitButton")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/update_nalez")
 
-        # C soubor
+        # Vytvoření souboru
         time = self.getTime()
         self.goToAddress(f"/id/{ident}")
         self.ElementClick(By.ID, "buttonUpload")
@@ -1900,7 +1900,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/create_soubor")
 
-        # U soubor
+        # Úprava souboru
         time = self.getTime()
         file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"file-upgrade-{file}")
@@ -1918,7 +1918,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_144/ident_cely")
         self.check_fedora_delete(["record/X-C-3D-000000009"])
 
-        # D nalez_
+        # Smazání nálezu
         time = self.getTime()
         pk = (
             NalezObjekt.objects.filter(komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely=new_ident)
@@ -1930,7 +1930,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/delete_nalez")
 
-        # D soubor
+        # Smazání souboru
         time = self.getTime()
         file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely=new_ident).first().pk
         self.ElementClick(By.ID, f"file-smazat-{file}")
@@ -1938,7 +1938,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/delete_soubor")
 
-        # D 3D dokument
+        # Smazání 3D dokumentu
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "dokument-smazat")

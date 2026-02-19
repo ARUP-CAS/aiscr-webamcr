@@ -682,7 +682,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.start")
 
         self.login("archeolog")
-        # C EZ
+        # Vytvoření záznamu EZ
         time = self.getTime()
         count_old = ExterniZdroj.objects.count()
         self.zapsat_zaznam()
@@ -709,7 +709,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.check_fedora_change(time, "ez/tests/resources/test_136/ident_cely")
         self.check_fedora_delete(["record/X-BIB-1408662"])
 
-        # U EZ
+        # Úprava záznamu EZ
         self.createFedoraRecord("X-BIB-0926116", "archivar")
         self.goToAddress("/id/X-BIB-0926116")
         time = self.getTime()
@@ -720,7 +720,7 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newEntitySubmitBtn")
         self.check_fedora_change(time, "ez/tests/resources/test_136/update_EZ")
 
-        # D EZ
+        # Smazání záznamu EZ
         self.createFedoraRecord("X-BIB-0700016", "archivar")
         self.goToAddress("/id/X-BIB-0700016")
         count_old = ExterniZdroj.objects.count()

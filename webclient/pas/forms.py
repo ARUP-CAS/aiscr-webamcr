@@ -166,7 +166,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "druh_nalezu",
             "pocet",
             "presna_datace",
-            "specifikace",  # material
+            "specifikace",  # materiál
             "poznamka",
         )
         widgets = {

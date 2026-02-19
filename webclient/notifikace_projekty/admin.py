@@ -1,1 +1,1 @@
-# Register your models here.
+"""Administrace modelů aplikace NOTIFIKACE_PROJEKTY."""

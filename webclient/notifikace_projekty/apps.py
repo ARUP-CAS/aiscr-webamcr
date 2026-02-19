@@ -7,5 +7,5 @@ class NotifikaceProjektyConfig(AppConfig):
 
     def ready(self):
         super(NotifikaceProjektyConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import notifikace_projekty.signals
