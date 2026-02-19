@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - dev
-      - test
   workflow_dispatch:
 
 permissions:
@@ -110,31 +109,6 @@ jobs:
 
             Please merge this PR to make the original PR pass.
           assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
-
-      - name: Rebase fix branch if PR was updated
-        id: rebase
-        if: steps.changes.outputs.changed == 'true' && steps.create_pr.outputs.pull-request-operation == 'updated'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          FIX_BRANCH="pre-commit-fixes/${{ github.event.pull_request.number || github.ref_name }}"
-          git fetch origin
-          git checkout -B "$FIX_BRANCH" origin/"$FIX_BRANCH"
-          if [ -n "${{ github.event.pull_request.base.ref }}" ]; then
-            BASE="${{ github.event.pull_request.base.ref }}"
-          else
-            BASE="${{ github.ref_name }}"
-          fi
-          git fetch origin "$BASE"
-          if git rebase origin/"$BASE"; then
-            git push --force-with-lease origin "$FIX_BRANCH"
-            echo "status=success" >> $GITHUB_OUTPUT
-          else
-            echo "Rebase conflict detected."
-            git rebase --abort || true
-            echo "status=conflict" >> $GITHUB_OUTPUT
-          fi
 
       - name: Publish pre-commit result to workflow summary
         if: steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true'
@@ -142,16 +116,8 @@ jobs:
           echo "## ⚠️ Pre-commit results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Pre-commit exit code: ${{ steps.hooks.outputs.exit_code }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Changes detected: ${{ steps.changes.outputs.changed || 'false' }}" >> $GITHUB_STEP_SUMMARY
-      
-          if [ "${{ steps.rebase.outputs.status }}" = "conflict" ]; then
-            echo "- Rebase status: ❌ Conflict (manual rebase required)" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ steps.rebase.outputs.status }}" = "success" ]; then
-            echo "- Rebase status: ✅ Successful" >> $GITHUB_STEP_SUMMARY
-          fi
-      
-          echo "" >> $GITHUB_STEP_SUMMARY
-      
+          echo "- Changes detected: ${{ steps.changes.outputs.changed || 'false' }}" >> $GITHUB_STEP_SUMMARY      
+          echo "" >> $GITHUB_STEP_SUMMARY      
           if [ "${{ steps.changes.outputs.changed }}" = "true" ]; then
             echo "A fix PR has been created or updated." >> $GITHUB_STEP_SUMMARY
           else
@@ -165,7 +131,6 @@ jobs:
           script: |
             const changed = "${{ steps.changes.outputs.changed }}" === "true";
             const exitCode = "${{ steps.hooks.outputs.exit_code }}";
-            const rebaseStatus = "${{ steps.rebase.outputs.status || '' }}";
             const marker = "<!-- precommit-bot-comment -->";
             let body = `${marker}
             ## ⚠️ Pre-commit results
@@ -191,11 +156,6 @@ jobs:
             } else {
               body += `
               Pre-commit checks failed and require manual fixes.
-              `;
-            }
-            if (rebaseStatus === "conflict") {
-              body += `
-              ⚠️ Rebase conflict detected. Manual rebase is required on the fix PR.
               `;
             }
             body = body.replace(/^[ \t]+/gm, '');
