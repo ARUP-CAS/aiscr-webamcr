@@ -331,7 +331,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # Vytvoření oznámení
         time = self.getTime()
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
-            ident = OznameniSeleniumTest.oznámení_projektu(self)
+            ident = OznameniSeleniumTest.oznameni_projektu(self)
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt")
 
         # Úprava projektu – smazání dokumentace
