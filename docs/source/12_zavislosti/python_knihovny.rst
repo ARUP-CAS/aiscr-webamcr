@@ -176,8 +176,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0
      - https://github.com/coveragepy/coveragepy
    * - crispy-bootstrap4
-     - 2025.6
-     - MIT License
+     - 2026.2
+     - MIT
      - https://github.com/django-crispy-forms/crispy-bootstrap4
    * - cron_descriptor
      - 2.0.6
