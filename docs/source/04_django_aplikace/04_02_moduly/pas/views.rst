@@ -26,15 +26,15 @@ Třídy
 
    .. py:method:: form_invalid()
 
-      Log form invalid errors and display a message to the user.
+      Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu.
 
    .. py:method:: handle_geometry()
 
-      Handle coordinate data parsing and return geometry objects.
+      Zpracuje parsování souřadnicových dat a vrátí objekty geometrie.
 
    .. py:method:: get()
 
-      Handle GET request and check project type.
+      Zpracuje GET požadavek a ověří typ projektu.
 
 
 .. py:class:: PasPermissionFilterMixin
