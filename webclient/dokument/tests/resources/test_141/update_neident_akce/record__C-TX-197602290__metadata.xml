@@ -10,37 +10,41 @@
     <amcr:rok_vzniku>1976</amcr:rok_vzniku>
     <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
     <amcr:pristupnost xml:lang="cs" id="HES-000866">badatel</amcr:pristupnost>
-    <amcr:datum_zverejneni>2017-06-01</amcr:datum_zverejneni>
+    <amcr:datum_zverejneni>2020-01-01</amcr:datum_zverejneni>
     <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
     <amcr:ulozeni_originalu xml:lang="cs" id="HES-001168">archiv ARÚ</amcr:ulozeni_originalu>
+    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:historie>
-      <amcr:id>hist-624875</amcr:id>
-      <amcr:datum_zmeny>2019-01-22T00:04:24+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>D01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-822455</amcr:id>
-      <amcr:datum_zmeny>2019-01-22T00:04:24+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>D23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803175</amcr:id>
-      <amcr:datum_zmeny>2025-06-08T13:26:47.808916+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-004219">U-004219</amcr:uzivatel>
       <amcr:poznamka>test</amcr:poznamka>
       <amcr:typ_zmeny>D-1</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:soubor>
-      <amcr:id>soub-113981</amcr:id>
+      <amcr:id>soub-0000001</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-TX-197602290/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>CTX197602290.pdf</amcr:nazev>
       <amcr:mimetype>application/pdf</amcr:mimetype>
       <amcr:rozsah>11</amcr:rozsah>
-      <amcr:size_mb>6.1534795761</amcr:size_mb>
+      <amcr:size_mb>0.0068559647</amcr:size_mb>
+      <amcr:sha_512>3a02c88f9d82e75564ef6c94567e155600bffb925cd1e8869b7990ef6c4f9d84c2908eabe4865058813cf81cd64aedbc0e93cbcf5991214fa30cd45fc5bd9161</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-TX-197602290/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
-        <amcr:id>hist-2473466</amcr:id>
-        <amcr:datum_zmeny>2019-01-31T23:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
         <amcr:poznamka>CTX197602290.pdf</amcr:poznamka>
         <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
@@ -49,14 +53,6 @@
     <amcr:extra_data>
       <amcr:geom_system>4326</amcr:geom_system>
     </amcr:extra_data>
-    <amcr:dokument_cast>
-      <amcr:ident_cely>C-TX-197602290-D002</amcr:ident_cely>
-      <amcr:archeologicky_zaznam id="C-9002093A">C-9002093A</amcr:archeologicky_zaznam>
-    </amcr:dokument_cast>
-    <amcr:dokument_cast>
-      <amcr:ident_cely>C-TX-197602290-D003</amcr:ident_cely>
-      <amcr:archeologicky_zaznam id="C-9002092A">C-9002092A</amcr:archeologicky_zaznam>
-    </amcr:dokument_cast>
     <amcr:dokument_cast>
       <amcr:ident_cely>C-TX-197602290-D001</amcr:ident_cely>
       <amcr:neident_akce>
@@ -69,6 +65,14 @@
         <amcr:popis>test</amcr:popis>
         <amcr:poznamka>test1</amcr:poznamka>
       </amcr:neident_akce>
+    </amcr:dokument_cast>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-TX-197602290-D002</amcr:ident_cely>
+      <amcr:archeologicky_zaznam id="C-9002093A">C-9002093A</amcr:archeologicky_zaznam>
+    </amcr:dokument_cast>
+    <amcr:dokument_cast>
+      <amcr:ident_cely>C-TX-197602290-D003</amcr:ident_cely>
+      <amcr:archeologicky_zaznam id="C-9002092A">C-9002092A</amcr:archeologicky_zaznam>
     </amcr:dokument_cast>
   </amcr:dokument>
 </amcr:amcr>

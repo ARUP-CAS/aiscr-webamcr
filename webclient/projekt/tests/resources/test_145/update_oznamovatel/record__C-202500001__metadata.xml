@@ -27,8 +27,8 @@
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-693174.81 -1077354.27)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-2803190</amcr:id>
-      <amcr:datum_zmeny>2025-07-26T12:00:01+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
     </amcr:historie>
@@ -39,21 +39,5 @@
       <amcr:telefon>xxx</amcr:telefon>
       <amcr:email>test@example.com</amcr:email>
     </amcr:oznamovatel>
-    <amcr:soubor>
-      <amcr:id>soub-646257</amcr:id>
-      <amcr:path>rest/AMCR-selenium-test/record/C-202500001/file/400aeb76-00e8-4d5b-9663-95a5edef9c14</amcr:path>
-      <amcr:nazev>oznameni_C-202500001_20250726120001.pdf</amcr:nazev>
-      <amcr:mimetype>application/pdf</amcr:mimetype>
-      <amcr:size_mb>0.2276515961</amcr:size_mb>
-      <amcr:sha_512>437f9b7c08b5ffc613ee61e46d858e3328e5588aaea17cf7ae51181970ec04fa0427712bcbba523c1590f5ecf52206d0ac28929ce278415b68d7000c40c82359</amcr:sha_512>
-      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-202500001/file/400aeb76-00e8-4d5b-9663-95a5edef9c14</amcr:url>
-      <amcr:historie>
-        <amcr:id>hist-2803191</amcr:id>
-        <amcr:datum_zmeny>2025-07-26T12:00:01+00:00</amcr:datum_zmeny>
-        <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
-        <amcr:poznamka>oznameni_C-202500001_20250726120001.pdf</amcr:poznamka>
-        <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
-      </amcr:historie>
-    </amcr:soubor>
   </amcr:projekt>
 </amcr:amcr>

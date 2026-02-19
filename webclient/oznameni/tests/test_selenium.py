@@ -52,7 +52,25 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         return pian.group() if pian else None
 
     def test_027_oznameni_projektu_001(self):
-        # Scenar_27 Oznámení projektu
+        """Test 027 Proces oznámení projektu (pozitivní scénář 1)
+
+        Oznámení projektu stavebníkem
+
+        Role:
+            \\-
+
+        Preconditions:
+            žádné
+
+        TestData:
+            test_foto_1.jpg
+
+        Steps:
+            Uživatel na stránce /oznameni vyplní formulář a odešle ho.
+
+        Expected:
+            -  V databázi je o jedn projekt více.
+        """
         logger.info("OznameniSeleniumTest.test_027_oznameni_projektu_001.start")
         project_count_old = Projekt.objects.count()
         self.oznameni_projektu(self)

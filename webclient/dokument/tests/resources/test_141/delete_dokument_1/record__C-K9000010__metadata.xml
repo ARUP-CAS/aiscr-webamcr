@@ -16,14 +16,14 @@
       </amcr:chranene_udaje>
     </amcr:lokalita>
     <amcr:historie>
-      <amcr:id>hist-973107</amcr:id>
-      <amcr:datum_zmeny>2021-02-01T20:19:23+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-976483</amcr:id>
-      <amcr:datum_zmeny>2021-02-01T20:19:23+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
     </amcr:historie>

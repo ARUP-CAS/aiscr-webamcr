@@ -4,6 +4,7 @@ from typing import Optional
 from celery import Celery
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 UPDATE_REDIS_SNAPSHOT = 20
@@ -91,12 +92,56 @@ class ModelWithMetadata(BaseAmcrModel):
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
+    def get_metadata_historicka(self, timestamp):
+        """
+        Metoda k získání vlastního souboru metadat dané verze z Fedory
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+
+        connector = FedoraRepositoryConnector(self)
+        return connector.get_metadata_historicka(timestamp)
+
+    def get_historicke_verze(self):
+        """
+        Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
+        """
+        from core.repository_connector import FedoraRepositoryConnector
+        from core.utils import get_timezone
+
+        connector = FedoraRepositoryConnector(self)
+        history_list = connector.get_historie_metadat()
+        results = []
+        timezone = get_timezone()
+        for history_item in history_list:
+            local_dt = history_item["datetime"].astimezone(timezone)
+            url = reverse(
+                "core:stahnout_data_historicka",
+                kwargs={
+                    "model_name": self.__class__.__name__,
+                    "ident_cely": self.ident_cely,
+                    "timestamp": history_item["timestamp"],
+                },
+            )
+            results.append(
+                {
+                    "datum": local_dt,
+                    "url": url,
+                    "uzivatel": history_item["creator"],
+                }
+            )
+        return results
+
     def save_metadata(
         self, fedora_transaction=None, include_files=False, close_transaction=False, skip_container_check=False
     ):
-        from core.repository_connector import FedoraTransaction
+        from core.repository_connector import DryRunFedoraTransaction, FedoraDeletionOnlyTransaction, FedoraTransaction
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
+        if isinstance(fedora_transaction, DryRunFedoraTransaction) or isinstance(
+            fedora_transaction, FedoraDeletionOnlyTransaction
+        ):
+            fedora_transaction.add_updated_ident_cely(self.ident_cely)
+            return
         if not self.ident_cely:
             logger.warning(
                 "xml_generator.models.ModelWithMetadata.save_metadata.no_ident",
@@ -179,9 +224,9 @@ class ModelWithMetadata(BaseAmcrModel):
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
             raise ValueError("No Fedora transaction")
-        from core.repository_connector import FedoraTransaction
+        from core.repository_connector import BaseFedoraTransaction
 
-        if not isinstance(fedora_transaction, FedoraTransaction):
+        if not isinstance(fedora_transaction, BaseFedoraTransaction):
             raise ValueError("fedora_transaction must be a FedoraTransaction class object")
         return fedora_transaction
 

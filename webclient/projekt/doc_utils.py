@@ -235,16 +235,16 @@ class DocumentCreator(ABC):
         self.texts["data_part_3"] = f"<strong>Lokalizace</strong>: {self.projekt.lokalizace}"
         self.texts["data_part_4"] = f"<strong>Parcelní číslo</strong>: {self.projekt.parcelni_cislo}"
         self.texts["data_part_5"] = f"<strong>Označení stavby</strong>: {self.projekt.oznaceni_stavby}"
-        self.texts[
-            "data_part_6"
-        ] = f"<strong>Plánované zahájení</strong>: {self.format_date(self.projekt.planovane_zahajeni.lower) if self.projekt.planovane_zahajeni else ''} - {self.format_date(self.projekt.planovane_zahajeni.upper) if self.projekt.planovane_zahajeni else ''}"
+        self.texts["data_part_6"] = (
+            f"<strong>Plánované zahájení</strong>: {self.format_date(self.projekt.planovane_zahajeni.lower) if self.projekt.planovane_zahajeni else ''} - {self.format_date(self.projekt.planovane_zahajeni.upper) if self.projekt.planovane_zahajeni else ''}"
+        )
 
     def _create_signature(self):
         self.texts["doc_sign_1"] = "S pozdravem"
         self.texts["doc_sign_2"] = DOC_REDITEL[self.dok_index]
-        self.texts[
-            "doc_sign_3"
-        ] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i."
+        self.texts["doc_sign_3"] = (
+            f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i."
+        )
 
     def _create_signature_doc(self):
         return [
@@ -301,17 +301,13 @@ class OznameniPDFCreator(DocumentCreator):
     def _generate_text(self):
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
-        self.texts[
-            "doc_vec"
-        ] = """
+        self.texts["doc_vec"] = """
         Věc: Potvrzení o&nbsp;splnění oznamovací povinnosti dle §&nbsp;22, odst.&nbsp;2 zák.&nbsp;č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči,
         v&nbsp;platném znění
         """
         self._create_data_document_part()
 
-        self.texts[
-            "doc_par_1"
-        ] = f"""
+        self.texts["doc_par_1"] = f"""
         Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i., obdržel dne 
         {self.format_date(self.projekt.datum_oznameni)} 
         Vaše oznámení o&nbsp;zahájení stavebního (či jiného) záměru na území s&nbsp;archeologickými nálezy 
@@ -321,18 +317,14 @@ class OznameniPDFCreator(DocumentCreator):
         dle ustanovení §&nbsp;22 odst.&nbsp;2 zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči, ve znění pozdějších předpisů.
         """
 
-        self.texts[
-            "doc_par_2"
-        ] = """
+        self.texts["doc_par_2"] = """
         Oznamovatel je v&nbsp;návaznosti na oznámení povinen umožnit Archeologickému ústavu nebo oprávněné 
         archeologické organizaci provést na dotčeném území záchranný archeologický výzkum. Informaci o&nbsp;konkrétní 
         organizaci, která má zájem archeologický výzkum provést obdržíte automatickou zprávu. V&nbsp;případě, že záchranný 
         archeologický výzkum nebude třeba provést, obdržíte automatickou zprávu o&nbsp;zrušení projektu.
         """
 
-        self.texts[
-            "doc_par_3"
-        ] = """
+        self.texts["doc_par_3"] = """
         <strong>Toto potvrzení neslouží jako doklad o&nbsp;provedení záchranného archeologického výzkumu, ani jako 
         doklad pro dodatečné stavební povolení.</strong>
         """
@@ -446,9 +438,7 @@ class OznameniPDFCreator(DocumentCreator):
 
         self.texts["doc_attachment_heading_1"] = "<u>ÚVODNÍ INFORMACE</u>"
 
-        self.texts[
-            "doc_attachment_par_1"
-        ] = """
+        self.texts["doc_attachment_par_1"] = """
                Prosím, věnujte pozornost následujícímu dokumentu, jehož prostřednictvím Vám poskytujeme informace
                o&nbsp;zpracování Vašich osobních údajů a&nbsp;o&nbsp;právech souvisejících s&nbsp;Vaší povinností jako stavebníka dle
                §&nbsp;22 odst.&nbsp;2 zákona č.&nbsp;20/1987 Sb., o&nbsp;státní památkové péči (dále rovněž jen „zákon“), poskytnout informace
@@ -466,29 +456,21 @@ class OznameniPDFCreator(DocumentCreator):
                s&nbsp;jejich ochranou.
                """
 
-        self.texts[
-            "doc_attachment_heading_2"
-        ] = """
+        self.texts["doc_attachment_heading_2"] = """
                <u>KDO JE SPRÁVCEM OSOBNÍCH ÚDAJŮ?</u>
                """
 
-        self.texts[
-            "doc_attachment_par_2"
-        ] = """
+        self.texts["doc_attachment_par_2"] = """
                Společnými správci osobních údajů jsou Archeologický ústav AV ČR, Praha, v.&nbsp;v.&nbsp;i., IČ:67985912,
                se sídlem Letenská 4, 118 01 Praha 1, a&nbsp;Archeologický ústav AV ČR, Brno, v.&nbsp;v.&nbsp;i., IČ:68081758,
                se sídlem Čechyňská 363/19, 602 00 Brno (dále jen <strong>„Správce“</strong> či <strong>„Archeologický ústav“</strong>).
                """
 
-        self.texts[
-            "doc_attachment_heading_3"
-        ] = """
+        self.texts["doc_attachment_heading_3"] = """
                <u>OBECNĚ - CO VŠE PATŘÍ MEZI OSOBNÍ ÚDAJE?</u>
                """
 
-        self.texts[
-            "doc_attachment_par_3"
-        ] = """
+        self.texts["doc_attachment_par_3"] = """
                Osobními údaji jsou veškeré informace vztahující se k&nbsp;identifikované či identifikovatelné fyzické osobě
                (člověku), na základě kterých lze konkrétní fyzickou osobu přímo či nepřímo identifikovat. Mezi osobní údaje
                tak patří široká škála informací, jako je například jméno, pohlaví, věk a&nbsp;datum narození, osobní stav,
@@ -497,15 +479,11 @@ class OznameniPDFCreator(DocumentCreator):
                ale také otisk prstu, podpis nebo IP adresa.
                """
 
-        self.texts[
-            "doc_attachment_heading_4"
-        ] = """
+        self.texts["doc_attachment_heading_4"] = """
                <u>ZA JAKÝM ÚČELEM A NA JAKÉM ZÁKLADĚ ZPRACOVÁVÁME VAŠE OSOBNÍ ÚDAJE?</u>
                """
 
-        self.texts[
-            "doc_attachment_par_4"
-        ] = """
+        self.texts["doc_attachment_par_4"] = """
                Vaše osobní údaje zpracováváme, jelikož nám to ukládá zákon, konkrétně §&nbsp;22 odst.&nbsp;2 zákona č.&nbsp;20/1987 Sb.,
                o&nbsp;státní památkové péči, který stanoví stavebníkovi, který má záměr provádět stavební činnost v&nbsp;území
                s&nbsp;archeologickými nálezy, nebo jinou činnost, kterou by mohlo být ohroženo provádění archeologických
@@ -517,15 +495,11 @@ class OznameniPDFCreator(DocumentCreator):
                Archeologický ústav či jiná oprávněná organizace dle zákona mohly kontaktovat za účelem provedení
                záchranného archeologického průzkumu."""
 
-        self.texts[
-            "doc_attachment_heading_5"
-        ] = """
+        self.texts["doc_attachment_heading_5"] = """
                <u>ROZSAH OSOBNÍCH ÚDAJŮ ZPRACOVÁVANÝCH SPRÁVCEM</u>
                """
 
-        self.texts[
-            "doc_attachment_par_5"
-        ] = """
+        self.texts["doc_attachment_par_5"] = """
                Informujeme Vás, že Vaše osobní údaje jsou zpracovávány v&nbsp;rozsahu Vámi vyplněného formuláře,
                a&nbsp;to konkrétně v&nbsp;rozsahu:"""
 
@@ -544,29 +518,21 @@ class OznameniPDFCreator(DocumentCreator):
             bulletType="bullet",
         )
 
-        self.texts[
-            "doc_attachment_heading_6"
-        ] = """
+        self.texts["doc_attachment_heading_6"] = """
                <u>DOBA ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ</u>
                """
 
-        self.texts[
-            "doc_attachment_par_6"
-        ] = """
+        self.texts["doc_attachment_par_6"] = """
                Vaše osobní údaje budeme ukládat po dobu nezbytně nutnou maximálně však po dobu deseti let. Tyto lhůty
                vyplývají ze zákonných požadavků a&nbsp;z&nbsp;titulu ochrany zájmu subjektu údajů na prokázání
                splnění své zákonné povinnosti.
                """
 
-        self.texts[
-            "doc_attachment_heading_7"
-        ] = """
+        self.texts["doc_attachment_heading_7"] = """
                <u>DALŠÍ INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ</u>
                """
 
-        self.texts[
-            "doc_attachment_par_7_part_1"
-        ] = """
+        self.texts["doc_attachment_par_7_part_1"] = """
                Osobní údaje subjektu údajů jsou zpracovávány automatizovaně v&nbsp;elektronické formě.
                Příjemci Vašich osobních údajů, resp. výsledků jejich zpracování jsou:
                """
@@ -578,27 +544,19 @@ class OznameniPDFCreator(DocumentCreator):
             bulletType="bullet",
         )
 
-        self.texts[
-            "doc_attachment_par_7_part_2"
-        ] = """
+        self.texts["doc_attachment_par_7_part_2"] = """
                Vaše osobní údaje nepředáváme a&nbsp;nemáme v&nbsp;úmyslu předat do třetí země nebo mezinárodní organizaci.
                """
 
-        self.texts[
-            "doc_attachment_heading_8"
-        ] = """
+        self.texts["doc_attachment_heading_8"] = """
                <u>POUČENÍ O PRÁVECH SUBJEKTŮ ÚDAJŮ</u>
                """
 
-        self.texts[
-            "doc_attachment_par_8_1"
-        ] = """
+        self.texts["doc_attachment_par_8_1"] = """
                Subjekt údajů má právo požádat Správce o&nbsp;poskytnutí informace o&nbsp;zpracování jeho osobních údajů.
                """
 
-        self.texts[
-            "doc_attachment_par_8_2"
-        ] = """
+        self.texts["doc_attachment_par_8_2"] = """
                Subjekt údajů má právo, aby Správce bez zbytečného odkladu opravil nepřesné osobní údaje, které se ho týkají.
                S&nbsp;přihlédnutím k&nbsp;účelům zpracování má subjekt údajů právo na doplnění neúplných osobních údajů, a&nbsp;to
                i&nbsp;poskytnutím dodatečného prohlášení.
@@ -607,16 +565,12 @@ class OznameniPDFCreator(DocumentCreator):
                stanovených obecným nařízením o&nbsp;ochraně osobních údajů.
                """
 
-        self.texts[
-            "doc_attachment_par_8_3"
-        ] = """
+        self.texts["doc_attachment_par_8_3"] = """
                Subjekt údajů má právo, aby Správce omezil zpracování osobních údajů, v&nbsp;případech stanovených obecným
                nařízením o&nbsp;ochraně osobních údajů.
                """
 
-        self.texts[
-            "doc_attachment_par_8_4"
-        ] = """
+        self.texts["doc_attachment_par_8_4"] = """
                Pokud se subjekt údajů domnívá, že došlo k&nbsp;porušení právních předpisů v&nbsp;souvislosti s&nbsp;ochranou jeho osobních
                údajů, má právo podat stížnost u&nbsp;dozorového úřadu. Dozorovým úřadem je v&nbsp;České republice
                Úřad pro ochranu osobních údajů.
@@ -691,14 +645,12 @@ class ZruseniPDFCreator(DocumentCreator):
     def _generate_text(self):
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
-        self.texts[
-            "doc_vec"
-        ] = "Věc: Zrušení evidence záměru v&nbsp;informačním systému Archeologická mapa České republiky"
+        self.texts["doc_vec"] = (
+            "Věc: Zrušení evidence záměru v&nbsp;informačním systému Archeologická mapa České republiky"
+        )
         self._create_data_document_part()
 
-        self.texts[
-            "doc_par_1"
-        ] = f"""
+        self.texts["doc_par_1"] = f"""
         Archeologický ústav AV ČR, {DOK_MESTO[self.dok_index]}, v.&nbsp;v.&nbsp;i., obdržel dne 
         {self.format_date(self.projekt.datum_oznameni)} 
         Vaše oznámení o&nbsp;zahájení stavebního (či jiného) záměru na území s&nbsp;archeologickými nálezy 
@@ -706,9 +658,7 @@ class ZruseniPDFCreator(DocumentCreator):
         eviduje pod evidenčním číslem {self.projekt.ident_cely}. 
         """
 
-        self.texts[
-            "doc_par_2"
-        ] = f"""
+        self.texts["doc_par_2"] = f"""
         Ve věci uvedeného záměru si Vám dovolujeme sdělit, že předmětný projekt byl zrušen z&nbsp;následujícího důvodu:
         """
 

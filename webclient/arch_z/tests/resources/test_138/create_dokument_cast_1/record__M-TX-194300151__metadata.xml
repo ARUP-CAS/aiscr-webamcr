@@ -10,31 +10,35 @@
     <amcr:rok_vzniku>1943</amcr:rok_vzniku>
     <amcr:organizace xml:lang="cs" id="ORG-000091">Archeologický ústav AV ČR, Praha, v.v.i.</amcr:organizace>
     <amcr:pristupnost xml:lang="cs" id="HES-000866">badatel</amcr:pristupnost>
-    <amcr:datum_zverejneni>2022-12-31</amcr:datum_zverejneni>
+    <amcr:datum_zverejneni>2020-01-01</amcr:datum_zverejneni>
     <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
     <amcr:ulozeni_originalu xml:lang="cs" id="HES-001167">archiv ARÚB</amcr:ulozeni_originalu>
     <amcr:popis>Fond Nevázané.</amcr:popis>
+    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:historie>
-      <amcr:id>hist-945026</amcr:id>
-      <amcr:datum_zmeny>2022-12-31T19:08:12+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000691">U-000691</amcr:uzivatel>
-      <amcr:typ_zmeny>D23</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-748079</amcr:id>
-      <amcr:datum_zmeny>2022-12-31T19:08:12+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>D01</amcr:typ_zmeny>
     </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000691">U-000691</amcr:uzivatel>
+      <amcr:typ_zmeny>D23</amcr:typ_zmeny>
+    </amcr:historie>
     <amcr:soubor>
-      <amcr:id>soub-534769</amcr:id>
+      <amcr:id>soub-0000001</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/M-TX-194300151/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>MTX194300151.pdf</amcr:nazev>
       <amcr:mimetype>application/pdf</amcr:mimetype>
       <amcr:rozsah>13</amcr:rozsah>
-      <amcr:size_mb>21.1753644943</amcr:size_mb>
+      <amcr:size_mb>0.0068559647</amcr:size_mb>
+      <amcr:sha_512>3a02c88f9d82e75564ef6c94567e155600bffb925cd1e8869b7990ef6c4f9d84c2908eabe4865058813cf81cd64aedbc0e93cbcf5991214fa30cd45fc5bd9161</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/M-TX-194300151/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
-        <amcr:id>hist-2415154</amcr:id>
-        <amcr:datum_zmeny>2023-01-18T23:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
         <amcr:poznamka>MTX194300151.pdf</amcr:poznamka>
         <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>

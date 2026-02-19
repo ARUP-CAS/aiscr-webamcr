@@ -1,1 +1,33 @@
-{"pagination":{"offset":0,"maxResults":100,"totalResults":-1},"items":[{"rdf_type":["http://www.w3.org/ns/ldp#Resource","http://www.w3.org/ns/ldp#RDFSource","http://mementoweb.org/ns#OriginalResource","http://fedora.info/definitions/v4/repository#Resource","http://mementoweb.org/ns#TimeGate","http://fedora.info/definitions/v4/repository#Container","http://www.w3.org/ns/ldp#Container","http://www.w3.org/ns/ldp#BasicContainer","http://fedora.info/definitions/v4/repository#ArchivalGroup"],"content_size":95,"mime_type":null,"created":"2025-06-26T18:18:48.794Z","fedora_id":"http://192.168.1.28:8081/rest/AMCR-selenium-test/record/HES-001464","modified":"2025-06-26T18:20:00.073Z"},{"rdf_type":["http://www.w3.org/ns/ldp#Resource","http://www.w3.org/ns/ldp#RDFSource","http://mementoweb.org/ns#OriginalResource","http://fedora.info/definitions/v4/repository#Resource","http://mementoweb.org/ns#TimeGate","http://fedora.info/definitions/v4/repository#Container","http://www.w3.org/ns/ldp#Container","http://www.w3.org/ns/ldp#BasicContainer"],"content_size":167,"mime_type":null,"created":"2025-06-26T18:20:00.141Z","fedora_id":"http://192.168.1.28:8081/rest/AMCR-selenium-test/model/deleted/member/HES-001464","modified":"2025-06-26T18:20:00.141Z"}]}
+{
+  "items": [
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/model/deleted/member/HES-001464",
+      "mime_type": null,
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#Container",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#BasicContainer",
+        "http://www.w3.org/ns/ldp#Container",
+        "http://www.w3.org/ns/ldp#RDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    },
+    {
+      "fedora_id": "info:test-base/AMCR-selenium-test/record/HES-001464",
+      "mime_type": null,
+      "rdf_type": [
+        "http://fedora.info/definitions/v4/repository#ArchivalGroup",
+        "http://fedora.info/definitions/v4/repository#Container",
+        "http://fedora.info/definitions/v4/repository#Resource",
+        "http://mementoweb.org/ns#OriginalResource",
+        "http://mementoweb.org/ns#TimeGate",
+        "http://www.w3.org/ns/ldp#BasicContainer",
+        "http://www.w3.org/ns/ldp#Container",
+        "http://www.w3.org/ns/ldp#RDFSource",
+        "http://www.w3.org/ns/ldp#Resource"
+      ]
+    }
+  ]
+}

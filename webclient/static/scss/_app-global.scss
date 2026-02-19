@@ -486,6 +486,10 @@ a.dropdown-item {
   }
 }
 
+.leaflet-top.leaflet-right {
+  z-index: 1005;
+}
+
 .leaflet-left.leaflet-top {
   z-index: 990;
 }
@@ -639,6 +643,24 @@ input.coordInput {
 
   &.app-entity-historie {
     //height: 92% !important;
+    .fedora-table {
+        table-layout: auto !important;
+
+    }
+
+    .col-stahnout {
+        width: 0 !important;    
+        white-space: nowrap;
+        text-align: center;
+        min-width: 0px !important;
+        th {
+          color: white !important;
+        }
+     
+    }
+    th.col-stahnout {
+      color: white !important;
+    }
   }
 
   &.app-entity-historie.app-entity-soubor {

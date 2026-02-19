@@ -10,6 +10,7 @@ from .views import (
     UpravitDatumOznameniView,
     ZadostOdhlaseniProjektuView,
     ZadostUdajeOznamovatelView,
+    ZadostZruseniProjektuView,
     archivovat,
     create,
     detail,
@@ -137,5 +138,10 @@ urlpatterns = [
         "zadost-odhlaseni-projektu/<str:ident_cely>",
         ZadostOdhlaseniProjektuView.as_view(),
         name="zadost-odhlaseni-projektu",
+    ),
+    path(
+        "zadost-zruseni-projektu/<str:ident_cely>",
+        ZadostZruseniProjektuView.as_view(),
+        name="zadost-zruseni-projektu",
     ),
 ]

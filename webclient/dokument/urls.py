@@ -57,6 +57,7 @@ urlpatterns = [
     path("model/edit/<str:ident_cely>", views.edit_model_3D, name="edit-model-3D"),
     path("model/detail/<str:ident_cely>", views.detail_model_3D, name="detail-model-3D"),
     path("radek-tabulky-odkaz", views.get_dokument_table_row, name="get_dokument_table_row"),
+    path("radek-tabulky-odkaz-vratit", views.get_dokument_table_row_vratit, name="get_dokument_table_row_vratit"),
     path(
         "model/mapa-3d",
         post_ajax_get_3d_limit,

@@ -7,12 +7,22 @@
     </p>
     <p><b>Zdůvodnění:</b> {{ reason }}</p>
     <p>
-        Vaše případné dotazy pište na adresu oznameni@arup.cas.cz nebo volejte na tel. 257 014 310.
+        Vaše případné dotazy pište na adresu oznameni@arup.cas.cz nebo volejte na tel. +420 257 014 310.
     </p>
     <p>S pozdravem</p>
     <p>Archeologický ústav AV ČR, Praha, v. v. i.</p>
     <p>Na tuto zprávu prosím neodpovídejte, je automaticky generována.</p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Dear madam/sir,</p>
+    <p>
+        project <b>{{ ident_cely }}</b> (<b>{{ podnet }}</b>), which was registered in connection with your announcement of construction or other activity on an area with archaeological finds in accordance with section 22, paragraph 2 of Act No. 20/1987 Sb. on State Monument Care on the cadastral area <b>{{ katastr }}</b>, parcel <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>) {% if datum_oznameni %}from date <b>{{ datum_oznameni }}</b>{% endif %} has been cancelled.
+    </p>
+    <p><b>Reason:</b> {{ reason }}</p>
+    <p>
+        If you have any questions, please write to oznameni@arup.cas.cz or call +420 257 014 310.
+    </p>
+    <p>Sincerely</p>
+    <p>Institute of Archaeology of the Czech Academy of Sciences, Prague</p>
+    <p>Please do not reply to this message, as it is automatically generated.</p>
 {% endblock %}

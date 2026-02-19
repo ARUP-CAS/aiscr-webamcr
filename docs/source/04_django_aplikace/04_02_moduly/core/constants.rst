@@ -1,0 +1,4 @@
+CORE constants
+==============
+
+Modul constants.

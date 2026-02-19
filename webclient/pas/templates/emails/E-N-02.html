@@ -9,8 +9,15 @@
             <li><a href="{% get_site_url %}{% url 'core:redirect_ident' ident %}">{{ ident }}</a></li>
         {% endfor %}
     </ul>
-    <p>Detaily zjistíte po přihlášení do AMČR-PAS. Záznamy budou během několika dní zveřejněny v Digitálním archivu AMČR.</p>
+    <p>Detaily zjistíte po přihlášení do AMČR-PAS. Záznamy byly zveřejněny v <a href="https://digiarchiv.aiscr.cz/">Digitálním archivu AMČR</a>.</p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Hello,</p>
+    The finds you submitted have been archived in AMCR-PAS today:
+    <ul style="list-style: none">
+        {% for ident in projekt_ident_list %}
+            <li><a href="{% get_site_url %}{% url 'core:redirect_ident' ident %}">{{ ident }}</a></li>
+        {% endfor %}
+    </ul>
+    <p>You can find the details after logging into AMCR-PAS. The records have been published in the <a href="https://digiarchiv.aiscr.cz/">AMCR Digital Archive</a>.</p>
 {% endblock %}

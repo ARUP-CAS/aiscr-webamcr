@@ -23,8 +23,8 @@
       </amcr:chranene_udaje>
     </amcr:akce>
     <amcr:historie>
-      <amcr:id>hist-2803099</amcr:id>
-      <amcr:datum_zmeny>2024-03-30T17:11:27.852850+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005362">U-005362</amcr:uzivatel>
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
@@ -39,8 +39,8 @@
         <amcr:jistota>false</amcr:jistota>
         <amcr:presna_datace>ne</amcr:presna_datace>
         <amcr:areal xml:lang="cs" id="HES-000065">osídlený skalní prostor</amcr:areal>
-        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
         <amcr:aktivita xml:lang="cs" id="HES-000002">pohřbívání</amcr:aktivita>
+        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
       </amcr:komponenta>
     </amcr:dokumentacni_jednotka>
   </amcr:archeologicky_zaznam>

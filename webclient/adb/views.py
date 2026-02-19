@@ -65,16 +65,7 @@ def zapsat(request, dj_ident_cely):
         logger.debug("adb.views.zapsat.not_valid", extra={"error": str(form.errors)})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    response = redirect(dj.get_absolute_url())
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict")
-    response.set_cookie(
-        "set-active",
-        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
-        max_age=1000,
-        secure=True,
-        samesite="Strict",
-    )
-    return response
+    return redirect(dj.get_absolute_url())
 
 
 @login_required
@@ -88,7 +79,6 @@ def smazat(request, ident_cely):
     adb = get_object_or_404(Adb, ident_cely=ident_cely)
     if request.method == "POST":
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
-        dj_ident_cely = dj.ident_cely
         fedora_transaction = adb.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT, dj)
         for vb in adb.vyskove_body.all():
             vb.active_transaction = fedora_transaction
@@ -104,9 +94,6 @@ def smazat(request, ident_cely):
                 {"redirect": dj.get_absolute_url()},
                 status=403,
             )
-        response.set_cookie(
-            "show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000, secure=True, samesite="Strict"
-        )
         return response
     else:
         context = {
@@ -115,15 +102,7 @@ def smazat(request, ident_cely):
             "id_tag": "smazat-adb-form",
             "button": _("adb.views.smazat.modalForm.submit.button"),
         }
-        response = render(request, "core/transakce_modal.html", context)
-        response.set_cookie(
-            "show-form",
-            f"detail_dj_form_{adb.dokumentacni_jednotka.ident_cely}",
-            max_age=1000,
-            secure=True,
-            samesite="Strict",
-        )
-        return response
+        return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -169,13 +148,6 @@ def smazat_vb(request, ident_cely):
             logger.warning("adb.views.smazat.smazat_vb.deleted", extra={"ident_cely": str(ident_cely)})
             fedora_transaction.rollback_transaction()
             response = JsonResponse({"redirect": redirect_url}, status=403)
-        response.set_cookie(
-            "show-form",
-            f"detail_dj_form_{vyskovy_bod.adb.dokumentacni_jednotka.ident_cely}",
-            max_age=1000,
-            secure=True,
-            samesite="Strict",
-        )
         fedora_transaction.mark_transaction_as_closed()
         return response
     else:

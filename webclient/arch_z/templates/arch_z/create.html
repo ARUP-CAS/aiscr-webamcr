@@ -7,7 +7,7 @@
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
 <script>
-    var global_csrftoken = '{{ csrf_token }}';
+    const global_csrftoken = '{{ csrf_token }}';
 </script>
  <!-- Autocomplete media files -->
  <link href="{% static 'admin/css/vendor/select2/select2.css' %}" media="screen" rel="stylesheet" type="text/css">
@@ -139,8 +139,8 @@
 
 {% block script %}
 <script>
-  var successFunction = function(settings, response) {
-    var newOption = new Option(response.text, response.value, true, true);
+  const successFunction = function(settings, response) {
+    const newOption = new Option(response.text, response.value, true, true);
       $('#id_hlavni_vedouci').append(newOption).trigger('change');
       $('#id_hlavni_vedouci').trigger({
         type: 'select2:select',
@@ -155,18 +155,18 @@
       };
   })
   document.addEventListener('DOMContentLoaded', function (event) {
-    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+    let options = Object.assign(Object.create(defaults), {modalID: "modal-form",
     formURL: "{% url 'heslar:create_osoba' %}",
     formID: "create-osoba-form",
     modalFormID: "#create-osoba-form",
     modalIDD : "#modal-form",
     successFunc:successFunction,
   })
-  create_osoba_modal = new Modal(options, "create-osoba");
+  const create_osoba_modal = new Modal(options, "create-osoba");
 
-  elements = document.getElementsByClassName("objekt-smazat-btn")
+  const elements = document.getElementsByClassName("objekt-smazat-btn")
   for (let i = 0; i < elements.length; i++){
-    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+    const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
     formID: "smazat-objekt-form",
     modalFormID: "#smazat-objekt-form",
     })
@@ -174,11 +174,11 @@
   }
 
   if (document.getElementsByClassName("create-vedouci")){
-    elements = document.getElementsByClassName("create-vedouci")
+    const elements = document.getElementsByClassName("create-vedouci")
     for (let i = 0; i < elements.length; i++){
-      var successFunctionVedouci = function(settings, response, elements) {
-        var newOption = new Option(response.text, response.value, true, true);
-          id_ref= this.button.getAttribute("ref")
+      const successFunctionVedouci = function(settings, response, elements) {
+        const newOption = new Option(response.text, response.value, true, true);
+          const id_ref= this.button.getAttribute("ref")
           $('#'+id_ref).append(newOption).trigger('change');
           $('#'+id_ref).trigger({
             type: 'select2:select',
@@ -192,7 +192,7 @@
         {#    $.fn.modal.Constructor.prototype._enforceFocus = function () {#}
         {#    };#}
         {#})#}
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
@@ -203,10 +203,10 @@
     }
   };
 
-  datum_zahajeni = document.getElementById("id_datum_zahajeni")
-  datum_ukonceni = document.getElementById("id_datum_ukonceni")
+  const datum_zahajeni = document.getElementById("id_datum_zahajeni")
+  const datum_ukonceni = document.getElementById("id_datum_ukonceni")
 
-  var specifikace = document.getElementById("id_specifikace_data");
+  const specifikace = document.getElementById("id_specifikace_data");
   if (specifikace.value == {{ heslar_specifikace_v_letech_presne }} || specifikace.value == {{ heslar_specifikace_v_letech_priblizne }}){
     $(".dateinput").datepicker('destroy')
     datum_zahajeni.value = datum_zahajeni.value.slice(-4)

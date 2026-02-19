@@ -63,3 +63,8 @@ class WrongCSVError(Exception):
 class ZaznamSouborNotmatching(Exception):
     def __init__(self, message="Zaznam nema dany soubor"):
         self.message = message
+
+
+class StateChangedError(Exception):
+    def __init__(self, message="Záznam byl mezitím změměn"):
+        self.message = message

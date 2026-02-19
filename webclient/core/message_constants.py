@@ -96,6 +96,8 @@ PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_SUCCESS: Final = _("common.message.PROJEKT_ZADO
 PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR: Final = _("common.message.PROJEKT_ZADOST_UDAJE_OZNAMOVATEL_ERROR.text")
 PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS: Final = _("common.message.PROJEKT_ZADOST_ODHLASENI_PROJEKTU_SUCCESS.text")
 PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR: Final = _("common.message.PROJEKT_ZADOST_ODHLASENI_PROJEKTU_ERROR.text")
+PROJEKT_ZADOST_ZRUSENI_PROJEKTU_SUCCESS: Final = _("common.message.PROJEKT_ZADOST_ZRUSENI_PROJEKTU_SUCCESS.text")
+PROJEKT_ZADOST_ZRUSENI_PROJEKTU_ERROR: Final = _("common.message.PROJEKT_ZADOST_ZRUSENI_PROJEKTU_ERROR.text")
 
 AKCE_USPESNE_ZAPSANA: Final = _("common.message.AKCE_USPESNE_ZAPSANA.text")  # Akce úspěšně zapsána.
 AKCE_USPESNE_ODESLANA: Final = _("common.message.AKCE_USPESNE_ODESLANA.text")  # Akce úspěšně odeslána.
@@ -195,13 +197,10 @@ UPLOADFILE_REJECTED_ALL: Final = _("core.message_constants.uploadFile.rejectedAl
 UPLOADFILE_ERROR: Final = _("core.message_constants.uploadFile.error.text")
 
 # Validation
-VALIDATION_NOT_VALID: Final = _("common.message.VALIDATION_NOT_VALID.text")  # Geometrie není validní.
-VALIDATION_EMPTY: Final = _("common.message.VALIDATION_EMPTY.text")  # Geometrie je prázdná.
 VALIDATION_NOT_SIMPLE: Final = _("common.message.VALIDATION_NOT_SIMPLE.text")  # Geometrie není typu simple geometry.
-VALIDATION_NOT_MULTIPART: Final = _("common.message.VALIDATION_NOT_MULTIPART.text")  # Geometrie je multigeometrií.
-VALIDATION_LINE_LENGTH: Final = _(
-    "common.message.VALIDATION_LINE_LENGTH.text"
-)  # Vzdálenost bodů je nižší než povolená mez.
+VALIDATION_NENALEZEN_KLAD: Final = _(
+    "common.message.VALIDATION_NENALEZEN_KLAD.text"
+)  # Pro geometrii nebyl nalezen klad ZM.
 
 # Lokalita
 LOKALITA_USPESNE_ZAPSANA: Final = _("core.message_constants.lokalitaUspesneZapsana.text")
@@ -240,3 +239,6 @@ TRANSLATION_FILE_WRONG_FORMAT: Final = _("core.message_constants.translationFile
 # restart aplikace
 APPLICATION_RESTART_ERROR: Final = _("core.message_constants.applicationRestartError.text")
 APPLICATION_RESTART_SUCCESS: Final = _("core.message_constants.applicationRestartSuccess.text")
+
+# uzivatel
+ZADOST_SMAZANI_UZIVATELE_SUCCESS: Final = _("core.message.ZADOST_SMAZANI_UZIVATELE_SUCCESS.text")

@@ -19,5 +19,19 @@
     </p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Hello,</p>
+        <p>
+           a new project <b><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{ project.ident_cely }}</a></b> has just been recorded in the AMCR.
+        </p>
+        <ul style="list-style: none">
+            <li><b>Project type:</b> {{ project.typ_projektu.heslo }}</li>
+            <li><b>Cadastral area:</b> {{ project.hlavni_katastr }}
+            <li><b>Motivation:</b> {{ project.podnet }}</li>
+            <li><b>Location:</b> {{ project.lokalizace }}</li>
+            <li><b>Planned start:</b> {{ project.planovane_zahajeni_str }}</li>
+            <li><b>Organization that recorded the project:</b> {{ organizace_zapsani }}</li>
+        </ul>
+    <p>
+        Details about the project can be found after logging into AMCR.
+    </p>
 {% endblock %}

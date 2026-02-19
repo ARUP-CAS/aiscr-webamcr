@@ -16,14 +16,14 @@
       </amcr:chranene_udaje>
     </amcr:lokalita>
     <amcr:historie>
-      <amcr:id>hist-2803190</amcr:id>
-      <amcr:datum_zmeny>2025-07-29T10:52:49.000847+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803195</amcr:id>
-      <amcr:datum_zmeny>2025-07-29T10:54:37.828030+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:poznamka>X-C-L000000003 -&gt; C-L0000001</amcr:poznamka>
       <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
@@ -40,8 +40,8 @@
         <amcr:jistota>false</amcr:jistota>
         <amcr:presna_datace>ne</amcr:presna_datace>
         <amcr:areal xml:lang="cs" id="HES-000065">osídlený skalní prostor</amcr:areal>
-        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
         <amcr:aktivita xml:lang="cs" id="HES-000002">pohřbívání</amcr:aktivita>
+        <amcr:aktivita xml:lang="cs" id="HES-000001">sídlení</amcr:aktivita>
         <amcr:nalez_objekt>
           <amcr:id>nalo-180492</amcr:id>
           <amcr:druh xml:lang="cs" id="HES-000479">kašna</amcr:druh>

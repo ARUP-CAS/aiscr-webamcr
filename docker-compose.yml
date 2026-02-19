@@ -10,7 +10,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
       - /opt/selenium_test:/vol/web/selenium_test
     environment:
       - IMAGE_TAG=${IMAGE_TAG}
@@ -61,7 +61,7 @@ services:
       start_period: 30s
   
   redis-exporter:
-    image: oliver006/redis_exporter:v1.80.0-alpine
+    image: oliver006/redis_exporter:v1.81.0-alpine
     ports:
       - "9121:9121"
     secrets:
@@ -85,7 +85,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
     networks:
       - prod-net
     healthcheck:
@@ -110,7 +110,7 @@ services:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
-      - /opt/data-migrace:/vol/data-migrace
+      - /home/migrace:/vol/data-migrace
     networks:
       - prod-net
     healthcheck:
@@ -136,7 +136,7 @@ services:
     entrypoint: [ '/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)"; python /app/cli.py' ] 
 
   grafana:
-    image: grafana/grafana-enterprise:12.2.1
+    image: grafana/grafana-enterprise:12.3.3
     restart: always
     depends_on:
       - prometheus
@@ -153,7 +153,7 @@ services:
       - prod-net
 
   prometheus:
-    image: prom/prometheus:v3.7.3
+    image: prom/prometheus:v3.9.1
     restart: always
     volumes:
       - ./prometheus:/etc/prometheus
@@ -166,10 +166,11 @@ services:
       - prometheus_config
     command:
       - "--config.file=/run/secrets/prometheus_config"
-      - "--storage.tsdb.retention.time=365d"
+      - "--storage.tsdb.retention.time=${PROM_RETENTION_TIME:-365d}"
+      - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.19.0
+    image: docker.elastic.co/logstash/logstash:9.3.0
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -184,7 +185,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
     hostname: elasticsearch
     restart: always
     environment:
@@ -210,7 +211,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.19.0
+    image: docker.elastic.co/kibana/kibana:9.3.0
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -224,16 +225,16 @@ services:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
 
   selenium:
-    image: selenium/standalone-firefox
+    image: selenium/standalone-chromium:144.0
     ports:
       - 4444:4444
       - 7900:7900
-    shm_size: '1gb'
+    shm_size: '2gb'
     networks:
       - prod-net
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    image: gcr.io/cadvisor/cadvisor:v0.55.1
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"
@@ -249,7 +250,7 @@ services:
     restart: always
 
   postgresql_exporter:
-    image: prometheuscommunity/postgres-exporter:v0.18.1
+    image: prometheuscommunity/postgres-exporter:v0.19.0
     restart: always
     environment:
       - DATA_SOURCE_URI_FILE=/run/secrets/postgresql_exporter_uri

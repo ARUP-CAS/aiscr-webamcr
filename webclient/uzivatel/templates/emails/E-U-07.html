@@ -1,0 +1,24 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>
+        Dobrý den,
+    </p>
+    <p>
+        uživatel <b>{{uzivatel.first_name}} {{uzivatel.last_name}}</b> (<a href="{{ uzivatel_admin_url }}">{{uzivatel.ident_cely}}</a>) z organizace <b>{{uzivatel.organizace}}</b> žádá o odstranění svého uživatelského účtu. 
+    </p>
+    <p>
+        O způsobu vypořádání uživatele vždy informujte v odpovědi na tento email.
+    </p>
+{% endblock %}
+{% block content_en %}
+    <p>
+        Hello,
+    </p>
+    <p>
+        user <b>{{uzivatel.first_name}} {{uzivatel.last_name}}</b> (<a href="{{ uzivatel_admin_url }}">{{uzivatel.ident_cely}}</a>) from organization <b>{{uzivatel.organizace}}</b> is requesting deletion of their user account. 
+    </p>
+    <p>
+        Always inform the user about the method of settlement in your reply to this email.
+    </p>
+{% endblock %}

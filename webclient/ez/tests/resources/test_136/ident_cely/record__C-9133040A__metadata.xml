@@ -26,22 +26,22 @@
       </amcr:chranene_udaje>
     </amcr:akce>
     <amcr:historie>
-      <amcr:id>hist-133863</amcr:id>
-      <amcr:datum_zmeny>2021-03-20T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-004403">U-004403</amcr:uzivatel>
-      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000203">U-000203</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-361209</amcr:id>
-      <amcr:datum_zmeny>2021-03-20T23:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>AZ12</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-521704</amcr:id>
-      <amcr:datum_zmeny>2023-05-07T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000203">U-000203</amcr:uzivatel>
-      <amcr:typ_zmeny>AZ23</amcr:typ_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-004403">U-004403</amcr:uzivatel>
+      <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:dokumentacni_jednotka>
       <amcr:ident_cely>C-9133040A-D01</amcr:ident_cely>
@@ -60,15 +60,15 @@
           <amcr:pocet>2</amcr:pocet>
         </amcr:nalez_objekt>
         <amcr:nalez_predmet>
-          <amcr:id>nalp-169875</amcr:id>
-          <amcr:druh xml:lang="cs" id="HES-000642">kostra</amcr:druh>
-          <amcr:specifikace xml:lang="cs" id="HES-000986">kost – lidská</amcr:specifikace>
-          <amcr:pocet>2</amcr:pocet>
-        </amcr:nalez_predmet>
-        <amcr:nalez_predmet>
           <amcr:id>nalp-169874</amcr:id>
           <amcr:druh xml:lang="cs" id="HES-000714">nádoba</amcr:druh>
           <amcr:specifikace xml:lang="cs" id="HES-000979">keramika</amcr:specifikace>
+          <amcr:pocet>2</amcr:pocet>
+        </amcr:nalez_predmet>
+        <amcr:nalez_predmet>
+          <amcr:id>nalp-169875</amcr:id>
+          <amcr:druh xml:lang="cs" id="HES-000642">kostra</amcr:druh>
+          <amcr:specifikace xml:lang="cs" id="HES-000986">kost – lidská</amcr:specifikace>
           <amcr:pocet>2</amcr:pocet>
         </amcr:nalez_predmet>
       </amcr:komponenta>
@@ -79,8 +79,8 @@
       <amcr:paginace>219</amcr:paginace>
     </amcr:ext_odkaz>
     <amcr:dokument id="C-TX-195001799">C-TX-195001799</amcr:dokument>
-    <amcr:dokument id="C-TX-195302602">C-TX-195302602</amcr:dokument>
     <amcr:dokument id="C-TX-195105614">C-TX-195105614</amcr:dokument>
+    <amcr:dokument id="C-TX-195302602">C-TX-195302602</amcr:dokument>
     <amcr:dokument id="C-TX-195302603">C-TX-195302603</amcr:dokument>
   </amcr:archeologicky_zaznam>
 </amcr:amcr>

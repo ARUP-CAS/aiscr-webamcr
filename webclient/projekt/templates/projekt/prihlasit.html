@@ -32,7 +32,7 @@
   <script type="text/javascript" id="js-id-create-osoba">
     //var prihlasit_modal
 
-    var successFunction = function(settings, response) {
+    const successFunction = function(settings, response) {
       let dropdown = document.getElementById('id_vedouci_projektu');
       let newOption = document.createElement('option');
       newOption.text = response.text;
@@ -46,7 +46,7 @@
       $(settings.modalIDD).modal("hide");
     };
     window.addEventListener("modalLoaded", function() {
-      var options = Object.assign(Object.create(defaults), {
+      const options = Object.assign(Object.create(defaults), {
         modalID: "modal-osoba-form",
         formURL: "{% url 'heslar:create_osoba' %}",
         formID: "create-osoba-form",
@@ -58,17 +58,17 @@
         firstModalID: "#modal-form",
         secondModal: modal,
       })
-      var create_osoba_modal = new Modal(options, "create-osoba");  
+      const create_osoba_modal = new Modal(options, "create-osoba");  
     });
   
     </script>
     <script>
       window.addEventListener("modalLoaded", function() {
-        var checked_field = document.getElementById("id_kulturni_pamatka");
-        var fields = new Map()
+        const checked_field = document.getElementById("id_kulturni_pamatka");
+        const fields = new Map()
         fields.set("id_kulturni_pamatka_cislo", "")
         fields.set("id_kulturni_pamatka_popis", "")
-        var required = new Map()
+        const required = new Map()
         required.set("{% get_value_from_heslar "kulturni_pamatky" "kp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("{% get_value_from_heslar "kulturni_pamatky" "nkp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("{% get_value_from_heslar "kulturni_pamatky" "pz" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])

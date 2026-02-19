@@ -12,7 +12,7 @@
                   aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'dokument.templates.dokument_table.dalsiNabidka.tooltip' %}">
             <span class="material-icons">add</span>
           </button>
-          <div class="dropdown-menu" aria-labelledby="others">
+          <div class="dropdown-menu" aria-labelledby="others_doc">
             {% if type == "arch_z"%}
               {% if show.zapsat_dokumenty %}
                 <a class="dropdown-item"
@@ -64,16 +64,18 @@
 </div>
 <script>
   //modal scripts
+  let dokument_pripojit_z_projektu_modal;
   document.addEventListener('DOMContentLoaded', function (event) {
+    let options;
     if ("{{show.pripojit_dokumenty}}"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })
-      dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
+      let dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
     };
     if ("{{show.pripojit_dokumenty}}" && "{{app}}" != "lokalita"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })
@@ -85,6 +87,10 @@
 <script type="text/javascript">
   // projekt pass load
   $(document).ready(function() {
+    //skryje prázdné menu
+    if ($('.dropdown-menu[aria-labelledby="others_doc"]').children().length === 0) {
+        $("#others_doc").hide();
+    }
     if ({{dokumenty.count}} > 0) {
       $.ajax({
         type: "GET",
@@ -94,9 +100,9 @@
           $('.app-card-dokument .loader').css("display", "none");
           $('.app-card-dokument .content-with-table-responsive').append(data);
           if (document.getElementsByClassName("dokument-odpojit-btn")){
-            elements = document.getElementsByClassName("dokument-odpojit-btn")
+            const elements = document.getElementsByClassName("dokument-odpojit-btn")
             for (let i = 0; i < elements.length; i++){
-              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+              const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "odpojit-dokument-form",
               modalFormID: "#odpojit-dokument-form",
               })

@@ -27,8 +27,8 @@
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(-693174.81 -1077354.27)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-2803189</amcr:id>
-      <amcr:datum_zmeny>2025-07-28T14:16:01.384831+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>

@@ -25,28 +25,28 @@
       <amcr:geom_wkt EPSG="4326">POINT(14.7866058 50.1752531)</amcr:geom_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1609550</amcr:id>
-      <amcr:datum_zmeny>2022-08-29T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1742409</amcr:id>
-      <amcr:datum_zmeny>2022-08-29T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
-      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2298584</amcr:id>
-      <amcr:datum_zmeny>2022-08-30T20:41:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
       <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2095264</amcr:id>
-      <amcr:datum_zmeny>2022-09-15T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>P12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
       <amcr:typ_zmeny>P23</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000355">U-000355</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:samostatny_nalez id="C-202209999-N00001">C-202209999-N00001</amcr:samostatny_nalez>
     <amcr:dokument id="X-C-TX-000000009">X-C-TX-000000009</amcr:dokument>
