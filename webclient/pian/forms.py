@@ -12,6 +12,7 @@ from django import forms
 from django.contrib.gis.forms import HiddenInput
 from django.contrib.gis.geos import LineString, Point, Polygon
 from django.db import connections
+from django.forms.utils import ErrorDict
 from django.utils.translation import gettext_lazy as _
 from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
 from heslar.models import Heslar
@@ -68,8 +69,6 @@ class PianCreateForm(forms.ModelForm):
         """
         Metoda pro validaci geometrií při potvrzení PIANu.
         """
-        from django.forms.utils import ErrorDict
-
         self._errors = ErrorDict()
         self.cleaned_data = {}
         geom_wkt = self._instance_geom_wkt("geom")
