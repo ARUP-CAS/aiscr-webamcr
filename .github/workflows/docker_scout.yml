@@ -5,6 +5,10 @@ on:
     branches:
       - "dev"
 
+concurrency:
+  group: scout-${{ github.repository }}/${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   # Hostname of your registry
   REGISTRY: docker.io
