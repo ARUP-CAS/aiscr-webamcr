@@ -596,7 +596,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         # Úprava uložení
         time = self.getTime()
-        self.ElementClick(By.ID, "pas-edit-uložení")
+        self.ElementClick(By.ID, "pas-edit-ulozeni")
         self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
