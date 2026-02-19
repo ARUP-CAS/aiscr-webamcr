@@ -28,7 +28,7 @@ on:
         default: GitHub 
 
 concurrency:
-  group: deploy-${{ inputs.environment }}
+  group: deploy-${{ github.repository }}-${{ inputs.environment }}
   cancel-in-progress: false
 
 env:
@@ -57,24 +57,28 @@ jobs:
 
       - name: Setup VPN config
         run: |
-          tmpdir=$(mktemp -d)
-          echo "VPN_TMPDIR=$tmpdir" >> $GITHUB_ENV
-          cp .github/vpn/openvpn20_huldio_ci.ovpn "$tmpdir/"
-          echo "${{ secrets.VPN_CA_CRT }}" > "$tmpdir/openvpn20_huldio_ci_ca.crt"
-          echo "${{ secrets.VPN_USER_CRT }}" > "$tmpdir/openvpn20_huldio_ci_user.crt"
-          echo "${{ secrets.VPN_USER_KEY }}" > "$tmpdir/openvpn20_huldio_ci_user.key"
-          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > "$tmpdir/secret.txt"
+          echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
+          echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
+          echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
+          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
 
       - name: Connect VPN
-        run: sudo openvpn --config "$VPN_TMPDIR/openvpn20_huldio_ci.ovpn" --daemon --askpass "$VPN_TMPDIR/secret.txt"
+        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --daemon --askpass secret.txt
 
       - name: Wait for VPN & DNS resolve
         shell: bash
         timeout-minutes: 2
         run: |
-          until ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; do
+          for i in {1..10}; do
+            if ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then
+              break
+            fi
             sleep 3
           done
+          if ! ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then
+            echo "::error::VPN connection failed"
+            exit 1
+          fi
 
       - name: SSH connection
         shell: bash
