@@ -5853,7 +5853,7 @@ Stav testu
 ^^^^^^^^^^
 
 Implementován v
-``webclient.heslar.tests.test_selenium.AkceHeslar.test_151_test_Fedora_heslar_001``.
+``webclient.heslar.tests.test_selenium.AkceHeslar.test_151_test_Fedora_heslář_001``.
 
 
 Lokalita
@@ -7016,13 +7016,13 @@ test1.jpg
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
 
-- Vytvoření PAS
+- Vytvoření záznamu PAS
 - Editace PAS
-- Vytvoření souboru
+- Vytvoření souboruu
 - Reload soubor
-- Smazání souboru
+- Smazání souboruu
 - Editace Uložení
-- Smazání PAS
+- Smazání záznamu PAS
 
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
@@ -8054,8 +8054,8 @@ Uživatelské kroky
 - Update - projekt
 - Update oznamovatel
 - Smazat soubor v projektu
-- Vytvoření soubor
-- Vytvoření projektová akce
+- Vytvoření souboru
+- Vytvoření projektové akce
 - Změna přístupnosti Akce
 - Smazání projektové Akce
 - Smazání projektu
@@ -8099,10 +8099,10 @@ Uživatelské kroky
 - Schválení projektu - změna ident-cely projektu
 - Vytvoření průzkumného projektu
 - Vytvoření části dokumentu projektu
-- Vytvoření PAS
+- Vytvoření záznamu PAS
 - Změna přístupnosti PAS
 - Smazání části dokumentu
-- Smazání PAS
+- Smazání záznamu PAS
 - Smazání projektu
 - Znovu vytvoření PAS
 - Vytvoření části dokumentu - existující dokument

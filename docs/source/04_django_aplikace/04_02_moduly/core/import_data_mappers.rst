@@ -376,7 +376,7 @@ Třídy
 
 .. py:class:: HeslarMapper
 
-   Mapper pro model Heslar.
+   Mapovač pro model Heslar.
 
    **Metody:**
 
@@ -385,7 +385,7 @@ Třídy
 
 .. py:class:: HeslarDataceMapper
 
-   Mapper pro model HeslarDatace.
+   Mapovač pro model HeslarDatace.
 
    **Metody:**
 
@@ -394,7 +394,7 @@ Třídy
 
 .. py:class:: HeslarDokumentTypMaterialRadaMapper
 
-   Mapper pro model HeslarDokumentTypMaterialRada.
+   Mapovač pro model HeslarDokumentTypMaterialRada.
 
    **Metody:**
 
@@ -403,7 +403,7 @@ Třídy
 
 .. py:class:: HeslarHierarchieMapper
 
-   Mapper pro model HeslarHierarchie.
+   Mapovač pro model HeslarHierarchie.
 
    **Metody:**
 
@@ -412,7 +412,7 @@ Třídy
 
 .. py:class:: HeslarOdkazMapper
 
-   Mapper pro model HeslarOdkaz.
+   Mapovač pro model HeslarOdkaz.
 
    **Metody:**
 
@@ -421,7 +421,7 @@ Třídy
 
 .. py:class:: OrganizaceMapper
 
-   Mapper pro model Organizace.
+   Mapovač pro model Organizace.
 
    **Metody:**
 
@@ -430,12 +430,12 @@ Třídy
 
 .. py:class:: OsobaMapper
 
-   Mapper pro model Osoba.
+   Mapovač pro model Osoba.
 
 
 .. py:class:: ProjektMapper
 
-   Mapper pro model Projekt.
+   Mapovač pro model Projekt.
 
    **Metody:**
 
@@ -446,7 +446,7 @@ Třídy
 
 .. py:class:: ProjektKatastrMapper
 
-   Mapper pro model ProjektKatastr.
+   Mapovač pro model ProjektKatastr.
 
    **Metody:**
 
@@ -455,7 +455,7 @@ Třídy
 
 .. py:class:: ProjektOznamovatelMapper
 
-   Mapper pro model Oznamovatel.
+   Mapovač pro model Oznamovatel.
 
    **Metody:**
 
@@ -464,7 +464,7 @@ Třídy
 
 .. py:class:: SamostatnyNalezMapper
 
-   Mapper pro model SamostatnyNalez.
+   Mapovač pro model SamostatnyNalez.
 
    **Metody:**
 
@@ -475,7 +475,7 @@ Třídy
 
 .. py:class:: ArcheologickyZaznamAkceMapper
 
-   Mapper pro modely ArcheologickyZaznam a Akce.
+   Mapovač pro modely ArcheologickyZaznam a Akce.
 
    **Metody:**
 
@@ -488,7 +488,7 @@ Třídy
 
 .. py:class:: LokalitaMapper
 
-   Mapper pro modely ArcheologickyZaznam a Lokalita.
+   Mapovač pro modely ArcheologickyZaznam a Lokalita.
 
    **Metody:**
 
@@ -499,7 +499,7 @@ Třídy
 
 .. py:class:: AkceVedouciMapper
 
-   Mapper pro model AkceVedouci.
+   Mapovač pro model AkceVedouci.
 
    **Metody:**
 
@@ -508,7 +508,7 @@ Třídy
 
 .. py:class:: ArcheologickyZaznamKatastrMapper
 
-   Mapper pro model ArcheologickyZaznamKatastr.
+   Mapovač pro model ArcheologickyZaznamKatastr.
 
    **Metody:**
 
@@ -517,7 +517,7 @@ Třídy
 
 .. py:class:: PianMapper
 
-   Mapper pro model Pian.
+   Mapovač pro model Pian.
 
    **Metody:**
 
@@ -528,7 +528,7 @@ Třídy
 
 .. py:class:: DokumentacniJednotkaMapper
 
-   Mapper pro model DokumentacniJednotka.
+   Mapovač pro model DokumentacniJednotka.
 
    **Metody:**
 
@@ -539,7 +539,7 @@ Třídy
 
 .. py:class:: AdbMapper
 
-   Mapper pro model Adb.
+   Mapovač pro model Adb.
 
    **Metody:**
 
@@ -548,7 +548,7 @@ Třídy
 
 .. py:class:: AdbVyskovyBod
 
-   Mapper pro model VyskovyBod.
+   Mapovač pro model VyskovyBod.
 
    **Metody:**
 
@@ -557,7 +557,7 @@ Třídy
 
 .. py:class:: DokumentLetMapper
 
-   Mapper pro model Let.
+   Mapovač pro model Let.
 
    **Metody:**
 
@@ -566,7 +566,7 @@ Třídy
 
 .. py:class:: DokumentMapper
 
-   Mapper pro modely Dokument a DokumentExtraData.
+   Mapovač pro modely Dokument a DokumentExtraData.
 
    **Metody:**
 
@@ -583,7 +583,7 @@ Třídy
 
 .. py:class:: DokumentAutorMapper
 
-   Mapper pro model DokumentAutor.
+   Mapovač pro model DokumentAutor.
 
    **Metody:**
 
@@ -592,7 +592,7 @@ Třídy
 
 .. py:class:: DokumentJazykMapper
 
-   Mapper pro model DokumentJazyk.
+   Mapovač pro model DokumentJazyk.
 
    **Metody:**
 
@@ -601,7 +601,7 @@ Třídy
 
 .. py:class:: DokumentOsobaMapper
 
-   Mapper pro model DokumentOsoba.
+   Mapovač pro model DokumentOsoba.
 
    **Metody:**
 
@@ -610,7 +610,7 @@ Třídy
 
 .. py:class:: DokumentPosudekMapper
 
-   Mapper pro model DokumentPosudek.
+   Mapovač pro model DokumentPosudek.
 
    **Metody:**
 
@@ -619,7 +619,7 @@ Třídy
 
 .. py:class:: TvarMapper
 
-   Mapper pro model Tvar.
+   Mapovač pro model Tvar.
 
    **Metody:**
 
@@ -628,7 +628,7 @@ Třídy
 
 .. py:class:: DokumentCastMapper
 
-   Mapper pro model DokumentCast.
+   Mapovač pro model DokumentCast.
 
    **Metody:**
 
@@ -637,7 +637,7 @@ Třídy
 
 .. py:class:: NeidentAkceMapper
 
-   Mapper pro model NeidentAkce.
+   Mapovač pro model NeidentAkce.
 
    **Metody:**
 
@@ -646,7 +646,7 @@ Třídy
 
 .. py:class:: NeidentAkceVedouciMapper
 
-   Mapper pro model NeidentAkceVedouci.
+   Mapovač pro model NeidentAkceVedouci.
 
    **Metody:**
 
@@ -655,7 +655,7 @@ Třídy
 
 .. py:class:: KomponentaMapper
 
-   Mapper pro model Komponenta.
+   Mapovač pro model Komponenta.
 
    **Metody:**
 
@@ -664,7 +664,7 @@ Třídy
 
 .. py:class:: KomponentaAktivitaMapper
 
-   Mapper pro model KomponentaAktivita.
+   Mapovač pro model KomponentaAktivita.
 
    **Metody:**
 
@@ -678,7 +678,7 @@ Třídy
 
 .. py:class:: NalezObjektMapper
 
-   Mapper pro model NalezObjekt.
+   Mapovač pro model NalezObjekt.
 
    **Metody:**
 
@@ -687,7 +687,7 @@ Třídy
 
 .. py:class:: NalezPredmetMapper
 
-   Mapper pro model NalezPredmet.
+   Mapovač pro model NalezPredmet.
 
    **Metody:**
 
@@ -696,7 +696,7 @@ Třídy
 
 .. py:class:: ExterniZdrojMapper
 
-   Mapper pro model ExterniZdroj.
+   Mapovač pro model ExterniZdroj.
 
    **Metody:**
 
@@ -705,7 +705,7 @@ Třídy
 
 .. py:class:: ExterniZdrojAutorMapper
 
-   Mapper pro model ExterniZdrojAutor.
+   Mapovač pro model ExterniZdrojAutor.
 
    **Metody:**
 
@@ -714,7 +714,7 @@ Třídy
 
 .. py:class:: ExterniZdrojEditorMapper
 
-   Mapper pro model ExterniZdrojEditor.
+   Mapovač pro model ExterniZdrojEditor.
 
    **Metody:**
 
@@ -723,7 +723,7 @@ Třídy
 
 .. py:class:: ExterniOdkazMapper
 
-   Mapper pro model ExterniOdkaz.
+   Mapovač pro model ExterniOdkaz.
 
    **Metody:**
 
@@ -732,7 +732,7 @@ Třídy
 
 .. py:class:: UzivatelMapper
 
-   Mapper pro model User.
+   Mapovač pro model User.
 
    **Metody:**
 
@@ -741,7 +741,7 @@ Třídy
 
 .. py:class:: UzivatelNotifikaceProjektMapper
 
-   Mapper pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN).
+   Mapovač pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN).
 
    **Metody:**
 
@@ -760,7 +760,7 @@ Třídy
 
 .. py:class:: UzivatelSpolupraceMapper
 
-   Mapper pro model UzivatelSpoluprace.
+   Mapovač pro model UzivatelSpoluprace.
 
    **Metody:**
 
@@ -769,7 +769,7 @@ Třídy
 
 .. py:class:: UzivatelOpravneniMapper
 
-   Mapper pro přiřazení skupinových oprávnění uživateli (model User).
+   Mapovač pro přiřazení skupinových oprávnění uživateli (model User).
 
    **Metody:**
 
@@ -784,7 +784,7 @@ Třídy
 
 .. py:class:: SouborMapper
 
-   Mapper pro model Soubor.
+   Mapovač pro model Soubor.
 
    **Metody:**
 
@@ -793,7 +793,7 @@ Třídy
 
 .. py:class:: UzivatelNotifikaceMapper
 
-   Mapper pro přiřazení typů notifikací uživateli (model User).
+   Mapovač pro přiřazení typů notifikací uživateli (model User).
 
    **Metody:**
 
@@ -808,7 +808,7 @@ Třídy
 
 .. py:class:: HistorieMapper
 
-   Mapper pro model Historie.
+   Mapovač pro model Historie.
 
    **Metody:**
 
