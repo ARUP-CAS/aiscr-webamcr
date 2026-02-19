@@ -83,6 +83,7 @@ jobs:
 
       # 🛠 Create PR with ALL changes
       - name: Create Pull Request with fixes
+        id: create_pr
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
@@ -103,6 +104,27 @@ jobs:
             Please merge this PR to make the original PR pass.
           assignees: ${{ github.actor }}
           reviewers: ${{ github.actor }}
+
+      - name: Rebase fix branch if PR was updated
+        if: steps.changes.outputs.changed == 'true' && steps.create_pr.outputs.pull-request-operation == 'updated'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          FIX_BRANCH="pre-commit-fixes/${{ github.event.pull_request.number || github.ref_name }}"
+          git fetch origin
+          git checkout -B "$FIX_BRANCH" origin/"$FIX_BRANCH"
+          # Determine base branch
+          if [ -n "${{ github.event.pull_request.base.ref }}" ]; then
+            BASE="${{ github.event.pull_request.base.ref }}"
+          else
+            BASE="${{ github.ref_name }}"
+          fi
+          git fetch origin "$BASE"
+          if ! git rebase origin/"$BASE"; then
+            echo "Rebase conflict detected. Manual intervention required."
+            exit 1
+          fi
+          git push --force-with-lease origin "$FIX_BRANCH"
 
       # ❌ Fail original workflow if pre-commit failed
       - name: Fail workflow if hooks failed
