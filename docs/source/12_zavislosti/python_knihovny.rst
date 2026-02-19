@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.24.2
+     - 3.24.3
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.7.0
+     - 6.7.1
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
