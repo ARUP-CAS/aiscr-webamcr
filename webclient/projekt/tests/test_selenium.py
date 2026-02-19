@@ -249,7 +249,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "add_akce")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_projektová_akce")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_projektova_akce")
 
         # zmena pristupnosti akce
         time = self.getTime()
@@ -266,7 +266,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "akce-smazat")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projektová_akce")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projektova_akce")
 
         # Smazání projektu
         self.createFedoraRecord("X-M-202393246", "archivar")
@@ -292,7 +292,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "add_akce")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/recreate_projektová_akce")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/recreate_projektova_akce")
         self.check_fedora_delete(["model/deleted/member/C-202111043A"])
 
         logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.end")
@@ -373,7 +373,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "actionSubmitBtn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt_průzkum")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt_pruzkum")
         ident = self.driver.current_url.split("/")[-1]
 
         # Vytvoření dokumentační části
@@ -406,7 +406,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "bs-select-8-1")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokumentační části")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokument_cast")
         doc_ident = self.driver.current_url.split("/")[-1]
 
         # Vytvoření záznamu PAS
@@ -419,7 +419,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
 
         # zmena pristupnosti PAS
         time = self.getTime()
-        self.ElementClick(By.ID, "pas-edit-uložení")
+        self.ElementClick(By.ID, "pas-edit-ulozeni")
         self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
@@ -434,7 +434,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, f"dokument-odpojit-{doc_ident}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_dokumentační části")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_dokument_cast")
 
         # Smazání záznamu PAS
         time = self.getTime()
@@ -492,7 +492,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokumentační části_1")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokument_cast_1")
 
         logger.info("ProjektSeleniumTest.test_146_test_Fedora_projekt_002.end")
 
@@ -623,7 +623,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         """
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.start")
 
-        ident_cely = OznameniSeleniumTest.oznámení_projektu(self)
+        ident_cely = OznameniSeleniumTest.oznameni_projektu(self)
         # Ověření e-mailu
         self.assertEqual(len(mail.outbox), 1)
         self.login("archivar")
@@ -635,11 +635,11 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.assertEqual(len(mail.outbox), 2)
         ident_cely_new = self.driver.current_url.split("/")[-1]
         self.assertNotEqual(ident_cely, ident_cely_new)
-        oznámení = Soubor.objects.filter(
-            vazba__projekt_souboru__ident_cely=ident_cely_new, nazev__startswith="oznámení", nazev__endswith=".pdf"
+        oznameni = Soubor.objects.filter(
+            vazba__projekt_souboru__ident_cely=ident_cely_new, nazev__startswith="oznameni", nazev__endswith=".pdf"
         )
-        self.assertEqual(oznámení.count(), 1)
-        self.assertGreater(oznámení.first().size_mb, 0.1)
+        self.assertEqual(oznameni.count(), 1)
+        self.assertGreater(oznameni.first().size_mb, 0.1)
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.end")
 
 
