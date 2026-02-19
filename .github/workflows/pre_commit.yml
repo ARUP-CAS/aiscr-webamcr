@@ -109,7 +109,6 @@ jobs:
 
             Please merge this PR to make the original PR pass.
           assignees: ${{ github.actor }}
-          reviewers: ${{ github.actor }}
 
       - name: Rebase fix branch if PR was updated
         id: rebase
