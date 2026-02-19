@@ -790,7 +790,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokumentační část_akce")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_akce")
 
         # Vytvoření dokumentační části lokality
         self.createFedoraRecord("C-K9000001", "archivar")
