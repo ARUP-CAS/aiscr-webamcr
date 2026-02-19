@@ -516,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/RDFLib/rdflib
    * - redis
-     - 7.1.1
+     - 7.2.0
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
@@ -672,7 +672,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.36.1
+     - 20.38.0
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
