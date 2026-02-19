@@ -130,9 +130,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
                 content_type=ContentType.objects.get(model=self.model_typ),
                 user=self.instance.user,
             )
-            if (
-                self.instance.pk
-            ):  # pokud je instance už v databázi, je potřeba vyloučit sama sebe ze seznamu duplicit
+            if self.instance.pk:  # pokud je instance už v databázi, je potřeba vyloučit sama sebe ze seznamu duplicit
                 duplicates = duplicates.exclude(pk=self.instance.pk)
             if duplicates.exists():
                 raise forms.ValidationError(_("notifikaceProjekty.forms.pesForm.stejnaJendotka.error"))
