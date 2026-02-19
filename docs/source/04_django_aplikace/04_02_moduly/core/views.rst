@@ -441,10 +441,10 @@ Třídy
 
    .. py:method:: po_file_path()
 
-      Based on the url kwargs, infer and return the path to the .po file to
-      be shown/updated.
+      Podle URL parametrů `kwargs` odvodí a vrátí cestu k `.po` souboru,
+      který se má zobrazit nebo upravit.
 
-      Throw a 404 if a file isn't found.
+      Pokud soubor neexistuje, vyvolá chybu 404.
 
 
 .. py:class:: TranslationImportView

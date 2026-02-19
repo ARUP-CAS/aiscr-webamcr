@@ -125,7 +125,7 @@ Třídy
 
    .. py:method:: initial_archeologicky_zaznam()
 
-      Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (lazy-load).
+      Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (líné načtení).
 
    .. py:method:: initial_projekt()
 
