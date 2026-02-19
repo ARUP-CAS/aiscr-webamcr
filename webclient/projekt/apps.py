@@ -6,5 +6,5 @@ class ProjektConfig(AppConfig):
 
     def ready(self):
         super(ProjektConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import projekt.signals

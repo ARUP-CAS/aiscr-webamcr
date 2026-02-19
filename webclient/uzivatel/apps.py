@@ -6,5 +6,5 @@ class UzivatelConfig(AppConfig):
 
     def ready(self):
         super(UzivatelConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import uzivatel.signals

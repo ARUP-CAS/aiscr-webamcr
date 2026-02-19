@@ -19,7 +19,7 @@ from django.conf import settings
 from django.core import mail
 from django.utils.translation import gettext as _
 from freezegun import freeze_time
-from oznameni.tests.test_selenium import OznameniSeleniumTest
+from oznámení.tests.test_selenium import OznameniSeleniumTest
 from projekt.models import Projekt
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -84,9 +84,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             3. Po zobrazení sloupce je sloupec v záhlaví tabulky
         """
         self.login()
-        # Go to projects
+        # Přechod do seznamu projektů
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
-        # Test sorting by all table columns
+        # Ověření řazení podle všech sloupců tabulky
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.stav.label"))
         # WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "btnGroupDropTable")))
@@ -170,8 +170,8 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             - Update - projekt
             - Update oznamovatel
             - Smazat soubor v projektu
-            - Vytvoření soubor
-            - Vytvoření projektová akce
+            - Vytvoření souboru
+            - Vytvoření projektové akce
             - Změna přístupnosti Akce
             - Smazání projektové Akce
             - Smazání projektu
@@ -182,7 +182,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         """
         logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.start")
         self.login("archivar")
-        # C projekt zachrany
+        # Vytvoření záchranného projektu
         self.createFedoraRecord("U-005361", "archivar")
         self.goToAddress("/projekt/zapsat")
         time = self.getTime()
@@ -210,7 +210,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_145/create_projekt_zachranny")
         ident = self.driver.current_url.split("/")[-1]
 
-        # U projekt detail
+        # Úprava detailu projektu
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementSendKeys(By.ID, "id_podnet", "test1")
@@ -218,7 +218,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/update_projekt")
 
-        # U oznamovatel
+        # Úprava oznamovatele
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn2")
         self.ElementSendKeys(By.ID, "id_adresa", "test1")
@@ -226,7 +226,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/update_oznamovatel")
 
-        # C soubor
+        # Vytvoření souboru
         time = self.getTime()
         self.ElementClick(By.ID, "add_dokumentace")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
@@ -234,7 +234,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/create_soubor")
 
-        # D soubor
+        # Smazání souboru
         time = self.getTime()
         file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"file-smazat-{file}")
@@ -242,14 +242,14 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
 
-        # C projektova akce
+        # Vytvoření projektové akce
         self.createFedoraRecord("C-201121404", "archivar")
         self.goToAddress("/projekt/detail/C-201121404")
         time = self.getTime()
         self.ElementClick(By.ID, "add_akce")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_projektova_akce")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/create_projektová_akce")
 
         # zmena pristupnosti akce
         time = self.getTime()
@@ -260,15 +260,15 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/zmena_pristupnosti_akce")
 
-        # D projektova akce
+        # Smazání projektuové akce
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "akce-smazat")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projektova_akce")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projektová_akce")
 
-        # D projekt
+        # Smazání projektu
         self.createFedoraRecord("X-M-202393246", "archivar")
         self.goToAddress("/projekt/detail/X-M-202393246")
         time = self.getTime()
@@ -278,7 +278,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_projekt")
 
-        # reC projektova akce
+        # reC projektová akce
         self.createFedoraRecord("C-202111043", "archivar")
         self.createFedoraRecord("C-202111043A", "archivar")
         self.uploadFileToFedora(364200, "projekt/tests/resources/test.pdf", "archivar")
@@ -292,7 +292,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "add_akce")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/recreate_projektova_akce")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/recreate_projektová_akce")
         self.check_fedora_delete(["model/deleted/member/C-202111043A"])
 
         logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.end")
@@ -315,10 +315,10 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             - Schválení projektu - změna ident-cely projektu
             - Vytvoření průzkumného projektu
             - Vytvoření části dokumentu projektu
-            - Vytvoření PAS
+            - Vytvoření záznamu PAS
             - Změna přístupnosti PAS
             - Smazání části dokumentu
-            - Smazání PAS
+            - Smazání záznamu PAS
             - Smazání projektu
             - Znovu vytvoření PAS
             - Vytvoření části dokumentu - existující dokument
@@ -328,13 +328,13 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         """
         logger.info("ProjektSeleniumTest.test_146_test_Fedora_projekt_002.start")
 
-        # C oznameni
+        # Vytvoření oznámení
         time = self.getTime()
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
-            ident = OznameniSeleniumTest.oznameni_projektu(self)
+            ident = OznameniSeleniumTest.oznámení_projektu(self)
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt")
 
-        # U projektu - smazání dokumentace
+        # Úprava projektu – smazání dokumentace
         self.login("archivar")
         self.goToAddress(f"/id/{ident}")
         time = self.getTime()
@@ -356,7 +356,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_146/ident_cely")
         self.check_fedora_delete(["record/X-C-000000001"])
 
-        # C projekt pruzkum
+        # Vytvoření projektu průzkumu
         self.goToAddress("/projekt/zapsat")
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".filter-option-inner-inner")
@@ -373,10 +373,10 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "actionSubmitBtn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt_pruzkum")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt_průzkum")
         ident = self.driver.current_url.split("/")[-1]
 
-        # C dokument_cast
+        # Vytvoření dokumentační části
         self.createFedoraRecord("C-202209999", "archivar")
         self.goToAddress("/id/C-202209999")
         time = self.getTime()
@@ -406,10 +406,10 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "bs-select-8-1")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokument_cast")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokumentační části")
         doc_ident = self.driver.current_url.split("/")[-1]
 
-        # C PAS
+        # Vytvoření záznamu PAS
         time = self.getTime()
         self.goToAddress("/id/C-202209999")
         self.ElementClick(By.ID, "add_PAS")
@@ -419,7 +419,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
 
         # zmena pristupnosti PAS
         time = self.getTime()
-        self.ElementClick(By.ID, "pas-edit-ulozeni")
+        self.ElementClick(By.ID, "pas-edit-uložení")
         self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
@@ -428,15 +428,15 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_146/zmena_pristupnosti")
         PAS_ident = self.driver.current_url.split("/")[-1]
 
-        # D dokument_cast
+        # Smazání dokumentační části
         time = self.getTime()
         self.goToAddress("/id/C-202209999")
         self.ElementClick(By.ID, f"dokument-odpojit-{doc_ident}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_dokument_cast")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_dokumentační části")
 
-        # D PAS
+        # Smazání záznamu PAS
         time = self.getTime()
         self.goToAddress(f"/id/{PAS_ident}")
         self.ElementClick(By.ID, "otherOptions")
@@ -445,7 +445,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "projekt/tests/resources/test_146/delete_PAS")
 
-        # D projekt C-202210662
+        # Smazání projektu C-202210662
         self.logout()
         self.login("administrator")
         self.createFedoraRecord("C-202210662")
@@ -478,7 +478,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_146/recreate_PAS")
         self.check_fedora_delete(["model/deleted/member/M-202302810-N00001"])
 
-        # C dokument_cast existujici
+        # Vytvoření existující dokumentační části
         self.createFedoraRecord("C-202114070", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
         self.uploadFileToFedora(534769, "projekt/tests/resources/test.pdf", "archivar")
@@ -492,7 +492,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokument_cast_1")
+        self.check_fedora_change(time, "projekt/tests/resources/test_146/create_dokumentační části_1")
 
         logger.info("ProjektSeleniumTest.test_146_test_Fedora_projekt_002.end")
 
@@ -623,23 +623,23 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         """
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.start")
 
-        ident_cely = OznameniSeleniumTest.oznameni_projektu(self)
-        # validate email
+        ident_cely = OznameniSeleniumTest.oznámení_projektu(self)
+        # Ověření e-mailu
         self.assertEqual(len(mail.outbox), 1)
         self.login("archivar")
         self.goToAddress(f"/id/{ident_cely}")
         self.ElementClick(By.ID, "projekt-schvalit")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        # validate email
+        # Ověření e-mailu
         self.assertEqual(len(mail.outbox), 2)
         ident_cely_new = self.driver.current_url.split("/")[-1]
         self.assertNotEqual(ident_cely, ident_cely_new)
-        oznameni = Soubor.objects.filter(
-            vazba__projekt_souboru__ident_cely=ident_cely_new, nazev__startswith="oznameni", nazev__endswith=".pdf"
+        oznámení = Soubor.objects.filter(
+            vazba__projekt_souboru__ident_cely=ident_cely_new, nazev__startswith="oznámení", nazev__endswith=".pdf"
         )
-        self.assertEqual(oznameni.count(), 1)
-        self.assertGreater(oznameni.first().size_mb, 0.1)
+        self.assertEqual(oznámení.count(), 1)
+        self.assertGreater(oznámení.first().size_mb, 0.1)
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.end")
 
 

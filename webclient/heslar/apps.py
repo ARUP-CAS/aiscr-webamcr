@@ -6,5 +6,5 @@ class HeslarConfig(AppConfig):
 
     def ready(self):
         super(HeslarConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import heslar.signals

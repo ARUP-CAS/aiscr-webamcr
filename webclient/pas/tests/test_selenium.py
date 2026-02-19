@@ -537,26 +537,26 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             test1.jpg
 
         Steps:
-            - Vytvoření PAS
+            - Vytvoření záznamu PAS
             - Editace PAS
-            - Vytvoření souboru
+            - Vytvoření souboruu
             - Reload soubor
-            - Smazání souboru
+            - Smazání souboruu
             - Editace Uložení
-            - Smazání PAS
+            - Smazání záznamu PAS
 
         Expected:
             - zápis dat do Fedory
         """
         logger.info("AkceSamostatneNalezy.test_147_test_Fedora_PAS_001.start")
-        # C PAS
+        # Vytvoření záznamu PAS
         self.login("badatel1")
         self.createFedoraRecord("M-202105907", "badatel1")
         time = self.getTime()
         ident = self.create_PAS()
         self.check_fedora_change(time, "pas/tests/resources/test_147/create_PAS")
 
-        # U detail
+        # Úprava detailu
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.ID, "id_lokalizace")
@@ -565,7 +565,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "pas/tests/resources/test_147/update_PAS")
 
-        # C soubor
+        # Vytvoření souboru
         time = self.getTime()
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
@@ -573,7 +573,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "pas/tests/resources/test_147/create_soubor")
 
-        # U soubor
+        # Úprava souboru
         time = self.getTime()
         file = Soubor.objects.filter(vazba__samostatny_nalez_souboru__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"file-upgrade-{file}")
@@ -582,7 +582,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "pas/tests/resources/test_147/update_soubor")
 
-        # D soubor
+        # Smazání souboru
         time = self.getTime()
         file = Soubor.objects.filter(vazba__samostatny_nalez_souboru__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"file-smazat-{file}")
@@ -594,17 +594,17 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.login("archivar")
         self.goToAddress(f"/id/{ident}")
 
-        # U ulozeni
+        # Úprava uložení
         time = self.getTime()
-        self.ElementClick(By.ID, "pas-edit-ulozeni")
+        self.ElementClick(By.ID, "pas-edit-uložení")
         self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body #id_evidencni_cislo", "1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_pristupnost .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "pas/tests/resources/test_147/update_ulozeni")
+        self.check_fedora_change(time, "pas/tests/resources/test_147/update_uložení")
 
-        # D PAS
+        # Smazání záznamu PAS
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "pas-smazat")

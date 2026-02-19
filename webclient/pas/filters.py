@@ -183,7 +183,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
 
     hloubka_do = NumberFilter(field_name="hloubka", label=" ", lookup_expr="lte")
 
-    # Filters by historie
+    # Filtrování podle historie
     historie_typ_zmeny = MultipleChoiceFilter(
         choices=list(filter(lambda x: x[0].startswith("SN") or x[0].startswith("KAT"), Historie.CHOICES)),
         label=_("pas.filters.samostatnyNalezFilter.historie_typ_zmeny.label"),

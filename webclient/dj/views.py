@@ -230,7 +230,7 @@ def zapsat(request, arch_z_ident_cely):
     if form.is_valid():
         logger.debug("dj.views.detail.zapsat.form_valid")
         vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
-        vazba.save()  # TODO přepsat do signalů
+        vazba.save()  # TODO: přesunout do signálů.
 
         dj = form.save(commit=False)
         try:

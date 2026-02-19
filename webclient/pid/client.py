@@ -1,3 +1,5 @@
+"""Klient pro komunikaci s DataCite API při správě DOI/IGSN identifikátorů."""
+
 import logging
 
 import requests
@@ -15,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class DigitalObjectIdentifierClient:
+    """Zapouzdřuje CRUD operace nad DOI/IGSN záznamy v DataCite."""
+
     headers = {"Content-Type": "application/vnd.api+json"}
 
     record_serializer_map = {
@@ -24,16 +28,19 @@ class DigitalObjectIdentifierClient:
     }
 
     def __init__(self, record):
+        """Inicializuje klienta podle typu předaného doménového záznamu."""
         self.record = record
         record_type = type(record)
         if record_type in self.record_serializer_map:
             serializer_class, self.attribute_name, self.auth = self.record_serializer_map[record_type]
-            self.serializer = serializer_class(self.record)  # Dynamicky přistoupí ke třídě serializéru.
+            # Dynamicky zvolí správnou třídu serializéru podle typu záznamu.
+            self.serializer = serializer_class(self.record)
         else:
             logger.error("doi.client.DigitalObjectIdentifierClient.invalid_record_class")
             raise ValueError(_("doi.client.DigitalObjectIdentifierClient.invalid_record_class"))
 
     def _check_response_status(self, response):
+        """Ověří úspěšnost HTTP odpovědi a při chybě vyvolá doménovou výjimku."""
         if not str(response.status_code).startswith("2"):
             logger.error(
                 "doi.client.DigitalObjectIdentifierClient._check_response_status.error",
@@ -46,9 +53,11 @@ class DigitalObjectIdentifierClient:
             raise DoiWriteError(response.status_code, response.text, response.url)
 
     def get_record_url(self):
+        """Vrátí URL detailu záznamu v DataCite."""
         return f"{DATACITE_URL.rstrip('/')}/{self.serializer._get_prefix()}/{self.serializer.get_ident_cely()}"
 
     def check_record_exists(self, check_status=True):
+        """Zjistí, zda záznam v DataCite existuje."""
         response = requests.get(self.get_record_url(), auth=self.auth)
         if str(response.status_code).startswith("5") and check_status:
             logger.error(
@@ -62,6 +71,7 @@ class DigitalObjectIdentifierClient:
         return str(response.status_code).startswith("2")
 
     def delete_record(self, check_status=True):
+        """Skryje/smaže záznam v DataCite podle serializovaného payloadu."""
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.delete_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
@@ -82,6 +92,7 @@ class DigitalObjectIdentifierClient:
             )
 
     def hide_record(self, check_status=True):
+        """Nastaví záznam v DataCite do neveřejného režimu."""
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.hide_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
@@ -102,6 +113,7 @@ class DigitalObjectIdentifierClient:
             )
 
     def publish_record(self, check_status=True):
+        """Publikuje záznam v DataCite, případně jej nejdříve vytvoří."""
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.check_record_exists.publish_record",
             extra={"ident_cely": self.serializer.get_ident_cely()},
@@ -121,6 +133,7 @@ class DigitalObjectIdentifierClient:
         return response.json()
 
     def update_record(self, check_status=True, reload_record=False):
+        """Aktualizuje existující záznam v DataCite."""
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.update_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},

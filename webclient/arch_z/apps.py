@@ -6,5 +6,5 @@ class ArchZConfig(AppConfig):
 
     def ready(self):
         super(ArchZConfig, self).ready()
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import arch_z.signals
