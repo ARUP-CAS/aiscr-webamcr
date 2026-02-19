@@ -807,7 +807,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokumentační část_lokalita")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_lokalita")
 
         # Vytvoření dokumentační části projektu
         self.createFedoraRecord("C-201911202", "archivar")
@@ -824,7 +824,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys(Keys.ENTER)
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokumentační část_projekt")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_projekt")
 
         # Vytvoření komponenty
         time = self.getTime()
@@ -893,7 +893,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementSendKeys(By.CSS_SELECTOR, ".modal-body > #div_id_poznamka #id_poznamka", "test")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokumentační část")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokument_cast")
 
         # Úprava komponenty C-DL-202500001-D004
         time = self.getTime()
@@ -944,7 +944,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "smazat-cast-btn")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokumentační část")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast")
 
         # Smazání dokumentační části projekt
         time = self.getTime()
@@ -953,7 +953,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "smazat-cast-btn")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokumentační část_projekt")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast_projekt")
 
         # Smazání dokumentační části lokalita
         time = self.getTime()
@@ -962,7 +962,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "smazat-cast-btn")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokumentační část_lokalita")
+        self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast_lokalita")
 
         # Úprava tvaru
         time = self.getTime()
