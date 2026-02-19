@@ -200,7 +200,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 moje_spolupracujici_organizace.append(self.organizace)
             return moje_spolupracujici_organizace
         elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
-            # Admin a archivar spolupracuje defaultne se vsemi organizacemi
+            # Admin a archivář standardně spolupracují se všemi organizacemi.
             return Organizace.objects.all()
 
     def moje_stavy_pruzkumnych_projektu(self):
@@ -211,7 +211,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         if self.hlavni_role == badatel_group or self.hlavni_role == archeolog_group:
             return (PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_ZAHAJENY_V_TERENU)
         elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
-            # Admin a archivar vidi na vsechny stavy projektu
+            # Admin a archivář vidí všechny stavy projektu.
             return (
                 PROJEKT_STAV_ARCHIVOVANY,
                 PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,

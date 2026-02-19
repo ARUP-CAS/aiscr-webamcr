@@ -926,7 +926,7 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
     else:
         # Pokud je `settings.SETTINGS_MODULE` None, pravděpodobně běží testovací režim.
         # a bylo použito `override_settings()`.
-        # see: https://code.djangoproject.com/ticket/25911
+        # Viz: https://code.djangoproject.com/ticket/25911
         parts = os.environ.get(ENVIRONMENT_VARIABLE).split(".")
     project = __import__(parts[0], {}, {}, [])
     abs_project_path = os.path.normpath(os.path.abspath(os.path.dirname(project.__file__)))
@@ -939,7 +939,7 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
     case_sensitive_file_system = True
     tmphandle, tmppath = tempfile.mkstemp()
     if os.path.exists(tmppath.upper()):
-        # Case insensitive file system.
+        # Souborový systém nerozlišuje velikost písmen.
         case_sensitive_file_system = False
 
     # django/locale
