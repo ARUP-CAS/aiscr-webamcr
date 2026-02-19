@@ -41,10 +41,10 @@ XS_NS = "{http://www.w3.org/2001/XMLSchema}"
 # Files to skip
 SKIP_FILES = {"urls.py", "__init__.py", "apps.py"}
 
-# Directories to skip (not Django apps)
+# Adresáře k přeskočení (nejsou to Django aplikace).
 SKIP_DIRS = {"static", "templates", "locale", "__pycache__", "services"}
 
-# Track if any files have changed
+# Sleduje, zda došlo ke změně souborů.
 changes_detected = False
 
 # Common file type descriptions
@@ -143,29 +143,29 @@ def parse_path_call(node: ast.AST) -> Optional[Dict[str, str]]:
     if not isinstance(node, ast.Call):
         return None
 
-    # Check if it's a path() or re_path() call
+    # Ověří, zda jde o některou z funkcí pro definici URL tras.
     if isinstance(node.func, ast.Name) and node.func.id not in ["path", "re_path"]:
         return None
 
     if len(node.args) < 2:
         return None
 
-    # Extract pattern (first argument)
+    # Získá pattern (první argument).
     pattern = None
     if isinstance(node.args[0], ast.Constant):
         pattern = node.args[0].value
 
-    # Extract view (second argument)
+    # Získá pohled (druhý argument).
     view = None
     if isinstance(node.args[1], ast.Attribute):
-        # e.g., views.zapsat or views.MyView.as_view()
+        # např. views.zapsat nebo views.MyView.as_view()
         if isinstance(node.args[1].value, ast.Name):
             view = f"{node.args[1].value.id}.{node.args[1].attr}"
     elif isinstance(node.args[1], ast.Name):
-        # e.g., post_upload
+        # např. post_upload
         view = node.args[1].id
     elif isinstance(node.args[1], ast.Call):
-        # e.g., MyView.as_view()
+        # např. MyView.as_view()
         if isinstance(node.args[1].func, ast.Attribute):
             if isinstance(node.args[1].func.value, ast.Name):
                 view = f"{node.args[1].func.value.id}.as_view()"
@@ -174,7 +174,7 @@ def parse_path_call(node: ast.AST) -> Optional[Dict[str, str]]:
                 if isinstance(node.args[1].func.value.value, ast.Name):
                     view = f"{node.args[1].func.value.value.id}.{node.args[1].func.value.attr}.as_view()"
 
-    # Extract name from keyword arguments
+    # Získá název z pojmenovaných argumentů.
     name = None
     for keyword in node.keywords:
         if keyword.arg == "name" and isinstance(keyword.value, ast.Constant):
@@ -208,7 +208,7 @@ def generate_url_routing_rst() -> bool:
     modules = []
     for item in sorted(webclient_dir.iterdir()):
         if item.is_dir() and not item.name.startswith(".") and item.name not in SKIP_DIRS:
-            # Skip the main webclient/urls.py (project-level URLs)
+            # Přeskočí hlavní `webclient/urls.py` (URL na úrovni projektu).
             if item.name == "webclient":
                 continue
             urls_file = item / "urls.py"
@@ -256,7 +256,7 @@ def generate_url_routing_rst() -> bool:
 
         print(f"    ✓ {module_name}: {len(url_patterns)} URLs")
 
-    # Write the file
+    # Zapíše soubor.
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
         new_content = "\n".join(rst_lines)
@@ -290,11 +290,11 @@ def extract_signals(signals_file: Path) -> List[Dict[str, str]]:
         signals = []
 
         for node in tree.body:
-            # Look for functions decorated with @receiver
+            # Hledá funkce dekorované `@receiver`.
             if isinstance(node, ast.FunctionDef):
                 for decorator in node.decorator_list:
                     if isinstance(decorator, ast.Call):
-                        # Check if decorator is receiver()
+                        # Ověří, zda je dekorátor `receiver()`.
                         if isinstance(decorator.func, ast.Name) and decorator.func.id == "receiver":
                             signal_info = parse_receiver_decorator(decorator, node.name)
                             if signal_info:
@@ -328,9 +328,9 @@ def parse_receiver_decorator(decorator: ast.Call, function_name: str) -> Optiona
     elif isinstance(decorator.args[0], ast.Name):
         signal_type = decorator.args[0].id
 
-    # Extract sender and weak from keyword arguments
+    # Získá `sender` a `weak` z pojmenovaných argumentů.
     sender = "N/A"
-    weak = "True"  # Default value in Django
+    weak = "True"  # Výchozí hodnota v Django.
 
     for keyword in decorator.keywords:
         if keyword.arg == "sender":
@@ -367,7 +367,7 @@ def generate_signals_rst() -> bool:
     modules = []
     for item in sorted(webclient_dir.iterdir()):
         if item.is_dir() and not item.name.startswith(".") and item.name not in SKIP_DIRS:
-            # Skip the main webclient module
+            # Přeskočí hlavní modul `webclient`.
             if item.name == "webclient":
                 continue
             signals_file = item / "signals.py"
@@ -415,7 +415,7 @@ def generate_signals_rst() -> bool:
 
         print(f"    ✓ {module_name}: {len(signals_list)} signals")
 
-    # Write the file
+    # Zapíše soubor.
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
         new_content = "\n".join(rst_lines)
@@ -448,10 +448,10 @@ def extract_permissions(models_file: Path) -> List[str]:
         tree = ast.parse(content)
         actions = []
 
-        # Find Permissions class
+        # Najde třídu Permissions.
         for node in tree.body:
             if isinstance(node, ast.ClassDef) and node.name == "Permissions":
-                # Find actionChoices nested class
+                # Najde vnořenou třídu actionChoices.
                 for item in node.body:
                     if isinstance(item, ast.ClassDef) and item.name == "actionChoices":
                         # Extract all assignments in actionChoices
@@ -504,7 +504,7 @@ def generate_permissions_rst() -> bool:
         print("  ⊝ No actions found in Permissions.actionChoices")
         return False
 
-    # Read existing content if file exists
+    # Načte existující obsah, pokud soubor existuje.
     existing_content = []
     marker_heading = "Uživatelské akce řízené pomocí oprávnění"
     marker_found = False
@@ -513,17 +513,17 @@ def generate_permissions_rst() -> bool:
         with open(output_file, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
-        # Find the marker heading and keep everything before it (including the heading and separator)
+        # Najde značkový nadpis a ponechá vše před ním (včetně nadpisu a oddělovače).
         for i, line in enumerate(lines):
             existing_content.append(line.rstrip())
             if line.strip() == marker_heading:
                 marker_found = True
-                # Also include the separator line (dashes) after the heading
+                # Zahrne i řádek oddělovače (pomlčky) za nadpisem.
                 if i + 1 < len(lines) and lines[i + 1].strip().startswith("-"):
                     existing_content.append(lines[i + 1].rstrip())
                 break
 
-    # If marker not found, create default structure
+    # Pokud značka není nalezena, vytvoří výchozí strukturu.
     if not marker_found:
         existing_content.extend(
             [
@@ -532,7 +532,7 @@ def generate_permissions_rst() -> bool:
             ]
         )
 
-    # Build the new content to append
+    # Sestaví nový obsah k připojení.
     new_content = [
         "",
         "Používá se pro bližší specifikaci akce či součásti view, pro které se oprávnění uplatňuje. Seznam všech akcí definovaných ve třídě ``Permissions.actionChoices``:",
@@ -546,10 +546,10 @@ def generate_permissions_rst() -> bool:
     new_content.append("")
     new_content.append(f"**Celkem:** {len(actions)} akcí")
 
-    # Combine existing and new content
+    # Spojí existující a nový obsah.
     final_content = existing_content + new_content
 
-    # Write the file
+    # Zapíše soubor.
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
         final_text = "\n".join(final_content)
@@ -567,7 +567,7 @@ def generate_permissions_rst() -> bool:
 
 
 def clean_comment_value(value: str) -> str:
-    """Strip wrapping quotes/braces from a comment value."""
+    """Odstraní obalové uvozovky/závorky z hodnoty komentáře."""
     cleaned = value.strip()
     if cleaned.startswith('"') and cleaned.endswith('"'):
         cleaned = cleaned[1:-1].strip()
@@ -577,7 +577,7 @@ def clean_comment_value(value: str) -> str:
 
 
 def parse_comment_values(comment_text: str) -> Tuple[str, str]:
-    """Return mapping values parsed from an inline XSD comment."""
+    """Vrátí mapované hodnoty získané z inline komentáře XSD."""
     if not comment_text:
         return "", ""
 
@@ -592,7 +592,7 @@ def parse_comment_values(comment_text: str) -> Tuple[str, str]:
 
 
 def get_following_comment(parent: ET.Element, element: ET.Element) -> str:
-    """Find the first comment node immediately following the given element."""
+    """Najde první uzel komentáře bezprostředně za daným elementem."""
     siblings = list(parent)
     for index, node in enumerate(siblings):
         if node is element and index + 1 < len(siblings):
@@ -614,7 +614,7 @@ def collect_choice_element_names(choice_element: ET.Element) -> List[str]:
 
 
 def format_choice_note(names: List[str]) -> str:
-    """Format a note describing the options inside a choice element."""
+    """Naformátuje poznámku popisující možnosti uvnitř elementu choice."""
     options = [name for name in names if name]
     if len(options) < 2:
         return ""
@@ -628,7 +628,7 @@ def format_choice_note(names: List[str]) -> str:
 def extract_elements_from_parent(
     parent: ET.Element, choice_context: Optional[List[str]] = None
 ) -> List[Dict[str, str]]:
-    """Recursively extract element definitions, noting choice context when present."""
+    """Rekurzivně extrahuje definice elementů a zaznamená kontext choice, pokud existuje."""
     rows: List[Dict[str, str]] = []
 
     for child in parent:
@@ -656,7 +656,7 @@ def extract_elements_from_parent(
 
 
 def extract_elements_from_complex_type(complex_type: ET.Element) -> List[Dict[str, str]]:
-    """Extract element rows from a complexType definition."""
+    """Extrahuje řádky elementů z definice complexType."""
     rows: List[Dict[str, str]] = []
     for child in complex_type:
         if child.tag in {f"{XS_NS}sequence", f"{XS_NS}choice"}:
@@ -665,7 +665,7 @@ def extract_elements_from_complex_type(complex_type: ET.Element) -> List[Dict[st
 
 
 def extract_model_mappings(schema_root: ET.Element) -> List[Dict[str, str]]:
-    """Read mappings from the amcr element choice into Model -> ComplexType rows."""
+    """Načte mapování z volby elementu amcr do řádků Model -> ComplexType."""
     ns = {"xs": "http://www.w3.org/2001/XMLSchema"}
     mappings: List[Dict[str, str]] = []
 
@@ -721,10 +721,10 @@ def extract_django_command_info(command_file: Path) -> Dict[str, str]:
         command_docstring = ""
         arguments = []
 
-        # Find Command class
+        # Najde třídu Command.
         for node in tree.body:
             if isinstance(node, ast.ClassDef) and node.name == "Command":
-                # Get class docstring
+                # Získá docstring třídy.
                 command_docstring = ast.get_docstring(node) or "Popis není k dispozici."
 
                 # Find help attribute
@@ -739,7 +739,7 @@ def extract_django_command_info(command_file: Path) -> Dict[str, str]:
                                     if item.value.args and isinstance(item.value.args[0], ast.Constant):
                                         command_help = item.value.args[0].value
 
-                    # Find add_arguments method to extract argument info
+                    # Najde metodu add_arguments a získá informace o argumentech.
                     elif isinstance(item, ast.FunctionDef) and item.name == "add_arguments":
                         arguments = extract_command_arguments(item)
                 break
@@ -776,7 +776,7 @@ def extract_command_arguments(add_arguments_node: ast.FunctionDef) -> List[Dict[
     for item in add_arguments_node.body:
         if isinstance(item, ast.Expr) and isinstance(item.value, ast.Call):
             call = item.value
-            # Check if this is parser.add_argument()
+            # Ověří, zda jde o `parser.add_argument()`.
             if isinstance(call.func, ast.Attribute) and call.func.attr == "add_argument":
                 if call.args and isinstance(call.args[0], ast.Constant):
                     arg_name = call.args[0].value
@@ -930,7 +930,7 @@ def generate_management_commands_rst() -> bool:
             ]
         )
 
-        # Add module reference for autodoc
+        # Přidá odkaz na modul pro autodoc.
         rst_lines.extend(
             [
                 f".. automodule:: core.management.commands.{command_info['name']}",
@@ -940,7 +940,7 @@ def generate_management_commands_rst() -> bool:
             ]
         )
 
-        # Add arguments table if any
+        # Přidá tabulku argumentů, pokud existují.
         if command_info["arguments"]:
             rst_lines.extend(
                 [
@@ -971,7 +971,7 @@ def generate_management_commands_rst() -> bool:
 
         print(f"    ✓ {command_info['name']}")
 
-    # Write the file
+    # Zapíše soubor.
     try:
         output_file.parent.mkdir(parents=True, exist_ok=True)
         new_content = "\n".join(rst_lines)
@@ -989,7 +989,7 @@ def generate_management_commands_rst() -> bool:
 
 
 def generate_export_structure_rst() -> bool:
-    """Generate docs/source/05_integrace/export_structure.rst from amcr.xsd."""
+    """Vygeneruje docs/source/05_integrace/export_structure.rst ze souboru amcr.xsd."""
     global changes_detected
     xsd_file = project_root / "webclient/xml_generator/definitions/amcr.xsd"
     output_file = docs_dir / "source/05_integrace/export_structure.rst"
@@ -1018,7 +1018,7 @@ def generate_export_structure_rst() -> bool:
     generic_type_names: List[str] = []
     generic_boundary_reached = False
 
-    # Respect the position of the "generic-types" comment to split processing
+    # Respektuje pozici komentáře „generic-types“ pro rozdělení zpracování.
     for child in list(schema_root):
         if child.tag is ET.Comment and (child.text or "").strip() == "generic-types":
             generic_boundary_reached = True
@@ -1157,13 +1157,13 @@ def has_meaningful_code(source_file: Path) -> bool:
         with open(source_file, "r", encoding="utf-8") as f:
             source_code = f.read()
 
-        # Try to parse the file
+        # Pokusí se soubor naparsovat.
         tree = ast.parse(source_code)
 
-        # Check if there are any meaningful nodes (classes, functions, imports, etc.)
+        # Ověří, zda existují smysluplné uzly (třídy, funkce, importy apod.).
         has_code = False
         for node in ast.walk(tree):
-            # Check for any meaningful statement
+            # Ověří přítomnost smysluplného příkazu.
             if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.Import, ast.ImportFrom, ast.Assign, ast.AnnAssign)):
                 has_code = True
                 break
@@ -1192,7 +1192,7 @@ def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Di
     classes = []
     functions = []
 
-    # Only iterate through top-level nodes (not nested classes like Meta)
+    # Iteruje jen přes uzly nejvyšší úrovně (ne přes vnořené třídy typu Meta).
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
             docstring = ast.get_docstring(node) or "Popis není k dispozici."
@@ -1206,9 +1206,9 @@ def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Di
             classes.append({"name": node.name, "docstring": docstring, "methods": methods, "lineno": node.lineno})
 
         elif isinstance(node, ast.FunctionDef):
-            # Only top-level functions (not methods)
+            # Pouze funkce nejvyšší úrovně (ne metody).
             docstring = ast.get_docstring(node) or "Popis není k dispozici."
-            # Get function signature
+            # Získá signaturu funkce.
             args = [arg.arg for arg in node.args.args]
             functions.append({"name": node.name, "docstring": docstring, "args": args, "lineno": node.lineno})
 
@@ -1242,15 +1242,15 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
     in_custom_section = False
     in_other_section = False
 
-    # Section keywords that format items as lists with backticks around names
+    # Klíčová slova sekcí, která formátují položky jako seznamy se zpětnými apostrofy kolem názvů.
     args_like_sections = {"Args:", "Attributes:", "Response Data Keys:", "URL Parameters:"}
-    # Section keywords that format items with italic type
+    # Klíčová slova sekcí, která formátují položky kurzívou.
     returns_like_sections = {"Returns:", "Raises:", "Yields:"}
-    # Section keywords that format items as lists with backticks around codes
+    # Klíčová slova sekcí, která formátují položky jako seznamy se zpětnými apostrofy kolem kódů.
     status_codes_sections = {"Response Status Codes:"}
-    # Section keywords that format items as numbered lists (process steps)
+    # Klíčová slova sekcí, která formátují položky jako číslované seznamy (kroky procesu).
     process_sections = {"Process Description:"}
-    # Section keywords that just pass through text
+    # Klíčová slova sekcí, která pouze předávají text.
     other_sections = {"Examples:", "Note:", "Notes:"}
 
     all_section_keywords = (
@@ -1274,17 +1274,17 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
     }
 
     def is_section_keyword(text: str) -> bool:
-        """Check if text matches a section keyword."""
+        """Ověří, zda text odpovídá klíčovému slovu sekce."""
         return text in all_section_keywords
 
     def is_custom_section(text: str, line_index: int) -> bool:
-        """Check if text looks like a custom section header (ends with colon, has content below)."""
+        """Ověří, zda text vypadá jako vlastní hlavička sekce (končí dvojtečkou a má obsah níže)."""
         if not text.endswith(":"):
             return False
-        # Must not be a known section
+        # Nesmí to být známá sekce.
         if text in all_section_keywords:
             return False
-        # Check if next line exists and is indented (indicates section content)
+        # Ověří, zda existuje další řádek a je odsazený (značí obsah sekce).
         if line_index + 1 < len(lines):
             next_line = lines[line_index + 1]
             if next_line.startswith("    ") or next_line.startswith("\t"):
@@ -1301,7 +1301,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
         line = lines[i]
         stripped = line.strip()
 
-        # Check if we're entering a new section
+        # Ověří, zda vstupujeme do nové sekce.
         if is_section_keyword(stripped):
             in_args_section = stripped in args_like_sections
             in_returns_section = stripped in returns_like_sections
@@ -1317,8 +1317,8 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             i += 1
             continue
 
-        # Check if we're entering a custom section (e.g., "Rozdíly oproti NewFileUploadView:")
-        # Only detect custom sections when not already inside a known section
+        # Ověří, zda vstupujeme do vlastní sekce (např. „Rozdíly oproti NewFileUploadView:“).
+        # Vlastní sekce detekuje jen tehdy, když už nejsme uvnitř známé sekce.
         in_any_section = (
             in_args_section or in_returns_section or in_status_codes_section or in_process_section or in_custom_section
         )
@@ -1330,7 +1330,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             in_custom_section = True
             in_other_section = False
 
-            # Use the section name as-is (no translation needed for custom sections)
+            # Název sekce použije beze změny (u vlastních sekcí není třeba překlad).
             section_name = stripped.rstrip(":")
             result.append("")
             result.append(f"{indent}**{section_name}:**")
@@ -1338,9 +1338,9 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             i += 1
             continue
 
-        # Handle Args-like sections - format as list with backticks
+        # Zpracuje sekce typu Args – formátuje je jako seznam se zpětnými apostrofy.
         if in_args_section and stripped:
-            # Check if this is an argument line (name (type): description)
+            # Ověří, zda jde o řádek argumentu (název (typ): popis).
             # or (name: description) format
             # Supports: name, *args, **kwargs
             arg_match = re.match(r"^(\*{0,2}\w+)\s*(?:\(([^)]+)\))?\s*:\s*(.*)$", stripped)
@@ -1354,17 +1354,17 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                 else:
                     result.append(f"{indent}- ``{arg_name}``: {arg_desc}")
 
-                # Check for continuation lines (indented more than the argument)
+                # Ověří navazující řádky (více odsazené než argument).
                 i += 1
                 while i < len(lines):
                     next_line = lines[i]
                     next_stripped = next_line.strip()
-                    # If next line is empty or a new section, break
+                    # Pokud je další řádek prázdný nebo jde o novou sekci, ukončí zpracování.
                     if not next_stripped or is_section_keyword(next_stripped):
                         break
-                    # Check if it's a continuation (starts with whitespace in original)
+                    # Ověří, zda jde o pokračování (v originálu začíná mezerou).
                     if next_line.startswith("    ") or next_line.startswith("\t"):
-                        # Check if it's a new argument (supports *args, **kwargs)
+                        # Ověří, zda jde o nový argument (podporuje *args, **kwargs).
                         if re.match(r"^\s+\*{0,2}\w+\s*(?:\([^)]+\))?\s*:", next_line):
                             break
                         result.append(f"{indent}  {next_stripped}")
@@ -1375,16 +1375,16 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             elif not stripped:
                 in_args_section = False
 
-        # Handle Response Status Codes section - format as list with backticks around codes
+        # Zpracuje sekci Response Status Codes – formátuje ji jako seznam se zpětnými apostrofy kolem kódů.
         if in_status_codes_section and stripped:
-            # Check if this is a status code line (code: description)
+            # Ověří, zda jde o řádek stavového kódu (kód: popis).
             status_match = re.match(r"^(\d{3})\s*:\s*(.*)$", stripped)
             if status_match:
                 status_code = status_match.group(1)
                 status_desc = status_match.group(2)
                 result.append(f"{indent}- ``{status_code}``: {status_desc}")
 
-                # Check for continuation lines
+                # Ověří navazující řádky.
                 i += 1
                 while i < len(lines):
                     next_line = lines[i]
@@ -1392,7 +1392,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                     if not next_stripped or is_section_keyword(next_stripped):
                         break
                     if next_line.startswith("    ") or next_line.startswith("\t"):
-                        # Check if it's a new status code
+                        # Ověří, zda jde o nový stavový kód.
                         if re.match(r"^\s+\d{3}\s*:", next_line):
                             break
                         result.append(f"{indent}  {next_stripped}")
@@ -1405,14 +1405,14 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
 
         # Handle Process Description section - format as numbered list
         if in_process_section and stripped:
-            # Check if this is a numbered step (e.g., "1. Step description")
+            # Ověří, zda jde o číslovaný krok (např. „1. Popis kroku“).
             step_match = re.match(r"^(\d+)\.\s+(.*)$", stripped)
             if step_match:
                 step_num = step_match.group(1)
                 step_desc = step_match.group(2)
                 result.append(f"{indent}{step_num}. {step_desc}")
 
-                # Check for continuation lines
+                # Ověří navazující řádky.
                 i += 1
                 while i < len(lines):
                     next_line = lines[i]
@@ -1420,7 +1420,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                     if not next_stripped or is_section_keyword(next_stripped):
                         break
                     if next_line.startswith("    ") or next_line.startswith("\t"):
-                        # Check if it's a new numbered step
+                        # Ověří, zda jde o nový číslovaný krok.
                         if re.match(r"^\s+\d+\.\s+", next_line):
                             break
                         result.append(f"{indent}   {next_stripped}")
@@ -1431,18 +1431,18 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             elif not stripped:
                 in_process_section = False
 
-        # Handle custom sections - format bullet points and numbered lists
+        # Zpracuje vlastní sekce – formátuje odrážky a číslované seznamy.
         if in_custom_section and stripped:
-            # Check if this is a bullet point (starts with -)
+            # Ověří, zda jde o odrážku (začíná znakem -).
             bullet_match = re.match(r"^-\s+(.*)$", stripped)
-            # Check if this is a numbered item (e.g., "1. description")
+            # Ověří, zda jde o číslovanou položku (např. „1. popis“).
             number_match = re.match(r"^(\d+)\.\s+(.*)$", stripped)
 
             if bullet_match:
                 bullet_desc = bullet_match.group(1)
                 result.append(f"{indent}- {bullet_desc}")
 
-                # Check for continuation lines
+                # Ověří navazující řádky.
                 i += 1
                 while i < len(lines):
                     next_line = lines[i]
@@ -1450,7 +1450,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                     if not next_stripped or is_section_keyword(next_stripped) or is_custom_section(next_stripped, i):
                         break
                     if next_line.startswith("    ") or next_line.startswith("\t"):
-                        # Check if it's a new bullet or numbered item
+                        # Ověří, zda jde o novou odrážku nebo číslovanou položku.
                         if re.match(r"^\s+-\s+", next_line) or re.match(r"^\s+\d+\.\s+", next_line):
                             break
                         result.append(f"{indent}  {next_stripped}")
@@ -1463,7 +1463,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                 num_desc = number_match.group(2)
                 result.append(f"{indent}{num}. {num_desc}")
 
-                # Check for continuation lines
+                # Ověří navazující řádky.
                 i += 1
                 while i < len(lines):
                     next_line = lines[i]
@@ -1471,7 +1471,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                     if not next_stripped or is_section_keyword(next_stripped) or is_custom_section(next_stripped, i):
                         break
                     if next_line.startswith("    ") or next_line.startswith("\t"):
-                        # Check if it's a new bullet or numbered item
+                        # Ověří, zda jde o novou odrážku nebo číslovanou položku.
                         if re.match(r"^\s+-\s+", next_line) or re.match(r"^\s+\d+\.\s+", next_line):
                             break
                         result.append(f"{indent}   {next_stripped}")
@@ -1484,7 +1484,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
 
         # Handle Returns/Raises section
         if in_returns_section and stripped:
-            # Check if this looks like a type: description format
+            # Ověří, zda to odpovídá formátu typ: popis.
             # Supports: Type, Type[inner], Type | Type2, Optional[Type], etc.
             ret_match = re.match(r"^([\w\[\], |]+)\s*:\s*(.*)$", stripped)
             if ret_match:
@@ -1492,7 +1492,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                 ret_desc = ret_match.group(2)
                 result.append(f"{indent}*{ret_type}*: {ret_desc}")
 
-                # Check for continuation lines
+                # Ověří navazující řádky.
                 i += 1
                 while i < len(lines):
                     next_line = lines[i]
@@ -1500,7 +1500,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                     if not next_stripped or is_section_keyword(next_stripped):
                         break
                     if next_line.startswith("    ") or next_line.startswith("\t"):
-                        # Check if it's a new type entry
+                        # Ověří, zda jde o novou položku typu.
                         if re.match(r"^\s+[\w\[\], |]+\s*:", next_line):
                             break
                         result.append(f"{indent}{next_stripped}")
@@ -1551,7 +1551,7 @@ def generate_rst_explicit(source_file: Path, module_name: str, module_title: str
         for cls in classes:
             rst_lines.append(f".. py:class:: {cls['name']}")
             rst_lines.append("")
-            # Format class docstring
+            # Naformátuje docstring třídy.
             formatted_class_doc = format_docstring_for_rst(cls["docstring"], "   ")
             rst_lines.extend(formatted_class_doc)
             rst_lines.append("")
@@ -1624,7 +1624,7 @@ def get_module_title_and_description(module_dir_name: str, filename: str) -> Tup
         filename, {"suffix": filename.replace(".py", ""), "description": f'Modul {filename.replace(".py", "")}.'}
     )
 
-    # Capitalize module name for title
+    # Použije název modulu s velkým počátečním písmenem do titulku.
     module_display = module_dir_name.upper()
 
     title = f"{module_display} {file_info['suffix']}"
@@ -1738,7 +1738,7 @@ Dokumentace modulu {module_dir_name}.
     for entry in toctree_entries:
         index_content += f"   {entry}\n"
 
-    # Write the index file
+    # Zapíše indexový soubor.
     try:
         if check_content_changed(index_content, index_file):
             changes_detected = True
@@ -1765,12 +1765,12 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
     source_dir = webclient_dir / module_dir_name
     output_dir = output_base_dir / module_dir_name
 
-    # Check if source directory exists
+    # Ověří, zda existuje zdrojový adresář.
     if not source_dir.exists() or not source_dir.is_dir():
         print(f"  ⊝ Skipping {module_dir_name}: source directory not found")
         return False
 
-    # Create output directory if it doesn't exist
+    # Vytvoří výstupní adresář, pokud neexistuje.
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"\n  Processing module: {module_dir_name}")
@@ -1780,7 +1780,7 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
     generated_files = []
     skipped_files = []
 
-    # Get all Python files in the module directory
+    # Získá všechny Python soubory v adresáři modulu.
     py_files = sorted(source_dir.glob("*.py"))
 
     if not py_files:
@@ -1795,7 +1795,7 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
             skipped_files.append(filename)
             continue
 
-        # Check if file has meaningful code
+        # Ověří, zda soubor obsahuje smysluplný kód.
         if not has_meaningful_code(source_file):
             skipped_files.append(filename)
             continue
@@ -1823,7 +1823,7 @@ def get_all_modules() -> List[str]:
     modules = []
     for item in sorted(webclient_dir.iterdir()):
         if item.is_dir() and item.name not in SKIP_DIRS and not item.name.startswith("."):
-            # Check if it looks like a Django app (has __init__.py or Python files)
+            # Ověří, zda to vypadá jako Django aplikace (má `__init__.py` nebo Python soubory).
             if (item / "__init__.py").exists() or list(item.glob("*.py")):
                 modules.append(item.name)
     return modules
@@ -1914,7 +1914,7 @@ def build_docs() -> bool:
 
 
 def main() -> None:
-    """Main function to run the documentation generator."""
+    """Hlavní funkce pro spuštění generátoru dokumentace."""
     parser = argparse.ArgumentParser(description="Generate Sphinx documentation for Django modules in webclient/")
     parser.add_argument("--build", action="store_true", help="Also build the HTML documentation")
     parser.add_argument(
@@ -1947,7 +1947,7 @@ def main() -> None:
     # Generate export structure documentation
     generate_export_structure_rst()
 
-    # Build documentation if requested
+    # Vytvoří dokumentaci, pokud je to požadováno.
     if args.build:
         if not build_docs():
             sys.exit(1)
@@ -1961,7 +1961,7 @@ def main() -> None:
         print("\n3. To view the generated documentation:")
         print("   open build/html/04_django_aplikace/04_02_moduly/")
 
-    # Exit with code 1 if changes were detected
+    # Ukončí se s kódem 1, pokud byly detekovány změny.
     if changes_detected:
         print("\n⚠ Documentation changes detected!")
         print("The documentation files have been updated.")

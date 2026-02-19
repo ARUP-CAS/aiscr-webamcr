@@ -35,7 +35,7 @@ def check_hlidaci_pes(projekt_id):
     """
     logger.debug("cron.Notifications.collect_watchdogs.start")
     notification_type = UserNotificationType.objects.get(ident_cely="E-P-02")
-    # to wait for save in DB
+    # čekání na uložení do DB
     projekts = Projekt.objects.filter(pk=projekt_id)
     while projekts.count() < 1:
         time.sleep(0.5)

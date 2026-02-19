@@ -252,7 +252,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         save metoda pro přidělení identu celý.
         """
         logger.debug("uzivatel.User.save.start", extra={"option": self._state.adding})
-        # Random string is temporary before the id is assigned
+        # Náhodný řetězec je dočasný, než je přiřazeno ID.
         if not self._state.adding and (not self.is_active or self.hlavni_role.pk == ROLE_BADATEL_ID):
             if self.is_active:
                 logger.debug(
@@ -550,7 +550,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         save metoda pro přidělení identu celý.
         """
         logger.debug("Osoba.save.start")
-        # Random string is temporary before the id is assigned
+        # Náhodný řetězec je dočasný, než je přiřazeno ID.
         if self._state.adding and not self.ident_cely:
             from core.ident_cely import get_osoba_ident
 

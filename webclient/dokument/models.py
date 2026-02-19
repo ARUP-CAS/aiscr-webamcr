@@ -322,7 +322,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 result.append(_("dokument.models.formCheckOdeslani.missingUlozeniOriginalu.text"))
             if self.jazyky.all().count() == 0:
                 result.append(_("dokument.models.formCheckOdeslani.missingJazyky.text"))
-        # At least one soubor must be attached to the dokument
+        # K dokumentu musí být připojen alespoň jeden soubor.
         if self.soubory.soubory.all().count() == 0:
             result.append(_("dokument.models.formCheckOdeslani.missingSoubor.text"))
         result = [str(x) for x in result]
@@ -335,7 +335,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             kontrola jako před odesláním
 
         """
-        # At least one soubor must be attached to the dokument
+        # K dokumentu musí být připojen alespoň jeden soubor.
         result = self.check_pred_odeslanim()
         return result
 
@@ -384,7 +384,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             prefix = f"{region}-{rada.zkratka}-{str(current_year)}"
             docs = Dokument.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
             if docs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:05}").count() > 0:
-                # number from empty spaces
+                # číslo bez mezer
                 idents = list(docs.values_list("ident_cely", flat=True).order_by("ident_cely"))
                 idents = [sub.replace(prefix, "") for sub in idents]
                 idents = [sub.lstrip("0") for sub in idents]
@@ -634,7 +634,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     @property
     def initial_archeologicky_zaznam(self) -> ArcheologickyZaznam | None:
-        """Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (lazy-load)."""
+        """Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (líné načtení)."""
         if self.initial_archeologicky_zaznam_id is not None:
             return ArcheologickyZaznam.objects.get(pk=self.initial_archeologicky_zaznam_id)
         return None

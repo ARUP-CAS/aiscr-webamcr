@@ -220,16 +220,16 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 logger.info(
                     "arch_z.models.ArcheologickyZaznam.nema_nalezovou_zpravu", extra={"ident_cely": self.ident_cely}
                 )
-        # Related events must have at least one valid documentation unit (dokumentační jednotka)
-        # record associated with it.
+        # Související akce musí mít alespoň jednu platnou dokumentační jednotku.
+        # záznam s ní spojený.
         if len(self.dokumentacni_jednotky_akce.all()) == 0:
             result.append(_("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.dj.text"))
             logger.info(
                 "arch_z.models.ArcheologickyZaznam.nema_dokumentacni_jednotku", extra={"ident_cely": self.ident_cely}
             )
         for dj in self.dokumentacni_jednotky_akce.all():
-            # Each documentation unit must have either associated at least one component or the
-            # documentation unit must be negative.
+            # Každá dokumentační jednotka musí mít alespoň jednu komponentu nebo
+            # dokumentační jednotka musí být záporná.
             if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
                 result.append(
                     _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text1")
@@ -239,7 +239,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 logger.debug(
                     "arch_z.models.ArcheologickyZaznam.dj_komponenta_negativni", extra={"ident_cely": dj.ident_cely}
                 )
-            # Each documentation unit associated with the project event must have a valid PIAN relation.
+            # Každá dokumentační jednotka navázaná na projektovou akci musí mít platnou vazbu na PIAN.
             if dj.pian is None:
                 result.append(
                     _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text1")
@@ -306,7 +306,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             prefix = f"{region}-{typ.zkratka}"
             lokality = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
             if lokality.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count() > 0:
-                # number from empty spaces
+                # číslo bez mezer
                 idents = list(lokality.values_list("ident_cely", flat=True).order_by("ident_cely"))
                 idents = [sub.replace(prefix, "") for sub in idents]
                 idents = [sub.lstrip("0") for sub in idents]
@@ -730,7 +730,7 @@ def get_akce_ident(region):
             ident_cely__startswith=f"{prefix}", ident_cely__endswith="A"
         ).order_by("-ident_cely")
         if akce.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:06}").count() > 0:
-            # number from empty spaces
+            # číslo bez mezer
             idents = list(akce.values_list("ident_cely", flat=True).order_by("ident_cely"))
             idents = [sub.replace(prefix, "") for sub in idents]
             idents = [sub.replace("A", "") for sub in idents]

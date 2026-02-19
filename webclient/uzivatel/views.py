@@ -157,7 +157,7 @@ def create_osoba(request):
                 messages.add_message(request, messages.WARNING, OSOBA_JIZ_EXISTUJE)
                 return render(request, "uzivatel/create_osoba.html", {"form": form})
 
-            # return JSON response to update dropdown and select and message
+            # Vrátí JSON odpověď pro aktualizaci rozbalovací nabídky, výběru a zprávy.
             django_messages = []
             for message in messages.get_messages(request):
                 django_messages.append(
@@ -280,10 +280,10 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def invalid_form_context(self, form, form_tag="form"):
         # Attribute "object" needs to exist.
-        # This is because Django's get_context_data() function uses the object to pass it into the context.
+        # Důvod: Django `get_context_data()` používá objekt pro jeho předání do contextu.
         self.object = None
         context = self.get_context_data()
-        # Update context with need form instances which contain form validation errors.
+        # Doplní context o potřebné instance formulářů obsahující validační chyby.
         context[form_tag] = form
         return context
 
@@ -371,7 +371,7 @@ class UserActivationView(ActivationView):
     def activate(self, form):
         username = form.cleaned_data["activation_key"]
         user = self.get_user(username)
-        # User must by activated manually by an administrator of the system
+        # Uživatel musí být aktivován ručně administrátorem systému.
         user.is_active = False
         user.save()
         for notification in UserNotificationType.objects.filter(

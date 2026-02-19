@@ -86,7 +86,7 @@ class Command(BaseCommand):
             else:
                 point = Centroid(geom)
 
-            # Check ZM10 and ZM50
+            # Zkontroluje ZM10 a ZM50.
             zm10, zm50 = get_ZM_from_point(point)
             if zm10 is not None and zm50 is not None:
                 if item.zm10.pk != zm10.pk:
@@ -112,7 +112,7 @@ class Command(BaseCommand):
                         + str(zm50)
                     )
 
-            # Save if there were changes
+            # Uloží pouze pokud došlo ke změnám.
             if save is True:
                 pocet_zmenenych += 1
                 self.stdout.write(
@@ -143,7 +143,7 @@ class Command(BaseCommand):
 
             index += 1
 
-            # Show periodic progress even when no changes
+            # Pravidelně vypisuje průběh i bez změn.
             if index % 100 == 0:
                 self.stdout.write(
                     "\r"

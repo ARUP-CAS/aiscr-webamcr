@@ -28,12 +28,12 @@ CORRTABLE = {}
 readCoef(CORRTABLE)
 
 
-# Conversion from WGS-84 to JTSK
+# Převod z WGS-84 do JTSK
 def convertToJTSK(longitude, latitude, height=0):
     if not isinstance(longitude, (int, float)) or not isinstance(latitude, (int, float)):
         return [None, None]
     if latitude < 40 or latitude > 60 or longitude < 5 or longitude > 25:
-        # return x,y
+        # vrátí x, y
         raise Exception(f"convertToJTSK coordinates are out of range: longitude {longitude} latitude {latitude} ")
     else:
         [latitude, longitude] = wgs84_to_bessel(latitude, longitude, height)
@@ -42,7 +42,7 @@ def convertToJTSK(longitude, latitude, height=0):
         return [round(-Y, 2), round(-X, 2)]
 
 
-# Conversion from JTSK to WGS-84
+# Převod z JTSK do WGS-84
 def convertToWGS84(minusY, minusX, height=0):
     if not isinstance(minusY, (int, float)) or not isinstance(minusX, (int, float)):
         return [None, None]
@@ -54,7 +54,7 @@ def convertToWGS84(minusY, minusX, height=0):
     return [round(longitude, 7), round(latitude, 7)]
 
 
-# Conversion from ellipsoid WGS-84 to Bessel's ellipsoid
+# Převod z elipsoidu WGS-84 na Besselův elipsoid
 def wgs84_to_bessel(latitude, longitude, altitude=0.0):
     b = math.radians(latitude)
     l = math.radians(longitude)
@@ -86,7 +86,7 @@ def bessel_to_wgs84(latitude, longitude, altitude=0.0):
     return [latitude, longitude]
 
 
-# Conversion from Bessel's lat/lon to jtsk05
+# Převod zeměpisné šířky/délky Bessel na JTSK05
 def bessel_to_jtsk(B, L):
 
     B = math.radians(B)
@@ -249,7 +249,7 @@ def jtsk_to_bessel(X05, Y05):
     return [lat, lon]
 
 
-# Conversion from geodetic coordinates to Cartesian coordinates
+# Převod z geodetických souřadnic na kartézské souřadnice
 def blht_to_geo_coords_wgs(b, l, h):
     # WGS-84 ellipsoid parameters
     a = 6378137.0
@@ -262,7 +262,7 @@ def blht_to_geo_coords_wgs(b, l, h):
     return [x, y, z]
 
 
-# Conversion from geodetic coordinates to Cartesian coordinates
+# Převod z geodetických souřadnic na kartézské souřadnice
 def blht_to_geo_coords_bessel(b, l, h):
     # Bessel's ellipsoid parameters
     a = 6377397.155
@@ -275,7 +275,7 @@ def blht_to_geo_coords_bessel(b, l, h):
     return [x, y, z]
 
 
-# Conversion from Cartesian coordinates to geodetic coordinates
+# Převod z kartézských souřadnic na geodetické souřadnice
 def geo_coords_to_blh_bessel(X, Y, Z):
     # Bessel's ellipsoid parameters
     a = 6377397.155
@@ -295,7 +295,7 @@ def geo_coords_to_blh_bessel(X, Y, Z):
     return [B, L, Hel]
 
 
-# Conversion from Cartesian coordinates to geodetic coordinates
+# Převod z kartézských souřadnic na geodetické souřadnice
 def geo_coords_to_blh_wgs(X, Y, Z):
     # WGS-84 ellipsoid parameters
     a = 6378137.0
@@ -317,7 +317,7 @@ def geo_coords_to_blh_wgs(X, Y, Z):
 
 # Coordinates transformation
 def ETRF2JTSK05transform_coords(xs, ys, zs):
-    # coeficients of transformation from WGS-84 to JTSK
+    # koeficienty transformace z WGS-84 do JTSK
     p1 = -572.203
     p2 = -85.328
     p3 = -461.934
@@ -335,7 +335,7 @@ def ETRF2JTSK05transform_coords(xs, ys, zs):
 
 
 def JTSK052ETRFtransform_coords(xs, ys, zs):
-    # coeficients of transformation from WGS-84 to JTSK
+    # koeficienty transformace z WGS-84 do JTSK
     p1 = 572.213
     p2 = 85.334
     p3 = 461.940

@@ -244,7 +244,7 @@ class DocumentGenerator:
                     related_record = None
                     from uzivatel.models import User
 
-                    # Know issue - user deletion fails when it has a notification set
+                    # Známý problém: smazání uživatele selže, pokud má nastavenou notifikaci.
                     if not (isinstance(record, User) and record_name_split[0] == "history_vazba"):
                         logger.warning(
                             "xml_generator.generator.DocumentGenerator."
@@ -371,7 +371,7 @@ class DocumentGenerator:
     def _parse_scheme_create_element(self, schema_element, parent_element):
         if schema_element.__class__.__name__ == "_Element":
             next_element = schema_element.getnext()
-            # The comment should be the very next element
+            # Komentář by měl být bezprostředně následující element.
             if next_element.__class__.__name__ == "_Comment":
                 parsed_comment: ParsedComment = self._parse_comment(next_element.text)
                 prefix = self._get_prefix(next_element.text)

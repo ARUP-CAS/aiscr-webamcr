@@ -250,7 +250,7 @@ class CustomDateInput(forms.DateField):
                 extra={"format": formats.get_format_lazy("DATE_INPUT_FORMATS")},
             )
 
-            return super().to_python(value)  # return self.strptime(value, "%d.%m.%Y")
+            return super().to_python(value)  # Alternativou je vlastní `strptime` formátu `%d.%m.%Y`.
         return super().to_python(value)
 
 

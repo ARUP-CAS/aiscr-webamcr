@@ -185,7 +185,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
             transaction_error = True
     if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
-        # Not sure if 404 is the only correct option
+        # Není jisté, zda je 404 jediná správná varianta.
         logger.debug("core.views.delete_file_DZ.not_deleted", extra={"soubor": soubor})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         django_messages = []
@@ -264,7 +264,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                     fedora_transaction.rollback_transaction()
                 return JsonResponse({"success": False}, status=400)
         if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
-            # Not sure if 404 is the only correct option
+            # Není jisté, zda je 404 jediná správná varianta.
             logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             django_messages = []
@@ -1152,7 +1152,7 @@ def check_stav_changed(request, zaznam):
                 return True
 
     else:
-        # check if stav zaznamu is same in DB as was on detail page entered from
+        # Ověří, že stav záznamu v DB odpovídá stavu při vstupu na detail.
         if request.GET.get("sent_stav", False) and str(request.GET.get("sent_stav")) != str(zaznam.stav):
             sent_stav = str(request.GET.get("sent_stav"))
             zaznam_stav = str(zaznam.stav)
@@ -1214,7 +1214,7 @@ def redirect_ident_view(request, ident_cely):
         return redirect("core:home")
 
 
-# for prolonging session ajax call
+# Pro AJAX volání na prodloužení relace.
 @login_required
 @require_http_methods(["GET"])
 def prolong_session(request):
@@ -1682,10 +1682,10 @@ class ReadTempValueView(View):
             try:
                 return JsonResponse(json.loads(value))
             except Exception:
-                # Handling the case where the key does not exist in Redis
+                # Ošetření případu, kdy klíč v Redis neexistuje.
                 return JsonResponse({"percent": 0, "text": _("core.templates.core.export_modal.file_being_generated")})
         else:
-            # Return a JSON response with a 403 Forbidden status
+            # Vrátí JSON odpověď se stavem 403 Forbidden.
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
@@ -1698,7 +1698,7 @@ class DeleteTempValueView(View):
             logger.debug("core.views.ResetTempValueView.get.result", extra={"value": temp_name})
             return JsonResponse({"result": "success"})
         else:
-            # Return a JSON response with a 403 Forbidden status
+            # Vrátí JSON odpověď se stavem 403 Forbidden.
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
@@ -1711,7 +1711,7 @@ class AbortDownloadUpdateTempValueView(View):
             logger.debug("core.views.AbortDownloadUpdateTempValueView.get.result", extra={"value": temp_name})
             return JsonResponse({"result": "success"})
         else:
-            # Return a JSON response with a 403 Forbidden status
+            # Vrátí JSON odpověď se stavem 403 Forbidden.
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
@@ -1722,14 +1722,14 @@ class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
 
     @cached_property
     def po_file_path(self):
-        """Based on the url kwargs, infer and return the path to the .po file to
-        be shown/updated.
+        """Podle URL parametrů `kwargs` odvodí a vrátí cestu k `.po` souboru,
+        který se má zobrazit nebo upravit.
 
-        Throw a 404 if a file isn't found.
+        Pokud soubor neexistuje, vyvolá chybu 404.
         """
-        # This was formerly referred to as 'rosetta_i18n_fn'
+        # Dříve se tato hodnota označovala jako `rosetta_i18n_fn`.
         idx = self.kwargs["idx"]
-        idx = int(idx)  # idx matched url re expression; calling int() is safe
+        idx = int(idx)  # `idx` odpovídá regexu v URL; volání `int()` je bezpečné.
 
         third_party_apps = self.po_filter in ("all", "third-party")
         django_apps = self.po_filter in ("all", "django")
@@ -1762,7 +1762,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         new_pofile = form.cleaned_data["file"]
         tmp_path = None
         try:
-            # Write uploaded InMemoryUploadedFile to a temporary file and pass its path to pofile
+            # Zapíše nahraný InMemoryUploadedFile do dočasného souboru a předá jeho cestu nástroji pofile.
             tmp = tempfile.NamedTemporaryFile(delete=False)
             tmp_path = tmp.name
             for chunk in new_pofile.chunks():
@@ -1776,7 +1776,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
             except Exception:
                 pass
         except Exception as e:
-            # cleanup on error
+            # Úklid při chybě.
             if tmp_path:
                 try:
                     os.unlink(tmp_path)
@@ -1876,7 +1876,7 @@ class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequir
             else:
                 offered_fn = self.po_file_path.split("/")[-1]
             po_fn = str(self.po_file_path.split("/")[-1])
-            mo_fn = str(po_fn.replace(".po", ".mo"))  # not so smart, huh
+            mo_fn = str(po_fn.replace(".po", ".mo"))  # Jednoduchá náhrada názvu souboru.
             zipdata = BytesIO()
             with zipfile.ZipFile(zipdata, mode="w") as zipf:
                 zipf.writestr(po_fn, str(self.po_file).encode("utf8"))

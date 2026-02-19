@@ -32,7 +32,7 @@ DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
 
-# This is only so that debug toolbar is shown when developing in docker
+# Pouze pro zobrazení debug toolbaru při vývoji v Dockeru.
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
 

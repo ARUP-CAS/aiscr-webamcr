@@ -117,7 +117,7 @@ class Command(BaseCommand):
                 rep_bin_file = conn.get_binary_file(record.repository_uuid)
                 if rep_bin_file:
                     rep_bin_file_new = Soubor.remove_gps_data(rep_bin_file.content)
-                    # Check if GPS data was actually removed (file content changed)
+                    # Ověří, zda byla GPS data opravdu odstraněna (změnil se obsah souboru).
                     if rep_bin_file_new is not rep_bin_file.content:
                         rep_bin_file = conn.update_binary_file(
                             record.nazev, record.mimetype, rep_bin_file_new, record.repository_uuid
@@ -168,7 +168,7 @@ class Command(BaseCommand):
                     )
                 )
 
-        # Final newline after progress indicator
+        # Závěrečný nový řádek po indikátoru průběhu.
         self.stdout.write("")
 
         logger.debug(

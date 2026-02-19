@@ -27,7 +27,7 @@ def pes_delete(sender, instance: Pes, **kwargs):
         try:
             transaction.on_commit(lambda: instance.user.save_metadata(fedora_transaction, close_transaction=True))
         except FedoraError as err:
-            # Occurs when record is update via admin interface
+            # Nastává při aktualizaci záznamu přes administraci.
             logger.debug("notifikace_projekty.signals.pes_delete.save_metadata.error", extra={"error": err})
         logger.debug(
             "notifikace_projekty.signals.pes_delete.save_metadata.end",

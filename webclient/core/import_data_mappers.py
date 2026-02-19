@@ -1098,7 +1098,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
 
 
 class HeslarMapper(ImportModelMapper):
-    """Mapper pro model Heslar."""
+    """Mapovač pro model Heslar."""
 
     fields = (
         "ident_cely",
@@ -1120,7 +1120,7 @@ class HeslarMapper(ImportModelMapper):
 
 
 class HeslarDataceMapper(ImportModelMapper):
-    """Mapper pro model HeslarDatace."""
+    """Mapovač pro model HeslarDatace."""
 
     fields = (
         "rok_od_min",
@@ -1141,7 +1141,7 @@ class HeslarDataceMapper(ImportModelMapper):
 
 
 class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
-    """Mapper pro model HeslarDokumentTypMaterialRada."""
+    """Mapovač pro model HeslarDokumentTypMaterialRada."""
 
     model_class = HeslarDokumentTypMaterialRada
     primary_key = "id"
@@ -1163,7 +1163,7 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
 
 
 class HeslarHierarchieMapper(ImportModelMapper):
-    """Mapper pro model HeslarHierarchie."""
+    """Mapovač pro model HeslarHierarchie."""
 
     fields = ("typ",)
     model_class = HeslarHierarchie
@@ -1179,7 +1179,7 @@ class HeslarHierarchieMapper(ImportModelMapper):
 
 
 class HeslarOdkazMapper(ImportModelMapper):
-    """Mapper pro model HeslarOdkaz."""
+    """Mapovač pro model HeslarOdkaz."""
 
     fields = (
         "zdroj",
@@ -1201,7 +1201,7 @@ class HeslarOdkazMapper(ImportModelMapper):
 
 
 class OrganizaceMapper(ImportModelMapper):
-    """Mapper pro model Organizace."""
+    """Mapovač pro model Organizace."""
 
     fields = (
         "ident_cely",
@@ -1238,7 +1238,7 @@ class OrganizaceMapper(ImportModelMapper):
 
 
 class OsobaMapper(ImportModelMapper):
-    """Mapper pro model Osoba."""
+    """Mapovač pro model Osoba."""
 
     fields = (
         "ident_cely",
@@ -1257,7 +1257,7 @@ class OsobaMapper(ImportModelMapper):
 
 
 class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
-    """Mapper pro model Projekt."""
+    """Mapovač pro model Projekt."""
 
     fields = (
         "ident_cely",
@@ -1300,7 +1300,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
 
 
 class ProjektKatastrMapper(ImportModelMapper):
-    """Mapper pro model ProjektKatastr."""
+    """Mapovač pro model ProjektKatastr."""
 
     model_class = ProjektKatastr
     primary_key = ("projekt", "katastr")
@@ -1317,7 +1317,7 @@ class ProjektKatastrMapper(ImportModelMapper):
 
 
 class ProjektOznamovatelMapper(ImportModelMapper):
-    """Mapper pro model Oznamovatel."""
+    """Mapovač pro model Oznamovatel."""
 
     fields = ("oznamovatel", "odpovedna_osoba", "adresa", "telefon", "email", "poznamka")
     model_class = Oznamovatel
@@ -1332,7 +1332,7 @@ class ProjektOznamovatelMapper(ImportModelMapper):
 
 
 class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
-    """Mapper pro model SamostatnyNalez."""
+    """Mapovač pro model SamostatnyNalez."""
 
     fields = (
         "ident_cely",
@@ -1379,7 +1379,7 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
 
 
 class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
-    """Mapper pro modely ArcheologickyZaznam a Akce."""
+    """Mapovač pro modely ArcheologickyZaznam a Akce."""
 
     fields = (
         ("archeologicky_zaznam", "ident_cely"),
@@ -1454,7 +1454,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
 
 
 class LokalitaMapper(MultipleClassImportModelMapper):
-    """Mapper pro modely ArcheologickyZaznam a Lokalita."""
+    """Mapovač pro modely ArcheologickyZaznam a Lokalita."""
 
     fields = (
         ("archeologicky_zaznam", "ident_cely"),
@@ -1512,7 +1512,7 @@ class LokalitaMapper(MultipleClassImportModelMapper):
 
 
 class AkceVedouciMapper(ImportModelMapper):
-    """Mapper pro model AkceVedouci."""
+    """Mapovač pro model AkceVedouci."""
 
     model_class = AkceVedouci
     primary_key = "id"
@@ -1528,7 +1528,7 @@ class AkceVedouciMapper(ImportModelMapper):
 
 
 class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
-    """Mapper pro model ArcheologickyZaznamKatastr."""
+    """Mapovač pro model ArcheologickyZaznamKatastr."""
 
     model_class = ArcheologickyZaznamKatastr
     primary_key = ("archeologicky_zaznam", "katastr")
@@ -1545,7 +1545,7 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
 
 
 class PianMapper(ImportModelMapper, GeometryTransformMixin):
-    """Mapper pro model Pian."""
+    """Mapovač pro model Pian."""
 
     fields = ("ident_cely", "stav", "geom_system", "geom", "geom_sjtsk")
     model_class = Pian
@@ -1566,7 +1566,7 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
 
 
 class DokumentacniJednotkaMapper(ImportModelMapper):
-    """Mapper pro model DokumentacniJednotka."""
+    """Mapovač pro model DokumentacniJednotka."""
 
     fields = ("ident_cely", "negativni_jednotka", "nazev")
     model_class = DokumentacniJednotka
@@ -1592,7 +1592,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
 
 
 class AdbMapper(ImportModelMapper):
-    """Mapper pro model Adb."""
+    """Mapovač pro model Adb."""
 
     fields = (
         "ident_cely",
@@ -1621,7 +1621,7 @@ class AdbMapper(ImportModelMapper):
 
 
 class AdbVyskovyBod(ImportModelMapper):
-    """Mapper pro model VyskovyBod."""
+    """Mapovač pro model VyskovyBod."""
 
     fields = ("ident_cely", "geom")
     model_class = VyskovyBod
@@ -1636,7 +1636,7 @@ class AdbVyskovyBod(ImportModelMapper):
 
 
 class DokumentLetMapper(ImportModelMapper):
-    """Mapper pro model Let."""
+    """Mapovač pro model Let."""
 
     fields = (
         "ident_cely",
@@ -1664,7 +1664,7 @@ class DokumentLetMapper(ImportModelMapper):
 
 
 class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
-    """Mapper pro modely Dokument a DokumentExtraData."""
+    """Mapovač pro modely Dokument a DokumentExtraData."""
 
     fields = (
         ("dokument", "ident_cely"),
@@ -1795,7 +1795,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
 
 
 class DokumentAutorMapper(ImportModelMapper):
-    """Mapper pro model DokumentAutor."""
+    """Mapovač pro model DokumentAutor."""
 
     fields = ("poradi",)
     model_class = DokumentAutor
@@ -1812,7 +1812,7 @@ class DokumentAutorMapper(ImportModelMapper):
 
 
 class DokumentJazykMapper(ImportModelMapper):
-    """Mapper pro model DokumentJazyk."""
+    """Mapovač pro model DokumentJazyk."""
 
     model_class = DokumentJazyk
     primary_key = ("dokument", "jazyk")
@@ -1828,7 +1828,7 @@ class DokumentJazykMapper(ImportModelMapper):
 
 
 class DokumentOsobaMapper(ImportModelMapper):
-    """Mapper pro model DokumentOsoba."""
+    """Mapovač pro model DokumentOsoba."""
 
     model_class = DokumentOsoba
     primary_key = ("dokument", "osoba")
@@ -1844,7 +1844,7 @@ class DokumentOsobaMapper(ImportModelMapper):
 
 
 class DokumentPosudekMapper(ImportModelMapper):
-    """Mapper pro model DokumentPosudek."""
+    """Mapovač pro model DokumentPosudek."""
 
     model_class = DokumentPosudek
     primary_key = ("dokument", "posudek")
@@ -1860,7 +1860,7 @@ class DokumentPosudekMapper(ImportModelMapper):
 
 
 class TvarMapper(ImportModelMapper):
-    """Mapper pro model Tvar."""
+    """Mapovač pro model Tvar."""
 
     fields = ("poznamka",)
     model_class = Tvar
@@ -1876,7 +1876,7 @@ class TvarMapper(ImportModelMapper):
 
 
 class DokumentCastMapper(ImportModelMapper):
-    """Mapper pro model DokumentCast."""
+    """Mapovač pro model DokumentCast."""
 
     fields = ("ident_cely", "poznamka")
     model_class = DokumentCast
@@ -1893,7 +1893,7 @@ class DokumentCastMapper(ImportModelMapper):
 
 
 class NeidentAkceMapper(ImportModelMapper):
-    """Mapper pro model NeidentAkce."""
+    """Mapovač pro model NeidentAkce."""
 
     fields = ("rok_zahajeni", "rok_ukonceni", "lokalizace", "popis", "poznamka", "pian")
     model_class = NeidentAkce
@@ -1909,7 +1909,7 @@ class NeidentAkceMapper(ImportModelMapper):
 
 
 class NeidentAkceVedouciMapper(ImportModelMapper):
-    """Mapper pro model NeidentAkceVedouci."""
+    """Mapovač pro model NeidentAkceVedouci."""
 
     model_class = NeidentAkceVedouci
     primary_key = ("neident_akce", "vedouci")
@@ -1925,7 +1925,7 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
 
 
 class KomponentaMapper(ImportModelMapper):
-    """Mapper pro model Komponenta."""
+    """Mapovač pro model Komponenta."""
 
     fields = ("ident_cely", "jistota", "presna_datace", "poznamka")
     model_class = Komponenta
@@ -1943,7 +1943,7 @@ class KomponentaMapper(ImportModelMapper):
 
 
 class KomponentaAktivitaMapper(ImportModelMapper):
-    """Mapper pro model KomponentaAktivita."""
+    """Mapovač pro model KomponentaAktivita."""
 
     model_class = KomponentaAktivita
     primary_key = ("komponenta", "aktivita")
@@ -1966,7 +1966,7 @@ class NalezMapper(ImportModelMapper):
 
 
 class NalezObjektMapper(NalezMapper):
-    """Mapper pro model NalezObjekt."""
+    """Mapovač pro model NalezObjekt."""
 
     model_class = NalezObjekt
     primary_key_prefix = "nalo"
@@ -1983,7 +1983,7 @@ class NalezObjektMapper(NalezMapper):
 
 
 class NalezPredmetMapper(NalezMapper):
-    """Mapper pro model NalezPredmet."""
+    """Mapovač pro model NalezPredmet."""
 
     model_class = NalezPredmet
     primary_key_prefix = "nalp"
@@ -2000,7 +2000,7 @@ class NalezPredmetMapper(NalezMapper):
 
 
 class ExterniZdrojMapper(ImportModelMapper):
-    """Mapper pro model ExterniZdroj."""
+    """Mapovač pro model ExterniZdroj."""
 
     fields = (
         "ident_cely",
@@ -2036,7 +2036,7 @@ class ExterniZdrojMapper(ImportModelMapper):
 
 
 class ExterniZdrojAutorMapper(ImportModelMapper):
-    """Mapper pro model ExterniZdrojAutor."""
+    """Mapovač pro model ExterniZdrojAutor."""
 
     fields = ("poradi",)
     primary_key = ("externi_zdroj", "autor")
@@ -2053,7 +2053,7 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
 
 
 class ExterniZdrojEditorMapper(ImportModelMapper):
-    """Mapper pro model ExterniZdrojEditor."""
+    """Mapovač pro model ExterniZdrojEditor."""
 
     fields = ("poradi",)
     primary_key = ("externi_zdroj", "editor")
@@ -2070,7 +2070,7 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
 
 
 class ExterniOdkazMapper(ImportModelMapper):
-    """Mapper pro model ExterniOdkaz."""
+    """Mapovač pro model ExterniOdkaz."""
 
     fields = ("paginace",)
     model_class = ExterniOdkaz
@@ -2086,7 +2086,7 @@ class ExterniOdkazMapper(ImportModelMapper):
 
 
 class UzivatelMapper(ImportModelMapper):
-    """Mapper pro model User."""
+    """Mapovač pro model User."""
 
     fields = (
         "ident_cely",
@@ -2114,7 +2114,7 @@ class UzivatelMapper(ImportModelMapper):
 
 
 class UzivatelNotifikaceProjektMapper(ImportModelMapper):
-    """Mapper pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN)."""
+    """Mapovač pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN)."""
 
     model_class = Pes
     primary_key = ("uzivatel", "ruian")
@@ -2184,7 +2184,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
 
 class UzivatelSpolupraceMapper(ImportModelMapper):
-    """Mapper pro model UzivatelSpoluprace."""
+    """Mapovač pro model UzivatelSpoluprace."""
 
     fields = ("stav",)
     model_class = UzivatelSpoluprace
@@ -2200,7 +2200,7 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
 
 
 class UzivatelOpravneniMapper(ImportModelMapper):
-    """Mapper pro přiřazení skupinových oprávnění uživateli (model User)."""
+    """Mapovač pro přiřazení skupinových oprávnění uživateli (model User)."""
 
     model_class = User
     primary_key = ("uzivatel", "skupina")
@@ -2222,7 +2222,7 @@ class UzivatelOpravneniMapper(ImportModelMapper):
 
 
 class SouborMapper(ImportModelMapper):
-    """Mapper pro model Soubor."""
+    """Mapovač pro model Soubor."""
 
     fields = ("nazev",)
     model_class = Soubor
@@ -2237,7 +2237,7 @@ class SouborMapper(ImportModelMapper):
 
 
 class UzivatelNotifikaceMapper(ImportModelMapper):
-    """Mapper pro přiřazení typů notifikací uživateli (model User)."""
+    """Mapovač pro přiřazení typů notifikací uživateli (model User)."""
 
     model_class = User
     primary_key = ("uzivatel", "notifikace")
@@ -2259,7 +2259,7 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
 
 
 class HistorieMapper(ImportModelMapper):
-    """Mapper pro model Historie."""
+    """Mapovač pro model Historie."""
 
     fields = (
         "datum_zmeny",

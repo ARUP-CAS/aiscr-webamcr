@@ -377,7 +377,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.save_container_content(n["fedora_id"], path)
 
     def check_fedora_change(self, time, path):
-        # self.save_fedora_change(time, path)
+        # Pomocný debug výpis změny ve Fedoře je zde záměrně vypnutý.
         if os.name == "nt":
             self.wait(1.5)
             self.save_fedora_change(
@@ -484,7 +484,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 # Chrome loguje např.: "... GET https://... 403 (Forbidden)"
                 if f" {err} (" in msg:
                     return True
-            # network / chrome error (string)
+            # chyba sítě / Chrome (řetězec)
             elif isinstance(err, str):
                 if err in msg:
                     return True

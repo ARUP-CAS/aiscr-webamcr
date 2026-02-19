@@ -485,7 +485,7 @@ def edit(request, ident_cely):
             else:
                 x1 = form.cleaned_data["coordinate_x1"]
                 x2 = form.cleaned_data["coordinate_x2"]
-            # Workaroud to not check if long and lat has been changed, only geom is interesting
+            # Obcházení kontroly změny lon/lat; důležitá je pouze geometrie.
             form.fields["coordinate_x1"].initial = x1
             form.fields["coordinate_x2"].initial = x2
             fedora_transaction = projekt.create_transaction(request.user)
@@ -1707,7 +1707,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
                 histore.typ_zmeny = OZNAMENI_PROJ_MANUALNI
                 histore.uzivatel = self.request.user
                 histore.vazba = projekt.historie
-                # Must be called otherwise the datum is rewritten by SQL to current date and time
+                # Musí se zavolat, jinak SQL přepíše datum na aktuální datum a čas.
                 histore.save()
                 histore.datum_zmeny = datetime.combine(
                     form.cleaned_data["datum_oznameni"], form.cleaned_data["cas_oznameni"]

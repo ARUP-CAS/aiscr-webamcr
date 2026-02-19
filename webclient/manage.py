@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""Nástroj příkazové řádky Django pro administrativní úlohy."""
 
 import os
 import sys
 
 
 def main():
-    """Run administrative tasks."""
+    """Spustí administrativní úlohy."""
     if os.getenv("DJANGO_SETTINGS_MODULE") is None:
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings")
     try:

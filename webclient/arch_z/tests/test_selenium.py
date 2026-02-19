@@ -2763,7 +2763,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_AZ")
         self.logout()
 
-        # update akce X-M-9922437A
+        # aktualizace akce X-M-9922437A
         self.login("archivar")
         self.createFedoraRecord("X-M-9922437A", "archivar")
         self.goToAddress("/id/X-M-9922437A")

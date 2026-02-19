@@ -114,7 +114,7 @@ class Command(BaseCommand):
                 related_record = soubor.vazba.navazany_objekt
                 conn = FedoraRepositoryConnector(related_record, None)
 
-                # Check if thumbnails exist
+                # Ověří existenci náhledů.
                 both_thumbnails_exist = (
                     conn.get_binary_file(soubor.repository_uuid, thumb_small=True) is not None
                     and conn.get_binary_file(soubor.repository_uuid, thumb_large=True) is not None
@@ -163,7 +163,7 @@ class Command(BaseCommand):
                     )
                 )
 
-        # Final newline after progress indicator
+        # Závěrečný nový řádek po indikátoru průběhu.
         self.stdout.write("")
 
         logger.debug(

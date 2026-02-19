@@ -752,7 +752,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         if publication_year_history.exists():
             return publication_year_history.first().datum_zmeny.year
         else:
-            # DataCite request may be called before the history record is created
+            # Požadavek DataCite může být volán ještě před vytvořením záznamu historie.
             return datetime.now().year
 
     def _get_title(self, language: str):
@@ -1009,7 +1009,7 @@ class LokalitaSerializer(ModelSerializer):
         if archivace_history_queryset.exists():
             return archivace_history_queryset.first().datum_zmeny.year
         else:
-            # DataCite request may be called before the history record is created
+            # Požadavek DataCite může být volán ještě před vytvořením záznamu historie.
             return datetime.now().year
 
     def _serialize_rightslist(self):

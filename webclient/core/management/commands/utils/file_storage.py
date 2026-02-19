@@ -79,7 +79,7 @@ def save_single_file_from_storage_impl(
     soubor_data.seek(0)
     mimetype = Soubor.get_mime_types(soubor_data)
     soubor_data.seek(0)
-    # Antivirus labeled file as infected or the check failed
+    # Antivirus označil soubor jako infikovaný nebo kontrola selhala.
     if not disable_antivirus and Soubor.check_antivirus(soubor_data) not in (
         AntivirusCheckResult.PASSES,
         AntivirusCheckResult.SKIPPED,

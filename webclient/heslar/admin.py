@@ -109,7 +109,7 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     list_filter = ("obdobi",)
 
     def get_readonly_fields(self, request, obj=None):
-        if obj:  # This means this is an edit
+        if obj:  # Znamená to, že jde o úpravu existujícího záznamu.
             return ("obdobi",)
         else:
             return []

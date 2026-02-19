@@ -17,9 +17,10 @@ register = template.Library()
 logger = logging.getLogger(__name__)
 
 
-# to get message constant for auto logout
+# Získá textovou konstantu zprávy pro automatické odhlášení.
 @register.simple_tag
 def get_message(message):
+    """Vrátí bezpečně escapovaný text konstanty podle jejího názvu."""
     return mark_safe("'%s'" % str(getattr(mc, message, "Message constant not found")))
 
 
@@ -71,11 +72,9 @@ class QuerystringNodeMulti(Node):
 
 @register.tag
 def querystring_multi(parser, token):
-    """
-    Creates a URL (containing only the query string [including "?"]) derived
-    from the current URL's query string, by updating it with the provided
-    keyword arguments.
-    Example (imagine URL is ``/abc/?gender=male&name=Brad``)::
+    """Sestaví query string z aktuální URL a upraví jej podle parametrů tagu.
+
+    Příklad (pokud je URL ``/abc/?gender=male&name=Brad``)::
         # {% querystring "name"="abc" "age"=15 %}
         ?name=abc&gender=male&age=15
         {% querystring "name"="Ayers" "age"=20 %}
@@ -98,15 +97,15 @@ def querystring_multi(parser, token):
     else:
         asvar = None
 
-    # ``bits`` should now be empty of a=b pairs, it should either be empty, or
-    # have ``without`` arguments.
+    # V této fázi by ``bits`` nemělo obsahovat páry a=b; buď je prázdné,
+    # nebo obsahuje argumenty za klíčovým slovem ``without``.
     if bits and bits.pop(0) != "without":
         raise TemplateSyntaxError("Malformed arguments to '%s'" % tag)
     removals = [parser.compile_filter(bit) for bit in bits]
     return QuerystringNodeMulti(updates, removals, asvar=asvar)
 
 
-# To get info about maintenance
+# Vrátí informaci o zapnutém režimu údržby.
 @register.simple_tag
 def get_maintenance():
     if get_set_maintenance_in_cache():
@@ -116,16 +115,19 @@ def get_maintenance():
 
 @register.simple_tag
 def get_server_domain():
+    """Vrátí doménu používanou pro e-mailové odkazy."""
     return settings.EMAIL_SERVER_DOMAIN_NAME
 
 
 @register.simple_tag
 def get_site_url():
+    """Vrátí základní URL adresu aplikace."""
     return settings.SITE_URL
 
 
 @register.simple_tag
 def get_settings(item_group, item_id):
+    """Načte hodnotu konfigurační položky z administrátorského nastavení."""
     settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
     if settings_query.count() > 0:
         return settings_query.last().value
@@ -135,15 +137,18 @@ def get_settings(item_group, item_id):
 
 @register.simple_tag
 def message_top(forloop_counter):
-    # 65px is the height of the message incl. margin
+    """Vypočítá vertikální offset pro vykreslení systémových zpráv."""
+    # 65 px je výška jedné zprávy včetně okrajů.
     return forloop_counter * 65 + 15
 
 
 @register.simple_tag
 def get_datetime_now():
+    """Vrátí aktuální datum a čas ve formátu používaném v šablonách."""
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 @register.simple_tag
 def get_test_env():
+    """Vrátí příznak testovacího prostředí."""
     return settings.TEST_ENV

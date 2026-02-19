@@ -17,31 +17,31 @@ TYP_DJ_CELEK_AKCE_ID = ""
 
 
 class CustomTextTestResult(unittest.runner.TextTestResult):
-    """Extension of TextTestResult to support numbering test cases"""
+    """Rozšíření třídy TextTestResult s podporou číslování testovacích případů."""
 
     def __init__(self, stream, descriptions, verbosity):
-        """Initializes the test number generator, then calls super impl"""
+        """Inicializuje generátor čísel testů a poté zavolá implementaci předka."""
 
         self.test_numbers = itertools.count(1)
 
         return super(CustomTextTestResult, self).__init__(stream, descriptions, verbosity)
 
     def startTest(self, test):
-        """Writes the test number to the stream if showAll is set, then calls super impl"""
+        """Pokud je showAll zapnuto, zapíše číslo testu do výstupu a poté zavolá implementaci předka."""
 
         if True:  # self.showAll:
             progress = "[{0}/{1}] ".format(next(self.test_numbers), self.test_case_count)
             self.stream.write(progress)
 
-            # Also store the progress in the test itself, so that if it errors,
-            # it can be written to the exception information by our overridden
-            # _exec_info_to_string method:
+            # Průběh ukládá i do samotného testu, aby se při chybě
+            # mohl propsat do informací o výjimce v našem přepsaném runneru.
+            # metoda _exec_info_to_string:
             test.progress_index = progress
 
         return super(CustomTextTestResult, self).startTest(test)
 
     def _exc_info_to_string(self, err, test):
-        """Gets an exception info string from super, and prepends 'Test Number' line"""
+        """Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu."""
 
         info = super(CustomTextTestResult, self)._exc_info_to_string(err, test)
 
@@ -52,18 +52,18 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
 
 
 class CustomTextTestRunner(unittest.runner.TextTestRunner):
-    """Extension of TextTestRunner to support numbering test cases"""
+    """Rozšíření třídy TextTestRunner s podporou číslování testovacích případů."""
 
     resultclass = CustomTextTestResult
 
     def run(self, test):
-        """Stores the total count of test cases, then calls super impl"""
+        """Uloží celkový počet testovacích případů a poté zavolá implementaci předka."""
 
         self.test_case_count = test.countTestCases()
         return super(CustomTextTestRunner, self).run(test)
 
     def _makeResult(self):
-        """Creates and returns a result instance that knows the count of test cases"""
+        """Vytvoří a vrátí instanci výsledku, která zná počet testovacích případů."""
 
         result = super(CustomTextTestRunner, self)._makeResult()
         result.test_case_count = self.test_case_count

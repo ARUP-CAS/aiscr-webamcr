@@ -51,7 +51,7 @@ def create_ident_cely(sender, instance: User, **kwargs):
     """
     logger.debug("uzivatel.signals.create_ident_cely.start")
     if not kwargs["update_fields"] and instance.id:
-        # Save it, so it can be used in post_save
+        # Uloží jej, aby šel použít v `post_save`.
         database_user_query = User.objects.filter(id=instance.id)
         if database_user_query.count() > 0:
             instance.old = database_user_query.first()
@@ -103,7 +103,7 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
 
         send_deactivation_email(sender, instance, **kwargs)
         send_account_confirmed_email(sender, instance, created)
-        # Create or change token when user changed.
+        # Vytvoří nebo změní token při změně uživatele.
         try:
             old_token = Token.objects.get(user=instance)
         except Token.DoesNotExist:
@@ -214,7 +214,7 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
 
 @receiver(user_logged_in, weak=False)
 def log_user_signin(sender, user, request, **kwargs):
-    # Get the IP address from the request object
+    # Získá IP adresu z objektu request.
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
         ip_address = x_forwarded_for.split(",")[0]

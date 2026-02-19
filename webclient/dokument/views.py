@@ -1335,7 +1335,7 @@ def edit_model_3D(request, ident_cely):
         except Exception:
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"X": x1, "Y": x2})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
-            # save autors with order
+            # uloží autory v požadovaném pořadí
             fedora_transaction = dokument.create_transaction(request.user)
             dokument_from_form = form_d.save(commit=False)
             dokument_from_form.active_transaction = fedora_transaction

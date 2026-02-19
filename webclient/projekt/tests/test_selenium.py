@@ -334,7 +334,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             ident = OznameniSeleniumTest.oznameni_projektu(self)
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt")
 
-        # U projektu - delete dokumentace
+        # U projektu - smazání dokumentace
         self.login("archivar")
         self.goToAddress(f"/id/{ident}")
         time = self.getTime()

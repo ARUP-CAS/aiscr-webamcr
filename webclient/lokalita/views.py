@@ -483,7 +483,7 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
                 geom = cache.get(str(request.user.id) + "_geom")
-                # cache.delete(str(request.user.id) + "_geom")
+                # Mazání cache geometrie je zde záměrně zakomentované.
                 index = int(self.request.GET["index"])
                 if self.request.GET["label"] != str(geom.iloc[index]["label"]):
                     raise Exception("lokalita.views.LokalitaPianCreateView.get.label_not_found")
@@ -545,7 +545,7 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
                 geom = cache.get(str(request.user.id) + "_geom")
-                # cache.delete(str(request.user.id) + "_geom")
+                # Mazání cache geometrie je zde záměrně zakomentované.
                 index = int(self.request.GET["index"])
                 if self.request.GET["label"] != str(geom.iloc[index]["label"]):
                     raise Exception("lokalita.views.LokalitaPianUpdateView.get.label_not_found")

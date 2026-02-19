@@ -1,6 +1,6 @@
-# Configuration file for the Sphinx documentation builder.
+# Konfigurační soubor pro generátor dokumentace Sphinx.
 #
-# For the full list of built-in configuration values, see the documentation:
+# Úplný seznam vestavěných konfiguračních hodnot je v dokumentaci:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os
@@ -39,8 +39,8 @@ exclude_patterns = []
 
 language = "cs"
 
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+# -- Nastavení HTML výstupu --------------------------------------------------
+
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]

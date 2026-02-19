@@ -23,7 +23,7 @@ class RedisConnector:
     def _create_connection(cls):
         cls.r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass())
 
-    # tento connector vrací přímo string, takže není potřeba volat value.decode("utf-8")
+    # Tento konektor vrací přímo řetězec, takže není potřeba volat `decode("utf-8")`.
     @classmethod
     def _create_connection_decode(cls):
         cls.r_decode = redis.Redis(
@@ -189,8 +189,8 @@ class ClamdNetworkSocket:
         Returns:
             str: formátovaná chybová zpráva
         """
-        # argumenty pro socket.error mohou být buď (errno, "message")
-        # nebo jen "message"
+        # argumenty pro síťovou výjimku mohou být buď (errno, "zpráva")
+        # nebo jen "zpráva"
         if len(exception.args) == 1:
             return "Error connecting to {host}:{port}. {msg}.".format(
                 host=self.host, port=self.port, msg=exception.args[0]

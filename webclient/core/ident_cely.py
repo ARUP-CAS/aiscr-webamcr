@@ -67,7 +67,7 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
 
             if len(idents) < MAXIMAL_PROJECT_EVENTS:
                 if idents:
-                    last_ident = idents[0][1]  # Assuming the second column is 'ident_cely'
+                    last_ident = idents[0][1]  # Předpoklad: druhý sloupec je `ident_cely`.
                     return project.ident_cely + chr(ord(last_ident[-1]) + 1)
                 else:
                     return project.ident_cely + "A"
@@ -273,7 +273,7 @@ def get_adb_ident(pian: Pian) -> str:
     except AdbSekvence.DoesNotExist:
         sequence = AdbSekvence.objects.using("urgent").create(kladysm5=sm5, sekvence=1)
     perm_ident_cely = record_list + "-" + f"{sequence.sekvence:06}"
-    # Loop through all of the idents that have been imported
+    # Projde všechny importované identifikátory.
     while True:
         if Adb.objects.filter(ident_cely=perm_ident_cely).exists():
             sequence.sekvence += 1

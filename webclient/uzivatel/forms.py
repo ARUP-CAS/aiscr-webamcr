@@ -384,7 +384,7 @@ class UserPasswordResetForm(PasswordResetForm):
         Send a django.core.mail.EmailMultiAlternatives to `to_email`.
         """
         subject = loader.render_to_string(subject_template_name, context)
-        # Email subject *must not* contain newlines
+        # Předmět e-mailu *nesmí* obsahovat znaky nového řádku.
         subject = "".join(subject.splitlines())
         body = loader.render_to_string(email_template_name, context)
 
@@ -458,7 +458,7 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
     def __init__(self, *args, **kwargs):
         kwargs.pop("create", False)
         super(OsobaForm, self).__init__(*args, **kwargs)
-        # if create:
+        # pokud jde o vytvoření:
         # self.fields["orcid"] = OrcidAutocompleteField(
         #     widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
         #     label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),

@@ -194,7 +194,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 komponenta.komponenta_vazby = cast.komponenty
             komponenta.close_active_transaction_when_finished = True
             komponenta.save()
-            form.save_m2m()  # this must be called to store komponenta_aktivity
+            form.save_m2m()  # Toto je nutné zavolat pro uložení `komponenta_aktivity`.
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         if dj:

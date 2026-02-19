@@ -36,13 +36,9 @@ class HistorieTable(ColumnShiftTableBootstrap4):
             "poznamka",
         )
 
-    # TODO: This form of printing does not respect django timezone
+    # TODO: Tento způsob výpisu nerespektuje časovou zónu Django.
     # @staticmethod
-    # def render_datum_zmeny(value):
-    #     if value:
-    #         return value.strftime("%Y-%m-%d, %H:%M:%S")
-    #     else:
-    #         return "—"
+    # Příklad alternativního renderu data změny je ponechán pouze jako poznámka.
 
 
 class SimpleHistoryTable(ColumnShiftTableBootstrap4):

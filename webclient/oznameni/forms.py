@@ -33,8 +33,8 @@ class DateRangeField(forms.DateField):
         else:
             from_date = super(DateRangeField, self).to_python(values[0].strip())
             to_date = super(DateRangeField, self).to_python(values[1].strip())
-        # add one day to the to_date since DateRangePicker has both bounds included 12/30/2020 - 12/30/2020 must be
-        # stored as 12/30/2020 - 12/31/2020, since postgres does not include upper bound to the range
+        # Přidá jeden den k `to_date`, protože DateRangePicker bere obě meze včetně; interval 12/30/2020 - 12/30/2020 musí být
+        # uložen jako 12/30/2020 - 12/31/2020, protože Postgres horní mez intervalu nezahrnuje.
         if from_date is None or to_date is None:
             raise ValidationError(self.error_messages["invalid"], code="invalid")
         try:
@@ -62,7 +62,7 @@ class DateRangeWidget(forms.TextInput):
                 return (
                     value.lower.strftime(format_str)
                     + " - "
-                    + (value.upper - datetime.timedelta(days=1)).strftime(format_str)  # Now I must substract one day
+                    + (value.upper - datetime.timedelta(days=1)).strftime(format_str)  # Je potřeba odečíst jeden den.
                 )
 
         return str(value)

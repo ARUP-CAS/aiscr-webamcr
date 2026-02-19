@@ -244,7 +244,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
                 }}
             """
 
-        # Set up the SPARQL wrapper
+        # Inicializace SPARQL wrapperu.
         sparql = SPARQLWrapper(cls.API_URL)
         sparql.setQuery(query)
         sparql.setReturnFormat(JSON)

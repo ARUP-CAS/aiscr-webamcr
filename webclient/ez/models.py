@@ -149,7 +149,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
         from arch_z.models import Akce, ArcheologickyZaznam
 
-        # Transaction is closed by TransakceView
+        # Transakci uzavírá `TransakceView`.
         self.save()
 
         for akce in self.externi_odkazy_zdroje.all():
@@ -246,7 +246,7 @@ def get_perm_ez_ident():
     finally:
         ezs = ExterniZdroj.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
         if ezs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count() > 0:
-            # number from empty spaces
+            # číslo bez mezer
             idents = list(ezs.values_list("ident_cely", flat=True).order_by("ident_cely"))
             idents = [sub.replace(prefix, "") for sub in idents]
             idents = [sub.lstrip("0") for sub in idents]

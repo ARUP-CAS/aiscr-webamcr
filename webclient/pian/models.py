@@ -203,7 +203,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             perm_ident_cely = "P-" + str(self.zm50.cislo).replace("-", "").zfill(4) + "-" + f"{sequence.sekvence:06}"
         else:
             raise MaximalIdentNumberError(maximum)
-        # Loop through all of the idents that have been imported
+        # Projde všechny importované identifikátory.
         while True:
             if Pian.objects.filter(ident_cely=perm_ident_cely).exists():
                 sequence.sekvence += 1

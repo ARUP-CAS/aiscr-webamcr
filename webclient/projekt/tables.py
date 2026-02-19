@@ -134,4 +134,4 @@ class ProjektTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         super(ProjektTable, self).__init__(*args, **kwargs)
-        # self.set_hideable_columns(['ident_cely', 'stav']) Uncomment when will be supported
+        # self.set_hideable_columns(['ident_cely', 'stav']) Odkomentovat, až bude podpora dostupná.

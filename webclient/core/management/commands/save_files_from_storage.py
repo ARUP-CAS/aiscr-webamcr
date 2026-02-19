@@ -76,7 +76,7 @@ class Command(BaseCommand):
         save_thumbs = options["save_thumbs"]
         disable_antivirus = options["disable_antivirus"]
 
-        # Validate that either pks or range is provided, but not both
+        # Ověří, že je zadáno buď `pks`, nebo rozsah, ale ne oboje.
         if pks and pk_range:
             raise CommandError(_("core.management.commands.save_files_from_storage.pks_and_range_error"))
         if not pks and not pk_range:

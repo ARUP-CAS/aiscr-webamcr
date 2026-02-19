@@ -28,7 +28,7 @@ BASE_MARGIN = 20 * mm
 HEADER_HEIGHT = 10 * mm
 HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png")
 
-# Try except because of failing sphinx-build
+# Ošetření výjimky kvůli selhávajícímu běhu sphinx-build.
 
 path = None
 try:
@@ -44,7 +44,7 @@ try:
         "OpenSans", normal="OpenSans", bold="OpenSansBold", italic="OpenSansItalic", boldItalic="OpenSansBoldItalic"
     )
 except Exception:
-    # This will be triggered during collectstatic
+    # Toto se spustí během `collectstatic`.
     logger.error("doc_utils.font.error", extra={"info": path})
 
 Title = "Hello world"

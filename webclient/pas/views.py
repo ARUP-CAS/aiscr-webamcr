@@ -187,7 +187,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
             messages.error(self.request, _("pas.views.zapsat.create.check_container_deleted_or_not_exists_error"))
             return self.form_invalid(form)
 
-        # Proceed with saving and other logic
+        # Pokračuje uložením a další logikou.
         sn.create_transaction(self.request.user, ZAZNAM_USPESNE_VYTVOREN)
         sn.stav = SN_ZAPSANY
         sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
@@ -209,23 +209,23 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         return HttpResponseRedirect(reverse("pas:detail", kwargs={"ident_cely": sn.ident_cely}))
 
     def form_invalid(self, form):
-        """Log form invalid errors and display a message to the user."""
+        """Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu."""
         logger.info("pas.views.create.form_invalid", extra={"error": form.errors})
         messages.error(self.request, FORM_NOT_VALID)
         return super().form_invalid(form)
 
     def handle_geometry(self, form_coor):
-        """Handle coordinate data parsing and return geometry objects."""
+        """Zpracuje parsování souřadnicových dat a vrátí objekty geometrie."""
         geom = None
         geom_sjtsk = None
         try:
-            # Parse WGS84 coordinates
+            # Parsování souřadnic WGS84
             wgs84_x1 = float(form_coor.data.get("coordinate_wgs84_x1"))
             wgs84_x2 = float(form_coor.data.get("coordinate_wgs84_x2"))
             if wgs84_x1 > 0 and wgs84_x2 > 0:
                 geom = Point(wgs84_x1, wgs84_x2)
 
-            # Parse SJTSK coordinates
+            # Parsování souřadnic SJTSK
             sjtsk_x1 = float(form_coor.data.get("coordinate_sjtsk_x1"))
             sjtsk_x2 = float(form_coor.data.get("coordinate_sjtsk_x2"))
             if sjtsk_x1 < 0 and sjtsk_x2 < 0:
@@ -239,7 +239,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Handle GET request and check project type."""
+        """Zpracuje GET požadavek a ověří typ projektu."""
         ident_cely = kwargs.get("ident_cely")
         if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value:
             proj = get_object_or_404(Projekt, ident_cely=ident_cely)

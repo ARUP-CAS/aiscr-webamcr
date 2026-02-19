@@ -44,11 +44,11 @@ class UserSerializer(serializers.ModelSerializer):
             except SkipField:
                 continue
 
-            # We skip `to_representation` for `None` values so that fields do
-            # not have to explicitly deal with that case.
+            # Pro hodnoty `None` přeskočíme `to_representation`, aby pole
+            # nemusela tento případ řešit explicitně.
             #
-            # For related fields with `use_pk_only_optimization` we need to
-            # resolve the pk value.
+            # U relačních polí s `use_pk_only_optimization` je potřeba
+            # převést hodnotu primárního klíče.
             check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
             if check_for_none is None:
                 ret[field.label] = None

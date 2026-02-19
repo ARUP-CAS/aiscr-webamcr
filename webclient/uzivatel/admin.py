@@ -103,7 +103,7 @@ class UserNotificationTypeInline(admin.TabularInline):
 
     def get_extra(self, request, obj=None, **kwargs):
         extra = 1  # default 0
-        if not obj:  # new create only
+        if not obj:  # pouze při vytváření nového záznamu
             extra = UserNotificationType.objects.filter(
                 Q(ident_cely__icontains="S-E-A")
                 | Q(ident_cely__icontains="S-E-N")
@@ -217,7 +217,7 @@ class PesUserNotificationTypeInline(admin.TabularInline):
 
     def get_extra(self, request, obj=None, **kwargs):
         extra = 1  # default 0
-        if not obj:  # new create only
+        if not obj:  # pouze při vytváření nového záznamu
             extra = UserNotificationType.objects.filter(Q(ident_cely__in=PES_NOTIFICATIONS)).count()
         return extra
 

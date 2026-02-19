@@ -91,7 +91,7 @@ class OznameniZapsatView(OznameniView):
                         "katastr": projekt.hlavni_katastr,
                     },
                 )
-                # p.save()
+                # Uložení instance je zde záměrně vypnuté.
                 if projekt.hlavni_katastr is not None and not self.ident_cely:
                     projekt.ident_cely = get_temporary_project_ident(projekt.hlavni_katastr.okres.kraj.rada_id)
                 else:

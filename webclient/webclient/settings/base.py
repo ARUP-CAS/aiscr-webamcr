@@ -13,8 +13,8 @@ def get_secret(setting, default_value=None):
     file_path = (
         "/run/secrets/db_conf"
         if os.path.exists("/run/secrets/db_conf")
-        # else path will be used in case a docker secret is not used during instantiation.
-        # Doesn't catch case where docker secrets points to missing file on local disk.
+        # Jinak se použije cesta, pokud při inicializaci není použit Docker secret.
+        # Nezachytí případ, kdy Docker secret ukazuje na chybějící lokální soubor.
         else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_db.json")
     )
 
@@ -37,8 +37,8 @@ def get_mail_secret(setting, default_value=None):
     file_mail_path = (
         "/run/secrets/mail_conf"
         if os.path.exists("/run/secrets/mail_conf")
-        # else path will be used in case a docker secret is not used during instantiation.
-        # Doesn't catch case where docker secrets points to missing file on local disk.
+        # Jinak se použije cesta, pokud při inicializaci není použit Docker secret.
+        # Nezachytí případ, kdy Docker secret ukazuje na chybějící lokální soubor.
         else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_mail_client.json")
     )
     with open(file_mail_path, "r") as file:
@@ -220,7 +220,7 @@ TEMPLATES = [
                 "core.context_processors.constants_import",
                 "core.context_processors.digi_links_from_settings",
                 "core.context_processors.logout_next_url",
-                "core.context_processors.auto_logout_client",  # for auto logout aftert idle
+                "core.context_processors.auto_logout_client",  # pro automatické odhlášení po nečinnosti
                 "core.context_processors.main_shows",
             ],
         },

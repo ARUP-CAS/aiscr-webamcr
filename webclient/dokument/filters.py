@@ -267,7 +267,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
     aktivity = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(
             nazev_heslare=HESLAR_AKTIVITA
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
+        ),  # Nezdá se mi použití obou hesel – platí i pro vytvoření a úpravu.
         field_name="casti__komponenty__komponenty__komponentaaktivita__aktivita",
         label=_("dokument.filters.dokumentFilter.aktivity.label"),
         widget=SelectMultiple(
@@ -283,7 +283,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
     predmet_specifikace = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(
             nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
+        ),  # Nezdá se mi použití obou hesel – platí i pro vytvoření a úpravu.
         field_name="casti__komponenty__komponenty__predmety__specifikace",
         label=_("dokument.filters.dokumentFilter.predmetSpecifikace.label"),
         widget=SelectMultiple(

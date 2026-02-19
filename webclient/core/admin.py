@@ -99,7 +99,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
                 uwsgi.reload()  # pretty easy right?
             except Exception as e:
                 logger.debug("core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e})
-                pass  # we may not be running under uwsgi :P
+                pass  # aplikace nemusí běžet pod uWSGI.
         super().save_model(request, obj, form, change)
 
     def has_module_permission(self, request):

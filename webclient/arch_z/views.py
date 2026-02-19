@@ -384,7 +384,7 @@ class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRel
         show = self.get_shows()
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         jednotky = self.get_jednotky()
-        # check po MR
+        # zkontrolovat po MR
         context["j"] = get_dj_form_detail("akce", jednotka, jednotky, show, old_adb_post, self.request.user)
         return context
 
@@ -481,7 +481,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
                 geom = cache.get(str(request.user.id) + "_geom")
-                # cache.delete(str(request.user.id) + "_geom")
+                # Mazání cache geometrie je zde záměrně zakomentované.
                 index = int(self.request.GET["index"])
                 if self.request.GET["label"] != str(geom.iloc[index]["label"]):
                     raise Exception("arch_z.views.PianCreateView.get.label_not_found")
@@ -541,7 +541,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
                 geom = cache.get(str(request.user.id) + "_geom")
-                # cache.delete(str(request.user.id) + "_geom")
+                # Mazání cache geometrie je zde záměrně zakomentované.
                 index = int(self.request.GET["index"])
                 if self.request.GET["label"] != str(geom.iloc[index]["label"]):
                     raise Exception("arch_z.views.PianUpdateView.get.label_not_found")
@@ -882,7 +882,7 @@ def vratit(request, ident_cely):
                     projekt = az.akce.projekt
                 # BR-A-3
                 if az.stav == AZ_STAV_ODESLANY and projekt is not None:
-                    #  Return also project from the states P6 or P5 to P4
+                    # Vrátit také projekt ze stavů P6 nebo P5 do P4.
                     projekt.active_transaction = fedora_transaction
                     projekt_stav = projekt.stav
                     logger.debug("arch_z.views.vratit.valid", extra={"ident_cely": ident_cely, "stav": projekt.stav})
@@ -1021,8 +1021,8 @@ def zapsat(request, projekt_ident_cely=None):
                 ):
                     az.save()
                     form_az.save_m2m()
-                    # This must be called to save many to many (katastry)
-                    # since we are doing commit = False
+                    # Toto je nutné zavolat pro uložení many-to-many vazeb (katastry).
+                    # protože používáme `commit = False`
                     az.set_zapsany(request.user)
                     akce = form_akce.save(commit=False)
 

@@ -106,7 +106,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     Metoda pro odeslání emailu hlídacího psa pri založení projektu.
     """
-    # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
+    # Když je projekt vytvořen přes stránku „oznámení“, metadata se ukládají přímo bez Celery.
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(Projekt)
     invalidate_model(Akce)
@@ -117,8 +117,8 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
 
             def save_metadata():
                 if instance.hlavni_katastr in instance.katastry.all():
-                    # This must be done in on_commit function, see
-                    # https://stackoverflow.com/questions/23795811/django-accessing-manytomany-fields-from-post-save-signal
+                    # Toto je nutné provést ve funkci `on_commit`, viz
+                    # Viz dokumentace k přístupu k many-to-many poli v post_save signálu.
                     instance.katastry.remove(instance.hlavni_katastr)
                 instance.save_metadata(fedora_transaction, close_transaction=True)
 

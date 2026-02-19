@@ -122,9 +122,9 @@ def create_pes_form(not_readonly=True, model_typ=None):
 
         def clean(self, *args, **kwargs):
             super().clean(*args, **kwargs)
-            # Get the values and check duplicates
+            # Načte hodnoty a zkontroluje duplicity.
 
-            # Find the duplicates
+            # Najde duplicitní záznamy.
             duplicates = Pes.objects.filter(
                 object_id=self.cleaned_data["object_id"],
                 content_type=ContentType.objects.get(model=self.model_typ),
@@ -132,7 +132,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
             )
             if (
                 self.instance.pk
-            ):  # if the instance is already in the database, make sure to exclude self from list of duplicates
+            ):  # pokud je instance už v databázi, je potřeba vyloučit sama sebe ze seznamu duplicit
                 duplicates = duplicates.exclude(pk=self.instance.pk)
             if duplicates.exists():
                 raise forms.ValidationError(_("notifikaceProjekty.forms.pesForm.stejnaJendotka.error"))

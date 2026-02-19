@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def list_files_in_db():
-    # do the work
+    # Provede vlastní zpracování.
     soubory_query = Soubor.objects.all()
     return [soubor.path.path for soubor in soubory_query if soubor.path.name != "not specified yet"]
 

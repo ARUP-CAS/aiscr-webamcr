@@ -19,7 +19,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
     Class pro db model heslar.
     """
 
-    # TextFields should be changed to CharField if no long text is expected to be written in
+    # TextField by měl být změněn na CharField, pokud se neočekává dlouhý text.
     ident_cely = models.TextField(unique=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
         "HeslarNazev", models.RESTRICT, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")

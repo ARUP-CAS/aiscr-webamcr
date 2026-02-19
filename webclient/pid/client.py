@@ -28,7 +28,7 @@ class DigitalObjectIdentifierClient:
         record_type = type(record)
         if record_type in self.record_serializer_map:
             serializer_class, self.attribute_name, self.auth = self.record_serializer_map[record_type]
-            self.serializer = serializer_class(self.record)  # Access serializer class dynamically
+            self.serializer = serializer_class(self.record)  # Dynamicky přistoupí ke třídě serializéru.
         else:
             logger.error("doi.client.DigitalObjectIdentifierClient.invalid_record_class")
             raise ValueError(_("doi.client.DigitalObjectIdentifierClient.invalid_record_class"))

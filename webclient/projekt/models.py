@@ -327,7 +327,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         self.save()
 
     def archive_project_documentation(self):
-        # making txt file with deleted files
+        # Vytvoří textový soubor se seznamem smazaných souborů.
         soubory = self.soubory.soubory.all()
         if soubory.count() > 0:
             conn = FedoraRepositoryConnector(self, self.active_transaction)
@@ -350,7 +350,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         from services.mailer import Mailer
 
         if self.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-            # Removing personal information from the projekt announcement
+            # Odstraňuje osobní údaje z oznámení projektu.
             if self.has_oznamovatel():
                 self.oznamovatel.delete()
                 self.oznamovatel = None
@@ -574,7 +574,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             prefix = f"{region}-{str(current_year)}"
             projekts = Projekt.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
             if projekts.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:05}").count() > 0:
-                # number from empty spaces
+                # číslo bez mezer
                 idents = list(projekts.values_list("ident_cely", flat=True).order_by("ident_cely"))
                 idents = [sub.replace(prefix, "") for sub in idents]
                 idents = [sub.lstrip("0") for sub in idents]

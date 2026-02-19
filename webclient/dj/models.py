@@ -94,7 +94,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     @property
     def initial_pian(self):
-        """Vrátí objekt Pian na základě initial_pian_id (lazy-load)."""
+        """Vrátí objekt Pian na základě initial_pian_id (líné načtení)."""
         if self.initial_pian_id is not None:
             try:
                 return Pian.objects.get(pk=self.initial_pian_id)

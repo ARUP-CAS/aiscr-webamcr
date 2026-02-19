@@ -74,7 +74,6 @@ def upload_file(Atomic_ID, file, type, path):
     print(response)
 
 
-# curl -u fedoraAdmin:pswd -X POST -H "Slug: member" -H "Link: <http://www.w3.org/ns/ldp#IndirectContainer>;rel=\"type\"" -H "Content-Type: text/turtle" --data-binary "@C:\Users\havrlant\Documents\ARUP\fedora\inputs\ldp\indir-deleted.ttl"  "http://localhost:8080/rest/AMCR/model/deleted"
 def IndirectContainer(container_path, Atomic_ID, name, file):
     print("IndirectContainer")
     with open(file, "r") as f:

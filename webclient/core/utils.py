@@ -166,7 +166,7 @@ def get_mime_type(file_name):
     Funkce pro získaní mime typu pro soubor.
     """
     mime_type = mimetypes.guess_type(file_name)[0]
-    # According to RFC 4180 csv is text/csv
+    # Podle RFC 4180 je MIME typ CSV `text/csv`.
     if file_name.endswith(".csv"):
         mime_type = "text/csv"
     return mime_type
@@ -551,7 +551,7 @@ def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
     c1 = Q(geom__isnull=False)
     c3 = Q(projekt__ident_cely=ident_cely)
     queryset = SamostatnyNalez.objects.filter(c3).filter(c1)
-    # FIltering bbox is disabled-because of caching add .filter(c2)
+    # Filtrování bbox je kvůli cache vypnuté; pro zapnutí přidejte .filter(c2).
     try:
         return queryset.only("id", "ident_cely", "geom")
     except IndexError:
@@ -583,7 +583,7 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
                 .values_list("pian__id", flat=True)
             )
         )
-        # FIltering bbox is disabled-because of caching add .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))
+        # Filtrování bbox je kvůli cache vypnuté; pro zapnutí přidejte .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom]))).
         if d:
             pians.extend(d)
     try:
@@ -924,8 +924,8 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
     if settings.SETTINGS_MODULE:
         parts = settings.SETTINGS_MODULE.split(".")
     else:
-        # if settings.SETTINGS_MODULE is None, we are probably in "test" mode
-        # and override_settings() was used
+        # Pokud je `settings.SETTINGS_MODULE` None, pravděpodobně běží testovací režim.
+        # a bylo použito `override_settings()`.
         # see: https://code.djangoproject.com/ticket/25911
         parts = os.environ.get(ENVIRONMENT_VARIABLE).split(".")
     project = __import__(parts[0], {}, {}, [])
@@ -1001,9 +1001,9 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
                     filename = os.path.join(dirname, fn)
                     abs_path = os.path.abspath(filename)
                     # On case insensitive filesystems (looking at you, MacOS)
-                    # compare the lowercase absolute path of the po file
+                    # Porovná absolutní cestu k PO souboru v malých písmenech.
                     # to all lowercased paths already collected.
-                    # This is not an issue on sane filesystems
+                    # Na běžných souborových systémech to nepředstavuje problém.
                     if not case_sensitive_file_system:
                         if filename.lower() in [p.lower() for p in ret]:
                             continue

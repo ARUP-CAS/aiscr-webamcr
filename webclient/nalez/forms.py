@@ -14,7 +14,7 @@ class NalezFormSetHelper(FormHelper):
         self.typ_vazby = typ_vazby
 
 
-# Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
+# Funkce bude podtříděna, aby šlo předat volby do formsetů při volání formsetfactory.
 def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=True):
     """
     Funkce která vrací formulář nálezu objekty pro formset.

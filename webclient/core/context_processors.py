@@ -54,7 +54,7 @@ def logout_next_url(request):
     return {"logout_next_url": request.path}
 
 
-# for autologout function redirect immediatelly
+# Pro funkci automatického odhlášení přesměruje ihned.
 def auto_logout_client(request):
     """
     Automatický výpočet a import kontextu potrebného pro správně zobrzazení automatického logoutu na všech stránkach.
