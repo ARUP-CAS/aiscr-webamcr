@@ -90,7 +90,8 @@ jobs:
       - name: Set final SHA
         id: final-sha
         run: |
-          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          git fetch origin dev
+          echo "sha=$(git rev-parse origin/dev)" >> $GITHUB_OUTPUT
   
   new_version:
     name: Create new tag
