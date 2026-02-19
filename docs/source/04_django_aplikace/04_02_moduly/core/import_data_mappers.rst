@@ -6,14 +6,28 @@ Modul import_data_mappers.
 Třídy
 ------
 
+.. py:class:: ImportDataValidationResult
+
+   Datová třída, která reprezentuje výsledek validace jednoho záznamu při importu dat.
+
+
+   **Atributy:**
+
+   - ``item_order``: Pořadové číslo záznamu v importu.
+   - ``file_name``: Název CSV souboru, ze kterého záznam pochází.
+   - ``primary_key_import``: Primární klíč záznamu v datovém souboru.
+   - ``primary_key_table``: Primární klíč záznamu v databázi.
+   - ``validation_result``: Textový popis výsledku validace (úspěch nebo chybová zpráva).
+
+
 .. py:class:: ImportDataError
 
-   Popis není k dispozici.
+   Základní výjimka pro chyby při importu dat.
 
 
 .. py:class:: ImportDataIncorrectStructureError
 
-   Exception raised when the structure of the imported data does not match the expected structure.
+   Výjimka vyvolaná při nesouladu struktury importovaných dat s očekávanou strukturou (chybějící nebo přebývající sloupce).
 
    **Metody:**
 
@@ -22,7 +36,7 @@ Třídy
 
 .. py:class:: ImportDataIncorrectStructureContentObjectError
 
-   Exception raised when the structure of the imported data does not match the expected structure.
+   Výjimka vyvolaná při nesouladu struktury obsahu importovaných dat s očekávanou strukturou (neplatná kombinace sloupců).
 
    **Metody:**
 
@@ -31,7 +45,7 @@ Třídy
 
 .. py:class:: ImportDataMissingReferencedValueError
 
-   Exception raised when a referenced value is missing in either database or in the imported data.
+   Výjimka vyvolaná při chybějící hodnotě referencovaného záznamu — buď v databázi, nebo v importovaných datech.
 
    **Metody:**
 
@@ -40,9 +54,9 @@ Třídy
 
 .. py:class:: ImportDataIntegrityError
 
-   Exception raised in two cases.
-   During the import action: when a record with the same primary key already exists in the database
-   During the update action: when a record with the specified primary key does not exist in the database.
+   Výjimka vyvolaná ve dvou případech:
+   při insertu — pokud záznam se stejným primárním klíčem již v databázi existuje,
+   při updatu — pokud záznam se zadaným primárním klíčem v databázi neexistuje.
 
    **Metody:**
 
@@ -51,7 +65,7 @@ Třídy
 
 .. py:class:: ImportDataLimitChoicesError
 
-   Popis není k dispozici.
+   Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to.
 
    **Metody:**
 
@@ -60,7 +74,7 @@ Třídy
 
 .. py:class:: ImportDataHeslarPresnostLimitChoicesError
 
-   Popis není k dispozici.
+   Výjimka vyvolaná při neplatné hodnotě přesnosti v hesláři u importovaného záznamu.
 
    **Metody:**
 
@@ -69,16 +83,25 @@ Třídy
 
 .. py:class:: ImportDataUnsupportedFileError
 
-   Exception raised when an unsupported file name is included in the imported archive.
+   Výjimka vyvolaná při výskytu nepodporovaného názvu souboru v importovaném archivu.
 
    **Metody:**
 
    .. py:method:: __init__()
 
 
-.. py:class:: ImportDataUnsupportedMultipleFilesError
+.. py:class:: ImportDataUnsupportedFilesError
 
-   Exception raised when an unsupported file name is included in the imported archive.
+   Výjimka vyvolaná při výskytu jednoho nebo více nepodporovaných názvů souborů v importovaném archivu.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+
+.. py:class:: ImportDataIncorrectPrimaryKeyFormatError
+
+   Výjimka vyvolaná při nesouladu hodnoty primárního klíče s očekávaným formátem.
 
    **Metody:**
 
@@ -87,8 +110,8 @@ Třídy
 
 .. py:class:: BaseImportField
 
-   Base class for import fields. Does not perform any validation or processing of the value.
-   Used mostly for text fields.
+   Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
+   Používá se především pro textová pole.
 
    **Metody:**
 
@@ -109,18 +132,18 @@ Třídy
 
 .. py:class:: IntegerImportField
 
-   Class for import fields that should contain integer values.
+   Importní pole pro hodnoty datového typu integer.
 
    **Metody:**
 
    .. py:method:: _process_value()
 
-      If the value is not a number, then the method raises ImportDataError. Otherwise it converts value to int.
+      Převede hodnotu na int. Pokud hodnota není číslo, vyvolá ImportDataError.
 
 
 .. py:class:: PositiveIntegerImportField
 
-   Popis není k dispozici.
+   Importní pole pro kladné celočíselné hodnoty. Záporná čísla způsobí vyvolání ImportDataError.
 
    **Metody:**
 
@@ -129,7 +152,7 @@ Třídy
 
 .. py:class:: DecimalImportField
 
-   Popis není k dispozici.
+   Importní pole pro desetinná čísla (float).
 
    **Metody:**
 
@@ -138,19 +161,18 @@ Třídy
 
 .. py:class:: BooleanImportField
 
-   Class for import fields that should contain boolean values.
+   Importní pole pro hodnoty datového typu boolean.
 
    **Metody:**
 
    .. py:method:: _process_value()
 
-      Tries to convert string value to bool. If the string value is not "true" or "false", then the exception
-      ImportDataError is raised.
+      Převede řetězec na bool. Pokud hodnota není "true"/"1" ani "false"/"0", vyvolá ImportDataError.
 
 
 .. py:class:: DateImportField
 
-   Class for import fields that should contain date values.
+   Importní pole pro hodnoty datového typu date.
 
    **Metody:**
 
@@ -162,13 +184,14 @@ Třídy
 
    .. py:method:: _process_value()
 
-      Tries to convert a string value to date. If the string value is not in the format "YYYY-MM-DD" or "DD.MM.YYYY",
-      then the exception ImportDataError is raised.
+      Převede řetězec na datum. Podporované formáty jsou "YYYY-MM-DD" a "DD.MM.YYYY".
+      Pokud hodnota neodpovídá žádnému formátu, vyvolá ImportDataError.
 
 
 .. py:class:: DateTimeImportField
 
-   Class for import fields that should contain date and time values.
+   Importní pole pro hodnoty datového typu datetime.
+   Podporovaný formát: "YYYY-MM-DD HH:MM:SS".
 
    **Metody:**
 
@@ -183,7 +206,7 @@ Třídy
 
 .. py:class:: DateRangeImportField
 
-   Class for import fields that should contain date-range values.
+   Importní pole pro hodnoty datového typu date range.
 
    **Metody:**
 
@@ -191,13 +214,13 @@ Třídy
 
    .. py:method:: _process_value()
 
-      Tries to convert a string value to date. If the string value is not in the format "YYYY-MM-DD".
-      then the exception ImportDataError is raised.
+      Převede řetězec na DateRange ve formátu "[YYYY-MM-DD, YYYY-MM-DD)".
+      Pokud hodnota neodpovídá očekávanému formátu, vyvolá ImportDataError.
 
 
 .. py:class:: LookupImportField
 
-   Class for import fields that should contain a reference to another model instance.
+   Importní pole pro hodnoty odkazující na instanci jiného modelu (cizí klíč).
 
    **Metody:**
 
@@ -209,14 +232,13 @@ Třídy
 
    .. py:method:: _process_value()
 
-      Processes the value by checking if it exists in the database or in the imported records. If yes, it returns
-      the record. If the referenced record does not exist, it raises ImportDataMissingReferencedValueError.
+      Ověří existenci hodnoty v databázi nebo v importovaných záznamech a vrátí odpovídající záznam.
+      Pokud referencovaný záznam neexistuje, vyvolá ImportDataMissingReferencedValueError.
 
 
 .. py:class:: RuianLookupImportField
 
-   Based on the LookupImportField, this class is used for importing data from RUIAN data. It strips
-   the "ruian-" prefix from the value and converts it to an integer.
+   Rozšíření LookupImportField pro import dat z RUIAN. Odstraní prefix "ruian-" a převede hodnotu na integer.
 
    **Metody:**
 
@@ -225,8 +247,7 @@ Třídy
 
 .. py:class:: VazbaLookupImportField
 
-   Class for import field with referenced models for vazba (relation). This relation is 1:1 instead of 1:N
-   and these fields manage relation to another model.
+   Importní pole pro referencované modely přes vazbu (relaci). Relace je 1:1 místo 1:N.
 
    **Metody:**
 
@@ -237,7 +258,7 @@ Třídy
 
 .. py:class:: GeomImportField
 
-   Class for import fields that should contain geometries.
+   Importní pole pro geometrické hodnoty.
 
    **Metody:**
 
@@ -247,12 +268,12 @@ Třídy
 
    .. py:method:: _process_value()
 
-      Tries to convert string value to geometry.
+      Převede řetězec na objekt GEOSGeometry. Pokud převod selže, vyvolá ImportDataError.
 
 
 .. py:class:: GenericForeignKeyImportField
 
-   Popis není k dispozici.
+   Importní pole pro generický cizí klíč.
 
    **Metody:**
 
@@ -265,8 +286,8 @@ Třídy
 
 .. py:class:: ImportModelMapper
 
-   Base class for data import. The class loads data from the imported file, preprocesses all values based on the
-   target field and creates a record.
+   Základní třída pro hromadný import dat. Načítá data z importovaného souboru,
+   předzpracovává hodnoty podle cílového pole a vytváří záznamy.
 
    **Metody:**
 
@@ -274,19 +295,19 @@ Třídy
 
    .. py:method:: get_import_data_mapper_dict()
 
-      Returns a child class based on the import file name.
+      Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů.
 
    .. py:method:: get_import_data_mapper()
 
-      Returns a child mapper class based on the file name, omitting the file extension.
+      Vrátí třídu mapperu odpovídající zadanému názvu souboru (bez přípony).
 
    .. py:method:: get_mapping()
 
-      Map imported values using the map_field method.
+      Vrátí slovník mapování polí pomocí metody map_field.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
-      Returns a dict with primary key field name(s) and field value(s).
+      Vrátí slovník s názvem (názvy) a hodnotou (hodnotami) primárního klíče pro filtrování.
 
    .. py:method:: _parse_primary_key()
 
@@ -294,46 +315,44 @@ Třídy
 
    .. py:method:: map_field()
 
-      Maps value to a specific BaseImportField instance or BaseImportField child instance.
+      Namapuje pole modelu na odpovídající instanci BaseImportField nebo její podtřídy.
 
    .. py:method:: is_field_required()
 
    .. py:method:: create_records()
 
-      Create a record instance or multiple model instances that can be saved to database.
+      Vytvoří instanci záznamu nebo více instancí modelů připravených k uložení do databáze.
 
    .. py:method:: import_validation()
 
-      Perform the validation based on the primary key. The record should not exist in databased when the insert action
-      is performed. It should exist if the update action is performed. If one of the conditions is valid, the method
-      returns a dict with mapped primary key field names and values.  Otherwise, the ImportDataIntegrityError
-      error is raised.
+      Provede validaci na základě primárního klíče. Při insertu záznam nesmí existovat,
+      při updatu musí existovat. Vrátí slovník s primárními klíči, nebo vyvolá ImportDataIntegrityError.
 
    .. py:method:: _check_column_structure()
 
    .. py:method:: map()
 
-      Checks if the file columns structure is valid as the first step. If not, the ImportDataIncorrectStructureError
-      exception is raised. Then it creates a dict with field names as keys and values are instances of
-      BaseImportField class or one of its child classes with values loaded from the import file.
+      Nejprve ověří strukturu sloupců souboru — při nesouladu vyvolá ImportDataIncorrectStructureError.
+      Poté vrátí slovník s názvy polí jako klíči a instancemi BaseImportField s načtenými hodnotami jako hodnotami.
 
    .. py:method:: check_required_fields()
 
    .. py:method:: map_column_name_to_field_name()
 
-      Map a column name from the import file to the field name of the Django model. Used when the Django field
-      name is different from a database column name.
+      Převede název sloupce z importního souboru na název pole Django modelu.
+      Používá se, pokud se název pole liší od názvu databázového sloupce.
 
    .. py:method:: create_relations()
 
-      Creates relation fields for Historie, Koimponenty, and Soubory.
+      Vytvoří vazební záznamy pro Historie, Komponenty a Soubory, pokud ještě neexistují.
 
    .. py:method:: record_postprocessing()
 
 
 .. py:class:: GeometryTransformMixin
 
-   Popis není k dispozici.
+   Mixin pro mappery s geometrickými poli. Při insertu zajišťuje konverzi mezi souřadnicovými systémy:
+   WGS84 (SRID 4326) → S-JTSK (SRID 5514) a naopak.
 
    **Metody:**
 
@@ -342,7 +361,7 @@ Třídy
 
 .. py:class:: MultipleClassImportModelMapper
 
-   Popis není k dispozici.
+   Základní třída pro mappery importující data do více modelů najednou.
 
    **Metody:**
 
@@ -357,7 +376,7 @@ Třídy
 
 .. py:class:: HeslarMapper
 
-   Popis není k dispozici.
+   Mapper pro model Heslar.
 
    **Metody:**
 
@@ -366,7 +385,7 @@ Třídy
 
 .. py:class:: HeslarDataceMapper
 
-   Popis není k dispozici.
+   Mapper pro model HeslarDatace.
 
    **Metody:**
 
@@ -375,7 +394,7 @@ Třídy
 
 .. py:class:: HeslarDokumentTypMaterialRadaMapper
 
-   Popis není k dispozici.
+   Mapper pro model HeslarDokumentTypMaterialRada.
 
    **Metody:**
 
@@ -384,7 +403,7 @@ Třídy
 
 .. py:class:: HeslarHierarchieMapper
 
-   Popis není k dispozici.
+   Mapper pro model HeslarHierarchie.
 
    **Metody:**
 
@@ -393,7 +412,7 @@ Třídy
 
 .. py:class:: HeslarOdkazMapper
 
-   Popis není k dispozici.
+   Mapper pro model HeslarOdkaz.
 
    **Metody:**
 
@@ -402,7 +421,7 @@ Třídy
 
 .. py:class:: OrganizaceMapper
 
-   Popis není k dispozici.
+   Mapper pro model Organizace.
 
    **Metody:**
 
@@ -411,12 +430,12 @@ Třídy
 
 .. py:class:: OsobaMapper
 
-   Popis není k dispozici.
+   Mapper pro model Osoba.
 
 
 .. py:class:: ProjektMapper
 
-   Popis není k dispozici.
+   Mapper pro model Projekt.
 
    **Metody:**
 
@@ -427,7 +446,7 @@ Třídy
 
 .. py:class:: ProjektKatastrMapper
 
-   Popis není k dispozici.
+   Mapper pro model ProjektKatastr.
 
    **Metody:**
 
@@ -436,7 +455,7 @@ Třídy
 
 .. py:class:: ProjektOznamovatelMapper
 
-   Popis není k dispozici.
+   Mapper pro model Oznamovatel.
 
    **Metody:**
 
@@ -445,7 +464,7 @@ Třídy
 
 .. py:class:: SamostatnyNalezMapper
 
-   Popis není k dispozici.
+   Mapper pro model SamostatnyNalez.
 
    **Metody:**
 
@@ -456,7 +475,7 @@ Třídy
 
 .. py:class:: ArcheologickyZaznamAkceMapper
 
-   Popis není k dispozici.
+   Mapper pro modely ArcheologickyZaznam a Akce.
 
    **Metody:**
 
@@ -469,7 +488,7 @@ Třídy
 
 .. py:class:: LokalitaMapper
 
-   Popis není k dispozici.
+   Mapper pro modely ArcheologickyZaznam a Lokalita.
 
    **Metody:**
 
@@ -480,7 +499,7 @@ Třídy
 
 .. py:class:: AkceVedouciMapper
 
-   Popis není k dispozici.
+   Mapper pro model AkceVedouci.
 
    **Metody:**
 
@@ -489,7 +508,7 @@ Třídy
 
 .. py:class:: ArcheologickyZaznamKatastrMapper
 
-   Popis není k dispozici.
+   Mapper pro model ArcheologickyZaznamKatastr.
 
    **Metody:**
 
@@ -498,7 +517,7 @@ Třídy
 
 .. py:class:: PianMapper
 
-   Popis není k dispozici.
+   Mapper pro model Pian.
 
    **Metody:**
 
@@ -509,7 +528,7 @@ Třídy
 
 .. py:class:: DokumentacniJednotkaMapper
 
-   Popis není k dispozici.
+   Mapper pro model DokumentacniJednotka.
 
    **Metody:**
 
@@ -520,7 +539,7 @@ Třídy
 
 .. py:class:: AdbMapper
 
-   Popis není k dispozici.
+   Mapper pro model Adb.
 
    **Metody:**
 
@@ -529,7 +548,7 @@ Třídy
 
 .. py:class:: AdbVyskovyBod
 
-   Popis není k dispozici.
+   Mapper pro model VyskovyBod.
 
    **Metody:**
 
@@ -538,7 +557,7 @@ Třídy
 
 .. py:class:: DokumentLetMapper
 
-   Popis není k dispozici.
+   Mapper pro model Let.
 
    **Metody:**
 
@@ -547,7 +566,7 @@ Třídy
 
 .. py:class:: DokumentMapper
 
-   Popis není k dispozici.
+   Mapper pro modely Dokument a DokumentExtraData.
 
    **Metody:**
 
@@ -557,14 +576,14 @@ Třídy
 
    .. py:method:: create_records()
 
-      Creates a Dokument instance and DokumentExtraData instance with relation to Dokument instance.
+      Vytvoří instanci Dokument a DokumentExtraData s vazbou na Dokument.
 
    .. py:method:: map()
 
 
 .. py:class:: DokumentAutorMapper
 
-   Popis není k dispozici.
+   Mapper pro model DokumentAutor.
 
    **Metody:**
 
@@ -573,7 +592,7 @@ Třídy
 
 .. py:class:: DokumentJazykMapper
 
-   Popis není k dispozici.
+   Mapper pro model DokumentJazyk.
 
    **Metody:**
 
@@ -582,7 +601,7 @@ Třídy
 
 .. py:class:: DokumentOsobaMapper
 
-   Popis není k dispozici.
+   Mapper pro model DokumentOsoba.
 
    **Metody:**
 
@@ -591,7 +610,7 @@ Třídy
 
 .. py:class:: DokumentPosudekMapper
 
-   Popis není k dispozici.
+   Mapper pro model DokumentPosudek.
 
    **Metody:**
 
@@ -600,7 +619,7 @@ Třídy
 
 .. py:class:: TvarMapper
 
-   Popis není k dispozici.
+   Mapper pro model Tvar.
 
    **Metody:**
 
@@ -609,7 +628,7 @@ Třídy
 
 .. py:class:: DokumentCastMapper
 
-   Popis není k dispozici.
+   Mapper pro model DokumentCast.
 
    **Metody:**
 
@@ -618,7 +637,7 @@ Třídy
 
 .. py:class:: NeidentAkceMapper
 
-   Popis není k dispozici.
+   Mapper pro model NeidentAkce.
 
    **Metody:**
 
@@ -627,7 +646,7 @@ Třídy
 
 .. py:class:: NeidentAkceVedouciMapper
 
-   Popis není k dispozici.
+   Mapper pro model NeidentAkceVedouci.
 
    **Metody:**
 
@@ -636,7 +655,7 @@ Třídy
 
 .. py:class:: KomponentaMapper
 
-   Popis není k dispozici.
+   Mapper pro model Komponenta.
 
    **Metody:**
 
@@ -645,7 +664,7 @@ Třídy
 
 .. py:class:: KomponentaAktivitaMapper
 
-   Popis není k dispozici.
+   Mapper pro model KomponentaAktivita.
 
    **Metody:**
 
@@ -654,12 +673,12 @@ Třídy
 
 .. py:class:: NalezMapper
 
-   Popis není k dispozici.
+   Základní mapper pro nálezy.
 
 
 .. py:class:: NalezObjektMapper
 
-   Popis není k dispozici.
+   Mapper pro model NalezObjekt.
 
    **Metody:**
 
@@ -668,7 +687,7 @@ Třídy
 
 .. py:class:: NalezPredmetMapper
 
-   Popis není k dispozici.
+   Mapper pro model NalezPredmet.
 
    **Metody:**
 
@@ -677,7 +696,7 @@ Třídy
 
 .. py:class:: ExterniZdrojMapper
 
-   Popis není k dispozici.
+   Mapper pro model ExterniZdroj.
 
    **Metody:**
 
@@ -686,7 +705,7 @@ Třídy
 
 .. py:class:: ExterniZdrojAutorMapper
 
-   Popis není k dispozici.
+   Mapper pro model ExterniZdrojAutor.
 
    **Metody:**
 
@@ -695,7 +714,7 @@ Třídy
 
 .. py:class:: ExterniZdrojEditorMapper
 
-   Popis není k dispozici.
+   Mapper pro model ExterniZdrojEditor.
 
    **Metody:**
 
@@ -704,7 +723,7 @@ Třídy
 
 .. py:class:: ExterniOdkazMapper
 
-   Popis není k dispozici.
+   Mapper pro model ExterniOdkaz.
 
    **Metody:**
 
@@ -713,7 +732,7 @@ Třídy
 
 .. py:class:: UzivatelMapper
 
-   Popis není k dispozici.
+   Mapper pro model User.
 
    **Metody:**
 
@@ -722,7 +741,7 @@ Třídy
 
 .. py:class:: UzivatelNotifikaceProjektMapper
 
-   Popis není k dispozici.
+   Mapper pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN).
 
    **Metody:**
 
@@ -741,7 +760,7 @@ Třídy
 
 .. py:class:: UzivatelSpolupraceMapper
 
-   Popis není k dispozici.
+   Mapper pro model UzivatelSpoluprace.
 
    **Metody:**
 
@@ -750,7 +769,7 @@ Třídy
 
 .. py:class:: UzivatelOpravneniMapper
 
-   Popis není k dispozici.
+   Mapper pro přiřazení skupinových oprávnění uživateli (model User).
 
    **Metody:**
 
@@ -765,7 +784,7 @@ Třídy
 
 .. py:class:: SouborMapper
 
-   Popis není k dispozici.
+   Mapper pro model Soubor.
 
    **Metody:**
 
@@ -774,7 +793,7 @@ Třídy
 
 .. py:class:: UzivatelNotifikaceMapper
 
-   Popis není k dispozici.
+   Mapper pro přiřazení typů notifikací uživateli (model User).
 
    **Metody:**
 
@@ -789,7 +808,7 @@ Třídy
 
 .. py:class:: HistorieMapper
 
-   Popis není k dispozici.
+   Mapper pro model Historie.
 
    **Metody:**
 
