@@ -81,17 +81,13 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Set Short SHA
-        id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
       # 🛠 Create PR with ALL changes
       - name: Create Pull Request with fixes
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: pre-commit-fixes/${{ github.event.pull_request.number || steps.vars.outputs.sha_short }}-${{ github.run_id }}
+          branch: pre-commit-fixes/${{ github.event.pull_request.number || github.ref_name }}
           delete-branch: true
           commit-message: "chore: apply pre-commit fixes and update licenses"
           title: "Automatic formatting + license updates"
