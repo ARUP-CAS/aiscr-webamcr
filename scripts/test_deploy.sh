@@ -93,7 +93,9 @@ run_default ()
    in_args="${1}"
    echo_dec "${msg_default_case}"
 
-   actualize_repo
+   if [[ "$quiet_mode" != "yes" ]]; then
+       actualize_repo
+   fi
    
    # Check network exists
    check_create_network
@@ -138,6 +140,7 @@ Help ()
     -h help
     -x remove docker stack (all services)
     -b (re)deploy all services in swarm mode (DEFAULT CASE)
+    -q quiet mode
   
 EOF
 }
@@ -196,7 +199,7 @@ cmd_deploy_base="docker stack deploy --compose-file"
 echo "Pruning unused Docker images..."
 docker image prune -f
 
-while getopts "hxbut:d" option; do
+while getopts "hxqbut:d" option; do
    option_passed="yes"
    case ${option} in
       h) # display Help
@@ -218,6 +221,11 @@ while getopts "hxbut:d" option; do
         echo "OPTION: -b"
         run_default b
         ;;
+      q)
+         echo "OPTION: -q"
+         quiet_mode="yes"
+         run_default
+         ;;
      \?) # Invalid option
          echo_dec "OPTION: INVALID"
          echo "Error: Invalid option ${option}"

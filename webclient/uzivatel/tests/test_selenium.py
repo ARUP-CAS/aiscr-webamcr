@@ -16,7 +16,29 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceUzivatel(BaseSeleniumTestClass):
     def test_148_test_Fedora_uzivatel_001(self):
-        # Scenar_148 Test Fedory pro uživatele
+        """Test 148 Test Fedory pro uživatele (pozitivní scénář 1)
+
+        Role:
+            Administrator
+
+        Steps:
+            - Registrace uživatele
+            - Validace mailu
+            - Aktivace uživatele
+            - Vytvoření uživatele administrátorem
+            - Editace uživatele administrátorem
+            - Změna hesla administrátorem
+            - Smazání notifikace admin
+            - Editace notifikace admin
+            - Vytvoření notifikace admin
+            - Vytvoření hlídacího psa admin
+            - Editace hlídacího psa admin
+            - Smazání hlídacího psa admin
+            - Smazání uživatele admin
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceUzivatel.test_148_test_Fedora_uzivatel_001.start")
         # C uzivatel
         self.goToAddress("/accounts/register/")
@@ -157,12 +179,33 @@ class AkceUzivatel(BaseSeleniumTestClass):
         logger.info("AkceUzivatel.test_148_test_Fedora_uzivatel_001.end")
 
     def test_149_test_Fedora_uzivatel_002(self):
-        # Scenar_149 Test Fedory pro uživatele
+        """Test 149 Test Fedory pro uživatele (pozitivní scénář 2)
+
+        Role:
+            Badatel, Archeolog
+
+        TestData:
+            U-005362
+            U-005357
+
+        Steps:
+            - Editace uživatele Badatel
+            - Změna hesla Badatel
+            - Smazání notifikace Archeolog
+            - Editace notifikace Archeolog
+            - Vytvoření notifikace Archeolog
+            - Vytvoření hlídacího psa Archeolog
+            - Editace hlídacího psa Archeolog
+            - Smazaní hlídacího psa Archeolog
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceUzivatel.test_149_test_Fedora_uzivatel_002.start")
 
         # U uzivatel
-        self.createFedoraRecord("U-005362")
-        self.createFedoraRecord("U-005357")
+        self.createFedoraRecord("U-005362", "administrator")
+        self.createFedoraRecord("U-005357", "administrator")
 
         self.login("badatel")
         self.goToAddress("/uzivatel/edit/")
@@ -183,7 +226,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
 
         # D notifikace
         self.login("archeolog")
-        self.createFedoraRecord("U-005357")
+        self.createFedoraRecord("U-005357", "administrator")
         self.goToAddress("/uzivatel/edit/")
         time = self.getTime()
         self.ElementClick(By.ID, "id_notification_types_0")
@@ -249,13 +292,33 @@ class AkceUzivatel(BaseSeleniumTestClass):
         logger.info("AkceUzivatel.test_149_test_Fedora_uzivatel_002.end")
 
     def test_150_test_Fedora_spoluprace_001(self):
-        # Scenar_150 Test Fedory pro spolupráci PAS
+        """Test 150 Test Fedory pro spolupráci PAS (pozitivní scénář 1)
+
+        Role:
+            Badatel, Archeolog
+
+        TestData:
+            U-000393
+            U-003726
+            U-005357
+            U-000408
+            U-000127
+
+        Steps:
+            - Vytvoření žádosti o spolupráci v PAS - Badatel
+            - Potvrzení spolupráce z mailu - Archeolog
+            - Editace spolupráce - Archeolog
+            - Smazání spolupráce  - Administrator
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceUzivatel.test_150_test_Fedora_spoluprace_001.start")
-        self.createFedoraRecord("U-000393")
-        self.createFedoraRecord("U-003726")
-        self.createFedoraRecord("U-005357")
-        self.createFedoraRecord("U-000408")
-        self.createFedoraRecord("U-000127")
+        self.createFedoraRecord("U-000393", "administrator")
+        self.createFedoraRecord("U-003726", "administrator")
+        self.createFedoraRecord("U-005357", "administrator")
+        self.createFedoraRecord("U-000408", "administrator")
+        self.createFedoraRecord("U-000127", "administrator")
 
         # C spolupráce
         self.login("badatel1")
@@ -306,7 +369,19 @@ class AkceUzivatel(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceOrganizace(BaseSeleniumTestClass):
     def test_152_test_Fedora_organizace_001(self):
-        # Scenar_152 Test Fedory pro organizaci
+        """Test 152 Test Fedory pro organizaci (pozitivní scénář 1)
+
+        Role:
+            Administrator
+
+        Steps:
+            - Vytvoření organizace
+            - Editace organizace
+            - Smazání organizace
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceOrganizace.test_152_test_Fedora_organizace_001.start")
         self.login("administrator")
         # C organizace
@@ -351,7 +426,19 @@ class AkceOrganizace(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceOsoba(BaseSeleniumTestClass):
     def test_153_test_Fedora_osoba_001(self):
-        # Scenar_152 Test Fedory pro osobu
+        """Test 153 Test Fedory pro osobu (pozitivní scénář 1)
+
+        Role:
+            Administrator
+
+        Steps:
+            - Vztvoření osoby
+            - Editace osoby
+            - Smazání osoby
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceOsoba.test_153_test_Fedora_osoba_001.start")
         self.login("administrator")
         # C osoba

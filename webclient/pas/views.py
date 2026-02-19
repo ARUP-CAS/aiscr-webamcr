@@ -706,7 +706,11 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         qs = qs.order_by(*sort_params)
         qs = qs.distinct("pk", *sort_params)
         qs = qs.select_related(
-            "nalezce", "predano_organizace", "katastr", "katastr__okres", "soubory"
+            "nalezce",
+            "predano_organizace",
+            "katastr",
+            "katastr__okres__kraj",
+            "soubory",
         ).prefetch_related(
             "specifikace",
             "okolnosti",
@@ -951,7 +955,7 @@ def aktivace(request, pk):
             spoluprace.set_aktivni(request.user)
             messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
             Mailer.send_en06(cooperation=spoluprace)
-            return JsonResponse({"redirect": reverse("pas:spoluprace_list")}, status=403)
+            return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
         except FedoraError as err:
             logger.info("pas.views.aktivace.error", extra={"error": err})
             fedora_transaction.rollback_transaction()
@@ -1137,7 +1141,6 @@ def get_detail_template_shows(sn, user):
         "arch_links": show_arch_links,
         "smazat": check_permissions(p.actionChoices.pas_smazat, user, sn.ident_cely),
         "ulozeni_edit": check_permissions(p.actionChoices.pas_ulozeni_edit, user, sn.ident_cely),
-        "stahnout_metadata": check_permissions(p.actionChoices.stahnout_metadata, user, sn.ident_cely),
         "soubor_stahnout": check_permissions(p.actionChoices.soubor_stahnout_pas, user, sn.ident_cely),
         "soubor_nahled": check_permissions(p.actionChoices.soubor_nahled_pas, user, sn.ident_cely),
         "soubor_smazat": check_permissions(p.actionChoices.soubor_smazat_pas, user, sn.ident_cely),

@@ -28,8 +28,8 @@ def invalidate_arch_z_related_models():
 @receiver(pre_save, sender=ArcheologickyZaznam, weak=False)
 def create_arch_z_vazby(sender, instance, **kwargs):
     """
-    Metóda pro vytvoření historických vazeb arch záznamu.
-    Metóda se volá pred uložením arch záznamu.
+    Metoda pro vytvoření historických vazeb arch záznamu.
+    Metoda se volá pred uložením arch záznamu.
     """
     logger.debug("arch_z.signals.create_arch_z_vazby.start")
     if instance.pk is None:

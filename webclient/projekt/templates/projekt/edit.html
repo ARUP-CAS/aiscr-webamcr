@@ -10,9 +10,9 @@
 {% block head %}
 	<script>
     {% autoescape off %}
-      var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
+      const settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
     {% endautoescape %}
-		var global_csrftoken = '{{ csrf_token }}';
+		const global_csrftoken = '{{ csrf_token }}';
 		global_map_can_edit=false;
 	</script>
 	<!-- Leaflet imports -->
@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="{% static 'js/Leaflet.EasyButton2.4.0/easy-button.css' %}">
 	<!-- Date picker imports -->
 	<script>
-    		var drp_translations = {
+    		const drp_translations = {
 			cancelLabel: '{% trans "drp.cancelLabel" %}',
 			applyLabel: '{% trans "drp.applyLabel" %}'
     		}
@@ -73,7 +73,7 @@
 
 {% block script %}
   <script>
-    var map_translations = {
+    const map_translations = {
       	CurrentLocationError: '{% trans "mapa.CurrentLocationError" %}',
 	cuzkKatastralniMapa: '{% trans "mapa.cuzkKatastralniMapa" %}',
 	cuzkKatastralniUzemi: '{% trans "mapa.cuzkKatastralniUzemi" %}',
@@ -100,7 +100,7 @@
 	zoomInTitle: '{% trans "mapa.zoomInTitle" %}',
 	zoomOutTitle: '{% trans "mapa.zoomOutTitle" %}'
     };
-  var leaflet_search_translations = {
+  const leaflet_search_translations = {
       KatastralniUzemi: '{% trans "leaflet_search.KatastralniUzemi" %}',
       Okres: '{% trans "leaflet_search.Okres" %}',
       Obec: '{% trans "leaflet_search.Obec" %}',
@@ -111,11 +111,12 @@
       Stavebni: '{% trans "leaflet_search.Stavebni" %}',
       Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
       SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
-      SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
+      SearchTextError: '{% trans "leaflet_search.SearchTextError" %}',
+      ButtonTitle: '{% trans "leaflet_search.ButtonTitle" %}'
   };
   </script>
   <script >
-    var static_url = "{% get_static_prefix %}";
+    const static_url = "{% get_static_prefix %}";
   </script>
   <script src="{% static 'js/mapa_pins.js' %}"></script>
   <script src="{% static 'js/coor_precision.js' %}"></script>
@@ -150,11 +151,11 @@
   <script src="{% static 'js/form_fields_disabling.js' %}"></script>
   <script>
       window.addEventListener("DOMContentLoaded", function() {
-        var checked_field = document.getElementById("id_kulturni_pamatka");
-        var fields = new Map()
+        const checked_field = document.getElementById("id_kulturni_pamatka");
+        const fields = new Map()
         fields.set("id_kulturni_pamatka_cislo", "")
         fields.set("id_kulturni_pamatka_popis", "")
-        var required = new Map()
+        const required = new Map()
         required.set("{% get_value_from_heslar "kulturni_pamatky" "kp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("{% get_value_from_heslar "kulturni_pamatky" "nkp" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("{% get_value_from_heslar "kulturni_pamatky" "pz" %}", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
@@ -166,9 +167,9 @@
     </script>
   <script>
     $(document).ready(function () {
-        var sel = document.getElementById('id_katastry');
+        const sel = document.getElementById('id_katastry');
         if (sel && "options" in sel) {
-          for(var i = 0; i < sel.options.length; i++){
+          for(let i = 0; i < sel.options.length; i++){
             if(sel.options[i].value === ""){
             sel.remove(i--);//decrease i to preserve future index references after removal
             }
@@ -179,9 +180,9 @@
   <script src="{% static 'js/create_message.js' %}"></script>
   <script type="text/javascript">
     // create osoba scripts
-    var successFunction = function(settings, response) {
-      let dropdown = document.getElementById('id_vedouci_projektu');
-      let newOption = document.createElement('option');
+    const successFunction = function(settings, response) {
+      const dropdown = document.getElementById('id_vedouci_projektu');
+      const newOption = document.createElement('option');
       newOption.text = response.text;
       newOption.value = response.value;
 
@@ -196,8 +197,9 @@
         $.fn.modal.Constructor.prototype._enforceFocus = function () {
         };
     })
+    let create_osoba_modal;
     document.addEventListener('DOMContentLoaded', function (event) {
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",

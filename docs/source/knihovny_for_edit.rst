@@ -177,7 +177,7 @@ Knihovny vkládané jako statické soubory
      - MIT License
      - https://github.com/fgnass/spin.js
    * - html-to-rtf-browser
-     - 1.6.1.
+     - 1.6.1
      - MIT License
      - https://github.com/antoniolucasnobar/html-to-rtf-browser; https://github.com/geraphl/javascript-html-to-rtf-browser
 
@@ -194,67 +194,67 @@ Docker image
      - Licence
      - Odkaz
    * - celery-exporter
-     - 0.10.8
+     - 0.10.14
      - MIT license
      - https://github.com/danihodovic/celery-exporter
    * - Elasticsearch
-     - 8.14.1
+     - 8.19.0
      - SSPL, Elastic License 2.0, Apache License 2.0
      - https://github.com/elastic/elasticsearch
    * - Kibana
-     - 8.14.1
+     - 8.19.0
      - SSPL, Elastic License 2.0, Apache License 2.0
      - https://github.com/elastic/kibana
    * - Logstash
-     - 8.14.1
+     - 8.19.0
      - SSPL, Elastic License 2.0, Apache License 2.0
      - https://github.com/elastic/logstash
-   * - eeacms/rsync:2.4
-     - 2.4
+   * - rsync
+     - 3.0
      - 
      - https://github.com/eea/eea.docker.rsync
    * - Cadvisor
-     - 0.49.1
+     - 0.55.1
      - Apache License 2
      - https://github.com/google/cadvisor
    * - Fedora
      - 6.5.1
      - Apache-2.0 License
      - https://github.com/fcrepo/fcrepo
-   * - ghcr.io/osgeo/gdal:ubuntu-small
-     - 3.9.1
+   * - gdal
+     - 3.12.1
      - MIT License
      - https://github.com/OSGeo/gdal/pkgs/container/gdal  
    * - Grafana
-     - 10.2.8
+     - 12.3.1
      - AGPL-3.0 License
      - https://github.com/grafana/grafana
-   * - docker-nginx
-     - 1.26.1
+   * - NGINX
+     - 1.27.3-alpine3.20
      - BSD 2 License
      - https://github.com/nginxinc/docker-nginx
-   * - postgis/postgis
-     - 14-3.3
+   * - PostGIS
+     - 16-3.4
      - MIT License
      - https://github.com/postgis/docker-postgis
    * - Prometheus
-     - 2.45.6
+     - 3.8.1
      - Apache-2.0 License
      - https://github.com/prometheus/prometheus
-   * - Postgres-exporter
-     - 0.17.1
+   * - PostgreSQL Server Exporter
+     - 0.18.1
      - Apache-2.0 License
      - https://github.com/prometheus-community/postgres_exporter
    * - Redis
-     - 7.2.5
+     - 8.4.0
      - RSALv2, SSPLv1
      - https://github.com/redis/redis
-   * - Redis exporter
-     - 1.61.0
+   * - Prometheus Valkey & Redis Metrics Exporter
+     - 1.80.1-alpine
      - MIT license
      - https://github.com/oliver006/redis_exporter
-   * - selenium/standalone-firefox
-     - 127.0
+   * - Selenium Grid Standalone with Chromium
+     - 143.0
      - Apache License 2.0
      - https://github.com/SeleniumHQ/docker-selenium
 

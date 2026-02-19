@@ -10,7 +10,7 @@
     </div>
     <div class="app-fx app-right">
       <div class="btn-group" role="group">
-        <div class="dropdown-menu" aria-labelledby="others">
+        <div class="dropdown-menu" aria-labelledby="add_others">
           {% if j.show_add_pian_zapsat %}
             <a id="show_menu_pian_new_id" class="dropdown-item"
                href="{% url 'arch_z:create-pian' zaznam.ident_cely j.ident_cely %}">
@@ -47,12 +47,11 @@
         </div>
         <button class="btn" type="button" id="add_others" type="button" data-toggle="dropdown" aria-haspopup="true"
                 aria-expanded="false" rel="tooltip" data-placement="top"
-                title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridat.label' %}"
-                onclick="filtrAkci()">
+                title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridat.label' %}">
           <span class="material-icons">add</span>
         </button>
       </div>
-      {% if j.show_uprav_pian or j.show_import_pian_change or j.show_change_katastr or j.show_remove_pian or j.show_approve_pian or j.pian_ident_cely and show.stahnout_metadata or j.adb_pk and show.stahnout_metadata or j.show_remove_adb or j.show_dj_smazat %}
+      {% if j.show_uprav_pian or j.show_import_pian_change or j.show_change_katastr or j.show_remove_pian or j.show_approve_pian or j.pian_ident_cely and show.historie_fedora or j.adb_pk and show.historie_fedora or j.show_remove_adb or j.show_dj_smazat %}
         <div class="btn-group" role="group">
           <div class="dropdown-menu" aria-labelledby="others">
             {% if j.show_uprav_pian %}
@@ -84,13 +83,13 @@
                 {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.potvrditPian.label' %}
               </button>
             {% endif %}
-            {% if j.pian_ident_cely and show.stahnout_metadata %}
+            {% if j.pian_ident_cely and show.historie_fedora %}
               <a class="dropdown-item"
-                 href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
+                 href="{% url 'historie:pian'  j.pian_ident_cely zaznam.ident_cely dj_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
             {% endif %}
-            {% if j.adb_pk and show.stahnout_metadata %}
+            {% if j.adb_pk and show.historie_fedora %}
               <a class="dropdown-item"
-                 href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
+                 href="{% url 'historie:adb'  j.adb_ident_cely zaznam.ident_cely dj_ident_cely %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
             {% endif %}
             {% if j.show_remove_adb %}
               <button id="adb-smazat-{{ j.adb_ident_cely }}" class="dropdown-item adb-smazat-btn" type="button"
@@ -108,8 +107,7 @@
           </div>
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                   aria-expanded="false" rel="tooltip" data-placement="top"
-                  title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.dalsiNabidka.label' %}"
-                  onclick="filtrAkci()">
+                  title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.dalsiNabidka.label' %}">
             <span class="material-icons">more_vert</span>
           </button>
         </div>
@@ -182,9 +180,10 @@
         const replaced_action = string.replace(/akce_dj_zakladni|akce_pripojit_pian_mapa|akce_pripojit_pian_id/g, new_action)
         document.getElementById("djEditForm").action = replaced_action
     }
-    document.addEventListener("DOMContentLoaded", function() {
-        if (filtrAkci() === 0) {
-            document.getElementById("others").style.display = "none";
-        }
+    $(document).ready(function () {
+      //skryje prázdné menu
+      if ($('.dropdown-menu[aria-labelledby="add_others"]').children().length === 0) {
+          $("#add_others").hide();
+      }
     });
 </script>

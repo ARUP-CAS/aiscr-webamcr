@@ -57,7 +57,7 @@ def get_default_licence():
     return DOKUMENT_LICENCE_NEZNAMA
 
 
-class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin):
+class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin, ModelWithMetadata):
     """
     Class pro db model user.
     """
@@ -66,18 +66,36 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     IDENT_PREFIX = "U"
     SEQUENCE_NAME = "auth_user_ident_seq"
 
-    password = models.CharField(max_length=128)
+    password = models.CharField(max_length=128, verbose_name=_("uzivatel.models.User.heslo"))
     last_login = models.DateTimeField(blank=True, null=True)
-    is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor", db_index=True)
+    is_superuser = models.BooleanField(
+        default=False, verbose_name=_("uzivatel.models.User.globalnyAdministrator"), db_index=True
+    )
     ident_cely = models.CharField(unique=True, max_length=150)
-    first_name = models.CharField(max_length=150, verbose_name="Jméno", db_index=True)
-    last_name = models.CharField(max_length=150, verbose_name="Příjmení", db_index=True)
-    email = models.CharField(max_length=254, unique=True)
-    is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní", db_index=True)
-    is_active = models.BooleanField(default=False, verbose_name="Aktivní", db_index=True)
+    first_name = models.CharField(max_length=150, verbose_name=_("uzivatel.models.User.jmeno"), db_index=True)
+    last_name = models.CharField(max_length=150, verbose_name=_("uzivatel.models.User.prijmeni"), db_index=True)
+    email = models.CharField(max_length=254, unique=True, verbose_name=_("uzivatel.models.User.email"))
+    is_staff = models.BooleanField(
+        default=False, verbose_name=_("uzivatel.models.User.pristupDoAdminRozhrani"), db_index=True
+    )
+    is_active = models.BooleanField(default=False, verbose_name=_("uzivatel.models.User.aktivni"), db_index=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    osoba = models.ForeignKey("Osoba", models.RESTRICT, db_column="osoba", blank=True, null=True, db_index=True)
-    organizace = models.ForeignKey("Organizace", models.RESTRICT, db_column="organizace", db_index=True)
+    osoba = models.ForeignKey(
+        "Osoba",
+        models.RESTRICT,
+        verbose_name=_("uzivatel.models.User.osoba"),
+        db_column="osoba",
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    organizace = models.ForeignKey(
+        "Organizace",
+        models.RESTRICT,
+        verbose_name=_("uzivatel.models.User.organizace"),
+        db_column="organizace",
+        db_index=True,
+    )
     history_vazba = models.OneToOneField(
         "historie.HistorieVazby",
         db_column="historie",
@@ -86,9 +104,16 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         null=True,
         db_index=True,
     )
-    jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
+    jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY, verbose_name=_("uzivatel.models.User.jazyk"))
     sha_1 = models.TextField(blank=True, null=True)
-    telefon = models.CharField(max_length=100, blank=True, null=True, validators=[validate_phone_number], db_index=True)
+    telefon = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        validators=[validate_phone_number],
+        db_index=True,
+        verbose_name=_("uzivatel.models.User.telefon"),
+    )
     notification_types = models.ManyToManyField(
         "UserNotificationType",
         blank=True,
@@ -141,6 +166,23 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             return self.user_str_en
         else:
             return self.user_str
+
+    def display_name(self, viewer=None):
+        """
+        Textová reprezentace uživatele pro tabulky a autocomplete pole.
+        """
+        lang = get_language()
+
+        if viewer and viewer.hlavni_role and viewer.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            base = f"{self.last_name}, {self.first_name}"
+        else:
+            base = self.ident_cely
+
+        if self.organizace:
+            org = self.organizace.nazev_zkraceny_en if lang == "en" else self.organizace.nazev_zkraceny
+            return f"{base} ({self.ident_cely}, {org})" if "," in base else f"{base} ({org})"
+
+        return base
 
     def moje_spolupracujici_organizace(self):
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
@@ -207,7 +249,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("uzivatel.User.save.start", extra={"option": self._state.adding})
         # Random string is temporary before the id is assigned
@@ -265,8 +307,17 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             "uzivatel.models.User.save_metadata.start",
             extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely},
         )
-        from core.repository_connector import FedoraRepositoryConnector
+        from core.repository_connector import (
+            DryRunFedoraTransaction,
+            FedoraDeletionOnlyTransaction,
+            FedoraRepositoryConnector,
+        )
 
+        if isinstance(fedora_transaction, DryRunFedoraTransaction) or isinstance(
+            fedora_transaction, FedoraDeletionOnlyTransaction
+        ):
+            fedora_transaction.add_updated_ident_cely(self.ident_cely)
+            return
         connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=False)
         connector.save_metadata(True)
         if close_transaction is True or self.close_active_transaction_when_finished:
@@ -346,7 +397,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
     Class pro db model organizace.
     """
 
-    IDENT_PREFIX = "HES"
+    IDENT_PREFIX = "ORG"
     SEQUENCE_NAME = "organizace_ident_seq"
 
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255, db_index=True)
@@ -414,7 +465,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("Organizace.save.start")
         if self._state.adding and not self.ident_cely:
@@ -478,7 +529,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
     Class pro db model osoba.
     """
 
-    IDENT_PREFIX = "HES"
+    IDENT_PREFIX = "OS"
     SEQUENCE_NAME = "osoba_ident_seq"
 
     jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
@@ -496,7 +547,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def save(self, *args, **kwargs):
         """
-        save metóda pro přidelení identu celý.
+        save metoda pro přidělení identu celý.
         """
         logger.debug("Osoba.save.start")
         # Random string is temporary before the id is assigned

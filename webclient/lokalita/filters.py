@@ -85,7 +85,7 @@ class LokalitaFilter(ArchZaznamFilter):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metóda pro filtrování podle názvu, popisu, uživatelského označení a poznámek.
+        Metoda pro filtrování podle názvu, popisu, uživatelského označení a poznámek.
         """
         return queryset.filter(
             Q(nazev__icontains=value)
@@ -109,7 +109,7 @@ class LokalitaFilter(ArchZaznamFilter):
 
 class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
     """
-    Třída pro správne zobrazení filtru.
+    Třída pro správně zobrazení filtru.
     """
 
     form_method = "GET"

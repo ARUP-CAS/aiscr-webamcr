@@ -11,20 +11,20 @@
     <amcr:rok_vzniku>2020</amcr:rok_vzniku>
     <amcr:organizace xml:lang="cs" id="ORG-000103">Archeologické centrum Olomouc, p.o.</amcr:organizace>
     <amcr:pristupnost xml:lang="cs" id="HES-000868">archivář</amcr:pristupnost>
-    <amcr:datum_zverejneni>2023-04-07</amcr:datum_zverejneni>
+    <amcr:datum_zverejneni>2020-01-01</amcr:datum_zverejneni>
     <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
     <amcr:ulozeni_originalu xml:lang="cs" id="HES-001166">primárně digitální dokument</amcr:ulozeni_originalu>
     <amcr:popis>test</amcr:popis>
     <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:historie>
-      <amcr:id>hist-662079</amcr:id>
-      <amcr:datum_zmeny>2020-04-07T06:50:44+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000680">U-000680</amcr:uzivatel>
       <amcr:typ_zmeny>D01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-859548</amcr:id>
-      <amcr:datum_zmeny>2020-04-07T09:27:30+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-001171">U-001171</amcr:uzivatel>
       <amcr:typ_zmeny>D23</amcr:typ_zmeny>
     </amcr:historie>

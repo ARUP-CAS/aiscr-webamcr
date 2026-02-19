@@ -1,0 +1,164 @@
+name: Run tests
+
+permissions:
+  contents: read
+  packages: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_mod:
+        description: 'Způsob testování'
+        required: true
+        type: choice
+        options:
+          - vsechny
+          - neuspesne
+          - konkretni
+        default: vsechny
+
+      test_cislo:
+        description: 'Číslo testu (použij jen pokud zvolen režim "konkretni")'
+        required: false
+        type: string
+
+      nasadit_verzi:
+        description: 'Nasadit aktuální verzi před testováním'
+        required: false
+        type: boolean
+        default: true
+
+
+env:
+  server_deploy_root: /home/amcr/aiscr-webamcr
+  dep_script: scripts/ci_deployment/deploy_test_server.sh
+  test_script: scripts/start_selenium_tests.sh
+
+jobs:
+  deployment:
+    name: Deploy to DEV Server and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install OpenVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get --assume-yes --no-install-recommends install openvpn iputils-ping dnsutils          
+
+      - name: Setup VPN config
+        run: |
+          mkdir -p .github/vpn
+          curl -o .github/vpn/openvpn20_huldio_ci.ovpn \
+            https://raw.githubusercontent.com/ARUP-CAS/aiscr-webamcr/dev/.github/vpn/openvpn20_huldio_ci.ovpn
+          echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
+          echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
+          echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
+          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
+
+      - name: Connect VPN
+        run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --daemon --askpass secret.txt
+
+      - name: Wait for VPN & DNS resolve
+        shell: bash
+        timeout-minutes: 2
+        run: |
+          for i in {1..10}; do
+            dig ${{ secrets.DNS_RESOLVER }} ${{ secrets.DEPLOYMENT_SERVER_DEV }} A +time=1 && break
+            sleep 2
+          done
+
+      - name: SSH deployment a testy
+        shell: bash
+        run: |
+          TEST_MOD="${{ inputs.test_mod }}"
+          NASADIT="${{ inputs.nasadit_verzi }}"
+          REF_NAME="${{ github.ref_name }}"
+          echo "Použitá větev: $REF_NAME"
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          sleep 2          
+          ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}          
+          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
+          sudo bash -c '
+          cd ${{ env.server_deploy_root }}
+          chmod +x ${{ env.dep_script }}
+          chmod +x ${{ env.test_script }}
+
+          if [ "$NASADIT" == "true" ]; then
+          echo "Nasazuji verzi: $REF_NAME"
+          ./${{ env.dep_script }} ${{ env.server_deploy_root }} $REF_NAME
+          fi
+
+          echo "Spouštím testy v režimu: $TEST_MOD"
+          case "$TEST_MOD" in
+          vsechny)
+          echo "Testuji vše"
+          ./${{ env.test_script }}
+          ;;
+          neuspesne)
+          echo "Testuji pouze neúspěšné"
+          ./${{ env.test_script }} -f
+          ;;
+          konkretni)
+          echo "Testuji test č. ${{ inputs.test_cislo }}"
+          ./${{ env.test_script }} -t ${{ inputs.test_cislo }}
+          ;;
+          *)
+          echo "::error::Neznámý režim testu: $TEST_MOD"
+          exit 1
+          ;;
+          esac
+          '
+          EOF
+
+      - name: Stáhnout a zobrazit výsledky testů
+        shell: bash
+        continue-on-error: true
+        run: |
+          echo "Nastavuji SSH..."
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          echo "Stahuji výsledky testů ze serveru..."
+          scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/results.xlsx ./results.xlsx
+          scp -o StrictHostKeyChecking=no amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }}:/opt/selenium_test/test_summary.env ./test_summary.env
+
+          echo "Načítám souhrn výsledků..."
+          source ./test_summary.env
+          echo "✅ Prošlo: $PASSED"
+          echo "❌ Selhalo: $FAILED"
+
+          {
+            echo "## 🧪 Výsledky testů"
+            echo ""
+            echo "| Stav | Počet |"
+            echo "|------|-------|"
+            echo "| ✅ Prošlo | $PASSED |"
+            echo "| ❌ Selhalo | $FAILED |"
+          } >> $GITHUB_STEP_SUMMARY
+          
+          # Pokud nějaký test selhal → celý workflow FAIL
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::error::Selhalo $FAILED testů"
+            exit 1
+          fi
+
+      - name: Nahrát výsledky testů jako artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: selenium-vysledky
+          path: ./results.xlsx
+
+      - name: Disconnect VPN
+        if: always()
+        run: |
+          sudo killall openvpn

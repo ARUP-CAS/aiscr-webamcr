@@ -30,34 +30,34 @@
       <amcr:kulturni_pamatka_popis>zřícenina hradu Engelsburg</amcr:kulturni_pamatka_popis>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1484588</amcr:id>
-      <amcr:datum_zmeny>2021-09-23T22:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
-      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1658747</amcr:id>
-      <amcr:datum_zmeny>2021-09-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
       <amcr:typ_zmeny>P12</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2028105</amcr:id>
-      <amcr:datum_zmeny>2021-09-23T22:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
       <amcr:typ_zmeny>P23</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2230747</amcr:id>
-      <amcr:datum_zmeny>2021-09-24T18:44:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
-      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-2135643</amcr:id>
-      <amcr:datum_zmeny>2023-03-12T23:00:00+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
       <amcr:typ_zmeny>P34</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000309">U-000309</amcr:uzivatel>
+      <amcr:typ_zmeny>PX1</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000322">U-000322</amcr:uzivatel>
+      <amcr:typ_zmeny>PX0</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:oznamovatel>
       <amcr:oznamovatel>obec Andělská Hora</amcr:oznamovatel>
@@ -67,14 +67,17 @@
       <amcr:email>-</amcr:email>
     </amcr:oznamovatel>
     <amcr:soubor>
-      <amcr:id>soub-364200</amcr:id>
+      <amcr:id>soub-0000001</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-202111043/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>oznameni_C-202111043.pdf</amcr:nazev>
       <amcr:mimetype>application/pdf</amcr:mimetype>
       <amcr:rozsah>3</amcr:rozsah>
-      <amcr:size_mb>0.1370201111</amcr:size_mb>
+      <amcr:size_mb>0.0068559647</amcr:size_mb>
+      <amcr:sha_512>3a02c88f9d82e75564ef6c94567e155600bffb925cd1e8869b7990ef6c4f9d84c2908eabe4865058813cf81cd64aedbc0e93cbcf5991214fa30cd45fc5bd9161</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-202111043/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
-        <amcr:id>hist-2478151</amcr:id>
-        <amcr:datum_zmeny>2021-09-23T22:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-000159">U-000159</amcr:uzivatel>
         <amcr:poznamka>oznameni_C-202111043.pdf</amcr:poznamka>
         <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>

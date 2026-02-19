@@ -11,6 +11,6 @@
     <amcr:admin>false</amcr:admin>
     <amcr:superadmin>false</amcr:superadmin>
     <amcr:skupina xml:lang="cs">Badatel</amcr:skupina>
-    <amcr:datum_registrace>2025-09-23T20:01:29.754895+00:00</amcr:datum_registrace>
+    <amcr:datum_registrace>2020-01-01T00:00:00+00:00</amcr:datum_registrace>
   </amcr:uzivatel>
 </amcr:amcr>

@@ -16,37 +16,37 @@
     <amcr:popis>testtest</amcr:popis>
     <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:historie>
-      <amcr:id>hist-2803190</amcr:id>
-      <amcr:datum_zmeny>2025-07-29T17:32:02.619281+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:typ_zmeny>D01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:historie>
-      <amcr:id>hist-2803192</amcr:id>
-      <amcr:datum_zmeny>2025-07-29T17:34:06.768551+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
       <amcr:poznamka>X-C-DL-000000009 -&gt; C-DL-202500001</amcr:poznamka>
       <amcr:typ_zmeny>D12</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:soubor>
-      <amcr:id>soub-646257</amcr:id>
-      <amcr:path>rest/AMCR-selenium-test/record/C-DL-202500001/file/3e7b34bc-3062-4751-a47d-0967676c96b7</amcr:path>
+      <amcr:id>soub-0000001</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/C-DL-202500001/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>CDL202500001.jpg</amcr:nazev>
       <amcr:mimetype>image/jpeg</amcr:mimetype>
       <amcr:rozsah>1</amcr:rozsah>
       <amcr:size_mb>0.0081558228</amcr:size_mb>
       <amcr:sha_512>b96f3ba255bde2dc16bad25e55a5271ae905fc5e16c9ecd23edfbe7a3e8e38d9897dd227ca5f69155fb0b2347c9214fe8f299f90e8cbea8cece4710633382d2d</amcr:sha_512>
-      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-DL-202500001/file/3e7b34bc-3062-4751-a47d-0967676c96b7</amcr:url>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/C-DL-202500001/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
-        <amcr:id>hist-2803191</amcr:id>
-        <amcr:datum_zmeny>2025-07-29T17:33:56.776796+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
         <amcr:poznamka>test.jpg</amcr:poznamka>
         <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
       </amcr:historie>
       <amcr:historie>
-        <amcr:id>hist-2803193</amcr:id>
-        <amcr:datum_zmeny>2025-07-29T17:35:21.140864+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-005361">U-005361</amcr:uzivatel>
         <amcr:poznamka>test.jpg</amcr:poznamka>
         <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>

@@ -11,13 +11,15 @@
 
 {% block content %}
   <div>
-    <form action="{% url 'core:post_upload' %}" class="dropzone mb-0" id="my-awesome-dropzone"
-          enctype="multipart/form-data">
+    {% if file_id %}
+      <form action="{% url 'core:post_upload_update' typ_vazby=typ_vazby ident_cely=ident_cely file_id=file_id %}" class="dropzone mb-0" id="my-awesome-dropzone"
+            enctype="multipart/form-data">
+    {% else %}
+      <form action="{% url 'core:post_upload' typ_vazby=typ_vazby ident_cely=ident_cely %}" class="dropzone mb-0" id="my-awesome-dropzone"
+            enctype="multipart/form-data">
+    {% endif %}
       {% csrf_token %}
       <input type="hidden" name="source-url" value={{request.path}}>
-      {% if file_id %}
-        <input type="hidden" name="fileID" value={{file_id}}>
-      {% endif %}
       <div class="fallback">
         <input name="file" type="file" multiple/>
       </div>
@@ -36,32 +38,36 @@
 
 {% block script %}
   <script src="{% static 'js/dropzone.min.js' %}"></script>
-    {% if file_id %}
-        <script>
-          var maxFiles = 1;
-          var file_id = {{ file_id }};
-          var object_id = "{{ ident_cely }}";
-          var typ_vazby = "{{ typ_vazby }}";
-          var typ_uploadu = "nahradit";
-          var addRemoveLinks = false;
-      </script>
-    {% else %}
-        <script>
-          var maxFiles = 99;
-          var object_id = "{{ ident_cely }}";
-          var typ_vazby = "{{ typ_vazby }}";
-          var typ_uploadu = "upload";
-          var addRemoveLinks = true;
-        </script>
-    {% endif %}
     <script>
-    var reject_dict = {
+      let maxFiles;
+      let file_id;
+      let object_id;
+      let typ_vazby;
+      let typ_uploadu;
+      let addRemoveLinks;
+      {% if file_id %}
+        maxFiles = 1;
+        file_id = {{ file_id }};
+        object_id = "{{ ident_cely }}";
+        typ_vazby = "{{ typ_vazby }}";
+        typ_uploadu = "nahradit";
+        addRemoveLinks = false;
+      {% else %}
+        maxFiles = 99;
+        object_id = "{{ ident_cely }}";
+        typ_vazby = "{{ typ_vazby }}";
+        typ_uploadu = "upload";
+        addRemoveLinks = true;
+      {% endif %}
+    </script>
+    <script>
+    const reject_dict = {
       "rejected_pas" : "{% get_message 'UPLOADFILE_REJECTED_PAS' %}",
       "rejected_dokument" : "{% get_message 'UPLOADFILE_REJECTED_DOKUMENT' %}",
       "rejected_dokument_model" : "{% get_message 'UPLOADFILE_REJECTED_DOKUMENT_MODEL' %}",
       "rejected_all" : "{% get_message 'UPLOADFILE_REJECTED_ALL' %}",
     };
-    var upload_error = "{% get_message 'UPLOADFILE_ERROR' %}";
+    const upload_error = "{% get_message 'UPLOADFILE_ERROR' %}";
     const dz_trans = {
       descriptionUpload: '{% trans "core.templates.core.upload_file.dz.descriptionUpload" %}',
       descriptionNahradit: '{% trans "core.templates.core.upload_file.dz.descriptionNahradit" %}',
@@ -81,7 +87,7 @@
       alertsDeleteErrorPart1: '{% trans "core.templates.core.upload_file.dz.alertsDeleteErrorPart1" %}',
       alertsDeleteErrorPart2: '{% trans "core.templates.core.upload_file.dz.alertsDeleteErrorPart2" %}',
     }
-    mock_str='{{seznam_mock|safe}}';
+    const mock_str='{{seznam_mock|safe}}';
   </script>
   <script src="{% static 'js/dz.js' %}"></script>
 {% endblock %}

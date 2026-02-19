@@ -195,11 +195,6 @@ MIDDLEWARE = [
     "core.log_middleware.LogMiddleware",
 ]
 
-CRON_CLASSES = [
-    "cron.job01.MyCronJobPianToJTSK",
-    "cron.job02.MyCronJobPianToWGS84",
-    "cron.notifications.Notifications",
-]
 
 ROOT_URLCONF = "webclient.urls"
 
@@ -552,6 +547,7 @@ TEST_ENV = get_secret("TEST_ENV", "True") == "True"
 
 CLAMD_HOST = None
 CLAMD_PORT = None
+CLAMD_TIMEOUT = 600
 
 DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv.aiscr.cz/id/")
 

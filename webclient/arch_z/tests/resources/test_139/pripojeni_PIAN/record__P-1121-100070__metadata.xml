@@ -17,16 +17,16 @@
       <amcr:geom_wkt EPSG="4326">POINT(12.8049934 50.3517312)</amcr:geom_wkt>
     </amcr:chranene_udaje>
     <amcr:historie>
-      <amcr:id>hist-1156374</amcr:id>
-      <amcr:datum_zmeny>2021-11-21T23:00:00+00:00</amcr:datum_zmeny>
-      <amcr:uzivatel id="U-000579">U-000579</amcr:uzivatel>
-      <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
-    </amcr:historie>
-    <amcr:historie>
-      <amcr:id>hist-1377623</amcr:id>
-      <amcr:datum_zmeny>2023-10-05T05:28:06+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000279">U-000279</amcr:uzivatel>
       <amcr:typ_zmeny>PI12</amcr:typ_zmeny>
+    </amcr:historie>
+    <amcr:historie>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
+      <amcr:uzivatel id="U-000579">U-000579</amcr:uzivatel>
+      <amcr:typ_zmeny>PI01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:dokumentacni_jednotka id="C-9002743A">C-9002743A-D01</amcr:dokumentacni_jednotka>
     <amcr:dokumentacni_jednotka id="X-C-9000000011A">X-C-9000000011A-D01</amcr:dokumentacni_jednotka>

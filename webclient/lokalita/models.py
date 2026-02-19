@@ -66,7 +66,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def get_absolute_url(self):
         """
-        Metóda pro získaní absolut url záznamu podle identu.
+        Metoda pro získaní absolut url záznamu podle identu.
         """
         return reverse(
             "lokalita:detail",

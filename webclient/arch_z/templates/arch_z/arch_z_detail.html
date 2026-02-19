@@ -206,15 +206,21 @@
       })
   </script>
   <script>
-    var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
+    let global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
+    let arch_projekt;
+    let odeslat_akci_modal;
+    let vratit_akci_modal;
+    let archivovat_akci_modal;
+    let smazat_akci_modal;
     if(global_map_projekt_ident.length==0){
       global_map_projekt_ident=document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0];
     }
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
+      let options;
       {% if arch_projekt_link and arch_projekt_link.0 %}
         if ("{{arch_projekt_link}}" !== "None"){
-          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
           formID: "archivovat-form",
           modalFormID: "#archivovat-form",
@@ -229,7 +235,7 @@
       {% endif %}
       {% if arch_projekt_link_uzavrit and arch_projekt_link_uzavrit.0 %}
         if ("{{arch_projekt_link_uzavrit}}" !== "None"){
-          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'projekt:projekt_uzavrit' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
           formID: "uzavrit-form",
           modalFormID: "#uzavrit-form",
@@ -243,7 +249,7 @@
         };
       {% endif %}
       if ("{{show.odeslat_link}}" != "False"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "odeslat-akci-form",
         modalFormID: "#odeslat-akci-form",
@@ -251,7 +257,7 @@
       odeslat_akci_modal = new Modal(options, "akce-odeslat");
       };
       if ("{{show.vratit_link}}" != "False"){
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "vratit-akci-form",
         modalFormID: "#vratit-akci-form",
@@ -259,21 +265,21 @@
       vratit_akci_modal = new Modal(options, "akce-vratit");
       }
       if ("{{show.archivovat_link}}" != "False"){
-        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "archivovat-akci-form",
           modalFormID: "#archivovat-akci-form",
         })
       archivovat_akci_modal = new Modal(options, "akce-archivovat");
       }
-      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "smazat-akci-form",
         modalFormID: "#smazat-akci-form",
       })
       smazat_akci_modal = new Modal(options, "akce-smazat");
       if ("{{show.zmenit_proj_akci}}" != "False"){
-        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:zmenit-proj-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "zmenit-akci-form",
           modalFormID: "#zmenit-akci-form",
@@ -281,7 +287,7 @@
         new Modal(options, "arch_z-proj-akce-change");
       }
       if ("{{show.zmenit_sam_akci}}" != "False"){
-        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+        options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:zmenit-sam-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "zmenit-akci-form",
           modalFormID: "#zmenit-akci-form",
@@ -300,6 +306,20 @@
                 )
               }
         }
+        {% if scroll_to_dj is True %}
+            arch_select_perspective(
+                window.location.href,
+                document.getElementById("main_cadastre_id").value,
+                '{{ zaznam.ident_cely }}',
+                '{{ dj_ident_cely }}'
+            )
+
+            try {
+                document.getElementById("dj_list_card_header").scrollIntoView();
+            } catch (e) {
+                console.log(e);
+            }
+        {% endif %}
     });
   </script>
 {% endblock %}

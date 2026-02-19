@@ -2,6 +2,7 @@ import datetime
 import re
 from abc import ABC
 from collections.abc import Iterable
+from dataclasses import dataclass
 from decimal import Decimal
 
 import pandas as pd
@@ -102,25 +103,54 @@ from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import Organizace, Osoba, User, UserNotificationType
 
 
+@dataclass
+class ImportDataValidationResult:
+    """
+    Datová třída, která reprezentuje výsledek validace jednoho záznamu při importu dat.
+
+    Attributes:
+        item_order: Pořadové číslo záznamu v importu.
+        file_name: Název CSV souboru, ze kterého záznam pochází.
+        primary_key_import: Primární klíč záznamu v datovém souboru.
+        primary_key_table: Primární klíč záznamu v databázi.
+        validation_result: Textový popis výsledku validace (úspěch nebo chybová zpráva).
+    """
+
+    item_order: int
+    file_name: str
+    primary_key_import: str = ""
+    primary_key_table: str = ""
+    validation_result: str = ""
+
+
 class ImportDataError(Exception):
+    """Základní výjimka pro chyby při importu dat."""
+
     pass
 
 
 class ImportDataIncorrectStructureError(ImportDataError):
     """
-    Exception raised when the structure of the imported data does not match the expected structure.
+    Výjimka vyvolaná při nesouladu struktury importovaných dat s očekávanou strukturou (chybějící nebo přebývající sloupce).
     """
 
     def __init__(self, missing_columns, excess_columns):
         super().__init__(
-            f'{_("core_admin.ImportDataIncorrectStructureError.message.part_1")} '
+            _("core_admin.ImportDataIncorrectStructureError.message.part_1")
+            + " "
             + (
-                f'{_("core_admin.ImportDataIncorrectStructureError.message.missing_columns")}: {", ".join(missing_columns)} '
+                _("core_admin.ImportDataIncorrectStructureError.message.missing_columns")
+                + ": "
+                + ", ".join(missing_columns)
+                + " "
                 if missing_columns
                 else ""
             )
             + (
-                f'{_("core_admin.ImportDataIncorrectStructureError.message.excess_columns")}: {", ".join(excess_columns)} '
+                _("core_admin.ImportDataIncorrectStructureError.message.excess_columns")
+                + ": "
+                + ", ".join(excess_columns)
+                + " "
                 if excess_columns
                 else ""
             )
@@ -129,7 +159,7 @@ class ImportDataIncorrectStructureError(ImportDataError):
 
 class ImportDataIncorrectStructureContentObjectError(ImportDataError):
     """
-    Exception raised when the structure of the imported data does not match the expected structure.
+    Výjimka vyvolaná při nesouladu struktury obsahu importovaných dat s očekávanou strukturou (neplatná kombinace sloupců).
     """
 
     def __init__(self, columns, *expected_colummns_options):
@@ -146,7 +176,7 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
 
 class ImportDataMissingReferencedValueError(ImportDataError):
     """
-    Exception raised when a referenced value is missing in either database or in the imported data.
+    Výjimka vyvolaná při chybějící hodnotě referencovaného záznamu — buď v databázi, nebo v importovaných datech.
     """
 
     def __init__(self, missing_value_id, missing_model_name=None):
@@ -165,9 +195,9 @@ class ImportDataMissingReferencedValueError(ImportDataError):
 
 class ImportDataIntegrityError(ImportDataError):
     """
-    Exception raised in two cases.
-    During the import action: when a record with the same primary key already exists in the database
-    During the update action: when a record with the specified primary key does not exist in the database.
+    Výjimka vyvolaná ve dvou případech:
+    při insertu — pokud záznam se stejným primárním klíčem již v databázi existuje,
+    při updatu — pokud záznam se zadaným primárním klíčem v databázi neexistuje.
     """
 
     def __init__(self, record_id, model_name, performed_action):
@@ -175,25 +205,38 @@ class ImportDataIntegrityError(ImportDataError):
         self.model_name = model_name
         self.performed_action = performed_action
         super().__init__(
-            f'{_("core_admin.ImportDataIntegrityError.message.part_1")} '
-            + f'{record_id} {_("core_admin.ImportDataIntegrityError.message.part_2")} '
-            + f'{model_name} {_("core_admin.ImportDataIntegrityError.message.part_3")} '
-            + f'({_("core_admin.ImportDataIntegrityError.message.part_4")} {performed_action})'
+            "{} {} {} {} {} ({} {})".format(
+                _("core_admin.ImportDataIntegrityError.message.part_1"),
+                record_id,
+                _("core_admin.ImportDataIntegrityError.message.part_2"),
+                model_name,
+                _("core_admin.ImportDataIntegrityError.message.part_3"),
+                _("core_admin.ImportDataIntegrityError.message.part_4"),
+                performed_action,
+            )
         )
 
 
 class ImportDataLimitChoicesError(ImportDataError):
+    """Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to."""
+
     def __init__(self, record_id, limit_choices_to: dict):
         self.record_id = record_id
         self.limit_choices_to = limit_choices_to
         super().__init__(
-            f'{_("core_admin.ImportDataLimitChoicesError.message.part_1")} '
-            + f'{record_id} {_("core_admin.ImportDataLimitChoicesError.message.part_2")} '
-            + f'{",".join([f"{k}: {v}" for k,v in limit_choices_to.items()])} {_("core_admin.ImportDataLimitChoicesError.message.part_3")}'
+            "{} {} {} {} {}".format(
+                _("core_admin.ImportDataLimitChoicesError.message.part_1"),
+                record_id,
+                _("core_admin.ImportDataLimitChoicesError.message.part_2"),
+                ",".join(["{}: {}".format(k, v) for k, v in limit_choices_to.items()]),
+                _("core_admin.ImportDataLimitChoicesError.message.part_3"),
+            )
         )
 
 
 class ImportDataHeslarPresnostLimitChoicesError(ImportDataError):
+    """Výjimka vyvolaná při neplatné hodnotě přesnosti v hesláři u importovaného záznamu."""
+
     def __init__(self, record_id):
         self.record_id = record_id
         super().__init__(
@@ -204,34 +247,55 @@ class ImportDataHeslarPresnostLimitChoicesError(ImportDataError):
 
 class ImportDataUnsupportedFileError(ImportDataError):
     """
-    Exception raised when an unsupported file name is included in the imported archive.
+    Výjimka vyvolaná při výskytu nepodporovaného názvu souboru v importovaném archivu.
     """
 
     def __init__(self, file_name):
         self.file_name = file_name
         super().__init__(
-            f'{_("core_admin.ImportDataUnsupportedFileError.message.part_1")} '
-            + f'{file_name} {_("core_admin.ImportDataUnsupportedFileError.message.part_2")} '
+            "{} {} {}".format(
+                _("core_admin.ImportDataUnsupportedFileError.message.part_1"),
+                file_name,
+                _("core_admin.ImportDataUnsupportedFileError.message.part_2"),
+            )
         )
 
 
-class ImportDataUnsupportedMultipleFilesError(ImportDataError):
+class ImportDataUnsupportedFilesError(ImportDataError):
     """
-    Exception raised when an unsupported file name is included in the imported archive.
+    Výjimka vyvolaná při výskytu jednoho nebo více nepodporovaných názvů souborů v importovaném archivu.
     """
 
-    def __init__(self, file_name):
-        self.file_name = file_name
+    def __init__(self, file_names):
+        self.file_names = file_names
         super().__init__(
-            f'{_("core_admin.ImportDataUnsupportedFileError.message.part_1")} '
-            + f'{", ".join(file_name)} {_("core_admin.ImportDataUnsupportedFileError.message.part_2")} '
+            "{} {} {}".format(
+                _("core_admin.ImportDataUnsupportedFilesError.message.part_1"),
+                ", ".join(file_names),
+                _("core_admin.ImportDataUnsupportedFilesError.message.part_2"),
+            )
+        )
+
+
+class ImportDataIncorrectPrimaryKeyFormatError(ImportDataError):
+    """
+    Výjimka vyvolaná při nesouladu hodnoty primárního klíče s očekávaným formátem.
+    """
+
+    def __init__(self, primary_key_value):
+        self.primary_key_value = primary_key_value
+        super().__init__(
+            "{} {}".format(
+                _("core_admin.ImportDataIncorrectPrimaryKeyFormatError.message"),
+                primary_key_value,
+            )
         )
 
 
 class BaseImportField:
     """
-    Base class for import fields. Does not perform any validation or processing of the value.
-    Used mostly for text fields.
+    Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
+    Používá se především pro textová pole.
     """
 
     def __init__(self):
@@ -265,14 +329,14 @@ class BaseImportField:
 
 class IntegerImportField(BaseImportField):
     """
-    Class for import fields that should contain integer values.
+    Importní pole pro hodnoty datového typu integer.
     """
 
     pattern = re.compile(r"\d+")
 
     def _process_value(self, value) -> int | None:
         """
-        If the value is not a number, then the method raises ImportDataError. Otherwise it converts value to int.
+        Převede hodnotu na int. Pokud hodnota není číslo, vyvolá ImportDataError.
         """
 
         if not value:
@@ -289,6 +353,8 @@ class IntegerImportField(BaseImportField):
 
 
 class PositiveIntegerImportField(BaseImportField):
+    """Importní pole pro kladné celočíselné hodnoty. Záporná čísla způsobí vyvolání ImportDataError."""
+
     def _process_value(self, value) -> int | None:
         value = super()._process_value(value)
         if value is not None and value < 0:
@@ -297,6 +363,8 @@ class PositiveIntegerImportField(BaseImportField):
 
 
 class DecimalImportField(BaseImportField):
+    """Importní pole pro desetinná čísla (float)."""
+
     pattern = re.compile(r"\d+\.\d*")
 
     def _process_value(self, value) -> float | None:
@@ -315,13 +383,12 @@ class DecimalImportField(BaseImportField):
 
 class BooleanImportField(BaseImportField):
     """
-    Class for import fields that should contain boolean values.
+    Importní pole pro hodnoty datového typu boolean.
     """
 
     def _process_value(self, value) -> bool | None:
         """
-        Tries to convert string value to bool. If the string value is not "true" or "false", then the exception
-        ImportDataError is raised.
+        Převede řetězec na bool. Pokud hodnota není "true"/"1" ani "false"/"0", vyvolá ImportDataError.
         """
 
         if isinstance(value, bool):
@@ -336,7 +403,7 @@ class BooleanImportField(BaseImportField):
 
 class DateImportField(BaseImportField):
     """
-    Class for import fields that should contain date values.
+    Importní pole pro hodnoty datového typu date.
     """
 
     pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2})(?: 0{1,2}:0{1,2}:0{1,2})?")
@@ -356,8 +423,8 @@ class DateImportField(BaseImportField):
 
     def _process_value(self, value) -> datetime.date | None:
         """
-        Tries to convert a string value to date. If the string value is not in the format "YYYY-MM-DD" or "DD.MM.YYYY",
-        then the exception ImportDataError is raised.
+        Převede řetězec na datum. Podporované formáty jsou "YYYY-MM-DD" a "DD.MM.YYYY".
+        Pokud hodnota neodpovídá žádnému formátu, vyvolá ImportDataError.
         """
 
         if not value or str(value).lower() == "nan":
@@ -374,7 +441,8 @@ class DateImportField(BaseImportField):
 
 class DateTimeImportField(BaseImportField):
     """
-    Class for import fields that should contain date and time values.
+    Importní pole pro hodnoty datového typu datetime.
+    Podporovaný formát: "YYYY-MM-DD HH:MM:SS".
     """
 
     pattern_iso = re.compile(r"(\d{4}-\d{1,2}-\d{1,2}.?\d{1,2}:\d{1,2}:\d{1,2}).*")
@@ -405,7 +473,7 @@ class DateTimeImportField(BaseImportField):
 
 class DateRangeImportField(BaseImportField):
     """
-    Class for import fields that should contain date-range values.
+    Importní pole pro hodnoty datového typu date range.
     """
 
     pattern = re.compile(r"\[\d{4}-\d{1,2}-\d{1,2}, ?\d{4}-\d{1,2}-\d{1,2}\)")
@@ -416,8 +484,8 @@ class DateRangeImportField(BaseImportField):
 
     def _process_value(self, value) -> DateRange | None:
         """
-        Tries to convert a string value to date. If the string value is not in the format "YYYY-MM-DD".
-        then the exception ImportDataError is raised.
+        Převede řetězec na DateRange ve formátu "[YYYY-MM-DD, YYYY-MM-DD)".
+        Pokud hodnota neodpovídá očekávanému formátu, vyvolá ImportDataError.
         """
 
         if not value or str(value).lower() == "nan":
@@ -433,7 +501,7 @@ class DateRangeImportField(BaseImportField):
 
 class LookupImportField(BaseImportField):
     """
-    Class for import fields that should contain a reference to another model instance.
+    Importní pole pro hodnoty odkazující na instanci jiného modelu (cizí klíč).
     """
 
     records = []
@@ -467,8 +535,8 @@ class LookupImportField(BaseImportField):
 
     def _process_value(self, value):
         """
-        Processes the value by checking if it exists in the database or in the imported records. If yes, it returns
-        the record. If the referenced record does not exist, it raises ImportDataMissingReferencedValueError.
+        Ověří existenci hodnoty v databázi nebo v importovaných záznamech a vrátí odpovídající záznam.
+        Pokud referencovaný záznam neexistuje, vyvolá ImportDataMissingReferencedValueError.
         """
 
         if str(value).lower() == "nan" or value is None or len(str(value)) == 0:
@@ -495,8 +563,7 @@ class LookupImportField(BaseImportField):
 
 class RuianLookupImportField(LookupImportField):
     """
-    Based on the LookupImportField, this class is used for importing data from RUIAN data. It strips
-    the "ruian-" prefix from the value and converts it to an integer.
+    Rozšíření LookupImportField pro import dat z RUIAN. Odstraní prefix "ruian-" a převede hodnotu na integer.
     """
 
     @LookupImportField.value.setter
@@ -509,8 +576,7 @@ class RuianLookupImportField(LookupImportField):
 
 class VazbaLookupImportField(LookupImportField):
     """
-    Class for import field with referenced models for vazba (relation). This relation is 1:1 instead of 1:N
-    and these fields manage relation to another model.
+    Importní pole pro referencované modely přes vazbu (relaci). Relace je 1:1 místo 1:N.
     """
 
     def __init__(self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", read_field_name: str = None):
@@ -518,8 +584,11 @@ class VazbaLookupImportField(LookupImportField):
         self.read_field_name = read_field_name
 
     def _process_value(self, value):
-        record = get_record_from_ident(value)
-        if self.lookup_model_class_list:
+        try:
+            record = get_record_from_ident(value)
+        except Exception:
+            record = None
+        if record and self.lookup_model_class_list:
             if isinstance(record, Dokument):
                 if Dokument in self.lookup_model_class_list:
                     self._instance_value = record
@@ -546,7 +615,7 @@ class VazbaLookupImportField(LookupImportField):
 
 class GeomImportField(BaseImportField):
     """
-    Class for import fields that should contain geometries.
+    Importní pole pro geometrické hodnoty.
     """
 
     def __init__(self, srid):
@@ -559,7 +628,7 @@ class GeomImportField(BaseImportField):
 
     def _process_value(self, value) -> GEOSGeometry | None:
         """
-        Tries to convert string value to geometry.
+        Převede řetězec na objekt GEOSGeometry. Pokud převod selže, vyvolá ImportDataError.
         """
         if not value:
             return None
@@ -571,6 +640,10 @@ class GeomImportField(BaseImportField):
 
 
 class GenericForeignKeyImportField(LookupImportField):
+    """
+    Importní pole pro generický cizí klíč.
+    """
+
     def __init__(
         self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", serialized_attribute: str = None
     ):
@@ -598,8 +671,8 @@ class GenericForeignKeyImportField(LookupImportField):
 
 class ImportModelMapper(ABC):
     """
-    Base class for data import. The class loads data from the imported file, preprocesses all values based on the
-    target field and creates a record.
+    Základní třída pro hromadný import dat. Načítá data z importovaného souboru,
+    předzpracovává hodnoty podle cílového pole a vytváří záznamy.
     """
 
     fields = tuple()
@@ -612,6 +685,7 @@ class ImportModelMapper(ABC):
     komponenty_vazba = False
     require_primary_key_value = None
     primary_key_prefix = None
+    allow_update = True
 
     def __init__(self, value_dict):
         self.value_dict = value_dict
@@ -621,7 +695,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def get_import_data_mapper_dict(cls):
         """
-        Returns a child class based on the import file name.
+        Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů.
         """
 
         return {
@@ -674,7 +748,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def get_import_data_mapper(cls, file_name):
         """
-        Returns a child mapper class based on the file name, omitting the file extension.
+        Vrátí třídu mapperu odpovídající zadanému názvu souboru (bez přípony).
         """
 
         return cls.get_import_data_mapper_dict().get(file_name.split(".")[0])
@@ -682,7 +756,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def get_mapping(cls, include_primary_key=False) -> dict:
         """
-        Map imported values using the map_field method.
+        Vrátí slovník mapování polí pomocí metody map_field.
         """
 
         field_mapping = {}
@@ -699,7 +773,7 @@ class ImportModelMapper(ABC):
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
         """
-        Returns a dict with primary key field name(s) and field value(s).
+        Vrátí slovník s názvem (názvy) a hodnotou (hodnotami) primárního klíče pro filtrování.
         """
 
         def value_dict_name(value):
@@ -736,7 +810,11 @@ class ImportModelMapper(ABC):
     @classmethod
     def _parse_primary_key(cls, value):
         if isinstance(value, str) and cls.primary_key_prefix:
-            return int(re.match(f"{cls.primary_key_prefix}-(.*)", value).group(1))
+            match = re.match(f"{cls.primary_key_prefix}-(.*)", value)
+            if match:
+                return int(match.group(1))
+            else:
+                raise ImportDataIncorrectPrimaryKeyFormatError(value)
         return value
 
     @staticmethod
@@ -748,7 +826,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def map_field(cls, field_name):
         """
-        Maps value to a specific BaseImportField instance or BaseImportField child instance.
+        Namapuje pole modelu na odpovídající instanci BaseImportField nebo její podtřídy.
         """
 
         model_field = cls.model_class._meta.get_field(field_name)
@@ -790,7 +868,7 @@ class ImportModelMapper(ABC):
 
     def create_records(self, performed_action) -> list:
         """
-        Create a record instance or multiple model instances that can be saved to database.
+        Vytvoří instanci záznamu nebo více instancí modelů připravených k uložení do databáze.
         """
 
         mapping_dict = self.map(performed_action, True)
@@ -824,10 +902,8 @@ class ImportModelMapper(ABC):
 
     def import_validation(self, performed_action) -> dict | None:
         """
-        Perform the validation based on the primary key. The record should not exist in databased when the insert action
-        is performed. It should exist if the update action is performed. If one of the conditions is valid, the method
-        returns a dict with mapped primary key field names and values.  Otherwise, the ImportDataIntegrityError
-        error is raised.
+        Provede validaci na základě primárního klíče. Při insertu záznam nesmí existovat,
+        při updatu musí existovat. Vrátí slovník s primárními klíči, nebo vyvolá ImportDataIntegrityError.
         """
 
         if self.primary_key and self._get_filter_kwargs_primary_key():
@@ -880,9 +956,8 @@ class ImportModelMapper(ABC):
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
         """
-        Checks if the file columns structure is valid as the first step. If not, the ImportDataIncorrectStructureError
-        exception is raised. Then it creates a dict with field names as keys and values are instances of
-        BaseImportField class or one of its child classes with values loaded from the import file.
+        Nejprve ověří strukturu sloupců souboru — při nesouladu vyvolá ImportDataIncorrectStructureError.
+        Poté vrátí slovník s názvy polí jako klíči a instancemi BaseImportField s načtenými hodnotami jako hodnotami.
         """
 
         self._check_column_structure(performed_action, include_primary_key)
@@ -910,8 +985,8 @@ class ImportModelMapper(ABC):
 
     def map_column_name_to_field_name(self, column_name):
         """
-        Map a column name from the import file to the field name of the Django model. Used when the Django field
-        name is different from a database column name.
+        Převede název sloupce z importního souboru na název pole Django modelu.
+        Používá se, pokud se název pole liší od názvu databázového sloupce.
         """
 
         return self.column_to_field_mapping.get(column_name, column_name)
@@ -919,7 +994,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def create_relations(cls, instance):
         """
-        Creates relation fields for Historie, Koimponenty, and Soubory.
+        Vytvoří vazební záznamy pro Historie, Komponenty a Soubory, pokud ještě neexistují.
         """
 
         if cls.historie_typ_vazby and not getattr(instance, "historie", None):
@@ -941,6 +1016,11 @@ class ImportModelMapper(ABC):
 
 
 class GeometryTransformMixin:
+    """
+    Mixin pro mappery s geometrickými poli. Při insertu zajišťuje konverzi mezi souřadnicovými systémy:
+    WGS84 (SRID 4326) → S-JTSK (SRID 5514) a naopak.
+    """
+
     def transform_geometries(self, mapping_dict, performed_action):
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             if mapping_dict.get("geom_system") == 4326 and mapping_dict.get("geom"):
@@ -951,6 +1031,8 @@ class GeometryTransformMixin:
 
 
 class MultipleClassImportModelMapper(ImportModelMapper):
+    """Základní třída pro mappery importující data do více modelů najednou."""
+
     foreign_key_fields = tuple()
     classes = tuple()
 
@@ -1016,6 +1098,8 @@ class MultipleClassImportModelMapper(ImportModelMapper):
 
 
 class HeslarMapper(ImportModelMapper):
+    """Mapper pro model Heslar."""
+
     fields = (
         "ident_cely",
         "heslo",
@@ -1036,6 +1120,8 @@ class HeslarMapper(ImportModelMapper):
 
 
 class HeslarDataceMapper(ImportModelMapper):
+    """Mapper pro model HeslarDatace."""
+
     fields = (
         "rok_od_min",
         "rok_od_max",
@@ -1055,6 +1141,8 @@ class HeslarDataceMapper(ImportModelMapper):
 
 
 class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
+    """Mapper pro model HeslarDokumentTypMaterialRada."""
+
     model_class = HeslarDokumentTypMaterialRada
     primary_key = "id"
     primary_key_prefix = "hdtm"
@@ -1075,6 +1163,8 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
 
 
 class HeslarHierarchieMapper(ImportModelMapper):
+    """Mapper pro model HeslarHierarchie."""
+
     fields = ("typ",)
     model_class = HeslarHierarchie
     primary_key = "id"
@@ -1089,6 +1179,8 @@ class HeslarHierarchieMapper(ImportModelMapper):
 
 
 class HeslarOdkazMapper(ImportModelMapper):
+    """Mapper pro model HeslarOdkaz."""
+
     fields = (
         "zdroj",
         "nazev_kodu",
@@ -1109,6 +1201,8 @@ class HeslarOdkazMapper(ImportModelMapper):
 
 
 class OrganizaceMapper(ImportModelMapper):
+    """Mapper pro model Organizace."""
+
     fields = (
         "ident_cely",
         "nazev",
@@ -1144,6 +1238,8 @@ class OrganizaceMapper(ImportModelMapper):
 
 
 class OsobaMapper(ImportModelMapper):
+    """Mapper pro model Osoba."""
+
     fields = (
         "ident_cely",
         "vypis_cely",
@@ -1161,6 +1257,8 @@ class OsobaMapper(ImportModelMapper):
 
 
 class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
+    """Mapper pro model Projekt."""
+
     fields = (
         "ident_cely",
         "stav",
@@ -1202,8 +1300,11 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
 
 
 class ProjektKatastrMapper(ImportModelMapper):
+    """Mapper pro model ProjektKatastr."""
+
     model_class = ProjektKatastr
     primary_key = ("projekt", "katastr")
+    allow_update = False
     primary_key_filter_field = ("projekt__ident_cely", "katastr__kod")
     primary_key_prefix = (None, "ruian")
 
@@ -1216,6 +1317,8 @@ class ProjektKatastrMapper(ImportModelMapper):
 
 
 class ProjektOznamovatelMapper(ImportModelMapper):
+    """Mapper pro model Oznamovatel."""
+
     fields = ("oznamovatel", "odpovedna_osoba", "adresa", "telefon", "email", "poznamka")
     model_class = Oznamovatel
     primary_key = "projekt"
@@ -1229,6 +1332,8 @@ class ProjektOznamovatelMapper(ImportModelMapper):
 
 
 class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
+    """Mapper pro model SamostatnyNalez."""
+
     fields = (
         "ident_cely",
         "igsn",
@@ -1274,6 +1379,8 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
 
 
 class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
+    """Mapper pro modely ArcheologickyZaznam a Akce."""
+
     fields = (
         ("archeologicky_zaznam", "ident_cely"),
         ("archeologicky_zaznam", "stav"),
@@ -1347,6 +1454,8 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
 
 
 class LokalitaMapper(MultipleClassImportModelMapper):
+    """Mapper pro modely ArcheologickyZaznam a Lokalita."""
+
     fields = (
         ("archeologicky_zaznam", "ident_cely"),
         ("lokalita", "igsn"),
@@ -1403,6 +1512,8 @@ class LokalitaMapper(MultipleClassImportModelMapper):
 
 
 class AkceVedouciMapper(ImportModelMapper):
+    """Mapper pro model AkceVedouci."""
+
     model_class = AkceVedouci
     primary_key = "id"
     primary_key_prefix = "vedo"
@@ -1417,8 +1528,11 @@ class AkceVedouciMapper(ImportModelMapper):
 
 
 class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
+    """Mapper pro model ArcheologickyZaznamKatastr."""
+
     model_class = ArcheologickyZaznamKatastr
     primary_key = ("archeologicky_zaznam", "katastr")
+    allow_update = False
     primary_key_filter_field = ("archeologicky_zaznam__ident_cely", "katastr__kod")
     primary_key_prefix = (None, "ruian")
 
@@ -1431,6 +1545,8 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
 
 
 class PianMapper(ImportModelMapper, GeometryTransformMixin):
+    """Mapper pro model Pian."""
+
     fields = ("ident_cely", "stav", "geom_system", "geom", "geom_sjtsk")
     model_class = Pian
     require_primary_key_value = True
@@ -1450,6 +1566,8 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
 
 
 class DokumentacniJednotkaMapper(ImportModelMapper):
+    """Mapper pro model DokumentacniJednotka."""
+
     fields = ("ident_cely", "negativni_jednotka", "nazev")
     model_class = DokumentacniJednotka
     require_primary_key_value = True
@@ -1474,6 +1592,8 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
 
 
 class AdbMapper(ImportModelMapper):
+    """Mapper pro model Adb."""
+
     fields = (
         "ident_cely",
         "uzivatelske_oznaceni_sondy",
@@ -1501,6 +1621,8 @@ class AdbMapper(ImportModelMapper):
 
 
 class AdbVyskovyBod(ImportModelMapper):
+    """Mapper pro model VyskovyBod."""
+
     fields = ("ident_cely", "geom")
     model_class = VyskovyBod
     require_primary_key_value = True
@@ -1514,6 +1636,8 @@ class AdbVyskovyBod(ImportModelMapper):
 
 
 class DokumentLetMapper(ImportModelMapper):
+    """Mapper pro model Let."""
+
     fields = (
         "ident_cely",
         "uzivatelske_oznaceni",
@@ -1540,6 +1664,8 @@ class DokumentLetMapper(ImportModelMapper):
 
 
 class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
+    """Mapper pro modely Dokument a DokumentExtraData."""
+
     fields = (
         ("dokument", "ident_cely"),
         ("dokument", "doi"),
@@ -1620,7 +1746,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
 
     def create_records(self, performed_action) -> list:
         """
-        Creates a Dokument instance and DokumentExtraData instance with relation to Dokument instance.
+        Vytvoří instanci Dokument a DokumentExtraData s vazbou na Dokument.
         """
 
         fields_dokument = [item for model, item in self.fields + self.foreign_key_fields if model == "dokument"]
@@ -1628,6 +1754,13 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             item for model, item in self.fields + self.foreign_key_fields if model == "dokument_extra_data"
         ]
         mapping_dict = self.map(performed_action, True)
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+            dokument = Dokument.objects.get(ident_cely=mapping_dict["ident_cely"])
+            dokument_extra_data_query = DokumentExtraData.objects.filter(dokument=dokument)
+            if dokument_extra_data_query.exists():
+                return [dokument_extra_data_query.first(), dokument]
+            else:
+                return [dokument]
         mapping_dict_dokument = {field: mapping_dict[field] for field in fields_dokument}
         mapping_dict_dokument_extra_data = {field: mapping_dict[field] for field in fields_dokument_extra_data}
         mapping_dict_dokument = {
@@ -1642,10 +1775,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             dokument_extra_data = DokumentExtraData(**mapping_dict_dokument_extra_data)
             dokument_extra_data.dokument = dokument
             return [dokument, dokument_extra_data]
-        if performed_action in (
-            ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
-            ImportDataAdminForm.PERFORMED_ACTION_DELETE,
-        ):
+        if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
             dokument = Dokument.objects.get(ident_cely=mapping_dict["ident_cely"])
             dokument_extra_data_query = DokumentExtraData.objects.filter(dokument=dokument)
             if dokument_extra_data_query.exists():
@@ -1665,9 +1795,12 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
 
 
 class DokumentAutorMapper(ImportModelMapper):
+    """Mapper pro model DokumentAutor."""
+
     fields = ("poradi",)
     model_class = DokumentAutor
     primary_key = ("dokument", "autor")
+    allow_update = False
     primary_key_filter_field = ("dokument__ident_cely", "autor__ident_cely")
 
     @classmethod
@@ -1679,8 +1812,11 @@ class DokumentAutorMapper(ImportModelMapper):
 
 
 class DokumentJazykMapper(ImportModelMapper):
+    """Mapper pro model DokumentJazyk."""
+
     model_class = DokumentJazyk
     primary_key = ("dokument", "jazyk")
+    allow_update = False
     primary_key_filter_field = ("dokument__ident_cely", "jazyk__ident_cely")
 
     @classmethod
@@ -1692,8 +1828,11 @@ class DokumentJazykMapper(ImportModelMapper):
 
 
 class DokumentOsobaMapper(ImportModelMapper):
+    """Mapper pro model DokumentOsoba."""
+
     model_class = DokumentOsoba
     primary_key = ("dokument", "osoba")
+    allow_update = False
     primary_key_filter_field = ("dokument__ident_cely", "osoba__ident_cely")
 
     @classmethod
@@ -1705,8 +1844,11 @@ class DokumentOsobaMapper(ImportModelMapper):
 
 
 class DokumentPosudekMapper(ImportModelMapper):
+    """Mapper pro model DokumentPosudek."""
+
     model_class = DokumentPosudek
     primary_key = ("dokument", "posudek")
+    allow_update = False
     primary_key_filter_field = ("dokument__ident_cely", "posudek__ident_cely")
 
     @classmethod
@@ -1718,6 +1860,8 @@ class DokumentPosudekMapper(ImportModelMapper):
 
 
 class TvarMapper(ImportModelMapper):
+    """Mapper pro model Tvar."""
+
     fields = ("poznamka",)
     model_class = Tvar
     primary_key = "id"
@@ -1732,6 +1876,8 @@ class TvarMapper(ImportModelMapper):
 
 
 class DokumentCastMapper(ImportModelMapper):
+    """Mapper pro model DokumentCast."""
+
     fields = ("ident_cely", "poznamka")
     model_class = DokumentCast
     require_primary_key_value = True
@@ -1747,6 +1893,8 @@ class DokumentCastMapper(ImportModelMapper):
 
 
 class NeidentAkceMapper(ImportModelMapper):
+    """Mapper pro model NeidentAkce."""
+
     fields = ("rok_zahajeni", "rok_ukonceni", "lokalizace", "popis", "poznamka", "pian")
     model_class = NeidentAkce
     primary_key = "dokument_cast"
@@ -1761,8 +1909,11 @@ class NeidentAkceMapper(ImportModelMapper):
 
 
 class NeidentAkceVedouciMapper(ImportModelMapper):
+    """Mapper pro model NeidentAkceVedouci."""
+
     model_class = NeidentAkceVedouci
     primary_key = ("neident_akce", "vedouci")
+    allow_update = False
     primary_key_filter_field = ("neident_akce__dokument_cast__ident_cely", "vedouci__ident_cely")
 
     @classmethod
@@ -1774,6 +1925,8 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
 
 
 class KomponentaMapper(ImportModelMapper):
+    """Mapper pro model Komponenta."""
+
     fields = ("ident_cely", "jistota", "presna_datace", "poznamka")
     model_class = Komponenta
     require_primary_key_value = True
@@ -1790,8 +1943,11 @@ class KomponentaMapper(ImportModelMapper):
 
 
 class KomponentaAktivitaMapper(ImportModelMapper):
+    """Mapper pro model KomponentaAktivita."""
+
     model_class = KomponentaAktivita
     primary_key = ("komponenta", "aktivita")
+    allow_update = False
     primary_key_filter_field = ("komponenta__ident_cely", "aktivita__ident_cely")
 
     @classmethod
@@ -1803,11 +1959,15 @@ class KomponentaAktivitaMapper(ImportModelMapper):
 
 
 class NalezMapper(ImportModelMapper):
+    """Základní mapper pro nálezy."""
+
     fields = ("pocet", "poznamka")
     primary_key = "id"
 
 
 class NalezObjektMapper(NalezMapper):
+    """Mapper pro model NalezObjekt."""
+
     model_class = NalezObjekt
     primary_key_prefix = "nalo"
 
@@ -1823,6 +1983,8 @@ class NalezObjektMapper(NalezMapper):
 
 
 class NalezPredmetMapper(NalezMapper):
+    """Mapper pro model NalezPredmet."""
+
     model_class = NalezPredmet
     primary_key_prefix = "nalp"
 
@@ -1838,6 +2000,8 @@ class NalezPredmetMapper(NalezMapper):
 
 
 class ExterniZdrojMapper(ImportModelMapper):
+    """Mapper pro model ExterniZdroj."""
+
     fields = (
         "ident_cely",
         "doi",
@@ -1872,8 +2036,11 @@ class ExterniZdrojMapper(ImportModelMapper):
 
 
 class ExterniZdrojAutorMapper(ImportModelMapper):
+    """Mapper pro model ExterniZdrojAutor."""
+
     fields = ("poradi",)
     primary_key = ("externi_zdroj", "autor")
+    allow_update = False
     primary_key_filter_field = ("externi_zdroj__ident_cely", "autor__ident_cely")
     model_class = ExterniZdrojAutor
 
@@ -1886,8 +2053,11 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
 
 
 class ExterniZdrojEditorMapper(ImportModelMapper):
+    """Mapper pro model ExterniZdrojEditor."""
+
     fields = ("poradi",)
     primary_key = ("externi_zdroj", "editor")
+    allow_update = False
     primary_key_filter_field = ("externi_zdroj__ident_cely", "editor__ident_cely")
     model_class = ExterniZdrojEditor
 
@@ -1900,6 +2070,8 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
 
 
 class ExterniOdkazMapper(ImportModelMapper):
+    """Mapper pro model ExterniOdkaz."""
+
     fields = ("paginace",)
     model_class = ExterniOdkaz
     primary_key = "id"
@@ -1914,6 +2086,8 @@ class ExterniOdkazMapper(ImportModelMapper):
 
 
 class UzivatelMapper(ImportModelMapper):
+    """Mapper pro model User."""
+
     fields = (
         "ident_cely",
         "first_name",
@@ -1940,8 +2114,11 @@ class UzivatelMapper(ImportModelMapper):
 
 
 class UzivatelNotifikaceProjektMapper(ImportModelMapper):
+    """Mapper pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN)."""
+
     model_class = Pes
     primary_key = ("uzivatel", "ruian")
+    allow_update = False
     primary_key_prefix = (None, "ruian")
     column_to_field_mapping = {"uzivatel": "user"}
 
@@ -2007,6 +2184,8 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
 
 class UzivatelSpolupraceMapper(ImportModelMapper):
+    """Mapper pro model UzivatelSpoluprace."""
+
     fields = ("stav",)
     model_class = UzivatelSpoluprace
     primary_key = "id"
@@ -2021,8 +2200,11 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
 
 
 class UzivatelOpravneniMapper(ImportModelMapper):
+    """Mapper pro přiřazení skupinových oprávnění uživateli (model User)."""
+
     model_class = User
     primary_key = ("uzivatel", "skupina")
+    allow_update = False
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
@@ -2040,6 +2222,8 @@ class UzivatelOpravneniMapper(ImportModelMapper):
 
 
 class SouborMapper(ImportModelMapper):
+    """Mapper pro model Soubor."""
+
     fields = ("nazev",)
     model_class = Soubor
     primary_key = "id"
@@ -2053,8 +2237,11 @@ class SouborMapper(ImportModelMapper):
 
 
 class UzivatelNotifikaceMapper(ImportModelMapper):
+    """Mapper pro přiřazení typů notifikací uživateli (model User)."""
+
     model_class = User
     primary_key = ("uzivatel", "notifikace")
+    allow_update = False
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
@@ -2072,6 +2259,8 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
 
 
 class HistorieMapper(ImportModelMapper):
+    """Mapper pro model Historie."""
+
     fields = (
         "datum_zmeny",
         "typ_zmeny",

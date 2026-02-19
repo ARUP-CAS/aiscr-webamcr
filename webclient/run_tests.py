@@ -1,7 +1,9 @@
 import argparse
 import logging
 import os
+import re
 import subprocess
+from io import StringIO
 from threading import Thread
 
 import logstash
@@ -14,10 +16,6 @@ parser.add_argument("-s", "--soubor", help="uloží výstup do souboru", action=
 args = parser.parse_args()
 
 SETTINGS = "webclient.settings.dev_test"
-
-test_preparation_path = os.path.join("scripts", "test_preparation.sh")
-if os.path.exists(test_preparation_path):
-    subprocess.run(f"./{test_preparation_path}")
 
 logger = logging.getLogger("webamcr.test_runner")
 # logger.setLevel(logging.INFO)
@@ -74,12 +72,16 @@ else:
     ]
 
 
-def reader(pipe):
+output_buffer = StringIO()
+
+
+def reader_and_capture(pipe):
     while True:
-        line = pipe.read(1)
-        print(line, end="")
+        line = pipe.readline()
         if not line:
             break
+        print(line, end="")
+        output_buffer.write(line)
 
 
 def filelog(pipe):
@@ -105,8 +107,35 @@ if args.soubor is True:
     t1 = Thread(target=filelog, args=[process.stdout]).start()
     t2 = Thread(target=filelog, args=[process.stderr]).start()
 else:
-    t1 = Thread(target=reader, args=[process.stdout]).start()
-    t2 = Thread(target=reader, args=[process.stderr]).start()
+    t1 = Thread(target=reader_and_capture, args=[process.stdout]).start()
+    t2 = Thread(target=reader_and_capture, args=[process.stderr]).start()
 process.wait()
 
 logger.info("amcr_test_runner.end")
+
+stdout_text = output_buffer.getvalue()
+
+# Zápis do logu
+with open("/vol/web/selenium_test/test_output.log", "w") as f:
+    f.write(stdout_text)
+# Parsování z výstupu
+ran_match = re.search(r"Ran (\d+) tests?", stdout_text)
+failures_match = re.search(r"failures=(\d+)", stdout_text)
+errors_match = re.search(r"errors=(\d+)", stdout_text)
+ok_match = re.search(r"\nOK\n", stdout_text)
+
+ran = int(ran_match.group(1)) if ran_match else 0
+failures = int(failures_match.group(1)) if failures_match else 0
+errors = int(errors_match.group(1)) if errors_match else 0
+passed = ran - failures - errors if ran > 0 else 0
+
+# Výstup do souboru pro GitHub Actions
+with open("/vol/web/selenium_test/test_summary.env", "w") as f:
+    f.write(f"PASSED={passed}\n")
+    f.write(f"FAILED={failures + errors}\n")
+
+# Výsledek
+if failures + errors > 0:
+    exit(1)
+else:
+    exit(0)

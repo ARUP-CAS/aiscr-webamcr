@@ -14,5 +14,15 @@
     <p>Na tuto zprávu prosím neodpovídejte, je automaticky generována.</p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Dear madam/sir,</p>
+    <p>
+        project <b>{{ ident_cely }}</b> (<b>{{ podnet }}</b>) which was registered in connection with your announcement of construction or other activity on an area with archaeological finds in accordance with section 22, paragraph 2 of Act No. 20/1987 Sb. on State Monument Care on the cadastral area <b>{{ katastr }}</b> parcel <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>) {% if datum_oznameni %}from date <b>{{ datum_oznameni }}</b>{% endif %} has been cancelled.
+    </p>
+    <p><b>Reason:</b> {{ reason }}</p>
+    <p>
+        If you have any questions, please write to oznameni@arub.cz or call +420 515 911 133 (South Moravian and Zlín Regions), +420 515 911 121 (Vysočina and Olomouc Regions), +420 553 821 603 (Moravian-Silesian Region).
+    </p>
+    <p>Sincerely</p>
+    <p>Institute of Archaeology of the Czech Academy of Sciences, Brno</p>
+    <p>Please do not reply to this message, as it is automatically generated.</p>
 {% endblock %}

@@ -47,7 +47,7 @@ def validate_uzivatel_email(email):
 
 class ProjectModelChoiceField(ModelChoiceField):
     """
-    Třída pro správne zobrazení label.
+    Třída pro správně zobrazení label.
     """
 
     def label_from_instance(self, obj):
@@ -184,7 +184,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
                     "data-live-search": "true",
-                    "data-container": ".content-with-table-responsive-container",
                 }
             ),
             "presna_datace": forms.TextInput(),

@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import re
+import tempfile
 import unicodedata
 import zipfile
 from datetime import datetime
@@ -27,6 +28,7 @@ from core.message_constants import (
     APPLICATION_RESTART_ERROR,
     APPLICATION_RESTART_SUCCESS,
     DOKUMENT_NEKDO_ZMENIL_STAV,
+    PRISTUP_ZAKAZAN,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
     SPATNY_ZAZNAM_SOUBOR_VAZBA,
@@ -39,7 +41,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.models import Soubor
+from core.models import AntivirusCheckResult, Soubor
 from core.repository_connector import (
     FedoraError,
     FedoraRepositoryConnector,
@@ -116,7 +118,7 @@ from uzivatel.models import User
 from .connectors import RedisConnector
 from .exceptions import ZaznamSouborNotmatching
 from .mixins import IPWhitelistMixin
-from .models import Permissions, PermissionsSkip
+from .models import Permissions, PermissionsSkip, check_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -379,7 +381,7 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["ident_cely"] = ""
+        context["ident_cely"] = self.kwargs.get("ident_cely")
         context["back_url"] = self.request.GET.get("next", "/")
         context["file_id"] = self.kwargs.get("file_id")
         context["typ_vazby"] = self.kwargs.get("typ_vazby")
@@ -387,7 +389,7 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class Uploadfileview(LoginRequiredMixin, TemplateView):
+class UploadFileView(LoginRequiredMixin, TemplateView):
     """
     Třída pohledu pro zobrazení stránky s uploadem souboru.
     """
@@ -399,7 +401,7 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
         self.typ_vazby = self.kwargs.get("typ_vazby")
         self.ident = self.kwargs.get("ident_cely")
         logger.debug(
-            "core.views.Uploadfileview.get_zaznam.start", extra={"typ_vazby": self.typ_vazby, "ident_cely": self.ident}
+            "core.views.UploadFileView.get_zaznam.start", extra={"typ_vazby": self.typ_vazby, "ident_cely": self.ident}
         )
         if self.typ_vazby == "pas":
             self.info_tooltip = _("core.upload_file_PAS.tooltip")
@@ -429,7 +431,7 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
             "seznam_mock": json_mock,
         }
         logger.debug(
-            "core.views.Uploadfileview.get_context_data.start",
+            "core.views.UploadFileView.get_context_data.start",
             extra={"typ_vazby": self.typ_vazby, "ident_cely": self.ident},
         )
         return context
@@ -446,269 +448,623 @@ class Uploadfileview(LoginRequiredMixin, TemplateView):
         return redirect(self.zaznam.get_absolute_url())
 
 
-@require_http_methods(["POST"])
-def post_upload(request):
+class BasePostUploadView(View):
     """
-    Funkce pohledu pro upload souboru a k navázaní ke správnemu záznamu.
+    Abstraktní třída pro zpracování nahrávání souborů.
+
+    Poskytuje společnou logiku pro upload nového souboru i nahrazení existujícího souboru.
+    Implementuje kompletní workflow pro validaci nahrávaných souborů včetně kontroly MIME typů,
+    antivirové kontroly a detekce šifrovaných souborů. Potomci musí implementovat metodu
+    handle_upload() pro specifické zpracování.
+
+    Process Description:
+        1. Kontrola přítomnosti souboru v requestu
+        2. Validace MIME typu a detekce šifrování
+        3. Antivirová kontrola nahrávaného obsahu
+        4. Předání validovaného souboru potomkům pro konkrétní zpracování
+
+    Attributes:
+        http_method_names (list): Povolené HTTP metody - pouze POST
+        source_url (str): URL zdroje souboru (pokud je specifikována)
+        fedora_transaction (FedoraTransaction): Instance transakce pro práci s Fedora repository
+        original_filename (str): Původní název nahrávaného souboru
     """
-    source_url = request.POST.get("source-url", "")
-    update = "fileID" in request.POST
-    fedora_transaction = FedoraTransaction()
-    soubor_instance = None
-    original_filename = request.FILES.get("file").name
-    if not update:
+
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        """
+        Zpracuje POST request s nahrávaným souborem.
+
+        Metoda provádí kompletní validaci nahrávaného souboru před jeho uložením:
+        - Kontroluje přítomnost souboru v requestu
+        - Validuje MIME typ a detekuje šifrované soubory
+        - Provádí antivirovou kontrolu obsahu
+        - Deleguje finální zpracování na potomky prostřednictvím handle_upload()
+
+        Args:
+            request (HttpRequest): Django HTTP request objekt obsahující nahrávaný soubor
+            *args: Poziční argumenty předané z URL dispatcheru
+            **kwargs: Klíčové argumenty z URL patternu (např. ident_cely, typ_vazby)
+
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace
+
+        Response Status Codes:
+            200: Soubor byl úspěšně validován a zpracován
+            400: Validační chyba (chybějící soubor, šifrovaný, virus, neplatný MIME typ)
+            500: Neznámá chyba při zpracování
+        """
+        self.source_url = request.POST.get("source-url", "")
+        self.fedora_transaction = FedoraTransaction()
+        soubor: TemporaryUploadedFile = request.FILES.get("file")
+        if not soubor:
+            logger.error("core.views.post_upload.no_file")
+            return self._unknown_error_response()
+        self.original_filename = soubor.name
+        soubor.seek(0)
+        check_meme = Soubor.check_mime_for_url(soubor, self.source_url)
+        if check_meme == "encrypted":
+            logger.debug("core.views.post_upload.check_mime_for_url.encrypted")
+            help_translation = _("core.views.post_upload.encrypted")
+            return JsonResponse({"error": help_translation}, status=400)
+        elif check_meme is False:
+            logger.debug("core.views.post_upload.check_mime_for_url.rejected")
+            help_translation = _("core.views.post_upload.mime_check_failed")
+            return JsonResponse({"error": help_translation}, status=400)
+        soubor_data = BytesIO(soubor.read())
+        check_antivirus_result = Soubor.check_antivirus(soubor_data)
+        if check_antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
+            logger.warning(
+                "core.views.post_upload.check_antivirus_result.virus_found",
+                extra={"soubor": soubor.name, "user": request.user.pk},
+            )
+            help_translation = _("core.views.post_upload.antivirus_check.virus_found")
+            return JsonResponse({"error": help_translation}, status=400)
+        if check_antivirus_result == AntivirusCheckResult.CHECK_FAILED:
+            logger.warning(
+                "core.views.post_upload.check_antivirus_result.check_failed",
+                extra={"soubor": soubor.name, "user": request.user.pk},
+            )
+            help_translation = _("core.views.post_upload.antivirus_check.check_failed")
+            return JsonResponse({"error": help_translation}, status=400)
+        soubor.seek(0)
+        return self.handle_upload(request, soubor, soubor_data, *args, **kwargs)
+
+    def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
+        """
+        Abstraktní metoda pro implementaci konkrétního zpracování nahraného souboru.
+
+        Tato metoda musí být implementována potomky třídy. Je volána z post() metody
+        po úspěšné validaci souboru (MIME typ, antivirus). Potomci zde implementují
+        specifickou logiku pro nové nahrání nebo aktualizaci existujícího souboru.
+
+        Args:
+            request (HttpRequest): Django HTTP request objekt s informacemi o uživateli a sessions
+            soubor (TemporaryUploadedFile): Nahraný soubor z requestu
+            soubor_data (BytesIO): Binární obsah souboru jako BytesIO objekt
+            *args: Poziční argumenty z URL dispatcheru
+            **kwargs: Klíčové argumenty z URL (např. ident_cely, typ_vazby, file_id)
+
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace nahrání
+
+        Raises:
+            NotImplementedError: Pokud potomek tuto metodu neimplementuje
+        """
+        raise NotImplementedError
+
+    def _append_duplicate_message(self, response_data, duplikat):
+        """
+        Přidá informaci o duplicitním souboru do odpovědi.
+
+        Kontroluje, zda v systému již existuje soubor se stejným SHA-512 hashem.
+        Pokud ano, přidá do response_data varovnou zprávu s informací o duplicitě
+        včetně identifikátoru záznamu, ke kterému je duplicitní soubor připojen.
+
+        Args:
+            response_data (dict): Slovník s daty odpovědi, do kterého bude přidána zpráva
+            duplikat (QuerySet): QuerySet s duplicitními soubory (Soubor objekty)
+
+        Returns:
+            dict: Upravený response_data slovník s přidanou duplicitní zprávou.
+                  Pokud není nalezen žádný duplikát, vrací nezměněný slovník.
+
+        Response Data Keys:
+            duplicate (tuple): Tuple obsahující zprávu o duplicitě ve formátu:
+                "Soubor {original_filename} byl již nahrán k záznamu {parent_ident}. Zpráva..."
+        """
+        if duplikat is not None and duplikat.exists():
+            parent_ident = (
+                duplikat.first().vazba.navazany_objekt.ident_cely
+                if duplikat.first().vazba.navazany_objekt is not None
+                else ""
+            )
+            help_translation = _("core.views.post_upload.duplikat2.text1")
+            help_translation2 = _("core.views.post_upload.duplikat2.text2")
+            help_translation3 = _("core.views.post_upload.duplikat2.text3")
+            response_data["duplicate"] = (
+                f"{help_translation} {self.original_filename} {help_translation2} "
+                f"{parent_ident}. {help_translation3}",
+            )
+        return response_data
+
+    def _append_rename_message(self, response_data, renamed, new_name):
+        """
+        Přidá informaci o přejmenování souboru do odpovědi.
+
+        Pokud byl soubor během uploadu přejmenován (typicky kvůli úpravě přípony
+        pro soulad s MIME typem), přidá do response_data informační zprávu.
+
+        Args:
+            response_data (dict): Slovník s daty odpovědi, do kterého bude přidána zpráva
+            renamed (bool): True pokud došlo k přejmenování, False jinak
+            new_name (str): Nový název souboru po přejmenování
+
+        Returns:
+            dict: Upravený response_data slovník s přidanou zprávou o přejmenování.
+                  Pokud nedošlo k přejmenování (renamed=False), vrací nezměněný slovník.
+
+        Response Data Keys:
+            file_renamed (tuple): Tuple obsahující zprávu o přejmenování ve formátu:
+                "Soubor {original_filename} byl přejmenován na {new_name}"
+        """
+        if renamed:
+            help_translation = _("core.views.post_upload.renamed.text1")
+            help_translation2 = _("core.views.post_upload.renamed.text2")
+            response_data["file_renamed"] = (
+                f"{help_translation} {self.original_filename} {help_translation2} " f"{new_name}",
+            )
+        return response_data
+
+    def _unknown_error_response(self):
+        """
+        Vrátí JSON odpověď s chybovou zprávou a HTTP status 500 pro neočekávané chyby
+        při zpracování souboru, které nejsou pokryty specifickými error handlery.
+
+        Returns:
+            JsonResponse: JSON odpověď s chybovou zprávou a HTTP status 500
+        """
+        help_translation = _("core.views.post_upload.unknown_error")
+        logger.error("core.views.post_upload.unknown_error")
+        return JsonResponse({"error": help_translation}, status=500)
+
+
+class NewFileUploadView(BasePostUploadView):
+    """
+    Pohled pro nahrání nového souboru k záznamu (projekt, dokument, samostatný nález).
+
+    Process Description:
+        1. Kontrola oprávnění uživatele (nebo anonymního přístupu pro projekty)
+        2. Rozlišení typu záznamu a generování názvu souboru
+        3. Validace a případná úprava přípony souboru podle MIME typu
+        4. Odstranění GPS dat z obrázků samostatných nálezů
+        5. Uložení do Fedora repository
+        6. Vytvoření záznamu v databázi s metadaty
+        7. Detekce duplicit podle SHA-512 hashe
+        8. Zaznamenání události nahrání do historie
+
+    URL Parameters:
+        ident_cely (str): Identifikátor záznamu, ke kterému má být soubor nahrán
+        typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+    """
+
+    def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
+        """
+        Implementuje nahrání nového souboru k záznamu.
+
+        Provádí kompletní workflow pro vytvoření nového souboru včetně kontroly oprávnění,
+        generování názvu, uložení do repository a vytvoření databázového záznamu.
+        Podporuje anonymní upload pro oznámení a automaticky zpracovává metadata obrázků.
+
+        Args:
+            request (HttpRequest): HTTP request s informacemi o uživateli a session
+            soubor (TemporaryUploadedFile): Nahraný soubor z requestu
+            soubor_data (BytesIO): Binární obsah souboru
+            *args: Poziční argumenty z URL
+            **kwargs: Obsahuje 'ident_cely' (identifikátor záznamu) a 'typ_vazby' (typ vazby)
+
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace
+
+        Response Status Codes:
+            200: Soubor úspěšně nahrán
+            400: Chyba při nahrávání (transakční konflikt, MIME typ, atd.)
+            403: Nedostatečná oprávnění nebo překročen limit souborů
+            500: Neexistující záznam nebo jiná interní chyba
+        """
+        ident_cely = kwargs.get("ident_cely")
         logger.debug(
             "core.views.post_upload.start",
-            extra={"pk": request.POST.get("objectID", None), "source_url": source_url},
+            extra={"pk": ident_cely, "source_url": self.source_url},
         )
-        projekt = Projekt.objects.filter(ident_cely=request.POST["objectID"])
-        dokument = Dokument.objects.filter(ident_cely=request.POST["objectID"])
-        samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
-        if projekt.exists():
-            objekt = projekt[0]
-            new_name = get_projekt_soubor_name(objekt, request.FILES.get("file").name)
-        elif dokument.exists():
-            objekt = dokument[0]
-            new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
-        elif samostatny_nalez.exists():
-            objekt = samostatny_nalez[0]
-            new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
+
+        if not request.user.is_authenticated:
+            typ_vazby = kwargs.get("typ_vazby")
+            session_identifier = SessionIdentifier(request)
+            if typ_vazby != "projekt" or not session_identifier.verify_project_ownership(ident_cely):
+                logger.warning(
+                    "core.views.post_upload.permission_denied_anonymous",
+                    extra={"ident_cely": ident_cely},
+                )
+                return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
+
+        typ_vazby = kwargs.get("typ_vazby")
+        resolved = self._resolve_object_and_name(request, ident_cely, soubor.name, typ_vazby)
+        if isinstance(resolved, JsonResponse):
+            return resolved
+        objekt, new_name = resolved
+
+        conn = FedoraRepositoryConnector(objekt, self.fedora_transaction, skip_container_check=False)
+        mimetype = Soubor.get_mime_types(soubor)
+        mime_extensions = Soubor.get_file_extension_by_mime(soubor)
+        if len(mime_extensions) == 0:
+            logger.debug("core.views.post_upload.check_mime_for_url.rejected")
+            help_translation = _("core.views.post_upload.mime_rename_failed")
+            return JsonResponse({"error": f"{help_translation}"}, status=400)
+        file_name_extension = new_name.split(".")[-1].lower()
+        if file_name_extension not in mime_extensions:
+            old_name = new_name
+            new_name = replace_last(new_name, new_name.split(".")[-1], mime_extensions[0])
+            renamed = True
+            logger.debug(
+                "core.views.post_upload.check_mime_for_url.rename",
+                extra={"mime_type": mimetype, "old": old_name, "new": new_name},
+            )
         else:
-            fedora_transaction.rollback_transaction()
-            logger.error("core.views.post_upload.error.object_does_not_exist")
+            renamed = False
+        if mimetype in ["image/png", "image/jpeg", "image/tiff"] and isinstance(objekt, SamostatnyNalez):
+            soubor_data = Soubor.remove_gps_data(soubor_data)
+        try:
+            rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
+        except FedoraUpdatedByAnotherTransactionError as err:
+            logger.debug("core.views.post_upload.upload_failed_another_transaction", extra={"error": err})
+            help_translation = _("core.views.post_upload.upload_failed_another_transaction")
+            return JsonResponse({"error": help_translation}, status=400)
+        except FedoraError as err:
+            logger.error("core.views.post_upload.fedora_error", extra={"error": err})
+            help_translation = _("core.views.post_upload.fedora_error")
+            return JsonResponse({"error": help_translation}, status=400)
+        sha_512 = rep_bin_file.sha_512
+        soubor_instance: Soubor = Soubor(
+            vazba=objekt.soubory,
+            nazev=new_name,
+            mimetype=mimetype,
+            size_mb=rep_bin_file.size_mb,
+            path=rep_bin_file.url_without_domain,
+            sha_512=sha_512,
+        )
+        soubor_instance.active_transaction = self.fedora_transaction
+        soubor_instance.binary_data = soubor_data
+        response_data = {"filename": soubor_instance.nazev}
+        logger.debug("core.views.post_upload.saving", extra={"instance": soubor_instance})
+        soubor_instance.save()
+        if not request.user.is_authenticated:
+            user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
+            soubor_instance.zaznamenej_nahrani(user_admin, self.original_filename)
+        else:
+            soubor_instance.zaznamenej_nahrani(request.user, self.original_filename)
+        duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk").exclude(id=soubor_instance.id)
+        response_data = self._append_duplicate_message(response_data, duplikat)
+        response_data = self._append_rename_message(response_data, renamed, new_name)
+        logger.debug("core.views.post_upload.end", extra={"pk": soubor_instance.pk})
+        response_data["id"] = soubor_instance.pk
+        soubor_instance.close_active_transaction_when_finished = True
+        soubor_instance.save()
+        SessionIdentifier(request).add_file_reference(soubor_instance.pk)
+        return JsonResponse(response_data, status=200)
+
+    def _resolve_object_and_name(self, request, ident_cely, filename, typ_vazby):
+        """
+        Rozliší typ záznamu, zkontroluje oprávnění a vygeneruje standardizovaný název souboru.
+
+        Na základě ident_cely a typ_vazby načte odpovídající záznam z databáze,
+        ověří konzistenci mezi typ_vazby a skutečným typem objektu, zkontroluje
+        oprávnění uživatele k nahrání souboru a vygeneruje standardizovaný název
+        souboru podle příslušných konvencí.
+
+        Args:
+            request (HttpRequest): HTTP request s informacemi o uživateli
+            ident_cely (str): Úplný identifikátor záznamu (např. "C-202400001")
+            filename (str): Původní název nahrávaného souboru
+            typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+
+        Returns:
+            tuple | JsonResponse: Při úspěchu vrací tuple (objekt, new_name):
+                - objekt (Projekt|Dokument|SamostatnyNalez): Instance nalezeného záznamu
+                - new_name (str): Vygenerovaný standardizovaný název souboru
+            Při chybě vrací JsonResponse s chybovou zprávou a status kódem 403/500
+        """
+        # Mapování typu vazby na permission action
+        action_map = {
+            "projekt": Permissions.actionChoices.soubor_nahrat_projekt,
+            "dokument": Permissions.actionChoices.soubor_nahrat_dokument,
+            "model3d": Permissions.actionChoices.soubor_nahrat_model3d,
+            "pas": Permissions.actionChoices.soubor_nahrat_pas,
+        }
+
+        # Kontrola platnosti typu vazby
+        action = action_map.get(typ_vazby)
+        if action is None:
+            self.fedora_transaction.rollback_transaction()
+            logger.error(
+                "core.views.post_upload.error.invalid_typ_vazby",
+                extra={"typ_vazby": typ_vazby, "ident_cely": ident_cely},
+            )
             return JsonResponse(
-                {"error": _("core.views.post_upload.error.object_does_not_exist") + " " + request.POST["objectID"]},
+                {"error": _("core.views.post_upload.error.invalid_typ_vazby") + f": {typ_vazby}"},
+                status=400,
+            )
+
+        # Rozlišení objektu podle typu vazby - dotazy pouze pro relevantní typ
+        objekt = None
+        new_name = None
+
+        if typ_vazby == "projekt":
+            projekt = Projekt.objects.filter(ident_cely=ident_cely).first()
+            if projekt:
+                objekt = projekt
+                new_name = get_projekt_soubor_name(objekt, filename)
+        elif typ_vazby in ("dokument", "model3d"):
+            dokument = Dokument.objects.filter(ident_cely=ident_cely).first()
+            if dokument:
+                objekt = dokument
+                new_name = get_dokument_soubor_name(objekt, filename)
+        elif typ_vazby == "pas":
+            samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=ident_cely).first()
+            if samostatny_nalez:
+                objekt = samostatny_nalez
+                new_name = get_finds_soubor_name(objekt, filename)
+
+        if objekt is None:
+            self.fedora_transaction.rollback_transaction()
+            logger.error(
+                "core.views.post_upload.error.object_does_not_exist_or_type_mismatch",
+                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby},
+            )
+            return JsonResponse(
+                {"error": _("core.views.post_upload.error.object_does_not_exist") + " " + ident_cely},
                 status=500,
             )
+
+        if request.user.is_authenticated:
+            if not check_permissions(action, request.user, objekt.ident_cely):
+                self.fedora_transaction.rollback_transaction()
+                logger.warning(
+                    "core.views._resolve_object_and_name.permission_denied",
+                    extra={"user": request.user.pk, "action": action, "ident_cely": ident_cely},
+                )
+                return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
+
         if new_name is False:
-            fedora_transaction.rollback_transaction()
+            self.fedora_transaction.rollback_transaction()
             return JsonResponse(
                 {
                     "error": (
                         _("core.views.post_upload.error.maximal_file_name_exceeded_part_1")
-                        + f" {request.POST['objectID']} "
+                        + f" {ident_cely} "
                         + _("core.views.post_upload.error.maximal_file_name_exceeded_part_2")
                     )
                 },
                 status=403,
             )
-    else:
-        logger.debug("core.views.post_upload.updating", extra={"pk": request.POST["fileID"], "source_url": source_url})
-        soubor_instance: Soubor = get_object_or_404(Soubor, id=request.POST["fileID"])
-        soubor_instance.active_transaction = fedora_transaction
+        return objekt, new_name
+
+
+class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
+    """
+    Pohled pro nahrazení existujícího souboru novou verzí.
+
+    Rozdíly oproti NewFileUploadView:
+        - Vždy vyžaduje přihlášení uživatele (LoginRequiredMixin)
+        - Nepodporuje projekty (pouze dokument, model3d, pas)
+        - Zachovává původní název souboru, aktualizuje pouze příponu
+        - Aktualizuje existující záznam v Fedora repository místo vytváření nového
+        - V historii zaznamenává jako novou verzi, ne nový soubor
+
+    URL Parameters:
+        typ_vazby (str): Typ vazby - "dokument", "model3d", nebo "pas"
+        ident_cely (str): Identifikátor záznamu, ke kterému soubor patří
+        file_id (int): Primary key existujícího Soubor objektu
+    """
+
+    def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
+        """
+        Implementuje aktualizaci existujícího souboru novou verzí.
+
+        Provádí kompletní workflow pro nahrazení obsahu existujícího souboru včetně
+        validace vazeb, aktualizace v repository a databázi. Zachovává původní název
+        souboru (s možnou úpravou přípony) a vytváří novou verzi v historii.
+
+        Args:
+            request (HttpRequest): HTTP request s informacemi o přihlášeném uživateli
+            soubor (TemporaryUploadedFile): Nový nahraný soubor z requestu
+            soubor_data (BytesIO): Binární obsah nového souboru
+            *args: Poziční argumenty z URL
+            **kwargs: Obsahuje 'typ_vazby', 'ident_cely' a 'file_id'
+
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace
+
+        Response Status Codes:
+            200: Soubor úspěšně aktualizován
+            400: Chyba vazby, transakční konflikt, MIME typ nebo neplatný typ_vazby
+            403: Nedostatečná oprávnění k nahrazení souboru
+            500: Chybějící vazba nebo jiná interní chyba
+
+        Raises:
+            Http404: Pokud soubor s daným file_id neexistuje (get_object_or_404)
+            ZaznamSouborNotmatching: Pokud soubor nepatří k danému záznamu
+        """
+        typ_vazby = kwargs.get("typ_vazby")
+        ident_cely = kwargs.get("ident_cely")
+        file_id = kwargs.get("file_id")
+        logger.debug("core.views.post_upload.updating", extra={"pk": file_id, "source_url": self.source_url})
+
+        # Kontrola platnosti typu vazby a oprávnění
+        permission_check = self._check_update_permissions(request, typ_vazby, ident_cely, file_id)
+        if isinstance(permission_check, JsonResponse):
+            return permission_check
+
+        try:
+            check_soubor_vazba(typ_vazby, ident_cely, file_id)
+        except ZaznamSouborNotmatching as err:
+            logger.debug(
+                "core.views.post_upload.vazbar_error_update",
+                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "pk": file_id, "error": err},
+            )
+            self.fedora_transaction.rollback_transaction()
+            return JsonResponse({"error": SPATNY_ZAZNAM_SOUBOR_VAZBA}, status=400)
+
+        soubor_instance: Soubor = get_object_or_404(Soubor, id=file_id)
+        soubor_instance.active_transaction = self.fedora_transaction
         logger.debug("core.views.post_upload.update", extra={"pk": soubor_instance.pk})
         objekt = soubor_instance.vazba.navazany_objekt
         new_name = soubor_instance.nazev
-    soubor: TemporaryUploadedFile = request.FILES.get("file")
-    soubor.seek(0)
-    check_meme = Soubor.check_mime_for_url(soubor, source_url)
-    if check_meme == "encrypted":
-        logger.debug("core.views.post_upload.check_mime_for_url.encrypted")
-        help_translation = _("core.views.post_upload.encrypted")
-        return JsonResponse({"error": help_translation}, status=400)
-    elif check_meme is False:
-        logger.debug("core.views.post_upload.check_mime_for_url.rejected")
-        help_translation = _("core.views.post_upload.mime_check_failed")
-        return JsonResponse({"error": help_translation}, status=400)
-    soubor_data = BytesIO(soubor.read())
-    check_antivirus_result = Soubor.check_antivirus(soubor_data)
-    if check_antivirus_result is False:
-        logger.warning("core.views.post_upload.check_antivirus_result")
-        help_translation = _("core.views.post_upload.antivirus_check_failed")
-        return JsonResponse({"error": help_translation}, status=400)
-    rep_bin_file = None
-    if soubor:
-        if not update:
-            conn = FedoraRepositoryConnector(objekt, fedora_transaction, skip_container_check=False)
-            mimetype = Soubor.get_mime_types(soubor)
-            mime_extensions = Soubor.get_file_extension_by_mime(soubor)
-            if len(mime_extensions) == 0:
-                logger.debug("core.views.post_upload.check_mime_for_url.rejected")
-                help_translation = _("core.views.post_upload.mime_rename_failed")
-                return JsonResponse({"error": f"{help_translation}"}, status=400)
-            file_name_extension = new_name.split(".")[-1].lower()
-            if file_name_extension not in mime_extensions:
-                old_name = new_name
-                new_name = replace_last(new_name, new_name.split(".")[-1], mime_extensions[0])
-                renamed = True
-                logger.debug(
-                    "core.views.post_upload.check_mime_for_url.rename",
-                    extra={"mime_type": mimetype, "old": old_name, "new": new_name},
-                )
-            else:
-                renamed = False
-            if mimetype in ["image/png", "image/jpeg", "image/tiff"] and samostatny_nalez.exists():
-                soubor_data = Soubor.remove_gps_data(soubor_data)
+        original_name = soubor.name
+        if soubor_instance.vazba.typ_vazby is None:
+            self.fedora_transaction.rollback_transaction()
+            logger.error("core.views.post_upload.error.no_vazba")
+            return JsonResponse(
+                {"error": _("core.views.post_upload.error.no_vazba")},
+                status=500,
+            )
+        conn = FedoraRepositoryConnector(objekt, self.fedora_transaction)
+        mimetype = Soubor.get_mime_types(soubor)
+        mime_extensions = Soubor.get_file_extension_by_mime(soubor)
+        if len(mime_extensions) == 0:
+            logger.debug("core.views.post_upload.check_mime_for_url.rejected", extra={"old": original_name})
+            help_translation = _("core.views.post_upload.mime_rename_failed")
+            self.fedora_transaction.rollback_transaction()
+            return JsonResponse({"error": f"{help_translation}"}, status=400)
+        file_name_extension = new_name.split(".")[-1].lower()
+        if file_name_extension not in mime_extensions:
+            new_name = new_name.replace(new_name.split(".")[-1], mime_extensions[0])
+            renamed = True
+            logger.debug(
+                "core.views.post_upload.check_mime_for_url.rename",
+                extra={"mime_type": mimetype, "old": original_name, "new": new_name},
+            )
+        else:
+            renamed = False
+        if (
+            mimetype in ["image/png", "image/jpeg", "image/tiff"]
+            and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE
+        ):
+            soubor_data = Soubor.remove_gps_data(soubor_data)
+        rep_bin_file = None
+        if soubor_instance.repository_uuid is not None:
+            extension = soubor.name.split(".")[-1]
+            new_name = f"{'.'.join(soubor_instance.nazev.split('.')[:-1])}.{extension}"
             try:
-                rep_bin_file = conn.save_binary_file(new_name, mimetype, soubor_data)
+                rep_bin_file = conn.update_binary_file(new_name, mimetype, soubor_data, soubor_instance.repository_uuid)
             except FedoraUpdatedByAnotherTransactionError as err:
-                logger.debug("core.views.post_upload.upload_failed_another_transaction", extra={"error": err})
-                help_translation = _("core.views.post_upload.upload_failed_another_transaction")
+                logger.debug("core.views.post_upload.update_failed_another_transaction", extra={"error": err})
+                help_translation = _("core.views.post_upload.update_failed_another_transaction")
                 return JsonResponse({"error": help_translation}, status=400)
             except FedoraError as err:
                 logger.error("core.views.post_upload.fedora_error", extra={"error": err})
                 help_translation = _("core.views.post_upload.fedora_error")
                 return JsonResponse({"error": help_translation}, status=400)
-            sha_512 = rep_bin_file.sha_512
-            soubor_instance: Soubor = Soubor(
-                vazba=objekt.soubory,
-                nazev=new_name,
-                mimetype=mimetype,
-                size_mb=rep_bin_file.size_mb,
-                path=rep_bin_file.url_without_domain,
-                sha_512=sha_512,
+            logger.debug(
+                "core.views.post_upload.update",
+                extra={"pk": soubor_instance.pk, "new": new_name, "old": original_name},
             )
-            soubor_instance.active_transaction = fedora_transaction
+            soubor_instance.nazev = new_name
+            soubor_instance.size_mb = rep_bin_file.size_mb
+            soubor_instance.mimetype = mimetype
+            soubor_instance.sha_512 = rep_bin_file.sha_512
             soubor_instance.binary_data = soubor_data
-            duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
+            soubor_instance.save()
+            soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
+        if rep_bin_file is not None:
+            duplikat = Soubor.objects.filter(sha_512=rep_bin_file.sha_512).exclude(id=soubor_instance.id).order_by("pk")
             response_data = {"filename": soubor_instance.nazev}
-            if not duplikat.exists():
-                logger.debug("core.views.post_upload.saving", extra={"instance": soubor_instance})
-                soubor_instance.save()
-                if not request.user.is_authenticated:
-                    user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
-                    soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
-                else:
-                    soubor_instance.zaznamenej_nahrani(request.user, original_filename)
-            else:
-                logger.debug("core.views.post_upload.already_exists", extra={"instance": soubor_instance})
-                soubor_instance.save()
-                if not request.user.is_authenticated:
-                    user_admin = User.objects.filter(pk=hesla_dynamicka.ADMIN_USER).first()
-                    soubor_instance.zaznamenej_nahrani(user_admin, original_filename)
-                else:
-                    soubor_instance.zaznamenej_nahrani(request.user, original_filename)
-                # Find parent record and send it to the user
-                parent_ident = (
-                    duplikat.first().vazba.navazany_objekt.ident_cely
-                    if duplikat.first().vazba.navazany_objekt is not None
-                    else ""
-                )
-                help_translation = _("core.views.post_upload.duplikat2.text1")
-                help_translation2 = _("core.views.post_upload.duplikat2.text2")
-                help_translation3 = _("core.views.post_upload.duplikat2.text3")
-                response_data["duplicate"] = (
-                    f"{help_translation} {original_filename} {help_translation2} "
-                    f"{parent_ident}. {help_translation3}",
-                )
-            if renamed:
-                help_translation = _("core.views.post_upload.renamed.text1")
-                help_translation2 = _("core.views.post_upload.renamed.text2")
-                response_data["file_renamed"] = (
-                    f"{help_translation} {original_filename} {help_translation2} " f"{new_name}",
-                )
-            logger.debug("core.views.post_upload.end", extra={"pk": soubor_instance.pk})
+            response_data = self._append_duplicate_message(response_data, duplikat)
+            response_data = self._append_rename_message(response_data, renamed, new_name)
             response_data["id"] = soubor_instance.pk
             soubor_instance.close_active_transaction_when_finished = True
             soubor_instance.save()
-            SessionIdentifier(request).add_file_reference(soubor_instance.pk)
             return JsonResponse(response_data, status=200)
         else:
-            original_name = soubor.name
-            if soubor_instance is None:
-                fedora_transaction.rollback_transaction()
-                logger.error("core.views.post_upload.error.error_processing")
-                return JsonResponse(
-                    {"error": _("core.views.post_upload.error.error_processing")},
-                    status=500,
+            soubor_instance.close_active_transaction_when_finished = True
+            soubor_instance.save()
+            logger.error("core.views.post_upload.rep_bin_file_is_none")
+            return self._unknown_error_response()
+
+    def _check_update_permissions(self, request, typ_vazby, ident_cely, file_id):
+        """
+        Zkontroluje platnost typu vazby a oprávnění uživatele k nahrazení souboru.
+
+        Na základě typ_vazby ověří, zda je nahrazení souboru povoleno pro daný typ
+        záznamu, a zkontroluje oprávnění uživatele pomocí check_permissions.
+
+        Args:
+            request (HttpRequest): HTTP request s informacemi o uživateli
+            typ_vazby (str): Typ vazby - "dokument", "model3d", nebo "pas"
+            ident_cely (str): Úplný identifikátor záznamu
+            file_id (int): Primary key existujícího souboru
+
+        Returns:
+            bool | JsonResponse: True pokud je vše v pořádku,
+                                 JsonResponse s chybovou zprávou při problému
+        """
+        # Mapování typu vazby na permission action
+        # Poznámka: projekt není v mapování - nahrazení souborů projektu není povoleno
+        action_map = {
+            "dokument": Permissions.actionChoices.soubor_nahradit_dokument,
+            "model3d": Permissions.actionChoices.soubor_nahradit_model3d,
+            "pas": Permissions.actionChoices.soubor_nahradit_pas,
+        }
+
+        # Kontrola platnosti typu vazby
+        action = action_map.get(typ_vazby)
+        if action is None:
+            self.fedora_transaction.rollback_transaction()
+            logger.error(
+                "core.views.post_upload.error.invalid_typ_vazby_for_update",
+                extra={"typ_vazby": typ_vazby, "ident_cely": ident_cely, "file_id": file_id},
+            )
+            return JsonResponse(
+                {"error": _("core.views.post_upload.error.invalid_typ_vazby") + f": {typ_vazby}"},
+                status=400,
+            )
+
+        # Rozlišení objektu podle typu vazby - dotazy pouze pro relevantní typ
+        objekt = None
+
+        if typ_vazby in ("dokument", "model3d"):
+            dokument = Dokument.objects.filter(ident_cely=ident_cely).first()
+            if dokument:
+                objekt = dokument
+        elif typ_vazby == "pas":
+            samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=ident_cely).first()
+            if samostatny_nalez:
+                objekt = samostatny_nalez
+
+        # Kontrola, zda byl objekt nalezen
+        if objekt is None:
+            self.fedora_transaction.rollback_transaction()
+            logger.error(
+                "core.views.post_upload.error.object_does_not_exist_or_type_mismatch_update",
+                extra={"ident_cely": ident_cely, "typ_vazby": typ_vazby, "file_id": file_id},
+            )
+            return JsonResponse(
+                {"error": _("core.views.post_upload.error.object_does_not_exist") + " " + ident_cely},
+                status=500,
+            )
+
+        # Kontrola oprávnění pro autentifikované uživatele
+        if request.user.is_authenticated:
+            if not check_permissions(action, request.user, objekt.ident_cely):
+                self.fedora_transaction.rollback_transaction()
+                logger.warning(
+                    "core.views._check_update_permissions.permission_denied",
+                    extra={"user": request.user.pk, "action": action, "ident_cely": ident_cely, "file_id": file_id},
                 )
-            if soubor_instance.vazba.typ_vazby is None:
-                fedora_transaction.rollback_transaction()
-                logger.error("core.views.post_upload.error.no_vazba")
-                return JsonResponse(
-                    {"error": _("core.views.post_upload.error.no_vazba")},
-                    status=500,
-                )
-            conn = FedoraRepositoryConnector(objekt, fedora_transaction)
-            mimetype = Soubor.get_mime_types(soubor)
-            mime_extensions = Soubor.get_file_extension_by_mime(soubor)
-            if len(mime_extensions) == 0:
-                logger.debug("core.views.post_upload.check_mime_for_url.rejected", extra={"old": original_name})
-                help_translation = _("core.views.post_upload.mime_rename_failed")
-                fedora_transaction.rollback_transaction()
-                return JsonResponse({"error": f"{help_translation}"}, status=400)
-            file_name_extension = new_name.split(".")[-1].lower()
-            if file_name_extension not in mime_extensions:
-                new_name = new_name.replace(new_name.split(".")[-1], mime_extensions[0])
-                renamed = True
-                logger.debug(
-                    "core.views.post_upload.check_mime_for_url.rename",
-                    extra={"mime_type": mimetype, "old": original_name, "new": new_name},
-                )
-            else:
-                renamed = False
-            if (
-                mimetype in ["image/png", "image/jpeg", "image/tiff"]
-                and soubor_instance.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE
-            ):
-                soubor_data = Soubor.remove_gps_data(soubor_data)
-            if soubor_instance.repository_uuid is not None:
-                extension = soubor.name.split(".")[-1]
-                new_name = f'{".".join(soubor_instance.nazev.split(".")[:-1])}.{extension}'
-                try:
-                    rep_bin_file = conn.update_binary_file(
-                        new_name, mimetype, soubor_data, soubor_instance.repository_uuid
-                    )
-                except FedoraUpdatedByAnotherTransactionError as err:
-                    logger.debug("core.views.post_upload.update_failed_another_transaction", extra={"error": err})
-                    help_translation = _("core.views.post_upload.update_failed_another_transaction")
-                    return JsonResponse({"error": help_translation}, status=400)
-                except FedoraError as err:
-                    logger.error("core.views.post_upload.fedora_error", extra={"error": err})
-                    help_translation = _("core.views.post_upload.fedora_error")
-                    return JsonResponse({"error": help_translation}, status=400)
-                logger.debug(
-                    "core.views.post_upload.update",
-                    extra={"pk": soubor_instance.pk, "new": new_name, "old": original_name},
-                )
-                soubor_instance.nazev = new_name
-                soubor_instance.size_mb = rep_bin_file.size_mb
-                soubor_instance.mimetype = mimetype
-                soubor_instance.sha_512 = rep_bin_file.sha_512
-                soubor_instance.binary_data = soubor_data
-                soubor_instance.save()
-                soubor_instance.zaznamenej_nahrani_nove_verze(request.user, original_name)
-            if rep_bin_file is not None:
-                duplikat = (
-                    Soubor.objects.filter(sha_512=rep_bin_file.sha_512).filter(~Q(id=soubor_instance.id)).order_by("pk")
-                )
-                response_data = {"filename": soubor_instance.nazev}
-                if duplikat.count() > 0:
-                    parent_ident = (
-                        duplikat.first().vazba.navazany_objekt.ident_cely
-                        if duplikat.first().vazba.navazany_objekt is not None
-                        else ""
-                    )
-                    help_translation = _("core.views.post_upload.duplikat2.text1")
-                    help_translation2 = _("core.views.post_upload.duplikat2.text2")
-                    help_translation3 = _("core.views.post_upload.duplikat2.text3")
-                    response_data["duplicate"] = (
-                        f"{help_translation} {original_filename} {help_translation2} "
-                        f"{parent_ident}. {help_translation3}",
-                    )
-                if renamed:
-                    help_translation = _("core.views.post_upload.renamed.text1")
-                    help_translation2 = _("core.views.post_upload.renamed.text2")
-                    response_data["file_renamed"] = (
-                        f"{help_translation} {original_filename} {help_translation2} " f"{new_name}",
-                    )
-                response_data["id"] = soubor_instance.pk
-                soubor_instance.close_active_transaction_when_finished = True
-                soubor_instance.save()
-                return JsonResponse(response_data, status=200)
-            else:
-                soubor_instance.close_active_transaction_when_finished = True
-                soubor_instance.save()
-                help_translation = _("core.views.post_upload.unknown_error")
-                logger.error("core.views.post_upload.rep_bin_file_is_none")
-                return JsonResponse({"error": help_translation}, status=500)
-    else:
-        logger.error("core.views.post_upload.no_file")
-    soubor_instance.close_active_transaction_when_finished = True
-    soubor_instance.save()
-    help_translation = _("core.views.post_upload.unknown_error")
-    logger.error("core.views.post_upload.unknown_error")
-    return JsonResponse({"error": help_translation}, status=500)
+                return JsonResponse({"error": str(PRISTUP_ZAKAZAN)}, status=403)
+
+        return True
 
 
 def get_finds_soubor_name(find, filename, add_to_index=1):
@@ -879,9 +1235,11 @@ class ExportMixinDate(ExportMixin):
     Mixin pro získaní názvu exportovaného souboru.
     """
 
-    def get_export_filename(self, export_format):
+    def get_export_filename(self, export_format, export_name=None):
+        if export_name is None:
+            export_name = self.export_name
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        return "{}{}.{}".format(self.export_name, now, export_format)
+        return "{}{}.{}".format(export_name, now, export_format)
 
 
 class PermissionFilterMixin:
@@ -1008,7 +1366,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     """
 
     template_name = "search_list.html"
-    paginate_by = 100
     allow_empty = True
     export_formats = ["csv", "json", "xlsx"]
     app = "core"
@@ -1016,6 +1373,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     redis_value_list_field = None
     redis_snapshot_prefix = None
     vypis_app = "core"
+    paginate_by = None
+    table_pagination = {"per_page": 100}
 
     def create_export(self, export_format):
         from redis import Redis
@@ -1156,9 +1515,6 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         self.toolbar_name = ""
         self.toolbar_label = ""
 
-    def get_paginate_by(self, queryset):
-        return self.request.GET.get("per_page", self.paginate_by)
-
     def _get_sort_params(self):
         sort_params = self.request.GET.getlist("sort")
         return sort_params
@@ -1195,31 +1551,40 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return super().get(request, *args, **kwargs)
 
 
-class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
-    def get(self, request, model_name, ident_cely):
-        if model_name == "pian":
-            record: Pian = Pian.objects.get(ident_cely=ident_cely)
-        elif model_name == "projekt":
-            record: Projekt = Projekt.objects.get(ident_cely=ident_cely)
-        elif model_name == "archeologicky_zaznam":
-            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
-        elif model_name == "adb":
-            record: Adb = Adb.objects.get(ident_cely=ident_cely)
-        elif model_name == "dokument":
-            record: Dokument = Dokument.objects.get(ident_cely=ident_cely)
-        elif model_name == "samostatny_nalez":
-            record: SamostatnyNalez = SamostatnyNalez.objects.get(ident_cely=ident_cely)
-        elif model_name == "externi_zdroj":
-            record: ExterniZdroj = ExterniZdroj.objects.get(ident_cely=ident_cely)
-        else:
+class StahnoutDataHistorickaView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro stažení historické verze souboru nebo metadat z Fedory
+    """
+
+    MODEL_MAP = {
+        "Pian": Pian,
+        "Projekt": Projekt,
+        "ArcheologickyZaznam": ArcheologickyZaznam,
+        "Adb": Adb,
+        "Dokument": Dokument,
+        "SamostatnyNalez": SamostatnyNalez,
+        "ExterniZdroj": ExterniZdroj,
+        "User": User,
+        "Soubor": Soubor,
+    }
+
+    def get(self, request, model_name, ident_cely, timestamp):
+        Model = self.MODEL_MAP.get(model_name)
+        if Model is None:
             raise Http404
-        metadata = record.metadata
 
         def context_processor(content):
             yield content
 
-        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
+        if model_name == "Soubor":
+            record = Model.objects.get(pk=ident_cely)
+            response = record.get_soubor_historicky(timestamp)
+        else:
+            record = Model.objects.get(ident_cely=ident_cely)
+            metadata = record.get_metadata_historicka(timestamp)
+            response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+            response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
+
         return response
 
 
@@ -1394,12 +1759,36 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     form_class = TransaltionImportForm
 
     def form_valid(self, form):
+        new_pofile = form.cleaned_data["file"]
+        tmp_path = None
+        try:
+            # Write uploaded InMemoryUploadedFile to a temporary file and pass its path to pofile
+            tmp = tempfile.NamedTemporaryFile(delete=False)
+            tmp_path = tmp.name
+            for chunk in new_pofile.chunks():
+                tmp.write(chunk)
+            tmp.flush()
+            tmp.close()
+            po_file = pofile(tmp_path)
+            # remove temp file once polib has loaded it
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
+        except Exception as e:
+            # cleanup on error
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
+            logger.error("core.views.TranslationImportView.form_valid", extra={"error": str(e)})
+            messages.add_message(self.request, messages.ERROR, str(e))
+            return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
         p = Path(self.po_file_path)
         date_sufix = datetime.strftime(datetime.now(), "%d%m%Y%H%M")
         p.rename(Path(p.parent, f"{p.stem}_backup_{date_sufix}{p.suffix}"))
-        new_pofile = form.cleaned_data["file"]
         self.handle_uploaded_file(new_pofile)
-        po_file = pofile(self.po_file_path)
         po_filepath, ext = os.path.splitext(self.po_file_path)
         po_file.save_as_mofile(po_filepath + ".mo")
         messages.add_message(self.request, messages.SUCCESS, TRANSLATION_UPLOAD_SUCCESS)
@@ -1586,12 +1975,11 @@ class DataImportProgress(LoginRequiredMixin, View):
         redis_connector = RedisConnector().get_connection_decode()
         try:
             record_count = int(redis_connector.get(f"import_data_count_{job_id}"))
-            import_data_progress_files = int(
-                redis_connector.get(f"import_data_progress_files_{job_id}")
-            )
+            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}"))
             status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
+            import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}"))
             serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}"))
             serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}"))
 
@@ -1609,6 +1997,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "progress_files": progress_files,
                 "finished_record_count": len(serialized_results),
                 "serialized_results": serialized_results,
+                "primary_keys": import_data_primary_keys,
                 "status": status,
                 "serialized_results_files": serialized_results_files,
                 "status_message": status_message,
@@ -1628,4 +2017,15 @@ class DataImportStop(LoginRequiredMixin, View):
         job_id = kwargs.get("job_id")
         redis_connector = RedisConnector().get_connection_decode()
         redis_connector.set(f"import_data_stop_{job_id}", 1)
+        return JsonResponse({"result": "ok"})
+
+
+class DataImportStart(LoginRequiredMixin, View):
+    def get(self, request, **kwargs):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        from cron import tasks
+
+        tasks.run_data_import.delay(job_id, request.user.id)
         return JsonResponse({"result": "ok"})

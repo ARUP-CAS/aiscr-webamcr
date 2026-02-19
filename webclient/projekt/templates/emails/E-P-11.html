@@ -1,0 +1,35 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% load template_tags %}
+{% load template_filters %}
+{% block content %}
+    <p>Dobrý den,</p>
+    <p>
+        uživatel <b>{{uzivatel.first_name}} {{uzivatel.last_name}}</b> ({{uzivatel.ident_cely}}) z organizace <b>{{uzivatel.organizace}}</b> žádá o zrušení projektu <b><a href="{{ projekt_ident_cely_url }}">{{ projekt.ident_cely }}</a></b> na katastru <b>{{ projekt.hlavni_katastr }}</b>. 
+    </p>
+    <p>
+        Jedná se o již zahájený projekt, návrh na zrušení je proto možné provést pouze archivářem po vyhodnocení důvodů.
+    </p>
+    <p>
+        <b>Důvod zrušení:</b> {{reason}}
+    </p>
+    <p>
+        V případě důvodnosti návrhu zrušení proveďte v AMČR. O způsobu vypořádání uživatele vždy informujte v odpovědi na tento email.
+    </p>
+{% endblock %}
+{% block content_en %}
+    <p>Hello,</p>
+    <p>
+        user <b>{{uzivatel.first_name}} {{uzivatel.last_name}}</b> ({{uzivatel.ident_cely}}) from organization <b>{{uzivatel.organizace}}</b> requests cancellation of project <b><a href="{{ projekt_ident_cely_url }}">{{ projekt.ident_cely }}</a></b> on cadastral area <b>{{ projekt.hlavni_katastr }}</b>. 
+    </p>
+    <p>
+        This is an already initiated project, so cancellation can only be performed by an archivist after evaluating the reasons.
+    </p>
+    <p>
+        <b>Reason for cancellation:</b> {{reason}}
+    </p>
+    <p>
+        In case the cancellation request is justified, please perform the cancellation in AMCR. Always inform the user of how their request was handled in a reply to this email.
+    </p>
+{% endblock %}
+

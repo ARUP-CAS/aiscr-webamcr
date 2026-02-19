@@ -26,6 +26,12 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     success_message = _("neidentAkce.views.neidentAkceEditView.success")
     form_class = NeidentAkceForm
     slug_field = "dokument_cast__ident_cely"
+    prefix = "neident_modal"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["prefix"] = self.prefix
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -35,10 +41,8 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
             "title": _("neidentAkce.views.neidentAkceEditView.title.text"),
             "id_tag": self.id_tag,
             "button": _("neidentAkce.views.neidentAkceEditView.submitButton"),
+            "form": self.get_form(),
         }
-        context["form"] = NeidentAkceForm(
-            instance=self.object,
-        )
         return context
 
     def get_success_url(self):

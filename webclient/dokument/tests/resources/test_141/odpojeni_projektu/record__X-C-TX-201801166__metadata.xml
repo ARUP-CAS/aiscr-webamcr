@@ -12,21 +12,25 @@
     <amcr:pristupnost xml:lang="cs" id="HES-000867">archeolog</amcr:pristupnost>
     <amcr:jazyk_dokumentu xml:lang="cs" id="HES-000167">čeština</amcr:jazyk_dokumentu>
     <amcr:ulozeni_originalu xml:lang="cs" id="HES-001169">archiv jiné organizace</amcr:ulozeni_originalu>
+    <amcr:licence xml:lang="cs" id="HES-001457">Creative Commons Uveďte původ-Neužívejte komerčně 4.0 Mezinárodní</amcr:licence>
     <amcr:historie>
-      <amcr:id>hist-582323</amcr:id>
-      <amcr:datum_zmeny>2018-03-09T12:44:53+00:00</amcr:datum_zmeny>
+      <amcr:id>hist-0000001</amcr:id>
+      <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
       <amcr:uzivatel id="U-000024">U-000024</amcr:uzivatel>
       <amcr:typ_zmeny>D01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:soubor>
       <amcr:id>soub-41065</amcr:id>
+      <amcr:path>rest/AMCR-selenium-test/record/X-C-TX-201801166/file/UUID-REMOVED</amcr:path>
       <amcr:nazev>XCTX201801166.pdf</amcr:nazev>
       <amcr:mimetype>application/pdf</amcr:mimetype>
       <amcr:rozsah>28</amcr:rozsah>
-      <amcr:size_mb>7.4245424271</amcr:size_mb>
+      <amcr:size_mb>0.0068559647</amcr:size_mb>
+      <amcr:sha_512>3a02c88f9d82e75564ef6c94567e155600bffb925cd1e8869b7990ef6c4f9d84c2908eabe4865058813cf81cd64aedbc0e93cbcf5991214fa30cd45fc5bd9161</amcr:sha_512>
+      <amcr:url>https://digiarchiv-dev.aiscr.cz/id/X-C-TX-201801166/file/UUID-REMOVED</amcr:url>
       <amcr:historie>
-        <amcr:id>hist-2714028</amcr:id>
-        <amcr:datum_zmeny>2018-03-08T23:00:00+00:00</amcr:datum_zmeny>
+        <amcr:id>hist-0000001</amcr:id>
+        <amcr:datum_zmeny>2020-01-01T00:00:00+00:00</amcr:datum_zmeny>
         <amcr:uzivatel id="U-000024">U-000024</amcr:uzivatel>
         <amcr:poznamka>NZ infrasrtuktura.pdf</amcr:poznamka>
         <amcr:typ_zmeny>SBR0</amcr:typ_zmeny>
@@ -36,13 +40,13 @@
       <amcr:geom_system>4326</amcr:geom_system>
     </amcr:extra_data>
     <amcr:dokument_cast>
+      <amcr:ident_cely>X-C-TX-201801166-D001</amcr:ident_cely>
+    </amcr:dokument_cast>
+    <amcr:dokument_cast>
       <amcr:ident_cely>X-C-TX-201801166-D002</amcr:ident_cely>
     </amcr:dokument_cast>
     <amcr:dokument_cast>
       <amcr:ident_cely>X-C-TX-201801166-D003</amcr:ident_cely>
-    </amcr:dokument_cast>
-    <amcr:dokument_cast>
-      <amcr:ident_cely>X-C-TX-201801166-D001</amcr:ident_cely>
     </amcr:dokument_cast>
   </amcr:dokument>
 </amcr:amcr>

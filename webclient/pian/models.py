@@ -193,8 +193,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def set_permanent_ident_cely(self):
         """
-        Metóda pro nastavení permanentního ident celý pro pian.
-        Metóda vráti ident podle sekvence pianu.
+        Metoda pro nastavení permanentního ident celý pro pian.
+        Metoda vráti ident podle sekvence pianu.
         """
         katastr = True if self.presnost.zkratka == "4" else False
         maximum: int = 999999 if katastr else 899999
@@ -224,14 +224,14 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def set_vymezeny(self, user):
         """
-        Metóda pro nastavení stavu vymezený.
+        Metoda pro nastavení stavu vymezený.
         """
         self.stav = PIAN_NEPOTVRZEN
         self.zaznamenej_zapsani(user)
 
     def set_potvrzeny(self, user, old_ident):
         """
-        Metóda pro nastavení stavu potvrzený.
+        Metoda pro nastavení stavu potvrzený.
         """
         self.stav = PIAN_POTVRZEN
         Historie(
@@ -241,7 +241,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def zaznamenej_zapsani(self, user):
         """
-        Metóda pro uložení změny do historie pro pianu.
+        Metoda pro uložení změny do historie pro pianu.
         """
         Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()

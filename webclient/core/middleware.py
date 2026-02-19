@@ -29,7 +29,7 @@ class PermissionMiddleware:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """
-        Metóda pro kontrolu oprvávnení pro každý view.
+        Metoda pro kontrolu oprvávnení pro každý view.
         """
         from core.models import Permissions
 

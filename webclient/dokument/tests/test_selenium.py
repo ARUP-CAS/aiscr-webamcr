@@ -1,4 +1,3 @@
-import base64
 import logging
 import unittest
 
@@ -7,7 +6,8 @@ from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
 from django.utils.translation import gettext as _
-from dokument.models import Dokument, Let, Tvar
+from dokument.models import Dokument, DokumentCast, Let, Tvar
+from freezegun import freeze_time
 from nalez.models import NalezObjekt, NalezPredmet
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -18,15 +18,29 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceDokumenty(BaseSeleniumTestClass):
     def go_to_form_zapsat(self):
-        self.ElementClick(By.ID, "menuDokumenty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.zapsat"))
-
-    def go_to_form_vybrat(self):
-        self.ElementClick(By.ID, "menuDokumenty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.dokumenty.vybrat"))
+        self.goToAddress("/dokument/zapsat")
 
     def test_064_zapsani_dokumentu_p_001(self):
-        # Scenar_64 Zapsání dokumentu (pozitivní scénář 1)
+        """Test 064 Zapsání dokumentu (pozitivní scénář 1)
+
+        Test zapsání dokumentu na stránce /dokument/zapsat. Končí zapsáním dokumentu do databáze.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel klikne na menu Dokumenty -> Zapsat
+            - Uživatel vyplní územní příslušnost
+            - Uživatel vyplní data do formuláře
+            - Uživatel klikne na tlačítko Zapsat
+
+        Expected:
+            - Po kliknutí na tlačítko Zapsat je v databázi o jeden dokument více. Dokument změní svůj stav na D1
+        """
         logger.info("AkceDokumenty.test_064_zapsani_dokumentu_p_001.start")
         self.login("badatel")
         self.goToAddress("/dokument/zapsat/do-arch-z/X-C-9000000001A")
@@ -67,7 +81,26 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_064_zapsani_dokumentu_p_001.end")
 
     def test_065_zapsani_dokumentu_n_001(self):
-        # Scenar_65 Zapsání dokumentu (negativní scénář 1)
+        """Test 065 Zapsání dokumentu (negativní scénář 1)
+
+        Test zapsání dokumentu na stránce /dokument/zapsat. Končí neúspěšným zapsáním dokumentu do databáze.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel klikne na menu Dokumenty -> Zapsat
+            - Uživatel vyplní územní příslušnost
+            - Uživatel vyplní data do formuláře, nevyplní pole Autoři
+            - Uživatel klikne na tlačítko Zapsat
+
+        Expected:
+            - Po kliknutí na tlačítko Zapsat se objeví nápověda u pole autoři “Vyberte prosím v seznamu některou položku”
+        """
         logger.info("AkceDokumenty.test_065_zapsani_dokumentu_n_001.start")
         self.login("badatel")
         self.goToAddress("/dokument/zapsat/do-arch-z/X-C-9000000001A")
@@ -98,7 +131,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newDocumentSubmitBtn")
         except Exception:
             pass
@@ -107,17 +140,34 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_065_zapsani_dokumentu_n_001.end")
 
     def test_066_odeslani_dokumentu_p_001(self):
-        # Scenar_66 Odeslání dokumentu (pozitivní scénář 1)
+        """Test 066 Odeslání dokumentu (pozitivní scénář 1)
+
+        Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit úspěšným odesláním dokumentu a jeho posunutím do stavu D2.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D1.
+
+        TestData:
+            X-C-TX-000000003
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D1
+            - Dokument → Vybrat → Filtr → ID obsahuje „X-C-TX-000000003“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Odeslat
+
+        Expected:
+            - Odeslání dokumentu a změna jeho procesního stavu na D2.
+        """
         logger.info("AkceDokumenty.test_066_odeslani_dokumentu_p_001.start")
         self.login("badatel")
-        self.go_to_form_vybrat()
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().stav, D_STAV_ZAPSANY)
         id = Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().id
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000003")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-TX-000000003")
+        self.goToAddress("/dokument/detail/X-C-TX-000000003")
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
@@ -130,20 +180,35 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_066_odeslani_dokumentu_p_001.end")
 
     def test_067_odeslani_dokumentu_n_001(self):
-        # Scenar_67 Odeslání dokumentu (negativní scénář 1)
+        """Test 067 Odeslání dokumentu (negativní scénář 1)
+
+        Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit neúspěšným odesláním dokumentu a jeho ponecháním ve stavu D1.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D1.
+
+        TestData:
+            X-C-TX-000000003
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D1
+            - Dokument → Vybrat → Filtr → ID obsahuje „X-C-TX-000000003“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Odeslat
+
+        Expected:
+            -  Neúspěšné odeslání dokumentu a jeho ponechání ve stavu D1. Chybová hláška “Dokument nelze odeslat, zkontrolujte zda má všechny náležitosti.” a nápověda “Dokument musí mít alespoň jeden soubor.”,
+        """
         logger.info("AkceDokumenty.test_067_odeslani_dokumentu_n_001.start")
         self.login("badatel")
-        self.go_to_form_vybrat()
-
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000003").first().stav, D_STAV_ZAPSANY)
-        # self.wait(1)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000003")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-TX-000000003")
+        self.goToAddress("/dokument/detail/X-C-TX-000000003")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
@@ -153,20 +218,36 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_067_odeslani_dokumentu_n_001.end")
 
     def test_068_archivace_dokumentu_p_001(self):
-        # Scenar_68 Archivace dokumentu (pozitivní scénář 1)
+        """Test 068 Archivace dokumentu (pozitivní scénář 1)
+
+        Test archivace dokumentu ve stavu D2 na stránce /dokument/detail/. Měl by končit archivací dokumentu a změnou jeho stavu na D3.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D2.
+
+        TestData:
+            X-C-TX-202413020
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D2
+            - Dokumenty → Vybrat → Filtr → ID obsahuje „X-C-TX-202413020“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Archivovat a volbu potvrdí
+
+        Expected:
+            - Archivace dokumentu a jeho posunutí do stavu D3.
+        """
         logger.info("AkceDokumenty.test_068_archivace_dokumentu_p_001.start")
         self.login("archivar")
         self.createFedoraRecord("X-C-TX-202413020")
-        self.go_to_form_vybrat()
 
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-202413020").first().stav, D_STAV_ODESLANY)
         id = Dokument.objects.filter(ident_cely="X-C-TX-202413020").first().id
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413020")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-TX-202413020")
-
+        self.goToAddress("/dokument/detail/X-C-TX-202413020")
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
@@ -181,20 +262,37 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_068_archivace_dokumentu_p_001.end")
 
     def test_069_archivace_dokumentu_n_001(self):
-        # Scenar_69 Archivace dokumentu (negativní scénář 1)
+        """Test 069 Archivace dokumentu (negativní scénář 1)
+
+        Test archivace dokumentu ve stavu D2 na stránce /dokument/detail/. Měl by končit neúspěšnou archivací dokumentu a jeho ponecháním ve stavu D2.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D1.
+
+        TestData:
+            X-C-TX-202413013
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D2
+            - Dokument → Vybrat → Filtr → ID obsahuje „X-C-TX-202413013“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Archivovat
+
+        Expected:
+            - Neúspěšná archivace dokumentu a jeho ponechání ve stavu D2. Chybová hláška “Dokument nelze archivovat, zkontrolujte zda má všechny náležitosti.” a nápověda “Dokument musí mít alespoň jeden soubor.”
+        """
         logger.info("AkceDokumenty.test_069_archivace_dokumentu_n_001.start")
         self.login("archivar")
-        self.go_to_form_vybrat()
-
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-202413013").first().stav, D_STAV_ODESLANY)
         id = Dokument.objects.filter(ident_cely="X-C-TX-202413013").first().id
-        self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-202413013")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-TX-202413013")
+
+        self.goToAddress("/dokument/detail/X-C-TX-202413013")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.CSS_SELECTOR, "#dokument-archivovat > .app-controls-button-text")
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
@@ -204,17 +302,36 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_069_archivace_dokumentu_n_001.end")
 
     def test_070_vraceni_odeslaneho_dokumentu_p_001(self):
-        # Scenar_70 Vrácení odeslaného dokumentu (pozitivní scénář 1)
+        """Test 070 Vrácení odeslaného dokumentu (pozitivní scénář 1)
+
+        Test vrácení dokumentu ve stavu D2 na stránce /dokument/detail. Měl by končit vrácením dokumentu a změnou jeho stavu na D1.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D2
+
+        TestData:
+            M-TX-201604272
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D2
+            - Dokumenty → Vybrat → Filtr → ID obsahuje „M-TX-201604272“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Vrátit, vyplní důvod a volbu potvrdí
+
+        Expected:
+            - Vrácení dokumentu do stavu D1.
+        """
         logger.info("AkceDokumenty.test_070_vraceni_odeslaneho_dokumentu_p_001.start")
         self.login("archivar")
-        self.go_to_form_vybrat()
+        self.createFedoraRecord("M-TX-201604272")
+        self.uploadFileToFedora(53532, "projekt/tests/resources/test.pdf")
 
         self.assertEqual(Dokument.objects.filter(ident_cely="M-TX-201604272").first().stav, D_STAV_ODESLANY)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-TX-201604272")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "M-TX-201604272")
+        self.goToAddress("/dokument/detail/M-TX-201604272")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
         # self.wait(1)
         self.ElementClick(By.ID, "id_reason")
@@ -226,22 +343,42 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_070_vraceni_odeslaneho_dokumentu_p_001.end")
 
     def test_071_vraceni_odeslaneho_dokumentu_n_001(self):
-        # Scenar_71 Vrácení odeslaného dokumentu (negativní scénář 1)
+        """Test 071 Vrácení odeslaného dokumentu (negativní scénář 1)
+
+        Test vrácení dokumentu ve stavu D2 na stránce /dokument/detail. Měl by končit neúspěšným vrácením a ponecháním dokumentu ve stavu D2.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D2
+
+        TestData:
+            M-TX-201604272
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D2
+            - Dokumenty → Vybrat → Filtr → ID obsahuje „M-TX-201604272“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Vrátit a volbu potvrdí
+
+        Expected:
+            - K vrácení dokumentu nedojde, ten zůstane ve stavu D2.
+            - Zobrazena nápověda “Vyplňte prosím toto pole”
+        """
         logger.info("AkceDokumenty.test_071_vraceni_odeslaneho_dokumentu_n_001.start")
         self.login("archivar")
-        self.go_to_form_vybrat()
+        self.createFedoraRecord("M-TX-201604272")
+        self.uploadFileToFedora(53532, "projekt/tests/resources/test.pdf")
 
         self.assertEqual(Dokument.objects.filter(ident_cely="M-TX-201604272").first().stav, D_STAV_ODESLANY)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("M-TX-201604272")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "M-TX-201604272")
+        self.goToAddress("/dokument/detail/M-TX-201604272")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
         # self.ElementClick(By.ID, "id_reason")
         # self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -249,17 +386,36 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_071_vraceni_odeslaneho_dokumentu_n_001.end")
 
     def test_072_vraceni_archivovaneho_dokumentu_p_001(self):
-        # Scenar_72 Vrácení archivovaného dokumentu (pozitivní scénář 1)
+        """Test 072 Vrácení archivovaného dokumentu (pozitivní scénář 1)
+
+        Test vrácení dokumentu ve stavu D3 na stránce /dokument/detail. Měl by končit vrácením dokumentu a změnou jeho stavu na D2.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D3
+
+        TestData:
+            C-TX-202400071
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D3
+            - Dokumenty → Vybrat → Filtr → ID obsahuje „C-TX-202400071“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Vrátit, vyplní důvod a volbu potvrdí
+
+        Expected:
+            - Vrácení dokumentu do stavu D2.
+        """
         logger.info("AkceDokumenty.test_072_vraceni_archivovaneho_dokumentu_p_001.start")
         self.login("archivar")
-        self.go_to_form_vybrat()
+        self.createFedoraRecord("C-TX-202400071")
+        self.uploadFileToFedora(638784, "projekt/tests/resources/test.pdf")
 
         self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-202400071").first().stav, D_STAV_ARCHIVOVANY)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-TX-202400071")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-TX-202400071")
+        self.goToAddress("/dokument/detail/C-TX-202400071")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
         # self.wait(1)
         self.ElementClick(By.ID, "id_reason")
@@ -271,22 +427,42 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_072_vraceni_archivovaneho_dokumentu_p_001.end")
 
     def test_073_vraceni_archivovaneho_dokumentu_n_001(self):
-        # Scenar_73 Vrácení archivovaného dokumentu (negativní scénář 1)
+        """Test 073 Vrácení archivovaného dokumentu (negativní scénář 1)
+
+        Test vrácení dokumentu ve stavu D3 na stránce /dokument/detail. Měl by končit neúspěšným vrácením a ponecháním dokumentu ve stavu D3.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D3
+
+        TestData:
+            C-TX-202400071
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D3
+            - Lokality → Vybrat → Filtr → ID obsahuje „C-TX-202400071“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Vrátit a volbu potvrdí
+
+        Expected:
+            - K vrácení dokumentu nedojde, ten zůstane ve stavu D3.
+            - Zobrazena nápověda “Vyplňte prosím toto pole”
+        """
         logger.info("AkceDokumenty.test_073_vraceni_archivovaneho_dokumentu_n_001.start")
         self.login("archivar")
-        self.go_to_form_vybrat()
+        self.createFedoraRecord("C-TX-202400071")
+        self.uploadFileToFedora(638784, "projekt/tests/resources/test.pdf")
 
         self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-202400071").first().stav, D_STAV_ARCHIVOVANY)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("C-TX-202400071")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-TX-202400071")
+        self.goToAddress("/dokument/detail/C-TX-202400071")
         self.ElementClick(By.CSS_SELECTOR, "#dokument-vratit > .app-controls-button-text")
         # self.ElementClick(By.ID, "id_reason")
         # self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -294,7 +470,26 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_073_vraceni_archivovaneho_dokumentu_n_001.end")
 
     def test_132_zapsani_dokumentu_p_002(self):
-        # Scenar_132 Zapsání dokumentu (pozitivní scénář 1)
+        """Test 132 Zapsání dokumentu (pozitivní scénář 2)
+
+        Test zapsání dokumentu na stránce /dokument/zapsat. Končí zapsáním dokumentu do databáze.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel klikne na menu Dokumenty -> Zapsat
+            - Uživatel vyplní územní příslušnost
+            - Uživatel vyplní data do formuláře
+            - Uživatel klikne na tlačítko Zapsat
+
+        Expected:
+            - Po kliknutí na tlačítko Zapsat je v databázi o jeden dokument více. Dokument změní svůj stav na D1
+        """
         logger.info("AkceDokumenty.test_132_zapsani_dokumentu_p_002.start")
         self.login("archeolog")
         self.goToAddress("/dokument/zapsat/do-arch-z/X-C-9000000013A")
@@ -329,7 +524,32 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_132_zapsani_dokumentu_p_002.end")
 
     def test_133_zapsani_dokumentu_n_002(self):
-        # Scenar_133 Zapsání dokumentu (negativní scénář 1)
+        """Test 133 Zapsání dokumentu (negativní scénář 2)
+
+        Test zapsání dokumentu na stránce /dokument/zapsat. Končí neúspěšným zapsáním dokumentu do databáze.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+
+        TestData:
+            Očekávané výsledky
+            ^^^^^^^^^^^^^^^^^^
+
+            - Po kliknutí na tlačítko Zapsat se objeví nápověda u pole autoři “Vyberte prosím v seznamu některou položku”
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel klikne na menu Dokumenty -> Zapsat
+            - Uživatel vyplní územní příslušnost
+            - Uživatel vyplní data do formuláře, nevyplní pole Autoři
+            - Uživatel klikne na tlačítko Zapsat
+
+        Expected:
+            - Po kliknutí na tlačítko Zapsat se objeví nápověda u pole autoři “Vyberte prosím v seznamu některou položku”
+        """
         logger.info("AkceDokumenty.test_133_zapsani_dokumentu_n_002.start")
         self.login("archeolog")
         self.goToAddress("/dokument/zapsat/do-arch-z/X-C-9000000013A")
@@ -357,7 +577,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newDocumentSubmitBtn")
         except Exception:
             pass
@@ -367,17 +587,34 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_133_zapsani_dokumentu_n_002.end")
 
     def test_134_odeslani_dokumentu_p_002(self):
-        # Scenar_134 Odeslání dokumentu (pozitivní scénář 1)
+        """Test 134 Odeslání dokumentu (pozitivní scénář 2)
+
+        Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit úspěšným odesláním dokumentu a jeho posunutím do stavu D2.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D1.
+
+        TestData:
+            X-C-TX-000000002
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu L1
+            - Dokument → Vybrat → Filtr → ID obsahuje „X-C-TX-000000002“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Odeslat
+
+        Expected:
+            - Odeslání dokumentu a změna jeho procesního stavu na D2.
+        """
         logger.info("AkceDokumenty.test_134_odeslani_dokumentu_p_002.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().stav, D_STAV_ZAPSANY)
         DBid = Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().id
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000002")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-TX-000000002")
+        self.goToAddress("/dokument/detail/X-C-TX-000000002")
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         with WaitForPageLoad(self.driver):
@@ -389,20 +626,36 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_134_odeslani_dokumentu_p_002.end")
 
     def test_135_odeslani_dokumentu_n_002(self):
-        # Scenar_135 Odeslání dokumentu (negativní scénář 1)
+        """Test 135 Odeslání dokumentu (negativní scénář 2)
+
+        Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit neúspěšným odesláním dokumentu a jeho ponecháním ve stavu D1.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D1.
+
+        TestData:
+            X-C-TX-000000002
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu L1
+            - Dokument → Vybrat → Filtr → ID obsahuje „X-C-TX-000000002“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Odeslat
+
+        Expected:
+            - Neúspěšné odeslání dokumentu a jeho ponechání ve stavu D1. Chybová hláška “Dokument nelze odeslat, zkontrolujte zda má všechny náležitosti.” a nápověda “Dokument musí mít alespoň jeden soubor.”,
+        """
         logger.info("AkceDokumenty.test_135_odeslani_dokumentu_n_002.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().stav, D_STAV_ZAPSANY)
         DBid = Dokument.objects.filter(ident_cely="X-C-TX-000000002").first().id
-        # self.wait(1)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-TX-000000002")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-TX-000000002")
+        self.goToAddress("/dokument/detail/X-C-TX-000000002")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.CSS_SELECTOR, "#dokument-odeslat > .app-controls-button-text")
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
@@ -411,6 +664,61 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_135_odeslani_dokumentu_n_002.end")
 
     def test_141_test_Fedory_dokument_p_001(self):
+        """Test 141 Test Fedory pro Dokument (pozitivní scénář 1)
+
+        Role:
+            Archivář
+
+        TestData:
+            C-LET-00001
+            C-200810821A
+            C-K9000001
+            C-201911202
+            C-TX-197602290
+            X-C-TX-201801164
+            C-201125635A
+            C-202010506
+            C-K9000010
+            C-LET-00010
+            X-C-TX-201801166
+            C-201226860A
+            C-K9000024
+            C-202104117
+
+        Steps:
+            - Vytvoření Dokumentu
+            - Editace Dokumentu
+            - Editace Letu v Dokumentu
+            - Vytvoření Části Dokumentu typ Akce
+            - Vytvoření Části Dokumentu typ Lokalita
+            - Vytvoření Části Dokumentu typ Projekt
+            - Vytvoření komponenty
+            - Vytvoření nálezu objektu a předmětu
+            - Vytvoření Tvaru
+            - Přidání souboru
+            - Odeslání Dokumentu
+            - Editace Části Dokumentu
+            - Editace komponenty
+            - Editace nálezu
+            - Smazání nálezu
+            - Smazání komponenty
+            - Smazání Části Dokumentu
+            - Smazání Části Dokumentu typ projekt
+            - Smazání Části Dokumentu typ lokalita
+            - Editace Tvaru
+            - Smazání Tvaru
+            - Upgrade souboru
+            - Smazání souboru
+            - Editace Neidentifikované Akce
+            - Smazání Neidentifikované Akce
+            - Smazání Dokumentu
+            - Odpojení Akce
+            - Odpojení Lokality
+            - Odpojení Projektu
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceDokumenty.test_141_test_Fedory_dokument_p_001.start")
 
         # C dokument
@@ -458,7 +766,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_dokument")
 
         # U detail let
-        self.createFedoraRecord("C-LET-00001")
+        self.createFedoraRecord("C-LET-00001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "edit-btn")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_let .btn")
@@ -468,7 +776,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_let")
 
         # C dokument_cast akce
-        self.createFedoraRecord("C-200810821A")
+        self.createFedoraRecord("C-200810821A", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -485,7 +793,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_akce")
 
         # C dokument_cast lokalita
-        self.createFedoraRecord("C-K9000001")
+        self.createFedoraRecord("C-K9000001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -502,7 +810,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_lokalita")
 
         # C dokument_cast projekt
-        self.createFedoraRecord("C-201911202")
+        self.createFedoraRecord("C-201911202", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
         with WaitForPageLoad(self.driver):
@@ -545,7 +853,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, f"id_{ident}-K001_o-0-pocet").send_keys("1")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-15-19 > .text")
-        self.ElementClick(By.CSS_SELECTOR, ".dropup > .bs-placeholder .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-specifikace .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-16-4 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "editKompSubmitButton")
@@ -570,8 +878,9 @@ class AkceDokumenty(BaseSeleniumTestClass):
         # zmena idnet_cely
         time = self.getTime()
         self.ElementClick(By.ID, "dokument-odeslat")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "submit-btn")
         new_ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "dokument/tests/resources/test_141/ident_cely")
         self.check_fedora_delete(["record/X-C-DL-000000009"])
@@ -697,15 +1006,16 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument")
 
         # U neident_akce
-        self.createFedoraRecord("C-TX-197602290")
+        self.createFedoraRecord("C-TX-197602290", "archivar")
+        self.uploadFileToFedora(113981, "projekt/tests/resources/test.pdf", "archivar")
         time = self.getTime()
         self.goToAddress("/id/C-TX-197602290")
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "button-edit-neident")
-        self.ElementClick(By.CSS_SELECTOR, ".row:nth-child(10) #id_popis")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".row:nth-child(10) #id_popis", "test")
-        self.ElementClick(By.CSS_SELECTOR, ".row:nth-child(10) #id_poznamka")
-        self.ElementSendKeys(By.CSS_SELECTOR, ".row:nth-child(10) #id_poznamka", "test1")
+        self.ElementClick(By.ID, "id_neident_modal-popis")
+        self.ElementSendKeys(By.ID, "id_neident_modal-popis", "test")
+        self.ElementClick(By.ID, "id_neident_modal-poznamka")
+        self.ElementSendKeys(By.ID, "id_neident_modal-poznamka", "test1")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_neident_akce")
@@ -720,11 +1030,11 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_neident_akce")
 
         # D dokument X-C-TX-201801164
-        self.createFedoraRecord("X-C-TX-201801164")
-        self.createFedoraRecord("C-201125635A")
-        self.createFedoraRecord("C-202010506")
-        self.createFedoraRecord("C-K9000010")
-        self.createFedoraRecord("C-LET-00010")
+        self.createFedoraRecord("X-C-TX-201801164", "archivar")
+        self.createFedoraRecord("C-201125635A", "archivar")
+        self.createFedoraRecord("C-202010506", "archivar")
+        self.createFedoraRecord("C-K9000010", "archivar")
+        self.createFedoraRecord("C-LET-00010", "archivar")
         self.goToAddress("/id/X-C-TX-201801164")
         self.ElementClick(By.ID, "NahratSoubory")
         self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
@@ -738,10 +1048,11 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_1")
 
         # odpojeni akce
-        self.createFedoraRecord("X-C-TX-201801166")
-        self.createFedoraRecord("C-201226860A")
-        self.createFedoraRecord("C-K9000024")
-        self.createFedoraRecord("C-202104117")
+        self.createFedoraRecord("X-C-TX-201801166", "archivar")
+        self.createFedoraRecord("C-201226860A", "archivar")
+        self.createFedoraRecord("C-K9000024", "archivar")
+        self.createFedoraRecord("C-202104117", "archivar")
+        self.uploadFileToFedora(41065, "projekt/tests/resources/test.pdf", "archivar")
         self.goToAddress("/dokument/detail/X-C-TX-201801166/cast/X-C-TX-201801166-D001")
         time = self.getTime()
         self.ElementClick(By.ID, "others")
@@ -771,7 +1082,24 @@ class AkceDokumenty(BaseSeleniumTestClass):
         logger.info("AkceDokumenty.test_141_test_Fedory_dokument_p_001.end")
 
     def test_142_test_Fedory_LET_p_001(self):
-        # Scenar_142 Test Fedory pro LET
+        """Test 142 Test Fedory pro LET (pozitivní scénář 1)
+
+        Role:
+            Administrator
+
+        TestData:
+            M-TX-202000166
+
+        Steps:
+            - Vytvoření Letu
+            - Editace Letu
+            - Připojení Letu v Dokumentu
+            - Odpojení Letu v Dokumentu
+            - Smazání Letu
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceDokumenty.test_142_test_Fedory_LET_p_001.start")
         # C Let
         self.login("administrator")
@@ -854,16 +1182,70 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
         logger.info("AkceDokumenty.test_142_test_Fedory_LET_p_001.end")
 
+    def test_162_smazání_dokumentu_p_001(self):
+        """Test 162 Smazání dokumentu (pozitivní scénář 1)
+
+        Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D2.
+
+        TestData:
+            C-TX-197602290
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu D2
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat dokument”
+            - V dalším dialogovém okně “Smazat dokument” kliknout na “Smazat”
+
+        Expected:
+            - Dokument bude smazán z databáze
+        """
+        logger.info("AkceDokumenty.test_162_smazání_dokumentu_p_001.start")
+        self.login("archivar")
+
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-197602290").first().stav, D_STAV_ODESLANY)
+        self.createFedoraRecord("C-TX-197602290")
+        self.uploadFileToFedora(113981, "projekt/tests/resources/test.pdf")
+        self.assertEqual(DokumentCast.objects.filter(dokument__ident_cely="C-TX-197602290").count(), 3)
+        self.goToAddress("/dokument/detail/C-TX-197602290/cast/C-TX-197602290-D001")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "smazat-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.goToAddress("/dokument/detail/C-TX-197602290/cast/C-TX-197602290-D002")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "smazat-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.goToAddress("/dokument/detail/C-TX-197602290/cast/C-TX-197602290-D003")
+        self.ElementClick(By.ID, "others")
+        self.ElementClick(By.ID, "smazat-cast-btn")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(DokumentCast.objects.filter(dokument__ident_cely="C-TX-197602290").count(), 0)
+        self.goToAddress("/dokument/detail/C-TX-197602290")
+        self.ElementClick(By.ID, "file-smazat-113981")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "dokument-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-TX-197602290").count(), 0)
+        logger.info("AkceDokumenty.test_162_smazání_dokumentu_p_001.end")
+
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceKnihovna3D(BaseSeleniumTestClass):
     def go_to_form_zapsat(self):
-        self.ElementClick(By.ID, "menuKnihovna3D")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.knihovna3D.zapsat"))
-
-    def go_to_form_vybrat(self):
-        self.ElementClick(By.ID, "menuKnihovna3D")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.knihovna3D.vybrat"))
+        self.goToAddress("/dokument/model/zapsat")
 
     def zapsat_zaznam(self):
         self.go_to_form_zapsat()
@@ -884,19 +1266,14 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         self.ElementClick(By.CSS_SELECTOR, "#div_id_licence .btn")
         self.ElementClick(By.ID, "bs-select-4-1")
+
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         ident = self.driver.current_url.split("/")[-1]
         return ident
 
     def odeslat_zaznam(self, ident_cely):
-        self.go_to_form_vybrat()
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys(ident_cely)
-        self.ElementClick(By.ID, "buttonVybrat")
-
-        self.ElementClick(By.LINK_TEXT, ident_cely)
+        self.goToAddress(f"/dokument/model/detail/{ident_cely}")
         self.ElementClick(By.ID, "buttonEdit")
 
         self.ElementClick(By.CSS_SELECTOR, "#div_id_format .btn")
@@ -912,10 +1289,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.ElementClick(By.ID, "buttonUpload")
-        with open("dokument/tests/resources/del.zip", "rb") as zip_file:
-            encoded_string = base64.b64encode(zip_file.read()).decode()
-        self.addFileToDropzone("#my-awesome-dropzone", "del.zip", encoded_string)
-        self.wait(1)
+        self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
         self.ElementClick(By.ID, "buttonUploadSubmit")
         self.ElementClick(By.ID, "dokument-odeslat")
         with WaitForPageLoad(self.driver):
@@ -949,7 +1323,24 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, f"id_{ident}-K001_p-0-poznamka").send_keys("test")
 
     def test_104_zapis_do_knihovny_D3_p_001(self):
-        # Scenar_104 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
+        """Test 104 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
+
+        Test zápisu nového záznamu do Knihovny 3D. Scénář končí vytvořením nového záznamu v Knihovně 3D.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Hodnoty pro povinná pole
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Zapsat  → uživatel vyplní povinná pole  → uživatel klikne na tlačítko “Zapsat”
+
+        Expected:
+            - Vznikne nový záznam v Knihovně 3D - v databázi bude o jeden záznam více.
+        """
         logger.info("AkceKnihovna3D.test_104_zapis_do_knihovny_D3_p_001.start")
         self.login("archeolog")
         count_old = Dokument.objects.count()
@@ -960,7 +1351,32 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_104_zapis_do_knihovny_D3_p_001.end")
 
     def test_105_odeslani_zaznamu_knihovny_D3_p_001(self):
-        # Scenar_105 Odeslání záznamu do knihovny 3D (pozitivní scénář 1)
+        """Test 105 Odeslání záznamu do knihovny 3D (pozitivní scénář 1)
+
+        Test odeslání záznamu do Knihovny 3D. Scénář končí posunem záznamu ze stavu D1 do stavu D2.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Hodnoty pro povinná pole
+            - Soubor s náhledem 3D modelu
+
+        TestData:
+            X-C-3D-000000005
+            del.zip
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000005“ → Vybrat → otevřít záznam „X-C-3D-000000005“
+            - Uživatel vyplní povinná pole
+            - V sekci “Náhledy 3D modelu/soubory s texturou” klikne uživatel na možnost “Nahrát soubory” → vloží soubor “del.zip” a klikne na “Dokončit”
+            - V panelu pro akce klikne uživatel na tlačítko “Odeslat” → v dialogovém okně “Odeslat dokument” klikne uživatel na tlačítko “Odeslat”
+
+        Expected:
+            - Záznam v Knihovně 3D se posune ze stavu D1 do stavu D2.
+        """
         logger.info("AkceKnihovna3D.test_105_odeslani_zaznamu_knihovny_D3_p_001.start")
         self.login("archeolog")
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000005").first().stav, D_STAV_ZAPSANY)
@@ -971,19 +1387,34 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_105_odeslani_zaznamu_knihovny_D3_p_001.end")
 
     def test_106_pridani_objektu_knihovny_D3_p_001(self):
-        # Scenar_106 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 1)
+        """Test 106 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 1)
+
+        Test přidání objektu k záznamu v Knihovně 3D. Scénář končí přidání objektu k záznamu v Knihovně 3D - v databázi je o jeden záznam více.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D1.
+
+        TestData:
+            X-C-3D-000000005
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000005“ → Vybrat → otevřít záznam „X-C-3D-000000005“
+            - V části “Specifikace obsahu” v části “Objekty” vybere uživatel v poli “Druh” hodnotu “hradba” a klikne na “Uložit změny”
+
+        Expected:
+            - U záznamu v Knihovně 3D bude vytvořen nový objekt. V databázi bude o jeden objekt více.
+        """
         logger.info("AkceKnihovna3D.test_106_pridani_objektu_knihovny_D3_p_001.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
-
         count_old = NalezObjekt.objects.filter(
             komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000005"
         ).count()
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
+        self.goToAddress("/dokument/model/detail/X-C-3D-000000005")
         self.pridani_objektu("X-C-3D-000000005")
 
         count_new = NalezObjekt.objects.filter(
@@ -993,19 +1424,35 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_106_pridani_objektu_knihovny_D3_p_001.end")
 
     def test_107_pridani_predmetu_knihovny_D3_p_001(self):
-        # Scenar_107 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 1)
+        """Test 107 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 1)
+
+        Test přidání objektu k záznamu v Knihovně 3D. Scénář končí přidáním předmětu k záznamu v Knihovně 3D - v databázi je o jeden záznam více.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D1.
+
+        TestData:
+            X-C-3D-000000005
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000005“ → Vybrat → otevřít záznam „X-C-3D-000000005“
+            - V části “Specifikace obsahu” v části “Předměty” vybere uživatel v poli “Druh” hodnotu “dýka”, v poli “Specifikace” hodnotu “kámen štípaný” a klikne na “Uložit změny”
+
+        Expected:
+            - U záznamu v Knihovně 3D bude vytvořen nový předmět. V databázi bude o jeden předmět více.
+        """
         logger.info("AkceKnihovna3D.test_107_pridani_predmetu_knihovny_D3_p_001.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
 
         count_old = NalezPredmet.objects.filter(
             komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000005"
         ).count()
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
+        self.goToAddress("/dokument/model/detail/X-C-3D-000000005")
         self.pridani_predmetu("X-C-3D-000000005")
 
         with WaitForPageLoad(self.driver):
@@ -1017,17 +1464,33 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_107_pridani_predmetu_knihovny_D3_p_001.end")
 
     def test_108_pridani_souradnic_knihovny_D3_p_001(self):
-        # Scenar_108 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 1)
+        """Test 108 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 1)
+
+        Test přidání prostorového vymezení k záznamu v Knihovně 3D.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D1.
+
+        TestData:
+            X-C-3D-000000005
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000005“ → Vybrat → otevřít záznam „X-C-3D-000000005“
+            - V části “Detail” klikne uživatel na “upravit”  → v mapě se přiblíží na místo XXX a klikne do mapy (jak vyřešit v testu?) → kliknout na “Uložit změny”
+
+        Expected:
+            - U záznamu v Knihovně 3D bude vytvořeno nové prostorové vymezení - bude vytvořena vazba mezi záznamem a prostorovým vymezením.
+        """
         logger.info("AkceKnihovna3D.test_108_pridani_souradnic_knihovny_D3_p_001.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
 
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000005").first().extra_data.geom, None)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
+        self.goToAddress("/dokument/model/detail/X-C-3D-000000005")
 
         self.ElementClick(By.ID, "buttonEdit")
         self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
@@ -1047,21 +1510,35 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_108_pridani_souradnic_knihovny_D3_p_001.end")
 
     def test_109_pridani_souboru_zaznamu_knihovny_D3_p_001(self):
-        # Scenar_109 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 1)
+        """Test 109 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 1)
+
+        Test přidání souboru k záznamu v Knihovně 3D.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D1, který nemá připojený soubor.
+
+        TestData:
+            del.zip
+            X-C-3D-000000005
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000005“ → Vybrat → otevřít záznam „X-C-3D-000000005“
+            - V části “Náhledy 3D modelu/soubory s texturou” klikne uživatel na “nahrát soubory” → v dialogové obrazovce vybere uživatel soubor del.zip → kliknout na “Dokončit”
+
+        Expected:
+            - U záznamu v Knihovně 3D bude připojen nový soubor.
+        """
         logger.info("AkceKnihovna3D.test_109_pridani_souboru_zaznamu_knihovny_D3_p_001.start")
         self.login("archeolog")
-        self.go_to_form_vybrat()
         count_old = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000005").count()
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000005")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000005")
+        self.goToAddress("/dokument/model/detail/X-C-3D-000000005")
         self.ElementClick(By.ID, "buttonUpload")
-        with open("dokument/tests/resources/del.zip", "rb") as zip_file:
-            encoded_string = base64.b64encode(zip_file.read()).decode()
-        self.addFileToDropzone("#my-awesome-dropzone", "del.zip", encoded_string)
-        self.wait(1)
+        self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         count_new = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000005").count()
@@ -1069,34 +1546,60 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_109_pridani_souboru_zaznamu_knihovny_D3_p_001.end")
 
     def test_110_archivace_zaznamu_knihovny_D3_p_001(self):
-        # Scenar_110 Archivace záznamu v Knihovně 3D (pozitivní scénář 1)
+        """Test 110 Archivace záznamu v Knihovně 3D (pozitivní scénář 1)
+
+        Test archivace záznamu v Knihovně 3D. Test končí posunem záznamu ze stavu D2 do D3.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D2, který má vyplněny všechny náležitosti.
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „XXX“ → Vybrat → otevřít záznam „XXX“
+            - V panelu pro akce klikne uživatel na tlačítko “Archivovat” → v dialogovém okně “Archivovat dokument” klikne uživatel na tlačítko “Archivovat”
+
+        Expected:
+            - Záznam v Knihovně 3D se posune ze stavu D2 do stavu D3.
+        """
         logger.info("AkceKnihovna3D.test_110_archivace_zaznamu_knihovny_D3_p_001.start")
-        self.login("archeolog")
 
-        ident = self.zapsat_zaznam()
-        self.ElementClick(By.ID, "buttonLogout")
-        self.login("archeolog")
-        ident = self.odeslat_zaznam(ident)
-        self.ElementClick(By.ID, "buttonLogout")
         self.login("archivar")
-        self.go_to_form_vybrat()
-        self.assertEqual(Dokument.objects.filter(ident_cely=ident).first().stav, D_STAV_ODESLANY)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys(ident)
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, ident)
+        self.createFedoraRecord("C-3D-202600001")
+        self.uploadFileToFedora(646257, "dokument/tests/resources/del.zip")
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-3D-202600001").first().stav, D_STAV_ODESLANY)
 
+        self.goToAddress("/dokument/model/detail/C-3D-202600001")
         self.ElementClick(By.ID, "dokument-archivovat")
-        self.ElementClick(By.CSS_SELECTOR, ".custom-control-label")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_confirm > label")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 
-        self.assertEqual(Dokument.objects.filter(ident_cely=ident).first().stav, D_STAV_ARCHIVOVANY)
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-3D-202600001").first().stav, D_STAV_ARCHIVOVANY)
         logger.info("AkceKnihovna3D.test_110_archivace_zaznamu_knihovny_D3_p_001.end")
 
     def test_111_zapis_do_knihovny_D3_p_002(self):
-        # Scenar_111 Zápis záznamu do knihovny 3D (pozitivní scénář 1)
+        """Test 111 Zápis záznamu do knihovny 3D (pozitivní scénář 2)
+
+        Test zápisu nového záznamu do Knihovny 3D. Scénář končí vytvořením nového záznamu v Knihovně 3D.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Hodnoty pro povinná pole
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Zapsat  → uživatel vyplní povinná pole  → uživatel klikne na tlačítko “Zapsat”
+
+        Expected:
+            - Vznikne nový záznam v Knihovně 3D - v databázi bude o jeden záznam více.
+        """
         logger.info("AkceKnihovna3D.test_111_zapis_do_knihovny_D3_p_002.start")
         self.login("badatel")
         count_old = Dokument.objects.count()
@@ -1107,7 +1610,32 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_111_zapis_do_knihovny_D3_p_002.end")
 
     def test_112_odeslani_zaznamu_knihovny_D3_p_002(self):
-        # Scenar_112 Odeslání záznamu do knihovny 3D (pozitivní scénář 2)
+        """Test 112 Odeslání záznamu do knihovny 3D (pozitivní scénář 2)
+
+        Test odeslání záznamu do Knihovny 3D. Scénář končí posunem záznamu ze stavu D1 do stavu D2.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Hodnoty pro povinná pole
+            - Soubor s náhledem 3D modelu
+
+        TestData:
+            del.zip
+            X-C-3D-000000006
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000006“ → Vybrat → otevřít záznam „X-C-3D-000000006“
+            - Uživatel vyplní povinná pole
+            - V sekci “Náhledy 3D modelu/soubory s texturou” klikne uživatel na možnost “Nahrát soubory” → vloží soubor “del.zip” a klikne na “Dokončit”
+            - V panelu pro akce klikne uživatel na tlačítko “Odeslat” → v dialogovém okně “Odeslat dokument” klikne uživatel na tlačítko “Odeslat”
+
+        Expected:
+            - Záznam v Knihovně 3D se posune ze stavu D1 do stavu D2.
+        """
         logger.info("AkceKnihovna3D.test_112_odeslani_zaznamu_knihovny_D3_p_002.start")
         self.login("badatel")
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000006").first().stav, D_STAV_ZAPSANY)
@@ -1118,19 +1646,35 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_112_odeslani_zaznamu_knihovny_D3_p_002.end")
 
     def test_113_pridani_objektu_knihovny_D3_p_002(self):
-        # Scenar_113 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 2)
+        """Test 113 Přidání objektu k záznamu v Knihovně 3D (pozitivní scénář 2)
+
+        Test přidání objektu k záznamu v Knihovně 3D. Scénář končí přidání objektu k záznamu v Knihovně 3D - v databázi je o jeden záznam více.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D1.
+
+        TestData:
+            X-C-3D-000000006
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000006“ → Vybrat → otevřít záznam „X-C-3D-000000006“
+            - V části “Specifikace obsahu” v části “Objekty” vybere uživatel v poli “Druh” hodnotu “kašna” a klikne na “Uložit změny”
+
+        Expected:
+            - U záznamu v Knihovně 3D bude vytvořen nový objekt. V databázi bude o jeden objekt více.
+        """
         logger.info("AkceKnihovna3D.test_113_pridani_objektu_knihovny_D3_p_002.start")
         self.login("badatel")
-        self.go_to_form_vybrat()
 
         count_old = NalezObjekt.objects.filter(
             komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000006"
         ).count()
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000006")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000006")
+        self.goToAddress("/dokument/model/detail/X-C-3D-000000006")
         self.pridani_objektu("X-C-3D-000000006")
 
         count_new = NalezObjekt.objects.filter(
@@ -1140,19 +1684,35 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_113_pridani_objektu_knihovny_D3_p_002.end")
 
     def test_114_pridani_predmetu_knihovny_D3_p_002(self):
-        # Scenar_114 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 2)
+        """Test 114 Přidání předmětu k záznamu v Knihovně 3D (pozitivní scénář 2)
+
+        Test přidání objektu k záznamu v Knihovně 3D. Scénář končí přidáním předmětu k záznamu v Knihovně 3D - v databázi je o jeden záznam více.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D1.
+
+        TestData:
+            X-C-3D-000000006
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000006“ → Vybrat → otevřít záznam „X-C-3D-000000006“
+            - V části “Specifikace obsahu” v části “Předměty” vybere uživatel v poli “Druh” hodnotu “zub”, v poli “Specifikace” hodnotu “zub lidský” a klikne na “Uložit změny”
+
+        Expected:
+            - U záznamu v Knihovně 3D bude vytvořen nový předmět. V databázi bude o jeden předmět více.
+        """
         logger.info("AkceKnihovna3D.test_114_pridani_predmetu_knihovny_D3_p_002.start")
         self.login("badatel")
-        self.go_to_form_vybrat()
 
         count_old = NalezPredmet.objects.filter(
             komponenta__komponenta_vazby__casti_dokumentu__dokument__ident_cely="X-C-3D-000000006"
         ).count()
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000006")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000006")
+        self.goToAddress("/dokument/model/detail/X-C-3D-000000006")
         self.pridani_predmetu("X-C-3D-000000006")
 
         with WaitForPageLoad(self.driver):
@@ -1164,17 +1724,33 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_114_pridani_predmetu_knihovny_D3_p_002.end")
 
     def test_115_pridani_souradnic_knihovny_D3_p_002(self):
-        # Scenar_115 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 2)
+        """Test 115 Přidání prostorového vymezení k záznamu v Knihovně 3D (pozitivní scénář 2)
+
+        Test přidání prostorového vymezení k záznamu v Knihovně 3D.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D1.
+
+        TestData:
+            X-C-3D-000000006
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000006“ → Vybrat → otevřít záznam „X-C-3D-000000006“
+            - V části “Detail” klikne uživatel na “upravit”  → v mapě se přiblíží na místo XXX a klikne do mapy → kliknout na “Uložit změny”
+
+        Expected:
+            - U záznamu v Knihovně 3D bude vytvořeno nové prostorové vymezení - bude vytvořena vazba mezi záznamem a prostorovým vymezením.
+        """
         logger.info("AkceKnihovna3D.test_115_pridani_souradnic_knihovny_D3_p_002.start")
         self.login("badatel")
-        self.go_to_form_vybrat()
 
         self.assertEqual(Dokument.objects.filter(ident_cely="X-C-3D-000000006").first().extra_data.geom, None)
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000006")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000006")
+        self.goToAddress("/dokument/model/detail/X-C-3D-000000006")
 
         self.ElementClick(By.ID, "buttonEdit")
         self.clickAt(self.driver.find_element(By.ID, "projectMap"), 20, 20)
@@ -1193,21 +1769,36 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_115_pridani_souradnic_knihovny_D3_p_002.end")
 
     def test_116_pridani_souboru_zaznamu_knihovny_D3_p_002(self):
-        # Scenar_116 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 2)
+        """Test 116 Přidání souboru k záznamu v Knihovně 3D (pozitivní scénář 2)
+
+        Test přidání souboru k záznamu v Knihovně 3D.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen
+            - Záznam v Knihovně 3D ve stavu D1, který nemá připojený soubor.
+
+        TestData:
+            del.zip
+            X-C-3D-000000006
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → Vybrat → Filtr → ID obsahuje „X-C-3D-000000006“ → Vybrat → otevřít záznam „X-C-3D-000000006“
+            - V části “Náhledy 3D modelu/soubory s texturou” klikne uživatel na “nahrát soubory” → v dialogové obrazovce vybere uživatel soubor del.zip  → kliknout na “Dokončit”
+
+        Expected:
+            - U záznamu v Knihovně 3D bude připojen nový soubor.
+        """
         logger.info("AkceKnihovna3D.test_116_pridani_souboru_zaznamu_knihovny_D3_p_002.start")
         self.login("badatel")
-        self.go_to_form_vybrat()
         count_old = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000006").count()
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys("X-C-3D-000000006")
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "X-C-3D-000000006")
+        self.goToAddress("/dokument/model/detail/X-C-3D-000000006")
+
         self.ElementClick(By.ID, "buttonUpload")
-        with open("dokument/tests/resources/del.zip", "rb") as zip_file:
-            encoded_string = base64.b64encode(zip_file.read()).decode()
-        self.addFileToDropzone("#my-awesome-dropzone", "del.zip", encoded_string)
-        self.wait(1)
+        self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         count_new = Soubor.objects.filter(vazba__dokument_souboru__ident_cely="X-C-3D-000000006").count()
@@ -1215,7 +1806,27 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         logger.info("AkceKnihovna3D.test_116_pridani_souboru_zaznamu_knihovny_D3_p_002.end")
 
     def test_144_test_Fedory_3D_p_001(self):
-        # Scenar_144 Test Fedory pro 3D dokumenty
+        """Test 144 Test Fedory pro 3D dokumenty (pozitivní scénář 1)
+
+        Role:
+            Archivář
+
+        Steps:
+            - Vytvoření 3D dokumentu
+            - Editace 3D dokumentu
+            - Editace komponenty
+            - Vytvoření nálezu
+            - Editace nálezu
+            - Nahrání souboru
+            - Upgrade souboru
+            - Odeslání 3D dokumentu
+            - Smazání nálezu
+            - Smazání souboru
+            - Smazání 3D dokumentu
+
+        Expected:
+            -  zápis dat do Fedory
+        """
         logger.info("AkceKnihovna3D.test_144_test_Fedory_3D_p_001.start")
 
         self.login("archivar")
@@ -1285,10 +1896,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         time = self.getTime()
         self.goToAddress(f"/id/{ident}")
         self.ElementClick(By.ID, "buttonUpload")
-        with open("dokument/tests/resources/del.zip", "rb") as zip_file:
-            encoded_string = base64.b64encode(zip_file.read()).decode()
-        self.addFileToDropzone("#my-awesome-dropzone", "del.zip", encoded_string)
-        self.wait(1)
+        self.upload_file("dokument/tests/resources/del.zip", "del.zip", "application/zip")
         self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/create_soubor")
 
@@ -1296,18 +1904,16 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         time = self.getTime()
         file = Soubor.objects.filter(vazba__dokument_souboru__ident_cely=ident).first().pk
         self.ElementClick(By.ID, f"file-upgrade-{file}")
-        with open("dokument/tests/resources/test.jpg", "rb") as zip_file:
-            encoded_string = base64.b64encode(zip_file.read()).decode()
-        self.addFileToDropzone("#my-awesome-dropzone", "test.jpg", encoded_string)
-        self.wait(1)
+        self.upload_file("dokument/tests/resources/test.jpg", "test.jpg")
         self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "dokument/tests/resources/test_144/update_soubor")
 
         # ident_cely
         time = self.getTime()
         self.ElementClick(By.ID, "dokument-odeslat")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "submit-btn")
         new_ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "dokument/tests/resources/test_144/ident_cely")
         self.check_fedora_delete(["record/X-C-3D-000000009"])
@@ -1341,3 +1947,46 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_144/delete_3D_dokument")
 
         logger.info("AkceKnihovna3D.test_144_test_Fedory_3D_p_001.end")
+
+    def test_160_smazani_zaznamu_knihovny_D3_p_001(self):
+        """Test 160 Smazání záznamu v Knihovně 3D (pozitivní scénář 1)
+
+        Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Záznam v Knihovně 3D ve stavu D2,
+
+        TestData:
+
+            C-3D-202600001
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře modul “Knihovna 3D”  → vybere záznam „C-3D-202600001“
+            - Smaže připojený soubor
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat dokument”
+            - V dalším dialogovém okně “Smazat dokument” kliknout na “Smazat”
+
+        Expected:
+            - Záznam v Knihovně 3D v databázi bude smazán.
+        """
+        logger.info("AkceKnihovna3D.test_160_smazani_zaznamu_knihovny_D3_p_001.start")
+        self.login("archivar")
+        self.createFedoraRecord("C-3D-202600001")
+        self.uploadFileToFedora(646257, "dokument/tests/resources/del.zip")
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-3D-202600001").first().stav, D_STAV_ODESLANY)
+        self.goToAddress("/dokument/model/detail/C-3D-202600001")
+        self.ElementClick(By.ID, "file-smazat-646257")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "dokument-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(Dokument.objects.filter(ident_cely="C-3D-202600001").count(), 0)
+        logger.info("AkceKnihovna3D.test_160_smazani_zaznamu_knihovny_D3_p_001.end")

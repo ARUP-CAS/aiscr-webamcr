@@ -19,11 +19,11 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponseRedirect, StreamingHttpResponse
+from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
-from django_object_actions import DjangoObjectActions, action
+from django_object_actions import DjangoObjectActions
 from historie.models import Historie
 from notifikace_projekty.forms import (
     KATASTR_CONTENT_TYPE,
@@ -304,19 +304,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         "orcid",
     )
     ordering = ("email",)
-    change_actions = ("metadata",)
     change_form_template = "admin/admin_user_change.html"
-
-    @action(label="Metadata", description="Download of metadata")
-    def metadata(self, request, obj):
-        metadata = obj.metadata
-
-        def context_processor(content):
-            yield content
-
-        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response["Content-Disposition"] = 'attachment; filename="metadata.xml"'
-        return response
 
     def has_delete_permission(self, request, obj=None):
         if obj:
@@ -439,8 +427,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             transaction.on_commit(
                 lambda: obj.groups.set([max_id] + list(other_groups.values_list("id", flat=True)), clear=True)
             )
-        if user_db_group_ids != set(all_groups_ids):
-            logger.debug("send activate email or change email")
+        if (user_db_group_ids != set(all_groups_ids) or user_db.is_active != obj.is_active) and obj.is_active:
+            logger.debug("uzivatel.admin.save_model.send_activation_email", extra={"pk": obj.pk})
             Mailer.send_eu06(user=obj, groups=[main_group] + list(other_groups))
         logger.debug(
             "uzivatel.admin.save_model.manage_user_groups.highest_groups",
@@ -488,9 +476,9 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                 "show_delete_history_button": True,
                 "object_id": object_id,
                 "user_account_history_exists": user_account_history.exists() if user_account_history else None,
-                "user_account_other_records_exists": user_account_other_records.exists()
-                if user_account_other_records
-                else None,
+                "user_account_other_records_exists": (
+                    user_account_other_records.exists() if user_account_other_records else None
+                ),
             }
         )
         return super().render_change_form(request, context, **kwargs)

@@ -1,4 +1,5 @@
 import base64
+import io
 import json
 import logging
 import os
@@ -17,7 +18,8 @@ import psycopg2
 import requests
 from cacheops import invalidate_all
 from core.ident_cely import get_record_from_ident
-from core.repository_connector import FedoraError, FedoraTransaction
+from core.models import Soubor
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.tests.custom_server import WerkzeugServerThread
 from core.tests.runner import USERS
 from django.conf import settings
@@ -26,10 +28,20 @@ from django.http import Http404
 from django.test import LiveServerTestCase
 from lxml import etree
 from PIL import Image, ImageChops
-from rdflib import Graph, Literal, URIRef
+from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
+    InvalidSessionIdException,
+    NoSuchElementException,
+    StaleElementReferenceException,
+    WebDriverException,
+)
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.common.by import By
 from uzivatel.models import User
+from xml_generator.generator import DocumentGenerator
 from xml_generator.models import ModelWithMetadata
 
 from webclient.settings.base import get_secret
@@ -37,9 +49,23 @@ from webclient.settings.base import get_secret
 logger = logging.getLogger(__name__)
 
 
+class LocalResolver(etree.Resolver):
+    """
+    Resolver, který nahradí vzdálené XSD URL lokálním souborem.
+    Hodí se, když libxml neumí stahovat přes HTTP a nechcete upravovat XSD.
+    """
+
+    def resolve(self, url, id, context):
+        if url == "http://www.w3.org/2001/03/xml.xsd":
+            local_path = "xml_generator/definitions/xml.xsd"
+            return self.resolve_filename(local_path, context)
+        return None
+
+
 class WaitForPageLoad:
-    def __init__(self, browser):
+    def __init__(self, browser, wait_time=20):
         self.browser = browser
+        self.wait_time = wait_time
 
     def __enter__(self):
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
@@ -58,7 +84,7 @@ class WaitForPageLoad:
 
     def wait_for(self, condition_function):
         start_time = time.time()
-        while time.time() < start_time + 20:
+        while time.time() < start_time + self.wait_time:
             if condition_function():
                 return True
             else:
@@ -73,6 +99,24 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     host = "0.0.0.0"
     del settings.DATABASES["test_db"]
     databases = {"default", "urgent"}
+    xmlschema = None
+    IGNORED_BROWSER_ERRORS = [
+        ("/projekt/stav/uzavrit/", 403),
+        ("/projekt/stav/archivovat/", 403),
+        ("/projekt/stav/navrhnout-ke-zruseni/", 403),
+        ("/pas/stav/odeslat/", 403),
+        ("/pas/stav/archivovat/", 403),
+        ("/arch-z/stav/odeslat/", 403),
+        ("/arch-z/stav/archivovat/", 403),
+        ("/dokument/stav/odeslat/", 403),
+        ("/dokument/stav/archivovat/", 403),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_RESET"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_CLOSED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_HTTP2_PROTOCOL_ERROR"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_FAILED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_SOCKET_NOT_CONNECTED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_ABORTED"),
+    ]
 
     @classmethod
     def setUpClass(cls):
@@ -107,18 +151,28 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         self.wipe_Fedora()
         self.clone_Database()
 
-        options = webdriver.FirefoxOptions()
-        # options = webdriver.ChromeOptions()
+        # options = webdriver.FirefoxOptions()
+        options = webdriver.ChromeOptions()
+        options.set_capability("goog:loggingPrefs", {"browser": "ALL"})
+        options.set_capability("acceptInsecureCerts", True)
+        options.add_argument("--ignore-certificate-errors")
+        options.add_argument("--allow-insecure-localhost")
+        options.add_argument("--window-size=1760,1020")
         if settings.USE_REMOTE_WEB_BROWSER:
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--headless=new")
+            # options.add_argument("--disable-dev-shm-usage")
             self.driver = webdriver.Remote(
                 command_executor=f"http://{settings.SELENIMUM_ADDRESS}:{settings.SELENIUM_PORT}/wd/hub", options=options
             )
         else:
-            self.driver = webdriver.Firefox()
-
-        # self.driver=webdriver.Chrome()
+            # self.driver = webdriver.Firefox()
+            self.driver = webdriver.Chrome(options=options)
         self.driver.implicitly_wait(2)
         self.wait_interval = 2
+        self.driver.set_page_load_timeout(120)
+        self.driver.set_script_timeout(30)
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.end")
 
     def get_container_content(self, container_path):
@@ -141,21 +195,43 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
         extensions = {
-            "text/turtle": "turtle",
+            "text/turtle": "nt",
             "application/xml": "xml",
             "image/jpeg": "jpg",
             "image/png": "png",
             "application/zip": "zip",
             "application/pdf": "pdf",
         }
-        filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
+        filename = (
+            str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
+        )
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
         if "__file__" in filename:
             filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
         if response.status_code == 200:
             f = open(f"{path}/{filename}.{extension}", "wb")
             if extension == "xml":
-                f.write(response.content.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+                xml = self.xml_to_string_bez_ignorovanych_z_textu(
+                    response.content,
+                    {
+                        "amcr:datum_zmeny": "xs:dateTime",
+                        "amcr:datum_registrace": "xs:dateTime",
+                        "amcr:datum_zverejneni": "xs:date",
+                    },
+                    f"{path}/{filename}.{extension}",
+                )
+                f.write(xml)
+            elif extension == "nt":
+                rdf = self.uprav_rdf_pred_ulozenim(
+                    response.content,
+                    ignorovat_predikaty={
+                        "fedora:created": "xs:dateTime",
+                        "fedora:lastModified": "xs:dateTime",
+                        "premis:hasMessageDigest": "urn:sha",
+                        "premis:hasSize": "xsd:long",
+                    },
+                )
+                f.write(rdf)
             else:
                 f.write(response.content)
             f.close()
@@ -183,14 +259,16 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
         extensions = {
-            "text/turtle": "turtle",
+            "text/turtle": "nt",
             "application/xml": "xml",
             "image/jpeg": "jpg",
             "image/png": "png",
             "application/zip": "zip",
             "application/pdf": "pdf",
         }
-        filename = str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__")
+        filename = (
+            str(container_path.split(f"/{settings.FEDORA_SERVER_NAME}/", 1)[1]).replace("/", "__").replace(":", "--")
+        )
         extension = extensions[response.headers.get("Content-Type", "").split(";")[0].strip()]
         if "__file__" in filename:
             filename = re.sub(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", "", filename)
@@ -198,15 +276,27 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             f = open(f"{path}/{filename}.{extension}", "rb")
             sample_file = f.read()
             f.close()
-        if extension == "turtle":
+        if extension == "nt":
             assert self.porovnej_rdf_obsah(
-                response.content, sample_file, ignorovat_predikaty=["fedora:created", "fedora:lastModified"]
+                response.content,
+                sample_file,
+                ignorovat_predikaty={
+                    "fedora:created": "xs:dateTime",
+                    "fedora:lastModified": "xs:dateTime",
+                    "premis:hasMessageDigest": "urn:sha",
+                    "premis:hasSize": "xsd:long",
+                },
             )
         elif extension == "xml":
             assert self.porovnej_xml_bez_ignorovanych(
                 sample_file,
                 response.content,
-                ignorovane_tagy=["amcr:datum_zmeny", "amcr:datum_registrace", "amcr:datum_zverejneni"],
+                ignorovane_tagy={
+                    "amcr:datum_zmeny": "xs:dateTime",
+                    "amcr:datum_registrace": "xs:dateTime",
+                    "amcr:datum_zverejneni": "xs:date",
+                },
+                filename=f"{path}/{filename}.{extension}",
             )
         elif extension == "png":
             assert self.porovnej_png_obsah(sample_file, response.content)
@@ -276,7 +366,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         if response.status_code == 200:
             os.makedirs(path, exist_ok=True)
             f = open(f"{path}/index.json", "wb")
-            f.write(response.content)
+            index = self.json_uprav_pro_porovnani(
+                response.content,
+                klice_k_ignoraci=["created", "modified", "content_size", "pagination"],
+            )
+            f.write(json.dumps(index, indent=2).encode("utf-8"))
             f.close()
             res = json.loads(response.text)
             for n in res["items"]:
@@ -306,7 +400,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             assert self.porovnej_json_rovnost(
                 vzor_json_text=json_vzor,
                 vystup_json_text=response.content,
-                klice_k_ignoraci=["created", "modified", "content_size"],
+                klice_k_ignoraci=["created", "modified", "content_size", "pagination"],
             )
 
             res = json.loads(response.text)
@@ -380,20 +474,63 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
             self.fail(self._formatMessage(msg, standardMsg))
 
-    def tearDown(self):
-        self.driver.save_screenshot(f"{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png")
-        self.driver.quit()
-        if hasattr(self._outcome, "errors"):
-            # Python 3.4 - 3.10  (These two methods have no side effects)
-            result = self.defaultTestResult()
-            self._feedErrorsToResult(result, self._outcome.errors)
-        else:
-            # Python 3.11+
-            result = self._outcome.result
-        ok = all(test != self for test, text in result.errors + result.failures)
+    def _is_ignored_browser_error(self, entry: dict) -> bool:
+        msg = entry.get("message", "") or ""
+        for path, err in self.IGNORED_BROWSER_ERRORS:
+            if path and path not in msg:
+                continue
+            # HTTP status (403, 401, ...)
+            if isinstance(err, int):
+                # Chrome loguje např.: "... GET https://... 403 (Forbidden)"
+                if f" {err} (" in msg:
+                    return True
+            # network / chrome error (string)
+            elif isinstance(err, str):
+                if err in msg:
+                    return True
 
-        if os.path.isfile(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx"):
-            data = pandas.read_excel(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx")
+        return False
+
+    def _collect_js_errors_at_end(self):
+        """Sbírá javascript chyby"""
+        try:
+            logs = ChromeDriver.get_log(self.driver, "browser")
+            severe = [entry for entry in logs if entry["level"] == "SEVERE"]
+            self._js_errors = [entry for entry in severe if not self._is_ignored_browser_error(entry)]
+        except (InvalidSessionIdException, WebDriverException):
+            self._js_errors = []
+
+    def tearDown(self):
+        self._collect_js_errors_at_end()
+
+        result = self._outcome.result
+
+        def has_issue():
+            return any(t is self and exc for t, exc in (result.errors + result.failures))
+
+        # Pokud test zatím OK a máme JS chyby => přidej FAILURE
+        if not has_issue() and getattr(self, "_js_errors", None):
+            result.addFailure(
+                self,
+                (
+                    AssertionError,
+                    AssertionError(f"JavaScript errors found: {self._js_errors}"),
+                    None,
+                ),
+            )
+
+        ok = not has_issue()
+
+        try:
+            self.driver.save_screenshot(f"{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png")
+        except Exception as js_errors:
+            logger.error(
+                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.save_screenshot_error",
+                extra={"error": js_errors},
+            )
+        path = f"{settings.TEST_SCREENSHOT_PATH}results.xlsx"
+        if os.path.isfile(path):
+            data = pandas.read_excel(path)
             d = data.values.tolist()
         else:
             d = []
@@ -413,7 +550,15 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         data = pandas.DataFrame(d)
         data.columns = ["index", "date", "test name", "result"]
         try:
-            data.to_excel(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx", index=False)
+            data.to_excel(path, index=False)
+        except Exception as exc:
+            logger.error(
+                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.to_excel_error",
+                extra={"error": exc},
+            )
+
+        try:
+            self.driver.quit()
         except Exception:
             pass
         super().tearDown()
@@ -424,65 +569,53 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     def wait(self, interval):
         time.sleep(interval)
 
-    def wait_for(self, condition_function, by, value):
-        start_time = time.time()
-        while time.time() < start_time + 12:
-            if condition_function(by, value):
-                return True
-            else:
-                time.sleep(0.5)
+    def wait_for(self, condition_function, by, value, timeout=12, poll=0.5):
+        end = time.time() + timeout
+        while time.time() < end:
+            try:
+                if condition_function(by, value):
+                    return True
+            except (StaleElementReferenceException, NoSuchElementException):
+                # DOM se překreslil / element na chvíli zmizel -> zkusíme znovu
+                pass
+            time.sleep(poll)
         return False
 
     def findElement(self, by, value):
-        elements = self.driver.find_elements(by, value)
-        if len(elements) > 0:
-            return True
-        return False
+        try:
+            return len(self.driver.find_elements(by, value)) > 0
+        except StaleElementReferenceException:
+            return False
 
     def ElementIsClickable(self, by, value):
-        element = self.driver.find_element(by, value)
-        if element.is_displayed() and element.is_enabled():
-            return True
-        return False
+        try:
+            element = self.driver.find_element(by, value)
+            return element.is_displayed() and element.is_enabled()
+        except (NoSuchElementException, StaleElementReferenceException):
+            return False
 
     def ElementClick(self, by=By.ID, value: Optional[str] = None):
-        res = self.wait_for(self.findElement, by, value)
-        if res is False:
-            logger.warning(
-                "BaseSeleniumTestClass.ElementClick.elementNotFound",
-                extra={
-                    "filed": by,
-                    "value": value,
-                },
-            )
+        if not self.wait_for(self.findElement, by, value):
+            logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "value": value})
             raise Exception("ElementClickError")
-        res = self.wait_for(self.ElementIsClickable, by, value)
-        if res is False:
+
+        if not self.wait_for(self.ElementIsClickable, by, value):
             logger.warning(
-                "BaseSeleniumTestClass.ElementClick.elementNotFound",
-                extra={
-                    "filed": by,
-                    "value": value,
-                },
+                "BaseSeleniumTestClass.ElementClick.elementNotClickable", extra={"filed": by, "value": value}
             )
             raise Exception("ElementIsNotClickableError")
+
         attempts = 0
         while attempts < 10:
             try:
                 self.driver.find_element(by, value).click()
-                break
-            except Exception:
+                return
+            except (StaleElementReferenceException, ElementClickInterceptedException, ElementNotInteractableException):
                 attempts += 1
-                time.sleep(1)
-        if attempts >= 10:
-            logger.warning(
-                "BaseSeleniumTestClass.ElementClick.elementNotFound",
-                extra={
-                    "filed": by,
-                    "value": value,
-                },
-            )
-            raise Exception("ElementClickError")
+                time.sleep(0.5)
+
+        logger.warning("BaseSeleniumTestClass.ElementClick.failedAfterRetries", extra={"filed": by, "value": value})
+        raise Exception("ElementClickError")
 
     def ElementSendKeys(self, by, value, keys):
         res = self.wait_for(self.findElement, by, value)
@@ -521,14 +654,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def clickAtMapCoord(self, lon, lat):
 
-        self.driver.execute_script(
-            f"""
+        self.driver.execute_script(f"""
  window.getToday = function() {{
 return new Date('2025-06-28T12:00:00Z');}};
  const latlng = L.latLng({lat}, {lon});
  map.setView(latlng, 17);
  const containerPoint = map.latLngToContainerPoint(latlng);
- const layerPoint = map.latLngToLayerPoint(latlng); 
+ const layerPoint = map.latLngToLayerPoint(latlng);
  const syntheticEvent = new MouseEvent('click', {{
  bubbles: true,
  cancelable: true,
@@ -540,8 +672,7 @@ return new Date('2025-06-28T12:00:00Z');}};
  containerPoint: containerPoint,
  layerPoint: layerPoint,
  originalEvent: syntheticEvent
-}});"""
-        )
+}});""")
 
     def _username(self, type="archeolog"):
         return USERS[type]["USERNAME"]
@@ -597,7 +728,6 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.driver.find_element(By.ID, "id_password").send_keys(self._password(type))
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".btn")
-        self.driver.set_window_rect(0, 0, 1360, 1020)
 
     def logout(self):
         self.ElementClick(By.ID, "buttonLogout")
@@ -606,53 +736,118 @@ return new Date('2025-06-28T12:00:00Z');}};
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
-    def addFileToDropzone(self, css_selector, name, content):
+    def upload_file(self, file_path, file_name, mime="image/jpeg"):
         """
-        Trigger a file add with `name` and `content` to Dropzone element at `css_selector`.
+        Metoda nahraje soubor do Dropzone.
         """
-        script = """
-        const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
-        const byteCharacters = atob(b64Data);
-        const byteArrays = [];
-
-        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-            const slice = byteCharacters.slice(offset, offset + sliceSize);
-            const byteNumbers = new Array(slice.length);
-            for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            byteArrays.push(byteArray);
-        }
-        const blob = new Blob(byteArrays, {type: contentType});
-        return blob;
-        }
-        var blob = b64toBlob('%s', 'image/jpeg');
-        var dropzone_instance = Dropzone.forElement('%s')
-        var new_file = new File([blob], '%s', {type: 'image/jpeg'})
-        dropzone_instance.addFile(new_file)
-        """ % (
-            content,
-            css_selector,
-            name,
-        )
-        self.driver.execute_script(script)
-
-    def upload_file(self, file_path, file_name):
-        with open(file_path, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-        self.addFileToDropzone("#my-awesome-dropzone", file_name, encoded_string)
+        with open(file_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("ascii")
         self.driver.set_script_timeout(15)
-        self.driver.execute_async_script(
+        result = self.driver.execute_async_script(
             """
-            var done = arguments[0];
-            newDropzone.on("success", function(){ done('foo');});
-            """
+            const callback = arguments[arguments.length - 1];
+            const selector = arguments[0];
+            const name = arguments[1];
+            const b64 = arguments[2];
+            const mime = arguments[3];
+
+            const safeCallback = (() => {
+            let finished = false;
+            return (payload) => {
+                if (finished) return;
+                finished = true;
+                try { callback(payload); } catch (e) { /* swallow */ }
+            };
+            })();
+            const fail = (msg, extra) => safeCallback({status:"error", message: msg, ...extra});
+            if (!window.newDropzone) {
+            fail("window.newDropzone is not defined");
+            return;
+            }
+            const dz = window.newDropzone;
+            // helper
+            const b64toBlob = (b64Data, contentType="", sliceSize=512) => {
+            const byteCharacters = atob(b64Data);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+                byteArrays.push(new Uint8Array(byteNumbers));
+            }
+            return new Blob(byteArrays, { type: contentType });
+            };
+            // Clean up handlers when done
+            const cleanup = () => {
+            dz.off("success", onSuccess);
+            dz.off("error", onError);
+            dz.off("queuecomplete", onQueueComplete);
+            if (timeoutId) clearTimeout(timeoutId);
+            };
+            // Prefer queuecomplete (nejstabilnější), fallback na success
+            let lastSuccessFile = null;
+            const onSuccess = (file) => { lastSuccessFile = file; };
+            const onQueueComplete = () => {
+            cleanup();
+            safeCallback({status:"success", name: lastSuccessFile && lastSuccessFile.name});
+            };
+            const onError = (file, msg, xhr) => {
+            cleanup();
+            let message = "";
+            try {
+                message = (typeof msg === "string") ? msg : JSON.stringify(msg);
+            } catch (e) {
+                message = String(msg);
+            }
+            safeCallback({
+                status:"error",
+                message,
+                name: file && file.name,
+                http: xhr && xhr.status
+            });
+            };
+            dz.on("success", onSuccess);
+            dz.on("queuecomplete", onQueueComplete);
+            dz.on("error", onError);
+            const timeoutId = setTimeout(() => {
+            cleanup();
+            fail("Dropzone did not finish within internal timeout");
+            }, 12000);
+
+            // Add file
+            try {
+            const blob = b64toBlob(b64, mime);
+            const file = new File([blob], name, { type: mime });
+            // pokud Dropzone není navázaný na selector, tak aspoň ověř element existuje
+            const el = document.querySelector(selector);
+            if (!el) {
+                cleanup();
+                fail("Dropzone element not found for selector", {selector});
+                return;
+            }
+            dz.addFile(file);
+            // pokud máte autoProcessQueue:false, je potřeba tohle:
+            if (dz.options && dz.options.autoProcessQueue === false) {
+                dz.processQueue();
+            }
+            } catch (e) {
+            cleanup();
+            fail("Exception while adding file", {exception: String(e)});
+            }
+            """,
+            "#my-awesome-dropzone",
+            file_name,
+            b64,
+            mime,
         )
 
-    def createFedoraRecord(self, ident_cely):
+        if result.get("status") != "success":
+            raise AssertionError(f"Upload failed: {result}")
+
+    def createFedoraRecord(self, ident_cely, user_name="archeolog"):
         try:
             record = get_record_from_ident(ident_cely)
+            user = User.objects.get(email=self._username(user_name))
         except Http404 as err:
             record = None
             logger.debug(
@@ -661,7 +856,7 @@ return new Date('2025-06-28T12:00:00Z');}};
             )
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
             try:
-                fedora_transaction = FedoraTransaction()
+                fedora_transaction = FedoraTransaction(transaction_user=user)
                 record.save_metadata(fedora_transaction)
                 fedora_transaction.mark_transaction_as_closed()
             except FedoraError as err:
@@ -670,11 +865,38 @@ return new Date('2025-06-28T12:00:00Z');}};
                     extra={"ident_cely": ident_cely, "error": err},
                 )
 
+    def uploadFileToFedora(self, record, filename, user_name="archeolog"):
+        """Nahraje do Fedory testovací soubor"""
+        user = User.objects.get(email=self._username(user_name))
+        record = Soubor.objects.get(pk=record)
+        related_record: ModelWithMetadata = record.vazba.navazany_objekt
+        fedora_transaction = FedoraTransaction(transaction_user=user)
+        record.active_transaction = fedora_transaction
+        conn = FedoraRepositoryConnector(related_record, fedora_transaction)
+        soubor_data = io.BytesIO()
+        with open(filename, "rb") as file:
+            content = file.read()
+            soubor_data.write(content)
+
+        soubor_data.seek(0)
+        mimetype = Soubor.get_mime_types(soubor_data)
+        soubor_data.seek(0)
+        rep_bin_file = conn.save_binary_file(record.nazev, mimetype, soubor_data, True)
+        record.path = rep_bin_file.url_without_domain
+        record.size_mb = rep_bin_file.size_mb
+        record.sha_512 = rep_bin_file.sha_512
+        record.save()
+        fedora_transaction.mark_transaction_as_closed()
+
     def odstran_elementy(self, root, ignorovane_tagy):
         """Rekurzivně odstraní ignorované tagy z XML stromu."""
         for elem in list(root):
             if elem.tag in ignorovane_tagy:
-                elem.text = None
+                typ = ignorovane_tagy[elem.tag]
+                if typ == "xs:date":
+                    elem.text = "2020-01-01"
+                elif typ == "xs:dateTime":
+                    elem.text = "2020-01-01T00:00:00+00:00"
             else:
                 self.odstran_elementy(elem, ignorovane_tagy)
 
@@ -696,17 +918,35 @@ return new Date('2025-06-28T12:00:00Z');}};
         for child in element:
             self.odstran_uuid_z_xml(child)
 
-    def serad_elementy_xml(self, element):
+    def serad_xml_podle_tagu_a_obsahu(self, element):
         """
-        Rekurzivně seřadí podřízené XML elementy podle tagu, obsahu a atributů.
+        Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
+        podle obsahu (pomocí _element_klic).
+        Nezasahuje do pořadí různých typů elementů, čímž zachovává validitu vůči XSD.
         """
-        # Nejprve rekurzivně seřaď všechny děti
+        # Nejprve rekurze
         for child in element:
-            self.serad_elementy_xml(child)
+            self.serad_xml_podle_tagu_a_obsahu(child)
 
-        # Pokud má element více dětí stejného názvu, seřadíme je podle vnitřního obsahu
-        if len(element) > 1:
-            element[:] = sorted(element, key=lambda e: (e.tag, self._element_klic(e)))
+        nove_deti = []
+        index = 0
+        while index < len(element):
+            current_tag = element[index].tag
+            skupina = [element[index]]
+            index += 1
+
+            # Posbírá sousední elementy se stejným tagem
+            while index < len(element) and element[index].tag == current_tag:
+                skupina.append(element[index])
+                index += 1
+
+            # Pokud je víc než jeden, seřadíme
+            if len(skupina) > 1:
+                skupina.sort(key=self._element_klic)
+
+            nove_deti.extend(skupina)
+
+        element[:] = nove_deti
 
     def _element_klic(self, elem):
         """
@@ -722,26 +962,58 @@ return new Date('2025-06-28T12:00:00Z');}};
                 hodnoty.append(v.strip())
         return "|".join(hodnoty)
 
-    def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy):
+    def nahrad_element_id_rekurzivne(self, element, element_name):
+        """
+        Rekurzivně upraví všechny elementy <amcr:id> s textem 'element_name-XXX' na 'element_name-0000001'.
+        Nezávislé na konkrétní verzi namespace.
+        """
+        # Zjisti namespace prefix 'amcr' z tagu
+        if element.tag.endswith("id") and "}" in element.tag:
+            lokalni_jmeno = element.tag.split("}", 1)[1]
+            if lokalni_jmeno == "id" and element.text and element.text.startswith(f"{element_name}-"):
+                element.text = f"{element_name}-0000001"
+
+        # Rekurzivně zpracuj podřízené elementy
+        for child in element:
+            self.nahrad_element_id_rekurzivne(child, element_name)
+
+    def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy, filename):
         """
         Načte XML z textového vstupu, odstraní ignorované tagy a vrátí serializovanou podobu.
         """
         parser = etree.XMLParser(remove_blank_text=True)
         root = etree.fromstring(xml_text, parser)
-        ignorovane_tagy_trans = []
-        for item in ignorovane_tagy:
-            ignorovane_tagy_trans.append(item.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"))
+        ignorovane_tagy_trans = {}
+        for key, item in ignorovane_tagy.items():
+            ignorovane_tagy_trans.update({key.replace("amcr:", "{https://api.aiscr.cz/schema/amcr/2.2/}"): item})
         self.odstran_elementy(root, ignorovane_tagy_trans)
         self.odstran_uuid_z_xml(root)
-        self.serad_elementy_xml(root)
-        text = etree.tostring(root, pretty_print=True, encoding="utf-8")
-        text = re.sub(rb">hist-\d+<", rb">hist-<", text)
+        self.nahrad_element_id_rekurzivne(root, "hist")
+        self.nahrad_element_id_rekurzivne(root, "soub")
+        self.serad_xml_podle_tagu_a_obsahu(root)
+        if BaseSeleniumTestClass.xmlschema is None:
+            with open(DocumentGenerator.get_path_to_schema(), "rb") as f:
+                parser = etree.XMLParser()
+                parser.resolvers.add(LocalResolver())
+                xmlschema_doc = etree.parse(f, parser)
+                BaseSeleniumTestClass.xmlschema = etree.XMLSchema(xmlschema_doc)
+        if not BaseSeleniumTestClass.xmlschema.validate(root):
+            error_messages = "\n".join(
+                f"Řádek {error.line}, sloupec {error.column}: {error.message}"
+                for error in BaseSeleniumTestClass.xmlschema.error_log
+            )
+            logger.error(
+                "BaseSeleniumTestClass.xml_to_string_bez_ignorovanych_z_textu.invalid_xml",
+                extra={"file": filename, "value": error_messages},
+            )
+
+        text = etree.tostring(root, pretty_print=True, encoding="utf-8", xml_declaration=True)
         return text
 
-    def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy):
+    def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy, filename):
         """Porovná dva XML soubory po odstranění ignorovaných tagů."""
-        vzor = self.xml_to_string_bez_ignorovanych_z_textu(vzorovy_soubor, ignorovane_tagy)
-        vystup = self.xml_to_string_bez_ignorovanych_z_textu(vystupni_soubor, ignorovane_tagy)
+        vzor = self.xml_to_string_bez_ignorovanych_z_textu(vzorovy_soubor, ignorovane_tagy, filename)
+        vystup = self.xml_to_string_bez_ignorovanych_z_textu(vystupni_soubor, ignorovane_tagy, filename)
         res = vzor == vystup
         if res is False:
             logger.error(
@@ -799,22 +1071,29 @@ return new Date('2025-06-28T12:00:00Z');}};
         for t in nove_triples:
             graf.add(t)
 
-    def rdf_graf_z_textu(self, data, format="turtle"):
-        g = Graph()
-        g.parse(data=data, format=format)
-        return g
-
     def odstran_predikaty(self, graf, predikaty_k_ignoru):
         """Odstraní trojice podle predikátů (může být prefixed nebo plné URI)."""
-        for pred in predikaty_k_ignoru:
+        for pred, typ in predikaty_k_ignoru.items():
             # Pokud je to string s dvojtečkou, pokusíme se ho expandovat jako CURIE (prefix:name)
             if ":" in pred and not pred.startswith("http"):
-                pred_uri = graf.namespace_manager.expand_curie(pred)
+                try:
+                    pred_uri = graf.namespace_manager.expand_curie(pred)
+                except ValueError:
+                    continue
             else:
                 pred_uri = URIRef(pred)
 
+            if typ == "xs:dateTime":
+                new_obj = Literal("2020-01-01T00:00:00.000000Z", datatype=XSD.dateTime)
+            elif typ == "xsd:long":
+                new_obj = Literal(0, datatype=XSD.long)
+            elif typ == "urn:sha":
+                fake_digest = "f" * 128
+                new_obj = URIRef(f"urn:sha-512:{fake_digest}")
+
             for s, p, o in list(graf.triples((None, pred_uri, None))):
                 graf.remove((s, p, o))
+                graf.add((s, p, new_obj))
 
     def odstran_uuid_z_rdf(self, graf):
         """
@@ -845,7 +1124,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         g1.parse(data=aktualni_rdf, format="turtle")
 
         g2 = Graph()
-        g2.parse(data=ocekavany_rdf, format="turtle")
+        g2.parse(data=ocekavany_rdf, format="nt")
 
         if ignorovat_predikaty:
             self.odstran_predikaty(g1, ignorovat_predikaty)
@@ -856,8 +1135,40 @@ return new Date('2025-06-28T12:00:00Z');}};
 
         self.odstran_uuid_z_rdf(g1)
         self.odstran_uuid_z_rdf(g2)
+        res = g1.isomorphic(g2)
+        if res is False:
+            nt = g1.serialize(format="nt")
+            # Seřadit řádky podle abecedy
+            radky = sorted(line.strip() for line in nt.strip().splitlines() if line.strip())
+            nt_stabilni = "\n".join(radky) + "\n"
+            logger.error(
+                "BaseSeleniumTestClass.fedora_error.porovnej_rdf_obsah",
+                extra={"data": nt_stabilni},
+            )
+        return res
 
-        return g1.isomorphic(g2)
+    def uprav_rdf_pred_ulozenim(self, rdf_input, ignorovat_predikaty=None):
+        """
+        Načte RDF z textu nebo bytes, odstraní proměnlivé predikáty, base URI a UUID,
+        a vrátí výstup jako serializovaný Turtle string.
+        """
+        g = Graph()
+        g.parse(data=rdf_input, format="turtle")
+
+        # Bezpečné odstranění predikátů
+        if ignorovat_predikaty:
+            self.odstran_predikaty(g, ignorovat_predikaty)
+
+        # Nahradit base URI (IP adresu apod.)
+        self.nahrad_base_uri_auto(g)
+
+        # Odstranit UUID z URI a Literálů
+        self.odstran_uuid_z_rdf(g)
+        nt = g.serialize(format="nt")
+        # Seřadit řádky podle abecedy
+        radky = sorted(line.strip() for line in nt.strip().splitlines() if line.strip())
+        nt_stabilni = "\n".join(radky) + "\n"
+        return nt_stabilni.encode("utf-8")
 
     def najdi_base_uri(self, vsechny_retezce):
         """
@@ -951,22 +1262,19 @@ return new Date('2025-06-28T12:00:00Z');}};
         else:
             return data
 
-    def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
-        json_vzor = json.loads(vzor_json_text)
-        json_vystup = json.loads(vystup_json_text)
-
+    def json_uprav_pro_porovnani(self, json_text, klice_k_ignoraci=None):
+        json_obj = json.loads(json_text)
         if klice_k_ignoraci:
-            json_vzor = self.odstran_klice(json_vzor, klice_k_ignoraci)
-            json_vystup = self.odstran_klice(json_vystup, klice_k_ignoraci)
+            json_obj = self.odstran_klice(json_obj, klice_k_ignoraci)
+        json_obj = self.nahrad_base_uri_auto_json(json_obj)
+        json_obj = self.odstran_uuid(json_obj)
+        json_obj = self.normalizuj_json(json_obj)
+        return json_obj
 
-        json_vzor = self.nahrad_base_uri_auto_json(json_vzor)
-        json_vystup = self.nahrad_base_uri_auto_json(json_vystup)
+    def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
+        json_vzor = self.json_uprav_pro_porovnani(vzor_json_text, klice_k_ignoraci)
+        json_vystup = self.json_uprav_pro_porovnani(vystup_json_text, klice_k_ignoraci)
 
-        json_vzor = self.odstran_uuid(json_vzor)
-        json_vystup = self.odstran_uuid(json_vystup)
-
-        json_vzor = self.normalizuj_json(json_vzor)
-        json_vystup = self.normalizuj_json(json_vystup)
         res = json_vzor == json_vystup
         if res is False:
             logger.error(
@@ -987,8 +1295,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.driver.set_script_timeout(6)
         try:
             self.driver.find_element(By.CSS_SELECTOR, ".loading-results")
-            self.driver.execute_async_script(
-                """
+            self.driver.execute_async_script("""
 var done = arguments[0];
 var $ = window.jQuery || (typeof django !== 'undefined' && django.jQuery);
 if (!$) {
@@ -998,15 +1305,29 @@ if (!$) {
 $(document).one('ajaxSuccess', function(event, xhr, settings) {
 done("ok");
 });
-"""
-            )
+""")
         except Exception:
             pass
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
     def test_001_core_001(self):
-        # Scenar_1 Přihlášení do AMČR (pozitivní scénář 1)
+        """Test 001 Přihlášení do AMČR
+
+        Testuje přihlášení uživatele.
+
+        Role:
+            Archeolog
+
+        TestData:
+            uživatelské jméno a heslo
+
+        Steps:
+            1. Vyplnění formuláře na titulní stránce
+
+        Expected:
+            1. Uživatel je přesměrován na stránku s titulkem AMČR Homepage
+        """
         logger.info("CoreSeleniumTest.test_core_001.start")
         self.login()
         self.assertEqual(self.driver.title, "AMČR Homepage")

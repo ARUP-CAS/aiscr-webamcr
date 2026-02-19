@@ -154,12 +154,6 @@ def detail(request, typ_vazby, ident_cely):
             ],
         )
     response = redirect(url)
-    response.set_cookie(
-        "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000, secure=True, samesite="Strict"
-    )
-    response.set_cookie(
-        "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000, secure=True, samesite="Strict"
-    )
     komponenta.close_active_transaction_when_finished = True
     komponenta.save()
     return response
@@ -181,7 +175,6 @@ def zapsat(request, typ_vazby, dj_ident_cely):
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     form = CreateKomponentaForm(obdobi_choices, areal_choices, request.POST)
-    komp_ident_cely = None
     if form.is_valid():
         logger.debug("komponenta.views.zapsat.form_valid")
         komponenta = form.save(commit=False)
@@ -191,7 +184,6 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam, fedora_transcation)
             else:
                 komponenta.ident_cely = get_komponenta_ident(cast.dokument, fedora_transcation)
-            komp_ident_cely = komponenta.ident_cely
         except MaximalIdentNumberError:
             fedora_transcation.error_message = MAXIMUM_KOMPONENT_DOSAZENO
             fedora_transcation.rollback_transaction()
@@ -243,17 +235,6 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 args=[cast.dokument.ident_cely, cast.ident_cely],
             )
     response = redirect(url)
-    if komp_ident_cely:
-        response.set_cookie(
-            "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000, secure=True, samesite="Strict"
-        )
-        response.set_cookie(
-            "set-active",
-            f"el_komponenta_{komp_ident_cely.replace('-', '_')}",
-            max_age=1000,
-            secure=True,
-            samesite="Strict",
-        )
     return response
 
 
@@ -280,12 +261,9 @@ def smazat(request, typ_vazby, ident_cely):
             logger.debug("komponenta.views.smazat.resp", extra={"value": resp})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             if dj:
-                response = JsonResponse({"redirect": dj.get_absolute_url()})
-                response.set_cookie(
-                    "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000, secure=True, samesite="Strict"
-                )
+                return JsonResponse({"redirect": dj.get_absolute_url()})
             else:
-                response = JsonResponse(
+                return JsonResponse(
                     {
                         "redirect": reverse(
                             "dokument:detail-cast",
@@ -296,24 +274,16 @@ def smazat(request, typ_vazby, ident_cely):
                         )
                     }
                 )
-            return response
         else:
             logger.warning("komponenta.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             if dj:
-                response = JsonResponse(
+                return JsonResponse(
                     {"redirect": dj.get_absolute_url()},
                     status=403,
                 )
-                response.set_cookie(
-                    "show-form",
-                    f"detail_komponenta_form_{komponenta.ident_cely}",
-                    max_age=1000,
-                    secure=True,
-                    samesite="Strict",
-                )
             else:
-                response = JsonResponse(
+                return JsonResponse(
                     {
                         "redirect": reverse(
                             "dokument:detail-komponenta",
@@ -324,7 +294,6 @@ def smazat(request, typ_vazby, ident_cely):
                         )
                     }
                 )
-            return response
     else:
         context = {
             "object": komponenta,
