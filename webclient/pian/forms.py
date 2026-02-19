@@ -9,7 +9,6 @@ from core.message_constants import (
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
-from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.forms import HiddenInput
 from django.contrib.gis.geos import LineString, Point, Polygon
 from django.db import connections
@@ -59,6 +58,34 @@ class PianCreateForm(forms.ModelForm):
             ),
         )
 
+    def _instance_geom_wkt(self, field_name):
+        g = getattr(self.instance, field_name, None)
+        if not g:
+            return None
+        return g.wkt if hasattr(g, "wkt") else str(g)
+
+    def run_loaded_validation(self):
+        """
+        Metoda pro validaci geometrií při potvrzení PIANu.
+        """
+        from django.forms.utils import ErrorDict
+
+        self._errors = ErrorDict()
+        self.cleaned_data = {}
+        geom_wkt = self._instance_geom_wkt("geom")
+        geom_sjtsk_wkt = self._instance_geom_wkt("geom_sjtsk")
+        if geom_wkt:
+            try:
+                self.validate_geom(geom_wkt, "4326")
+            except forms.ValidationError as e:
+                self.add_error("geom", e)
+        if geom_sjtsk_wkt:
+            try:
+                self.validate_geom(geom_sjtsk_wkt, "5514")
+            except forms.ValidationError as e:
+                self.add_error("geom_sjtsk", e)
+        return not bool(self.errors)
+
     def clean(self):
         validation_geom = self.data.get("geom")
         self.validate_geom(validation_geom, "4326")
@@ -74,7 +101,7 @@ class PianCreateForm(forms.ModelForm):
             point = geom.interpolate_normalized(0.5)
         elif isinstance(geom, Polygon):
             self.instance.typ = Heslar.objects.get(id=GEOMETRY_PLOCHA)
-            point = Centroid(geom)
+            point = geom.centroid
         else:
             raise forms.ValidationError(PIAN_NEVALIDNI_GEOMETRIE + " " + VALIDATION_NOT_SIMPLE)
         zm10, zm50 = get_ZM_from_point(point)
