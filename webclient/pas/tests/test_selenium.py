@@ -538,11 +538,11 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
 
         Steps:
             - Vytvoření záznamu PAS
-            - Editace PAS
-            - Vytvoření souboruu
-            - Reload soubor
-            - Smazání souboruu
-            - Editace Uložení
+            - Editace záznamu PAS
+            - Vytvoření souboru
+            - Reload souboru
+            - Smazání souboru
+            - Editace záznamu Uložení
             - Smazání záznamu PAS
 
         Expected:
@@ -602,7 +602,7 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-1 > .text")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "pas/tests/resources/test_147/update_uložení")
+        self.check_fedora_change(time, "pas/tests/resources/test_147/update_ulozeni")
 
         # Smazání záznamu PAS
         time = self.getTime()
