@@ -36,10 +36,6 @@ class HistorieTable(ColumnShiftTableBootstrap4):
             "poznamka",
         )
 
-    # TODO: Tento způsob výpisu nerespektuje časové pásmo Django.
-    # @staticmethod
-    # Příklad alternativního renderu data změny je ponechán pouze jako poznámka.
-
 
 class SimpleHistoryTable(ColumnShiftTableBootstrap4):
     history_date = columns.DateTimeColumn(format="Y-m-d, H:i", default="")
