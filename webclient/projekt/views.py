@@ -931,7 +931,7 @@ def uzavrit(request, ident_cely):
         projekt.save()
         return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})})
     else:
-        # Check business rules
+        # Ověří obchodní pravidla před uzavřením projektu.
         warnings = projekt.check_pred_uzavrenim()
         logger.debug("projekt.views.uzavrit.warnings", extra={"warning": str(warnings)})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})

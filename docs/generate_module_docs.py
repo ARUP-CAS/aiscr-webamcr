@@ -47,7 +47,7 @@ SKIP_DIRS = {"static", "templates", "locale", "__pycache__", "services"}
 # Sleduje, zda došlo ke změně souborů.
 changes_detected = False
 
-# Common file type descriptions
+# Běžné popisy typů souborů
 FILE_TYPE_INFO = {
     "models.py": {"suffix": "modely", "description": "Definice modelů."},
     "forms.py": {"suffix": "formuláře", "description": "Definice formulářů."},
@@ -1717,7 +1717,7 @@ def generate_index_rst(module_dir_name: str, generated_files: List[str], output_
         if f not in sorted_files:
             sorted_files.append(f)
 
-    # Create toctree entries (without .py extension)
+    # Vytvoří položky toctree (bez přípony .py)
     toctree_entries = [f.replace(".py", "") for f in sorted_files]
 
     # Module display name

@@ -1,3 +1,9 @@
+"""Inicializace základní struktury repozitáře Fedora pro AMČR instance.
+
+Skript vytváří základní kontejnery, ACL pravidla a schéma metadat
+pro produkční i testovací prostředí.
+"""
+
 import os
 import time
 import xml.etree.ElementTree as ET
@@ -6,6 +12,7 @@ import requests
 
 
 def get_password():
+    """Načte heslo uživatele `fedoraAdmin` ze souboru se secrets."""
     soubor_xml = "/var/run/secrets/tomcat_users"
     strom = ET.parse(soubor_xml)
     root = strom.getroot()
@@ -24,6 +31,7 @@ AUTH = requests.auth.HTTPBasicAuth("fedoraAdmin", PASSWORD)
 
 
 def create_new_transaction():
+    """Založí novou transakci ve Fedora API a vrátí její URL."""
     print("create_new_transaction")
     response = requests.post(API_URL + "/fcr:tx", auth=AUTH, timeout=10)
     print(response)
@@ -31,12 +39,14 @@ def create_new_transaction():
 
 
 def commit(Atomic_ID):
+    """Potvrdí (commitne) otevřenou Fedora transakci."""
     print("commit")
     response = requests.put(Atomic_ID, auth=AUTH, timeout=10)
     print(response)
 
 
 def create_container(Atomic_ID, name, path=""):
+    """Vytvoří LDP kontejner v zadané cestě a vrátí jeho URL."""
     print("create container ", name)
     headers = {
         "Atomic-ID": Atomic_ID,
@@ -48,9 +58,8 @@ def create_container(Atomic_ID, name, path=""):
     return response.headers["link"].split(";")[0][1:-1]
 
 
-# (FedoraAcl) PUT acl resource 'AMCR/'
-# curl -u fedoraAdmin:pswd -H"Atomic-ID: http://localhost:8080/rest/fcr:tx/285ba3a5-7bce-48e0-b4a8-324da8a42a22" -X PUT http://localhost:8080/rest/AMCR/fcr:acl -H "Content-Type: text/turtle" --data-binary "@C:\Users\havrlant\Documents\ARUP\fedora\inputs\acl\repo.ttl"
 def createFedoraWebacAcl(container_path, Atomic_ID, file):
+    """Nahraje ACL definici ve formátu Turtle do kontejneru Fedora."""
     print("createFedoraWebacAcl")
     headers = {"Atomic-ID": Atomic_ID, "Content-Type": "text/turtle"}
     with open(file, "r") as f:
@@ -60,8 +69,8 @@ def createFedoraWebacAcl(container_path, Atomic_ID, file):
     print(response)
 
 
-# curl -u fedoraAdmin:pswd -H"Atomic-ID: http://localhost:8080/rest/fcr:tx/9afcc89d-7c5a-4bf8-91bd-4daa89b0c4eb" -X PUT --upload-file "C:/Users\havrlant\Documents\ARUP\fedora\inputs\amcr.xsd" -H "Content-Type: application/xml" -H "Content-Disposition: attachment; filename=\"amcr.xsd\"" -H "digest: sha-512=6ca8eca77bec25b701212d655b5c8d7aa582acbdfa72e7491f116d8e902b3ae0ecaa5dd8ca60cb06d57b5b5bcc7d887382f5e57d788f3928921d3ea04d10c4e7" "http://localhost:8080/rest/AMCR/metadata-schema"
 def upload_file(Atomic_ID, file, type, path):
+    """Nahraje binární soubor na zadanou cestu ve Fedora repozitáři."""
     print("upload_file")
     with open(file, "rb") as f:
         data = f.read()
@@ -75,6 +84,7 @@ def upload_file(Atomic_ID, file, type, path):
 
 
 def IndirectContainer(container_path, Atomic_ID, name, file):
+    """Vytvoří nepřímý LDP kontejner z Turtle šablony."""
     print("IndirectContainer")
     with open(file, "r") as f:
         data = f.read()
@@ -90,6 +100,7 @@ def IndirectContainer(container_path, Atomic_ID, name, file):
 
 
 def get_container_content(container_path):
+    """Vrátí HTTP status a seznam členů (`ldp:contains`) kontejneru."""
     headers = {}
     response = requests.get(container_path, auth=AUTH, headers=headers, timeout=10)
     members = []
@@ -105,20 +116,20 @@ def get_container_content(container_path):
     return response.status_code, members
 
 
-# 'C-202401979'
-
-
 def delete_container(container_path):
+    """Odstraní zadaný kontejner."""
     response = requests.delete(container_path, auth=AUTH, timeout=10)
     print(response.text)
 
 
 def purge_container(container_path):
+    """Odstraní tombstone po předchozím smazání kontejneru."""
     response = requests.delete(container_path + "/fcr:tombstone", auth=AUTH, timeout=10)
     print(response.text)
 
 
 def wipe_Fedora():
+    """Smaže obsah hlavních model/record větví a vyčistí tombstones."""
     code, mem = get_container_content(f"{API_URL}/{FEDORA_SERVER_NAME}/model")
     for item in mem:
         items = get_container_content(item + "/member")
@@ -133,6 +144,7 @@ def wipe_Fedora():
 
 
 def generate_base_struct():
+    """Vytvoří kompletní základní adresářovou a ACL strukturu AMČR."""
     path = os.path.dirname(__file__)
     transaction_id = create_new_transaction()
     createFedoraWebacAcl(API_URL, transaction_id, os.path.join(path, "inputs/acl/root-authorization.ttl"))
@@ -216,10 +228,11 @@ def generate_base_struct():
 
 
 def inicialize_base_directory():
-    for attempt in range(MAX_RETRIES + 1):  # Pokusíme se max_retries + 1 krát (včetně prvního pokusu)
+    """Inicializuje kořenovou strukturu repozitáře po startu služby."""
+    for attempt in range(MAX_RETRIES + 1):  # Pokusíme se `MAX_RETRIES + 1`krát (včetně prvního pokusu).
         try:
             stat, res = get_container_content(f"{API_URL}/{FEDORA_SERVER_NAME}")
-            # Pokud server odpoví status kódem 200, je vše v pořádku
+            # Pokud server odpoví kódem 200, základní struktura již existuje.
             print(f"stat {stat}")
             if stat == 503:
                 time.sleep(RETRY_DELAY)
@@ -232,7 +245,7 @@ def inicialize_base_directory():
                 generate_base_struct()
                 break
         except requests.exceptions.RequestException as e:
-            # Pokud dojde k výjimce, vypíše chybu a počká 2 sekundy před dalším pokusem
+            # Při chybě spojení vypíše detail problému a čeká před dalším pokusem.
             print(f"fedora-init.py: Chyba při pokusu o spojení s Fedorou na adrese {API_URL}/{FEDORA_SERVER_NAME}: {e}")
             if attempt < MAX_RETRIES:
                 print(f"fedora-init.py: Opakuji pokus {attempt + 1} za {RETRY_DELAY} sekund...")

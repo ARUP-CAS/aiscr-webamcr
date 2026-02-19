@@ -1752,7 +1752,7 @@ class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
 
 class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     """
-    Třída pohledu pro import prekladových souboru.
+    Třída pohledu pro import překladových souborů.
     """
 
     template_name = "rosetta/import_form.html"
@@ -1770,7 +1770,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
             tmp.flush()
             tmp.close()
             po_file = pofile(tmp_path)
-            # remove temp file once polib has loaded it
+            # Dočasný soubor smaže až po načtení obsahu knihovnou polib.
             try:
                 os.unlink(tmp_path)
             except Exception:

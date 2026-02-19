@@ -1,3 +1,5 @@
+"""Generuje RST tabulku Python závislostí z výstupu nástroje pip-licenses."""
+
 import json
 import subprocess
 
@@ -7,6 +9,7 @@ LICENSES_MANUAL_FIXES = {
 
 
 def csv_to_rst_table():
+    """Načte licence knihoven a zapíše je do dokumentace ve formátu RST."""
     output = subprocess.run(
         ["pip-licenses", "--format=json", "--with-urls", "--from=mixed", "--with-system"],
         capture_output=True,
@@ -35,7 +38,7 @@ def csv_to_rst_table():
     content = content.replace("@licence_table", rest_table_data)
     with open("docs/source/12_zavislosti/python_knihovny.rst", "w", encoding="utf-8") as rst_file:
         rst_file.write(content)
-    print(f"{len(data_to_write)} libraries written to file 'docs/source/12_zavislosti/python_knihovny.rst'.")
+    print(f"Do souboru 'docs/source/12_zavislosti/python_knihovny.rst' bylo zapsáno {len(data_to_write)} knihoven.")
 
 
 csv_to_rst_table()

@@ -63,7 +63,7 @@ class Command(BaseCommand):
         from uzivatel.models import User
         from xml_generator.models import ModelWithMetadata
 
-        # Get admin user
+        # Načte administrátorského uživatele pro systémové změny.
         try:
             admin_user = User.objects.get(pk=ADMIN_USER)
         except User.DoesNotExist:
@@ -76,7 +76,7 @@ class Command(BaseCommand):
             )
             return
 
-        # Read CSV file
+        # Načte vstupní CSV se seznamem dokumentů.
         try:
             sheet = pd.read_csv(csv_file, sep=",")
         except Exception as e:

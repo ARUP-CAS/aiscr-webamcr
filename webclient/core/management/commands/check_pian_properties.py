@@ -43,7 +43,7 @@ class Command(BaseCommand):
 
         logger.debug("core.management.commands.check_pian_properties.start")
 
-        # Prepare geometry type mapping
+        # Připraví mapování tříd geometrií na odpovídající heslářové hodnoty typu.
         geom_type = {}
         geom_type[str(Point)] = Heslar.objects.get(id=GEOMETRY_BOD)
         geom_type[str(LineString)] = Heslar.objects.get(id=GEOMETRY_LINIE)
@@ -65,7 +65,7 @@ class Command(BaseCommand):
             changes = []
             geom = item.geom
 
-            # Check geometry type
+            # Ověří, zda uložený typ odpovídá skutečnému typu geometrie.
             if item.typ.pk != geom_type[str(type(geom))].pk:
                 old_typ = str(item.typ)
                 item.typ = geom_type[str(type(geom))]
