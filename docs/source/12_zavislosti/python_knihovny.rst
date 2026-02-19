@@ -392,7 +392,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
-     - 3.0.0
+     - 3.0.1
      - BSD License
      - https://pandas.pydata.org
    * - pdf2image
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.7.0
+     - 6.7.1
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
