@@ -10,6 +10,10 @@ on:
         type: boolean
         required: true
 
+concurrency:
+  group: docker-${{ github.repository }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
 env:
   REGISTRY_GITHUB: ghcr.io
   REGISTRY_DOCKERHUB: index.docker.io
@@ -20,6 +24,7 @@ env:
 
 jobs:
   build_publish_images:
+    if: startsWith(inputs.tag, 'v')
     name: Build and publish images
     runs-on: ubuntu-latest
     strategy:
@@ -61,6 +66,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag }}
+          fetch-depth: 0
       
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v3
@@ -108,7 +114,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION_APP=${{ steps.meta.outputs.version }}
-            TAG_APP=${{ github.ref }}
+            TAG_APP=${{ inputs.tag }}
+          cache-from: type=registry,ref=${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:buildcache,mode=max
 
       - name: Attest build - GitHub
         uses: actions/attest-build-provenance@v3

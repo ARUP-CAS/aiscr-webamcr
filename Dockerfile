@@ -1,4 +1,4 @@
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1 AS python-builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.2 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ="Europe/Prague"
@@ -43,7 +43,7 @@ WORKDIR /code
 
 RUN python3 -m compileall -b /code
 
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.1 AS runtime
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.2 AS runtime
 
 ARG VERSION_APP
 ARG TAG_APP

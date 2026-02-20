@@ -134,9 +134,14 @@ class ModelWithMetadata(BaseAmcrModel):
     def save_metadata(
         self, fedora_transaction=None, include_files=False, close_transaction=False, skip_container_check=False
     ):
-        from core.repository_connector import FedoraTransaction
+        from core.repository_connector import DryRunFedoraTransaction, FedoraDeletionOnlyTransaction, FedoraTransaction
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
+        if isinstance(fedora_transaction, DryRunFedoraTransaction) or isinstance(
+            fedora_transaction, FedoraDeletionOnlyTransaction
+        ):
+            fedora_transaction.add_updated_ident_cely(self.ident_cely)
+            return
         if not self.ident_cely:
             logger.warning(
                 "xml_generator.models.ModelWithMetadata.save_metadata.no_ident",
@@ -219,9 +224,9 @@ class ModelWithMetadata(BaseAmcrModel):
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
             raise ValueError("No Fedora transaction")
-        from core.repository_connector import FedoraTransaction
+        from core.repository_connector import BaseFedoraTransaction
 
-        if not isinstance(fedora_transaction, FedoraTransaction):
+        if not isinstance(fedora_transaction, BaseFedoraTransaction):
             raise ValueError("fedora_transaction must be a FedoraTransaction class object")
         return fedora_transaction
 

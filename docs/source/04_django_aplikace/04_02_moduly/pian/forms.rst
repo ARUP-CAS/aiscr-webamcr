@@ -14,6 +14,12 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: _instance_geom_wkt()
+
+   .. py:method:: run_loaded_validation()
+
+      Metoda pro validaci geometrií při potvrzení PIANu.
+
    .. py:method:: clean()
 
    .. py:method:: validate_geom()
