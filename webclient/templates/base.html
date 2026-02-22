@@ -16,7 +16,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="{% static 'icons/bootstrap-icons-1.5.0/bootstrap-icons.css' %}">
+  <link rel="stylesheet" href="{% static 'bootstrap-icons/font/bootstrap-icons.css' %}">
   {% compress css %}
   <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="screen">
   {% endcompress %}
@@ -29,16 +29,16 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
   <!-- Optional JavaScript; choose one of the two! -->
   <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
-  <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
-  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'jquery/dist/jquery.min.js' %}"></script>
+  <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
   <!-- Bootstrap select -->
   <link rel="stylesheet"
-        href="{% static 'js/bootstrap-select1.13.18/bootstrap-select.min.css' %}">
-  <script src="{% static 'js/bootstrap-select1.13.18/bootstrap-select.min.js' %}"></script>
+        href="{% static 'bootstrap-select/dist/css/bootstrap-select.min.css' %}">
+  <script src="{% static 'bootstrap-select/dist/js/bootstrap-select.min.js' %}"></script>
   <!-- Bootstrap datepicker -->
   <link rel="stylesheet"
-        href="{% static 'js/bootstrap-datepicker1.10.0/bootstrap-datepicker.min.css' %}"/>
-  <script src="{% static 'js/bootstrap-datepicker1.10.0/bootstrap-datepicker.min.js' %}"></script>
+        href="{% static 'bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css' %}"/>
+  <script src="{% static 'bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
   {% get_current_language as LANGUAGE_CODE %}
   {% if "en" in LANGUAGE_CODE %}
   <script src="{% static 'js/selectpicker-en.js' %}"></script>
@@ -52,15 +52,15 @@
   <script src="{% static 'js/submit_button.js' %}"></script>
   <link rel="shortcut icon" id="dynamic-favicon" href="{%  static 'loga/favicon.png' %}">
   <!-- Map imports -->
-  <link rel="stylesheet" href="{% static 'js/Leaflet1.9.4/leaflet.css' %}"/>
-    <script src="{% static 'js/Leaflet1.9.4/leaflet.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet/dist/leaflet.css' %}"/>
+    <script src="{% static 'leaflet/dist/leaflet.js' %}"></script>
     </script>
-  <script src="{% static 'js/leaflet.markercluster-src.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'css/MarkerCluster.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/MarkerCluster.Default.css' %}" />
+  <script src="{% static 'leaflet.markercluster/dist/leaflet.markercluster-src.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.css' %}" />
+  <link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.Default.css' %}" />
   <!--Leaflet FullScreen-->
-  <script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
-  <link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
+  <script src='{% static 'leaflet-fullscreen/dist/Leaflet.fullscreen.min.js' %}'></script>
+  <link href='{% static 'leaflet-fullscreen/dist/leaflet.fullscreen.css' %}'rel='stylesheet'/>
   <!-- static leaflet additional import-->
   <link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}" />
   <script src="{% static 'js/leaflet.measure.js' %}"></script>

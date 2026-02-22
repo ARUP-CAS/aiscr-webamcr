@@ -23,14 +23,20 @@ RUN echo $TZ > /etc/timezone && \
         postgresql-client \
         curl \
         libmagic1 \
-        redis-tools && \
+        redis-tools \
+        nodejs \
+        npm && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./webclient/requirements.txt /tmp/requirements.txt
+COPY ./package.json /node_modules_build/package.json
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
+
+RUN --mount=type=cache,target=/root/.npm \
+    cd /node_modules_build && npm install
 
 FROM python-builder AS app-builder
 
@@ -91,6 +97,7 @@ RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --brea
     rm -rf /wheels ~/.cache/pip
 
 COPY --from=app-builder /code /code
+COPY --from=python-builder /node_modules_build/node_modules /node_modules
 
 RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale/cs/LC_MESSAGES /vol/web/locale/en/LC_MESSAGES && \
     userdel ubuntu && \

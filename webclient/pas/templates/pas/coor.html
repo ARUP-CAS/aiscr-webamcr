@@ -13,18 +13,18 @@
     const settings_heatmap_options = {% get_settings "heatmap_options" "pas_heatmap_options" %};
   {% endautoescape %}
 </script>
-<link rel="stylesheet" href="{% static 'js/Leaflet1.9.4/leaflet.css' %}"/>
-<script src="{% static 'js/Leaflet1.9.4/leaflet.js' %}"></script>
+<link rel="stylesheet" href="{% static 'leaflet/dist/leaflet.css' %}"/>
+<script src="{% static 'leaflet/dist/leaflet.js' %}"></script>
 </script>
-<script src="{% static 'js/leaflet.markercluster-src.js' %}"></script>
-<link rel="stylesheet" href="{% static 'css/MarkerCluster.css' %}" />
-<link rel="stylesheet" href="{% static 'css/MarkerCluster.Default.css' %}" />
+<script src="{% static 'leaflet.markercluster/dist/leaflet.markercluster-src.js' %}"></script>
+<link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.css' %}" />
+<link rel="stylesheet" href="{% static 'leaflet.markercluster/dist/MarkerCluster.Default.css' %}" />
 <script src="{% static 'js/heatmap/heatmap.js' %}"></script>
 <script src="{% static 'js/heatmap/leaflet-heatmap.js' %}"></script>
 
 <!--Leaflet FullScreen-->
-<script src='{% static 'js/Leaflet.fullscreen1.0.1/Leaflet.fullscreen.min.js' %}'></script>
-<link href='{% static 'js/Leaflet.fullscreen1.0.1/leaflet.fullscreen.css' %}'rel='stylesheet'/>
+<script src='{% static 'leaflet-fullscreen/dist/Leaflet.fullscreen.min.js' %}'></script>
+<link href='{% static 'leaflet-fullscreen/dist/leaflet.fullscreen.css' %}'rel='stylesheet'/>
 <!-- static leaflet additional import-->
 <link rel="stylesheet" href="{% static 'css/leaflet.measure.css' %}"/>
 <script src="{% static 'js/leaflet.measure.js' %}"></script>
@@ -228,9 +228,9 @@
 <script src="{% static 'js/mapa_functions.js' %}"></script>
 <script src="{% static 'js/mapa_basic_functions.js' %}"></script>
 <script src="{% static 'js/coordTransform.js' %}"></script>
-<script src="{% static 'js/leaflet_subgroup.js' %}"></script>
-<script src="{% static 'js/spin/spin.min.js' %}"></script>
-<script src="{% static 'js/leaflet.spin.min.js' %}"></script>
+<script src="{% static 'leaflet.featuregroup.subgroup/dist/leaflet.featuregroup.subgroup.js' %}"></script>
+<script src="{% static 'spin.js/spin.js' %}"></script>
+<script src="{% static 'leaflet-spin/leaflet.spin.min.js' %}"></script>
 <script src="{% static 'js/mapa_pas.js' %}"></script>
     <script>
         $(document).ready(function () {
