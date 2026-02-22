@@ -11,6 +11,13 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 30
     target-branch: test
+
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 30
+    target-branch: test
     
   - package-ecosystem: "docker" # See documentation for possible values
     directories: # Location of package manifests
