@@ -2,19 +2,16 @@ import logging
 
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from core.models import Permissions as p
 from core.models import Soubor, check_permissions
 from core.views import ExportMixinDate
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import CharField, F, Value
-from django.db.models.functions import Concat
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 from django.views.generic import ListView
 from django_tables2 import RequestConfig, SingleTableMixin
+from django_tables2.export.export import TableExport
 from dokument.models import Dokument
 from ez.models import ExterniZdroj
 from historie.models import Historie
@@ -33,11 +30,13 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     Třída se dědí pro jednotlivá historie.
     """
 
+    paginate_by = None
     use_history_table = True
     table_class = HistorieTable
     model = Historie
     template_name = "historie/historie_list.html"
     export_name = "export_historie_"
+    table_pagination = {"per_page": 25}  # defaultní počet záznamů v tabulce historie
 
     context_typ = None  # např. "samostatny_nalez"
     lookup_kwarg = "ident_cely"  # URL parametr obsahující identifikátor
@@ -66,46 +65,11 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         lookup = self.get_lookup_value()
         qs = self.model.objects.filter(**{self.queryset_filter: lookup})
         qs = self.prepare_queryset(qs)
-        return self._annotate_queryset(qs)
+        return qs
 
     def get_header_config(self, context):
         """Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}"""
         return None
-
-    def _annotate_queryset(self, queryset):
-        user = self.request.user
-        if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
-            return queryset.annotate(
-                uzivatel_custom=Concat(
-                    F("uzivatel__last_name"),
-                    Value(", "),
-                    F("uzivatel__first_name"),
-                    Value(" ("),
-                    F("uzivatel__ident_cely"),
-                    Value(", "),
-                    (
-                        F("uzivatel__organizace__nazev_zkraceny_en")
-                        if get_language() == "en"
-                        else F("uzivatel__organizace__nazev_zkraceny")
-                    ),
-                    Value(")"),
-                    output_field=CharField(),
-                )
-            )
-        else:
-            return queryset.annotate(
-                uzivatel_custom=Concat(
-                    F("uzivatel__ident_cely"),
-                    Value(" ("),
-                    (
-                        F("uzivatel__organizace__nazev_zkraceny_en")
-                        if get_language() == "en"
-                        else F("uzivatel__organizace__nazev_zkraceny")
-                    ),
-                    Value(")"),
-                    output_field=CharField(),
-                )
-            )
 
     def add_fedora_history(self, context):
         """
@@ -130,7 +94,8 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         if not fedora_data:
             return
         fedora_table = FedoraHistorieTable(fedora_data, prefix="fed-")
-        RequestConfig(self.request).configure(fedora_table)
+        per_page = int(self.request.GET.get("fed-per_page", 25))  # defaultní počet záznamů v tabulce Fedora historie
+        RequestConfig(self.request, paginate={"per_page": per_page}).configure(fedora_table)
 
         context["fedora_table"] = fedora_table
 
@@ -158,6 +123,18 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
             self.add_fedora_history(context)
         context["header"] = self.get_header_config(context)
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        export_format = self.request.GET.get("_export")
+        export_table = self.request.GET.get("export_table")
+        if export_format and export_table == "fedora":
+            fedora_table = context.get("fedora_table")
+            if fedora_table is None:
+                return super().render_to_response(context, **response_kwargs)
+            # export tabulky Fedora historie
+            exporter = TableExport(export_format, fedora_table)
+            return exporter.response(filename=self.get_export_filename(export_format, "export_fedora_historie_"))
+        return super().render_to_response(context, **response_kwargs)
 
 
 class ProjektHistorieListView(HistorieListView):
@@ -343,8 +320,9 @@ class UzivatelHistorieListView(HistorieListView):
     fedora_model = User
 
     def get_header_config(self, context):
+        next_url = self.request.GET.get("next", reverse("uzivatel:update-uzivatel"))
         return {
-            "url": reverse("uzivatel:update-uzivatel"),
+            "url": next_url,
             "icon": "person",
             "text": _("historie.templates.historieList.uzivatele.cardHeader"),
         }

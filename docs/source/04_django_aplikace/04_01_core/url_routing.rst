@@ -130,14 +130,17 @@ CORE
      - ````
      - ``views.index``
    * - ``post_upload``
-     - ``soubor/nahrat/odeslat``
-     - ``views.post_upload``
+     - ``soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>``
+     - ``views.NewFileUploadView.as_view()``
+   * - ``post_upload_update``
+     - ``soubor/nahrat/odeslat/<str:typ_vazby>/<str:ident_cely>/<int:file_id>``
+     - ``views.UpdateExistingFileUploadView.as_view()``
    * - ``update_file``
      - ``soubor/nahrat/<str:typ_vazby>/nahradit/<str:ident_cely>/<int:file_id>``
      - ``views.UpdateFileView.as_view()``
    * - ``upload_file``
      - ``soubor/nahrat/<str:typ_vazby>/<str:ident_cely>``
-     - ``views.Uploadfileview.as_view()``
+     - ``views.UploadFileView.as_view()``
    * - ``download_file``
      - ``soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
      - ``views.DownloadFile.as_view()``
@@ -204,6 +207,9 @@ CORE
    * - ``data-import-stop``
      - ``data-import-stop/<str:job_id>``
      - ``views.DataImportStop.as_view()``
+   * - ``data-import-start``
+     - ``data-import-start/<str:job_id>``
+     - ``views.DataImportStart.as_view()``
 
 DJ
 --

@@ -12,5 +12,12 @@
     <p>Detaily zjistíte po přihlášení do AMČR-PAS.</p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Hello,</p>
+    Your collaborator has sent new finds for approval in AMCR-PAS today:
+    <ul style="list-style: none">
+        {% for ident in projekt_ident_list %}
+            <li><a href="{% get_site_url %}{% url 'core:redirect_ident' ident %}">{{ ident }}</a></li>
+        {% endfor %}
+    </ul>
+    <p>You can find the details after logging into AMCR-PAS.</p>
 {% endblock %}

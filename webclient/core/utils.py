@@ -12,13 +12,6 @@ import pytz
 from arch_z.models import ArcheologickyZaznam
 from core.constants import EPSG_WGS84, LIMIT_PRVKU_ZOBRAZENI_HEATMAP, ZAPSANI_AZ, ZAPSANI_DOK, ZAPSANI_PROJ, ZAPSANI_SN
 from core.coordTransform import transform_geom_to_sjtsk, transform_geom_to_wgs84
-from core.message_constants import (
-    VALIDATION_EMPTY,
-    VALIDATION_LINE_LENGTH,
-    VALIDATION_NOT_MULTIPART,
-    VALIDATION_NOT_SIMPLE,
-    VALIDATION_NOT_VALID,
-)
 from dj.models import DokumentacniJednotka
 from django.apps import apps
 from django.conf import ENVIRONMENT_VARIABLE, settings
@@ -855,26 +848,6 @@ def get_heatmap_project(left, bottom, right, top, zoom):
         return None
 
 
-def get_validation_messages(text):
-    """
-    Funkce pro získaní textu validační chyby.
-    """
-    if text == "Not valid":
-        return VALIDATION_NOT_VALID
-    elif text == "Geometry is empty":
-        return VALIDATION_EMPTY
-    elif text == "Geometry is not simple":
-        return VALIDATION_NOT_SIMPLE
-    elif text == "Geometry is multipart":
-        return VALIDATION_NOT_MULTIPART
-    elif text == "Min. legth of line excesed":
-        return VALIDATION_LINE_LENGTH
-    elif text == "Parse error":
-        return VALIDATION_NOT_VALID
-    else:
-        return text
-
-
 def get_message(az, message):
     """
     Funkce pro získaní textu správy podle záznamu.
@@ -1101,6 +1074,38 @@ class SessionIdentifier:
     def get_cached_files(self):
         files = cache.get(f"{self.cache_key}_files", set())
         return files
+
+    def set_project_ownership(self, ident_cely, timeout=7200):
+        """
+        Uloží vlastnictví projektu pro anonymního uživatele do Redis.
+        Používá se pro ověření, že anonymní uživatel může nahrávat soubory pouze k projektu, který sám vytvořil.
+
+        Args:
+            ident_cely: identifikátor projektu
+            timeout: timeout v sekundách (defaultně 2 hodiny)
+        """
+        from core.connectors import RedisConnector
+
+        r = RedisConnector.get_connection_decode()
+        key = f"anonymous_project_owner_{self.cache_key}"
+        r.set(key, ident_cely, ex=timeout)
+
+    def verify_project_ownership(self, ident_cely):
+        """
+        Ověří, zda anonymní uživatel vlastní daný projekt.
+
+        Args:
+            ident_cely: identifikátor projektu
+
+        Returns:
+            bool: True pokud uživatel vlastní projekt, jinak False
+        """
+        from core.connectors import RedisConnector
+
+        r = RedisConnector.get_connection_decode()
+        key = f"anonymous_project_owner_{self.cache_key}"
+        stored_ident = r.get(key)
+        return stored_ident == ident_cely
 
 
 def get_set_maintenance_in_cache():

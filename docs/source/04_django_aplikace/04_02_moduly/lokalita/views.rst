@@ -179,11 +179,13 @@ Funkce
 .. py:function:: get_required_fields(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu lokality.
-   
-   Args:
-       zaznam (Lokalita): model Lokalita pro který se dané pole počítají.
-   
-       next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-   
-   Returns:
-       required_fields: list polí.
+
+
+   **Argumenty:**
+
+   - ``zaznam`` (*Lokalita*): model Lokalita pro který se dané pole počítají.
+   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+   **Návratová hodnota:**
+
+   *required_fields*: list polí.

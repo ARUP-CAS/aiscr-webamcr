@@ -10,6 +10,10 @@ Třídy
 
    Class pro definování tabulky pro zobrazení historie.
 
+   **Metody:**
+
+   .. py:method:: render_uzivatel_custom()
+
 
 .. py:class:: SimpleHistoryTable
 
@@ -22,5 +26,9 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: render_uzivatel()
+
    .. py:method:: render_url()
+
+   .. py:method:: value_url()
 

@@ -1,4 +1,5 @@
 import base64
+import io
 import json
 import logging
 import os
@@ -17,7 +18,8 @@ import psycopg2
 import requests
 from cacheops import invalidate_all
 from core.ident_cely import get_record_from_ident
-from core.repository_connector import FedoraError, FedoraTransaction
+from core.models import Soubor
+from core.repository_connector import FedoraError, FedoraRepositoryConnector, FedoraTransaction
 from core.tests.custom_server import WerkzeugServerThread
 from core.tests.runner import USERS
 from django.conf import settings
@@ -28,6 +30,15 @@ from lxml import etree
 from PIL import Image, ImageChops
 from rdflib import XSD, Graph, Literal, URIRef
 from selenium import webdriver
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
+    InvalidSessionIdException,
+    NoSuchElementException,
+    StaleElementReferenceException,
+    WebDriverException,
+)
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 from selenium.webdriver.common.by import By
 from uzivatel.models import User
 from xml_generator.generator import DocumentGenerator
@@ -52,8 +63,9 @@ class LocalResolver(etree.Resolver):
 
 
 class WaitForPageLoad:
-    def __init__(self, browser):
+    def __init__(self, browser, wait_time=20):
         self.browser = browser
+        self.wait_time = wait_time
 
     def __enter__(self):
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
@@ -72,7 +84,7 @@ class WaitForPageLoad:
 
     def wait_for(self, condition_function):
         start_time = time.time()
-        while time.time() < start_time + 20:
+        while time.time() < start_time + self.wait_time:
             if condition_function():
                 return True
             else:
@@ -88,6 +100,23 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     del settings.DATABASES["test_db"]
     databases = {"default", "urgent"}
     xmlschema = None
+    IGNORED_BROWSER_ERRORS = [
+        ("/projekt/stav/uzavrit/", 403),
+        ("/projekt/stav/archivovat/", 403),
+        ("/projekt/stav/navrhnout-ke-zruseni/", 403),
+        ("/pas/stav/odeslat/", 403),
+        ("/pas/stav/archivovat/", 403),
+        ("/arch-z/stav/odeslat/", 403),
+        ("/arch-z/stav/archivovat/", 403),
+        ("/dokument/stav/odeslat/", 403),
+        ("/dokument/stav/archivovat/", 403),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_RESET"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_CLOSED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_HTTP2_PROTOCOL_ERROR"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_FAILED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_SOCKET_NOT_CONNECTED"),
+        ("/arcgis1/rest/services/ZTM/MapServer/tile/", "net::ERR_CONNECTION_ABORTED"),
+    ]
 
     @classmethod
     def setUpClass(cls):
@@ -122,18 +151,28 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         self.wipe_Fedora()
         self.clone_Database()
 
-        options = webdriver.FirefoxOptions()
-        # options = webdriver.ChromeOptions()
+        # options = webdriver.FirefoxOptions()
+        options = webdriver.ChromeOptions()
+        options.set_capability("goog:loggingPrefs", {"browser": "ALL"})
+        options.set_capability("acceptInsecureCerts", True)
+        options.add_argument("--ignore-certificate-errors")
+        options.add_argument("--allow-insecure-localhost")
+        options.add_argument("--window-size=1760,1020")
         if settings.USE_REMOTE_WEB_BROWSER:
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--headless=new")
+            # options.add_argument("--disable-dev-shm-usage")
             self.driver = webdriver.Remote(
                 command_executor=f"http://{settings.SELENIMUM_ADDRESS}:{settings.SELENIUM_PORT}/wd/hub", options=options
             )
         else:
-            self.driver = webdriver.Firefox()
-
-        # self.driver=webdriver.Chrome()
+            # self.driver = webdriver.Firefox()
+            self.driver = webdriver.Chrome(options=options)
         self.driver.implicitly_wait(2)
         self.wait_interval = 2
+        self.driver.set_page_load_timeout(120)
+        self.driver.set_script_timeout(30)
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.end")
 
     def get_container_content(self, container_path):
@@ -435,20 +474,63 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
             self.fail(self._formatMessage(msg, standardMsg))
 
-    def tearDown(self):
-        self.driver.save_screenshot(f"{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png")
-        self.driver.quit()
-        if hasattr(self._outcome, "errors"):
-            # Python 3.4 - 3.10  (These two methods have no side effects)
-            result = self.defaultTestResult()
-            self._feedErrorsToResult(result, self._outcome.errors)
-        else:
-            # Python 3.11+
-            result = self._outcome.result
-        ok = all(test != self for test, text in result.errors + result.failures)
+    def _is_ignored_browser_error(self, entry: dict) -> bool:
+        msg = entry.get("message", "") or ""
+        for path, err in self.IGNORED_BROWSER_ERRORS:
+            if path and path not in msg:
+                continue
+            # HTTP status (403, 401, ...)
+            if isinstance(err, int):
+                # Chrome loguje např.: "... GET https://... 403 (Forbidden)"
+                if f" {err} (" in msg:
+                    return True
+            # network / chrome error (string)
+            elif isinstance(err, str):
+                if err in msg:
+                    return True
 
-        if os.path.isfile(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx"):
-            data = pandas.read_excel(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx")
+        return False
+
+    def _collect_js_errors_at_end(self):
+        """Sbírá javascript chyby"""
+        try:
+            logs = ChromeDriver.get_log(self.driver, "browser")
+            severe = [entry for entry in logs if entry["level"] == "SEVERE"]
+            self._js_errors = [entry for entry in severe if not self._is_ignored_browser_error(entry)]
+        except (InvalidSessionIdException, WebDriverException):
+            self._js_errors = []
+
+    def tearDown(self):
+        self._collect_js_errors_at_end()
+
+        result = self._outcome.result
+
+        def has_issue():
+            return any(t is self and exc for t, exc in (result.errors + result.failures))
+
+        # Pokud test zatím OK a máme JS chyby => přidej FAILURE
+        if not has_issue() and getattr(self, "_js_errors", None):
+            result.addFailure(
+                self,
+                (
+                    AssertionError,
+                    AssertionError(f"JavaScript errors found: {self._js_errors}"),
+                    None,
+                ),
+            )
+
+        ok = not has_issue()
+
+        try:
+            self.driver.save_screenshot(f"{settings.TEST_SCREENSHOT_PATH}{self._testMethodName}.png")
+        except Exception as js_errors:
+            logger.error(
+                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.save_screenshot_error",
+                extra={"error": js_errors},
+            )
+        path = f"{settings.TEST_SCREENSHOT_PATH}results.xlsx"
+        if os.path.isfile(path):
+            data = pandas.read_excel(path)
             d = data.values.tolist()
         else:
             d = []
@@ -468,7 +550,15 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         data = pandas.DataFrame(d)
         data.columns = ["index", "date", "test name", "result"]
         try:
-            data.to_excel(f"{settings.TEST_SCREENSHOT_PATH}results.xlsx", index=False)
+            data.to_excel(path, index=False)
+        except Exception as exc:
+            logger.error(
+                "core.tests.test_selenium.BaseSeleniumTestClass.tearDown.to_excel_error",
+                extra={"error": exc},
+            )
+
+        try:
+            self.driver.quit()
         except Exception:
             pass
         super().tearDown()
@@ -479,65 +569,53 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     def wait(self, interval):
         time.sleep(interval)
 
-    def wait_for(self, condition_function, by, value):
-        start_time = time.time()
-        while time.time() < start_time + 12:
-            if condition_function(by, value):
-                return True
-            else:
-                time.sleep(0.5)
+    def wait_for(self, condition_function, by, value, timeout=12, poll=0.5):
+        end = time.time() + timeout
+        while time.time() < end:
+            try:
+                if condition_function(by, value):
+                    return True
+            except (StaleElementReferenceException, NoSuchElementException):
+                # DOM se překreslil / element na chvíli zmizel -> zkusíme znovu
+                pass
+            time.sleep(poll)
         return False
 
     def findElement(self, by, value):
-        elements = self.driver.find_elements(by, value)
-        if len(elements) > 0:
-            return True
-        return False
+        try:
+            return len(self.driver.find_elements(by, value)) > 0
+        except StaleElementReferenceException:
+            return False
 
     def ElementIsClickable(self, by, value):
-        element = self.driver.find_element(by, value)
-        if element.is_displayed() and element.is_enabled():
-            return True
-        return False
+        try:
+            element = self.driver.find_element(by, value)
+            return element.is_displayed() and element.is_enabled()
+        except (NoSuchElementException, StaleElementReferenceException):
+            return False
 
     def ElementClick(self, by=By.ID, value: Optional[str] = None):
-        res = self.wait_for(self.findElement, by, value)
-        if res is False:
-            logger.warning(
-                "BaseSeleniumTestClass.ElementClick.elementNotFound",
-                extra={
-                    "filed": by,
-                    "value": value,
-                },
-            )
+        if not self.wait_for(self.findElement, by, value):
+            logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "value": value})
             raise Exception("ElementClickError")
-        res = self.wait_for(self.ElementIsClickable, by, value)
-        if res is False:
+
+        if not self.wait_for(self.ElementIsClickable, by, value):
             logger.warning(
-                "BaseSeleniumTestClass.ElementClick.elementNotFound",
-                extra={
-                    "filed": by,
-                    "value": value,
-                },
+                "BaseSeleniumTestClass.ElementClick.elementNotClickable", extra={"filed": by, "value": value}
             )
             raise Exception("ElementIsNotClickableError")
+
         attempts = 0
         while attempts < 10:
             try:
                 self.driver.find_element(by, value).click()
-                break
-            except Exception:
+                return
+            except (StaleElementReferenceException, ElementClickInterceptedException, ElementNotInteractableException):
                 attempts += 1
-                time.sleep(1)
-        if attempts >= 10:
-            logger.warning(
-                "BaseSeleniumTestClass.ElementClick.elementNotFound",
-                extra={
-                    "filed": by,
-                    "value": value,
-                },
-            )
-            raise Exception("ElementClickError")
+                time.sleep(0.5)
+
+        logger.warning("BaseSeleniumTestClass.ElementClick.failedAfterRetries", extra={"filed": by, "value": value})
+        raise Exception("ElementClickError")
 
     def ElementSendKeys(self, by, value, keys):
         res = self.wait_for(self.findElement, by, value)
@@ -576,8 +654,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def clickAtMapCoord(self, lon, lat):
 
-        self.driver.execute_script(
-            f"""
+        self.driver.execute_script(f"""
  window.getToday = function() {{
 return new Date('2025-06-28T12:00:00Z');}};
  const latlng = L.latLng({lat}, {lon});
@@ -595,8 +672,7 @@ return new Date('2025-06-28T12:00:00Z');}};
  containerPoint: containerPoint,
  layerPoint: layerPoint,
  originalEvent: syntheticEvent
-}});"""
-        )
+}});""")
 
     def _username(self, type="archeolog"):
         return USERS[type]["USERNAME"]
@@ -652,7 +728,6 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.driver.find_element(By.ID, "id_password").send_keys(self._password(type))
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.CSS_SELECTOR, ".btn")
-        self.driver.set_window_rect(0, 0, 1360, 1020)
 
     def logout(self):
         self.ElementClick(By.ID, "buttonLogout")
@@ -661,54 +736,117 @@ return new Date('2025-06-28T12:00:00Z');}};
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
-    def addFileToDropzone(self, css_selector, name, content):
+    def upload_file(self, file_path, file_name, mime="image/jpeg"):
         """
-        Trigger a file add with `name` and `content` to Dropzone element at `css_selector`.
+        Metoda nahraje soubor do Dropzone.
         """
-        script = """
-        const b64toBlob = (b64Data, contentType='', sliceSize=512) => {
-        const byteCharacters = atob(b64Data);
-        const byteArrays = [];
-
-        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-            const slice = byteCharacters.slice(offset, offset + sliceSize);
-            const byteNumbers = new Array(slice.length);
-            for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            byteArrays.push(byteArray);
-        }
-        const blob = new Blob(byteArrays, {type: contentType});
-        return blob;
-        }
-        var blob = b64toBlob('%s', 'image/jpeg');
-        var dropzone_instance = Dropzone.forElement('%s')
-        var new_file = new File([blob], '%s', {type: 'image/jpeg'})
-        dropzone_instance.addFile(new_file)
-        """ % (
-            content,
-            css_selector,
-            name,
-        )
-        self.driver.execute_script(script)
-
-    def upload_file(self, file_path, file_name):
-        with open(file_path, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-        self.addFileToDropzone("#my-awesome-dropzone", file_name, encoded_string)
+        with open(file_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("ascii")
         self.driver.set_script_timeout(15)
-        self.driver.execute_async_script(
+        result = self.driver.execute_async_script(
             """
-            var done = arguments[0];
-            newDropzone.on("success", function(){ done('foo');});
-            """
+            const callback = arguments[arguments.length - 1];
+            const selector = arguments[0];
+            const name = arguments[1];
+            const b64 = arguments[2];
+            const mime = arguments[3];
+
+            const safeCallback = (() => {
+            let finished = false;
+            return (payload) => {
+                if (finished) return;
+                finished = true;
+                try { callback(payload); } catch (e) { /* swallow */ }
+            };
+            })();
+            const fail = (msg, extra) => safeCallback({status:"error", message: msg, ...extra});
+            if (!window.newDropzone) {
+            fail("window.newDropzone is not defined");
+            return;
+            }
+            const dz = window.newDropzone;
+            // helper
+            const b64toBlob = (b64Data, contentType="", sliceSize=512) => {
+            const byteCharacters = atob(b64Data);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+                byteArrays.push(new Uint8Array(byteNumbers));
+            }
+            return new Blob(byteArrays, { type: contentType });
+            };
+            // Clean up handlers when done
+            const cleanup = () => {
+            dz.off("success", onSuccess);
+            dz.off("error", onError);
+            dz.off("queuecomplete", onQueueComplete);
+            if (timeoutId) clearTimeout(timeoutId);
+            };
+            // Prefer queuecomplete (nejstabilnější), fallback na success
+            let lastSuccessFile = null;
+            const onSuccess = (file) => { lastSuccessFile = file; };
+            const onQueueComplete = () => {
+            cleanup();
+            safeCallback({status:"success", name: lastSuccessFile && lastSuccessFile.name});
+            };
+            const onError = (file, msg, xhr) => {
+            cleanup();
+            let message = "";
+            try {
+                message = (typeof msg === "string") ? msg : JSON.stringify(msg);
+            } catch (e) {
+                message = String(msg);
+            }
+            safeCallback({
+                status:"error",
+                message,
+                name: file && file.name,
+                http: xhr && xhr.status
+            });
+            };
+            dz.on("success", onSuccess);
+            dz.on("queuecomplete", onQueueComplete);
+            dz.on("error", onError);
+            const timeoutId = setTimeout(() => {
+            cleanup();
+            fail("Dropzone did not finish within internal timeout");
+            }, 12000);
+
+            // Add file
+            try {
+            const blob = b64toBlob(b64, mime);
+            const file = new File([blob], name, { type: mime });
+            // pokud Dropzone není navázaný na selector, tak aspoň ověř element existuje
+            const el = document.querySelector(selector);
+            if (!el) {
+                cleanup();
+                fail("Dropzone element not found for selector", {selector});
+                return;
+            }
+            dz.addFile(file);
+            // pokud máte autoProcessQueue:false, je potřeba tohle:
+            if (dz.options && dz.options.autoProcessQueue === false) {
+                dz.processQueue();
+            }
+            } catch (e) {
+            cleanup();
+            fail("Exception while adding file", {exception: String(e)});
+            }
+            """,
+            "#my-awesome-dropzone",
+            file_name,
+            b64,
+            mime,
         )
+
+        if result.get("status") != "success":
+            raise AssertionError(f"Upload failed: {result}")
 
     def createFedoraRecord(self, ident_cely, user_name="archeolog"):
         try:
             record = get_record_from_ident(ident_cely)
-            self._username(user_name)
             user = User.objects.get(email=self._username(user_name))
         except Http404 as err:
             record = None
@@ -726,6 +864,29 @@ return new Date('2025-06-28T12:00:00Z');}};
                     "BaseSeleniumTestClass.fedora_error.not_found",
                     extra={"ident_cely": ident_cely, "error": err},
                 )
+
+    def uploadFileToFedora(self, record, filename, user_name="archeolog"):
+        """Nahraje do Fedory testovací soubor"""
+        user = User.objects.get(email=self._username(user_name))
+        record = Soubor.objects.get(pk=record)
+        related_record: ModelWithMetadata = record.vazba.navazany_objekt
+        fedora_transaction = FedoraTransaction(transaction_user=user)
+        record.active_transaction = fedora_transaction
+        conn = FedoraRepositoryConnector(related_record, fedora_transaction)
+        soubor_data = io.BytesIO()
+        with open(filename, "rb") as file:
+            content = file.read()
+            soubor_data.write(content)
+
+        soubor_data.seek(0)
+        mimetype = Soubor.get_mime_types(soubor_data)
+        soubor_data.seek(0)
+        rep_bin_file = conn.save_binary_file(record.nazev, mimetype, soubor_data, True)
+        record.path = rep_bin_file.url_without_domain
+        record.size_mb = rep_bin_file.size_mb
+        record.sha_512 = rep_bin_file.sha_512
+        record.save()
+        fedora_transaction.mark_transaction_as_closed()
 
     def odstran_elementy(self, root, ignorovane_tagy):
         """Rekurzivně odstraní ignorované tagy z XML stromu."""
@@ -1134,8 +1295,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.driver.set_script_timeout(6)
         try:
             self.driver.find_element(By.CSS_SELECTOR, ".loading-results")
-            self.driver.execute_async_script(
-                """
+            self.driver.execute_async_script("""
 var done = arguments[0];
 var $ = window.jQuery || (typeof django !== 'undefined' && django.jQuery);
 if (!$) {
@@ -1145,15 +1305,29 @@ if (!$) {
 $(document).one('ajaxSuccess', function(event, xhr, settings) {
 done("ok");
 });
-"""
-            )
+""")
         except Exception:
             pass
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
     def test_001_core_001(self):
-        # Scenar_1 Přihlášení do AMČR (pozitivní scénář 1)
+        """Test 001 Přihlášení do AMČR
+
+        Testuje přihlášení uživatele.
+
+        Role:
+            Archeolog
+
+        TestData:
+            uživatelské jméno a heslo
+
+        Steps:
+            1. Vyplnění formuláře na titulní stránce
+
+        Expected:
+            1. Uživatel je přesměrován na stránku s titulkem AMČR Homepage
+        """
         logger.info("CoreSeleniumTest.test_core_001.start")
         self.login()
         self.assertEqual(self.driver.title, "AMČR Homepage")

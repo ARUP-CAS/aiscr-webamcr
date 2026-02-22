@@ -421,7 +421,8 @@
                 Stavebni: '{% trans "leaflet_search.Stavebni" %}',
                 Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
                 SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
-                SearchTextError: '{% trans "leaflet_search.SearchTextError" %}'
+                SearchTextError: '{% trans "leaflet_search.SearchTextError" %}',
+                ButtonTitle: '{% trans "leaflet_search.ButtonTitle" %}'
             };
             </script>
             <script src="{% static 'js/mapa_pins.js' %}"></script>
@@ -857,22 +858,22 @@
       }
     });
     </script>
-    <script type="text/javascript">
-      // projekt pass load
-      $(document).ready(function() {
-        if ("{{show.samostatne_nalezy}}" != "False" && {{samostatne_nalezy.count}} > 0) {
-          $.ajax({
-            type: "GET",
-            url: '{% url "pas:get_projekt_pas_table" projekt.ident_cely %}', 
-            data: {},
-            success : function(data) {
-              $('.app-card-samostatny_nalez .loader').css("display", "none");
-              $('.app-card-samostatny_nalez table thead').css("display", "table-header-group");
-              $('.app-card-samostatny_nalez table tbody').append(data);
-             }
-    });
+    {% if show.samostatne_nalezy and samostatne_nalezy and samostatne_nalezy.count > 0 %}
+      <script type="text/javascript">
+        // projekt pass load
+        $(document).ready(function() {
+            $.ajax({
+              type: "GET",
+              url: '{% url "pas:get_projekt_pas_table" projekt.ident_cely %}', 
+              data: {},
+              success : function(data) {
+                $('.app-card-samostatny_nalez .loader').css("display", "none");
+                $('.app-card-samostatny_nalez table thead').css("display", "table-header-group");
+                $('.app-card-samostatny_nalez table tbody').append(data);
+              }
+      });          
         }
-      }
-      )
-    </script>
+        )
+      </script>
+    {% endif %}
 {% endblock %}

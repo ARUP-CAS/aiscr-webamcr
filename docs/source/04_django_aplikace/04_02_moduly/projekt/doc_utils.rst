@@ -16,7 +16,29 @@ Třídy
 
    .. py:method:: format_date()
 
+   .. py:method:: _create_style_dict()
+
+   .. py:method:: _create_header_oznamovatel()
+
+   .. py:method:: _create_header_oznamovatel_doc()
+
+   .. py:method:: _create_header_tab_dates()
+
+   .. py:method:: _create_header_tab_dates_doc()
+
+   .. py:method:: _create_data_document_part()
+
+   .. py:method:: _create_signature()
+
+   .. py:method:: _create_signature_doc()
+
+   .. py:method:: _initiate_document()
+
+   .. py:method:: _generate_repository_file()
+
    .. py:method:: body_style()
+
+   .. py:method:: _generate_text()
 
    .. py:method:: build_document()
 
@@ -27,6 +49,8 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: _generate_text()
+
    .. py:method:: build_document()
 
 
@@ -35,6 +59,8 @@ Třídy
    Popis není k dispozici.
 
    **Metody:**
+
+   .. py:method:: _generate_text()
 
    .. py:method:: build_document()
 

@@ -27,11 +27,14 @@ class Command(BaseCommand):
     Poznámka:
         - Musí být zadán buď --pks nebo --range, ne oba současně
 
-    Příklady použití::
+    Příklady použití:
 
-        python manage.py save_files_from_storage /tmp/files --pks 1 2 3
-        python manage.py save_files_from_storage /tmp/files --range 100 200
-        python manage.py save_files_from_storage /tmp/files --pks 10 20 --save-thumbs
+        Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
+        proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
+
+            python manage.py save_files_from_storage /vol/data-migrace/files --pks 1 2 3
+            python manage.py save_files_from_storage /vol/data-migrace/files --range 100 200
+            python manage.py save_files_from_storage /vol/data-migrace/files --pks 10 20 --save-thumbs
     """
 
     help = _("core.management.commands.save_files_from_storage.Command.help")
@@ -75,11 +78,9 @@ class Command(BaseCommand):
 
         # Validate that either pks or range is provided, but not both
         if pks and pk_range:
-            raise CommandError(_("core.management.commands.save_files_from_storage.Command.handle.pks_and_range_error"))
+            raise CommandError(_("core.management.commands.save_files_from_storage.pks_and_range_error"))
         if not pks and not pk_range:
-            raise CommandError(
-                _("core.management.commands.save_files_from_storage.Command.handle.missing_params_error")
-            )
+            raise CommandError(_("core.management.commands.save_files_from_storage.missing_params_error"))
 
         # Prepare records list
         if pks:
@@ -101,16 +102,14 @@ class Command(BaseCommand):
         queryset = Soubor.objects.filter(pk__in=records).order_by("pk")
         total = queryset.count()
 
-        self.stdout.write(
-            _("core.management.commands.save_files_from_storage.Command.handle.processing_total") + " " + str(total)
-        )
+        self.stdout.write(_("core.management.commands.save_files_from_storage.processing_total") + " " + str(total))
 
         for index, item in enumerate(queryset, 1):
             try:
                 save_single_file_from_storage_impl(item, storage_path, save_thumbs, disable_antivirus)
                 if index % 10 == 0 or index == total:
                     self.stdout.write(
-                        _("core.management.commands.save_files_from_storage.Command.handle.processed")
+                        _("core.management.commands.save_files_from_storage.processed")
                         + " "
                         + str(index)
                         + "/"
@@ -123,7 +122,7 @@ class Command(BaseCommand):
                 )
                 self.stdout.write(
                     self.style.ERROR(
-                        _("core.management.commands.save_files_from_storage.Command.handle.error_prefix")
+                        _("core.management.commands.save_files_from_storage.error_prefix")
                         + " "
                         + str(item.pk)
                         + ": "
@@ -136,7 +135,5 @@ class Command(BaseCommand):
             extra={"count": total, "storage_path": storage_path},
         )
         self.stdout.write(
-            self.style.SUCCESS(
-                _("core.management.commands.save_files_from_storage.Command.handle.finished") + " " + str(total)
-            )
+            self.style.SUCCESS(_("core.management.commands.save_files_from_storage.finished") + " " + str(total))
         )

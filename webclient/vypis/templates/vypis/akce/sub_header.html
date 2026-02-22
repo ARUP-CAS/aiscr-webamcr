@@ -1,6 +1,6 @@
 
 {% load i18n %}
 <strong>{{sub_header.specifikace_data.label}}:</strong>&nbsp;{{sub_header.specifikace_data.value}}&nbsp;{{sub_header.datum_zahajeni.value}}&nbsp;-&nbsp;{{sub_header.datum_ukonceni.value}}&nbsp;|&nbsp;
-<strong>{{sub_header.je_nz.label}}:</strong>&nbsp;{% if sub_header.je_nz.value %}{% trans "vypis.akce.sub_header.je_nz.Ano" %}{% else %}{% trans "vypis.akce.sub_header.je_nz.Nie" %}{% endif %}&nbsp;|&nbsp;
-<strong>{{sub_header.odlozena_nz.label}}:</strong>&nbsp;{% if sub_header.odlozena_nz.value %}{% trans "vypis.akce.sub_header.odlozena_nz.Ano" %}{% else %}{% trans "vypis.akce.sub_header.odlozena_nz.Nie" %}{% endif %}&nbsp;|&nbsp;
+<strong>{{sub_header.je_nz.label}}:</strong>&nbsp;{% if sub_header.je_nz.value and sub_header.je_nz.value != 'False' %}{% trans "vypis.akce.sub_header.je_nz.Ano" %}{% else %}{% trans "vypis.akce.sub_header.je_nz.Nie" %}{% endif %}&nbsp;|&nbsp;
+<strong>{{sub_header.odlozena_nz.label}}:</strong>&nbsp;{% if sub_header.odlozena_nz.value and sub_header.odlozena_nz.value != 'False'%}{% trans "vypis.akce.sub_header.odlozena_nz.Ano" %}{% else %}{% trans "vypis.akce.sub_header.odlozena_nz.Nie" %}{% endif %}&nbsp;|&nbsp;
 <strong>{{sub_header.pristupnost.label}}:</strong>&nbsp;{{sub_header.pristupnost.value}}

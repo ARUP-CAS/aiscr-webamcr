@@ -18,6 +18,8 @@ Třídy
 
    .. py:method:: nadrazena_hesla()
 
+   .. py:method:: __str__()
+
    .. py:method:: save()
 
 
@@ -54,6 +56,8 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: __str__()
+
 
 .. py:class:: HeslarOdkaz
 
@@ -72,6 +76,8 @@ Třídy
 
    .. py:method:: pian_ident_cely()
 
+   .. py:method:: __str__()
+
    .. py:method:: ident_cely()
 
    .. py:method:: save()
@@ -83,6 +89,8 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: __str__()
+
    .. py:method:: ident_cely()
 
    .. py:method:: save()
@@ -93,6 +101,8 @@ Třídy
    Class pro db model ruian okres.
 
    **Metody:**
+
+   .. py:method:: __str__()
 
    .. py:method:: ident_cely()
 

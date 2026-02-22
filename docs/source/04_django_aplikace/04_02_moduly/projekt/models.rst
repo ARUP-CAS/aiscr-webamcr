@@ -22,6 +22,8 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: __str__()
+
    .. py:method:: send_ep01()
 
    .. py:method:: set_vytvoreny()
@@ -82,34 +84,34 @@ Třídy
    .. py:method:: check_pred_archivaci()
 
       Metoda na kontrolu prerekvizit pred posunem do stavu archivovaný:
-      
-          kontrola jako před uzavřením a navíc
-      
-          Připojení akce musejí být ve stavu archivovaná.
+
+      kontrola jako před uzavřením a navíc
+
+      Připojení akce musejí být ve stavu archivovaná.
 
    .. py:method:: check_pred_navrzeni_k_zruseni()
 
       Metoda na kontrolu prerekvizit pred posunem do stavu navržen ke zrušení:
-      
-          Projekt nesmí mít pripojené akce.
+
+      Projekt nesmí mít pripojené akce.
 
    .. py:method:: check_pred_smazanim()
 
       Metoda na kontrolu prerekvizit pred smazaním projektu:
-      
-          Projekt nesmí mít žádnou akci, soubor ani samostatný nález.
+
+      Projekt nesmí mít žádnou akci, soubor ani samostatný nález.
 
    .. py:method:: check_pred_uzavrenim()
 
       Metoda na kontrolu prerekvizit pred posunem do stavu uzavřený:
-      
-          Projekt musí mít alespoň jednou akci která projde svou kontrolou před odesláním.
+
+      Projekt musí mít alespoň jednou akci která projde svou kontrolou před odesláním.
 
    .. py:method:: check_pred_zahajenim_v_terenu()
 
       Metoda na kontrolu prerekvizit pred posunem do stavu zahájen v terénu:
-      
-          Projektu musí mít lokalizaci
+
+      Projektu musí mít lokalizaci
 
    .. py:method:: parse_ident_cely()
 
@@ -122,6 +124,8 @@ Třídy
    .. py:method:: set_permanent_ident_cely()
 
       Metoda na nastavení permanentního identu akce z projektu sekvence.
+
+   .. py:method:: _save_document()
 
    .. py:method:: create_cancel_confirmation_document()
 
@@ -163,4 +167,6 @@ Třídy
    Class pro db model dalších katastru proketu.
 
    **Metody:**
+
+   .. py:method:: __str__()
 

@@ -46,15 +46,11 @@ class Command(BaseCommand):
                 "core.management.commands.import_permissions.WrongCSVError",
                 extra={"error": err},
             )
-            self.stdout.write(
-                self.style.WARNING(_("core.management.commands.import_permissions.Command.handle.finished_error"))
-            )
+            self.stdout.write(self.style.WARNING(_("core.management.commands.import_permissions.finished_error")))
         else:
             logger.info(
                 "core.management.commands.import_permissions.results",
                 extra={"data": sheet.to_string(), "missing": str(missing)},
             )
-            self.stdout.write(
-                self.style.SUCCESS(_("core.management.commands.import_permissions.Command.handle.finished_success"))
-            )
+            self.stdout.write(self.style.SUCCESS(_("core.management.commands.import_permissions.finished_success")))
         logger.debug("core.management.commands.import_permissions.end")

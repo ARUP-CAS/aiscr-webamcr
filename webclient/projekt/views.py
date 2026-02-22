@@ -921,8 +921,11 @@ def uzavrit(request, ident_cely):
                         "projekt.views.uzavrit.set_d2",
                         extra={"ident_cely": ident_cely, "transaction": fedora_transaction.uid},
                     )
-                    dokument_cast.dokument.active_transaction = fedora_transaction
-                    dokument_cast.dokument.set_odeslany(request.user)
+                    dokument: Dokument = dokument_cast.dokument
+                    old_ident = dokument.ident_cely
+                    dokument.active_transaction = fedora_transaction
+                    Dokument.set_permanent_identificator(dokument, request, messages, fedora_transaction)
+                    dokument.set_odeslany(request.user, old_ident)
         projekt.set_uzavreny(request.user)
         projekt.close_active_transaction_when_finished = True
         projekt.save()

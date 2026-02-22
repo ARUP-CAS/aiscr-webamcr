@@ -16,6 +16,7 @@ from core.constants import (
 from core.models import Soubor
 from core.tests.test_selenium import BaseSeleniumTestClass, WaitForPageLoad
 from django.conf import settings
+from django.core import mail
 from django.utils.translation import gettext as _
 from freezegun import freeze_time
 from oznameni.tests.test_selenium import OznameniSeleniumTest
@@ -54,12 +55,37 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.assertIn(column_header_text, columns)
 
     def test_002_projekt_001(self):
-        # Scenar_2 Otevření tabulky projekty
-        # test 2.1
+        """Test 002 Otevření tabulky projekty
+
+        Testuje tabulku s projekty. Ověřuje, zda funguje řazení podle
+        jednotlivých sloupců a zobrazení/skrývání sloupců.
+
+        Využívá metodu ``_check_column_hiding``.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+
+        TestData:
+            *Žádná*
+
+        Steps:
+            1. Uživatel klikne na menu Projekty -> Vybrat projekty
+            2. Uživatel kliká na záhlaví jednotlivých sloupců
+            3. Uživatel skryje a znovu zobrazí jednotlivé sloupce pomocí výsuvného
+               menu
+
+        Expected:
+            1. Po kliknutí na název sloupce je do adresy stránky přidán řetězec
+               ``sort=sloupec``
+            2. Po skrytí sloupce zmizí název sloupce ze záhlaví
+            3. Po zobrazení sloupce je sloupec v záhlaví tabulky
+        """
         self.login()
         # Go to projects
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
         # Test sorting by all table columns
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, _("projekt.models.projekt.stav.label"))
@@ -129,7 +155,31 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.driver.refresh()
 
     def test_145_test_Fedora_projekt_001(self):
-        # Scenar_145 Test Fedory pro projekty
+        """Test 145 Test Fedory pro projekty (pozitivní scénář 1)
+
+        Test zapsání dat do Fedory v projektech
+
+        Role:
+            Archivář
+
+        TestData:
+            Projekt C-201121404, X-M-202393246, C-202111043
+
+        Steps:
+            - Vytvoření - projekt zachrany
+            - Update - projekt
+            - Update oznamovatel
+            - Smazat soubor v projektu
+            - Vytvoření soubor
+            - Vytvoření projektová akce
+            - Změna přístupnosti Akce
+            - Smazání projektové Akce
+            - Smazání projektu
+            - Znovu vytvoření projektové Akce
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.start")
         self.login("archivar")
         # C projekt zachrany
@@ -153,7 +203,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_adresa", "test")
         self.ElementSendKeys(By.ID, "id_telefon", "xxx")
         self.ElementSendKeys(By.ID, "id_email", "test@example.com")
-        # self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with freeze_time("2025-07-26 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "actionSubmitBtn")
@@ -176,14 +226,6 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-id-save")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/update_oznamovatel")
 
-        # D soubor
-        time = self.getTime()
-        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
-        self.ElementClick(By.ID, f"file-smazat-{file}")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
-        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
-
         # C soubor
         time = self.getTime()
         self.ElementClick(By.ID, "add_dokumentace")
@@ -191,6 +233,14 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "buttonUploadSubmit")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/create_soubor")
+
+        # D soubor
+        time = self.getTime()
+        file = Soubor.objects.filter(vazba__projekt_souboru__ident_cely=ident).first().pk
+        self.ElementClick(By.ID, f"file-smazat-{file}")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.check_fedora_change(time, "projekt/tests/resources/test_145/delete_soubor")
 
         # C projektova akce
         self.createFedoraRecord("C-201121404", "archivar")
@@ -231,6 +281,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # reC projektova akce
         self.createFedoraRecord("C-202111043", "archivar")
         self.createFedoraRecord("C-202111043A", "archivar")
+        self.uploadFileToFedora(364200, "projekt/tests/resources/test.pdf", "archivar")
         self.goToAddress("/id/C-202111043A")
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "akce-smazat")
@@ -247,7 +298,34 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektSeleniumTest.test_145_test_Fedora_projekt_001.end")
 
     def test_146_test_Fedora_projekt_002(self):
-        # Scenar_146 Test Fedory pro projekty
+        """Test 146 Test Fedory pro projekty (pozitivní scénář 2)
+
+        test zapsání dat do Fedory v projektech
+
+        Role:
+            Archivář, Administrator
+
+        TestData:
+            Projekt  C-202209999, C-202210662, M-202302810, C-202114070
+            Dokument M-TX-194300151
+
+        Steps:
+            - Vytvoření oznámení
+            - Smazání dokumentu u projektu
+            - Schválení projektu - změna ident-cely projektu
+            - Vytvoření průzkumného projektu
+            - Vytvoření části dokumentu projektu
+            - Vytvoření PAS
+            - Změna přístupnosti PAS
+            - Smazání části dokumentu
+            - Smazání PAS
+            - Smazání projektu
+            - Znovu vytvoření PAS
+            - Vytvoření části dokumentu - existující dokument
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("ProjektSeleniumTest.test_146_test_Fedora_projekt_002.start")
 
         # C oznameni
@@ -270,6 +348,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.goToAddress(f"/id/{ident}")
         time = self.getTime()
         self.ElementClick(By.ID, "projekt-schvalit")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_send_mail label")
         with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
             with WaitForPageLoad(self.driver):
                 self.ElementClick(By.ID, "submit-btn")
@@ -291,8 +370,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.ElementSendKeys(By.ID, "id_parcelni_cislo", "test")
         self.ElementSendKeys(By.ID, "id_planovane_zahajeni", "11.6.2025 - 12.6.2025")
         self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys(Keys.ESCAPE)
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "actionSubmitBtn")
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt_pruzkum")
         ident = self.driver.current_url.split("/")[-1]
 
@@ -370,6 +450,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.login("administrator")
         self.createFedoraRecord("C-202210662")
         self.createFedoraRecord("C-200810918A-DT-15")
+        self.uploadFileToFedora(411126, "dokument/tests/resources/test.tif")
         self.goToAddress("/id/C-202210662")
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
@@ -383,6 +464,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.login("archivar")
         self.createFedoraRecord("M-202302810", "archivar")
         self.createFedoraRecord("M-202302810-N00001", "archivar")
+        self.uploadFileToFedora(584786, "projekt/tests/resources/test.pdf", "archivar")
         self.goToAddress("/id/M-202302810-N00001")
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "pas-smazat")
@@ -399,6 +481,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         # C dokument_cast existujici
         self.createFedoraRecord("C-202114070", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
+        self.uploadFileToFedora(534769, "projekt/tests/resources/test.pdf", "archivar")
         time = self.getTime()
         self.goToAddress("/id/C-202114070")
         self.ElementClick(By.ID, "others_doc")
@@ -454,72 +537,148 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         return [project_count_old, project_count_new]
 
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zapsat"))
+        self.goToAddress("/projekt/zapsat")
 
     def test_003_projekt_zapsat_p_001(self):
-        # Scenar_3 Zapsání projektu (pozitivní scénář 1)
-        # test 2.2
+        """Test 003 Zapsání projektu (pozitivní scénář 1)
+
+        Test zapsání projektu na stránce ``/projekt/zapsat``. Test simuluje
+        zadání validních data měl by končit zapsáním projektu do databáze.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Jsou vložena kompletní data o katastrech, okresech a krajích.
+
+        TestData:
+            +-----------------------+---------------------------------------------+
+            | Field                 | Value                                       |
+            +=======================+=============================================+
+            | typ_projektu          | záchranný                                   |
+            +-----------------------+---------------------------------------------+
+            | id_podnet             | test                                        |
+            +-----------------------+---------------------------------------------+
+            | id_lokalizace         | test                                        |
+            +-----------------------+---------------------------------------------+
+            | id_parcelni_cislo     | test                                        |
+            +-----------------------+---------------------------------------------+
+            | id_planovane_zahajeni | dynamicky vložené datum (dnes + dva dny až  |
+            |                       | dnes + pět dní)                             |
+            +-----------------------+---------------------------------------------+
+            | id_oznamovatel        | test                                        |
+            +-----------------------+---------------------------------------------+
+            | id_odpovedna_osoba    | test                                        |
+            +-----------------------+---------------------------------------------+
+            | id_adresa             | test                                        |
+            +-----------------------+---------------------------------------------+
+            | id_telefon            | +420123456789                               |
+            +-----------------------+---------------------------------------------+
+            | id_email              | test@example.com                            |
+            +-----------------------+---------------------------------------------+
+
+        Steps:
+            1. Uživatel klikne na menu Projekty -> Zapsat
+            2. Uživatel vyplní data do formuláře a kliknutím na mapu vybere hlavní
+               katastr
+            3. Uživatel klikne na tlačítko Uložit
+
+        Expected:
+            -  Pole ``id_oznamovatel`` je povoleno.
+            -  Pole ``id_odpovedna_osoba`` je povoleno.
+            -  Pole ``id_adresa`` je povoleno.
+            -  Pole ``id_telefon`` je povoleno.
+            -  Pole ``id_email`` je povoleno.
+            -  Po kliknutí na tlačítko Uložit je v databázi o 1 projekt více
+        """
         logger.info("CoreSeleniumTest.test_003_projekt_zapsat_p_001.start")
         [project_count_old, project_count_new] = self.ProjektZapsat()
         self.assertEqual(project_count_old + 1, project_count_new)
         logger.info("CoreSeleniumTest.test_003_projekt_zapsat_p_001.end")
 
-    @unittest.skip  # teststuje se pravidlo, které v programu není
-    def test_004_projekt_zapsat_n_001(self):
-        # Scenar_4 Zapsání projektu (negativní scénář 1)
-        # test 2.3
-        logger.info("CoreSeleniumTest.test_004_projekt_zapsat_n_001.start")
-        [project_count_old, project_count_new] = self.ProjektZapsat(
-            date_from=-9, date_to=-5, css_selector=".nav-link > span:nth-child(2)"
-        )
-        self.assertEqual(project_count_old, project_count_new)
-        logger.info("CoreSeleniumTest.test_004_projekt_zapsat_n_001.end")
-
-    @unittest.skip  # teststuje zrušené pravidlo
-    def test_005_projekt_zapsat_n_002(self):
-        # Scenar_5 Zapsání projektu (negativní scénář 2)
-        # test 2.4
-        logger.info("CoreSeleniumTest.test_005_projekt_zapsat_n_002.start")
-        [project_count_old, project_count_new] = self.ProjektZapsat(
-            telefon="xxx", css_selector=".nav-link > span:nth-child(2)"
-        )
-        self.assertEqual(project_count_old, project_count_new)
-        logger.info("CoreSeleniumTest.test_005_projekt_zapsat_n_002.end")
-
     def test_006_schvaleni_projektu_p_001(self):
-        # Scenar_6 Schválení projektu
+        """Test 006 Schválení projektu (pozitivní scénář 1)
 
+        Test schválení projektu
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            -  Archivář je přihlášen.
+            - Projekt ve stavu Px0
+
+        TestData:
+            Očekávané výsledky
+            ^^^^^^^^^^^^^^^^^^
+
+            -  Změní se označení projektu.
+
+        Steps:
+            Archivář schválí projekt.
+
+        Expected:
+            -  Změní se označení projektu.
+        """
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.start")
 
-        pian = OznameniSeleniumTest.oznameni_projektu(self)
+        ident_cely = OznameniSeleniumTest.oznameni_projektu(self)
+        # validate email
+        self.assertEqual(len(mail.outbox), 1)
         self.login("archivar")
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, "Schválit oznámení")
-        self.ElementClick(By.ID, "buttonFiltr")
-        self.ElementClick(By.ID, "id_ident_cely")
-        self.driver.find_element(By.ID, "id_ident_cely").send_keys(pian)
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, pian)
+        self.goToAddress(f"/id/{ident_cely}")
         self.ElementClick(By.ID, "projekt-schvalit")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
-        pian_new = self.driver.find_element(By.ID, "id-app-entity-item").text
-        self.assertNotEqual(pian, pian_new)
+        # validate email
+        self.assertEqual(len(mail.outbox), 2)
+        ident_cely_new = self.driver.current_url.split("/")[-1]
+        self.assertNotEqual(ident_cely, ident_cely_new)
+        oznameni = Soubor.objects.filter(
+            vazba__projekt_souboru__ident_cely=ident_cely_new, nazev__startswith="oznameni", nazev__endswith=".pdf"
+        )
+        self.assertEqual(oznameni.count(), 1)
+        self.assertGreater(oznameni.first().size_mb, 0.1)
         logger.info("CoreSeleniumTest.test_006_schvaleni_projektu_p_001.end")
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.zahajitVyzkum"))
+        self.goToAddress("/projekt/vyber?stav=2&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_007_projekt_zahajit_vyzkum_p_001(self):
-        # Scenar_7 Zahájení výzkumu (pozitivní scénář 1)
-        # test 2.6
+        """Test 007 Zahájení výzkumu (pozitivní scénář 1)
+
+        Test zahájení výzkumu u projektu ve stavu P2 s pozitivním výsledkem. Měl by končit posunem projektu do stavu P3
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A2.
+
+        TestData:
+            ================= =====================================
+            Field ID          Value
+            ================= =====================================
+            id_datum_zahajeni (date calculated: -5 days from today)
+            ================= =====================================
+
+        Steps:
+            Uživatel otevře projekt ve stavu A2.
+
+        Expected:
+            -  Projekt přesunut do stavu A3
+            -  Datum zahájení projektu odpovídá testovacím datům.
+        """
         logger.info("ProjektZahajitVyzkumSeleniumTest.test_007_projekt_zahajit_vyzkum_p_001.start")
         self.login()
+        self.createFedoraRecord("C-202211750")
+        self.uploadFileToFedora(459668, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(459775, "projekt/tests/resources/test.pdf")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".odd:nth-child(2) a")
@@ -544,14 +703,39 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.ukoncitTeren"))
+        self.goToAddress("/projekt/vyber?stav=3&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_008_projekt_ukoncit_vyzkum_p_001(self):
-        # Scenar_8 Ukončení výzkumu (pozitivní scénář 1)
-        # test 2.7
+        """Test 008 Ukončení výzkumu (pozitivní scénář 1)
+
+        Test ukončení výzkumu u projektu ve stavu P3 s pozitivním výsledkem. Měl by končit posunem projektu do stavu P4.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A3.
+
+        TestData:
+            ================= =====================================
+            Field ID          Value
+            ================= =====================================
+            id_datum_ukonceni (date calculated: -1 days from today)
+            ================= =====================================
+
+        Steps:
+            Uživatel otevře projekt ve stavu A3.
+
+        Expected:
+            -  Projekt přesunut do stavu A4.
+            -  Datum zahájení projektu odpovídá testovacím datům.
+        """
         logger.info("ProjektUkoncitVyzkumSeleniumTest.test_008_projekt_ukoncit_vyzkum_p_001.start")
         self.login()
+        self.createFedoraRecord("C-202006194")
+        self.uploadFileToFedora(260183, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(260151, "projekt/tests/resources/test.pdf")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(7) a")
@@ -568,10 +752,36 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektUkoncitVyzkumSeleniumTest.test_008_projekt_ukoncit_vyzkum_p_001.end")
 
     def test_009_projekt_ukoncit_vyzkum_n_001(self):
-        # Scenar_9 Ukončení výzkumu (negativní scénář 1)
-        # test 2.8
+        """Test 009 Ukončení výzkumu (negativní scénář 1)
+
+        Test ukončení výzkumu u projektu ve stavu P3 s negativním výsledkem. Měl by končit neposunutím projektu do stavu P4.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A3.
+
+        TestData:
+            ================= =====================================
+            Field ID          Value
+            ================= =====================================
+            id_datum_ukonceni (date calculated: 90 days from today)
+            ================= =====================================
+
+        Steps:
+            Uživatel otevře projekt ve stavu A3.
+
+        Expected:
+            -  Projekt zůstal ve stavu A3.
+            -  Zobrazena chyba ``Datum nesmí být dále než měsíc v budoucnosti``.
+        """
         logger.info("ProjektUkoncitVyzkumSeleniumTest.test_009_projekt_ukoncit_vyzkum_n_001.start")
         self.login()
+        self.createFedoraRecord("C-202006194")
+        self.uploadFileToFedora(260183, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(260151, "projekt/tests/resources/test.pdf")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(7) a")
@@ -594,12 +804,29 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.UzavritProjekt"))
+        self.goToAddress("/projekt/vyber?stav=4&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_010_projekt_uzavrit_p_001(self):
-        # Scenar_10 Uzavření projektu (pozitivní scénář 1)
-        # test 2.9
+        """Test 010 Uzavření projektu (pozitivní scénář 1)
+
+        Test uzavření projektu ve stavu P4 s pozitivním výsledkem. Měl by končin posunem projektu do stavu P5.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A4, který má projektovou akci.
+
+        TestData:
+            Žádná.
+
+        Steps:
+            Uživatel otevře projekt ve stavu A4.
+
+        Expected:
+            -  Projekt přesunut do stavu A5.
+        """
         logger.info("ProjektUzavritSeleniumTest.test_010_projekt_uzavrit_p_001.start")
         self.login()
         self.go_to_form()
@@ -614,8 +841,27 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektUzavritSeleniumTest.test_010_projekt_uzavrit_p_001.end")
 
     def test_011_projekt_uzavrit_n_001(self):
-        # Scenar_11 Uzavření projektu (negativní scénář 1)
-        # 2.10
+        """Test 011 Uzavření projektu (negativní scénář 1)
+
+        Test uzavření projektu ve stavu P4 s negativním výsledkem. Měl by končin neposunutím projektu do stavu P5.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A4, který nemá projektovou akci.
+
+        TestData:
+            Žádná.
+
+        Steps:
+            Uživatel otevře projekt ve stavu A4.
+
+        Expected:
+            -  Projekt zůstal ve stavu A4.
+            -  Zobrazena chyba ``Projekt musí mít alespoň jednu projektovou akci``.
+        """
         logger.info("ProjektUzavritSeleniumTest.test_011_projekt_uzavrit_n_001.start")
         self.login()
         self.go_to_form()
@@ -623,7 +869,7 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
 
         self.ElementClick(By.CSS_SELECTOR, "#projekt-uzavrit > .app-controls-button-text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -638,12 +884,29 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
     next_stav_projektu = PROJEKT_STAV_ARCHIVOVANY
 
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.archivovatProjekty"))
+        self.goToAddress("/projekt/vyber?stav=5&sort=datum_ukonceni&sort=ident_cely")
 
     def test_012_projekt_archivovat_p_001(self):
-        # Scenar_12 Archivace projektu (pozitivní scénář 1)
-        # 2.11  C-201231446 projekt/detail/C-201231446
+        """Test 012 Archivace projektu (pozitivní scénář 1)
+
+        Test archivace projektu ve stavu P5 s pozitivním výsledkem. Scénář končí posunem projektu do stavu P6,
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A5, který má archivovanou projektovou akci.
+
+        TestData:
+            Žádná.
+
+        Steps:
+            Uživatel otevře projekt ve stavu A5.
+
+        Expected:
+            -  Projekt je přesunut do stavu A6.
+        """
         logger.info("ProjektArchivovatSeleniumTest.test_012_projekt_archivovat_p_001.start")
         self.login("archivar")
         self.go_to_form()
@@ -658,8 +921,28 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektArchivovatSeleniumTest.test_012_projekt_archivovat_p_001.end")
 
     def test_013_projekt_uzavrit_n_001(self):
-        # Scenar_13 Archivace projektu (negativní scénář 1)
-        # 2.12
+        """Test 013 Archivace projektu (negativní scénář 1)
+
+        Test archivace projektu ve stavu P5 s negativním výsledkem. Scénář končí neposunutím projektu do stavu P6,
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A5, který má nearchivovanou projektovou
+               akci.
+
+        TestData:
+            Stejná jako u ``test_projekt_zapsat_p_001``.
+
+        Steps:
+            Uživatel otevře projekt ve stavu A5.
+
+        Expected:
+            -  Projekt zůstal ve stavu A5.
+            -  Zobrazena chyba ``Akce musí být archivovaná``.
+        """
         logger.info("ProjektArchivovatSeleniumTest.test_013_projekt_uzavrit_n_001.start")
         self.login("archivar")
         self.go_to_form()
@@ -667,7 +950,7 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "M-201400072")
 
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.CSS_SELECTOR, "#projekt-archivovat > .app-controls-button-text")
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
@@ -683,14 +966,37 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_014_projekt_vratit_p_001(self):
-        # Scenar_14 Vrácení stavu u archivovaného projektu (pozitivní scénář 1)
-        # 2.13
+        """Test 014 Vrácení stavu u archivovaného projektu (pozitivní scénář 1)
+
+        Test vrácení projektu do stavu P5 s pozitivním výsledkem. Scénář končí posunem do stavu P5.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A6.
+
+        TestData:
+            ========= =====
+            Field ID  Value
+            ========= =====
+            id_reason test
+            ========= =====
+
+        Steps:
+            Uživatel otevře projekt ve stavu A6.
+
+        Expected:
+            -  Projekt přesunut do stavu A5.
+        """
         logger.info("ProjektVratitSeleniumTest.test_014_projekt_vratit_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-202205168")
+        self.uploadFileToFedora(520356, "projekt/tests/resources/test.pdf")
         self.go_to_form()
 
         self.ElementClick(By.CSS_SELECTOR, ".btn-primary > .app-icon-expand")
@@ -710,18 +1016,34 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektVratitSeleniumTest.test_014_projekt_vratit_p_001.end")
 
     def test_015_projekt_vratit_p_002(self):
-        # Scenar_15 Vrácení stavu u uzavřeného projektu (pozitivní scénář 1)
-        # 2.14
+        """Test 015 Vrácení stavu u uzavřeného projektu (pozitivní scénář 2)
+
+        Test vrácení projektu do stavu P4 s pozitivním výsledkem. Scénář končí posunem do stavu P4.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A5.
+
+        TestData:
+            ========= =====
+            Field ID  Value
+            ========= =====
+            id_reason test
+            ========= =====
+
+        Steps:
+            Uživatel otevře projekt ve stavu A5.
+
+        Expected:
+            -  Projekt přesunut do stavu A4.
+        """
         logger.info("ProjektVratitSeleniumTest.test_015_projekt_vratit_p_002.start")
         self.login("archivar")
-        self.go_to_form()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.uzavren.label") + "')]")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
+        self.goToAddress("/projekt/detail/C-201231446")
+        self.ElementClick(By.ID, "projekt-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
 
@@ -732,20 +1054,34 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektVratitSeleniumTest.test_015_projekt_vratit_p_002.end")
 
     def test_016_projekt_vratit_p_003(self):
-        # Scenar_16 Vrácení stavu u ukončeného projektu (pozitivní scénář 1)
-        # 2.15
+        """Test 016  Vrácení stavu u ukončeného projektu (pozitivní scénář 3)
+
+        Test vrácení projektu do stavu P3 s pozitivním výsledkem. Scénář končí posunem do stavu P3.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A4.
+
+        TestData:
+            ========= =====
+            Field ID  Value
+            ========= =====
+            id_reason test
+            ========= =====
+
+        Steps:
+            Uživatel otevře projekt ve stavu A4.
+
+        Expected:
+            -  Projekt přesunut do stavu A3.
+        """
         logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_003.start")
         self.login("archivar")
-        self.go_to_form()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(
-            By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.ukoncenVTerenu.label") + "')]"
-        )
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
+        self.goToAddress("/projekt/detail/C-201557636")
+        self.ElementClick(By.ID, "projekt-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
 
@@ -756,20 +1092,34 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektVratitSeleniumTest.test_016_projekt_vratit_p_003.end")
 
     def test_017_projekt_vratit_p_004(self):
-        # Scenar_17 Vrácení stavu u zahájeného projektu (pozitivní scénář 1)
-        # 2.16
+        """Test 017 Vrácení stavu u zahájeného projektu (pozitivní scénář 4)
+
+        Test vrácení projektu do stavu P2 s pozitivním výsledkem. Scénář končí posunem do stavu P2.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A3.
+
+        TestData:
+            ========= =====
+            Field ID  Value
+            ========= =====
+            id_reason test
+            ========= =====
+
+        Steps:
+            Uživatel otevře projekt ve stavu A3.
+
+        Expected:
+            -  Projekt přesunut do stavu A2.
+        """
         logger.info("ProjektVratitSeleniumTest.test_017_projekt_vratit_p_004.start")
         self.login("archivar")
-        self.go_to_form()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(
-            By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.zahajenVTerenu.label") + "')]"
-        )
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
+        self.goToAddress("/projekt/detail/C-201121404")
+        self.ElementClick(By.ID, "projekt-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
 
@@ -780,18 +1130,36 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektVratitSeleniumTest.test_017_projekt_vratit_p_004.end")
 
     def test_018_projekt_vratit_p_005(self):
-        # Scenar_18 Vrácení stavu u přihlášeného projektu (pozitivní scénář 1)
-        # 2.17
+        """Test 018 Vrácení stavu u přihlášeného projektu (pozitivní scénář 5)
+
+        Test vrácení projektu do stavu P2 s pozitivním výsledkem. Scénář končí posunem do stavu A1.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A2.
+
+        TestData:
+            ========= =====
+            Field ID  Value
+            ========= =====
+            id_reason test
+            ========= =====
+
+        Steps:
+            Uživatel otevře projekt ve stavu A2.
+
+        Expected:
+            -  Projekt přesunut do stavu A1.
+        """
         logger.info("ProjektVratitSeleniumTest.test_018_projekt_vratit_p_005.start")
         self.login("archivar")
-        self.go_to_form()
-
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.prihlasen.label") + "')]")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.CSS_SELECTOR, "#projekt-vratit > .app-controls-button-text")
+        self.createFedoraRecord("C-201665792")
+        self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
+        self.goToAddress("/projekt/detail/C-201665792")
+        self.ElementClick(By.ID, "projekt-vratit")
         self.ElementClick(By.ID, "id_reason")
         self.driver.find_element(By.ID, "id_reason").send_keys("test")
 
@@ -805,14 +1173,38 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_019_projekt_zrusit_p_001(self):
-        # Scenar_19 Navržení zrušení projektu (pozitivní scénář 1)
-        # 2.18
+        """Test 019 Navržení zrušení projektu (pozitivní scénář 1)
+
+        Test navržení zrušení projektu s pozitivním výsledkem. Scénář končí posunem projektu do stavu A7.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt.
+
+        TestData:
+            ======== ==========
+            Field ID Value
+            ======== ==========
+            reason   item no. 2
+            ======== ==========
+
+        Steps:
+            Uživatel otevře projekt.
+
+        Expected:
+            -  Projekt přesunut do stavu A7.
+        """
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_019_projekt_zrusit_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-201665792")
+        self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
+
         self.go_to_form()
         self.ElementClick(By.LINK_TEXT, "C-201665792")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
@@ -825,10 +1217,36 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_019_projekt_zrusit_p_001.end")
 
     def test_020_projekt_zrusit_p_002(self):
-        # Scenar_20 Navržení zrušení projektu (pozitivní scénář 2)
-        # 2.19
+        """Test 020 Navržení zrušení projektu (pozitivní scénář 2)
+
+        Test navržení zrušení projektu s pozitivním výsledkem. Scénář končí posunem projektu do stavu A7.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt.
+
+        TestData:
+            ============= ==========
+            Field ID      Value
+            ============= ==========
+            reason        item no. 1
+            id_projekt_id test
+            ============= ==========
+
+        Steps:
+            Uživatel otevře projekt.
+
+        Expected:
+            -  Projekt přesunut do stavu A7.
+        """
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_020_projekt_zrusit_p_002.start")
         self.login("archivar")
+        self.createFedoraRecord("C-201665792")
+        self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
+
         self.go_to_form()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.LINK_TEXT, "C-201665792")
@@ -843,10 +1261,36 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_020_projekt_zrusit_p_002.end")
 
     def test_021_projekt_zrusit_n_001(self):
-        # Scenar_21 Navržení zrušení projektu (negativní scénář 1)
-        # 2.20
+        """Test 021 Navržení zrušení projektu (negativní scénář 1)
+
+        Test navržení zrušení projektu s negativním výsledkem. Scénář končí neposunutím projektu do stavu A7.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt s projektovými akcemi.
+
+        TestData:
+            ======== ==========
+            Field ID Value
+            ======== ==========
+            reason   item no. 2
+            ======== ==========
+
+        Steps:
+            Uživatel otevře projekt s projektovými akcemi.
+
+        Expected:
+            -  Projekt zůstal ve výchozím stavu.
+            -  Zobrazena chyba ``Projekt před zrušením nesmí mít projektové akce``.
+        """
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_021_projekt_zrusit_n_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-202401104")
+        self.uploadFileToFedora(639669, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(639688, "projekt/tests/resources/test.pdf")
         self.go_to_form()
         self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
@@ -855,7 +1299,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-202401104")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label")
                 self.ElementClick(By.CSS_SELECTOR, ".btn-primary:nth-child(2)")
         except Exception:
@@ -868,23 +1312,38 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
-    def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
 
     def test_022_projekt_zrusit_p_001(self):
-        # Scenar_22 Zrušení projektu (pozitivní scénář 1)
-        # 2.21
+        """Test 022 Zrušení projektu (pozitivní scénář 1)
+
+        Test zrušení projektu s pozitivním výsledkem. Scénář končí posunem projektu do stavu A8
+
+        Role:
+            Archivář
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A7.
+
+        TestData:
+            ============== =====
+            Field ID       Value
+            ============== =====
+            id_reason_text test
+            ============== =====
+
+        Steps:
+            Uživatel otevře projekt s projektovými akcemi.
+
+        Expected:
+            -  Projekt je přesunut do stavu A8.
+        """
         logger.info("ProjektZrusitSeleniumTest.test_022_projekt_zrusit_p_001.start")
         self.login("archivar")
-        self.go_to_form()
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(
-            By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.navrzenKeZruseni.label") + "')]"
-        )
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
+        self.createFedoraRecord("M-202202919")
+        self.uploadFileToFedora(424158, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(424159, "projekt/tests/resources/test.pdf")
+        self.goToAddress("/projekt/detail/M-202202919")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-zrusit > .app-controls-button-text")
         self.ElementClick(By.ID, "id_reason_text")
         self.driver.find_element(By.ID, "id_reason_text").send_keys("test")
@@ -895,17 +1354,84 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_ZRUSENY)
         logger.info("ProjektZrusitSeleniumTest.test_022_projekt_zrusit_p_001.end")
 
+    def test_155_smazani_projektu_p_001(self):
+        """Test 155 Smazání záznamu projektu (pozitivní scénář 1)
+
+        Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat
+
+        Role:
+            Archivář
+
+        TestData:
+            Projekt X-C-202419296
+
+        Preconditions:
+            -  Uživatel je přihlášen.
+            -  Existuje projekt ve stavu A0.
+
+        Steps:
+            - Uživatel otevře projekt ke smazání.
+            - Smaže připojenou dokumentaci.
+            - V panelu pro akce kliknout na  “Další akce” → “Smazat záznam”
+            - V dalším dialogovém okně “Smazat projekt” kliknout na “Smazat”
+
+        Expected:
+            -  Projekt je vymazán z databáze.
+        """
+        logger.info("ProjektZrusitSeleniumTest.test_155_smazani_projektu_p_001.start")
+        self.login("archivar")
+        ident_cely = "X-C-202419296"
+        self.createFedoraRecord(ident_cely)
+        self.uploadFileToFedora(646217, "projekt/tests/resources/test.pdf")
+        self.assertEqual(Projekt.objects.filter(ident_cely=ident_cely).count(), 1)
+        self.goToAddress(f"/projekt/detail/{ident_cely}")
+        self.ElementClick(By.ID, "file-smazat-646217")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "projekt-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+
+        self.assertEqual(Projekt.objects.filter(ident_cely=ident_cely).count(), 0)
+        logger.info("ProjektZrusitSeleniumTest.test_155_smazani_projektu_p_001.end")
+
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
     def go_to_form(self):
-        self.ElementClick(By.ID, "menuProjekty")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.projekty.vybratProjekty"))
+        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_023_projekt_vytvori_akci_p_001(self):
-        # Scenar_23 Vytvoření projektové akce (pozitivní scénář 1)
+        """Test 023 Vytvoření projektové akce (pozitivní scénář 1)
+
+        Test vytvoření projektové akce. Scénář končí vytvořením projektové akce ve stavu A1.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Projekt je ve stavu P3
+
+        TestData:
+            Projekt C-202401502
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře projekt ve stavu P3 (viz předpoklady)
+            - Projekty → Vybrat → Filtr → ID obsahuje „C-202111043“ → Vybrat → otevřít projekt
+            - Kliknout na Vložit další akci (v sekci Archeologické akce)
+            - Vytvoření akci
+
+        Expected:
+            -  Vytvoření akce u projektu - v databázi bude o jednu akci více.
+        """
         logger.info("ProjektVytvoreniProjektoveAkce.test_023_projekt_vytvori_akci_p_001.start")
         self.login()
+        self.createFedoraRecord("C-202401502")
+        self.uploadFileToFedora(643547, "projekt/tests/resources/test.pdf")
+
         self.go_to_form()
         arch_z_count_old = Akce.objects.count()
         self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
@@ -916,17 +1442,9 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
         # self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
         self.ElementClick(By.LINK_TEXT, "C-202401502")
+        self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(6) .app-fx .material-icons")
         with WaitForPageLoad(self.driver):
-            self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(6) .app-fx .material-icons")
             self.ElementClick(By.ID, "actionSubmitBtn")
         arch_z_count_new = Akce.objects.count()
         self.assertEqual(arch_z_count_old + 1, arch_z_count_new)
         logger.info("ProjektVytvoreniProjektoveAkce.test_023_projekt_vytvori_akci_p_001.end")
-
-    @unittest.skip
-    def test_033_projekt_vytvori_akci_n_001(self):
-        # Scenar_33 Vytvoření projektové akce (negativní scénář 1)
-        # v poslední verzi už bylo pole vyplněné automaticky - scénář ztratil smysl
-        logger.info("ProjektVytvoreniProjektoveAkce.test_033_projekt_vytvori_akci_n_001.start")
-
-        logger.info("ProjektVytvoreniProjektoveAkce.test_033_projekt_vytvori_akci_n_001.end")

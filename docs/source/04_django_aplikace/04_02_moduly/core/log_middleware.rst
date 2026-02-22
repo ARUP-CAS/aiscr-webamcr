@@ -9,12 +9,14 @@ Třídy
 .. py:class:: LogMiddleware
 
    Middleware, který:
-- ukládá do thread-local: url, user_id
-- měří duration a zapisuje strukturovaný log po odpovědi
+   - ukládá do thread-local: url, user_id
+   - měří duration a zapisuje strukturovaný log po odpovědi
 
    **Metody:**
 
    .. py:method:: __init__()
+
+   .. py:method:: __call__()
 
    .. py:method:: get_request_url()
 

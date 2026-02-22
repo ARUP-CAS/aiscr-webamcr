@@ -80,8 +80,22 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     )
     is_active = models.BooleanField(default=False, verbose_name=_("uzivatel.models.User.aktivni"), db_index=True)
     date_joined = models.DateTimeField(default=timezone.now)
-    osoba = models.ForeignKey("Osoba", models.RESTRICT, db_column="osoba", blank=True, null=True, db_index=True)
-    organizace = models.ForeignKey("Organizace", models.RESTRICT, db_column="organizace", db_index=True)
+    osoba = models.ForeignKey(
+        "Osoba",
+        models.RESTRICT,
+        verbose_name=_("uzivatel.models.User.osoba"),
+        db_column="osoba",
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    organizace = models.ForeignKey(
+        "Organizace",
+        models.RESTRICT,
+        verbose_name=_("uzivatel.models.User.organizace"),
+        db_column="organizace",
+        db_index=True,
+    )
     history_vazba = models.OneToOneField(
         "historie.HistorieVazby",
         db_column="historie",
@@ -152,6 +166,23 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             return self.user_str_en
         else:
             return self.user_str
+
+    def display_name(self, viewer=None):
+        """
+        Textová reprezentace uživatele pro tabulky a autocomplete pole.
+        """
+        lang = get_language()
+
+        if viewer and viewer.hlavni_role and viewer.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            base = f"{self.last_name}, {self.first_name}"
+        else:
+            base = self.ident_cely
+
+        if self.organizace:
+            org = self.organizace.nazev_zkraceny_en if lang == "en" else self.organizace.nazev_zkraceny
+            return f"{base} ({self.ident_cely}, {org})" if "," in base else f"{base} ({org})"
+
+        return base
 
     def moje_spolupracujici_organizace(self):
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
@@ -276,8 +307,17 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             "uzivatel.models.User.save_metadata.start",
             extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely},
         )
-        from core.repository_connector import FedoraRepositoryConnector
+        from core.repository_connector import (
+            DryRunFedoraTransaction,
+            FedoraDeletionOnlyTransaction,
+            FedoraRepositoryConnector,
+        )
 
+        if isinstance(fedora_transaction, DryRunFedoraTransaction) or isinstance(
+            fedora_transaction, FedoraDeletionOnlyTransaction
+        ):
+            fedora_transaction.add_updated_ident_cely(self.ident_cely)
+            return
         connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=False)
         connector.save_metadata(True)
         if close_transaction is True or self.close_active_transaction_when_finished:

@@ -10,7 +10,6 @@ import zipfile
 import pandas as pd
 from bs4 import BeautifulSoup
 from core.services import PermissionService
-from cron import tasks
 from django.conf import settings
 from django.contrib import admin, messages
 from django.core.cache import cache
@@ -32,8 +31,10 @@ from .exceptions import WrongCSVError, WrongSheetError
 from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .import_data_mappers import (
     ImportDataError,
+    ImportDataIntegrityError,
     ImportDataUnsupportedFileError,
-    ImportDataUnsupportedMultipleFilesError,
+    ImportDataUnsupportedFilesError,
+    ImportDataValidationResult,
     ImportModelMapper,
     LookupImportField,
 )
@@ -596,47 +597,92 @@ class FedoraCustomAdminSite(admin.AdminSite):
             record_id = 0
             invalid_records = []
             performed_action = cleaned_data["performed_action"]
-            with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
-                file_names = [name for name in zf.namelist() if not name.startswith("__MACOSX")]
-                file_names = set(file_names)
-                allowed_file_names = set(
-                    [f"{name}.csv".lower() for name in ImportModelMapper.get_import_data_mapper_dict().keys()]
-                )
-                normalized_imported_file_names = set([normalize_file_name(file_name) for file_name in file_names])
-                if not normalized_imported_file_names.issubset(allowed_file_names):
-                    raise ImportDataUnsupportedMultipleFilesError(normalized_imported_file_names - allowed_file_names)
-                for file_name in file_names:
-                    with zf.open(file_name) as file:
-                        sheet = pd.read_csv(file)
-                    file_name = normalize_file_name(file_name)
-                    for idx, row in sheet.iterrows():
-                        mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
-                        if mapper_class:
-                            try:
-                                mapper = mapper_class(row.to_dict())
-                                record = mapper.map(performed_action, serialize=True, include_primary_key=True)
-                                mapper.check_required_fields(performed_action)
-                                primary_key = mapper.import_validation(performed_action)
-                                LookupImportField.records += mapper.create_records(performed_action)
-                                record["__file_name"] = file_name
-                            except ImportDataError as err:
-                                validation_results.append([getattr(err, "record_id", ""), err])
-                                invalid_records.append(record_id)
+            try:
+                with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
+                    file_names = [
+                        name for name in zf.namelist() if not name.startswith("__MACOSX") and not name.endswith("/")
+                    ]
+                    mapper_dict = ImportModelMapper.get_import_data_mapper_dict()
+                    mapper_key_order = {f"{name}.csv": i for i, name in enumerate(mapper_dict.keys())}
+                    allowed_file_names = set(
+                        [
+                            f"{name}.csv".lower()
+                            for name, mapper in mapper_dict.items()
+                            if performed_action != ImportDataAdminForm.PERFORMED_ACTION_UPDATE or mapper.allow_update
+                        ]
+                    )
+                    normalized_imported_file_names = set([normalize_file_name(file_name) for file_name in file_names])
+                    if not normalized_imported_file_names.issubset(allowed_file_names):
+                        raise ImportDataUnsupportedFilesError(normalized_imported_file_names - allowed_file_names)
+                    file_names.sort(key=lambda fn: mapper_key_order.get(normalize_file_name(fn), len(mapper_key_order)))
+                    for file_name in file_names:
+                        with zf.open(file_name) as file:
+                            sheet = pd.read_csv(file)
+                        file_name = normalize_file_name(file_name)
+                        for idx, row in sheet.iterrows():
+                            mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
+
+                            def format_primary_key(pk):
+                                if isinstance(pk, dict):
+                                    return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
+                                return str(pk)
+
+                            if mapper_class:
+                                try:
+                                    mapper = mapper_class(row.to_dict())
+                                    record = mapper.map(performed_action, serialize=True, include_primary_key=True)
+                                    mapper.check_required_fields(performed_action)
+                                    primary_key = mapper.import_validation(performed_action)
+                                    LookupImportField.records += mapper.create_records(performed_action)
+                                    record["__file_name"] = file_name
+                                except ImportDataIntegrityError as err:
+                                    validation_results.append(
+                                        ImportDataValidationResult(
+                                            item_order=record_id,
+                                            file_name=file_name,
+                                            primary_key_import=format_primary_key(err.record_id),
+                                            validation_result=str(err),
+                                        )
+                                    )
+                                    invalid_records.append(record_id)
+                                except ImportDataError as err:
+                                    validation_results.append(
+                                        ImportDataValidationResult(
+                                            item_order=record_id,
+                                            file_name=file_name,
+                                            validation_result=str(err),
+                                        )
+                                    )
+                                    invalid_records.append(record_id)
+                                else:
+                                    records.append(record)
+                                    validation_results.append(
+                                        ImportDataValidationResult(
+                                            item_order=record_id,
+                                            file_name=file_name,
+                                            primary_key_import=format_primary_key(primary_key),
+                                            validation_result=_("core.admin.import_data.record_valid"),
+                                        )
+                                    )
+                                    self.redis_connector.set(
+                                        f"import_data_{job_id}_record_{record_id}", json.dumps(record)
+                                    )
+                                record_id += 1
                             else:
-
-                                def format_primary_key(pk):
-                                    if isinstance(pk, dict):
-                                        return ", ".join([f"{k}: {v}" for k, v in pk.items()])
-                                    return str(pk)
-
-                                records.append(record)
-                                validation_results.append(
-                                    [format_primary_key(primary_key), _("core.admin.import_data.record_valid")]
-                                )
-                                self.redis_connector.set(f"import_data_{job_id}_record_{record_id}", json.dumps(record))
-                            record_id += 1
-                        else:
-                            raise ImportDataUnsupportedFileError(file_name)
+                                raise ImportDataUnsupportedFileError(file_name)
+            except zipfile.BadZipFile:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = _("core.admin.import_data.error.bad_zip_file")
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            except ImportDataUnsupportedFilesError as err:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = str(err)
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            except Exception as err:
+                logger.exception("core.admin.FedoraCustomAdminSite.import_data.unexpected_error", extra={"err": err})
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)
             self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
@@ -645,8 +691,17 @@ class FedoraCustomAdminSite(admin.AdminSite):
             context["records_count"] = records_count
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
+            try:
+                import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
+                import_directory_settings = json.loads(import_directory_settings_obj.value)
+                import_directory_path = import_directory_settings.get("DIRECTORY_PATH")
+                context["import_directory_configured"] = bool(
+                    import_directory_path and os.path.isdir(import_directory_path)
+                )
+            except (CustomAdminSettings.DoesNotExist, json.JSONDecodeError, ValueError, KeyError):
+                context["import_directory_configured"] = False
+            context["url_start"] = reverse("core:data-import-start", args=[job_id])
             if not invalid_records:
-                tasks.run_data_import.delay(job_id, request.user.id)
                 context["stop_request"] = False
             else:
                 context["stop_request"] = True

@@ -44,13 +44,13 @@ class OznameniView(View):
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniZapsatView(OznameniView):
     """
-    Třida pohledu pro 1. stranu oznámení.
+    Třída pohledu pro 1. stranu oznámení.
     """
 
     def post(self, request):
         """
         Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
-        V prvém kroku uživatel zadáva údaje a v druhém je potvrzuje a případně uploaduje soubory.
+        V prvém kroku uživatel zadává údaje a v druhém je potvrzuje a případně uploaduje soubory.
         """
         logger.debug("oznameni.views.index.start")
         if "oznamovatel" in request.POST:
@@ -65,17 +65,23 @@ class OznameniZapsatView(OznameniView):
                 form_ozn = OznamovatelForm(request.POST)
                 form_projekt = ProjektOznameniForm(request.POST)
             form_captcha = FormWithCaptcha(request.POST) if not settings.SKIP_RECAPTCHA else None
-            logger.debug("oznameni.views.index.form_ozn.valid", extra={"valid": form_ozn.is_valid()})
-            logger.debug("oznameni.views.index.form_projekt.valid", extra={"valid": form_projekt.is_valid()})
+            ozn_valid = form_ozn.is_valid()
+            projekt_valid = form_projekt.is_valid()
+            logger.debug("oznameni.views.index.form_ozn.valid", extra={"valid": ozn_valid})
+            logger.debug("oznameni.views.index.form_projekt.valid", extra={"valid": projekt_valid})
+            captcha_valid = True
             if not settings.SKIP_RECAPTCHA:
-                logger.debug("oznameni.views.index.form_captcha.valid", extra={"valid": form_captcha.is_valid()})
-            if form_ozn.is_valid() and form_projekt.is_valid() and (settings.SKIP_RECAPTCHA or form_captcha.is_valid()):
+                try:
+                    captcha_valid = form_captcha.is_valid()
+                except Exception:
+                    captcha_valid = False
+                    logger.exception("oznameni.views.index.form_captcha.validate_failed")
+                logger.debug("oznameni.views.index.form_captcha.valid", extra={"valid": captcha_valid})
+            if ozn_valid and projekt_valid and captcha_valid:
                 logger.debug("oznameni.views.index.all_forms_valid")
                 oznamovatel = form_ozn.save(commit=False)
                 projekt: Projekt = form_projekt.save(commit=False)
-                fedora_transaction = FedoraTransaction()
                 projekt.suppress_signal = True
-                projekt.active_transaction = fedora_transaction
                 projekt.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
                 dalsi_katastry = form_projekt.cleaned_data["katastry"]
                 projekt.geom = Point(
@@ -91,14 +97,13 @@ class OznameniZapsatView(OznameniView):
                     "oznameni.views.index.hlavni_katastr",
                     extra={
                         "katastr": projekt.hlavni_katastr,
-                        "transaction": getattr(fedora_transaction, "uid", None),
                     },
                 )
                 # p.save()
                 if projekt.hlavni_katastr is not None and not self.ident_cely:
                     projekt.ident_cely = get_temporary_project_ident(projekt.hlavni_katastr.okres.kraj.rada_id)
                 else:
-                    logger.debug("oznameni.views.index.unknow_location", extra={"geom": str(projekt.geom)})
+                    logger.debug("oznameni.views.index.unknown_location", extra={"geom": str(projekt.geom)})
                 projekt.save()
                 oznamovatel.projekt = projekt
                 oznamovatel.save()
@@ -106,6 +111,8 @@ class OznameniZapsatView(OznameniView):
                 projekt.katastry.add(*[i for i in dalsi_katastry])
                 projekt.save()
                 self.session_identifier.set_ident(projekt.ident_cely)
+                # Uložení vlastnictví projektu pro anonymního uživatele
+                self.session_identifier.set_project_ownership(projekt.ident_cely)
                 return redirect("oznameni:index2", ident_cely=projekt.ident_cely)
             else:
                 extra = {"form_error": form_ozn.errors, "error": form_projekt.errors}
@@ -179,7 +186,7 @@ class OznameniZapsatView(OznameniView):
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniDokumentaceView(OznameniView):
     """
-    Třida pohledu pro 2. stranu oznámení.
+    Třída pohledu pro 2. stranu oznámení.
     """
 
     def post(self, request):
@@ -236,7 +243,7 @@ class OznameniDokumentaceView(OznameniView):
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniPotvrzeniView(OznameniView):
     """
-    Třida pohledu pro potvrzení oznámení.
+    Třída pohledu pro potvrzení oznámení.
     """
 
     @method_decorator(never_cache)
@@ -320,7 +327,7 @@ def post_poi2kat(request):
 
 class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
     """
-    Třída pohledu pro vytvoření oznamovetele pomocí modalu.
+    Třída pohledu pro vytvoření oznamovatele pomocí modalu.
     """
 
     template_name = "core/transakce_modal.html"

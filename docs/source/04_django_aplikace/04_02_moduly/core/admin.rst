@@ -9,7 +9,7 @@ Třídy
 .. py:class:: OdstavkaSystemuAdmin
 
    Třída admin panelu pro zobrazení odstávek systému.
-Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
+   Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
 
    **Metody:**
 
@@ -104,6 +104,8 @@ Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
    Popis není k dispozici.
 
    **Metody:**
+
+   .. py:method:: _read_file()
 
    .. py:method:: update_doi()
 

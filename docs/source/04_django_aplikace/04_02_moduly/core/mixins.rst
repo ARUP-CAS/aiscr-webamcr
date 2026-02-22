@@ -9,7 +9,7 @@ Třídy
 .. py:class:: ManyToManyRestrictedClassMixin
 
    Třída pro model pro vytvoření property has_connections.
-Hledá jestli má model nejakou many to many vazbu.
+   Hledá jestli má model nejakou many to many vazbu.
 
    **Metody:**
 

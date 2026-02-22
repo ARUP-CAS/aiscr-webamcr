@@ -52,27 +52,21 @@ class Command(BaseCommand):
         batch_count = projekt_count // batch_size + 1
 
         self.stdout.write(
-            _("core.management.commands.update_pristupnost_snapshot.Command.handle.total_projects")
-            + " "
-            + str(projekt_count)
+            _("core.management.commands.update_pristupnost_snapshot.total_projects") + " " + str(projekt_count)
         )
+        self.stdout.write(_("core.management.commands.update_pristupnost_snapshot.batch_size") + " " + str(batch_size))
         self.stdout.write(
-            _("core.management.commands.update_pristupnost_snapshot.Command.handle.batch_size") + " " + str(batch_size)
-        )
-        self.stdout.write(
-            _("core.management.commands.update_pristupnost_snapshot.Command.handle.batch_count")
-            + " "
-            + str(batch_count)
+            _("core.management.commands.update_pristupnost_snapshot.batch_count") + " " + str(batch_count)
         )
         self.stdout.write("")
-        self.stdout.write(_("core.management.commands.update_pristupnost_snapshot.Command.handle.processing_projects"))
+        self.stdout.write(_("core.management.commands.update_pristupnost_snapshot.processing_projects"))
 
         processed_count = 0
 
         for i in range(batch_count):
             self.stdout.write(
                 "\r"
-                + _("core.management.commands.update_pristupnost_snapshot.Command.handle.batch")
+                + _("core.management.commands.update_pristupnost_snapshot.batch")
                 + " "
                 + str(i + 1)
                 + " / "
@@ -99,7 +93,7 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 "\n"
-                + _("core.management.commands.update_pristupnost_snapshot.Command.handle.finished_updated")
+                + _("core.management.commands.update_pristupnost_snapshot.finished_updated")
                 + " "
                 + str(processed_count)
             )

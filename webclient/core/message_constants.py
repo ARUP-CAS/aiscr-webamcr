@@ -197,13 +197,10 @@ UPLOADFILE_REJECTED_ALL: Final = _("core.message_constants.uploadFile.rejectedAl
 UPLOADFILE_ERROR: Final = _("core.message_constants.uploadFile.error.text")
 
 # Validation
-VALIDATION_NOT_VALID: Final = _("common.message.VALIDATION_NOT_VALID.text")  # Geometrie není validní.
-VALIDATION_EMPTY: Final = _("common.message.VALIDATION_EMPTY.text")  # Geometrie je prázdná.
 VALIDATION_NOT_SIMPLE: Final = _("common.message.VALIDATION_NOT_SIMPLE.text")  # Geometrie není typu simple geometry.
-VALIDATION_NOT_MULTIPART: Final = _("common.message.VALIDATION_NOT_MULTIPART.text")  # Geometrie je multigeometrií.
-VALIDATION_LINE_LENGTH: Final = _(
-    "common.message.VALIDATION_LINE_LENGTH.text"
-)  # Vzdálenost bodů je nižší než povolená mez.
+VALIDATION_NENALEZEN_KLAD: Final = _(
+    "common.message.VALIDATION_NENALEZEN_KLAD.text"
+)  # Pro geometrii nebyl nalezen klad ZM.
 
 # Lokalita
 LOKALITA_USPESNE_ZAPSANA: Final = _("core.message_constants.lokalitaUspesneZapsana.text")

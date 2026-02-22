@@ -10,5 +10,10 @@
     <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Hello,</p>
+    <p>
+        project <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> on cadastral area <b>{{ katastr }}</b> proposed for cancellation has been converted to state: <b>{{ state }}</b>.
+    </p>
+    <p><b>Reason:</b> {{ reason }}</p>
+    <p>Details about the project can be found after logging into AMCR.</p>
 {% endblock %}

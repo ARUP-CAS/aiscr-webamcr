@@ -17,21 +17,21 @@ Třídy
 
 .. py:class:: OznameniZapsatView
 
-   Třida pohledu pro 1. stranu oznámení.
+   Třída pohledu pro 1. stranu oznámení.
 
    **Metody:**
 
    .. py:method:: post()
 
       Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
-      V prvém kroku uživatel zadáva údaje a v druhém je potvrzuje a případně uploaduje soubory.
+      V prvém kroku uživatel zadává údaje a v druhém je potvrzuje a případně uploaduje soubory.
 
    .. py:method:: get()
 
 
 .. py:class:: OznameniDokumentaceView
 
-   Třida pohledu pro 2. stranu oznámení.
+   Třída pohledu pro 2. stranu oznámení.
 
    **Metody:**
 
@@ -42,7 +42,7 @@ Třídy
 
 .. py:class:: OznameniPotvrzeniView
 
-   Třida pohledu pro potvrzení oznámení.
+   Třída pohledu pro potvrzení oznámení.
 
    **Metody:**
 
@@ -51,7 +51,7 @@ Třídy
 
 .. py:class:: OznamovatelCreateView
 
-   Třída pohledu pro vytvoření oznamovetele pomocí modalu.
+   Třída pohledu pro vytvoření oznamovatele pomocí modalu.
 
    **Metody:**
 

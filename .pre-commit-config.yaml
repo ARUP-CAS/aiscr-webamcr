@@ -6,7 +6,7 @@ repos:
         name: isort (python)
         args: ["--profile", "black"]
   - repo: https://github.com/psf/black
-    rev: 25.9.0
+    rev: 26.1.0
     hooks:
       - id: black
         args: [ "--line-length", "120" ]
@@ -19,6 +19,13 @@ repos:
       - id: generate-module-docs
         name: Generate module documentation
         entry: python3 docs/generate_module_docs.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        
+      - id: generate-selenium-test-docs
+        name: Generate selenium test documentation
+        entry: python3 docs/generate_selenium_test_docs.py
         language: system
         pass_filenames: false
         always_run: true

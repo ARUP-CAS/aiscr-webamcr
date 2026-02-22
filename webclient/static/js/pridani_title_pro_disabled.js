@@ -17,11 +17,11 @@ window.onload = function () {
     }
     const textareas = document.querySelectorAll("textarea");
     for (let index = 0; index < textareas.length; ++index) {
-        if (inputs[index].readOnly === true) {
+        if (textareas[index].readOnly === true) {
             textareas[index].title = textareas[index].value
             textareas[index].setAttribute("data-toggle", "tooltip")
             textareas[index].setAttribute("data-placement", "top")
-            inputs[index].setAttribute("rel", "tooltip")
+            textareas[index].setAttribute("rel", "tooltip")
         }
     }
     const elements = document.querySelectorAll("[name*='visible_x']");

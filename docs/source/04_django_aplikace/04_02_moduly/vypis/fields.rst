@@ -14,6 +14,8 @@ Třídy
 
    .. py:method:: __init__()
 
+   .. py:method:: __str__()
+
    .. py:method:: get_name()
 
    .. py:method:: get_permission()
@@ -55,6 +57,10 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+   .. py:method:: __repr__()
+
+   .. py:method:: __str__()
 
    .. py:method:: get_value()
 

@@ -13,5 +13,13 @@
 </p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+<p>
+    Hello,
+</p>
+<p>
+    in the AMCR application, the deadline for submitting a final report for project <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> on the cadastral area <b>{{ katastr }}</b> will expire in 90 days.
+</p>
+<p>
+    You can find out the details of the project after logging into AMCR.
+</p>
 {% endblock %}

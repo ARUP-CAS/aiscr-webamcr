@@ -184,6 +184,7 @@
 <script src="{% static 'js/ajax_functions.js' %}"></script>
   <script>
       $(document).ready(function () {
+        if ($('#objekt_table').length > 0){
           const ident_cely = "{{dokument.ident_cely}}";
           const url = '{% url "heslar:get-initial-value" %}' + "?nadrazene=";
           const objekty = document.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
@@ -194,6 +195,7 @@
           for (let i = 0; i < predmety.length; i++) {
             get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-K001_p-${i}-druh`,`#id_${ident_cely}-K001_p-${i}-specifikace`,url);
           } 
+        }
       })
   </script>
   <script>

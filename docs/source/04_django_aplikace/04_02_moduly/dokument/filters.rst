@@ -23,6 +23,8 @@ Třídy
 
    .. py:method:: set_filter_fields()
 
+   .. py:method:: _get_history_subquery()
+
 
 .. py:class:: Model3DFilter
 

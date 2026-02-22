@@ -24,6 +24,8 @@ Třídy
 
    .. py:method:: generate_redis_snapshot()
 
+   .. py:method:: _get_igsn_client()
+
    .. py:method:: igsn_exists()
 
    .. py:method:: igsn_delete()

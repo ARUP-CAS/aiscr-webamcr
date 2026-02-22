@@ -1,0 +1,61 @@
+name: Pre-commit autoupdate
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: pre-commit-autoupdate-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - run: pip install --upgrade pre-commit
+
+      - name: Run autoupdate and capture output
+        id: update
+        run: |
+          pre-commit autoupdate > update.log 2>&1 || true
+          echo "UPDATE_LOG<<EOF" >> "$GITHUB_OUTPUT"
+          cat update.log >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: pre-commit autoupdate"
+          branch: pre-commit-autoupdate-${{ github.run_id }}
+          delete-branch: true
+          title: "Pre-commit autoupdate"
+          body: |
+            Updating pre-commit hooks to their latest versions.
+
+            **Update Log:**
+            ```text
+            ${{ steps.update.outputs.UPDATE_LOG }}
+            ```

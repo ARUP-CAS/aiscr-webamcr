@@ -23,5 +23,22 @@
     <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Dear madam/sir,</p>
+    <p>
+    a project <strong><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{project.ident_cely}}</a></strong> has been started in the AMCR, initiated on <strong>{{project.datum_zahajeni}}</strong>.
+    </p>
+        <ul style="list-style: none">
+            <li><strong>Project type:</strong> {{ project.typ_projektu.heslo }}</li>
+            <li><strong>Cadastral area:</strong> {{ project.hlavni_katastr }}; {{ dalsi_katastry|katastry_to_list|check_if_none }}
+            <li><strong>Motivation:</strong> {{ project.podnet }}</li>
+            <li><strong>Location:</strong> {{ project.lokalizace }}</li>
+            <li><strong>Parcel numbers:</strong> {{project.parcelni_cislo}}</li>
+            <li><strong>Construction designation:</strong> {{project.oznaceni_stavby}}</li>
+            <li><strong>Announcer:</strong> {{project.oznamovatel.oznamovatel}}</li>
+            <li><strong>Authorized organization:</strong> {{project.organizace.nazev}}</li>
+            <li><strong>Project leader:</strong> {{project.vedouci_projektu}}</li>
+            <li><strong>Additional information:</strong> {{info_text}}</li>
+        </ul>
+
+    <p>Detaily o projektu zjistíte po přihlášení do AMČR.</p>
 {% endblock %}

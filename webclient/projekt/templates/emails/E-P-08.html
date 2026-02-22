@@ -4,11 +4,16 @@
 {% block content %}
     <p>Dobrý den,</p>
     <p>
-        uživatel {{auth_user.first_name}} {{auth_user.last_name}} ({{auth_user.ident_cely}}) z organizace {{auth_user.organizace}} žádá o zpřístupnění osobních údajů oznamovatele pro projekt <a href="{% get_site_url %}{% url 'projekt:detail' ident_cely %}">{{ ident_cely }}</a>.
+        uživatel <b>{{auth_user.first_name}} {{auth_user.last_name}}</b> ({{auth_user.ident_cely}}) z organizace <b>{{auth_user.organizace}}</b> žádá o zpřístupnění osobních údajů oznamovatele pro projekt <a href="{% get_site_url %}{% url 'projekt:detail' ident_cely %}">{{ ident_cely }}</a>.
     </p>
     <p><b>Zdůvodnění žádosti:</b> {{ reason }}</p>
     <p>Po vyhodnocení žádosti lze údaje uživateli odeslat v odpovědi na tento email.</p>
 {% endblock %}
 {% block content_en %}
-  <!-- add English version -->
+    <p>Hello,</p>
+    <p>
+        user <b>{{auth_user.first_name}} {{auth_user.last_name}}</b> ({{auth_user.ident_cely}}) from organization <b>{{auth_user.organizace}}</b> is requesting access to the personal data of the announcer of the project <a href="{% get_site_url %}{% url 'projekt:detail' ident_cely %}">{{ ident_cely }}</a>.
+    </p>
+    <p><b>Reason for the request:</b> {{ reason }}</p>
+    <p>After evaluating the request, the data can be sent to the user in response to this email.</p>
 {% endblock %}

@@ -8,6 +8,7 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.utils.translation import gettext as _
 from dokument.models import Dokument
+from freezegun import freeze_time
 from komponenta.models import Komponenta
 from lokalita.models import Lokalita
 from nalez.models import NalezObjekt, NalezPredmet
@@ -21,15 +22,31 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceLokality(BaseSeleniumTestClass):
     def go_to_form_zapsat(self):
-        self.ElementClick(By.ID, "menuLokality")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.zapsat"))
+        self.goToAddress("/arch-z/lokalita/zapsat")
 
     def go_to_form_vybrat(self):
-        self.ElementClick(By.ID, "menuLokality")
-        self.ElementClick(By.LINK_TEXT, _("templates.baseLogedIn.sidebar.lokality.vybrat"))
+        self.goToAddress("/arch-z/lokalita/vyber?sort=nazev")
 
     def test_051_zapsani_lokality_p_001(self):
-        # Scenar_51 Zapsání lokality (pozitivní scénář 1)
+        """Test 051 Zapsání lokality (pozitivní scénář 1)
+
+        Test zapsání lokality na stránce /arch-z/lokalita/zapsat. Končí zapsáním lokality do databáze.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel klikne na menu Lokality -> Zapsat
+            - Uživatel vyplní data do formuláře
+            - Uživatel klikne na tlačítko Zapsat
+
+        Expected:
+            - Po kliknutí na tlačítko Zapsat je v databázi o jednu lokalitu více.
+        """
         logger.info("AkceLokality.test_051_zapsani_lokality_p_001.start")
         self.login("archeolog")
         self.go_to_form_zapsat()
@@ -62,7 +79,26 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_051_zapsani_lokality_p_001.end")
 
     def test_052_zapsani_lokality_n_001(self):
-        # Scenar_52 Zapsání lokality (negativní scénář 1)
+        """Test 052 Zapsání lokality (negativní scénář 1)
+
+        Test zapsání lokality na stránce /arch-z/lokalita/zapsat. Nekončí zapsáním lokality do databáze.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel klikne na menu Lokality -> Zapsat
+            - Uživatel vyplní data do formuláře, nevyplní pole Název
+            - Uživatel klikne na tlačítko Zapsat
+
+        Expected:
+            - Neúspěšné zapsání lokality, počet lokalit v databázi se nezměnil.
+            - Zobrazena nápověda “Vyplňte prosím toto pole” u pole Název.
+        """
         logger.info("AkceLokality.test_052_zapsani_lokality_n_001.start")
         self.login("archeolog")
         self.go_to_form_zapsat()
@@ -82,7 +118,7 @@ class AkceLokality(BaseSeleniumTestClass):
         # self.ElementClick(By.ID, "id_nazev")
         # self.driver.find_element(By.ID, "id_nazev").send_keys("test")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newEntitySubmitBtn")
         except Exception:
             pass
@@ -92,7 +128,32 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_052_zapsani_lokality_n_001.end")
 
     def test_053_pridani_DJ_lokality_p_001(self):
-        # Scenar_53 Přidání dokumentační jednotky lokalita (pozitivní scénář 1)
+        """Test 053 Přidání dokumentační jednotky lokalita (pozitivní scénář 1)
+
+        Test vytvoření dokumentační jednotky typu lokalita u lokalita ve stavu L1. Scénář končí vytvořením dokumentační jednotky D01 typu lokalita.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L1 a nemá žádnou dokumentační jednotku
+
+        TestData:
+            X-C-L000000001
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L1 (viz předpoklady)
+            - Lokalita → Vybrat → Filtr → ID obsahuje „X-C-L000000001“ → Vybrat → otevřít lokalitu
+            - Kliknout na tlačítko “Přidat dokumentační jednotku”
+            - Zvolit typ DJ “lokalita”
+            - Zvolit typ Negativní jednotka “ne”
+            - Kliknout na “uložit”
+
+        Expected:
+            - U akce bude vytvořena DJ typu “lokalita” (v databázi je o jednu DJ více).
+        """
         logger.info("AkceLokality.test_053_pridani_DJ_lokality_p_001.start")
         self.login("archeolog")
         self.go_to_form_vybrat()
@@ -118,7 +179,32 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_053_pridani_DJ_lokality_p_001.end")
 
     def test_054_pridani_DJ_lokality_n_001(self):
-        # Scenar_54 Přidání dokumentační jednotky lokalita (negativní scénář 1)
+        """Test 054 Přidání dokumentační jednotky lokalita (negativní scénář 1)
+
+        Test vytvoření dokumentační jednotky typu lokalita u lokalita ve stavu L1. Scénář nekončí vytvořením dokumentační jednotky D01 typu lokalita.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L1 a nemá žádnou dokumentační jednotku
+
+        TestData:
+            X-C-L000000001
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L1 (viz předpoklady)
+            - Lokalita → Vybrat → Filtr → ID obsahuje „X-C-L000000001“ → Vybrat → otevřít lokalitu
+            - Kliknout na tlačítko “Přidat dokumentační jednotku”
+            - Zvolit typ Negativní jednotka “ne”, nevybere pole Typ
+            - Kliknout na “uložit”
+
+        Expected:
+            - Neúspěšné vytvoření DJ typu “lokalita”, počet DJ v databázi se nezměnil.
+            - Zobrazena nápověda “Vyberte prosím v seznamu některou položku” u pole Typ.
+        """
         logger.info("AkceLokality.test_054_pridani_DJ_lokality_n_001.start")
         self.login("archeolog")
         self.go_to_form_vybrat()
@@ -137,7 +223,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.CSS_SELECTOR, "#div_id_negativni_jednotka .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-2-0")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "newDjSubmitButton")
         except Exception:
             pass
@@ -147,7 +233,33 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_054_pridani_DJ_lokality_n_001.end")
 
     def test_055_pridani_komponenty_DJ_lokality_p_001(self):
-        # Scenar_55 Přidání komponenty k dokumentační jednotce lokalita (pozitivní scénář 1)
+        """Test 055 Přidání komponenty k dokumentační jednotce lokalita (pozitivní scénář 1)
+
+        Test vytvoření komponenty u dokumentační jednotky typu lokalita u lokality ve stavu L1. Scénář končí vytvořením komponenty K001 u dokumentační jednotky D01.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L1 a má dokumentační jednotku D01 typu lokalita, která je pozitivní.
+
+        TestData:
+            X-C-L000000002
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L1 (X-C-L000000002)
+            - Lokalita → Vybrat → Filtr → ID obsahuje „X-C-L000000002“ → Vybrat → otevřít lokalitu
+            - Kliknout na dokumentační jednotku D01
+            - Kliknout na “Další volby” a zvolit ”Komponenta - vytvořit”.
+            - Zvolit Období “únětická k.”
+            - Zvolit Areál “sídliště nesp.”.
+            - Kliknout na “uložit změny”
+
+        Expected:
+            - U DJ D01 bude vytvořena nová komponenta K001, v databázi bude o jednu komponentu více.
+        """
         logger.info("AkceLokality.test_055_pridani_komponenty_DJ_lokality_p_001.start")
         self.login("archeolog")
         self.go_to_form_vybrat()
@@ -182,7 +294,29 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_055_pridani_komponenty_DJ_lokality_p_001.end")
 
     def test_056_odeslani_lokality_p_001(self):
-        # Scenar_56 Odeslání lokality (pozitivní scénář 1)
+        """Test 056 Odeslání lokality (pozitivní scénář 1)
+
+        Test odeslání lokality ve stavu L1 na stránce /arch-z/lokalita/detail. Měl by končit odesláním lokality a změnou jeho stavu na L2.
+
+        Role:
+            Archeolog
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L1, má připojenu dokumentační jednotku D01, ta má připojenu komponentu K001. Dokumentační jednotka má připojený PIAN.
+
+        TestData:
+            C-N9000579
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L1
+            - Lokalita → Vybrat → Filtr → ID obsahuje „C-N9000579“ → Vybrat → otevřít lokalitu
+            - Uživatel klikne na tlačítko Odeslat a volbu potvrdí
+
+        Expected:
+            -  Odeslání lokality a změna jejího stavu na L2.
+        """
         logger.info("AkceLokality.test_056_odeslani_lokality_p_001.start")
         self.login("archeolog")
         self.go_to_form_vybrat()
@@ -203,10 +337,36 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_056_odeslani_lokality_p_001.end")
 
     def test_057_odeslani_lokality_n_001(self):
-        # Scenar_57 Odeslání lokality (negativní scénář 1)
+        """Test 057 Odeslání dokumentu (negativní scénář 1)
+
+        Test odeslání dokumentu ve stavu D1 na stránce /dokument/detail/. Měl by končit neúspěšným odesláním dokumentu a jeho ponecháním ve stavu D1.
+
+        Role:
+            Badatel
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Dokument je ve stavu D1.
+
+        TestData:
+            X-C-TX-000000003
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře dokument ve stavu L1
+            - Dokument → Vybrat → Filtr → ID obsahuje „X-C-TX-000000003“ → Vybrat → otevřít dokument
+            - Uživatel klikne na tlačítko Odeslat
+
+        Expected:
+            -  Neúspěšné odeslání dokumentu a jeho ponechání ve stavu D1. Chybová hláška “Dokument nelze odeslat, zkontrolujte zda má všechny náležitosti.” a nápověda “Dokument musí mít alespoň jeden soubor.”,
+        """
         logger.info("AkceLokality.test_057_odeslani_lokality_n_001.start")
 
         self.login("archeolog")
+        self.createFedoraRecord("C-DT-100000146")
+        self.createFedoraRecord("C-DT-100000147")
+        self.uploadFileToFedora(81227, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(81228, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N9000145").first().stav, AZ_STAV_ZAPSANY)
 
@@ -218,7 +378,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N9000145")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-odeslat > .app-controls-button-text")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -227,9 +387,37 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_057_odeslani_lokality_n_001.end")
 
     def test_058_archivace_lokality_p_001(self):
-        # Scenar_58 Archivace lokality (pozitivní scénář 1)
+        """Test 058 Archivace lokality (pozitivní scénář 1)
+
+        Test archivace lokality ve stavu L2 na stránce /arch-z/lokalita/detail. Měl by končit archivací lokality a změnou jeho stavu na L3.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L2.
+
+        TestData:
+            C-N1000003
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L2
+            - Lokality → Vybrat → Filtr → ID obsahuje „C-N1000003“ → Vybrat → otevřít lokalitu
+            - Uživatel vybere dokumentační jednotku D01 a potvrdí nepotvrzený PIAN
+            - Dokumentační jednotky → D01 → Další volby → PIAN - potvrdit
+            - Uživatel klikne na tlačítko Archivovat a volbu potvrdí
+
+        Expected:
+            - Archivace lokality a její posunutí do stavu L3.
+        """
         logger.info("AkceLokality.test_058_archivace_lokality_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-DT-100005206")
+        self.createFedoraRecord("C-DY-100000065")
+        self.uploadFileToFedora(187330, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(63104, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
         self.ElementClick(By.ID, "buttonFiltr")
@@ -247,9 +435,36 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_058_archivace_lokality_p_001.end")
 
     def test_059_archivace_lokality_n_001(self):
-        # Scenar_59 Archivace lokality (negativní scénář 1)
+        """Test 059 Archivace lokality (negativní scénář 1)
+
+        Test archivace lokality ve stavu L2 na stránce /arch-z/lokalita/detail. Měl by končit ponecháním lokality ve stavu L2.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L2.
+
+        TestData:
+            C-N1000109
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L2
+            - Lokality → Vybrat → Filtr → ID obsahuje „C-N1000109“ → Vybrat → otevřít lokalitu
+            - Uživatel klikne na tlačítko Archivovat
+
+        Expected:
+            - K archivaci lokality nedojde, ta zůstane ve stavu L2.
+            - Zobrazena chyba “Lokalitu nelze odeslat. Zkontrolujte, zda má všechny náležitosti.” a nápověda “Dokumentační jednotce X-M-K000000034-D01 chybí PIAN.”
+        """
         logger.info("AkceLokality.test_059_archivace_lokality_n_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-DT-100005454")
+        self.createFedoraRecord("C-DY-100000058")
+        self.uploadFileToFedora(187349, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(63179, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").first().stav, AZ_STAV_ODESLANY)
         self.ElementClick(By.ID, "buttonFiltr")
@@ -259,7 +474,7 @@ class AkceLokality(BaseSeleniumTestClass):
         self.ElementClick(By.LINK_TEXT, "C-N1000109")
         self.ElementClick(By.CSS_SELECTOR, "#lokalita-archivovat > .material-icons")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -268,9 +483,35 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_059_archivace_lokality_n_001.end")
 
     def test_060_vraceni_odeslane_lokality_p_001(self):
-        # Scenar_60 Vrácení odeslané lokality (pozitivní scénář 1)
+        """Test 060 Vrácení odeslané lokality (pozitivní scénář 1)
+
+        Test vrácení lokality ve stavu L2 na stránce /arch-z/lokalita/detail. Měl by končit vrácením lokality a změnou jejího stavu na L1.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L2
+
+        TestData:
+            C-N1000003
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L2
+            - Lokality → Vybrat → Filtr → ID obsahuje „C-N1000003“ → Vybrat → otevřít lokalitu
+            - Uživatel klikne na tlačítko Vrátit, vyplní důvod a volbu potvrdí
+
+        Expected:
+            - Vrácení lokality do stavu L1.
+        """
         logger.info("AkceLokality.test_060_vraceni_odeslane_lokality_p_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-DT-100005206")
+        self.createFedoraRecord("C-DY-100000065")
+        self.uploadFileToFedora(187330, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(63104, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
 
@@ -290,9 +531,36 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_060_vraceni_odeslane_lokality_p_001.end")
 
     def test_061_vraceni_odeslane_lokality_n_001(self):
-        # Scenar_61 Vrácení odeslané lokality (negativní scénář 1)
+        """Test 061 Vrácení odeslané lokality (negativní scénář 1)
+
+        Test vrácení lokality ve stavu L2 na stránce /arch-z/lokalita/detail. Měl by končit neúspěšným vrácením a ponecháním lokality ve stavu L2.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L2
+
+        TestData:
+            C-N1000003
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L2
+            - Lokality → Vybrat → Filtr → ID obsahuje „C-N1000003“ → Vybrat → otevřít lokalitu
+            - Uživatel klikne na tlačítko Vrátit a volbu potvrdí
+
+        Expected:
+            - K vrácení lokality nedojde, ta zůstane ve stavu L2.
+            - Zobrazena nápověda “Vyplňte prosím toto pole”
+        """
         logger.info("AkceLokality.test_061_vraceni_odeslane_lokality_n_001.start")
         self.login("archivar")
+        self.createFedoraRecord("C-DT-100005206")
+        self.createFedoraRecord("C-DY-100000065")
+        self.uploadFileToFedora(187330, "dokument/tests/resources/test.tif")
+        self.uploadFileToFedora(63104, "dokument/tests/resources/test.tif")
         self.go_to_form_vybrat()
         self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000003").first().stav, AZ_STAV_ODESLANY)
 
@@ -305,7 +573,7 @@ class AkceLokality(BaseSeleniumTestClass):
         # self.ElementClick(By.ID, "id_reason")
         # self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -313,7 +581,29 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_061_vraceni_odeslane_lokality_n_001.end")
 
     def test_062_vraceni_archivovane_lokality_p_001(self):
-        # Scenar_62 Vrácení archivované lokality (pozitivní scénář 1)
+        """Test 062 Vrácení archivované lokality (pozitivní scénář 1)
+
+        Test vrácení lokality ve stavu L3 na stránce /arch-z/lokalita/detail. Měl by končit vrácením lokality a změnou jejího stavu na L2.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L3
+
+        TestData:
+            C-N9000593
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L3
+            - Lokality → Vybrat → Filtr → ID obsahuje „C-N9000593“ → Vybrat → otevřít lokalitu
+            - Uživatel klikne na tlačítko Vrátit, vyplní důvod a volbu potvrdí
+
+        Expected:
+            - Vrácení lokality do stavu L2.
+        """
         logger.info("AkceLokality.test_062_vraceni_archivovane_lokality_p_001.start")
 
         self.login("archivar")
@@ -336,7 +626,30 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_062_vraceni_archivovane_lokality_p_001.end")
 
     def test_063_vraceni_archivovane_lokality_n_001(self):
-        # Scenar_63 Vrácení archivované lokality (negativní scénář 1)
+        """Test 063 Vrácení archivované lokality (negativní scénář 1)
+
+        Test vrácení lokality ve stavu L3 na stránce /arch-z/lokalita/detail. Měl by končit neúspěšným vrácením a ponecháním lokality ve stavu L3.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L3
+
+        TestData:
+            C-N9000593
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L3
+            - Lokality → Vybrat → Filtr → ID obsahuje „C-N9000593“ → Vybrat → otevřít lokalitu
+            - Uživatel klikne na tlačítko Vrátit a volbu potvrdí
+
+        Expected:
+            - K vrácení lokality nedojde, ta zůstane ve stavu L3.
+            - Zobrazena nápověda “Vyplňte prosím toto pole”
+        """
         logger.info("AkceLokality.test_063_vraceni_archivovane_lokality_n_001.start")
 
         self.login("archivar")
@@ -352,7 +665,7 @@ class AkceLokality(BaseSeleniumTestClass):
         # self.ElementClick(By.ID, "id_reason")
         # self.driver.find_element(By.ID, "id_reason").send_keys("test")
         try:
-            with WaitForPageLoad(self.driver):
+            with WaitForPageLoad(self.driver, 5):
                 self.ElementClick(By.ID, "submit-btn")
         except Exception:
             pass
@@ -360,7 +673,46 @@ class AkceLokality(BaseSeleniumTestClass):
         logger.info("AkceLokality.test_063_vraceni_archivovane_lokality_n_001.end")
 
     def test_143_test_Fedory_lokalita_p_001(self):
-        # Scenar_143 Test Fedory pro lokalitu
+        """Test 143 Test Fedory pro lokalitu (pozitivní scénář 1)
+
+        Role:
+            Archivář
+
+        TestData:
+            ruian-679038
+            BIB-0000001
+            X-C-K0751147
+            N-1412-000000007
+            M-L9000181
+            M-TX-194300151
+
+        Steps:
+            - Vytvoření Lokality
+            - Editace Lokality
+            - Vytvoření DJ
+            - Editace DJ
+            - Vytvoření PIAN
+            - Editace PIAN
+            - Vytvoření komponenty
+            - Editace komponenty
+            - Vytvoření nálezu
+            - Editace nálezu
+            - Připojení a vytvoření nového Části dokumentu
+            - Připojení EZ
+            - Editace EZ
+            - Odeslání Lokality
+            - Smazaní EZ
+            - Smazání Části dokumentu
+            - Smazání nálezu
+            - Smazání komponenty
+            - Smazání DJ
+            - Smazání Lokality
+            - Potvrzení PIAN
+            - Připojení existujícího dokumentu
+
+        Expected:
+            - zápis dat do Fedory
+        """
         logger.info("AkceLokality.test_143_test_Fedory_lokalita_p_001.start")
         self.login("archivar")
         # C lokalita
@@ -574,8 +926,9 @@ class AkceLokality(BaseSeleniumTestClass):
         # ident_cely
         time = self.getTime()
         self.ElementClick(By.ID, "lokalita-odeslat")
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.ID, "submit-btn")
+        with freeze_time("2025-07-27 12:00:01", ignore=["core.tests.test_selenium"]):
+            with WaitForPageLoad(self.driver):
+                self.ElementClick(By.ID, "submit-btn")
         new_ident = self.driver.current_url.split("/")[-1]
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/ident_cely")
         self.check_fedora_delete(["record/X-C-L000000003", "record/X-C-TX-000000009"])
@@ -589,8 +942,8 @@ class AkceLokality(BaseSeleniumTestClass):
 
         # D dokument_cast
         time = self.getTime()
-        dockument_ident = Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=new_ident).first().ident_cely
-        self.ElementClick(By.ID, f"dokument-odpojit-{dockument_ident}")
+        dokument_ident = Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=new_ident).first().ident_cely
+        self.ElementClick(By.ID, f"dokument-odpojit-{dokument_ident}")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/delete_dokument_cast")
@@ -649,6 +1002,10 @@ class AkceLokality(BaseSeleniumTestClass):
         # změna ident_cely PIAN
         self.createFedoraRecord("X-C-K0751147", "archivar")
         self.createFedoraRecord("N-1412-000000007", "archivar")
+        self.createFedoraRecord("C-DT-100005023", "archivar")
+        self.createFedoraRecord("C-DT-100005024", "archivar")
+        self.uploadFileToFedora(187083, "dokument/tests/resources/test.tif", "archivar")
+        self.uploadFileToFedora(187080, "dokument/tests/resources/test.tif", "archivar")
         time = self.getTime()
         self.goToAddress("/arch-z/lokalita/detail/X-C-K0751147/dj/C-K0751147-D01")
         self.ElementClick(By.ID, "others")
@@ -661,6 +1018,9 @@ class AkceLokality(BaseSeleniumTestClass):
         # C dokument_cast existujici
         self.createFedoraRecord("M-L9000181", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
+        self.createFedoraRecord("M-LN-000000803", "archivar")
+        self.uploadFileToFedora(418643, "dokument/tests/resources/test.tif", "archivar")
+        self.uploadFileToFedora(534769, "dokument/tests/resources/test.tif", "archivar")
         time = self.getTime()
         self.goToAddress("/id/M-L9000181")
         self.ElementClick(By.ID, "others_doc")
@@ -674,3 +1034,53 @@ class AkceLokality(BaseSeleniumTestClass):
         self.check_fedora_change(time, "lokalita/tests/resources/test_143/create_dokument_cast_1")
 
         logger.info("AkceLokality.test_143_test_Fedory_lokalita_p_001.end")
+
+    def test_158_smazani_lokality_p_001(self):
+        """Test 158 Smazání lokality (pozitivní scénář 1)
+
+        Test smazání záznamu lokality, test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat.
+
+        Role:
+            Archivář
+
+        Preconditions:
+            - Uživatel je přihlášen.
+            - Lokalita je ve stavu L2
+
+        TestData:
+            C-N1000109
+
+        Steps:
+            - Uživatel se přihlásí
+            - Uživatel otevře lokalitu ve stavu L2
+            - Uživatel smaže dokumenty
+            - V panelu pro akce kliknout na  “Další volby” → “Smazat záznam”
+            - V dalším dialogovém okně “Smazat lokalitu” kliknout na “Smazat”
+
+        Expected:
+            - Lokalita je vymazána z databáze.
+        """
+        logger.info("AkceLokality.test_158_smazani_lokality_p_001.start")
+
+        self.login("archivar")
+        self.createFedoraRecord("C-N1000109")
+        self.createFedoraRecord("C-DT-100005454")
+        self.createFedoraRecord("C-DY-100000058")
+        self.uploadFileToFedora(187349, "projekt/tests/resources/test.pdf")
+        self.uploadFileToFedora(63179, "projekt/tests/resources/test.pdf")
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").count(), 1)
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").first().stav, AZ_STAV_ODESLANY)
+        self.goToAddress("/arch-z/lokalita/detail/C-N1000109")
+        self.ElementClick(By.ID, "dokument-odpojit-C-DT-100005454")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.ID, "dokument-odpojit-C-DY-100000058")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.ElementClick(By.ID, "otherOptions")
+        self.ElementClick(By.ID, "lokalita-smazat")
+        with WaitForPageLoad(self.driver):
+            self.ElementClick(By.ID, "submit-btn")
+        self.assertEqual(ArcheologickyZaznam.objects.filter(ident_cely="C-N1000109").count(), 0)
+
+        logger.info("AkceLokality.test_158_smazani_lokality_p_001.end")

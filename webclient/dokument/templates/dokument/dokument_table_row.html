@@ -1,4 +1,4 @@
-<tr id="d{{d.id}}">
+<tr id="{{prefix}}{{d.id}}">
   <td>
   {% if d.thumbnail_image %}
       <img src="{% url 'core:download_thumbnail' 'dokument' d.ident_cely d.thumbnail_image %}" class="image-nahled" data-bs-toggle="modal" data-bs-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'dokument' d.ident_cely d.thumbnail_image %}" loading="lazy" style="opacity:0" onload="this.style.opacity=100">

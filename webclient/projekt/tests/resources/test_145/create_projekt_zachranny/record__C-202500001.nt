@@ -9,5 +9,4 @@
 <info:test-base/rest/AMCR-selenium-test/record/C-202500001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#Container> .
 <info:test-base/rest/AMCR-selenium-test/record/C-202500001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#RDFSource> .
 <info:test-base/rest/AMCR-selenium-test/record/C-202500001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/ldp#Resource> .
-<info:test-base/rest/AMCR-selenium-test/record/C-202500001> <http://www.w3.org/ns/ldp#contains> <info:test-base/rest/AMCR-selenium-test/record/C-202500001/file> .
 <info:test-base/rest/AMCR-selenium-test/record/C-202500001> <http://www.w3.org/ns/ldp#contains> <info:test-base/rest/AMCR-selenium-test/record/C-202500001/metadata> .
