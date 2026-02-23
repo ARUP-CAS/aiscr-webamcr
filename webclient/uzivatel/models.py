@@ -307,8 +307,17 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             "uzivatel.models.User.save_metadata.start",
             extra={"transaction": fedora_transaction.uid, "ident_cely": self.ident_cely},
         )
-        from core.repository_connector import FedoraRepositoryConnector
+        from core.repository_connector import (
+            DryRunFedoraTransaction,
+            FedoraDeletionOnlyTransaction,
+            FedoraRepositoryConnector,
+        )
 
+        if isinstance(fedora_transaction, DryRunFedoraTransaction) or isinstance(
+            fedora_transaction, FedoraDeletionOnlyTransaction
+        ):
+            fedora_transaction.add_updated_ident_cely(self.ident_cely)
+            return
         connector = FedoraRepositoryConnector(self, fedora_transaction, skip_container_check=False)
         connector.save_metadata(True)
         if close_transaction is True or self.close_active_transaction_when_finished:

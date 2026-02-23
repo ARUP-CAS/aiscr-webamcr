@@ -155,13 +155,27 @@ class DocumentGenerator:
             from pian.models import Pian
             from projekt.models import Projekt
 
-            if isinstance(record, Projekt) or isinstance(record, DokumentExtraData):
+            if isinstance(record, Projekt):
                 record = record.__class__.objects.annotate(
                     geom_st_asgml=AsGML("geom", nprefix="gml"),
                     geom_st_astext=AsText("geom"),
                     geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
                     geom_sjtsk_st_astext=AsText("geom_sjtsk"),
                 ).get(pk=record.pk)
+            elif isinstance(record, DokumentExtraData):
+                try:
+                    record = record.__class__.objects.annotate(
+                        geom_st_asgml=AsGML("geom", nprefix="gml"),
+                        geom_st_astext=AsText("geom"),
+                        geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
+                        geom_sjtsk_st_astext=AsText("geom_sjtsk"),
+                    ).get(pk=record.pk)
+                except ObjectDoesNotExist:
+                    record = DokumentExtraData()
+                    setattr(record, "geom_st_asgml", None)
+                    setattr(record, "geom_st_astext", None)
+                    setattr(record, "geom_sjtsk_st_asgml", None)
+                    setattr(record, "geom_sjtsk_st_astext", None)
             elif isinstance(record, VyskovyBod):
                 record = record.__class__.objects.annotate(
                     geom_st_asgml=AsGML("geom", nprefix="gml"),

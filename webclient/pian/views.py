@@ -162,6 +162,17 @@ def potvrdit(request, dj_ident_cely):
     pian = dj.pian
     if pian == PIAN_POTVRZEN:
         raise PermissionDenied
+    form = PianCreateForm(instance=pian)
+    ok = form.run_loaded_validation()
+    if not ok:
+        logger.info("pian.views.potvrdit.not_valid", extra={"error": form.errors})
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(request, str(error))
+        return JsonResponse(
+            {"redirect": dj.get_absolute_url()},
+            status=403,
+        )
     if request.method == "POST":
         redirect_view = dj.archeologicky_zaznam.get_absolute_url(dj_ident_cely)
         fedora_transaction = pian.create_transaction(request.user, PIAN_USPESNE_POTVRZEN)
