@@ -38,8 +38,8 @@ jobs:
       - name: Validate tag format
         run: |
           set -euo pipefail
-          if [[ ! "${{ inputs.new_tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid tag format. Must be vX.Y.Z"
+          if [[ ! "${{ inputs.new_tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid tag format. Must be vX.Y.Z or vX.Y.Z-suffix"
             exit 1
           fi
       
