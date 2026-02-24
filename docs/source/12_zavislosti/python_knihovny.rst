@@ -672,7 +672,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.38.0
+     - 20.39.0
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
