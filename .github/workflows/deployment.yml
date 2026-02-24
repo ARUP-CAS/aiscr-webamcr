@@ -46,6 +46,11 @@ jobs:
       SSH_KNOWN_HOST: ${{ inputs.environment == 'DEV' && secrets.SSH_KNOWN_HOST_DEV || inputs.environment == 'TEST' && secrets.SSH_KNOWN_HOST_TEST }}
     
     steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refs/tags/v${{ inputs.tag }}
+          fetch-depth: 0
+    
       - name: Install OpenVPN
         run: |
           sudo apt-get update
