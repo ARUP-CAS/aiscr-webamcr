@@ -48,7 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: v${{ inputs.tag }}
+          ref: refs/tags/v${{ inputs.tag }}
+          fetch-depth: 0
 
       - name: Install OpenVPN
         run: |
@@ -95,11 +96,13 @@ jobs:
             sleep 3
           done       
           echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"          
-          git fetch --tags --force
-          git rev-parse "v${{ inputs.tag }}" >/dev/null 2>&1 || {
-            echo "Tag does not exist"
+          git fetch --all --tags --force
+          if ! git rev-parse "refs/tags/v${{ inputs.tag }}" >/dev/null 2>&1; then
+            echo "::error::Tag v${{ inputs.tag }} does not exist"
+            echo "Available tags:"
+            git tag -l
             exit 1
-          }
+          fi
           ssh amcr@${{ env.DEPLOYMENT_SERVER }} "sudo bash -s" << EOF
           set -euo pipefail
           cd ${{ env.server_deploy_root }}
