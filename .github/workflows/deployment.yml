@@ -46,11 +46,6 @@ jobs:
       SSH_KNOWN_HOST: ${{ inputs.environment == 'DEV' && secrets.SSH_KNOWN_HOST_DEV || inputs.environment == 'TEST' && secrets.SSH_KNOWN_HOST_TEST }}
     
     steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: refs/tags/v${{ inputs.tag }}
-          fetch-depth: 0
-
       - name: Install OpenVPN
         run: |
           sudo apt-get update
@@ -94,19 +89,18 @@ jobs:
           for i in {1..10}; do
             if ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then break; fi
             sleep 3
-          done       
-          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"          
-          git fetch --all --tags --force
-          if ! git rev-parse "refs/tags/v${{ inputs.tag }}" >/dev/null 2>&1; then
-            echo "::error::Tag v${{ inputs.tag }} does not exist"
-            echo "Available tags:"
-            git tag -l
-            exit 1
-          fi
+          done
+          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
           ssh amcr@${{ env.DEPLOYMENT_SERVER }} "sudo bash -s" << EOF
           set -euo pipefail
-          cd ${{ env.server_deploy_root }}
-          git checkout -f v${{ inputs.tag }}
+          cd ${{ env.server_deploy_root }}          
+          git fetch --all --tags --force          
+          if ! git rev-parse "refs/tags/v${{ inputs.tag }}" >/dev/null 2>&1; then
+            echo "ERROR: Tag v${{ inputs.tag }} does not exist"
+            git tag -l
+            exit 1
+          fi          
+          git checkout -f "refs/tags/v${{ inputs.tag }}"          
           chmod +x ${{ env.dep_script }}
           ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} ${{ env.branch }} ${{ inputs.source }}
           EOF
