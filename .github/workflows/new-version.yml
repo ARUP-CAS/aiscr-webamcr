@@ -132,7 +132,6 @@ jobs:
           tag: ${{ inputs.new_tag }}
           commit_sha: ${{ needs.update_files.outputs.sha }}
           message: "Release ${{ inputs.new_tag }}"
-          annotated: true
 
   docker_deploy:
     needs: new_version
