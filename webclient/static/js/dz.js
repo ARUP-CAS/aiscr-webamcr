@@ -193,6 +193,10 @@ window.onload = function () {
         init: function () {
             this.on("success", function (file, response) {
                 file.id = response.id;
+                if (file.previewElement) {
+                    const b = file.previewElement.querySelector("[data-dz-remove]");
+                    if (b) b.innerText = dz_trans["removeFile"];
+                }
                 let result = null;
                 let message = "";
                 if (response.duplicate && response.file_renamed) {
@@ -215,22 +219,45 @@ window.onload = function () {
             });
             this.on("addedfile", function (file) {
                 toggleButtonsDisabled(true);
+                updateRemoveLocks();
                 const btn = file.previewElement.querySelector("[data-dz-remove]");
 
                 //přepíše tlačítko delete
                 if(btn){
                     const clone = btn.cloneNode(true);
                     btn.parentNode.replaceChild(clone, btn);
-                    
+
+                    const setBtnText = () => { // nastavení textu tlačítka delete pod ikonou souboru
+                        if (file.status === Dropzone.UPLOADING) {
+                            clone.innerText = dz_trans["cancelUpload"];     // cancel během uploadu
+                        } else if (file.id) {
+                            clone.innerText = dz_trans["removeFile"];       // smazat ze serveru
+                        } else {
+                            clone.innerText = dz_trans["removeFile"];       // ještě bez id = jen odstranit z UI
+                        }
+                    };
+
+                    setBtnText();
+                                    
                     //vloží událost na tlačítko delete
                     clone.addEventListener("click", (e) => {
                         e.preventDefault();
                         e.stopPropagation();
 
-                        if (!file.id) return;
+                        if (file.status === Dropzone.UPLOADING) {  //mazání souboru při uploadu                            
+                            this.cancelUpload(file);
+                            this.removeFile(file); // odstraní z UI po zrušení                            
+                            return;
+                        }
+
+                        if (!file.id) {  //mazání souboru ve frontě
+                            this.removeFile(file);
+                            return;
+                        }
 
                         toggleAllLocked(true);
                         btn.style.pointerEvents = "none";
+                        clone.innerText = dz_trans["removingFile"];
 
                         const xhttp = new XMLHttpRequest();
                         xhttp.open("POST", "/soubor/smazat-DZ/" + typ_vazby + "/" + object_id + "/" + file.id);
@@ -245,6 +272,7 @@ window.onload = function () {
                                 } else {
                                     show_action_result_message(file, ActionResultsEnum.error, "error", ActionTypeEnum.delete);
                                     btn.style.pointerEvents = "auto";
+                                    setBtnText();
                                 }
                                 toggleAllLocked(false);
                             }
@@ -255,12 +283,34 @@ window.onload = function () {
                 }
             });
             this.on("processing", function (file) {
-                toggleFileRemoving(true);
+                 updateRemoveLocks(); 
             });
             this.on("queuecomplete", function () {
-                toggleButtonsDisabled(false);
-                toggleFileRemoving(false);
+                 toggleButtonsDisabled(false);
+                 updateRemoveLocks(); 
+                 //po dokončení kompletního nahrání všech souborů, pro jistotu provedeme reload stránky, aby bylo jasné co se opravdu nahrálo a co ne
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             });
+            this.on("sending", function (file, xhr /*, formData */) {
+                // před odesláním: ještě povol cancel (tlačítko nezamykáme)
+                file._awaitingServerResponseAfterUpload = false;
+                updateRemoveLocks();
+
+                // po doodeslání dat (progress 100%), ale před odpovědí serveru:
+                xhr.upload.addEventListener("loadend", () => {
+                    file._awaitingServerResponseAfterUpload = true;
+                    updateRemoveLocks();   // teď zamkni tlačítko u tohoto uploadovaného souboru
+                }, { once: true });
+            });
+
+            this.on("complete", function(file) {
+                file._awaitingServerResponseAfterUpload = false;
+                updateRemoveLocks();
+            });
+
+            this.on("removedfile", function() { updateRemoveLocks(); });
 
         },
         error: function (file, response) {
@@ -296,15 +346,66 @@ window.onload = function () {
             size: file.size,
             id: file.id // Přidání ID pro mazání
         };
-        newDropzone.emit("addedfile", mockFile);
-        newDropzone.emit("complete", mockFile);
+        newDropzone.emit("addedfile", mockFile);        
+        //stažení ikony souboru ze serveru
+        newDropzone.emit("thumbnail", mockFile, "/soubor/stahnout-nahled-DZ/" + typ_vazby + "/" + object_id + "/" + file.id);
+        mockFile.status = Dropzone.SUCCESS;
+        mockFile.upload = { progress: 100, total: mockFile.size, bytesSent: mockFile.size };
+        newDropzone.files.push(mockFile);
+
+        if (mockFile.previewElement) {
+            mockFile.previewElement.classList.add("dz-success", "dz-complete");
+            mockFile.previewElement.classList.remove("dz-processing");
+            const prog = mockFile.previewElement.querySelector(".dz-progress");
+            if (prog) prog.style.display = "none"; 
+        }
+        toggleButtonsDisabled(false);
+        updateRemoveLocks(); 
     });
 
-    //zablokuje tlačítka mazání
+    //zablokuje všechna tlačítka mazání
     function toggleFileRemoving(lock) {
         $("[data-dz-remove]").css({
             "pointer-events": lock ? "none" : "auto",
             "opacity": lock ? "0.4" : "1"
+        });
+    }
+
+    //zablokuje jedno tlačítko mazání
+    function toggleRemoveLockForFile(file, lock) {
+        if (!file.previewElement) return;
+        $(file.previewElement).find("[data-dz-remove]").css({
+            "pointer-events": lock ? "none" : "auto",
+            "opacity": lock ? "0.4" : "1"
+        });
+    }
+
+    // blokuje mazání souborů podle zadaných podmínek
+    function updateRemoveLocks() {
+        // je teď nějaký soubor aktivně uploadovaný?
+        const hasUploading = newDropzone.getUploadingFiles().length > 0; // používá interní statusy :contentReference[oaicite:0]{index=0}
+
+        newDropzone.files.forEach(f => {
+            // 1) soubory čekající ve frontě (ADDED/QUEUED): vždy povolit odstranit z fronty
+            if (f.status === Dropzone.ADDED || f.status === Dropzone.QUEUED) {
+            toggleRemoveLockForFile(f, false);
+            return;
+            }
+
+            // 2) soubor uploadovaný: zamykáme jen když už je doodesláno a čeká se na odpověď
+            if (f.status === Dropzone.UPLOADING) {
+            toggleRemoveLockForFile(f, !!f._awaitingServerResponseAfterUpload);
+            return;
+            }
+
+            // 3) už uploadnuté soubory (mají id): během uploadu jiného souboru je zamknout (aby nešel server delete)
+            if (f.id && hasUploading) {
+            toggleRemoveLockForFile(f, true);
+            return;
+            }
+
+            // 4) jinak povolit
+            toggleRemoveLockForFile(f, false);
         });
     }
 
