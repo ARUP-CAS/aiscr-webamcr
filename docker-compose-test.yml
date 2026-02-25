@@ -63,7 +63,7 @@ services:
       - client
 
   redis:
-    image: aiscr/webamcr-redis:latest
+    image: docker.io/library/test_redis
     restart: always
     ports:
       - "6379:6379"
