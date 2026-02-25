@@ -7,7 +7,7 @@
     vámi odeslaný záznam <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> na katastru <b> {{ katastr }} </b> byl převeden do stavu: <b>{{ state }}</b>.
 </p>
 <p>
-    Detaily o záznamu zjistíte po přihlášení do AMČR. Záznam byl zveřejněn v <a href="https://digiarchiv.aiscr.cz/id/{% url 'core:redirect_ident' ident_cely %}">Digitálním archivu AMČR</a>.
+    Detaily o záznamu zjistíte po přihlášení do AMČR. Záznam byl zveřejněn v <a href="https://digiarchiv.aiscr.cz/id/{{ ident_cely }}">Digitálním archivu AMČR</a>.
 </p>
 {% endblock %}
 {% block content_en %}
@@ -16,6 +16,6 @@
     your record <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> on the cadastral area <b> {{ katastr }} </b> was moved to state: <b>{{ state }}</b>.
 </p>
 <p>
-    You can find out the details of the record after logging into AMCR. The record was published in the <a href="https://digiarchiv.aiscr.cz/id/{% url 'core:redirect_ident' ident_cely %}">AMCR Digital Archive</a>.
+    You can find out the details of the record after logging into AMCR. The record was published in the <a href="https://digiarchiv.aiscr.cz/id/{{ ident_cely }}">AMCR Digital Archive</a>.
 </p>
 {% endblock %}
