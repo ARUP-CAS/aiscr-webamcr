@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.7.1
+     - 6.7.3
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
