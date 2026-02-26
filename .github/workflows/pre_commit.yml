@@ -9,6 +9,12 @@ on:
     branches:
       - dev
   workflow_dispatch:
+    inputs:
+      dependencies:
+        description: 'Update the list od dependencies'
+        type: boolean
+        default: true
+        
 
 permissions:
   contents: write
@@ -53,6 +59,10 @@ jobs:
 
       # 🔧 Install project dependencies
       - name: Install Dependencies
+        if: |
+          (github.event_name == 'pull_request' && github.base_ref == 'dev') ||
+          (github.event_name == 'push' && github.ref_name == 'dev') ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.dependencies == 'true')
         run: |
           pip install --upgrade pip
           pip install pip-licenses
@@ -61,6 +71,10 @@ jobs:
 
       # 📄 Regenerate license RST
       - name: Run convert_to_rst.py
+        if: |
+          (github.event_name == 'pull_request' && github.base_ref == 'dev') ||
+          (github.event_name == 'push' && github.ref_name == 'dev') ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.dependencies == 'true')
         run: python docs/licenses/convert_to_rst.py
 
       # 🔍 Run pre-commit and capture exit code
