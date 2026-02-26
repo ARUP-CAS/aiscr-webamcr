@@ -103,10 +103,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 3.11.1
      - BSD License
      - https://github.com/django/asgiref/
-   * - async-generator
-     - 1.10
-     - Apache Software License; MIT License
-     - https://github.com/python-trio/async_generator
    * - attrs
      - 25.4.0
      - MIT
@@ -339,10 +335,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.4.1
      - MIT License
      - https://github.com/shibukawa/imagesize_py
-   * - importlib_metadata
-     - 8.7.1
-     - Apache-2.0
-     - https://github.com/python/importlib_metadata
    * - inflate64
      - 1.0.4
      - GNU Lesser General Public License v2 or later (LGPLv2+)
@@ -363,10 +355,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.2.3
      - GNU Lesser General Public License v2 or later (LGPLv2+)
      - https://github.com/miurahr/multivolume
-   * - mypy_extensions
-     - 1.1.0
-     - MIT
-     - https://github.com/python/mypy_extensions
    * - nodeenv
      - 1.10.0
      - BSD License
@@ -491,6 +479,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.9.0.post0
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
+   * - python-discovery
+     - 1.0.0
+     - MIT License
+     - https://github.com/tox-dev/python-discovery
    * - python-logstash
      - 0.4.8
      - MIT License
@@ -536,7 +528,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0BSD OR CC0-1.0
      - https://github.com/AA-Turner/roman-numerals/blob/master/CHANGES.rst
    * - selenium
-     - 4.40.0
+     - 4.41.0
      - Apache-2.0
      - https://www.selenium.dev
    * - setuptools
@@ -631,22 +623,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 0.33.0
      - MIT OR Apache-2.0
      - https://github.com/python-trio/trio
-   * - trio-typing
-     - 0.10.0
-     - Apache Software License; MIT License
-     - https://github.com/python-trio/trio-typing
    * - trio-websocket
      - 0.12.2
      - MIT License
      - https://github.com/python-trio/trio-websocket
-   * - types-certifi
-     - 2021.10.8.3
-     - Apache Software License
-     - https://github.com/python/typeshed
-   * - types-urllib3
-     - 1.26.25.14
-     - Apache Software License
-     - https://github.com/python/typeshed
    * - typing_extensions
      - 4.15.0
      - PSF-2.0
@@ -672,7 +652,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.39.0
+     - 21.0.0
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
@@ -699,10 +679,6 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.3.0
      - BSD License
      - http://www.python-excel.org/
-   * - zipp
-     - 3.23.0
-     - MIT
-     - https://github.com/jaraco/zipp
 
 
 Knihovny vkládané jako statické soubory
