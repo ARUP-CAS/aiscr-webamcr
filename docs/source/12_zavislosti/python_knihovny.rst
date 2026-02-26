@@ -88,7 +88,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-2-Clause
      - https://www.sphinx-doc.org/
    * - Werkzeug
-     - 3.1.5
+     - 3.1.6
      - BSD-3-Clause
      - https://github.com/pallets/werkzeug/
    * - alabaster
@@ -476,7 +476,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.7.1
+     - 6.7.3
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -520,7 +520,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/RDFLib/rdflib
    * - redis
-     - 7.2.0
+     - 7.2.1
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
