@@ -88,7 +88,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-2-Clause
      - https://www.sphinx-doc.org/
    * - Werkzeug
-     - 3.1.5
+     - 3.1.6
      - BSD-3-Clause
      - https://github.com/pallets/werkzeug/
    * - alabaster
