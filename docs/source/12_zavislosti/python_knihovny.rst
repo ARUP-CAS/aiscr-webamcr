@@ -520,7 +520,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/RDFLib/rdflib
    * - redis
-     - 7.2.0
+     - 7.2.1
      - MIT
      - https://github.com/redis/redis-py
    * - reportlab
