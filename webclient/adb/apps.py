@@ -6,7 +6,10 @@ class AdbConfig(AppConfig):
     name = "adb"
 
     def ready(self):
-        """Provádí funkci ``AdbConfig.ready`` v rámci modulu ``webclient.adb.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(AdbConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import adb.signals

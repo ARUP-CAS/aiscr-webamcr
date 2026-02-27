@@ -44,7 +44,12 @@ class PianCreateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``PianCreateForm.__init__`` v rámci modulu ``webclient.pian.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PianCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -62,7 +67,11 @@ class PianCreateForm(forms.ModelForm):
         )
 
     def _instance_geom_wkt(self, field_name):
-        """Zpracuje volání ``PianCreateForm._instance_geom_wkt`` v rámci modulu ``webclient.pian.forms``."""
+        """Zajišťuje logiku funkce ``_instance_geom_wkt``.
+        
+        :param field_name: Vstupní hodnota parametru ``field_name`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         g = getattr(self.instance, field_name, None)
         if not g:
             return None
@@ -89,7 +98,10 @@ class PianCreateForm(forms.ModelForm):
         return not bool(self.errors)
 
     def clean(self):
-        """Provádí funkci ``PianCreateForm.clean`` v rámci modulu ``webclient.pian.forms``."""
+        """Zajišťuje logiku funkce ``clean``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         validation_geom = self.data.get("geom")
         self.validate_geom(validation_geom, "4326")
         validation_geom_jtsk = self.data.get("geom_sjtsk")

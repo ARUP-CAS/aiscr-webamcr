@@ -9,18 +9,28 @@ class PidAutocompleteField(autocomplete.Select2ListChoiceField):
     attribute_name = None
 
     def __init__(self, **kwargs):
-        """Zpracuje volání ``PidAutocompleteField.__init__`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.instance = kwargs.pop("instance", None)
         self.initial_value = kwargs.pop("initial_value", None)
         super().__init__(**kwargs)
         self._set_initial_values()
 
     def _get_initial_value_from_instance(self):
-        """Provádí funkci ``PidAutocompleteField._get_initial_value_from_instance`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``_get_initial_value_from_instance``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return getattr(self.instance, self.attribute_name)
 
     def _set_initial_values(self):
-        """Provádí funkci ``PidAutocompleteField._set_initial_values`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``_set_initial_values``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.initial_value:
             result_list = self.autocomplete_class.api_call(self.initial_value, True)
         elif self.instance and getattr(self.instance, self.attribute_name, None):
@@ -38,11 +48,19 @@ class DoiAutocompleteField(PidAutocompleteField):
     attribute_name = "doi"
 
     def valid_value(self, value):
-        """Zpracuje volání ``DoiAutocompleteField.valid_value`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``valid_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return verify_doi(value)
 
     def validate(self, value):
-        """Zpracuje volání ``DoiAutocompleteField.validate`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``validate``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return verify_doi(value)
 
 
@@ -52,21 +70,36 @@ class OrcidAutocompleteField(PidAutocompleteField):
     attribute_name = "orcid"
 
     def _get_initial_value_from_instance(self):
-        """Provádí funkci ``OrcidAutocompleteField._get_initial_value_from_instance`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``_get_initial_value_from_instance``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         value = super()._get_initial_value_from_instance()
         value = value.replace("https://orcid.org/", "") if value else None
         return value
 
     def prepare_value(self, value):
-        """Zpracuje volání ``OrcidAutocompleteField.prepare_value`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``prepare_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return value.replace("https://orcid.org/", "") if value else None
 
     def valid_value(self, value):
-        """Zpracuje volání ``OrcidAutocompleteField.valid_value`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``valid_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return verify_orcid(value)
 
     def validate(self, value):
-        """Zpracuje volání ``OrcidAutocompleteField.validate`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``validate``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return verify_orcid(value)
 
 
@@ -76,11 +109,19 @@ class RorAutocompleteField(PidAutocompleteField):
     attribute_name = "ror"
 
     def valid_value(self, value):
-        """Zpracuje volání ``RorAutocompleteField.valid_value`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``valid_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return verify_ror(value)
 
     def validate(self, value):
-        """Zpracuje volání ``RorAutocompleteField.validate`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``validate``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return verify_ror(value)
 
 
@@ -90,19 +131,34 @@ class WikiDataAutocompleteField(PidAutocompleteField):
     attribute_name = "wikidata"
 
     def _get_initial_value_from_instance(self):
-        """Provádí funkci ``WikiDataAutocompleteField._get_initial_value_from_instance`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``_get_initial_value_from_instance``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         value = super()._get_initial_value_from_instance()
         value = value.replace("https://www.wikidata.org/entity/", "") if value else None
         return value
 
     def prepare_value(self, value):
-        """Zpracuje volání ``WikiDataAutocompleteField.prepare_value`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``prepare_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return value.replace("https://www.wikidata.org/entity/", "") if value else None
 
     def valid_value(self, value):
-        """Zpracuje volání ``WikiDataAutocompleteField.valid_value`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``valid_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return verify_wikidata(value)
 
     def validate(self, value):
-        """Zpracuje volání ``WikiDataAutocompleteField.validate`` v rámci modulu ``webclient.pid.fields``."""
+        """Zajišťuje logiku funkce ``validate``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return verify_wikidata(value)

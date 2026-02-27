@@ -37,7 +37,11 @@ class CannotFindCadasterCentre(Exception):
 
 
 def file_validate_epsg(epsg):
-    """Provádí funkci ``file_validate_epsg`` v rámci modulu ``webclient.core.utils``."""
+    """Zajišťuje logiku funkce ``file_validate_epsg``.
+    
+    :param epsg: Vstupní hodnota parametru ``epsg`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if epsg == "4326":
         return True
     elif epsg == "5514":
@@ -47,7 +51,11 @@ def file_validate_epsg(epsg):
 
 
 def balanced_parentheses(expression):
-    """Provádí funkci ``balanced_parentheses`` v rámci modulu ``webclient.core.utils``."""
+    """Zajišťuje logiku funkce ``balanced_parentheses``.
+    
+    :param expression: Vstupní hodnota parametru ``expression`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     stack = 0
     for char in expression:
         if char == "(":
@@ -62,7 +70,10 @@ def balanced_parentheses(expression):
 
 
 def load_database_translation_strings():
-    """Provádí funkci ``load_database_translation_strings`` v rámci modulu ``webclient.core.utils``."""
+    """Zajišťuje logiku funkce ``load_database_translation_strings``.
+    
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     return [
         _("pian.posgtres.importovatPian.check.unsupportedEPSG"),
         _("pian.posgtres.importovatPian.check.wrongGeometry"),
@@ -875,7 +886,10 @@ class SearchTable(ColumnShiftTableBootstrap4):
     column_excluded = ["ident_cely"]
 
     def get_column_default_show(self):
-        """Provádí funkci ``SearchTable.get_column_default_show`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``get_column_default_show``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))
         return super(SearchTable, self).get_column_default_show()
 
@@ -1028,7 +1042,13 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
 
 def replace_last(source_string, old, new):
-    """Provádí funkci ``replace_last`` v rámci modulu ``webclient.core.utils``."""
+    """Zajišťuje logiku funkce ``replace_last``.
+    
+    :param source_string: Vstupní hodnota parametru ``source_string`` použitého při zpracování.
+    :param old: Vstupní hodnota parametru ``old`` použitého při zpracování.
+    :param new: Vstupní hodnota parametru ``new`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     index = source_string.rfind(old)
     if index != -1:
         start_part = source_string[:index]
@@ -1041,53 +1061,88 @@ def replace_last(source_string, old, new):
 class SessionIdentifier:
     """Zapouzdřuje chování třídy ``SessionIdentifier`` pro modul ``webclient.core.utils``."""
     def __init__(self, request):
-        """Zpracuje volání ``SessionIdentifier.__init__`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.cache_key = self._generate_session_key(request)
 
     def _generate_session_key(self, request):
-        """Zpracuje volání ``SessionIdentifier._generate_session_key`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``_generate_session_key``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if "session_uuid" not in request.session:
             request.session["session_uuid"] = str(uuid.uuid4())  # Vytvoří unikátní ID
             request.session.modified = True
         return f"session_{request.session['session_uuid']}_key"
 
     def clear_cached_files(self):
-        """Provádí funkci ``SessionIdentifier.clear_cached_files`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``clear_cached_files``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         cache.delete(f"{self.cache_key}_files")
 
     def set_ident(self, ident_cely, timeout=3600):
-        """Provádí funkci ``SessionIdentifier.set_ident`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``set_ident``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :param timeout: Vstupní hodnota parametru ``timeout`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         old_ident_cely = self.get_ident()
         if old_ident_cely != ident_cely:
             self.clear_cached_files()
         cache.set(self.cache_key, ident_cely, timeout)
 
     def get_ident(self):
-        """Provádí funkci ``SessionIdentifier.get_ident`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``get_ident``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return cache.get(self.cache_key, None)
 
     def add_file_reference(self, ident, timeout=3600):
-        """Provádí funkci ``SessionIdentifier.add_file_reference`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``add_file_reference``.
+        
+        :param ident: Vstupní hodnota parametru ``ident`` použitého při zpracování.
+        :param timeout: Vstupní hodnota parametru ``timeout`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         files.add(ident)
         cache.set(f"{self.cache_key}_files", files, timeout)
 
     def file_exists(self, ident):
-        """Zpracuje volání ``SessionIdentifier.file_exists`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``file_exists``.
+        
+        :param ident: Vstupní hodnota parametru ``ident`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
             return True
         return False
 
     def remove_file_reference(self, ident):
-        """Zpracuje volání ``SessionIdentifier.remove_file_reference`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``remove_file_reference``.
+        
+        :param ident: Vstupní hodnota parametru ``ident`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
             files.remove(ident)
             cache.set(f"{self.cache_key}_files", files)
 
     def get_cached_files(self):
-        """Provádí funkci ``SessionIdentifier.get_cached_files`` v rámci modulu ``webclient.core.utils``."""
+        """Zajišťuje logiku funkce ``get_cached_files``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         return files
 

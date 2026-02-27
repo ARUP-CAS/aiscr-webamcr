@@ -37,7 +37,12 @@ class Command(BaseCommand):
     help = _("core.management.commands.check_pian_properties.Command.help")
 
     def handle(self, *args, **options):
-        """Provádí funkci ``Command.handle`` v rámci modulu ``webclient.core.management.commands.check_pian_properties``."""
+        """Zajišťuje logiku funkce ``handle``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param options: Vstupní hodnota parametru ``options`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
         from heslar.models import Heslar
         from pian.models import Pian, get_ZM_from_point

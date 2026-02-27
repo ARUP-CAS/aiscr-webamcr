@@ -4,7 +4,12 @@ from django.db import migrations, models
 
 
 def populate_organizace_nazev(apps, schema_editor):
-    """Provádí funkci ``populate_organizace_nazev`` v rámci modulu ``webclient.ez.migrations.0006_externizdroj_organizace_nazev_and_more``."""
+    """Zajišťuje logiku funkce ``populate_organizace_nazev``.
+    
+    :param apps: Vstupní hodnota parametru ``apps`` použitého při zpracování.
+    :param schema_editor: Vstupní hodnota parametru ``schema_editor`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     ExterniZdroj = apps.get_model('ez', 'ExterniZdroj')
     for instance in ExterniZdroj.objects.all():
         if instance.organizace:

@@ -65,12 +65,20 @@ class NumberRangeWidget(SuffixedMultiWidget):
     suffixes = ["min", "max"]
 
     def __init__(self, attrs=None):
-        """Zpracuje volání ``NumberRangeWidget.__init__`` v rámci modulu ``webclient.arch_z.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param attrs: Vstupní hodnota parametru ``attrs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         widgets = (NumberInput, NumberInput)
         super().__init__(widgets, attrs)
 
     def decompress(self, value):
-        """Zpracuje volání ``NumberRangeWidget.decompress`` v rámci modulu ``webclient.arch_z.filters``."""
+        """Zajišťuje logiku funkce ``decompress``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if value:
             return [value.start, value.stop]
         return [None, None]
@@ -306,7 +314,12 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         ).distinct()
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ArchZaznamFilter.__init__`` v rámci modulu ``webclient.arch_z.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ArchZaznamFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
@@ -661,7 +674,13 @@ class AkceFilter(ArchZaznamFilter):
         return queryset.filter(Q(**{lookup1: value}) | Q(**{lookup2: value})).distinct()
 
     def filter_by_z_range(self, queryset, name, value):
-        """Provádí funkci ``AkceFilter.filter_by_z_range`` v rámci modulu ``webclient.arch_z.filters``."""
+        """Zajišťuje logiku funkce ``filter_by_z_range``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if value:
             if name == "vb_niveleta_od":
                 queryset = queryset.extra(where=["ST_Z(geom) >= %s"], params=[value])
@@ -670,7 +689,11 @@ class AkceFilter(ArchZaznamFilter):
         return queryset
 
     def filter_queryset(self, queryset):
-        """Zpracuje volání ``AkceFilter.filter_queryset`` v rámci modulu ``webclient.arch_z.filters``."""
+        """Zajišťuje logiku funkce ``filter_queryset``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(AkceFilter, self).filter_queryset(queryset)
@@ -706,7 +729,12 @@ class AkceFilter(ArchZaznamFilter):
         form = ArchzFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AkceFilter.__init__`` v rámci modulu ``webclient.arch_z.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(AkceFilter, self).__init__(*args, **kwargs)
         self.filters["typ"].extra["choices"] = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
         self.filters["historie_uzivatel_organizace"] = HistorieOrganizaceMultipleChoiceFilter(
@@ -725,7 +753,11 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Zpracuje volání ``AkceFilterFormHelper.__init__`` v rámci modulu ``webclient.arch_z.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("arch_z.filters.AkceFilterFormHelper.djPian.divider.label")
         }

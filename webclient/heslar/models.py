@@ -36,17 +36,26 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def dokument_typ_material_rada(self):
-        """Provádí funkci ``Heslar.dokument_typ_material_rada`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``dokument_typ_material_rada``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):
-        """Provádí funkci ``Heslar.podrazena_hesla`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``podrazena_hesla``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
 
     @property
     def nadrazena_hesla(self):
-        """Provádí funkci ``Heslar.nadrazena_hesla`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``nadrazena_hesla``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return HeslarHierarchie.objects.filter(heslo_podrazene=self)
 
     class Meta:
@@ -61,7 +70,10 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
         verbose_name_plural = "Heslář"
 
     def __str__(self):
-        """Provádí funkci ``Heslar.__str__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if get_language() == "en":
             if self.heslo_en:
                 return self.heslo_en
@@ -76,7 +88,12 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
                 return ""
 
     def save(self, *args, **kwargs):
-        """Provádí funkci ``Heslar.save`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``save``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         super().save(*args, **kwargs)
@@ -112,7 +129,12 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         verbose_name_plural = "Heslář datace"
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``HeslarDatace.__init__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(HeslarDatace, self).__init__(*args, **kwargs)
         try:
             self.initial_obdobi = self.obdobi
@@ -159,7 +181,12 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``HeslarDokumentTypMaterialRada.__init__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(HeslarDokumentTypMaterialRada, self).__init__(*args, **kwargs)
         self.initial_dokument_rada = self.dokument_rada
         self.initial_dokument_typ = self.dokument_typ
@@ -207,7 +234,12 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         ]
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``HeslarHierarchie.__init__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(HeslarHierarchie, self).__init__(*args, **kwargs)
         if self.pk:
             self.initial_heslo_podrazene = self.heslo_podrazene
@@ -227,7 +259,10 @@ class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
     povolit_zmeny = models.BooleanField(default=True, verbose_name=_("heslar.models.HeslarNazev.povolit_zmeny"))
 
     def __str__(self):
-        """Provádí funkci ``HeslarNazev.__str__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.nazev
 
     class Meta:
@@ -273,7 +308,12 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         verbose_name_plural = "Heslář odkaz"
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``HeslarOdkaz.__init__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(HeslarOdkaz, self).__init__(*args, **kwargs)
         if self.pk:
             logger.debug(self.heslo)
@@ -305,7 +345,10 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def pian_ident_cely(self):
-        """Provádí funkci ``RuianKatastr.pian_ident_cely`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``pian_ident_cely``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.pian is not None:
             return self.pian.ident_cely
         else:
@@ -318,16 +361,27 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
         verbose_name_plural = "Ruian katastry"
 
     def __str__(self):
-        """Provádí funkci ``RuianKatastr.__str__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"{self.nazev} ({self.okres.nazev}; {self.kod})"
 
     @property
     def ident_cely(self):
-        """Provádí funkci ``RuianKatastr.ident_cely`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``ident_cely``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Provádí funkci ``RuianKatastr.save`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``save``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -360,16 +414,27 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
         verbose_name_plural = "Ruian kraje"
 
     def __str__(self):
-        """Provádí funkci ``RuianKraj.__str__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Provádí funkci ``RuianKraj.ident_cely`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``ident_cely``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Provádí funkci ``RuianKraj.save`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``save``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -404,16 +469,27 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
         verbose_name_plural = "Ruian okresy"
 
     def __str__(self):
-        """Provádí funkci ``RuianOkres.__str__`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Provádí funkci ``RuianOkres.ident_cely`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``ident_cely``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Provádí funkci ``RuianOkres.save`` v rámci modulu ``webclient.heslar.models``."""
+        """Zajišťuje logiku funkce ``save``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(

@@ -172,7 +172,12 @@ class PermissionAdmin(admin.ModelAdmin):
     search_fields = ["address_in_app", "action"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
-        """Provádí funkci ``PermissionAdmin.changelist_view`` v rámci modulu ``webclient.core.admin``."""
+        """Zajišťuje logiku funkce ``changelist_view``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou. (typ: ``HttpRequest``).
+        :param extra_context: Vstupní hodnota parametru ``extra_context`` použitého při zpracování. (typ: ``dict[str, str] | None``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``HttpResponse``).
+        """
         return super().changelist_view(request, {"import_list": True})
 
     def get_urls(self):
@@ -347,7 +352,12 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     search_fields = ["user"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
-        """Provádí funkci ``PermissionSkipAdmin.changelist_view`` v rámci modulu ``webclient.core.admin``."""
+        """Zajišťuje logiku funkce ``changelist_view``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou. (typ: ``HttpRequest``).
+        :param extra_context: Vstupní hodnota parametru ``extra_context`` použitého při zpracování. (typ: ``dict[str, str] | None``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``HttpResponse``).
+        """
         return super().changelist_view(request, {"import_skip_list": True})
 
     def get_urls(self):
@@ -433,7 +443,11 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         )
 
     def check_save_row(self, row):
-        """Zpracuje volání ``PermissionSkipAdmin.check_save_row`` v rámci modulu ``webclient.core.admin``."""
+        """Zajišťuje logiku funkce ``check_save_row``.
+        
+        :param row: Vstupní hodnota parametru ``row`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             PermissionsSkip.objects.create(
                 user=User.objects.get(ident_cely=row.iloc[0]),
@@ -477,7 +491,12 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         )
 
     def export_as_csv(self, request, queryset):
-        """Provádí funkci ``PermissionSkipAdmin.export_as_csv`` v rámci modulu ``webclient.core.admin``."""
+        """Zajišťuje logiku funkce ``export_as_csv``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=opravneni_override.csv"
         writer = csv.writer(response, delimiter=";")
@@ -495,7 +514,12 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
     @staticmethod
     def _read_file(uploaded_file, context):
-        """Provádí funkci ``FedoraCustomAdminSite._read_file`` v rámci modulu ``webclient.core.admin``."""
+        """Zajišťuje logiku funkce ``_read_file``.
+        
+        :param uploaded_file: Vstupní hodnota parametru ``uploaded_file`` použitého při zpracování.
+        :param context: Vstupní hodnota parametru ``context`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         sheet = None
         if uploaded_file.content_type == "text/csv":
             try:
@@ -527,7 +551,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
         return sheet
 
     def update_doi(self, request):
-        """Zpracuje volání ``FedoraCustomAdminSite.update_doi`` v rámci modulu ``webclient.core.admin``."""
+        """Zajišťuje logiku funkce ``update_doi``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -550,7 +578,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
         return TemplateResponse(request, "admin/doi_management/update_doi.html", context)
 
     def update_metadata_file_upload(self, request):
-        """Zpracuje volání ``FedoraCustomAdminSite.update_metadata_file_upload`` v rámci modulu ``webclient.core.admin``."""
+        """Zajišťuje logiku funkce ``update_metadata_file_upload``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -576,7 +608,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
         """
 
         def normalize_file_name(name: str) -> str:
-            """Zpracuje volání ``FedoraCustomAdminSite.normalize_file_name`` v rámci modulu ``webclient.core.admin``."""
+            """Zajišťuje logiku funkce ``normalize_file_name``.
+            
+            :param name: Vstupní hodnota parametru ``name`` použitého při zpracování. (typ: ``str``).
+            :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``str``).
+            """
             if "/" in name:
                 name = name.split("/")[-1]
             return name.strip().lower()
@@ -632,7 +668,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
                             mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
 
                             def format_primary_key(pk):
-                                """Zpracuje volání ``FedoraCustomAdminSite.format_primary_key`` v rámci modulu ``webclient.core.admin``."""
+                                """Zajišťuje logiku funkce ``format_primary_key``.
+                                
+                                :param pk: Primární klíč záznamu.
+                                :return: Návratová hodnota funkce po zpracování vstupních dat.
+                                """
                                 if isinstance(pk, dict):
                                     return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
                                 return str(pk)
@@ -727,7 +767,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
     def get_urls(
         self,
     ):
-        """Provádí funkci ``FedoraCustomAdminSite.get_urls`` v rámci modulu ``webclient.core.admin``."""
+        """Zajišťuje logiku funkce ``get_urls``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return [
             path(
                 "update-metadata/",

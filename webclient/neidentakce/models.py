@@ -36,7 +36,12 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
         db_table = "neident_akce"
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``NeidentAkce.__init__`` v rámci modulu ``webclient.neidentakce.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(NeidentAkce, self).__init__(*args, **kwargs)
         try:
             dokument_cast: DokumentCast = self.dokument_cast

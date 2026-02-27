@@ -6,7 +6,10 @@ class HistorieConfig(AppConfig):
     name = "historie"
 
     def ready(self):
-        """Provádí funkci ``HistorieConfig.ready`` v rámci modulu ``webclient.historie.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(HistorieConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import historie.signals

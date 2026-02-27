@@ -16,11 +16,22 @@ logger = logging.getLogger(__name__)
 class AdminRecordProcessingView(LoginRequiredMixin, View):
     """Zapouzdřuje chování třídy ``AdminRecordProcessingView`` pro modul ``webclient.fedora_management.views``."""
     def process_record(self, record, result, **kwargs):
-        """Provádí funkci ``AdminRecordProcessingView.process_record`` v rámci modulu ``webclient.fedora_management.views``."""
+        """Zajišťuje logiku funkce ``process_record``.
+        
+        :param record: Vstupní hodnota parametru ``record`` použitého při zpracování.
+        :param result: Vstupní hodnota parametru ``result`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pass
 
     def get(self, request, **kwargs):
-        """Provádí funkci ``AdminRecordProcessingView.get`` v rámci modulu ``webclient.fedora_management.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         r = RedisConnector().get_connection()
         job_id = kwargs.get("job_id")
         job_data = r.get(job_id).decode("utf-8")
@@ -57,7 +68,13 @@ class AdminRecordProcessingView(LoginRequiredMixin, View):
 class ContinueMedataProcessing(AdminRecordProcessingView):
     """Zapouzdřuje chování třídy ``ContinueMedataProcessing`` pro modul ``webclient.fedora_management.views``."""
     def process_record(self, record, result, **kwargs):
-        """Provádí funkci ``ContinueMedataProcessing.process_record`` v rámci modulu ``webclient.fedora_management.views``."""
+        """Zajišťuje logiku funkce ``process_record``.
+        
+        :param record: Vstupní hodnota parametru ``record`` použitého při zpracování.
+        :param result: Vstupní hodnota parametru ``result`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
             try:
                 fedora_transaction = FedoraTransaction()

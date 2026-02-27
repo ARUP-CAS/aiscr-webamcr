@@ -34,7 +34,13 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(post_save, sender=ExterniZdroj, weak=False)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
-    """Provádí funkci ``externi_zdroj_save_metadata`` v rámci modulu ``webclient.ez.signals``."""
+    """Zajišťuje logiku funkce ``externi_zdroj_save_metadata``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``ExterniZdroj``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(ExterniZdroj)
     if not instance.suppress_signal:
@@ -52,7 +58,13 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(pre_delete, sender=ExterniZdroj, weak=False)
 def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
-    """Provádí funkci ``delete_externi_zdroj_repository_container`` v rámci modulu ``webclient.ez.signals``."""
+    """Zajišťuje logiku funkce ``delete_externi_zdroj_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``ExterniZdroj``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(
         "ez.signals.delete_externi_zdroj_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )

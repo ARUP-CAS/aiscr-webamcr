@@ -261,7 +261,12 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         form = PasFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``SamostatnyNalezFilter.__init__`` v rámci modulu ``webclient.pas.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         self.filters["obdobi"].extra["choices"] = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:]
@@ -274,7 +279,11 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_queryset(self, queryset):
-        """Zpracuje volání ``SamostatnyNalezFilter.filter_queryset`` v rámci modulu ``webclient.pas.filters``."""
+        """Zajišťuje logiku funkce ``filter_queryset``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(SamostatnyNalezFilter, self).filter_queryset(queryset)
@@ -365,7 +374,12 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         fields = ["stav"]
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``UzivatelSpolupraceFilter.__init__`` v rámci modulu ``webclient.pas.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
@@ -408,7 +422,11 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         self.helper = UzivatelSpolupraceFilterFormHelper()
 
     def filter_queryset(self, queryset):
-        """Zpracuje volání ``UzivatelSpolupraceFilter.filter_queryset`` v rámci modulu ``webclient.pas.filters``."""
+        """Zajišťuje logiku funkce ``filter_queryset``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(UzivatelSpolupraceFilter, self).filter_queryset(queryset)
@@ -436,7 +454,11 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Zpracuje volání ``SamostatnyNalezFilterFormHelper.__init__`` v rámci modulu ``webclient.pas.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.samostatnyNalezFilterFormHelper.history.divider.label")
         }
@@ -497,7 +519,11 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Zpracuje volání ``UzivatelSpolupraceFilterFormHelper.__init__`` v rámci modulu ``webclient.pas.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.UzivatelSpolupraceFilterFormHelper.history.divider.label")
         }

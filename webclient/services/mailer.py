@@ -86,7 +86,11 @@ class Mailer:
     """Zapouzdřuje chování třídy ``Mailer`` pro modul ``webclient.services.mailer``."""
     @classmethod
     def __strip_tags(cls, html):
-        """Zpracuje volání ``Mailer.__strip_tags`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``__strip_tags``.
+        
+        :param html: Vstupní hodnota parametru ``html`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         s = MLStripper()
         s.feed(html)
         return s.get_data()
@@ -95,7 +99,12 @@ class Mailer:
     def _notification_should_be_sent(
         cls, notification_type: "uzivatel.models.UserNotificationType", user: "uzivatel.models.User"
     ):
-        """Provádí funkci ``Mailer._notification_should_be_sent`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_notification_should_be_sent``.
+        
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování. (typ: ``'uzivatel.models.UserNotificationType'``).
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         result = False
         if notification_type.ident_cely in ALWAYS_ACTIVE:
             notification_is_enabled = True
@@ -131,7 +140,12 @@ class Mailer:
     def _notification_was_sent(
         cls, notification_type: "uzivatel.models.UserNotificationType", user: "uzivatel.models.User"
     ):
-        """Provádí funkci ``Mailer._notification_was_sent`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_notification_was_sent``.
+        
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování. (typ: ``'uzivatel.models.UserNotificationType'``).
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         notification_log = user.notification_log_items.filter(notification_type=notification_type).first()
         logger.debug(
             "services.mailer._notification_was_sent",
@@ -151,7 +165,16 @@ class Mailer:
         exception,
         log_user=None,
     ):
-        """Provádí funkci ``Mailer._log_notification`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_log_notification``.
+        
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování. (typ: ``'uzivatel.models.UserNotificationType'``).
+        :param receiver_object: Vstupní hodnota parametru ``receiver_object`` použitého při zpracování.
+        :param receiver_address: Vstupní hodnota parametru ``receiver_address`` použitého při zpracování.
+        :param status: Vstupní hodnota parametru ``status`` použitého při zpracování.
+        :param exception: Vstupní hodnota parametru ``exception`` použitého při zpracování.
+        :param log_user: Vstupní hodnota parametru ``log_user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         user_object = log_user if log_user else receiver_object
         try:
             uzivatel.models.User.objects.get(pk=user_object.pk)
@@ -196,7 +219,20 @@ class Mailer:
         reply_to=None,
         cc=None,
     ):
-        """Provádí funkci ``Mailer.__send`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``__send``.
+        
+        :param subject: Vstupní hodnota parametru ``subject`` použitého při zpracování.
+        :param to: Vstupní hodnota parametru ``to`` použitého při zpracování.
+        :param html_content: Vstupní hodnota parametru ``html_content`` použitého při zpracování.
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :param from_email: Vstupní hodnota parametru ``from_email`` použitého při zpracování.
+        :param attachment: Vstupní hodnota parametru ``attachment`` použitého při zpracování. (typ: ``RepositoryBinaryFile``).
+        :param log_user: Vstupní hodnota parametru ``log_user`` použitého při zpracování.
+        :param reply_to: Vstupní hodnota parametru ``reply_to`` použitého při zpracování.
+        :param cc: Vstupní hodnota parametru ``cc`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if "@" in to:
             plain_text = cls.__strip_tags(html_content)
             email = EmailMultiAlternatives(subject, plain_text, from_email, [to], reply_to=reply_to, cc=cc)
@@ -236,7 +272,11 @@ class Mailer:
 
     @classmethod
     def send_eu02(cls, user: "uzivatel.models.User"):
-        """Zpracuje volání ``Mailer.send_eu02`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_eu02``.
+        
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-U-02"
         logger.debug("services.mailer.send_eu02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -257,7 +297,11 @@ class Mailer:
 
     @classmethod
     def send_eu03(cls, user: "uzivatel.models.User"):
-        """Zpracuje volání ``Mailer.send_eu03`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_eu03``.
+        
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-U-03"
         logger.debug("services.mailer.send_eu03", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -267,7 +311,11 @@ class Mailer:
 
     @classmethod
     def send_eu04(cls, user: "uzivatel.models.User"):
-        """Zpracuje volání ``Mailer.send_eu04`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_eu04``.
+        
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-U-04"
         logger.debug("services.mailer.send_eu04", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -298,7 +346,12 @@ class Mailer:
 
     @classmethod
     def send_eu06(cls, user: "uzivatel.models.User", groups):
-        """Provádí funkci ``Mailer.send_eu06`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_eu06``.
+        
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :param groups: Vstupní hodnota parametru ``groups`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-U-06"
         logger.debug("services.mailer.send_eu06", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -319,7 +372,12 @@ class Mailer:
 
     @classmethod
     def send_eu07(cls, user: "uzivatel.models.User", request):
-        """Provádí funkci ``Mailer.send_eu07`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_eu07``.
+        
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-U-07"
         logger.debug("services.mailer.send_eu07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -339,7 +397,12 @@ class Mailer:
 
     @classmethod
     def _send_notification_for_project(cls, project, notification_type):
-        """Provádí funkci ``Mailer._send_notification_for_project`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_send_notification_for_project``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování.
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from projekt.models import Projekt
         from uzivatel.models import User
 
@@ -369,7 +432,12 @@ class Mailer:
 
     @classmethod
     def _send_notification_for_projects(cls, projects, notification_type):
-        """Provádí funkci ``Mailer._send_notification_for_projects`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_send_notification_for_projects``.
+        
+        :param projects: Vstupní hodnota parametru ``projects`` použitého při zpracování.
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "services.mailer._send_notification_for_projects",
             extra={"notification_type": notification_type, "count": projects.count()},
@@ -379,7 +447,10 @@ class Mailer:
 
     @classmethod
     def send_enz01(cls):
-        """Provádí funkci ``Mailer.send_enz01`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_enz01``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         today_plus_90_days = (datetime.now() + timedelta(days=90)).date()
         IDENT_CELY = "E-NZ-01"
         logger.debug("services.mailer.send_enz01", extra={"ident_cely": IDENT_CELY})
@@ -391,7 +462,10 @@ class Mailer:
 
     @classmethod
     def send_enz02(cls):
-        """Provádí funkci ``Mailer.send_enz02`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_enz02``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         today_minus_1_day = (datetime.now() - timedelta(days=1)).date()
         IDENT_CELY = "E-NZ-02"
         logger.debug("services.mailer.send_enz02", extra={"ident_cely": IDENT_CELY})
@@ -403,7 +477,12 @@ class Mailer:
 
     @classmethod
     def send_ev01(cls, zaznam: "arch_z.models.ArcheologickyZaznam", reason):
-        """Provádí funkci ``Mailer.send_ev01`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ev01``.
+        
+        :param zaznam: Vstupní hodnota parametru ``zaznam`` použitého při zpracování. (typ: ``'arch_z.models.ArcheologickyZaznam'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-V-01"
         logger.debug("services.mailer.send_ev01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -442,7 +521,13 @@ class Mailer:
         notification_type,
         user: "uzivatel.models.User" = None,
     ):
-        """Provádí funkci ``Mailer._send_a`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_send_a``.
+        
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování. (typ: ``Union[projekt.models.Projekt, arch_z.models.ArcheologickyZaznam]``).
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         subject = notification_type.predmet.format(ident_cely=obj.ident_cely)
         if isinstance(obj, projekt.models.Projekt):
             state = obj.CHOICES[obj.stav][1]
@@ -479,7 +564,12 @@ class Mailer:
 
     @classmethod
     def send_ea01(cls, project: "projekt.models.Projekt", user: "uzivatel.models.User"):
-        """Provádí funkci ``Mailer.send_ea01`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ea01``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-A-01"
         logger.debug("services.mailer.send_ea01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -489,7 +579,11 @@ class Mailer:
 
     @classmethod
     def send_ea02(cls, arch_z: "arch_z.models.ArcheologickyZaznam"):
-        """Zpracuje volání ``Mailer.send_ea02`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ea02``.
+        
+        :param arch_z: Vstupní hodnota parametru ``arch_z`` použitého při zpracování. (typ: ``'arch_z.models.ArcheologickyZaznam'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-A-02"
         logger.debug("services.mailer.send_ea02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -497,7 +591,12 @@ class Mailer:
 
     @classmethod
     def _send_e(cls, project, notification_type):
-        """Provádí funkci ``Mailer._send_e`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_send_e``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování.
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
             notification_type.cesta_sablony,
@@ -516,7 +615,11 @@ class Mailer:
 
     @classmethod
     def send_eo01(cls, project: "projekt.models.Projekt"):
-        """Zpracuje volání ``Mailer.send_eo01`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_eo01``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-O-01"
         logger.debug("services.mailer.send_eo01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -524,7 +627,11 @@ class Mailer:
 
     @classmethod
     def send_eo02(cls, project: "projekt.models.Projekt"):
-        """Zpracuje volání ``Mailer.send_eo02`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_eo02``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-O-02"
         logger.debug("services.mailer.send_eo02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -532,7 +639,13 @@ class Mailer:
 
     @classmethod
     def _send_ep01(cls, project, notification_type, rep_bin_file=None):
-        """Provádí funkci ``Mailer._send_ep01`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_send_ep01``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování.
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :param rep_bin_file: Vstupní hodnota parametru ``rep_bin_file`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
             notification_type.cesta_sablony,
@@ -592,7 +705,12 @@ class Mailer:
 
     @classmethod
     def send_ep01a(cls, project: "projekt.models.Projekt", rep_bin_file=None):
-        """Provádí funkci ``Mailer.send_ep01a`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep01a``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param rep_bin_file: Vstupní hodnota parametru ``rep_bin_file`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-01a"
         logger.debug("services.mailer.send_ep01a", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -600,7 +718,12 @@ class Mailer:
 
     @classmethod
     def send_ep01b(cls, project: "projekt.models.Projekt", rep_bin_file=None):
-        """Provádí funkci ``Mailer.send_ep01b`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep01b``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param rep_bin_file: Vstupní hodnota parametru ``rep_bin_file`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-01b"
         logger.debug("services.mailer.send_ep01b", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -608,7 +731,12 @@ class Mailer:
 
     @classmethod
     def send_ep02(cls, psi, project):
-        """Provádí funkci ``Mailer.send_ep02`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep02``.
+        
+        :param psi: Vstupní hodnota parametru ``psi`` použitého při zpracování.
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-02"
         while project.ident_cely.startswith("X-"):
             project.refresh_from_db()
@@ -636,7 +764,12 @@ class Mailer:
 
     @classmethod
     def _send_ep03(cls, project, notification_type):
-        """Provádí funkci ``Mailer._send_ep03`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_send_ep03``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování.
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
             notification_type.cesta_sablony,
@@ -665,7 +798,11 @@ class Mailer:
 
     @classmethod
     def send_ep03a(cls, project: "projekt.models.Projekt"):
-        """Zpracuje volání ``Mailer.send_ep03a`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep03a``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-03a"
         logger.debug("services.mailer.send_ep03a", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -673,7 +810,11 @@ class Mailer:
 
     @classmethod
     def send_ep03b(cls, project: "projekt.models.Projekt"):
-        """Zpracuje volání ``Mailer.send_ep03b`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep03b``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-03b"
         logger.debug("services.mailer.send_ep03b", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -681,7 +822,13 @@ class Mailer:
 
     @classmethod
     def send_ep07(cls, project: "projekt.models.Projekt", reason, user):
-        """Provádí funkci ``Mailer.send_ep07`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep07``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-07"
         logger.debug("services.mailer.send_ep07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -710,7 +857,12 @@ class Mailer:
 
     @classmethod
     def send_ep04(cls, project: "projekt.models.Projekt", reason):
-        """Provádí funkci ``Mailer.send_ep04`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep04``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-04"
         logger.debug("services.mailer.send_ep04", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -740,7 +892,11 @@ class Mailer:
 
     @classmethod
     def send_ep05(cls, project: "projekt.models.Projekt"):
-        """Zpracuje volání ``Mailer.send_ep05`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep05``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-05"
         logger.debug(
             "services.mailer.send_ep05", extra={"ident_cely": IDENT_CELY, "project_ident_cely": project.ident_cely}
@@ -773,7 +929,11 @@ class Mailer:
 
     @classmethod
     def _get_ep06_attachment(cls, project) -> RepositoryBinaryFile | None:
-        """Zpracuje volání ``Mailer._get_ep06_attachment`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_get_ep06_attachment``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``RepositoryBinaryFile | None``).
+        """
         project_files = project.soubory.soubory.filter(
             nazev__startswith=f"{ZruseniPDFCreator.FILENAME_PREFIX}_{project.ident_cely}", nazev__endswith=".pdf"
         )
@@ -804,7 +964,14 @@ class Mailer:
 
     @classmethod
     def _send_ep06(cls, project, notification_type, reason, rep_bin_file=None):
-        """Provádí funkci ``Mailer._send_ep06`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_send_ep06``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování.
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :param rep_bin_file: Vstupní hodnota parametru ``rep_bin_file`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         oznameni = Historie.objects.filter(
             vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=OZNAMENI_PROJ
@@ -835,7 +1002,13 @@ class Mailer:
 
     @classmethod
     def send_ep06a(cls, project: "projekt.models.Projekt", reason, rep_bin_file=None):
-        """Provádí funkci ``Mailer.send_ep06a`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep06a``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :param rep_bin_file: Vstupní hodnota parametru ``rep_bin_file`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-06a"
         logger.debug("services.mailer.send_ep06a", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -843,7 +1016,13 @@ class Mailer:
 
     @classmethod
     def send_ep06b(cls, project: "projekt.models.Projekt", reason, rep_bin_file=None):
-        """Provádí funkci ``Mailer.send_ep06b`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep06b``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :param rep_bin_file: Vstupní hodnota parametru ``rep_bin_file`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-06b"
         logger.debug("services.mailer.send_ep06b", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -851,7 +1030,13 @@ class Mailer:
 
     @classmethod
     def _send_en01_02(cls, projekt_ident_list, notification_type, send_to):
-        """Provádí funkci ``Mailer._send_en01_02`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``_send_en01_02``.
+        
+        :param projekt_ident_list: Vstupní hodnota parametru ``projekt_ident_list`` použitého při zpracování.
+        :param notification_type: Vstupní hodnota parametru ``notification_type`` použitého při zpracování.
+        :param send_to: Vstupní hodnota parametru ``send_to`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         subject = notification_type.predmet
         context = {
             "title": subject,
@@ -864,7 +1049,12 @@ class Mailer:
 
     @classmethod
     def send_en01(cls, send_to, projekt_ident_list):
-        """Provádí funkci ``Mailer.send_en01`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_en01``.
+        
+        :param send_to: Vstupní hodnota parametru ``send_to`` použitého při zpracování.
+        :param projekt_ident_list: Vstupní hodnota parametru ``projekt_ident_list`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-N-01"
         logger.debug("services.mailer.send_en01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -872,7 +1062,12 @@ class Mailer:
 
     @classmethod
     def send_en02(cls, send_to, projekt_ident_list):
-        """Provádí funkci ``Mailer.send_en02`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_en02``.
+        
+        :param send_to: Vstupní hodnota parametru ``send_to`` použitého při zpracování.
+        :param projekt_ident_list: Vstupní hodnota parametru ``projekt_ident_list`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-N-02"
         logger.debug("services.mailer.send_en02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -880,7 +1075,12 @@ class Mailer:
 
     @classmethod
     def send_en03_en04(cls, samostatny_nalez: "pas.models.SamostatnyNalez", reason):
-        """Provádí funkci ``Mailer.send_en03_en04`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_en03_en04``.
+        
+        :param samostatny_nalez: Vstupní hodnota parametru ``samostatny_nalez`` použitého při zpracování. (typ: ``'pas.models.SamostatnyNalez'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("services.mailer.send_en03_en04")
         if samostatny_nalez.stav == SN_ODESLANY:
             look_for_stav = f"SN{SN_ODESLANY}{SN_POTVRZENY}"
@@ -917,7 +1117,14 @@ class Mailer:
 
     @classmethod
     def send_en05(cls, email_to, reason, user: "uzivatel.models.User", spoluprace_id):
-        """Provádí funkci ``Mailer.send_en05`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_en05``.
+        
+        :param email_to: Vstupní hodnota parametru ``email_to`` použitého při zpracování.
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování. (typ: ``'uzivatel.models.User'``).
+        :param spoluprace_id: Vstupní hodnota parametru ``spoluprace_id`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-N-05"
         logger.debug("services.mailer.send_en05", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -942,7 +1149,11 @@ class Mailer:
 
     @classmethod
     def send_en06(cls, cooperation: "pas.models.UzivatelSpoluprace"):
-        """Zpracuje volání ``Mailer.send_en06`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_en06``.
+        
+        :param cooperation: Vstupní hodnota parametru ``cooperation`` použitého při zpracování. (typ: ``'pas.models.UzivatelSpoluprace'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-N-06"
         logger.debug("services.mailer.send_en06", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -967,7 +1178,12 @@ class Mailer:
 
     @classmethod
     def send_en07(cls, cooperation: "pas.models.UzivatelSpoluprace", reason):
-        """Provádí funkci ``Mailer.send_en07`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_en07``.
+        
+        :param cooperation: Vstupní hodnota parametru ``cooperation`` použitého při zpracování. (typ: ``'pas.models.UzivatelSpoluprace'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-N-07"
         logger.debug("services.mailer.send_en07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1003,7 +1219,11 @@ class Mailer:
 
     @classmethod
     def send_ek01(cls, document: "dokument.models.Dokument"):
-        """Zpracuje volání ``Mailer.send_ek01`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ek01``.
+        
+        :param document: Vstupní hodnota parametru ``document`` použitého při zpracování. (typ: ``'dokument.models.Dokument'``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-K-01"
         logger.debug("services.mailer.send_ek01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1027,7 +1247,12 @@ class Mailer:
 
     @classmethod
     def send_ek02(cls, document: "dokument.models.Dokument", reason):
-        """Provádí funkci ``Mailer.send_ek02`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ek02``.
+        
+        :param document: Vstupní hodnota parametru ``document`` použitého při zpracování. (typ: ``'dokument.models.Dokument'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-K-02"
         logger.debug("services.mailer.send_ek02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1056,7 +1281,10 @@ class Mailer:
 
     @staticmethod
     def get_en01_data() -> Dict:
-        """Provádí funkci ``Mailer.get_en01_data`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``get_en01_data``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Dict``).
+        """
         invalidate_model(SamostatnyNalez)
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -1091,7 +1319,10 @@ class Mailer:
 
     @staticmethod
     def get_en02_data() -> Dict:
-        """Provádí funkci ``Mailer.get_en02_data`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``get_en02_data``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Dict``).
+        """
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
         previous_midnight = midnight + timedelta(days=-1)
@@ -1125,7 +1356,13 @@ class Mailer:
 
     @classmethod
     def send_ep08(cls, project: "projekt.models.Projekt", reason, user):
-        """Provádí funkci ``Mailer.send_ep08`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep08``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-08"
         logger.debug("services.mailer.send_ep08", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1144,7 +1381,14 @@ class Mailer:
 
     @classmethod
     def send_ep09(cls, project: "projekt.models.Projekt", info_text, user, kraje_s_emailem):
-        """Provádí funkci ``Mailer.send_ep09`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep09``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param info_text: Vstupní hodnota parametru ``info_text`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :param kraje_s_emailem: Vstupní hodnota parametru ``kraje_s_emailem`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-09"
         logger.debug("services.mailer.send_ep09", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1170,7 +1414,14 @@ class Mailer:
 
     @classmethod
     def send_ep10(cls, project: "projekt.models.Projekt", info_text, user, kraje_s_emailem):
-        """Provádí funkci ``Mailer.send_ep10`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep10``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param info_text: Vstupní hodnota parametru ``info_text`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :param kraje_s_emailem: Vstupní hodnota parametru ``kraje_s_emailem`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-10"
         logger.debug("services.mailer.send_ep10", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1196,7 +1447,14 @@ class Mailer:
 
     @classmethod
     def send_ep11(cls, project: "projekt.models.Projekt", reason, user, request):
-        """Provádí funkci ``Mailer.send_ep11`` v rámci modulu ``webclient.services.mailer``."""
+        """Zajišťuje logiku funkce ``send_ep11``.
+        
+        :param project: Vstupní hodnota parametru ``project`` použitého při zpracování. (typ: ``'projekt.models.Projekt'``).
+        :param reason: Vstupní hodnota parametru ``reason`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         IDENT_CELY = "E-P-11"
         logger.debug("services.mailer.send_ep11", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)

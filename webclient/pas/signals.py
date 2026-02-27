@@ -34,7 +34,14 @@ def create_dokument_vazby(sender, instance, **kwargs):
 
 @receiver(post_save, sender=SamostatnyNalez, weak=False)
 def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, **kwargs):
-    """Provádí funkci ``save_metadata_samostatny_nalez`` v rámci modulu ``webclient.pas.signals``."""
+    """Zajišťuje logiku funkce ``save_metadata_samostatny_nalez``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``SamostatnyNalez``).
+    :param created: Vstupní hodnota parametru ``created`` použitého při zpracování.
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
@@ -43,7 +50,11 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
         fedora_transaction = instance.active_transaction
 
         def save_metadata(close_transaction=False):
-            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.pas.signals``."""
+            """Zajišťuje logiku funkce ``save_metadata``.
+            
+            :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
                 instance.projekt.set_pristupnost()
                 instance.projekt.active_transaction = fedora_transaction
@@ -64,14 +75,24 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
 
 @receiver(pre_delete, sender=SamostatnyNalez, weak=False)
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
-    """Provádí funkci ``dokument_delete_container_soubor_vazby`` v rámci modulu ``webclient.pas.signals``."""
+    """Zajišťuje logiku funkce ``dokument_delete_container_soubor_vazby``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``SamostatnyNalez``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.pas.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if instance.projekt:
             instance.projekt.save_metadata(fedora_transaction)
         instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
@@ -95,13 +116,23 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 
 @receiver(post_save, sender=UzivatelSpoluprace, weak=False)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
-    """Provádí funkci ``save_uzivatel_spoluprce`` v rámci modulu ``webclient.pas.signals``."""
+    """Zajišťuje logiku funkce ``save_uzivatel_spoluprce``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``UzivatelSpoluprace``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
         def save_metadata(close_transaction=False):
-            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.pas.signals``."""
+            """Zajišťuje logiku funkce ``save_metadata``.
+            
+            :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             instance.vedouci.save_metadata(fedora_transaction)
             instance.spolupracovnik.save_metadata(fedora_transaction, close_transaction=close_transaction)
 
@@ -114,12 +145,22 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
 
 @receiver(post_delete, sender=UzivatelSpoluprace, weak=False)
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
-    """Provádí funkci ``delete_uzivatel_spoluprce_connections`` v rámci modulu ``webclient.pas.signals``."""
+    """Zajišťuje logiku funkce ``delete_uzivatel_spoluprce_connections``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``UzivatelSpoluprace``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.pas.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         Historie.save_record_deletion_record(record=instance)
         instance.vedouci.save_metadata(fedora_transaction)
         if instance.historie and instance.historie.pk:

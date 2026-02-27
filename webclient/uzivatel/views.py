@@ -68,7 +68,10 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     """
 
     def get_queryset(self):
-        """Provádí funkci ``OsobaAutocomplete.get_queryset`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = Osoba.objects.all()
         if self.q:
             qs = qs.filter(vypis_cely__icontains=self.q)
@@ -81,11 +84,18 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     """
 
     def get_result_label(self, result):
-        """Zpracuje volání ``UzivatelAutocomplete.get_result_label`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get_result_label``.
+        
+        :param result: Vstupní hodnota parametru ``result`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return result.display_name(viewer=self.request.user)
 
     def get_queryset(self):
-        """Provádí funkci ``UzivatelAutocomplete.get_queryset`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = User.objects.select_related("organizace")
 
         if self.q:
@@ -108,11 +118,21 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         return self.check_filter_permission(qs)
 
     def add_accessibility_lookup(self, permission, qs):
-        """Provádí funkci ``UzivatelAutocomplete.add_accessibility_lookup`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``add_accessibility_lookup``.
+        
+        :param permission: Vstupní hodnota parametru ``permission`` použitého při zpracování.
+        :param qs: Vstupní hodnota parametru ``qs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return qs
 
     def add_ownership_lookup(self, ownership, qs=None):
-        """Provádí funkci ``UzivatelAutocomplete.add_ownership_lookup`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``add_ownership_lookup``.
+        
+        :param ownership: Vstupní hodnota parametru ``ownership`` použitého při zpracování.
+        :param qs: Vstupní hodnota parametru ``qs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return Q()
 
 
@@ -122,11 +142,18 @@ class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySe
     """
 
     def get_result_label(self, result):
-        """Zpracuje volání ``UzivatelAutocompletePublic.get_result_label`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get_result_label``.
+        
+        :param result: Vstupní hodnota parametru ``result`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return result.display_name()
 
     def get_queryset(self):
-        """Provádí funkci ``UzivatelAutocompletePublic.get_queryset`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = User.objects.all().select_related("organizace").order_by("ident_cely")
         if self.q:
             qs = qs.filter(Q(ident_cely__icontains=self.q) | Q(organizace__nazev_zkraceny__icontains=self.q))
@@ -200,7 +227,11 @@ class UserRegistrationView(RegistrationView):
     success_url = reverse_lazy("django_registration_complete")
 
     def send_activation_email(self, user):
-        """Zpracuje volání ``UserRegistrationView.send_activation_email`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``send_activation_email``.
+        
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             super().send_activation_email(user)
             notification_type = UserNotificationType.objects.get(ident_cely="E-U-01")
@@ -230,7 +261,13 @@ class UserLogoutView(LogoutView):
     """
 
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``UserLogoutView.post`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if request.POST.get("logout_type") == "autologout":
             logger.debug("message added")
             messages.add_message(self.request, messages.SUCCESS, AUTOLOGOUT_AFTER_LOGOUT)
@@ -249,12 +286,20 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
     template_name = "uzivatel/update_user.html"
 
     def get_object(self, queryset=None):
-        """Zpracuje volání ``UserAccountUpdateView.get_object`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get_object``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         user_pk = self.request.user.pk
         return User.objects.get(pk=user_pk)
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``UserAccountUpdateView.get_context_data`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
         context["form"] = self.form_class(instance=self.request.user)
@@ -270,7 +315,12 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         return context
 
     def _change_password(self, request, request_data):
-        """Provádí funkci ``UserAccountUpdateView._change_password`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``_change_password``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param request_data: Vstupní hodnota parametru ``request_data`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         form = UpdatePasswordSettings(request_data, instance=self.request.user, prefix="pass")
         if form.is_valid():
             Historie(
@@ -293,7 +343,12 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
     def invalid_form_context(self, form, form_tag="form"):
         # Atribut "object" musí existovat.
         # Důvod: Django `get_context_data()` používá objekt pro jeho předání do contextu.
-        """Provádí funkci ``UserAccountUpdateView.invalid_form_context`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``invalid_form_context``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :param form_tag: Vstupní hodnota parametru ``form_tag`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.object = None
         context = self.get_context_data()
         # Doplní context o potřebné instance formulářů obsahující validační chyby.
@@ -302,7 +357,13 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``UserAccountUpdateView.post`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         request_data = dict(request.POST)
         logger.debug("uzivatel.views.UserAccountUpdateView.post.start")
         form = self.form_class(data=request.POST, instance=self.request.user)
@@ -380,11 +441,21 @@ class UserActivationView(ActivationView):
     form_class = AuthActivationForm
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """Provádí funkci ``UserActivationView.dispatch`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou. (typ: ``HttpRequest``).
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``HttpResponse``).
+        """
         return super().dispatch(request, *args, **kwargs)
 
     def activate(self, form):
-        """Zpracuje volání ``UserActivationView.activate`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``activate``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         username = form.cleaned_data["activation_key"]
         user = self.get_user(username)
         # Uživatel musí být aktivován ručně administrátorem systému.
@@ -421,7 +492,13 @@ class UserPasswordResetView(PasswordResetView):
     form_class = UserPasswordResetForm
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """Provádí funkci ``UserPasswordResetView.dispatch`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou. (typ: ``HttpRequest``).
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``HttpResponse``).
+        """
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -434,11 +511,21 @@ class TokenAuthenticationBearer(TokenAuthentication):
     keyword = "Bearer"
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """Provádí funkci ``TokenAuthenticationBearer.dispatch`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou. (typ: ``HttpRequest``).
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``HttpResponse``).
+        """
         return super().dispatch(request, *args, **kwargs)
 
     def authenticate_credentials(self, key):
-        """Zpracuje volání ``TokenAuthenticationBearer.authenticate_credentials`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``authenticate_credentials``.
+        
+        :param key: Vstupní hodnota parametru ``key`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         model = self.get_model()
         try:
             token = model.objects.select_related("user").get(key=key)
@@ -486,17 +573,31 @@ class GetUserInfo(APIView):
     ]
 
     def get(self, request, format=None):
-        """Provádí funkci ``GetUserInfo.get`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param format: Vstupní hodnota parametru ``format`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         user = request.user
         return Response(user.metadata)
 
     def handle_exception(self, exc):
-        """Zpracuje volání ``GetUserInfo.handle_exception`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``handle_exception``.
+        
+        :param exc: Vstupní hodnota parametru ``exc`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.is_exception = True
         return super().handle_exception(exc)
 
     def perform_content_negotiation(self, request, force=False):
-        """Provádí funkci ``GetUserInfo.perform_content_negotiation`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``perform_content_negotiation``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param force: Vstupní hodnota parametru ``force`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             self.is_exception
             return JSONRenderer(), JSONRenderer.media_type
@@ -504,7 +605,14 @@ class GetUserInfo(APIView):
             return super().perform_content_negotiation(request, force)
 
     def finalize_response(self, request, response, *args, **kwargs):
-        """Provádí funkci ``GetUserInfo.finalize_response`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``finalize_response``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param response: Vstupní hodnota parametru ``response`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             self.is_exception
             neg = self.perform_content_negotiation(request, force=True)
@@ -520,7 +628,13 @@ class ObtainAuthTokenWithUpdate(ObtainAuthToken):
     """
 
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ObtainAuthTokenWithUpdate.post`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
@@ -543,14 +657,26 @@ class UserDeleteRequest(LoginRequiredMixin, UpdateView):
     """
 
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``UserDeleteRequest.post`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         user: User = request.user
         Mailer.send_eu07(user, request)
         messages.add_message(request, messages.SUCCESS, ZADOST_SMAZANI_UZIVATELE_SUCCESS)
         return JsonResponse({"redirect": reverse("uzivatel:update-uzivatel")})
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``UserDeleteRequest.get`` v rámci modulu ``webclient.uzivatel.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = {
             "title": _("uzivatel.views.UserDeleteRequest.title.text"),
             "id_tag": "user-delete-request-dialog",

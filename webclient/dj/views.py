@@ -312,7 +312,10 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     id_tag = "zmenit-katastr-form"
 
     def get_zaznam(self) -> DokumentacniJednotka:
-        """Provádí funkci ``ChangeKatastrView.get_zaznam`` v rámci modulu ``webclient.dj.views``."""
+        """Zajišťuje logiku funkce ``get_zaznam``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``DokumentacniJednotka``).
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             DokumentacniJednotka,
@@ -320,7 +323,11 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ChangeKatastrView.get_context_data`` v rámci modulu ``webclient.dj.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         zaznam = self.get_zaznam()
         form = ChangeKatastrForm(initial={"katastr": zaznam.archeologicky_zaznam.hlavni_katastr})
         context = {
@@ -333,13 +340,25 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``ChangeKatastrView.get`` v rámci modulu ``webclient.dj.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ChangeKatastrView.post`` v rámci modulu ``webclient.dj.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         zaznam: DokumentacniJednotka = self.get_zaznam()
         form = ChangeKatastrForm(data=request.POST)
         if form.is_valid():

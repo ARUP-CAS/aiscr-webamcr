@@ -6,7 +6,10 @@ class PasConfig(AppConfig):
     name = "pas"
 
     def ready(self):
-        """Provádí funkci ``PasConfig.ready`` v rámci modulu ``webclient.pas.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PasConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import pas.signals

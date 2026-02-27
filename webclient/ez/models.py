@@ -100,7 +100,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         )
 
     def __str__(self):
-        """Provádí funkci ``ExterniZdroj.__str__`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.ident_cely:
             return self.ident_cely
         else:
@@ -176,11 +179,17 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         self.save()
 
     def get_permission_object(self):
-        """Provádí funkci ``ExterniZdroj.get_permission_object`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self
 
     def get_create_user(self):
-        """Provádí funkci ``ExterniZdroj.get_create_user`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``get_create_user``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_EXT_ZD)[0].uzivatel,)
         except Exception as e:
@@ -188,7 +197,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return ()
 
     def get_create_org(self):
-        """Provádí funkci ``ExterniZdroj.get_create_org`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``get_create_org``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return (self.get_create_user()[0].organizace,)
         except Exception as e:
@@ -196,7 +208,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return ()
 
     def set_snapshots(self):
-        """Provádí funkci ``ExterniZdroj.set_snapshots`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``set_snapshots``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if not self.externizdrojautor_set.all():
             self.autori_snapshot = None
         else:
@@ -212,13 +227,19 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     @property
     def redis_snapshot_id(self):
-        """Provádí funkci ``ExterniZdroj.redis_snapshot_id`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``redis_snapshot_id``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from ez.views import ExterniZdrojListView
 
         return f"{ExterniZdrojListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Provádí funkci ``ExterniZdroj.generate_redis_snapshot`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``generate_redis_snapshot``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from ez.tables import ExterniZdrojTable
 
         data = ExterniZdroj.objects.filter(pk=self.pk)
@@ -227,7 +248,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         return self.redis_snapshot_id, data
 
     def check_set_permanent_ident(self):
-        """Provádí funkci ``ExterniZdroj.check_set_permanent_ident`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``check_set_permanent_ident``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         historie_poznamka = None
         if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             old_ident = self.ident_cely
@@ -281,7 +305,10 @@ class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), model
     poradi = models.IntegerField()
 
     def get_osoba(self):
-        """Provádí funkci ``ExterniZdrojAutor.get_osoba`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``get_osoba``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.autor.vypis_cely
 
     class Meta:
@@ -300,7 +327,10 @@ class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), mod
     poradi = models.IntegerField()
 
     def get_osoba(self):
-        """Provádí funkci ``ExterniZdrojEditor.get_osoba`` v rámci modulu ``webclient.ez.models``."""
+        """Zajišťuje logiku funkce ``get_osoba``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.editor.vypis_cely
 
     class Meta:

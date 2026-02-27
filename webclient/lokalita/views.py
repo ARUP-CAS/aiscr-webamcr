@@ -86,7 +86,10 @@ class LokalitaListView(SearchListView):
     vypis_app = "lokalita"
 
     def init_translations(self):
-        """Provádí funkci ``LokalitaListView.init_translations`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``init_translations``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().init_translations()
         self.page_title = _("lokalita.views.lokalitaListView.pageTitle.text")
         self.search_sum = _("lokalita.views.lokalitaListView.pocetVyhledanych.text")
@@ -100,7 +103,11 @@ class LokalitaListView(SearchListView):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Zpracuje volání ``LokalitaListView.rename_field_for_ordering`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``rename_field_for_ordering``.
+        
+        :param field: Vstupní hodnota parametru ``field`` použitého při zpracování. (typ: ``str``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         field = field.replace("-", "")
         return {
             "ident_cely": "archeologicky_zaznam__ident_cely",
@@ -121,7 +128,10 @@ class LokalitaListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Provádí funkci ``LokalitaListView.get_queryset`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -141,7 +151,11 @@ class LokalitaListView(SearchListView):
         return self.check_filter_permission(qs)
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaListView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["toolbar_icon"] = "tour"
         context["type"] = "lokalita"
@@ -158,7 +172,13 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
     slug_field = "archeologicky_zaznam__ident_cely"
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaDetailView.get`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
@@ -170,7 +190,10 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         return self.object.archeologicky_zaznam
 
     def check_locality_arch_z_conflict(self):
-        """Provádí funkci ``LokalitaDetailView.check_locality_arch_z_conflict`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``check_locality_arch_z_conflict``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return
 
     def get_context_data(self, **kwargs):
@@ -187,7 +210,10 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         return context
 
     def get_shows(self):
-        """Provádí funkci ``LokalitaDetailView.get_shows`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_shows``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return get_detail_template_shows(
             self.get_object().archeologicky_zaznam,
             self.get_jednotky(),
@@ -206,7 +232,11 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
     form_class = LokalitaForm
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaCreateView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         logger.debug("context is called")
         required_fields = get_required_fields()
@@ -229,7 +259,11 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """Zpracuje volání ``LokalitaCreateView.form_valid`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``form_valid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("lokalita.views.LokalitaCreateView.form_valid.start")
         form_az = CreateArchZForm(self.request.POST)
         if form_az.is_valid():
@@ -264,7 +298,11 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """Zpracuje volání ``LokalitaCreateView.form_invalid`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``form_invalid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         logger.debug("main form is invalid")
         logger.debug(form.errors)
@@ -272,12 +310,24 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaCreateView.get`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().get(request, *args, **kwargs)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaCreateView.post`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().post(request, *args, **kwargs)
 
 
@@ -292,7 +342,11 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
     slug_field = "archeologicky_zaznam__ident_cely"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaEditView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         required_fields = get_required_fields()
         logger.debug(required_fields[0:-1])
@@ -316,7 +370,11 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        """Zpracuje volání ``LokalitaEditView.form_valid`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``form_valid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("Lokalita.EditForm is valid")
         form_az = CreateArchZForm(self.request.POST, instance=self.object.archeologicky_zaznam)
         if form_az.is_valid():
@@ -335,7 +393,11 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """Zpracuje volání ``LokalitaEditView.form_invalid`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``form_invalid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("main form is invalid")
         logger.debug(form.errors)
@@ -343,12 +405,24 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaEditView.get`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().get(request, *args, **kwargs)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaEditView.post`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().post(request, *args, **kwargs)
 
 
@@ -369,7 +443,11 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
     template_name = "lokalita/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaDokumentacniJednotkaCreateView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["dj_form_create"] = CreateDJForm(typ_arch_z=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
         return context
@@ -383,7 +461,13 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
     scroll_to_dj = True
 
     def dispatch(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaDokumentacniJednotkaRelatedView.dispatch`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         az = self.get_object().archeologicky_zaznam
         if not dj.archeologicky_zaznam == az:
@@ -399,7 +483,10 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_dokumentacni_jednotka(self):
-        """Provádí funkci ``LokalitaDokumentacniJednotkaRelatedView.get_dokumentacni_jednotka`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_dokumentacni_jednotka``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug(
             "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
@@ -409,7 +496,11 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         return object
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaDokumentacniJednotkaRelatedView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["dj_ident_cely"] = self.get_dokumentacni_jednotka().ident_cely
         return context
@@ -423,7 +514,11 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
     template_name = "lokalita/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaDokumentacniJednotkaUpdateView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["j"] = get_dj_form_detail(
             "lokalita", self.get_dokumentacni_jednotka(), show=self.get_shows(), user=self.request.user
@@ -439,7 +534,11 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
     template_name = "lokalita/dj/komponenta_create.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaKomponentaCreateView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
         context["j"] = self.get_dokumentacni_jednotka()
@@ -447,7 +546,13 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaKomponentaCreateView.get`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().get(request, *args, **kwargs)
 
 
@@ -459,7 +564,13 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
     template_name = "lokalita/dj/komponenta_detail.html"
 
     def dispatch(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaKomponentaUpdateView.dispatch`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
         if not dj.komponenty == komponenta.komponenta_vazby:
@@ -475,13 +586,20 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
-        """Provádí funkci ``LokalitaKomponentaUpdateView.get_komponenta`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_komponenta``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dj_ident_cely = self.kwargs["komponenta_ident_cely"]
         object = get_object_or_404(Komponenta, ident_cely=dj_ident_cely)
         return object
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaKomponentaUpdateView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         komponenta = self.get_komponenta()
         old_nalez_post = self.request.session.pop("_old_nalez_post", None)
@@ -501,13 +619,23 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
     template_name = "lokalita/dj/pian_create.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaPianCreateView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["pian_form_create"] = PianCreateForm()
         return context
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaPianCreateView.get`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
@@ -542,7 +670,13 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
     template_name = "lokalita/dj/pian_update.html"
 
     def dispatch(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaPianUpdateView.dispatch`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         pian = get_object_or_404(Pian, ident_cely=self.kwargs["pian_ident_cely"])
         if not dj.pian == pian:
@@ -558,12 +692,19 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_pian(self):
-        """Provádí funkci ``LokalitaPianUpdateView.get_pian`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_pian``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pian_ident_cely = self.kwargs["pian_ident_cely"]
         return get_object_or_404(Pian, ident_cely=pian_ident_cely)
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``LokalitaPianUpdateView.get_context_data`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         self.pian = self.get_pian()
         context["pian_ident_cely"] = self.pian.ident_cely
@@ -571,7 +712,13 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``LokalitaPianUpdateView.get`` v rámci modulu ``webclient.lokalita.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         if self.pian == PIAN_POTVRZEN:
             raise PermissionDenied

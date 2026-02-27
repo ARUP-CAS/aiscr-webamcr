@@ -21,7 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 def invalidate_arch_z_related_models():
-    """Provádí funkci ``invalidate_arch_z_related_models`` v rámci modulu ``webclient.arch_z.signals``."""
+    """Zajišťuje logiku funkce ``invalidate_arch_z_related_models``.
+    
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     invalidate_model(Akce)
     invalidate_model(Projekt)
 
@@ -83,7 +86,11 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
         close_transaction = instance.close_active_transaction_when_finished
 
         def save_metadata(inner_close_transaction=False):
-            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.arch_z.signals``."""
+            """Zajišťuje logiku funkce ``save_metadata``.
+            
+            :param inner_close_transaction: Vstupní hodnota parametru ``inner_close_transaction`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             try:
                 if (
                     instance.akce
@@ -123,7 +130,13 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 
 @receiver(post_save, sender=Akce, weak=False)
 def update_akce_snapshot(sender, instance: Akce, **kwargs):
-    """Provádí funkci ``update_akce_snapshot`` v rámci modulu ``webclient.arch_z.signals``."""
+    """Zajišťuje logiku funkce ``update_akce_snapshot``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Akce``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"pk": instance.pk})
     if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
@@ -201,7 +214,13 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
 
 @receiver(post_delete, sender=ArcheologickyZaznam, weak=False)
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
-    """Provádí funkci ``delete_arch_z_repository_update_connected_records`` v rámci modulu ``webclient.arch_z.signals``."""
+    """Zajišťuje logiku funkce ``delete_arch_z_repository_update_connected_records``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``ArcheologickyZaznam``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_update_connected_records.start",
         extra={"ident_cely": instance.ident_cely},
@@ -209,7 +228,11 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     fedora_transaction: FedoraTransaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.arch_z.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         invalidate_arch_z_related_models()
         try:
             if instance.akce and instance.akce.projekt is not None:
@@ -245,7 +268,11 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     invalidate_arch_z_related_models()
 
     def save_metadata(inner_close_transaction=False):
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.arch_z.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :param inner_close_transaction: Vstupní hodnota parametru ``inner_close_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
             instance.archeologicky_zaznam.save_metadata(fedora_transaction)
         if instance.externi_zdroj is not None:

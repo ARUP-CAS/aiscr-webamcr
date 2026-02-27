@@ -77,7 +77,13 @@ class NeidentAkceForm(forms.ModelForm):
         js = ["js/create_osoba_modal.js"]
 
     def __init__(self, *args, readonly=False, **kwargs):
-        """Provádí funkci ``NeidentAkceForm.__init__`` v rámci modulu ``webclient.neidentakce.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False

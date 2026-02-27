@@ -32,7 +32,11 @@ class Command(BaseCommand):
     help = _("core.management.commands.transform_to_sjtsk.Command.help")
 
     def add_arguments(self, parser):
-        """Zpracuje volání ``Command.add_arguments`` v rámci modulu ``webclient.core.management.commands.transform_to_sjtsk``."""
+        """Zajišťuje logiku funkce ``add_arguments``.
+        
+        :param parser: Vstupní hodnota parametru ``parser`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         parser.add_argument(
             "model",
             type=str,
@@ -41,7 +45,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Provádí funkci ``Command.handle`` v rámci modulu ``webclient.core.management.commands.transform_to_sjtsk``."""
+        """Zajišťuje logiku funkce ``handle``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param options: Vstupní hodnota parametru ``options`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         model_type = options["model"]
 
         logger.debug(
@@ -64,7 +73,10 @@ class Command(BaseCommand):
         )
 
     def _transform_pian(self):
-        """Provádí funkci ``Command._transform_pian`` v rámci modulu ``webclient.core.management.commands.transform_to_sjtsk``."""
+        """Zajišťuje logiku funkce ``_transform_pian``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from pian.models import Pian
 
         self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_pian.processing"))
@@ -140,7 +152,10 @@ class Command(BaseCommand):
         )
 
     def _transform_nalez(self):
-        """Provádí funkci ``Command._transform_nalez`` v rámci modulu ``webclient.core.management.commands.transform_to_sjtsk``."""
+        """Zajišťuje logiku funkce ``_transform_nalez``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from pas.models import SamostatnyNalez
 
         self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_nalez.processing"))
@@ -216,7 +231,10 @@ class Command(BaseCommand):
         )
 
     def _transform_projekt(self):
-        """Provádí funkci ``Command._transform_projekt`` v rámci modulu ``webclient.core.management.commands.transform_to_sjtsk``."""
+        """Zajišťuje logiku funkce ``_transform_projekt``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from projekt.models import Projekt
 
         self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_projekt.processing"))
@@ -292,7 +310,10 @@ class Command(BaseCommand):
         )
 
     def _transform_dokument(self):
-        """Provádí funkci ``Command._transform_dokument`` v rámci modulu ``webclient.core.management.commands.transform_to_sjtsk``."""
+        """Zajišťuje logiku funkce ``_transform_dokument``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from dokument.models import DokumentExtraData
 
         self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_dokument.processing"))

@@ -19,7 +19,10 @@ logger = logging.getLogger("tests")
 class AkceDokumenty(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``AkceDokumenty`` pro modul ``webclient.dokument.tests.test_selenium``."""
     def go_to_form_zapsat(self):
-        """Provádí funkci ``AkceDokumenty.go_to_form_zapsat`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form_zapsat``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/dokument/zapsat")
 
     def test_064_zapsani_dokumentu_p_001(self):
@@ -1248,11 +1251,17 @@ class AkceDokumenty(BaseSeleniumTestClass):
 class AkceKnihovna3D(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``AkceKnihovna3D`` pro modul ``webclient.dokument.tests.test_selenium``."""
     def go_to_form_zapsat(self):
-        """Provádí funkci ``AkceKnihovna3D.go_to_form_zapsat`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form_zapsat``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/dokument/model/zapsat")
 
     def zapsat_zaznam(self):
-        """Provádí funkci ``AkceKnihovna3D.zapsat_zaznam`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``zapsat_zaznam``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("švejcar")
@@ -1278,7 +1287,11 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         return ident
 
     def odeslat_zaznam(self, ident_cely):
-        """Zpracuje volání ``AkceKnihovna3D.odeslat_zaznam`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``odeslat_zaznam``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress(f"/dokument/model/detail/{ident_cely}")
         self.ElementClick(By.ID, "buttonEdit")
 
@@ -1304,7 +1317,11 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         return ident
 
     def pridani_objektu(self, ident):
-        """Zpracuje volání ``AkceKnihovna3D.pridani_objektu`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``pridani_objektu``.
+        
+        :param ident: Vstupní hodnota parametru ``ident`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-specifikace .btn")
@@ -1318,7 +1335,11 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editNalezSubmitButton")
 
     def pridani_predmetu(self, ident):
-        """Zpracuje volání ``AkceKnihovna3D.pridani_predmetu`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``pridani_predmetu``.
+        
+        :param ident: Vstupní hodnota parametru ``ident`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.driver.execute_script("$(window).scrollTop(1500 );")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-6 > .text")

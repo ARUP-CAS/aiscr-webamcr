@@ -329,7 +329,11 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.save()
 
     def _set_connected_records_ident(self, new_ident):
-        """Zpracuje volání ``ArcheologickyZaznam._set_connected_records_ident`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``_set_connected_records_ident``.
+        
+        :param new_ident: Vstupní hodnota parametru ``new_ident`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         for dj in self.dokumentacni_jednotky_akce.all():
             dj.ident_cely = new_ident + dj.ident_cely[-4:]
             if dj.komponenty is None:
@@ -389,11 +393,17 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return "[ident_cely not yet assigned]"
 
     def get_permission_object(self):
-        """Provádí funkci ``ArcheologickyZaznam.get_permission_object`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self
 
     def get_create_user(self):
-        """Provádí funkci ``ArcheologickyZaznam.get_create_user`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``get_create_user``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel,)
         except Exception as e:
@@ -401,14 +411,20 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return ()
 
     def get_create_org(self):
-        """Provádí funkci ``ArcheologickyZaznam.get_create_org`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``get_create_org``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.get_create_user():
             return (self.get_create_user()[0].organizace,)
         else:
             return ()
 
     def check_set_permanent_ident(self):
-        """Provádí funkci ``ArcheologickyZaznam.check_set_permanent_ident`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``check_set_permanent_ident``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         poznamka_historie = None
         old_ident = None
         ident_change_recorded = False
@@ -433,13 +449,21 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         return poznamka_historie
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ArcheologickyZaznam.__init__`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         self.initial_stav = self.stav
 
     @property
     def initial_casti_dokumentu(self):
-        """Provádí funkci ``ArcheologickyZaznam.initial_casti_dokumentu`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``initial_casti_dokumentu``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError:
@@ -447,7 +471,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @property
     def initial_pristupnost(self):
-        """Provádí funkci ``ArcheologickyZaznam.initial_pristupnost`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``initial_pristupnost``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if hasattr(self, "_initial_pristupnost"):
             return self._initial_pristupnost
         if hasattr(self, "pristupnost"):
@@ -458,11 +485,20 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @initial_pristupnost.setter
     def initial_pristupnost(self, value):
-        """Zpracuje volání ``ArcheologickyZaznam.initial_pristupnost`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``initial_pristupnost``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self._initial_pristupnost = value
 
     def save(self, *args, **kwargs):
-        """Provádí funkci ``ArcheologickyZaznam.save`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``save``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.pk is not None:
             previous = ArcheologickyZaznam.objects.get(pk=self.pk)
             if previous.pristupnost != self.pristupnost:
@@ -470,22 +506,39 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         super(ArcheologickyZaznam, self).save(*args, **kwargs)
 
     def igsn_lokalita_hide(self, check_status=True):
-        """Zpracuje volání ``ArcheologickyZaznam.igsn_lokalita_hide`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``igsn_lokalita_hide``.
+        
+        :param check_status: Vstupní hodnota parametru ``check_status`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_hide(check_status)
 
     def igsn_lokalita_publish(self, check_status=True):
-        """Zpracuje volání ``ArcheologickyZaznam.igsn_lokalita_publish`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``igsn_lokalita_publish``.
+        
+        :param check_status: Vstupní hodnota parametru ``check_status`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA and self.stav == AZ_STAV_ARCHIVOVANY:
             self.lokalita.igsn_publish(check_status)
 
     def igsn_lokalita_delete(self, check_status=True):
-        """Zpracuje volání ``ArcheologickyZaznam.igsn_lokalita_delete`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``igsn_lokalita_delete``.
+        
+        :param check_status: Vstupní hodnota parametru ``check_status`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_delete(check_status)
 
     def igsn_lokalita_update(self, check_status=True, reload_record=False):
-        """Provádí funkci ``ArcheologickyZaznam.igsn_lokalita_update`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``igsn_lokalita_update``.
+        
+        :param check_status: Vstupní hodnota parametru ``check_status`` použitého při zpracování.
+        :param reload_record: Vstupní hodnota parametru ``reload_record`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_update(check_status, reload_record)
 
@@ -595,7 +648,12 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         ]
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``Akce.__init__`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.initial_projekt_id = self.projekt_id
         self.suppress_signal = False
@@ -604,7 +662,10 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def initial_projekt(self):
-        """Provádí funkci ``Akce.initial_projekt`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``initial_projekt``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from projekt.models import Projekt
 
         if self.initial_projekt_id is not None:
@@ -618,16 +679,25 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         return reverse("arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely})
 
     def vedouci_organizace(self):
-        """Provádí funkci ``Akce.vedouci_organizace`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``vedouci_organizace``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return ", ".join([str(x.organizace) for x in self.akcevedouci_set.all()])
 
     @cached_property
     def vedouci(self):
-        """Provádí funkci ``Akce.vedouci`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``vedouci``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return ", ".join([str(x.vedouci) for x in self.akcevedouci_set.all()])
 
     def set_snapshots(self):
-        """Provádí funkci ``Akce.set_snapshots`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``set_snapshots``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if not self.akcevedouci_set.all():
             self.vedouci_snapshot = None
         else:
@@ -642,13 +712,19 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def redis_snapshot_id(self):
-        """Provádí funkci ``Akce.redis_snapshot_id`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``redis_snapshot_id``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from arch_z.views import AkceListView
 
         return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Provádí funkci ``Akce.generate_redis_snapshot`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``generate_redis_snapshot``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from arch_z.tables import AkceTable
 
         data = Akce.objects.filter(archeologicky_zaznam=self)
@@ -665,7 +741,11 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
-        """Zpracuje volání ``Akce.get_by_ident_cely`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``get_by_ident_cely``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
         except Exception:
@@ -724,7 +804,12 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         db_table = "externi_odkaz"
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ExterniOdkaz.__init__`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.suppress_signal_arch_z = False
         self.active_transaction = None
@@ -732,7 +817,11 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user):
-        """Zpracuje volání ``ExterniOdkaz.create_transaction`` v rámci modulu ``webclient.arch_z.models``."""
+        """Zajišťuje logiku funkce ``create_transaction``.
+        
+        :param transaction_user: Vstupní hodnota parametru ``transaction_user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 

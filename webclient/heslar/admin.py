@@ -25,11 +25,20 @@ class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
     """Zapouzdřuje chování třídy ``ObjectWithMetadataAdmin`` pro modul ``webclient.heslar.admin``."""
     @action(label="Metadata", description="Download of metadata")
     def metadata(self, request, obj):
-        """Provádí funkci ``ObjectWithMetadataAdmin.metadata`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``metadata``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         metadata = obj.metadata
 
         def context_processor(content):
-            """Zpracuje volání ``ObjectWithMetadataAdmin.context_processor`` v rámci modulu ``webclient.heslar.admin``."""
+            """Zajišťuje logiku funkce ``context_processor``.
+            
+            :param content: Vstupní hodnota parametru ``content`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             yield content
 
         response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
@@ -57,15 +66,30 @@ class HeslarNazevAdmin(admin.ModelAdmin):
     search_fields = ("nazev",)
 
     def has_add_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarNazevAdmin.has_add_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_add_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarNazevAdmin.has_delete_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_delete_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarNazevAdmin.has_change_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_change_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
 
@@ -81,26 +105,50 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
     list_filter = ("nazev_heslare",)
 
     def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
-        """Provádí funkci ``HeslarAdmin.render_change_form`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``render_change_form``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param context: Vstupní hodnota parametru ``context`` použitého při zpracování.
+        :param add: Vstupní hodnota parametru ``add`` použitého při zpracování.
+        :param change: Vstupní hodnota parametru ``change`` použitého při zpracování.
+        :param form_url: Vstupní hodnota parametru ``form_url`` použitého při zpracování.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if add:
             context["adminform"].form.fields["nazev_heslare"].queryset = HeslarNazev.objects.filter(povolit_zmeny=True)
         return super(HeslarAdmin, self).render_change_form(request, context, add, change, form_url, obj)
 
     def has_change_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarAdmin.has_change_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_change_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
         return super().has_change_permission(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
-        """Provádí funkci ``HeslarAdmin.get_readonly_fields`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``get_readonly_fields``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj is not None and obj.pk is not None:
             return "ident_cely", "nazev_heslare"
         else:
             return ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarAdmin.has_delete_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_delete_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
         if obj is not None:
@@ -120,14 +168,23 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     list_filter = ("obdobi",)
 
     def get_readonly_fields(self, request, obj=None):
-        """Provádí funkci ``HeslarDataceAdmin.get_readonly_fields`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``get_readonly_fields``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj:  # Znamená to, že jde o úpravu existujícího záznamu.
             return ("obdobi",)
         else:
             return []
 
     def obdobi_ident_cely(self, obj):
-        """Zpracuje volání ``HeslarDataceAdmin.obdobi_ident_cely`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``obdobi_ident_cely``.
+        
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return obj.obdobi.ident_cely
 
 
@@ -152,15 +209,30 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarDokumentTypMaterialRadaAdmin.has_add_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_add_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarDokumentTypMaterialRadaAdmin.has_delete_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_delete_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarDokumentTypMaterialRadaAdmin.has_change_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_change_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
 
@@ -177,7 +249,11 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     form = HeslarOdkazForm
 
     def heslo_ident_cely(self, obj):
-        """Zpracuje volání ``HeslarOdkazAdmin.heslo_ident_cely`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``heslo_ident_cely``.
+        
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return obj.heslo.ident_cely
 
 
@@ -199,7 +275,11 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     form = HeslarHierarchieForm
 
     def heslo_podrazene_ident_cely(self, obj):
-        """Zpracuje volání ``HeslarHierarchieAdmin.heslo_podrazene_ident_cely`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``heslo_podrazene_ident_cely``.
+        
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return obj.heslo_podrazene.ident_cely
 
 
@@ -237,18 +317,33 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     readonly_fields = ("ident_cely",)
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``OsobaAdmin.__init__`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.wiki_data_available = None
         super().__init__(*args, **kwargs)
 
     def has_delete_permission(self, request, obj=None):
-        """Provádí funkci ``OsobaAdmin.has_delete_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_delete_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj is not None:
             return not obj.has_connections
         return super().has_delete_permission(request)
 
     def get_fields(self, request, obj=None):
-        """Provádí funkci ``OsobaAdmin.get_fields`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``get_fields``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         fields = list(self.fields)
         if self.wiki_data_available is None:
             try:
@@ -326,7 +421,12 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     readonly_fields = ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
-        """Provádí funkci ``OrganizaceAdmin.has_delete_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_delete_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj is not None:
             return not obj.has_connections
         return super().has_delete_permission(request)
@@ -335,15 +435,30 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
 class HeslarRuianAdmin(ObjectWithMetadataAdmin):
     """Zapouzdřuje chování třídy ``HeslarRuianAdmin`` pro modul ``webclient.heslar.admin``."""
     def has_add_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarRuianAdmin.has_add_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_add_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarRuianAdmin.has_delete_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_delete_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
-        """Provádí funkci ``HeslarRuianAdmin.has_change_permission`` v rámci modulu ``webclient.heslar.admin``."""
+        """Zajišťuje logiku funkce ``has_change_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return False
 
 

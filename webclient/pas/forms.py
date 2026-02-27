@@ -51,7 +51,11 @@ class ProjectModelChoiceField(ModelChoiceField):
     """
 
     def label_from_instance(self, obj):
-        """Zpracuje volání ``ProjectModelChoiceField.label_from_instance`` v rámci modulu ``webclient.pas.forms``."""
+        """Zajišťuje logiku funkce ``label_from_instance``.
+        
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
 
 
@@ -102,7 +106,15 @@ class PotvrditNalezForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, predano_required=False, predano_hidden=False, **kwargs):
-        """Provádí funkci ``PotvrditNalezForm.__init__`` v rámci modulu ``webclient.pas.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param predano_required: Vstupní hodnota parametru ``predano_required`` použitého při zpracování.
+        :param predano_hidden: Vstupní hodnota parametru ``predano_hidden`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
         self.fields["evidencni_cislo"].required = True
         self.fields["predano_organizace"].required = False
@@ -225,7 +237,17 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     def __init__(
         self, *args, readonly=False, user=None, required=None, required_next=None, project_ident=None, **kwargs
     ):
-        """Provádí funkci ``CreateSamostatnyNalezForm.__init__`` v rámci modulu ``webclient.pas.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param project_ident: Vstupní hodnota parametru ``project_ident`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         projekt_disabed = kwargs.pop("projekt_disabled", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 2
@@ -344,7 +366,12 @@ class CreateZadostForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``CreateZadostForm.__init__`` v rámci modulu ``webclient.pas.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(CreateZadostForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -367,7 +394,12 @@ class DeaktivovatSpolupraciForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``DeaktivovatSpolupraciForm.__init__`` v rámci modulu ``webclient.pas.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(DeaktivovatSpolupraciForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

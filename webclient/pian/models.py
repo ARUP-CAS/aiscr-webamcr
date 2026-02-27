@@ -86,13 +86,21 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN, db_index=True)
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``Pian.__init__`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.update_all_azs = True
 
     @property
     def pristupnost_pom(self):
-        """Provádí funkci ``Pian.pristupnost_pom`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``pristupnost_pom``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
             pristupnosti_ids = set()
@@ -110,11 +118,19 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     @property
     def pristupnost(self):
-        """Provádí funkci ``Pian.pristupnost`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``pristupnost``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.pristupnost_pom
 
     def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
-        """Provádí funkci ``Pian.evaluate_pristupnost_change`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``evaluate_pristupnost_change``.
+        
+        :param added_pristupnost_id: Vstupní hodnota parametru ``added_pristupnost_id`` použitého při zpracování.
+        :param skip_zaznam_id: Vstupní hodnota parametru ``skip_zaznam_id`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         pristupnosti_ids = set()
         for dok_jednotka in dok_jednotky:
@@ -145,11 +161,18 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         ]
 
     def __str__(self):
-        """Provádí funkci ``Pian.__str__`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
     def get_absolute_url(self, request=None):
-        """Zpracuje volání ``Pian.get_absolute_url`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``get_absolute_url``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         if dok_jednotky:
             for dok_jednotka in dok_jednotky:
@@ -162,11 +185,17 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return reverse("core:home")
 
     def get_permission_object(self):
-        """Provádí funkci ``Pian.get_permission_object`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self
 
     def get_create_user(self):
-        """Provádí funkci ``Pian.get_create_user`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``get_create_user``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             my_list = []
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -183,7 +212,10 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Provádí funkci ``Pian.get_create_org`` v rámci modulu ``webclient.pian.models``."""
+        """Zajišťuje logiku funkce ``get_create_org``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             our_list = []
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -333,7 +365,11 @@ def vytvor_pian(katastr, fedora_transaction):
 
 
 def get_ZM_from_point(point):
-    """Provádí funkci ``get_ZM_from_point`` v rámci modulu ``webclient.pian.models``."""
+    """Zajišťuje logiku funkce ``get_ZM_from_point``.
+    
+    :param point: Vstupní hodnota parametru ``point`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     try:
         zm10s = list(Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=point))
         zm50s = list(Kladyzm.objects.filter(kategorie=KLADYZM50).filter(the_geom__contains=point))

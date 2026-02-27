@@ -33,7 +33,15 @@ class FedoraValidationError(Exception):
 class FedoraError(Exception):
     """Zapouzdřuje chování třídy ``FedoraError`` pro modul ``webclient.core.repository_connector``."""
     def __init__(self, url, message, code, headers=None, fedora_transaction=None):
-        """Provádí funkci ``FedoraError.__init__`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param url: Vstupní hodnota parametru ``url`` použitého při zpracování.
+        :param message: Vstupní hodnota parametru ``message`` použitého při zpracování.
+        :param code: Vstupní hodnota parametru ``code`` použitého při zpracování.
+        :param headers: Vstupní hodnota parametru ``headers`` použitého při zpracování.
+        :param fedora_transaction: Vstupní hodnota parametru ``fedora_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.url = url
         self.message = message
         self.code = code
@@ -64,21 +72,34 @@ class RepositoryBinaryFile:
     """Zapouzdřuje chování třídy ``RepositoryBinaryFile`` pro modul ``webclient.core.repository_connector``."""
     @staticmethod
     def get_url_without_domain(url):
-        """Zpracuje volání ``RepositoryBinaryFile.get_url_without_domain`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``get_url_without_domain``.
+        
+        :param url: Vstupní hodnota parametru ``url`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return "/".join(url.split("/")[3:])
 
     @property
     def url_without_domain(self):
-        """Provádí funkci ``RepositoryBinaryFile.url_without_domain`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``url_without_domain``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.get_url_without_domain(self.url)
 
     @property
     def uuid(self):
-        """Provádí funkci ``RepositoryBinaryFile.uuid`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``uuid``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.url.split("/")[-1]
 
     def _calculate_sha_512(self):
-        """Provádí funkci ``RepositoryBinaryFile._calculate_sha_512`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_calculate_sha_512``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         data = self.content.read()
         sha_512 = hashlib.sha512(data).hexdigest()
         self.content.seek(0)
@@ -86,17 +107,29 @@ class RepositoryBinaryFile:
 
     @property
     def size_mb(self):
-        """Provádí funkci ``RepositoryBinaryFile.size_mb`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``size_mb``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.size / 1024**2
 
     @property
     def mime_type(self):
-        """Provádí funkci ``RepositoryBinaryFile.mime_type`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``mime_type``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.filename is not None:
             return get_mime_type(self.filename)
 
     def __init__(self, url: str, content: io.BytesIO, filename: Union[str, None] = None):
-        """Provádí funkci ``RepositoryBinaryFile.__init__`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param url: Vstupní hodnota parametru ``url`` použitého při zpracování. (typ: ``str``).
+        :param content: Vstupní hodnota parametru ``content`` použitého při zpracování. (typ: ``io.BytesIO``).
+        :param filename: Vstupní hodnota parametru ``filename`` použitého při zpracování. (typ: ``Union[str, None]``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.url = url
         self.content = content
         self.filename = filename
@@ -160,7 +193,13 @@ class FedoraRequestType(Enum):
 class FedoraRepositoryConnector:
     """Zapouzdřuje chování třídy ``FedoraRepositoryConnector`` pro modul ``webclient.core.repository_connector``."""
     def __init__(self, record, transaction=None, skip_container_check=True):
-        """Provádí funkci ``FedoraRepositoryConnector.__init__`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param record: Vstupní hodnota parametru ``record`` použitého při zpracování.
+        :param transaction: Vstupní hodnota parametru ``transaction`` použitého při zpracování.
+        :param skip_container_check: Vstupní hodnota parametru ``skip_container_check`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.models import ModelWithMetadata
         from uzivatel.models import User
 
@@ -188,7 +227,10 @@ class FedoraRepositoryConnector:
         )
 
     def _get_model_name(self):
-        """Provádí funkci ``FedoraRepositoryConnector._get_model_name`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_get_model_name``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         class_name = self.record.__class__.__name__
         return {
             "Adb": "adb",
@@ -209,13 +251,20 @@ class FedoraRepositoryConnector:
         }.get(class_name)
 
     def _get_rdf_inset_data(self):
-        """Provádí funkci ``FedoraRepositoryConnector._get_rdf_inset_data`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_get_rdf_inset_data``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"""PREFIX dcterms: <http://purl.org/dc/terms/>
 DELETE WHERE {{ <> dcterms:creator ?oldCreator .}};
 INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
 
     def _get_creator(self, url):
-        """Zpracuje volání ``FedoraRepositoryConnector._get_creator`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_get_creator``.
+        
+        :param url: Vstupní hodnota parametru ``url`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         headers = {"Accept": "text/turtle"}
         r = self._send_request(url, FedoraRequestType.GET_METADATA, headers=headers)
         if r.status_code != 200:
@@ -229,7 +278,13 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return None
 
     def _update_creator(self, request_type: FedoraRequestType, uuid=None, ident_cely=None):
-        """Provádí funkci ``FedoraRepositoryConnector._update_creator`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_update_creator``.
+        
+        :param request_type: Vstupní hodnota parametru ``request_type`` použitého při zpracování. (typ: ``FedoraRequestType``).
+        :param uuid: Vstupní hodnota parametru ``uuid`` použitého při zpracování.
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         url = self._get_request_url(request_type, uuid=uuid, ident_cely=ident_cely)
         existing_creator = self._get_creator(url)
         if existing_creator != self.user:
@@ -242,14 +297,23 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
 
     @staticmethod
     def get_base_url():
-        """Provádí funkci ``FedoraRepositoryConnector.get_base_url`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``get_base_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return (
             f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
             f"{settings.FEDORA_SERVER_NAME}"
         )
 
     def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None) -> Optional[str]:
-        """Provádí funkci ``FedoraRepositoryConnector._get_request_url`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_get_request_url``.
+        
+        :param request_type: Vstupní hodnota parametru ``request_type`` použitého při zpracování. (typ: ``FedoraRequestType``).
+        :param uuid: Vstupní hodnota parametru ``uuid`` použitého při zpracování.
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Optional[str]``).
+        """
         base_url = self.get_base_url()
         if request_type == FedoraRequestType.CREATE_CONTAINER:
             return f"{base_url}/record/"
@@ -349,18 +413,32 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         logger.error("core_repository_connector._get_request_url.not_implemented", extra={"request_type": request_type})
 
     def check_container_deleted(self, ident_cely):
-        """Zpracuje volání ``FedoraRepositoryConnector.check_container_deleted`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``check_container_deleted``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         result = self._send_request(f"{self.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
         return hasattr(result, "text") and regex.search(result.text)
 
     @classmethod
     def check_container_deleted_or_not_exists(cls, ident_cely, model_name):
-        """Provádí funkci ``FedoraRepositoryConnector.check_container_deleted_or_not_exists`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``check_container_deleted_or_not_exists``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :param model_name: Vstupní hodnota parametru ``model_name`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("core_repository_connector.check_container_is_deleted.start", extra={"ident_cely": ident_cely})
 
         def send_request(url, request_type):
-            """Provádí funkci ``FedoraRepositoryConnector.send_request`` v rámci modulu ``webclient.core.repository_connector``."""
+            """Zajišťuje logiku funkce ``send_request``.
+            
+            :param url: Vstupní hodnota parametru ``url`` použitého při zpracování.
+            :param request_type: Vstupní hodnota parametru ``request_type`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             auth = cls._get_auth(request_type)
             response = requests.get(url, auth=auth, verify=False)
             return response
@@ -404,7 +482,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
 
     @classmethod
     def _get_auth(cls, request_type: FedoraRequestType):
-        """Zpracuje volání ``FedoraRepositoryConnector._get_auth`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_get_auth``.
+        
+        :param request_type: Vstupní hodnota parametru ``request_type`` použitého při zpracování. (typ: ``FedoraRequestType``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if request_type in (
             FedoraRequestType.DELETE_CONTAINER,
             FedoraRequestType.DELETE_TOMBSTONE,
@@ -419,7 +501,14 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def _send_request(
         self, url: str, request_type: FedoraRequestType, *, headers=None, data=None
     ) -> requests.Response | None:
-        """Provádí funkci ``FedoraRepositoryConnector._send_request`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_send_request``.
+        
+        :param url: Vstupní hodnota parametru ``url`` použitého při zpracování. (typ: ``str``).
+        :param request_type: Vstupní hodnota parametru ``request_type`` použitého při zpracování. (typ: ``FedoraRequestType``).
+        :param headers: Vstupní hodnota parametru ``headers`` použitého při zpracování.
+        :param data: Vstupní hodnota parametru ``data`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``requests.Response | None``).
+        """
         extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
             extra["data"] = data
@@ -578,7 +667,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return response
 
     def _create_container(self):
-        """Provádí funkci ``FedoraRepositoryConnector._create_container`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_create_container``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._create_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -598,7 +690,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def create_link(self, ident_cely_proxy=None):
-        """Zpracuje volání ``FedoraRepositoryConnector.create_link`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``create_link``.
+        
+        :param ident_cely_proxy: Vstupní hodnota parametru ``ident_cely_proxy`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._create_link.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -619,7 +715,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def container_exists(self):
-        """Provádí funkci ``FedoraRepositoryConnector.container_exists`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``container_exists``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._container_exists.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -639,7 +738,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return True
 
     def _connect_deleted_container(self):
-        """Provádí funkci ``FedoraRepositoryConnector._connect_deleted_container`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_connect_deleted_container``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._connect_deleted_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -667,13 +769,19 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def link_exists(self):
-        """Provádí funkci ``FedoraRepositoryConnector.link_exists`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``link_exists``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
         return result.status_code != 404
 
     def _check_container(self):
-        """Provádí funkci ``FedoraRepositoryConnector._check_container`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_check_container``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._check_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -702,7 +810,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def _create_binary_file_container(self):
-        """Provádí funkci ``FedoraRepositoryConnector._create_binary_file_container`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_create_binary_file_container``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._create_binary_file_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -720,7 +831,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def _check_binary_file_container(self):
-        """Provádí funkci ``FedoraRepositoryConnector._check_binary_file_container`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_check_binary_file_container``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._check_binary_file_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -737,7 +851,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def _generate_metadata(self):
-        """Provádí funkci ``FedoraRepositoryConnector._generate_metadata`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_generate_metadata``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._generate_metadata.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -752,7 +869,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return document, hash512
 
     def get_metadata(self, update=False) -> bytes:
-        """Zpracuje volání ``FedoraRepositoryConnector.get_metadata`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``get_metadata``.
+        
+        :param update: Vstupní hodnota parametru ``update`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``bytes``).
+        """
         logger.debug(
             "core_repository_connector.get_metadata.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -834,7 +955,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return result
 
     def save_metadata(self, update=True):
-        """Zpracuje volání ``FedoraRepositoryConnector.save_metadata`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :param update: Vstupní hodnota parametru ``update`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector.save_metadata.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -845,7 +970,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         result = self._send_request(url, FedoraRequestType.GET_METADATA)
 
         def generate_metadata():
-            """Provádí funkci ``FedoraRepositoryConnector.generate_metadata`` v rámci modulu ``webclient.core.repository_connector``."""
+            """Zajišťuje logiku funkce ``generate_metadata``.
+            
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             document_func, hash512 = self._generate_metadata()
             headers_func = {
                 "Content-Type": "application/xml",
@@ -875,7 +1003,14 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def save_binary_file(
         self, file_name, content_type, file: io.BytesIO, save_thumbs: bool = True
     ) -> RepositoryBinaryFile:
-        """Provádí funkci ``FedoraRepositoryConnector.save_binary_file`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``save_binary_file``.
+        
+        :param file_name: Vstupní hodnota parametru ``file_name`` použitého při zpracování.
+        :param content_type: Vstupní hodnota parametru ``content_type`` použitého při zpracování.
+        :param file: Vstupní hodnota parametru ``file`` použitého při zpracování. (typ: ``io.BytesIO``).
+        :param save_thumbs: Vstupní hodnota parametru ``save_thumbs`` použitého při zpracování. (typ: ``bool``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``RepositoryBinaryFile``).
+        """
         logger.debug(
             "core_repository_connector.save_binary_file.start",
             extra={"file": file_name, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -910,11 +1045,22 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
 
     @staticmethod
     def __generate_thumb(file_name: str, file_content: BytesIO, large=False):
-        """Provádí funkci ``FedoraRepositoryConnector.__generate_thumb`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__generate_thumb``.
+        
+        :param file_name: Vstupní hodnota parametru ``file_name`` použitého při zpracování. (typ: ``str``).
+        :param file_content: Vstupní hodnota parametru ``file_content`` použitého při zpracování. (typ: ``BytesIO``).
+        :param large: Vstupní hodnota parametru ``large`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("core_repository_connector.__generate_thumb.start", extra={"file": file_name, "large": large})
 
         def resize_image(image: BytesIO, large_inner=False):
-            """Provádí funkci ``FedoraRepositoryConnector.resize_image`` v rámci modulu ``webclient.core.repository_connector``."""
+            """Zajišťuje logiku funkce ``resize_image``.
+            
+            :param image: Vstupní hodnota parametru ``image`` použitého při zpracování. (typ: ``BytesIO``).
+            :param large_inner: Vstupní hodnota parametru ``large_inner`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             image = Image.open(image)
             image = ImageOps.exif_transpose(image)
             max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
@@ -925,7 +1071,13 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             return output_buffer
 
         def __generate_thumb_from_icon(file_name: str, file_content: BytesIO, large=False):
-            """Provádí funkci ``FedoraRepositoryConnector.__generate_thumb_from_icon`` v rámci modulu ``webclient.core.repository_connector``."""
+            """Zajišťuje logiku funkce ``__generate_thumb_from_icon``.
+            
+            :param file_name: Vstupní hodnota parametru ``file_name`` použitého při zpracování. (typ: ``str``).
+            :param file_content: Vstupní hodnota parametru ``file_content`` použitého při zpracování. (typ: ``BytesIO``).
+            :param large: Vstupní hodnota parametru ``large`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             from core.models import Soubor
 
             thumb_icon, mime_type = Soubor.get_thumb_icon(file_content)
@@ -974,7 +1126,15 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             return __generate_thumb_from_icon(file_name, file_content, large)
 
     def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
-        """Provádí funkci ``FedoraRepositoryConnector.save_thumbs`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``save_thumbs``.
+        
+        :param file_name: Vstupní hodnota parametru ``file_name`` použitého při zpracování.
+        :param file: Vstupní hodnota parametru ``file`` použitého při zpracování.
+        :param uuid: Vstupní hodnota parametru ``uuid`` použitého při zpracování.
+        :param update: Vstupní hodnota parametru ``update`` použitého při zpracování.
+        :param ident_cely_old: Vstupní hodnota parametru ``ident_cely_old`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector._save_thumb.start",
             extra={
@@ -1067,7 +1227,14 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def migrate_binary_file(
         self, soubor, include_content=True, check_if_exists=True, ident_cely_old=None
     ) -> Optional[RepositoryBinaryFile]:
-        """Provádí funkci ``FedoraRepositoryConnector.migrate_binary_file`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``migrate_binary_file``.
+        
+        :param soubor: Vstupní hodnota parametru ``soubor`` použitého při zpracování.
+        :param include_content: Vstupní hodnota parametru ``include_content`` použitého při zpracování.
+        :param check_if_exists: Vstupní hodnota parametru ``check_if_exists`` použitého při zpracování.
+        :param ident_cely_old: Vstupní hodnota parametru ``ident_cely_old`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Optional[RepositoryBinaryFile]``).
+        """
         from core.models import Soubor
 
         soubor: Soubor
@@ -1124,7 +1291,15 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def get_binary_file(
         self, uuid, ident_cely_old=None, thumb_small=False, thumb_large=False, timestamp=None
     ) -> RepositoryBinaryFile | None:
-        """Provádí funkci ``FedoraRepositoryConnector.get_binary_file`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``get_binary_file``.
+        
+        :param uuid: Vstupní hodnota parametru ``uuid`` použitého při zpracování.
+        :param ident_cely_old: Vstupní hodnota parametru ``ident_cely_old`` použitého při zpracování.
+        :param thumb_small: Vstupní hodnota parametru ``thumb_small`` použitého při zpracování.
+        :param thumb_large: Vstupní hodnota parametru ``thumb_large`` použitého při zpracování.
+        :param timestamp: Vstupní hodnota parametru ``timestamp`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``RepositoryBinaryFile | None``).
+        """
         logger.debug(
             "core_repository_connector.get_binary_file.start",
             extra={
@@ -1175,7 +1350,15 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def update_binary_file(
         self, file_name, content_type, file: io.BytesIO, uuid: str, save_thumbs: bool = True
     ) -> RepositoryBinaryFile:
-        """Provádí funkci ``FedoraRepositoryConnector.update_binary_file`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``update_binary_file``.
+        
+        :param file_name: Vstupní hodnota parametru ``file_name`` použitého při zpracování.
+        :param content_type: Vstupní hodnota parametru ``content_type`` použitého při zpracování.
+        :param file: Vstupní hodnota parametru ``file`` použitého při zpracování. (typ: ``io.BytesIO``).
+        :param uuid: Vstupní hodnota parametru ``uuid`` použitého při zpracování. (typ: ``str``).
+        :param save_thumbs: Vstupní hodnota parametru ``save_thumbs`` použitého při zpracování. (typ: ``bool``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``RepositoryBinaryFile``).
+        """
         logger.debug(
             "core_repository_connector.update_binary_file.start",
             extra={
@@ -1204,7 +1387,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return rep_bin_file
 
     def delete_binary_file(self, soubor):
-        """Zpracuje volání ``FedoraRepositoryConnector.delete_binary_file`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``delete_binary_file``.
+        
+        :param soubor: Vstupní hodnota parametru ``soubor`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.models import Soubor
 
         soubor: Soubor
@@ -1236,7 +1423,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             )
 
     def delete_binary_file_completely(self, soubor):
-        """Zpracuje volání ``FedoraRepositoryConnector.delete_binary_file_completely`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``delete_binary_file_completely``.
+        
+        :param soubor: Vstupní hodnota parametru ``soubor`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector.delete_binary_file_completely.start",
             extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely},
@@ -1256,7 +1447,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def delete_container(self, delete_tombstone=True):
-        """Zpracuje volání ``FedoraRepositoryConnector.delete_container`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``delete_container``.
+        
+        :param delete_tombstone: Vstupní hodnota parametru ``delete_tombstone`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self._delete_link()
         logger.debug(
             "core_repository_connector.delete_container.start",
@@ -1273,7 +1468,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def _delete_link(self, ident_cely=None):
-        """Zpracuje volání ``FedoraRepositoryConnector._delete_link`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_delete_link``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector.delete_link.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1288,7 +1487,10 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def record_deletion(self):
-        """Provádí funkci ``FedoraRepositoryConnector.record_deletion`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``record_deletion``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector.record_deletion.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1326,7 +1528,12 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
         )
 
     def record_ident_change(self, ident_cely_old, delete_container=True):
-        """Provádí funkci ``FedoraRepositoryConnector.record_ident_change`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``record_ident_change``.
+        
+        :param ident_cely_old: Vstupní hodnota parametru ``ident_cely_old`` použitého při zpracování.
+        :param delete_container: Vstupní hodnota parametru ``delete_container`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(
             "core_repository_connector.record_ident_change.start",
             extra={
@@ -1403,7 +1610,11 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
 
     @classmethod
     def generate_thumb_for_single_file(cls, record) -> None:
-        """Zpracuje volání ``FedoraRepositoryConnector.generate_thumb_for_single_file`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``generate_thumb_for_single_file``.
+        
+        :param record: Vstupní hodnota parametru ``record`` použitého při zpracování.
+        :return: Funkce nevrací žádnou hodnotu (``None``).
+        """
         from core.models import Soubor
         from xml_generator.models import ModelWithMetadata
 
@@ -1477,7 +1688,10 @@ class BaseFedoraTransaction(ABC):
     """
 
     def __init__(self):
-        """Provádí funkci ``BaseFedoraTransaction.__init__`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.uid = None
 
     def mark_transaction_as_closed(self):
@@ -1498,7 +1712,10 @@ class DryRunFedoraTransaction(BaseFedoraTransaction):
     """
 
     def __init__(self):
-        """Provádí funkci ``DryRunFedoraTransaction.__init__`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__()
         self.updated_ident_cely: set[str] = set()
 
@@ -1548,7 +1765,19 @@ class FedoraTransaction(BaseFedoraTransaction):
         redirect_on_error=False,
         redirect_url=None,
     ):
-        """Provádí funkci ``FedoraTransaction.__init__`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param main_record: Vstupní hodnota parametru ``main_record`` použitého při zpracování. (typ: ``ModelWithMetadata``).
+        :param transaction_user: Vstupní hodnota parametru ``transaction_user`` použitého při zpracování.
+        :param success_message: Vstupní hodnota parametru ``success_message`` použitého při zpracování.
+        :param error_message: Vstupní hodnota parametru ``error_message`` použitého při zpracování.
+        :param uid: Vstupní hodnota parametru ``uid`` použitého při zpracování.
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param suppress_message: Vstupní hodnota parametru ``suppress_message`` použitého při zpracování.
+        :param redirect_on_error: Vstupní hodnota parametru ``redirect_on_error`` použitého při zpracování.
+        :param redirect_url: Vstupní hodnota parametru ``redirect_url`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__()
         from uzivatel.models import User
 
@@ -1571,7 +1800,10 @@ class FedoraTransaction(BaseFedoraTransaction):
         self.changes_count = 0
 
     def __str__(self):
-        """Provádí funkci ``FedoraTransaction.__str__`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.uid
 
     @staticmethod
@@ -1587,12 +1819,18 @@ class FedoraTransaction(BaseFedoraTransaction):
 
     @property
     def _transaction_redis_key(self):
-        """Provádí funkci ``FedoraTransaction._transaction_redis_key`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``_transaction_redis_key``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.get_transaction_redis_key(self.main_record.ident_cely, self.transaction_user.id)
 
     @property
     def status(self):
-        """Provádí funkci ``FedoraTransaction.status`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``status``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.__status
 
     def _save_transaction_result_to_redis(self, result: FedoraTransactionResult):
@@ -1796,7 +2034,10 @@ class FedoraDeletionOnlyTransaction(FedoraTransaction):
     """
 
     def __init__(self):
-        """Provádí funkci ``FedoraDeletionOnlyTransaction.__init__`` v rámci modulu ``webclient.core.repository_connector``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__()
         self.updated_ident_cely: set[str] = set()
 

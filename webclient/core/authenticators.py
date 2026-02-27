@@ -9,7 +9,11 @@ class AMCRAuthUser(ModelBackend):
     """
 
     def user_can_authenticate(self, user):
-        """Zpracuje volání ``AMCRAuthUser.user_can_authenticate`` v rámci modulu ``webclient.core.authenticators``."""
+        """Zajišťuje logiku funkce ``user_can_authenticate``.
+        
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if user.is_active:
             return True
         else:

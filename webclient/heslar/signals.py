@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 def get_or_create_transaction(instance):
-    """Provádí funkci ``get_or_create_transaction`` v rámci modulu ``webclient.heslar.signals``."""
+    """Zajišťuje logiku funkce ``get_or_create_transaction``.
+    
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if instance.active_transaction:
         return instance.active_transaction
     else:
@@ -87,7 +91,13 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
 
 @receiver(post_save, sender=RuianOkres, weak=False)
 def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
-    """Provádí funkci ``save_metadata_okres`` v rámci modulu ``webclient.heslar.signals``."""
+    """Zajišťuje logiku funkce ``save_metadata_okres``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``RuianOkres``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("heslo.signals.save_metadata_okres.start")
     if not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
@@ -107,7 +117,10 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
     if not instance.suppress_signal:
 
         def save_metadata():
-            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.heslar.signals``."""
+            """Zajišťuje logiku funkce ``save_metadata``.
+            
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             fedora_transaction = FedoraTransaction()
             if instance.heslo_podrazene:
                 instance.heslo_podrazene.save_metadata(fedora_transaction)
@@ -136,7 +149,10 @@ def save_metadata_heslar_datace(sender, instance: HeslarDatace, created, **kwarg
         fedora_transaction = FedoraTransaction()
 
         def save_metadata():
-            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.heslar.signals``."""
+            """Zajišťuje logiku funkce ``save_metadata``.
+            
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             if instance.initial_obdobi and instance.initial_obdobi != instance.obdobi:
                 instance.initial_obdobi.save_metadata(fedora_transaction)
                 logger.debug(
@@ -162,7 +178,10 @@ def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDoku
         if created:
 
             def save_metadata():
-                """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.heslar.signals``."""
+                """Zajišťuje logiku funkce ``save_metadata``.
+                
+                :return: Návratová hodnota funkce po zpracování vstupních dat.
+                """
                 fedora_transaction = FedoraTransaction()
                 instance.dokument_typ.save_metadata(fedora_transaction)
                 instance.dokument_material.save_metadata(fedora_transaction)
@@ -185,7 +204,10 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
     if not instance.suppress_signal:
 
         def save_metadata():
-            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.heslar.signals``."""
+            """Zajišťuje logiku funkce ``save_metadata``.
+            
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             fedora_transaction = FedoraTransaction()
             if instance.initial_heslo and instance.initial_heslo != instance.heslo:
                 heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
@@ -208,7 +230,13 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
 
 @receiver(pre_delete, sender=Heslar, weak=False)
 def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
-    """Provádí funkci ``heslar_delete_repository_container`` v rámci modulu ``webclient.heslar.signals``."""
+    """Zajišťuje logiku funkce ``heslar_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Heslar``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("heslo.signals.heslar_delete_repository_container.start")
     fedora_transaction = FedoraTransaction()
     transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, close_transaction=True))
@@ -220,7 +248,13 @@ def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
 
 @receiver(pre_delete, sender=RuianKatastr, weak=False)
 def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
-    """Provádí funkci ``ruian_katastr_delete_repository_container`` v rámci modulu ``webclient.heslar.signals``."""
+    """Zajišťuje logiku funkce ``ruian_katastr_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``RuianKatastr``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("heslo.signals.ruian_katastr_delete_repository_container.start")
     fedora_transaction = get_or_create_transaction(instance)
     transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, close_transaction=True))
@@ -232,7 +266,13 @@ def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **
 
 @receiver(pre_delete, sender=RuianKraj, weak=False)
 def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
-    """Provádí funkci ``ruian_kraj_delete_repository_container`` v rámci modulu ``webclient.heslar.signals``."""
+    """Zajišťuje logiku funkce ``ruian_kraj_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``RuianKraj``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("heslo.signals.ruian_kraj_delete_repository_container.start")
     fedora_transaction = get_or_create_transaction(instance)
     transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, close_transaction=True))
@@ -244,11 +284,20 @@ def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs
 
 @receiver(pre_delete, sender=RuianOkres, weak=False)
 def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
-    """Provádí funkci ``ruian_okres_delete_repository_container`` v rámci modulu ``webclient.heslar.signals``."""
+    """Zajišťuje logiku funkce ``ruian_okres_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``RuianOkres``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("heslo.signals.ruian_okres_delete_repository_container.start")
 
     def save_metadata():
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.heslar.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         fedora_transaction = get_or_create_transaction(instance)
         instance.record_deletion(fedora_transaction, close_transaction=True)
         logger.debug(
@@ -268,7 +317,10 @@ def delete_uppdate_related_heslar_hierarchie(sender, instance: HeslarHierarchie,
     fedora_transaction = FedoraTransaction()
 
     def save_metadata():
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.heslar.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         instance.heslo_podrazene.save_metadata(fedora_transaction)
         instance.heslo_nadrazene.save_metadata(fedora_transaction, close_transaction=True)
 
@@ -288,7 +340,10 @@ def delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance: H
     fedora_transaction = FedoraTransaction()
 
     def save_metadata():
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.heslar.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         instance.dokument_rada.save_metadata(fedora_transaction)
         instance.dokument_typ.save_metadata(fedora_transaction)
         instance.dokument_material.save_metadata(fedora_transaction, close_transaction=True)
@@ -324,7 +379,10 @@ def delete_uppdate_related_heslar_datace(sender, instance: HeslarDatace, **kwarg
     heslo_obdobi = instance.obdobi
 
     def save_metadata():
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.heslar.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         heslo_obdobi.datace_obdobi = None
         heslo_obdobi.save_metadata(fedora_transaction, close_transaction=True)
 

@@ -11,7 +11,13 @@ from werkzeug.serving import make_ssl_devcert, run_simple
 class WerkzeugServerThread(Thread):
     """Zapouzdřuje chování třídy ``WerkzeugServerThread`` pro modul ``webclient.core.tests.custom_server``."""
     def __init__(self, host="0.0.0.0", port=8000, **kwargs):
-        """Provádí funkci ``WerkzeugServerThread.__init__`` v rámci modulu ``webclient.core.tests.custom_server``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param host: Vstupní hodnota parametru ``host`` použitého při zpracování.
+        :param port: Vstupní hodnota parametru ``port`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__()
         self.host = host
         self.port = port
@@ -20,7 +26,10 @@ class WerkzeugServerThread(Thread):
         self.error = None
 
     def setup_ssl(self):
-        """Provádí funkci ``WerkzeugServerThread.setup_ssl`` v rámci modulu ``webclient.core.tests.custom_server``."""
+        """Zajišťuje logiku funkce ``setup_ssl``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             cert_path, key_path = make_ssl_devcert("./core/tests/resources/ssl", host="localhost")
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -30,7 +39,10 @@ class WerkzeugServerThread(Thread):
             self.error = str(e)
 
     def run(self):
-        """Provádí funkci ``WerkzeugServerThread.run`` v rámci modulu ``webclient.core.tests.custom_server``."""
+        """Zajišťuje logiku funkce ``run``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             self.setup_ssl()
             application = StaticFilesHandler(get_wsgi_application())
@@ -47,11 +59,17 @@ class WerkzeugServerThread(Thread):
             print(f"Chyba při spuštění serveru: {self.error}")
 
     def terminate(self):
-        """Provádí funkci ``WerkzeugServerThread.terminate`` v rámci modulu ``webclient.core.tests.custom_server``."""
+        """Zajišťuje logiku funkce ``terminate``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pass
 
     def get_free_port(self):
-        """Provádí funkci ``WerkzeugServerThread.get_free_port`` v rámci modulu ``webclient.core.tests.custom_server``."""
+        """Zajišťuje logiku funkce ``get_free_port``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(("127.0.0.1", 0))  # Bind na port 0, což znamená "najdi volný port"
             s.listen(1)  # Spustí naslouchání na tomto portu

@@ -291,7 +291,12 @@ def mapa_dj(request, ident_cely):
 class PianPermissionFilterMixin(PermissionFilterMixin):
     """Zapouzdřuje chování třídy ``PianPermissionFilterMixin`` pro modul ``webclient.pian.views``."""
     def filter_by_permission(self, qs, permission):
-        """Provádí funkci ``PianPermissionFilterMixin.filter_by_permission`` v rámci modulu ``webclient.pian.views``."""
+        """Zajišťuje logiku funkce ``filter_by_permission``.
+        
+        :param qs: Vstupní hodnota parametru ``qs`` použitého při zpracování.
+        :param permission: Vstupní hodnota parametru ``permission`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = qs.annotate(
             historie_zapsat_pian=FilteredRelation(
                 "historie__historie",
@@ -317,7 +322,12 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         return qs
 
     def add_ownership_lookup(self, ownership, qs=None):
-        """Provádí funkci ``PianPermissionFilterMixin.add_ownership_lookup`` v rámci modulu ``webclient.pian.views``."""
+        """Zajišťuje logiku funkce ``add_ownership_lookup``.
+        
+        :param ownership: Vstupní hodnota parametru ``ownership`` použitého při zpracování.
+        :param qs: Vstupní hodnota parametru ``qs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
         filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
         if ownership == Permissions.ownershipChoices.our:
@@ -342,7 +352,12 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
             )
 
     def add_accessibility_lookup(self, permission, qs):
-        """Provádí funkci ``PianPermissionFilterMixin.add_accessibility_lookup`` v rámci modulu ``webclient.pian.views``."""
+        """Zajišťuje logiku funkce ``add_accessibility_lookup``.
+        
+        :param permission: Vstupní hodnota parametru ``permission`` použitého při zpracování.
+        :param qs: Vstupní hodnota parametru ``qs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         accessibility_key = self.permission_model_lookup + "pristupnost_filter__in"
         accessibilities = Heslar.objects.filter(
             nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id)
@@ -367,7 +382,10 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pia
     """
 
     def get_queryset(self):
-        """Provádí funkci ``PianAutocomplete.get_queryset`` v rámci modulu ``webclient.pian.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = Pian.objects.all().order_by("ident_cely")
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
@@ -387,7 +405,11 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
     template_name = "pian/pian_import_table.html"
 
     def post(self, request):
-        """Zpracuje volání ``ImportovatPianView.post`` v rámci modulu ``webclient.pian.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         docfile = request.FILES["file"]
         if docfile.size == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
@@ -474,5 +496,9 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
 
     def check_epsg(self, epsg):
         # @jiribartos kontrola geometrie
-        """Zpracuje volání ``ImportovatPianView.check_epsg`` v rámci modulu ``webclient.pian.views``."""
+        """Zajišťuje logiku funkce ``check_epsg``.
+        
+        :param epsg: Vstupní hodnota parametru ``epsg`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return file_validate_epsg(epsg)

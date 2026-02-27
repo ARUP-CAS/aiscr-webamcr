@@ -5,7 +5,12 @@ except ImportError:
     from core.models import CustomAdminSettings 
 
 def insert_customadminsettings_heslar_group(apps, schema_editor):
-    """Provádí funkci ``insert_customadminsettings_heslar_group`` v rámci modulu ``webclient.core.migrations.0017_insert_customadminsettings``."""
+    """Zajišťuje logiku funkce ``insert_customadminsettings_heslar_group``.
+    
+    :param apps: Vstupní hodnota parametru ``apps`` použitého při zpracování.
+    :param schema_editor: Vstupní hodnota parametru ``schema_editor`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     CustomAdminSettings.objects.create(
         item_group='constants',
         item_id='heslar_group',
@@ -82,7 +87,12 @@ def insert_customadminsettings_heslar_group(apps, schema_editor):
     )
 
 def insert_customadminsettings_heslar(apps, schema_editor):
-    """Provádí funkci ``insert_customadminsettings_heslar`` v rámci modulu ``webclient.core.migrations.0017_insert_customadminsettings``."""
+    """Zajišťuje logiku funkce ``insert_customadminsettings_heslar``.
+    
+    :param apps: Vstupní hodnota parametru ``apps`` použitého při zpracování.
+    :param schema_editor: Vstupní hodnota parametru ``schema_editor`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     CustomAdminSettings.objects.create(
         item_group='constants',
         item_id='heslar',

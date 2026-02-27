@@ -6,7 +6,10 @@ class EzConfig(AppConfig):
     name = "ez"
 
     def ready(self):
-        """Provádí funkci ``EzConfig.ready`` v rámci modulu ``webclient.ez.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(EzConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import ez.signals

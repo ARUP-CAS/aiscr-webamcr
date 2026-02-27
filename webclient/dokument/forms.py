@@ -44,7 +44,11 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
     """
 
     def clean(self, value):
-        """Zpracuje volání ``AutoriField.clean`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``clean``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = super().clean(value)
         if value:
             i = 1
@@ -219,7 +223,15 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Provádí funkci ``EditDokumentExtraDataForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
         dok_osoby = kwargs.pop("dok_osoby", None)
@@ -454,7 +466,16 @@ class EditDokumentForm(forms.ModelForm):
     def __init__(
         self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False, **kwargs
     ):
-        """Provádí funkci ``EditDokumentForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param can_edit_datum_zverejneni: Vstupní hodnota parametru ``can_edit_datum_zverejneni`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
@@ -614,7 +635,15 @@ class CreateModelDokumentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Provádí funkci ``CreateModelDokumentForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
@@ -709,7 +738,15 @@ class CreateModelExtraDataForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Provádí funkci ``CreateModelExtraDataForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
         # Hodnoty z disabled polí se na server neodesílají.
@@ -743,7 +780,13 @@ class PripojitDokumentForm(forms.Form):
     """
 
     def __init__(self, ident_zaznam, *args, **kwargs):
-        """Provádí funkci ``PripojitDokumentForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param ident_zaznam: Vstupní hodnota parametru ``ident_zaznam`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PripojitDokumentForm, self).__init__(*args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
             label=_("dokument.forms.pripojitDokumentForm.dokument.label"),
@@ -778,7 +821,13 @@ class DokumentCastForm(forms.ModelForm):
         fields = ("poznamka",)
 
     def __init__(self, readonly=False, *args, **kwargs):
-        """Provádí funkci ``DokumentCastForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(DokumentCastForm, self).__init__(*args, **kwargs)
 
         self.helper = FormHelper(self)
@@ -803,7 +852,12 @@ class DokumentCastCreateForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``DokumentCastCreateForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(DokumentCastCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -841,7 +895,12 @@ def create_tvar_form(not_readonly=True):
             }
 
         def __init__(self, *args, **kwargs):
-            """Provádí funkci ``TvarForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+            """Zajišťuje logiku funkce ``__init__``.
+            
+            :param args: Poziční argumenty předané voláním.
+            :param kwargs: Pojmenované argumenty předané voláním.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             super(TvarForm, self).__init__(*args, **kwargs)
             if not not_readonly:
                 self.fields["tvar"].required = False
@@ -864,7 +923,12 @@ class TvarFormSetHelper(FormHelper):
     """
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``TvarFormSetHelper.__init__`` v rámci modulu ``webclient.dokument.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False

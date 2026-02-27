@@ -22,7 +22,11 @@ from projekt.views import get_show_oznamovatel
 
 
 def get_model(name):
-    """Provádí funkci ``get_model`` v rámci modulu ``webclient.vypis.fields``."""
+    """Zajišťuje logiku funkce ``get_model``.
+    
+    :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     models = {
         "tvary": Tvar,
         "dokument": Dokument,
@@ -48,7 +52,11 @@ def get_model(name):
 
 
 def get_gml(geom):
-    """Provádí funkci ``get_gml`` v rámci modulu ``webclient.vypis.fields``."""
+    """Zajišťuje logiku funkce ``get_gml``.
+    
+    :param geom: Vstupní hodnota parametru ``geom`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     try:
         with transaction.atomic(), connection.cursor() as cursor:
             cursor.execute("SELECT ST_AsGML(%s)", [geom.wkt])
@@ -59,7 +67,11 @@ def get_gml(geom):
 
 
 def get_wkt(geom):
-    """Provádí funkci ``get_wkt`` v rámci modulu ``webclient.vypis.fields``."""
+    """Zajišťuje logiku funkce ``get_wkt``.
+    
+    :param geom: Vstupní hodnota parametru ``geom`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     with connection.cursor() as cursor:
         cursor.execute("SELECT ST_AsText(ST_GeomFromText(%s))", [geom.wkt])
         row = cursor.fetchone()
@@ -70,32 +82,58 @@ def get_wkt(geom):
 class SimpleSectionTemplateName:
     """Zapouzdřuje chování třídy ``SimpleSectionTemplateName`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, name):
-        """Zpracuje volání ``SimpleSectionTemplateName.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.name = name
 
     def __str__(self):
-        """Provádí funkci ``SimpleSectionTemplateName.__str__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.name
 
     def get_name(self, instance):
-        """Zpracuje volání ``SimpleSectionTemplateName.get_name`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_name``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.name
 
     def get_permission(self, instance, user=None):
-        """Provádí funkci ``SimpleSectionTemplateName.get_permission`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_permission``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return True
 
 
 class SectionNameWithAccessor(SimpleSectionTemplateName):
     """Zapouzdřuje chování třídy ``SectionNameWithAccessor`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, name, accessor, foreign_key=None):
-        """Provádí funkci ``SectionNameWithAccessor.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :param accessor: Vstupní hodnota parametru ``accessor`` použitého při zpracování.
+        :param foreign_key: Vstupní hodnota parametru ``foreign_key`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(name)
         self.accessor = accessor
         self.foreign_key = foreign_key
 
     def get_name(self, instance):
-        """Zpracuje volání ``SectionNameWithAccessor.get_name`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_name``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
                 return f"{self.name}&nbsp;{getattr(getattr(instance, self.foreign_key), self.accessor)}"
@@ -107,7 +145,11 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
     """Zapouzdřuje chování třídy ``PianSectionNameWithAccessor`` pro modul ``webclient.vypis.fields``."""
     def get_name(self, instance):
-        """Zpracuje volání ``PianSectionNameWithAccessor.get_name`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_name``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
             stav = getattr(pian, self.accessor[1])()
@@ -119,27 +161,48 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
 class OznamovatelSectionNameWithAccessor(SectionNameWithAccessor):
     """Zapouzdřuje chování třídy ``OznamovatelSectionNameWithAccessor`` pro modul ``webclient.vypis.fields``."""
     def get_permission(self, instance, user=None):
-        """Provádí funkci ``OznamovatelSectionNameWithAccessor.get_permission`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_permission``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return get_show_oznamovatel(instance, user)
 
 
 class Field:
     """Zapouzdřuje chování třídy ``Field`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, label, accessor):
-        """Provádí funkci ``Field.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param label: Vstupní hodnota parametru ``label`` použitého při zpracování.
+        :param accessor: Vstupní hodnota parametru ``accessor`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.label = label
         self.accessor = accessor
 
     def __repr__(self):
-        """Provádí funkci ``Field.__repr__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__repr__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"Field(label={self.label}, accessor={self.accessor})"
 
     def __str__(self):
-        """Provádí funkci ``Field.__str__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.label
 
     def get_value(self, instance, user=None):
-        """Provádí funkci ``Field.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         value = getattr(instance, self.accessor)
         if isinstance(value, date) and value:
             return value.strftime("%-d.%-m.%Y")
@@ -148,19 +211,33 @@ class Field:
         return getattr(instance, self.accessor)
 
     def get_label(self):
-        """Provádí funkci ``Field.get_label`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_label``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.label
 
 
 class SouborField(Field):
     """Zapouzdřuje chování třídy ``SouborField`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, label, accessor, key_name):
-        """Provádí funkci ``SouborField.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param label: Vstupní hodnota parametru ``label`` použitého při zpracování.
+        :param accessor: Vstupní hodnota parametru ``accessor`` použitého při zpracování.
+        :param key_name: Vstupní hodnota parametru ``key_name`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(label, accessor)
         self.key_name = key_name
 
     def get_value(self, instance, user=None):
-        """Provádí funkci ``SouborField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         soubor = getattr(instance, self.accessor)
         if soubor:
             return reverse(
@@ -177,7 +254,12 @@ class SouborField(Field):
 class SouborDownloadField(SouborField):
     """Zapouzdřuje chování třídy ``SouborDownloadField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``SouborDownloadField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         accessor = getattr(instance, self.accessor)
         if accessor:
             return {
@@ -197,14 +279,24 @@ class SouborDownloadField(SouborField):
 class Model3dKomponentaField(Field):
     """Zapouzdřuje chování třídy ``Model3dKomponentaField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``Model3dKomponentaField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return getattr(instance.casti.first().komponenty.komponenty.first(), self.accessor)
 
 
 class Model3dKomponentaAktivityField(Model3dKomponentaField):
     """Zapouzdřuje chování třídy ``Model3dKomponentaAktivityField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``Model3dKomponentaAktivityField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = super().get_value(instance, user)
         return "; ".join([str(v) for v in related_manager.all()])
 
@@ -212,7 +304,12 @@ class Model3dKomponentaAktivityField(Model3dKomponentaField):
 class ChooseField(Field):
     """Zapouzdřuje chování třídy ``ChooseField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ChooseField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         for accessor in self.accessor:
             value = getattr(instance, accessor)
             if value:
@@ -223,14 +320,24 @@ class ChooseField(Field):
 class StatusField(Field):
     """Zapouzdřuje chování třídy ``StatusField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``StatusField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return getattr(instance, self.accessor)()
 
 
 class ZjisteniField(Field):
     """Zapouzdřuje chování třídy ``ZjisteniField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ZjisteniField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if getattr(instance, self.accessor) is not None:
             if getattr(instance, self.accessor):
                 return _("vypis.vypis_config.dj.zjisteni.Ano")
@@ -242,12 +349,23 @@ class ZjisteniField(Field):
 class ForeignField(Field):
     """Zapouzdřuje chování třídy ``ForeignField`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, name, accessor, foreign_key):
-        """Provádí funkci ``ForeignField.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :param accessor: Vstupní hodnota parametru ``accessor`` použitého při zpracování.
+        :param foreign_key: Vstupní hodnota parametru ``foreign_key`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(name, accessor)
         self.foreign_key = foreign_key
 
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ForeignField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         accessors = self.accessor.split("__")
         new_instance = ""
         try:
@@ -267,7 +385,12 @@ class ForeignField(Field):
 class GeomGmlField(Field):
     """Zapouzdřuje chování třídy ``GeomGmlField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``GeomGmlField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         geom = getattr(instance, self.accessor)
         if geom:
             return get_gml(geom)
@@ -277,7 +400,12 @@ class GeomGmlField(Field):
 class GeomWktField(Field):
     """Zapouzdřuje chování třídy ``GeomWktField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``GeomWktField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         geom = getattr(instance, self.accessor)
         if geom:
             return get_wkt(geom)
@@ -287,7 +415,12 @@ class GeomWktField(Field):
 class ForeignGeomGmlField(ForeignField):
     """Zapouzdřuje chování třídy ``ForeignGeomGmlField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ForeignGeomGmlField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             geom = getattr(getattr(instance, self.foreign_key), self.accessor)
             if geom:
@@ -300,7 +433,12 @@ class ForeignGeomGmlField(ForeignField):
 class ForeignGeomWktField(ForeignField):
     """Zapouzdřuje chování třídy ``ForeignGeomWktField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ForeignGeomWktField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             geom = getattr(getattr(instance, self.foreign_key), self.accessor)
             if geom:
@@ -313,7 +451,12 @@ class ForeignGeomWktField(ForeignField):
 class ManyToManyField(Field):
     """Zapouzdřuje chování třídy ``ManyToManyField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ManyToManyField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = getattr(instance, self.accessor)
         return "; ".join([str(v) for v in related_manager.all()])
 
@@ -321,7 +464,12 @@ class ManyToManyField(Field):
 class ForeignManyToManyField(ForeignField):
     """Zapouzdřuje chování třídy ``ForeignManyToManyField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ForeignManyToManyField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if getattr(instance, self.foreign_key, False):
             related_manager = getattr(getattr(instance, self.foreign_key), self.accessor)
             return "; ".join([v.vypis_name() for v in related_manager.all()])
@@ -331,7 +479,12 @@ class ForeignManyToManyField(ForeignField):
 class DoubleField(Field):
     """Zapouzdřuje chování třídy ``DoubleField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``DoubleField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         values = []
         for accessor in self.accessor:
             value = getattr(instance, accessor)
@@ -348,7 +501,12 @@ class DoubleField(Field):
 class DoubleFieldNum(Field):
     """Zapouzdřuje chování třídy ``DoubleFieldNum`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``DoubleFieldNum.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         values = []
         for accessor in self.accessor:
             value = getattr(instance, accessor)
@@ -362,7 +520,12 @@ class DoubleFieldNum(Field):
 class ForeignDoubleField(ForeignField):
     """Zapouzdřuje chování třídy ``ForeignDoubleField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ForeignDoubleField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if getattr(instance, self.foreign_key, False):
             values = []
             for accessor in self.accessor:
@@ -377,7 +540,12 @@ class ForeignDoubleField(ForeignField):
 class ForeignDoubleFieldNum(ForeignField):
     """Zapouzdřuje chování třídy ``ForeignDoubleFieldNum`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``ForeignDoubleFieldNum.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if getattr(instance, self.foreign_key, False):
             values = []
             for accessor in self.accessor:
@@ -392,19 +560,36 @@ class ForeignDoubleFieldNum(ForeignField):
 class RepeatableField(ForeignField):
     """Zapouzdřuje chování třídy ``RepeatableField`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, name, accessor, foreign_key, template_name=None, model_name=None):
-        """Provádí funkci ``RepeatableField.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :param accessor: Vstupní hodnota parametru ``accessor`` použitého při zpracování.
+        :param foreign_key: Vstupní hodnota parametru ``foreign_key`` použitého při zpracování.
+        :param template_name: Vstupní hodnota parametru ``template_name`` použitého při zpracování.
+        :param model_name: Vstupní hodnota parametru ``model_name`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(name, accessor, foreign_key)
         self.template_name = template_name
         self.model_name = model_name
 
     def get_related_manager(self, instance):
-        """Zpracuje volání ``RepeatableField.get_related_manager`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_related_manager``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.model_name:
             return get_model(self.foreign_key).objects.filter(**{self.model_name: instance})
         return get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance})
 
     def get_value(self, instance, user=None):
-        """Provádí funkci ``RepeatableField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = self.get_related_manager(instance)
         data = {
             "template_name": self.template_name,
@@ -427,7 +612,12 @@ class RepeatableField(ForeignField):
 class VbRepeatableField(RepeatableField):
     """Zapouzdřuje chování třídy ``VbRepeatableField`` pro modul ``webclient.vypis.fields``."""
     def get_value(self, instance, user=None):
-        """Provádí funkci ``VbRepeatableField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = self.get_related_manager(instance)
         data = {
             "template_name": self.template_name,
@@ -451,11 +641,20 @@ class VbRepeatableField(RepeatableField):
 class HistorieRepeatableField(RepeatableField):
     """Zapouzdřuje chování třídy ``HistorieRepeatableField`` pro modul ``webclient.vypis.fields``."""
     def get_related_manager(self, instance):
-        """Zpracuje volání ``HistorieRepeatableField.get_related_manager`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_related_manager``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return Historie.objects.filter(**{"vazba": instance.historie})
 
     def get_value(self, instance, user=None):
-        """Provádí funkci ``HistorieRepeatableField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = self.get_related_manager(instance)
         data = {
             "template_name": self.template_name,
@@ -481,11 +680,18 @@ class HistorieRepeatableField(RepeatableField):
 class RepeatableSectionField(RepeatableField):
     """Zapouzdřuje chování třídy ``RepeatableSectionField`` pro modul ``webclient.vypis.fields``."""
     def get_label(self):
-        """Provádí funkci ``RepeatableSectionField.get_label`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_label``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().get_label()
 
     def get_sections(self, instance):
-        """Zpracuje volání ``RepeatableSectionField.get_sections`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_sections``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = (
             get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance}).order_by("ident_cely")
         )
@@ -494,7 +700,12 @@ class RepeatableSectionField(RepeatableField):
         return None
 
     def get_value(self, instance, user=None):
-        """Provádí funkci ``RepeatableSectionField.get_value`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_value``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance})
         data = {
             "template_name": self.template_name,
@@ -513,7 +724,13 @@ class RepeatableSectionField(RepeatableField):
 class SectionField(Field):
     """Zapouzdřuje chování třídy ``SectionField`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, name, accessor, foreign_key):
-        """Provádí funkci ``SectionField.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :param accessor: Vstupní hodnota parametru ``accessor`` použitého při zpracování.
+        :param foreign_key: Vstupní hodnota parametru ``foreign_key`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(name, accessor)
         self.foreign_key = foreign_key
 
@@ -521,12 +738,23 @@ class SectionField(Field):
 class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
     """Zapouzdřuje chování třídy ``RepeatableSectionNameWithAccessor`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, name, accessor, foreign_key, model_name=None):
-        """Provádí funkci ``RepeatableSectionNameWithAccessor.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :param accessor: Vstupní hodnota parametru ``accessor`` použitého při zpracování.
+        :param foreign_key: Vstupní hodnota parametru ``foreign_key`` použitého při zpracování.
+        :param model_name: Vstupní hodnota parametru ``model_name`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(name, accessor, foreign_key)
         self.model_name = model_name
 
     def get_sections(self, instance):
-        """Zpracuje volání ``RepeatableSectionNameWithAccessor.get_sections`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_sections``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = (
             get_model(self.foreign_key).objects.filter(**{self.model_name: instance}).order_by("ident_cely")
         )
@@ -535,7 +763,11 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         return None
 
     def get_name(self, instance):
-        """Zpracuje volání ``RepeatableSectionNameWithAccessor.get_name`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_name``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if len(self.accessor) > 2:
             new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{getattr(instance, self.accessor[1])}"
         else:
@@ -548,14 +780,22 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
 class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor):
     """Zapouzdřuje chování třídy ``SouboryRepeatableSectionNameWithAccessor`` pro modul ``webclient.vypis.fields``."""
     def get_sections(self, instance):
-        """Zpracuje volání ``SouboryRepeatableSectionNameWithAccessor.get_sections`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_sections``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         related_manager = get_model(self.foreign_key).objects.filter(**{"vazba": instance.soubory}).order_by("pk")
         if related_manager.count() > 0:
             return related_manager
         return None
 
     def get_name(self, instance):
-        """Zpracuje volání ``SouboryRepeatableSectionNameWithAccessor.get_name`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_name``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
         if getattr(instance, self.accessor[-1]):
             return f"{new_name}<div class='mime-type' style='white-space: pre;'> ({getattr(instance, self.accessor[-1])})</div>"
@@ -565,7 +805,11 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor):
     """Zapouzdřuje chování třídy ``KomponentaRepeatableSectionNameWithAccessor`` pro modul ``webclient.vypis.fields``."""
     def get_name(self, instance):
-        """Zpracuje volání ``KomponentaRepeatableSectionNameWithAccessor.get_name`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_name``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         obdobi = getattr(instance, self.accessor[1])
         jistota = getattr(instance, self.accessor[2])
         presna_datace = getattr(instance, self.accessor[3])
@@ -594,16 +838,28 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
 class SubSectionField:
     """Zapouzdřuje chování třídy ``SubSectionField`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, config, foreign_key=None):
-        """Provádí funkci ``SubSectionField.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param config: Vstupní hodnota parametru ``config`` použitého při zpracování.
+        :param foreign_key: Vstupní hodnota parametru ``foreign_key`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.config = config
         self.foreign_key = foreign_key
 
     def get_config(self):
-        """Provádí funkci ``SubSectionField.get_config`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_config``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.config
 
     def get_instance(self, instance):
-        """Zpracuje volání ``SubSectionField.get_instance`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_instance``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.foreign_key:
             try:
                 return getattr(instance, self.foreign_key)
@@ -615,7 +871,11 @@ class SubSectionField:
 class NeidentAkceSubSectionField(SubSectionField):
     """Zapouzdřuje chování třídy ``NeidentAkceSubSectionField`` pro modul ``webclient.vypis.fields``."""
     def get_instance(self, instance):
-        """Zpracuje volání ``NeidentAkceSubSectionField.get_instance`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_instance``.
+        
+        :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             neident_akce = NeidentAkce.objects.get(dokument_cast=instance)
             return neident_akce
@@ -624,7 +884,11 @@ class NeidentAkceSubSectionField(SubSectionField):
 
 
 def get_historie_config(label_key):
-    """Provádí funkci ``get_historie_config`` v rámci modulu ``webclient.vypis.fields``."""
+    """Zajišťuje logiku funkce ``get_historie_config``.
+    
+    :param label_key: Vstupní hodnota parametru ``label_key`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     return {
         "section_name": SimpleSectionTemplateName(label_key),
         "template": SimpleSectionTemplateName("vypis/simple_section_with_name.html"),
@@ -640,10 +904,18 @@ def get_historie_config(label_key):
 class HistorieSubSectionField(SubSectionField):
     """Zapouzdřuje chování třídy ``HistorieSubSectionField`` pro modul ``webclient.vypis.fields``."""
     def __init__(self, foreign_key=None, label_key="vypis.historie.section_name"):
-        """Provádí funkci ``HistorieSubSectionField.__init__`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param foreign_key: Vstupní hodnota parametru ``foreign_key`` použitého při zpracování.
+        :param label_key: Vstupní hodnota parametru ``label_key`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.label_key = label_key
         self.foreign_key = foreign_key
 
     def get_config(self):
-        """Provádí funkci ``HistorieSubSectionField.get_config`` v rámci modulu ``webclient.vypis.fields``."""
+        """Zajišťuje logiku funkce ``get_config``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return get_historie_config(self.label_key)

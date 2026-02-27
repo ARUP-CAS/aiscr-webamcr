@@ -47,17 +47,28 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``NalezObjekt.__init__`` v rámci modulu ``webclient.nalez.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
-        """Provádí funkci ``NalezObjekt.__str__`` v rámci modulu ``webclient.nalez.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Provádí funkci ``NalezObjekt.get_permission_object`` v rámci modulu ``webclient.nalez.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.komponenta.get_permission_object()
 
 
@@ -102,15 +113,26 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init_(self, *args, **kwargs):
-        """Provádí funkci ``NalezPredmet.__init_`` v rámci modulu ``webclient.nalez.models``."""
+        """Zajišťuje logiku funkce ``__init_``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
-        """Provádí funkci ``NalezPredmet.__str__`` v rámci modulu ``webclient.nalez.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Provádí funkci ``NalezPredmet.get_permission_object`` v rámci modulu ``webclient.nalez.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.komponenta.get_permission_object()

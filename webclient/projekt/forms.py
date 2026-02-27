@@ -88,7 +88,14 @@ class CreateProjektForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
-        """Provádí funkci ``CreateProjektForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["katastry"].readonly = True
@@ -151,7 +158,10 @@ class CreateProjektForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean(self):
-        """Provádí funkci ``CreateProjektForm.clean`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``clean``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         cleaned_data = super().clean()
 
         coordinate_x1 = cleaned_data.get("coordinate_x1")
@@ -275,7 +285,15 @@ class EditProjektForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, edit_fields=None, **kwargs):
-        """Provádí funkci ``EditProjektForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param edit_fields: Vstupní hodnota parametru ``edit_fields`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.helper = FormHelper(self)
@@ -425,7 +443,12 @@ class NavrhnoutZruseniProjektForm(forms.Form):
     enable_submit = True
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``NavrhnoutZruseniProjektForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -502,7 +525,12 @@ class PrihlaseniProjektForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``PrihlaseniProjektForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         archivar = kwargs.pop("archivar", False)
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.fields["vedouci_projektu"].required = True
@@ -580,7 +608,12 @@ class ZahajitVTerenuForm(forms.ModelForm):
         help_texts = {"datum_zahajeni": _("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip")}
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ZahajitVTerenuForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ZahajitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_zahajeni"].required = True
         kraje_s_emailem = self.instance.get_kraje_s_emailem()
@@ -600,7 +633,10 @@ class ZahajitVTerenuForm(forms.ModelForm):
         )
 
     def clean(self):
-        """Provádí funkci ``ZahajitVTerenuForm.clean`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``clean``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         cleaned_data = super().clean()
         poslat_email_kraj = cleaned_data.get("poslat_email_kraj")
         if poslat_email_kraj == "False":
@@ -649,7 +685,12 @@ class UkoncitVTerenuForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``UkoncitVTerenuForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(UkoncitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_ukonceni"].required = True
         kraje_s_emailem = self.instance.get_kraje_s_emailem()
@@ -698,7 +739,12 @@ class ZruseniProjektForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ZruseniProjektForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -724,7 +770,12 @@ class GenerovatNovePotvrzeniForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``GenerovatNovePotvrzeniForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -783,7 +834,12 @@ class GenerovatExpertniListForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``GenerovatExpertniListForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -819,7 +875,13 @@ class PripojitProjektForm(forms.Form):
     """
 
     def __init__(self, dok=False, *args, **kwargs):
-        """Provádí funkci ``PripojitProjektForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param dok: Vstupní hodnota parametru ``dok`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PripojitProjektForm, self).__init__(*args, **kwargs)
         if dok:
             new_choices = list(
@@ -873,7 +935,14 @@ class ProjektFilterForm(BaseFilterForm):
 class ZadostProjektForm(forms.Form):
     """Zapouzdřuje chování třídy ``ZadostProjektForm`` pro modul ``webclient.projekt.forms``."""
     def __init__(self, label="", help_text="", *args, **kwargs):
-        """Provádí funkci ``ZadostProjektForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param label: Vstupní hodnota parametru ``label`` použitého při zpracování.
+        :param help_text: Vstupní hodnota parametru ``help_text`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ZadostProjektForm, self).__init__(*args, **kwargs)
         self.fields["reason"] = forms.CharField(
             label=label,
@@ -916,7 +985,12 @@ class UpravitDatumOznameniForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``UpravitDatumOznameniForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(UpravitDatumOznameniForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
@@ -949,7 +1023,12 @@ class NeodeslatMailForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``NeodeslatMailForm.__init__`` v rámci modulu ``webclient.projekt.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

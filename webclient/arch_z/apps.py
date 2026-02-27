@@ -6,7 +6,10 @@ class ArchZConfig(AppConfig):
     name = "arch_z"
 
     def ready(self):
-        """Provádí funkci ``ArchZConfig.ready`` v rámci modulu ``webclient.arch_z.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ArchZConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import arch_z.signals

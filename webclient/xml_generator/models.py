@@ -11,7 +11,13 @@ UPDATE_REDIS_SNAPSHOT = 20
 
 
 def check_if_task_queued(class_name, pk, task_name):
-    """Provádí funkci ``check_if_task_queued`` v rámci modulu ``webclient.xml_generator.models``."""
+    """Zajišťuje logiku funkce ``check_if_task_queued``.
+    
+    :param class_name: Vstupní hodnota parametru ``class_name`` použitého při zpracování.
+    :param pk: Primární klíč záznamu.
+    :param task_name: Vstupní hodnota parametru ``task_name`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     try:
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
@@ -56,12 +62,18 @@ class BaseAmcrModel(models.Model):
         abstract = True
 
     def __str__(self):
-        """Provádí funkci ``BaseAmcrModel.__str__`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"{self.pk}"
 
     @property
     def get_ident_cely_link(self):
-        """Provádí funkci ``BaseAmcrModel.get_ident_cely_link`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``get_ident_cely_link``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
             return f"<a href='{self.get_absolute_url()}' target='_blank'>{self.ident_cely}</a>"
 
@@ -74,7 +86,12 @@ class ModelWithMetadata(BaseAmcrModel):
     ident_cely = models.TextField(unique=True)
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ModelWithMetadata.__init__`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.suppress_signal = False
         self.deleted_by_user = None
         self.active_transaction = None
@@ -84,7 +101,13 @@ class ModelWithMetadata(BaseAmcrModel):
         super(ModelWithMetadata, self).__init__(*args, **kwargs)
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
-        """Provádí funkci ``ModelWithMetadata.create_transaction`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``create_transaction``.
+        
+        :param transaction_user: Vstupní hodnota parametru ``transaction_user`` použitého při zpracování.
+        :param success_message: Vstupní hodnota parametru ``success_message`` použitého při zpracování.
+        :param error_message: Vstupní hodnota parametru ``error_message`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -94,7 +117,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
     @property
     def metadata(self):
-        """Provádí funkci ``ModelWithMetadata.metadata`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``metadata``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         connector = FedoraRepositoryConnector(self)
@@ -142,7 +168,14 @@ class ModelWithMetadata(BaseAmcrModel):
     def save_metadata(
         self, fedora_transaction=None, include_files=False, close_transaction=False, skip_container_check=False
     ):
-        """Provádí funkci ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :param fedora_transaction: Vstupní hodnota parametru ``fedora_transaction`` použitého při zpracování.
+        :param include_files: Vstupní hodnota parametru ``include_files`` použitého při zpracování.
+        :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+        :param skip_container_check: Vstupní hodnota parametru ``skip_container_check`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import DryRunFedoraTransaction, FedoraDeletionOnlyTransaction, FedoraTransaction
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
@@ -202,7 +235,12 @@ class ModelWithMetadata(BaseAmcrModel):
         )
 
     def save_record_deletion_record(self, fedora_transaction, deleted_by_user=None):
-        """Provádí funkci ``ModelWithMetadata.save_record_deletion_record`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``save_record_deletion_record``.
+        
+        :param fedora_transaction: Vstupní hodnota parametru ``fedora_transaction`` použitého při zpracování.
+        :param deleted_by_user: Vstupní hodnota parametru ``deleted_by_user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
 
         from arch_z.models import ArcheologickyZaznam
@@ -230,7 +268,11 @@ class ModelWithMetadata(BaseAmcrModel):
             self.deletion_record_saved = True
 
     def _get_fedora_transaction(self, fedora_transaction):
-        """Zpracuje volání ``ModelWithMetadata._get_fedora_transaction`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``_get_fedora_transaction``.
+        
+        :param fedora_transaction: Vstupní hodnota parametru ``fedora_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
@@ -242,7 +284,12 @@ class ModelWithMetadata(BaseAmcrModel):
         return fedora_transaction
 
     def record_deletion(self, fedora_transaction=None, close_transaction=False):
-        """Provádí funkci ``ModelWithMetadata.record_deletion`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``record_deletion``.
+        
+        :param fedora_transaction: Vstupní hodnota parametru ``fedora_transaction`` použitého při zpracování.
+        :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.start")
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
@@ -292,7 +339,14 @@ class ModelWithMetadata(BaseAmcrModel):
             fedora_transaction.mark_transaction_as_closed()
 
     def record_ident_change(self, old_ident_cely, fedora_transaction=None, new_ident_cely=None, delete_container=True):
-        """Provádí funkci ``ModelWithMetadata.record_ident_change`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``record_ident_change``.
+        
+        :param old_ident_cely: Vstupní hodnota parametru ``old_ident_cely`` použitého při zpracování.
+        :param fedora_transaction: Vstupní hodnota parametru ``fedora_transaction`` použitého při zpracování.
+        :param new_ident_cely: Vstupní hodnota parametru ``new_ident_cely`` použitého při zpracování.
+        :param delete_container: Vstupní hodnota parametru ``delete_container`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
@@ -342,7 +396,11 @@ class ModelWithMetadata(BaseAmcrModel):
             from projekt.models import Projekt
 
             def process_arch_z(record: ArcheologickyZaznam):
-                """Zpracuje volání ``ModelWithMetadata.process_arch_z`` v rámci modulu ``webclient.xml_generator.models``."""
+                """Zajišťuje logiku funkce ``process_arch_z``.
+                
+                :param record: Vstupní hodnota parametru ``record`` použitého při zpracování. (typ: ``ArcheologickyZaznam``).
+                :return: Návratová hodnota funkce po zpracování vstupních dat.
+                """
                 for inner_item in record.dokumentacni_jednotky_akce.all():
                     inner_item: DokumentacniJednotka
                     try:
@@ -372,7 +430,11 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Dokument):
 
                 def save_metadata(record: Dokument):
-                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
+                    """Zajišťuje logiku funkce ``save_metadata``.
+                    
+                    :param record: Vstupní hodnota parametru ``record`` použitého při zpracování. (typ: ``Dokument``).
+                    :return: Návratová hodnota funkce po zpracování vstupních dat.
+                    """
                     for item in record.casti.all():
                         item: DokumentCast
                         if item.archeologicky_zaznam:
@@ -387,7 +449,11 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, ExterniZdroj):
 
                 def save_metadata(record: ExterniZdroj):
-                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
+                    """Zajišťuje logiku funkce ``save_metadata``.
+                    
+                    :param record: Vstupní hodnota parametru ``record`` použitého při zpracování. (typ: ``ExterniZdroj``).
+                    :return: Návratová hodnota funkce po zpracování vstupních dat.
+                    """
                     for item in record.externi_odkazy_zdroje.all():
                         item: ExterniOdkaz
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -397,7 +463,11 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Projekt):
 
                 def save_metadata(record: Projekt):
-                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
+                    """Zajišťuje logiku funkce ``save_metadata``.
+                    
+                    :param record: Vstupní hodnota parametru ``record`` použitého při zpracování. (typ: ``Projekt``).
+                    :return: Návratová hodnota funkce po zpracování vstupních dat.
+                    """
                     for item in record.casti_dokumentu.all():
                         item: DokumentCast
                         item.dokument.save_metadata(fedora_transaction)
@@ -410,7 +480,11 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Lokalita):
 
                 def save_metadata(record: Lokalita):
-                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
+                    """Zajišťuje logiku funkce ``save_metadata``.
+                    
+                    :param record: Vstupní hodnota parametru ``record`` použitého při zpracování. (typ: ``Lokalita``).
+                    :return: Návratová hodnota funkce po zpracování vstupních dat.
+                    """
                     archeologicky_zaznam: ArcheologickyZaznam = record.archeologicky_zaznam
                     process_arch_z(archeologicky_zaznam)
 
@@ -419,7 +493,11 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, SamostatnyNalez):
 
                 def save_metadata(record: SamostatnyNalez):
-                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
+                    """Zajišťuje logiku funkce ``save_metadata``.
+                    
+                    :param record: Vstupní hodnota parametru ``record`` použitého při zpracování. (typ: ``SamostatnyNalez``).
+                    :return: Návratová hodnota funkce po zpracování vstupních dat.
+                    """
                     if record.projekt:
                         record.projekt.save_metadata(fedora_transaction)
 
@@ -428,7 +506,11 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Pian):
 
                 def save_metadata(record: Pian):
-                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
+                    """Zajišťuje logiku funkce ``save_metadata``.
+                    
+                    :param record: Vstupní hodnota parametru ``record`` použitého při zpracování. (typ: ``Pian``).
+                    :return: Návratová hodnota funkce po zpracování vstupních dat.
+                    """
                     for item in record.dokumentacni_jednotky_pianu.all():
                         item: DokumentacniJednotka
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -454,7 +536,11 @@ class ModelWithMetadata(BaseAmcrModel):
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
-        """Zpracuje volání ``ModelWithMetadata.get_by_ident_cely`` v rámci modulu ``webclient.xml_generator.models``."""
+        """Zajišťuje logiku funkce ``get_by_ident_cely``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return cls.objects.get(ident_cely=ident_cely)
         except Exception:

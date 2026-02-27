@@ -68,7 +68,10 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     @property
     def ident_cely_safe(self):
-        """Provádí funkci ``DokumentacniJednotka.ident_cely_safe`` v rámci modulu ``webclient.dj.models``."""
+        """Zajišťuje logiku funkce ``ident_cely_safe``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.ident_cely.replace("-", "_")
 
     def has_adb(self):
@@ -83,11 +86,19 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         return has_adb
 
     def get_permission_object(self):
-        """Provádí funkci ``DokumentacniJednotka.get_permission_object`` v rámci modulu ``webclient.dj.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.archeologicky_zaznam
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``DokumentacniJednotka.__init__`` v rámci modulu ``webclient.dj.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(DokumentacniJednotka, self).__init__(*args, **kwargs)
         self.initial_pian_id = self.pian_id
         self.active_transaction = None

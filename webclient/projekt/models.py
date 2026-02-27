@@ -178,33 +178,55 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def datum_oznameni(self):
-        """Provádí funkci ``Projekt.datum_oznameni`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``datum_oznameni``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.historie.historie_set.order_by("datum_zmeny").first().datum_zmeny
 
     @property
     def pristupnost(self):
-        """Provádí funkci ``Projekt.pristupnost`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``pristupnost``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.pristupnost_snapshot
 
     @property
     def get_ident_cely_link(self):
-        """Provádí funkci ``Projekt.get_ident_cely_link`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``get_ident_cely_link``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
             return f"<a href='{self.get_absolute_url()}' target='_blank' class='link-projekt'>{self.ident_cely}</a>"
 
     def save(self, *args, **kwargs):
-        """Provádí funkci ``Projekt.save`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``save``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.pk is None:
             self.set_pristupnost()
         super().save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``Projekt.__init__`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(Projekt, self).__init__(*args, **kwargs)
         self.initial_dokumenty = []
 
     def __str__(self):
-        """Provádí funkci ``Projekt.__str__`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.ident_cely:
             return self.ident_cely
         else:
@@ -216,7 +238,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         verbose_name = "projekty"
 
     def send_ep01(self, rep_bin_file=None):
-        """Zpracuje volání ``Projekt.send_ep01`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``send_ep01``.
+        
+        :param rep_bin_file: Vstupní hodnota parametru ``rep_bin_file`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("projekt.models.Projekt.send_ep01", extra={"file": rep_bin_file, "ident_cely": self.ident_cely})
         from services.mailer import Mailer
 
@@ -336,7 +362,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def archive_project_documentation(self):
         # Vytvoří textový soubor se seznamem smazaných souborů.
-        """Provádí funkci ``Projekt.archive_project_documentation`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``archive_project_documentation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         soubory = self.soubory.soubory.all()
         if soubory.count() > 0:
             conn = FedoraRepositoryConnector(self, self.active_transaction)
@@ -624,7 +653,14 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def _save_document(
         self, creator: DocumentCreator, fedora_transaction: FedoraTransaction, user=None, check_duplicate=True
     ) -> RepositoryBinaryFile:
-        """Provádí funkci ``Projekt._save_document`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``_save_document``.
+        
+        :param creator: Vstupní hodnota parametru ``creator`` použitého při zpracování. (typ: ``DocumentCreator``).
+        :param fedora_transaction: Vstupní hodnota parametru ``fedora_transaction`` použitého při zpracování. (typ: ``FedoraTransaction``).
+        :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+        :param check_duplicate: Vstupní hodnota parametru ``check_duplicate`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``RepositoryBinaryFile``).
+        """
         rep_bin_file: RepositoryBinaryFile = creator.build_document()
         duplikat = Soubor.objects.filter(nazev=rep_bin_file.filename)
         filename = rep_bin_file.filename
@@ -695,30 +731,47 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def expert_list_can_be_created(self):
-        """Provádí funkci ``Projekt.expert_list_can_be_created`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``expert_list_can_be_created``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.typ_projektu.pk != TYP_PROJEKTU_ZACHRANNY_ID:
             return False
         return True
 
     def create_expert_list(self, popup_parametry=None):
-        """Zpracuje volání ``Projekt.create_expert_list`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``create_expert_list``.
+        
+        :param popup_parametry: Vstupní hodnota parametru ``popup_parametry`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         elc = ExpertniListCreator(self, popup_parametry)
         output = elc.build_document()
         return output
 
     @property
     def should_generate_confirmation_document(self):
-        """Provádí funkci ``Projekt.should_generate_confirmation_document`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``should_generate_confirmation_document``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.stav == PROJEKT_STAV_ZAPSANY and self.has_oznamovatel():
             return True
         return False
 
     def get_absolute_url(self):
-        """Provádí funkci ``Projekt.get_absolute_url`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``get_absolute_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_pristupnost(self, fixes: Union[Dict, None] = None):
-        """Zpracuje volání ``Projekt.set_pristupnost`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``set_pristupnost``.
+        
+        :param fixes: Vstupní hodnota parametru ``fixes`` použitého při zpracování. (typ: ``Union[Dict, None]``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.pk is None:
             self.pristupnost_snapshot = Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
             return
@@ -746,7 +799,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def planovane_zahajeni_str(self):
-        """Provádí funkci ``Projekt.planovane_zahajeni_str`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``planovane_zahajeni_str``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.planovane_zahajeni:
             return f"[{self.planovane_zahajeni.lower}, {self.planovane_zahajeni.upper + datetime.timedelta(days=-1)}]"
         else:
@@ -754,18 +810,27 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def planovane_zahajeni_vypis(self):
-        """Provádí funkci ``Projekt.planovane_zahajeni_vypis`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``planovane_zahajeni_vypis``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.planovane_zahajeni:
             return f"{self.planovane_zahajeni.lower.strftime('%-d.%-m.%Y')} - {(self.planovane_zahajeni.upper + datetime.timedelta(days=-1)).strftime('%-d.%-m.%Y')}"
         else:
             return ""
 
     def get_permission_object(self):
-        """Provádí funkci ``Projekt.get_permission_object`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self
 
     def get_create_user(self):
-        """Provádí funkci ``Projekt.get_create_user`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``get_create_user``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel,)
         except Exception as e:
@@ -773,18 +838,27 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Provádí funkci ``Projekt.get_create_org`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``get_create_org``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return (self.organizace,)
 
     @property
     def redis_snapshot_id(self):
-        """Provádí funkci ``Projekt.redis_snapshot_id`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``redis_snapshot_id``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from projekt.views import ProjektListView
 
         return f"{ProjektListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Provádí funkci ``Projekt.generate_redis_snapshot`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``generate_redis_snapshot``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from projekt.tables import ProjektTable
 
         data = Projekt.objects.filter(pk=self.pk)
@@ -793,7 +867,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         return self.redis_snapshot_id, data
 
     def get_kraje_s_emailem(self):
-        """Provádí funkci ``Projekt.get_kraje_s_emailem`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``get_kraje_s_emailem``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         all_katastre = RuianKatastr.objects.filter(
             Q(pk=self.hlavni_katastr.id) | Q(pk__in=self.katastry.values_list("id"))
         )
@@ -810,7 +887,10 @@ class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model
     katastr = models.ForeignKey(RuianKatastr, on_delete=models.RESTRICT)
 
     def __str__(self):
-        """Provádí funkci ``ProjektKatastr.__str__`` v rámci modulu ``webclient.projekt.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return "P: " + str(self.projekt) + " - K: " + str(self.katastr)
 
     class Meta:

@@ -6,7 +6,10 @@ class PianConfig(AppConfig):
     name = "pian"
 
     def ready(self):
-        """Provádí funkci ``PianConfig.ready`` v rámci modulu ``webclient.pian.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PianConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import pian.signals

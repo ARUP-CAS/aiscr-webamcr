@@ -150,7 +150,12 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     vazba = models.ForeignKey("HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True)
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``Historie.__init__`` v rámci modulu ``webclient.historie.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.suppress_signal = False
 

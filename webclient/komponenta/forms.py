@@ -53,7 +53,17 @@ class CreateKomponentaForm(forms.ModelForm):
     def __init__(
         self, obdobi_choices, areal_choices, *args, readonly=False, required=None, required_next=None, **kwargs
     ):
-        """Provádí funkci ``CreateKomponentaForm.__init__`` v rámci modulu ``webclient.komponenta.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param obdobi_choices: Vstupní hodnota parametru ``obdobi_choices`` použitého při zpracování.
+        :param areal_choices: Vstupní hodnota parametru ``areal_choices`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
         self.fields["obdobi"] = TwoLevelSelectField(
             label=_("komponenta.form.createKomponentaForm.obdobi.label"),

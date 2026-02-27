@@ -36,7 +36,11 @@ class Command(BaseCommand):
     help = _("core.management.commands.generate_thumbs.Command.help")
 
     def add_arguments(self, parser):
-        """Zpracuje volání ``Command.add_arguments`` v rámci modulu ``webclient.core.management.commands.generate_thumbs``."""
+        """Zajišťuje logiku funkce ``add_arguments``.
+        
+        :param parser: Vstupní hodnota parametru ``parser`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         parser.add_argument(
             "--pks",
             nargs="+",
@@ -57,7 +61,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Provádí funkci ``Command.handle`` v rámci modulu ``webclient.core.management.commands.generate_thumbs``."""
+        """Zajišťuje logiku funkce ``handle``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param options: Vstupní hodnota parametru ``options`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pks = options.get("pks")
         pk_range = options.get("range")
         csv_file = options.get("csv")

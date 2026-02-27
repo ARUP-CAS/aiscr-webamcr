@@ -6,6 +6,9 @@ class DjConfig(AppConfig):
     name = "dj"
 
     def ready(self):
-        """Provádí funkci ``DjConfig.ready`` v rámci modulu ``webclient.dj.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(DjConfig, self).ready()
         import dj.signals

@@ -73,12 +73,22 @@ class CustomTextTestRunner(unittest.runner.TextTestRunner):
 class AMCRSeleniumTestRunner(BaseRunner):
     """Zapouzdřuje chování třídy ``AMCRSeleniumTestRunner`` pro modul ``webclient.core.tests.runner``."""
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AMCRSeleniumTestRunner.__init__`` v rámci modulu ``webclient.core.tests.runner``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(AMCRSeleniumTestRunner, self).__init__(*args, **kwargs)
         self.test_runner = CustomTextTestRunner
 
     def setup_databases(self, *args, **kwargs):
-        """Provádí funkci ``AMCRSeleniumTestRunner.setup_databases`` v rámci modulu ``webclient.core.tests.runner``."""
+        """Zajišťuje logiku funkce ``setup_databases``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.keepdb = True
         temp_return = super().setup_databases(*args, **kwargs)
         return temp_return
@@ -86,5 +96,10 @@ class AMCRSeleniumTestRunner(BaseRunner):
     def teardown_databases(self, *args, **kwargs):
         # do somthing
         # return super().teardown_databases(*args, **kwargs)
-        """Provádí funkci ``AMCRSeleniumTestRunner.teardown_databases`` v rámci modulu ``webclient.core.tests.runner``."""
+        """Zajišťuje logiku funkce ``teardown_databases``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pass

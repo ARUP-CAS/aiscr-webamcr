@@ -29,13 +29,20 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     prefix = "neident_modal"
 
     def get_form_kwargs(self):
-        """Provádí funkci ``NeidentAkceEditView.get_form_kwargs`` v rámci modulu ``webclient.neidentakce.views``."""
+        """Zajišťuje logiku funkce ``get_form_kwargs``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         kwargs = super().get_form_kwargs()
         kwargs["prefix"] = self.prefix
         return kwargs
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``NeidentAkceEditView.get_context_data`` v rámci modulu ``webclient.neidentakce.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         zaznam = self.object
         context = {
@@ -48,7 +55,10 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Provádí funkci ``NeidentAkceEditView.get_success_url`` v rámci modulu ``webclient.neidentakce.views``."""
+        """Zajišťuje logiku funkce ``get_success_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data()
         dc = context["object"].dokument_cast
         return reverse(
@@ -60,17 +70,31 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         )
 
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``NeidentAkceEditView.post`` v rámci modulu ``webclient.neidentakce.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().post(request, *args, **kwargs)
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_valid(self, form):
-        """Zpracuje volání ``NeidentAkceEditView.form_valid`` v rámci modulu ``webclient.neidentakce.views``."""
+        """Zajišťuje logiku funkce ``form_valid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """Zpracuje volání ``NeidentAkceEditView.form_invalid`` v rámci modulu ``webclient.neidentakce.views``."""
+        """Zajišťuje logiku funkce ``form_invalid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)

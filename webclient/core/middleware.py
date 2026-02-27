@@ -21,11 +21,19 @@ class PermissionMiddleware:
     """
 
     def __init__(self, get_response):
-        """Zpracuje volání ``PermissionMiddleware.__init__`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param get_response: Vstupní hodnota parametru ``get_response`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.get_response = get_response
 
     def __call__(self, request):
-        """Zpracuje volání ``PermissionMiddleware.__call__`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``__call__``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         response = self.get_response(request)
         return response
 
@@ -73,16 +81,29 @@ class PermissionMiddleware:
 class ErrorMiddleware:
     """Zapouzdřuje chování třídy ``ErrorMiddleware`` pro modul ``webclient.core.middleware``."""
     def __init__(self, get_response):
-        """Zpracuje volání ``ErrorMiddleware.__init__`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param get_response: Vstupní hodnota parametru ``get_response`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.get_response = get_response
 
     def __call__(self, request):
-        """Zpracuje volání ``ErrorMiddleware.__call__`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``__call__``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         response = self.get_response(request)
         return response
 
     def process_exception(self, request, exception):
-        """Provádí funkci ``ErrorMiddleware.process_exception`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``process_exception``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param exception: Vstupní hodnota parametru ``exception`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
             return render(request, "fedora_error.html", context, status=500)
@@ -97,18 +118,32 @@ class StatusMessageMiddleware:
     pattern = re.compile(r"[\w-]+\d+[A-Z]?")
 
     def __init__(self, get_response):
-        """Zpracuje volání ``StatusMessageMiddleware.__init__`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param get_response: Vstupní hodnota parametru ``get_response`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.get_response = get_response
         r = RedisConnector()
         self.redis_connection = r.get_connection()
 
     def __call__(self, request):
-        """Zpracuje volání ``StatusMessageMiddleware.__call__`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``__call__``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         response = self.get_response(request)
         return response
 
     def _show_message(self, value, request, redis_key):
-        """Provádí funkci ``StatusMessageMiddleware._show_message`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``_show_message``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param redis_key: Vstupní hodnota parametru ``redis_key`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         value = int(value.decode("utf-8"))
         if value == FedoraTransactionResult.COMMITED.value:
             try:
@@ -135,7 +170,14 @@ class StatusMessageMiddleware:
         self.redis_connection.delete(redis_key)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        """Provádí funkci ``StatusMessageMiddleware.process_view`` v rámci modulu ``webclient.core.middleware``."""
+        """Zajišťuje logiku funkce ``process_view``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param view_func: Vstupní hodnota parametru ``view_func`` použitého při zpracování.
+        :param view_args: Vstupní hodnota parametru ``view_args`` použitého při zpracování.
+        :param view_kwargs: Vstupní hodnota parametru ``view_kwargs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         regex_result = self.pattern.findall(request.path)
         for item in regex_result:
             redis_key = FedoraTransaction.get_transaction_redis_key(item, request.user.id)

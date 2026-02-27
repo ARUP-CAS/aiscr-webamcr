@@ -40,7 +40,11 @@ class Command(BaseCommand):
     help = _("core.management.commands.save_files_from_storage.Command.help")
 
     def add_arguments(self, parser):
-        """Zpracuje volání ``Command.add_arguments`` v rámci modulu ``webclient.core.management.commands.save_files_from_storage``."""
+        """Zajišťuje logiku funkce ``add_arguments``.
+        
+        :param parser: Vstupní hodnota parametru ``parser`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         parser.add_argument(
             "storage_path",
             type=str,
@@ -71,7 +75,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Provádí funkci ``Command.handle`` v rámci modulu ``webclient.core.management.commands.save_files_from_storage``."""
+        """Zajišťuje logiku funkce ``handle``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param options: Vstupní hodnota parametru ``options`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         storage_path = options["storage_path"]
         pks = options.get("pks")
         pk_range = options.get("range")

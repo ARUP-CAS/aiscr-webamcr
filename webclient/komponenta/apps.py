@@ -6,7 +6,10 @@ class KomponentaConfig(AppConfig):
     name = "komponenta"
 
     def ready(self):
-        """Provádí funkci ``KomponentaConfig.ready`` v rámci modulu ``webclient.komponenta.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(KomponentaConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import komponenta.signals

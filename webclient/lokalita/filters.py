@@ -58,7 +58,11 @@ class LokalitaFilter(ArchZaznamFilter):
     )
 
     def filter_queryset(self, queryset):
-        """Zpracuje volání ``LokalitaFilter.filter_queryset`` v rámci modulu ``webclient.lokalita.filters``."""
+        """Zajišťuje logiku funkce ``filter_queryset``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("lokalita.filters.LokalitaFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(LokalitaFilter, self).filter_queryset(queryset)
@@ -105,7 +109,12 @@ class LokalitaFilter(ArchZaznamFilter):
         )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``LokalitaFilter.__init__`` v rámci modulu ``webclient.lokalita.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(LokalitaFilter, self).__init__(*args, **kwargs)
         self.helper = LokalitaFilterFormHelper()
 
@@ -118,7 +127,11 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Zpracuje volání ``LokalitaFilterFormHelper.__init__`` v rámci modulu ``webclient.lokalita.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("lokalita.filters.djPian.divider.label")
         }

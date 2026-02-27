@@ -45,7 +45,12 @@ class LetAdmin(DokumentWithMetadataAdmin):
     search_fields = ("ident_cely", "uzivatelske_oznaceni")
 
     def get_readonly_fields(self, request, obj=None):
-        """Provádí funkci ``LetAdmin.get_readonly_fields`` v rámci modulu ``webclient.dokument.admin``."""
+        """Zajišťuje logiku funkce ``get_readonly_fields``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj:  # editace existujícího objektu
             return self.readonly_fields + ("ident_cely",)
         return self.readonly_fields

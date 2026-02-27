@@ -71,7 +71,13 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
 
 @receiver(post_save, sender=Dokument, weak=False)
 def dokument_save_metadata(sender, instance: Dokument, **kwargs):
-    """Provádí funkci ``dokument_save_metadata`` v rámci modulu ``webclient.dokument.signals``."""
+    """Zajišťuje logiku funkce ``dokument_save_metadata``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Dokument``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(
         "dokument.signals.dokument_save_metadata.startdokument.signals.dokument_save_metadata.start",
         extra={
@@ -86,7 +92,11 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
         fedora_transaction = instance.active_transaction
 
         def save_metadata(close_transaction=False):
-            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.dokument.signals``."""
+            """Zajišťuje logiku funkce ``save_metadata``.
+            
+            :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             if instance.initial_let is None and instance.let is not None:
                 instance.let.save_metadata(fedora_transaction)
             elif instance.initial_let is not None and instance.let is None:
@@ -114,7 +124,13 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
 
 @receiver(post_save, sender=Let, weak=False)
 def let_save_metadata(sender, instance: Let, **kwargs):
-    """Provádí funkci ``let_save_metadata`` v rámci modulu ``webclient.dokument.signals``."""
+    """Zajišťuje logiku funkce ``let_save_metadata``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Let``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("dokument.signals.let_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
@@ -128,7 +144,13 @@ def let_save_metadata(sender, instance: Let, **kwargs):
 
 @receiver(post_delete, sender=Dokument, weak=False)
 def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
-    """Provádí funkci ``dokument_delete_repository_container`` v rámci modulu ``webclient.dokument.signals``."""
+    """Zajišťuje logiku funkce ``dokument_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Dokument``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(
         "dokument.signals.dokument_delete_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )
@@ -143,7 +165,11 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
         k.komponenta_vazby.delete()
 
     def save_metadata(close_transaction=False):
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.dokument.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         for item in instance.casti.all():
             item: DokumentCast
             if item.archeologicky_zaznam is not None:
@@ -166,7 +192,13 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
 
 @receiver(post_delete, sender=Let, weak=False)
 def let_delete_repository_container(sender, instance: Let, **kwargs):
-    """Provádí funkci ``let_delete_repository_container`` v rámci modulu ``webclient.dokument.signals``."""
+    """Zajišťuje logiku funkce ``let_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Let``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("dokument.signals.let_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = FedoraTransaction()
     transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, True))
@@ -178,7 +210,14 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 
 @receiver(post_save, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **kwargs):
-    """Provádí funkci ``dokument_cast_save_metadata_save`` v rámci modulu ``webclient.dokument.signals``."""
+    """Zajišťuje logiku funkce ``dokument_cast_save_metadata_save``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``DokumentCast``).
+    :param created: Vstupní hodnota parametru ``created`` použitého při zpracování.
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     extra = {"pk": instance.pk, "custom_created": created}
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
     from core.repository_connector import FedoraTransaction
@@ -228,14 +267,24 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
 
 @receiver(post_delete, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs):
-    """Provádí funkci ``dokument_cast_save_metadata_delete`` v rámci modulu ``webclient.dokument.signals``."""
+    """Zajišťuje logiku funkce ``dokument_cast_save_metadata_delete``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``DokumentCast``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra={"pk": instance.pk})
     fedora_transaction: FedoraTransaction = instance.active_transaction
     invalidate_model(Dokument)
     invalidate_model(Akce)
 
     def save_metadata(close_transaction=False):
-        """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.dokument.signals``."""
+        """Zajišťuje logiku funkce ``save_metadata``.
+        
+        :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if instance.initial_archeologicky_zaznam_id is not None and instance.suppress_signal_arch_z is False:
             instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
         if instance.initial_projekt_id is not None:
@@ -256,7 +305,14 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
 
 @receiver(post_save, sender=Tvar, weak=False)
 def tvar_save(sender, instance: Tvar, created, **kwargs):
-    """Provádí funkci ``tvar_save`` v rámci modulu ``webclient.dokument.signals``."""
+    """Zajišťuje logiku funkce ``tvar_save``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Tvar``).
+    :param created: Vstupní hodnota parametru ``created`` použitého při zpracování.
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("dokument.signals.tvar_save.start", extra={"pk": instance.pk})
     if instance.dokument and instance.active_transaction and not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
@@ -268,7 +324,13 @@ def tvar_save(sender, instance: Tvar, created, **kwargs):
 
 @receiver(post_delete, sender=Tvar, weak=False)
 def tvar_delete(sender, instance: Tvar, **kwargs):
-    """Provádí funkci ``tvar_delete`` v rámci modulu ``webclient.dokument.signals``."""
+    """Zajišťuje logiku funkce ``tvar_delete``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Tvar``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("dokument.signals.tvar_delete.start", extra={"pk": instance.pk})
     if instance.dokument:
         fedora_transaction = instance.active_transaction

@@ -66,7 +66,16 @@ class LokalitaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, detail=False, **kwargs):
-        """Provádí funkci ``LokalitaForm.__init__`` v rámci modulu ``webclient.lokalita.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param detail: Vstupní hodnota parametru ``detail`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(LokalitaForm, self).__init__(*args, **kwargs)
         if self.instance.pk is not None:
             nadrazene = HeslarHierarchie.objects.filter(

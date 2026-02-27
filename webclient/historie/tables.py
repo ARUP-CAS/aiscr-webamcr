@@ -23,7 +23,11 @@ class HistorieTable(ColumnShiftTableBootstrap4):
     )
 
     def render_uzivatel_custom(self, record):
-        """Zpracuje volání ``HistorieTable.render_uzivatel_custom`` v rámci modulu ``webclient.historie.tables``."""
+        """Zajišťuje logiku funkce ``render_uzivatel_custom``.
+        
+        :param record: Vstupní hodnota parametru ``record`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if not record.uzivatel:
             return ""
         return record.uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
@@ -77,14 +81,23 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
     )
 
     def render_uzivatel(self, record):
-        """Zpracuje volání ``FedoraHistorieTable.render_uzivatel`` v rámci modulu ``webclient.historie.tables``."""
+        """Zajišťuje logiku funkce ``render_uzivatel``.
+        
+        :param record: Vstupní hodnota parametru ``record`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         uzivatel = User.objects.filter(ident_cely=record["uzivatel"]).first()
         if uzivatel is None:
             return record["uzivatel"]
         return uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
 
     def render_url(self, value, record):
-        """Provádí funkci ``FedoraHistorieTable.render_url`` v rámci modulu ``webclient.historie.tables``."""
+        """Zajišťuje logiku funkce ``render_url``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :param record: Vstupní hodnota parametru ``record`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return format_html(
             '<a href="{}" class="btn-sm" target="_blank">'
             '<span class="material-icons" style="vertical-align:middle;">download</span>'
@@ -93,7 +106,12 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         )
 
     def value_url(self, value, record):
-        """Provádí funkci ``FedoraHistorieTable.value_url`` v rámci modulu ``webclient.historie.tables``."""
+        """Zajišťuje logiku funkce ``value_url``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :param record: Vstupní hodnota parametru ``record`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"{settings.SITE_URL}{record['url']}"
 
     class Meta:

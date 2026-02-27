@@ -6,7 +6,10 @@ class UzivatelConfig(AppConfig):
     name = "uzivatel"
 
     def ready(self):
-        """Provádí funkci ``UzivatelConfig.ready`` v rámci modulu ``webclient.uzivatel.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(UzivatelConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import uzivatel.signals

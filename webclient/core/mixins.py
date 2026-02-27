@@ -15,7 +15,10 @@ class ManyToManyRestrictedClassMixin:
 
     @property
     def has_connections(self):
-        """Provádí funkci ``ManyToManyRestrictedClassMixin.has_connections`` v rámci modulu ``webclient.core.mixins``."""
+        """Zajišťuje logiku funkce ``has_connections``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         attr_list = []
         for attr in dir(self):
             if not attr.startswith("_") and attr not in ("has_connections", "objects"):
@@ -34,7 +37,13 @@ class ManyToManyRestrictedClassMixin:
 class IPWhitelistMixin:
     """Zapouzdřuje chování třídy ``IPWhitelistMixin`` pro modul ``webclient.core.mixins``."""
     def dispatch(self, request, *args, **kwargs):
-        """Provádí funkci ``IPWhitelistMixin.dispatch`` v rámci modulu ``webclient.core.mixins``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         ALLOWED_IPS = settings.ALLOWED_HOSTS + ["127.0.0.1", "10.0.0.2"]
         client_ip = request.META.get("REMOTE_ADDR", "")  # Get client IP
         if client_ip not in ALLOWED_IPS and "*" not in ALLOWED_IPS:  # Ověří, že je IP adresa povolena.

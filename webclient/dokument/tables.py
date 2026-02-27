@@ -96,7 +96,12 @@ class Model3DTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``Model3DTable.__init__`` v rámci modulu ``webclient.dokument.tables``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(Model3DTable, self).__init__(*args, **kwargs)
 
     def render_nahled(self, value, record):
@@ -362,5 +367,10 @@ class DokumentTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``DokumentTable.__init__`` v rámci modulu ``webclient.dokument.tables``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(DokumentTable, self).__init__(*args, **kwargs)

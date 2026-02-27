@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_delete, sender=NalezObjekt, weak=False)
 def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
-    """Provádí funkci ``delete_nalez_objekt`` v rámci modulu ``webclient.nalez.signals``."""
+    """Zajišťuje logiku funkce ``delete_nalez_objekt``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``NalezObjekt``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("nalez.signals.delete_nalez_objekt.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
     if not hasattr(instance, "active_transaction") or not hasattr(instance, "close_active_transaction_when_finished"):
@@ -62,7 +68,13 @@ def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
 
 @receiver(post_delete, sender=NalezPredmet, weak=False)
 def delete_nalez_predmet(sender, instance: NalezObjekt, **kwargs):
-    """Provádí funkci ``delete_nalez_predmet`` v rámci modulu ``webclient.nalez.signals``."""
+    """Zajišťuje logiku funkce ``delete_nalez_predmet``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``NalezObjekt``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("nalez.signals.delete_nalez_predmet.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
     if not hasattr(instance, "active_transaction") or not hasattr(instance, "close_active_transaction_when_finished"):

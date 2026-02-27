@@ -23,7 +23,10 @@ class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
     poznamka = models.CharField(max_length=1000, null=True, blank=True)
 
     def __str__(self):
-        """Provádí funkci ``Oznamovatel.__str__`` v rámci modulu ``webclient.oznameni.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.odpovedna_osoba + " (" + self.email + ")"
 
     class Meta:

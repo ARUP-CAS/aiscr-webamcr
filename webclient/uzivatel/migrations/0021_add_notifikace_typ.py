@@ -1,7 +1,12 @@
 from django.db import migrations, models
 
 def add_notifikace_typ(apps, schema_editor):
-    """Provádí funkci ``add_notifikace_typ`` v rámci modulu ``webclient.uzivatel.migrations.0021_add_notifikace_typ``."""
+    """Zajišťuje logiku funkce ``add_notifikace_typ``.
+    
+    :param apps: Vstupní hodnota parametru ``apps`` použitého při zpracování.
+    :param schema_editor: Vstupní hodnota parametru ``schema_editor`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     NotifikaceTyp = apps.get_model('uzivatel', 'UserNotificationType')
     NotifikaceTyp.objects.get_or_create(ident_cely='S-E-P-02c')
     NotifikaceTyp.objects.get_or_create(ident_cely='S-E-P-02b')

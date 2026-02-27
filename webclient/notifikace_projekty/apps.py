@@ -7,7 +7,10 @@ class NotifikaceProjektyConfig(AppConfig):
     name = "notifikace_projekty"
 
     def ready(self):
-        """Provádí funkci ``NotifikaceProjektyConfig.ready`` v rámci modulu ``webclient.notifikace_projekty.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(NotifikaceProjektyConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import notifikace_projekty.signals

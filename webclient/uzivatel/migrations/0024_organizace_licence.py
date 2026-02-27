@@ -5,7 +5,12 @@ from django.db import migrations, models
 
 
 def set_default_licence(apps, schema_editor):
-    """Provádí funkci ``set_default_licence`` v rámci modulu ``webclient.uzivatel.migrations.0024_organizace_licence``."""
+    """Zajišťuje logiku funkce ``set_default_licence``.
+    
+    :param apps: Vstupní hodnota parametru ``apps`` použitého při zpracování.
+    :param schema_editor: Vstupní hodnota parametru ``schema_editor`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     Organizace = apps.get_model('uzivatel', 'Organizace')
     get_default_licence = __import__('uzivatel.models', fromlist=['get_default_licence']).get_default_licence
     default_licence = get_default_licence()

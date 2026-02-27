@@ -6,7 +6,10 @@ class DokumentConfig(AppConfig):
     name = "dokument"
 
     def ready(self):
-        """Provádí funkci ``DokumentConfig.ready`` v rámci modulu ``webclient.dokument.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(DokumentConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import dokument.signals

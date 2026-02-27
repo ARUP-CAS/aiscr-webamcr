@@ -48,12 +48,18 @@ logger = logging.getLogger(__name__)
 
 
 def only_notification_groups():
-    """Provádí funkci ``only_notification_groups`` v rámci modulu ``webclient.uzivatel.models``."""
+    """Zajišťuje logiku funkce ``only_notification_groups``.
+    
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     return UserNotificationType.objects.filter(ident_cely__icontains="S-E-").all()
 
 
 def get_default_licence():
-    """Provádí funkci ``get_default_licence`` v rámci modulu ``webclient.uzivatel.models``."""
+    """Zajišťuje logiku funkce ``get_default_licence``.
+    
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     from heslar.hesla_dynamicka import DOKUMENT_LICENCE_NEZNAMA
 
     return DOKUMENT_LICENCE_NEZNAMA
@@ -132,7 +138,12 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     objects = CustomUserManager()
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``User.__init__`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.created_from_admin_panel = False
         self.suppress_signal = False
@@ -142,7 +153,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @cached_property
     def hlavni_role(self) -> Union[Group, None]:
-        """Provádí funkci ``User.hlavni_role`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``hlavni_role``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Union[Group, None]``).
+        """
         roles = self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
         if roles.count() == 0:
             if self.is_active:
@@ -153,7 +167,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @cached_property
     def user_str(self):
-        """Provádí funkci ``User.user_str`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``user_str``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         retezec = f"{self.last_name}, {self.first_name} ({self.ident_cely}, "
         if self.organizace:
             retezec += f"{self.organizace})"
@@ -161,14 +178,20 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @cached_property
     def user_str_en(self):
-        """Provádí funkci ``User.user_str_en`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``user_str_en``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         retezec = f"{self.last_name}, {self.first_name} ({self.ident_cely}, "
         if self.organizace:
             retezec += f"{self.organizace})"
         return retezec
 
     def __str__(self):
-        """Provádí funkci ``User.__str__`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if get_language() == "en":
             return self.user_str_en
         else:
@@ -192,7 +215,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return base
 
     def moje_spolupracujici_organizace(self):
-        """Provádí funkci ``User.moje_spolupracujici_organizace`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``moje_spolupracujici_organizace``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
         archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
         archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
@@ -212,7 +238,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             return Organizace.objects.all()
 
     def moje_stavy_pruzkumnych_projektu(self):
-        """Provádí funkci ``User.moje_stavy_pruzkumnych_projektu`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``moje_stavy_pruzkumnych_projektu``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
         archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
         archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
@@ -234,7 +263,12 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             )
 
     def email_user(self, *args, **kwargs):
-        """Provádí funkci ``User.email_user`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``email_user``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             send_mail(
                 "{}".format(args[0]),
@@ -252,12 +286,18 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def is_archiver_or_more(self):
-        """Provádí funkci ``User.is_archiver_or_more`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``is_archiver_or_more``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     @property
     def is_archeolog_or_more(self):
-        """Provádí funkci ``User.is_archeolog_or_more`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``is_archeolog_or_more``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.hlavni_role.pk in (ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
@@ -367,22 +407,34 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def can_see_users_details(self):
-        """Provádí funkci ``User.can_see_users_details`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``can_see_users_details``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
 
     @property
     def full_details(self):
-        """Provádí funkci ``User.full_details`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``full_details``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"{self.last_name}, {self.first_name} ({self.ident_cely}, {self.organizace})"
 
     @property
     def anonymous_details(self):
-        """Provádí funkci ``User.anonymous_details`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``anonymous_details``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"{self.ident_cely} ({self.organizace})"
 
     @property
     def can_see_ours_item(self):
-        """Provádí funkci ``User.can_see_ours_item`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``can_see_ours_item``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
 
     class Meta:
@@ -398,15 +450,24 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         ]
 
     def get_permission_object(self):
-        """Provádí funkci ``User.get_permission_object`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self
 
     def get_create_user(self):
-        """Provádí funkci ``User.get_create_user`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``get_create_user``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return (self,)
 
     def get_create_org(self):
-        """Provádí funkci ``User.get_create_org`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``get_create_org``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return ()
 
 
@@ -509,7 +570,10 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
             super().save(*args, **kwargs)
 
     def __str__(self):
-        """Provádí funkci ``Organizace.__str__`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if get_language() == "en":
             if self.nazev_zkraceny_en:
                 return self.nazev_zkraceny_en
@@ -524,7 +588,10 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                 return ""
 
     def get_nazev(self):
-        """Provádí funkci ``Organizace.get_nazev`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``get_nazev``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if get_language() == "en":
             if self.nazev_en:
                 return self.nazev_en
@@ -601,7 +668,10 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         verbose_name_plural = "Osoby"
 
     def __str__(self):
-        """Provádí funkci ``Osoba.__str__`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.vypis_cely
 
 
@@ -626,35 +696,50 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     ident_cely = models.TextField(unique=True)
 
     def _get_settings_dict(self) -> Optional[dict]:
-        """Provádí funkci ``UserNotificationType._get_settings_dict`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``_get_settings_dict``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Optional[dict]``).
+        """
         if self.ident_cely in notification_settings:
             return notification_settings[self.ident_cely]
         return None
 
     @property
     def zasilat_neaktivnim(self) -> Optional[str]:
-        """Provádí funkci ``UserNotificationType.zasilat_neaktivnim`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``zasilat_neaktivnim``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Optional[str]``).
+        """
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
             return settings_dict.get("zasilat_neaktivnim", False)
 
     @property
     def predmet(self) -> Optional[str]:
-        """Provádí funkci ``UserNotificationType.predmet`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``predmet``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Optional[str]``).
+        """
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
             return settings_dict.get("predmet", None)
 
     @property
     def cesta_sablony(self) -> Optional[str]:
-        """Provádí funkci ``UserNotificationType.cesta_sablony`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``cesta_sablony``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Optional[str]``).
+        """
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
             return settings_dict.get("cesta_sablony", None)
 
     @property
     def is_groups(self) -> bool:
-        """Provádí funkci ``UserNotificationType.is_groups`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``is_groups``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``bool``).
+        """
         from services.mailer import NOTIFICATION_GROUPS
 
         return self.ident_cely in NOTIFICATION_GROUPS.values()
@@ -666,7 +751,10 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
         verbose_name_plural = _("uzivatel.models.UserNotificationType.namePlural")
 
     def __str__(self):
-        """Provádí funkci ``UserNotificationType.__str__`` v rámci modulu ``webclient.uzivatel.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return str(self.NOTIFICATION_GROUPS_NAMES[self.ident_cely])
         except Exception:

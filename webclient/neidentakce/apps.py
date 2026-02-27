@@ -6,7 +6,10 @@ class NeidentakceConfig(AppConfig):
     name = "neidentakce"
 
     def ready(self):
-        """Provádí funkci ``NeidentakceConfig.ready`` v rámci modulu ``webclient.neidentakce.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(NeidentakceConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import neidentakce.signals

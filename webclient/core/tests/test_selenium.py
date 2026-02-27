@@ -56,7 +56,13 @@ class LocalResolver(etree.Resolver):
     """
 
     def resolve(self, url, id, context):
-        """Provádí funkci ``LocalResolver.resolve`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``resolve``.
+        
+        :param url: Vstupní hodnota parametru ``url`` použitého při zpracování.
+        :param id: Vstupní hodnota parametru ``id`` použitého při zpracování.
+        :param context: Vstupní hodnota parametru ``context`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if url == "http://www.w3.org/2001/03/xml.xsd":
             local_path = "xml_generator/definitions/xml.xsd"
             return self.resolve_filename(local_path, context)
@@ -66,31 +72,53 @@ class LocalResolver(etree.Resolver):
 class WaitForPageLoad:
     """Zapouzdřuje chování třídy ``WaitForPageLoad`` pro modul ``webclient.core.tests.test_selenium``."""
     def __init__(self, browser, wait_time=20):
-        """Provádí funkci ``WaitForPageLoad.__init__`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param browser: Vstupní hodnota parametru ``browser`` použitého při zpracování.
+        :param wait_time: Vstupní hodnota parametru ``wait_time`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.browser = browser
         self.wait_time = wait_time
 
     def __enter__(self):
-        """Provádí funkci ``WaitForPageLoad.__enter__`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``__enter__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
 
     def page_has_loaded(self):
-        """Provádí funkci ``WaitForPageLoad.page_has_loaded`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``page_has_loaded``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         new_page = self.browser.find_element(By.TAG_NAME, "html")
         return new_page.id != self.old_page.id
 
     def page_is_ready(self):
-        """Provádí funkci ``WaitForPageLoad.page_is_ready`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``page_is_ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         page_state = self.browser.execute_script("return document.readyState;")
         return page_state == "complete"
 
     def __exit__(self, *_):
-        """Zpracuje volání ``WaitForPageLoad.__exit__`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``__exit__``.
+        
+        :param _: Vstupní hodnota parametru ``_`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.wait_for(self.page_has_loaded)
         self.wait_for(self.page_is_ready)
 
     def wait_for(self, condition_function):
-        """Zpracuje volání ``WaitForPageLoad.wait_for`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``wait_for``.
+        
+        :param condition_function: Vstupní hodnota parametru ``condition_function`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         start_time = time.time()
         while time.time() < start_time + self.wait_time:
             if condition_function():
@@ -129,7 +157,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Provádí funkci ``BaseSeleniumTestClass.setUpClass`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``setUpClass``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().setUpClass()
         cls.server_thread.is_ready.wait()
         if cls.server_thread.error:
@@ -137,7 +168,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Provádí funkci ``BaseSeleniumTestClass.tearDownClass`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``tearDownClass``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         cls.server_thread.terminate()
         super().tearDownClass()
 
@@ -148,20 +182,32 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def _terminate_thread(cls):
-        """Provádí funkci ``BaseSeleniumTestClass._terminate_thread`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_terminate_thread``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pass
 
     @classmethod
     def get_base_test_data(cls):
-        """Provádí funkci ``BaseSeleniumTestClass.get_base_test_data`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``get_base_test_data``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pass
 
     def go_to_form(self):
-        """Provádí funkci ``BaseSeleniumTestClass.go_to_form`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pass
 
     def setUp(self):
-        """Provádí funkci ``BaseSeleniumTestClass.setUp`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``setUp``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.start")
         self.wipe_Fedora()
         self.clone_Database()
@@ -191,7 +237,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.end")
 
     def get_container_content(self, container_path):
-        """Zpracuje volání ``BaseSeleniumTestClass.get_container_content`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``get_container_content``.
+        
+        :param container_path: Vstupní hodnota parametru ``container_path`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -207,7 +257,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return members
 
     def save_container_content(self, container_path, path):
-        """Provádí funkci ``BaseSeleniumTestClass.save_container_content`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``save_container_content``.
+        
+        :param container_path: Vstupní hodnota parametru ``container_path`` použitého při zpracování.
+        :param path: Vstupní hodnota parametru ``path`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -272,7 +327,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return not rozdil.getbbox()
 
     def check_container_content(self, container_path, path):
-        """Provádí funkci ``BaseSeleniumTestClass.check_container_content`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``check_container_content``.
+        
+        :param container_path: Vstupní hodnota parametru ``container_path`` použitého při zpracování.
+        :param path: Vstupní hodnota parametru ``path`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -334,7 +394,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     auth = requests.auth.HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
 
     def purge_container(self, container_path):
-        """Zpracuje volání ``BaseSeleniumTestClass.purge_container`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``purge_container``.
+        
+        :param container_path: Vstupní hodnota parametru ``container_path`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         response = requests.delete(container_path + "/fcr:tombstone", auth=self.auth)
         if not str(response.status_code).startswith("2"):
             logger.error(
@@ -343,7 +407,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
     def delete_container(self, container_path):
-        """Zpracuje volání ``BaseSeleniumTestClass.delete_container`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``delete_container``.
+        
+        :param container_path: Vstupní hodnota parametru ``container_path`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         response = requests.delete(container_path, auth=self.auth)
         if not str(response.status_code).startswith("2"):
             logger.error(
@@ -352,7 +420,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
     def wipe_Fedora_dir(self, name, deep):
-        """Provádí funkci ``BaseSeleniumTestClass.wipe_Fedora_dir`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``wipe_Fedora_dir``.
+        
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :param deep: Vstupní hodnota parametru ``deep`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         mem = self.get_container_content(name)
         for item in mem:
             self.wipe_Fedora_dir(item, deep + 1)
@@ -360,7 +433,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.delete_container(item)
 
     def find_files(self, directory, filename):
-        """Provádí funkci ``BaseSeleniumTestClass.find_files`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``find_files``.
+        
+        :param directory: Vstupní hodnota parametru ``directory`` použitého při zpracování.
+        :param filename: Vstupní hodnota parametru ``filename`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         matches = []
         for root, _, files in os.walk(directory):
             if filename in files:
@@ -368,7 +446,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return matches
 
     def delete_tombstones(self, url, name, dir):
-        """Provádí funkci ``BaseSeleniumTestClass.delete_tombstones`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``delete_tombstones``.
+        
+        :param url: Vstupní hodnota parametru ``url`` použitého při zpracování.
+        :param name: Vstupní hodnota parametru ``name`` použitého při zpracování.
+        :param dir: Vstupní hodnota parametru ``dir`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         results = self.find_files(dir, "fcr-root.json")
         for res in results:
             if os.path.isfile(res):
@@ -379,7 +463,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                     self.purge_container(f"{url}{matches}")
 
     def save_fedora_change(self, time, path):
-        """Provádí funkci ``BaseSeleniumTestClass.save_fedora_change`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``save_fedora_change``.
+        
+        :param time: Vstupní hodnota parametru ``time`` použitého při zpracování.
+        :param path: Vstupní hodnota parametru ``path`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         headers = {}
         response = requests.get(
             f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
@@ -402,7 +491,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def check_fedora_change(self, time, path):
         # Pomocný debug výpis změny ve Fedoře je zde záměrně vypnutý.
-        """Provádí funkci ``BaseSeleniumTestClass.check_fedora_change`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``check_fedora_change``.
+        
+        :param time: Vstupní hodnota parametru ``time`` použitého při zpracování.
+        :param path: Vstupní hodnota parametru ``path`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if os.name == "nt":
             self.wait(1.5)
             self.save_fedora_change(
@@ -433,7 +527,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.check_container_content(n["fedora_id"], path)
 
     def check_fedora_delete(self, records):
-        """Zpracuje volání ``BaseSeleniumTestClass.check_fedora_delete`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``check_fedora_delete``.
+        
+        :param records: Vstupní hodnota parametru ``records`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         headers = {}
         for item in records:
             response = requests.get(
@@ -442,14 +540,20 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.assertIn(response.status_code, [410, 404])
 
     def wipe_Fedora(self):
-        """Provádí funkci ``BaseSeleniumTestClass.wipe_Fedora`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``wipe_Fedora``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/model", 0)
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/record", 2)
         self.delete_tombstones(self.api_url, settings.FEDORA_SERVER_NAME, settings.FEDORA_PATH)
 
     @staticmethod
     def clone_Database():
-        """Provádí funkci ``BaseSeleniumTestClass.clone_Database`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``clone_Database``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.clone_Database")
         prod_conn = None
         prod_cursor = None
@@ -487,7 +591,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         connection.connect()
 
     def assertIn2(self, member1, member2, container, msg=None):
-        """Provádí funkci ``BaseSeleniumTestClass.assertIn2`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``assertIn2``.
+        
+        :param member1: Vstupní hodnota parametru ``member1`` použitého při zpracování.
+        :param member2: Vstupní hodnota parametru ``member2`` použitého při zpracování.
+        :param container: Vstupní hodnota parametru ``container`` použitého při zpracování.
+        :param msg: Vstupní hodnota parametru ``msg`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         container_result = container.current_url
         repeat = 0
         while (member1 not in container_result and member2 not in container_result) and repeat < 10:
@@ -504,7 +615,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.fail(self._formatMessage(msg, standardMsg))
 
     def _is_ignored_browser_error(self, entry: dict) -> bool:
-        """Zpracuje volání ``BaseSeleniumTestClass._is_ignored_browser_error`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_is_ignored_browser_error``.
+        
+        :param entry: Vstupní hodnota parametru ``entry`` použitého při zpracování. (typ: ``dict``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``bool``).
+        """
         msg = entry.get("message", "") or ""
         for path, err in self.IGNORED_BROWSER_ERRORS:
             if path and path not in msg:
@@ -531,13 +646,19 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self._js_errors = []
 
     def tearDown(self):
-        """Provádí funkci ``BaseSeleniumTestClass.tearDown`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``tearDown``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self._collect_js_errors_at_end()
 
         result = self._outcome.result
 
         def has_issue():
-            """Provádí funkci ``BaseSeleniumTestClass.has_issue`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+            """Zajišťuje logiku funkce ``has_issue``.
+            
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             return any(t is self and exc for t, exc in (result.errors + result.failures))
 
         # Pokud test zatím OK a máme JS chyby => přidej FAILURE
@@ -598,15 +719,30 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         super().tearDown()
 
     def _fixture_teardown(self):
-        """Provádí funkci ``BaseSeleniumTestClass._fixture_teardown`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_fixture_teardown``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         pass
 
     def wait(self, interval):
-        """Zpracuje volání ``BaseSeleniumTestClass.wait`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``wait``.
+        
+        :param interval: Vstupní hodnota parametru ``interval`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         time.sleep(interval)
 
     def wait_for(self, condition_function, by, value, timeout=12, poll=0.5):
-        """Provádí funkci ``BaseSeleniumTestClass.wait_for`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``wait_for``.
+        
+        :param condition_function: Vstupní hodnota parametru ``condition_function`` použitého při zpracování.
+        :param by: Vstupní hodnota parametru ``by`` použitého při zpracování.
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :param timeout: Vstupní hodnota parametru ``timeout`` použitého při zpracování.
+        :param poll: Vstupní hodnota parametru ``poll`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         end = time.time() + timeout
         while time.time() < end:
             try:
@@ -619,14 +755,24 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return False
 
     def findElement(self, by, value):
-        """Provádí funkci ``BaseSeleniumTestClass.findElement`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``findElement``.
+        
+        :param by: Vstupní hodnota parametru ``by`` použitého při zpracování.
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return len(self.driver.find_elements(by, value)) > 0
         except StaleElementReferenceException:
             return False
 
     def ElementIsClickable(self, by, value):
-        """Provádí funkci ``BaseSeleniumTestClass.ElementIsClickable`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``ElementIsClickable``.
+        
+        :param by: Vstupní hodnota parametru ``by`` použitého při zpracování.
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             element = self.driver.find_element(by, value)
             return element.is_displayed() and element.is_enabled()
@@ -634,7 +780,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             return False
 
     def ElementClick(self, by=By.ID, value: Optional[str] = None):
-        """Provádí funkci ``BaseSeleniumTestClass.ElementClick`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``ElementClick``.
+        
+        :param by: Vstupní hodnota parametru ``by`` použitého při zpracování.
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování. (typ: ``Optional[str]``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if not self.wait_for(self.findElement, by, value):
             logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "value": value})
             raise Exception("ElementClickError")
@@ -658,7 +809,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         raise Exception("ElementClickError")
 
     def ElementSendKeys(self, by, value, keys):
-        """Provádí funkci ``BaseSeleniumTestClass.ElementSendKeys`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``ElementSendKeys``.
+        
+        :param by: Vstupní hodnota parametru ``by`` použitého při zpracování.
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :param keys: Vstupní hodnota parametru ``keys`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         res = self.wait_for(self.findElement, by, value)
         if res is False:
             logger.warning(
@@ -688,7 +845,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             raise Exception("ElementSendKeysError")
 
     def clickAt(self, el, position_x, position_y):
-        """Provádí funkci ``BaseSeleniumTestClass.clickAt`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``clickAt``.
+        
+        :param el: Vstupní hodnota parametru ``el`` použitého při zpracování.
+        :param position_x: Vstupní hodnota parametru ``position_x`` použitého při zpracování.
+        :param position_y: Vstupní hodnota parametru ``position_y`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(el, position_x, position_y)
         action.click()
@@ -696,7 +859,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def clickAtMapCoord(self, lon, lat):
 
-        """Provádí funkci ``BaseSeleniumTestClass.clickAtMapCoord`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``clickAtMapCoord``.
+        
+        :param lon: Vstupní hodnota parametru ``lon`` použitého při zpracování.
+        :param lat: Vstupní hodnota parametru ``lat`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.driver.execute_script(f"""
  window.getToday = function() {{
 return new Date('2025-06-28T12:00:00Z');}};
@@ -718,37 +886,69 @@ return new Date('2025-06-28T12:00:00Z');}};
 }});""")
 
     def _username(self, type="archeolog"):
-        """Zpracuje volání ``BaseSeleniumTestClass._username`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_username``.
+        
+        :param type: Vstupní hodnota parametru ``type`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return USERS[type]["USERNAME"]
 
     def _password(sel, type="archeolog"):
-        """Provádí funkci ``BaseSeleniumTestClass._password`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_password``.
+        
+        :param sel: Vstupní hodnota parametru ``sel`` použitého při zpracování.
+        :param type: Vstupní hodnota parametru ``type`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return USERS[type]["PASSWORD"]
 
     def _select_value_select_picker(self, field_id, selected_value):
-        """Provádí funkci ``BaseSeleniumTestClass._select_value_select_picker`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_select_value_select_picker``.
+        
+        :param field_id: Vstupní hodnota parametru ``field_id`` použitého při zpracování.
+        :param selected_value: Vstupní hodnota parametru ``selected_value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         dropdown = self.driver.find_element(By.ID, field_id)
         dropdown.find_element(By.XPATH, f"//option[. = '{selected_value}']").click()
 
     def _fill_text_field(self, field_id, field_value):
-        """Provádí funkci ``BaseSeleniumTestClass._fill_text_field`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_fill_text_field``.
+        
+        :param field_id: Vstupní hodnota parametru ``field_id`` použitého při zpracování.
+        :param field_value: Vstupní hodnota parametru ``field_value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.driver.find_element(By.ID, field_id).click()
         self.driver.find_element(By.ID, field_id).send_keys(field_value)
 
     def _select_map_point(self, field_id, click_count):
-        """Provádí funkci ``BaseSeleniumTestClass._select_map_point`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_select_map_point``.
+        
+        :param field_id: Vstupní hodnota parametru ``field_id`` použitého při zpracování.
+        :param click_count: Vstupní hodnota parametru ``click_count`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         for _ in range(click_count):
             self.driver.find_element(By.ID, field_id).click()
             time.sleep(1)
 
     def _select_radion_group_item(self, item_order=1):
-        """Zpracuje volání ``BaseSeleniumTestClass._select_radion_group_item`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_select_radion_group_item``.
+        
+        :param item_order: Vstupní hodnota parametru ``item_order`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.driver.find_element(
             By.CSS_SELECTOR, f".custom-radio:nth-child({item_order}) > .custom-control-label"
         ).click()
 
     def _fill_form_fields(self, test_data):
-        """Zpracuje volání ``BaseSeleniumTestClass._fill_form_fields`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_fill_form_fields``.
+        
+        :param test_data: Vstupní hodnota parametru ``test_data`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         for item, value in test_data.items():
             field_type = value["field_type"]
             logger.info(
@@ -770,7 +970,11 @@ return new Date('2025-06-28T12:00:00Z');}};
                 )
 
     def login(self, type="archeolog"):
-        """Zpracuje volání ``BaseSeleniumTestClass.login`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``login``.
+        
+        :param type: Vstupní hodnota parametru ``type`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "czech")
@@ -781,11 +985,18 @@ return new Date('2025-06-28T12:00:00Z');}};
             self.ElementClick(By.CSS_SELECTOR, ".btn")
 
     def logout(self):
-        """Provádí funkci ``BaseSeleniumTestClass.logout`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``logout``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.ElementClick(By.ID, "buttonLogout")
 
     def goToAddress(self, rel_address="/"):
-        """Zpracuje volání ``BaseSeleniumTestClass.goToAddress`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``goToAddress``.
+        
+        :param rel_address: Vstupní hodnota parametru ``rel_address`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
@@ -898,7 +1109,12 @@ return new Date('2025-06-28T12:00:00Z');}};
             raise AssertionError(f"Upload failed: {result}")
 
     def createFedoraRecord(self, ident_cely, user_name="archeolog"):
-        """Provádí funkci ``BaseSeleniumTestClass.createFedoraRecord`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``createFedoraRecord``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :param user_name: Vstupní hodnota parametru ``user_name`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             record = get_record_from_ident(ident_cely)
             user = User.objects.get(email=self._username(user_name))
@@ -1174,7 +1390,13 @@ return new Date('2025-06-28T12:00:00Z');}};
             graf.add(triple)
 
     def porovnej_rdf_obsah(self, aktualni_rdf, ocekavany_rdf, ignorovat_predikaty=None):
-        """Provádí funkci ``BaseSeleniumTestClass.porovnej_rdf_obsah`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``porovnej_rdf_obsah``.
+        
+        :param aktualni_rdf: Vstupní hodnota parametru ``aktualni_rdf`` použitého při zpracování.
+        :param ocekavany_rdf: Vstupní hodnota parametru ``ocekavany_rdf`` použitého při zpracování.
+        :param ignorovat_predikaty: Vstupní hodnota parametru ``ignorovat_predikaty`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         g1 = Graph()
         g1.parse(data=aktualni_rdf, format="turtle")
 
@@ -1318,7 +1540,12 @@ return new Date('2025-06-28T12:00:00Z');}};
             return data
 
     def json_uprav_pro_porovnani(self, json_text, klice_k_ignoraci=None):
-        """Provádí funkci ``BaseSeleniumTestClass.json_uprav_pro_porovnani`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``json_uprav_pro_porovnani``.
+        
+        :param json_text: Vstupní hodnota parametru ``json_text`` použitého při zpracování.
+        :param klice_k_ignoraci: Vstupní hodnota parametru ``klice_k_ignoraci`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         json_obj = json.loads(json_text)
         if klice_k_ignoraci:
             json_obj = self.odstran_klice(json_obj, klice_k_ignoraci)
@@ -1328,7 +1555,13 @@ return new Date('2025-06-28T12:00:00Z');}};
         return json_obj
 
     def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
-        """Provádí funkci ``BaseSeleniumTestClass.porovnej_json_rovnost`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``porovnej_json_rovnost``.
+        
+        :param vzor_json_text: Vstupní hodnota parametru ``vzor_json_text`` použitého při zpracování.
+        :param vystup_json_text: Vstupní hodnota parametru ``vystup_json_text`` použitého při zpracování.
+        :param klice_k_ignoraci: Vstupní hodnota parametru ``klice_k_ignoraci`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         json_vzor = self.json_uprav_pro_porovnani(vzor_json_text, klice_k_ignoraci)
         json_vystup = self.json_uprav_pro_porovnani(vystup_json_text, klice_k_ignoraci)
 
@@ -1341,7 +1574,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def getTime(self):
-        """Provádí funkci ``BaseSeleniumTestClass.getTime`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``getTime``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if os.name == "nt":
             self.wait(1.5)
         t = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -1350,7 +1586,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         return t
 
     def wait_for_select2_results(self):
-        """Provádí funkci ``BaseSeleniumTestClass.wait_for_select2_results`` v rámci modulu ``webclient.core.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``wait_for_select2_results``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.driver.set_script_timeout(6)
         try:
             self.driver.find_element(By.CSS_SELECTOR, ".loading-results")

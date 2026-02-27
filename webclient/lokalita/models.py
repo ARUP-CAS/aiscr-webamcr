@@ -75,11 +75,17 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         )
 
     def set_igsn(self):
-        """Provádí funkci ``Lokalita.set_igsn`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``set_igsn``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.igsn = f"{settings.IGSN_PREFIX}/{self.archeologicky_zaznam.ident_cely}"
 
     def set_snapshots(self):
-        """Provádí funkci ``Lokalita.set_snapshots`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``set_snapshots``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if not self.archeologicky_zaznam.katastry.all():
             self.dalsi_katastry_snapshot = None
         else:
@@ -91,13 +97,19 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     @property
     def redis_snapshot_id(self):
-        """Provádí funkci ``Lokalita.redis_snapshot_id`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``redis_snapshot_id``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from lokalita.views import LokalitaListView
 
         return f"{LokalitaListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Provádí funkci ``Lokalita.generate_redis_snapshot`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``generate_redis_snapshot``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from lokalita.tables import LokalitaTable
 
         data = Lokalita.objects.filter(pk=self.pk)
@@ -106,43 +118,73 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return self.redis_snapshot_id, data
 
     def _get_igsn_client(self):
-        """Provádí funkci ``Lokalita._get_igsn_client`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``_get_igsn_client``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from pid.client import DigitalObjectIdentifierClient
 
         return DigitalObjectIdentifierClient(self)
 
     @property
     def igsn_exists(self):
-        """Provádí funkci ``Lokalita.igsn_exists`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``igsn_exists``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self, check_status=True):
-        """Zpracuje volání ``Lokalita.igsn_delete`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``igsn_delete``.
+        
+        :param check_status: Vstupní hodnota parametru ``check_status`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.igsn:
             return self._get_igsn_client().delete_record(check_status)
 
     def igsn_hide(self, check_status=True):
-        """Zpracuje volání ``Lokalita.igsn_hide`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``igsn_hide``.
+        
+        :param check_status: Vstupní hodnota parametru ``check_status`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.igsn:
             return self._get_igsn_client().hide_record(check_status)
 
     def igsn_publish(self, check_status=True):
-        """Zpracuje volání ``Lokalita.igsn_publish`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``igsn_publish``.
+        
+        :param check_status: Vstupní hodnota parametru ``check_status`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self._get_igsn_client().publish_record(check_status)
 
     def igsn_update(self, check_status=True, reload_record=False):
-        """Provádí funkci ``Lokalita.igsn_update`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``igsn_update``.
+        
+        :param check_status: Vstupní hodnota parametru ``check_status`` použitého při zpracování.
+        :param reload_record: Vstupní hodnota parametru ``reload_record`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
 
     @property
     def igsn_url(self):
-        """Provádí funkci ``Lokalita.igsn_url`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``igsn_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self._get_igsn_client().get_record_url()
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
-        """Zpracuje volání ``Lokalita.get_by_ident_cely`` v rámci modulu ``webclient.lokalita.models``."""
+        """Zajišťuje logiku funkce ``get_by_ident_cely``.
+        
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
         except Exception:

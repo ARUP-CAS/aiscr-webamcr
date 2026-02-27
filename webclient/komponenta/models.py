@@ -30,13 +30,21 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
         db_table = "komponenta_vazby"
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``KomponentaVazby.__init__`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.suppress_komponenta_signal = False
 
     @property
     def navazany_objekt(self):
-        """Provádí funkci ``KomponentaVazby.navazany_objekt`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``navazany_objekt``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if hasattr(self, "casti_dokumentu") and self.casti_dokumentu:
             return self.casti_dokumentu
         elif hasattr(self, "dokumentacni_jednotka") and self.dokumentacni_jednotka:
@@ -80,7 +88,12 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``Komponenta.__init__`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
@@ -88,12 +101,18 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     @property
     def ident_cely_safe(self):
-        """Provádí funkci ``Komponenta.ident_cely_safe`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``ident_cely_safe``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.ident_cely.replace("-", "_")
 
     @property
     def pocet_nalezu(self):
-        """Provádí funkci ``Komponenta.pocet_nalezu`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``pocet_nalezu``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.objekty.all().count() + self.predmety.all().count()
 
     class Meta:
@@ -102,7 +121,10 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
-        """Provádí funkci ``Komponenta.get_absolute_url`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``get_absolute_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             from arch_z.models import ArcheologickyZaznam
 
@@ -136,21 +158,31 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
             )
 
     def get_permission_object(self):
-        """Provádí funkci ``Komponenta.get_permission_object`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
         else:
             return self.komponenta_vazby.casti_dokumentu.get_permission_object()
 
     def create_transaction(self, transaction_user):
-        """Zpracuje volání ``Komponenta.create_transaction`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``create_transaction``.
+        
+        :param transaction_user: Vstupní hodnota parametru ``transaction_user`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraTransaction
 
         self.active_transaction = FedoraTransaction(transaction_user=transaction_user)
         return self.active_transaction
 
     def set_transaction_main_record(self):
-        """Provádí funkci ``Komponenta.set_transaction_main_record`` v rámci modulu ``webclient.komponenta.models``."""
+        """Zajišťuje logiku funkce ``set_transaction_main_record``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             related_model = self.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam
             self.active_transaction.main_record = related_model

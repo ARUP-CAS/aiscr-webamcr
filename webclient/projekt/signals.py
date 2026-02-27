@@ -71,7 +71,13 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Projekt, weak=False)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
-    """Provádí funkci ``projekt_pre_delete`` v rámci modulu ``webclient.projekt.signals``."""
+    """Zajišťuje logiku funkce ``projekt_pre_delete``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Projekt``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(
         "projekt.signals.projekt_pre_delete.start",
         extra={"ident_cely": instance.ident_cely, "initial": instance.initial_dokumenty},
@@ -85,7 +91,11 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if not instance.suppress_signal:
 
         def save_metadata(close_transaction=False):
-            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.projekt.signals``."""
+            """Zajišťuje logiku funkce ``save_metadata``.
+            
+            :param close_transaction: Vstupní hodnota parametru ``close_transaction`` použitého při zpracování.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             if instance.soubory and instance.soubory.pk:
                 instance.soubory.delete()
             for dokument_pk in instance.initial_dokumenty:
@@ -118,7 +128,10 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         if instance.close_active_transaction_when_finished:
 
             def save_metadata():
-                """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.projekt.signals``."""
+                """Zajišťuje logiku funkce ``save_metadata``.
+                
+                :return: Návratová hodnota funkce po zpracování vstupních dat.
+                """
                 if instance.hlavni_katastr in instance.katastry.all():
                     # Toto je nutné provést ve funkci `on_commit`, viz
                     # Viz dokumentace k přístupu k many-to-many poli v post_save signálu.

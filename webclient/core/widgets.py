@@ -10,7 +10,12 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
     """
 
     def __init__(self, value=None, attrs=None):
-        """Provádí funkci ``ForeignKeyReadOnlyTextInput.__init__`` v rámci modulu ``webclient.core.widgets``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :param attrs: Vstupní hodnota parametru ``attrs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if attrs is None:
             attrs = {}
         attrs["readonly"] = True
@@ -18,7 +23,11 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
         self.value = None
 
     def format_value(self, value):
-        """Zpracuje volání ``ForeignKeyReadOnlyTextInput.format_value`` v rámci modulu ``webclient.core.widgets``."""
+        """Zajišťuje logiku funkce ``format_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return str(self.value)
 
 

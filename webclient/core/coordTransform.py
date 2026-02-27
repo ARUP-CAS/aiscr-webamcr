@@ -30,7 +30,13 @@ readCoef(CORRTABLE)
 
 # Převod z WGS-84 do JTSK
 def convertToJTSK(longitude, latitude, height=0):
-    """Provádí funkci ``convertToJTSK`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``convertToJTSK``.
+    
+    :param longitude: Vstupní hodnota parametru ``longitude`` použitého při zpracování.
+    :param latitude: Vstupní hodnota parametru ``latitude`` použitého při zpracování.
+    :param height: Vstupní hodnota parametru ``height`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if not isinstance(longitude, (int, float)) or not isinstance(latitude, (int, float)):
         return [None, None]
     if latitude < 40 or latitude > 60 or longitude < 5 or longitude > 25:
@@ -45,7 +51,13 @@ def convertToJTSK(longitude, latitude, height=0):
 
 # Převod z JTSK do WGS-84
 def convertToWGS84(minusY, minusX, height=0):
-    """Provádí funkci ``convertToWGS84`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``convertToWGS84``.
+    
+    :param minusY: Vstupní hodnota parametru ``minusY`` použitého při zpracování.
+    :param minusX: Vstupní hodnota parametru ``minusX`` použitého při zpracování.
+    :param height: Vstupní hodnota parametru ``height`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if not isinstance(minusY, (int, float)) or not isinstance(minusX, (int, float)):
         return [None, None]
     if minusY < -905000 or minusY > -400000 or minusX < -1230000 or minusX > -930000:
@@ -58,7 +70,13 @@ def convertToWGS84(minusY, minusX, height=0):
 
 # Převod z elipsoidu WGS-84 na Besselův elipsoid
 def wgs84_to_bessel(latitude, longitude, altitude=0.0):
-    """Provádí funkci ``wgs84_to_bessel`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``wgs84_to_bessel``.
+    
+    :param latitude: Vstupní hodnota parametru ``latitude`` použitého při zpracování.
+    :param longitude: Vstupní hodnota parametru ``longitude`` použitého při zpracování.
+    :param altitude: Vstupní hodnota parametru ``altitude`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     b = math.radians(latitude)
     l = math.radians(longitude)
     h = altitude
@@ -76,7 +94,13 @@ def wgs84_to_bessel(latitude, longitude, altitude=0.0):
 
 
 def bessel_to_wgs84(latitude, longitude, altitude=0.0):
-    """Provádí funkci ``bessel_to_wgs84`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``bessel_to_wgs84``.
+    
+    :param latitude: Vstupní hodnota parametru ``latitude`` použitého při zpracování.
+    :param longitude: Vstupní hodnota parametru ``longitude`` použitého při zpracování.
+    :param altitude: Vstupní hodnota parametru ``altitude`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     b = math.radians(latitude)
     l = math.radians(longitude)
     h = altitude
@@ -93,7 +117,12 @@ def bessel_to_wgs84(latitude, longitude, altitude=0.0):
 # Převod zeměpisné šířky/délky Bessel na JTSK05
 def bessel_to_jtsk(B, L):
 
-    """Provádí funkci ``bessel_to_jtsk`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``bessel_to_jtsk``.
+    
+    :param B: Vstupní hodnota parametru ``B`` použitého při zpracování.
+    :param L: Vstupní hodnota parametru ``L`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     B = math.radians(B)
     L = math.radians(L)
     fi0 = math.radians(49.5)
@@ -172,7 +201,12 @@ def bessel_to_jtsk(B, L):
 
 
 def jtsk_to_bessel(X05, Y05):
-    """Provádí funkci ``jtsk_to_bessel`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``jtsk_to_bessel``.
+    
+    :param X05: Vstupní hodnota parametru ``X05`` použitého při zpracování.
+    :param Y05: Vstupní hodnota parametru ``Y05`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     Yc = Y05 - 5_000_000.0
     Xc = X05 - 5_000_000.0
 
@@ -258,7 +292,13 @@ def jtsk_to_bessel(X05, Y05):
 # Převod z geodetických souřadnic na kartézské souřadnice
 def blht_to_geo_coords_wgs(b, l, h):
     # WGS-84 ellipsoid parameters
-    """Provádí funkci ``blht_to_geo_coords_wgs`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``blht_to_geo_coords_wgs``.
+    
+    :param b: Vstupní hodnota parametru ``b`` použitého při zpracování.
+    :param l: Vstupní hodnota parametru ``l`` použitého při zpracování.
+    :param h: Vstupní hodnota parametru ``h`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     a = 6378137.0
     e2 = 0.006694380022901
     N = a / math.sqrt(1 - e2 * math.pow(math.sin(b), 2))
@@ -272,7 +312,13 @@ def blht_to_geo_coords_wgs(b, l, h):
 # Převod z geodetických souřadnic na kartézské souřadnice
 def blht_to_geo_coords_bessel(b, l, h):
     # Bessel's ellipsoid parameters
-    """Provádí funkci ``blht_to_geo_coords_bessel`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``blht_to_geo_coords_bessel``.
+    
+    :param b: Vstupní hodnota parametru ``b`` použitého při zpracování.
+    :param l: Vstupní hodnota parametru ``l`` použitého při zpracování.
+    :param h: Vstupní hodnota parametru ``h`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     a = 6377397.155
     e2 = 0.00667437223062
     N = a / math.sqrt(1 - e2 * math.pow(math.sin(b), 2))
@@ -286,7 +332,13 @@ def blht_to_geo_coords_bessel(b, l, h):
 # Převod z kartézských souřadnic na geodetické souřadnice
 def geo_coords_to_blh_bessel(X, Y, Z):
     # Bessel's ellipsoid parameters
-    """Provádí funkci ``geo_coords_to_blh_bessel`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``geo_coords_to_blh_bessel``.
+    
+    :param X: Vstupní hodnota parametru ``X`` použitého při zpracování.
+    :param Y: Vstupní hodnota parametru ``Y`` použitého při zpracování.
+    :param Z: Vstupní hodnota parametru ``Z`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     a = 6377397.155
     e2 = 0.00667437223062
     L = math.atan(Y / X)
@@ -307,7 +359,13 @@ def geo_coords_to_blh_bessel(X, Y, Z):
 # Převod z kartézských souřadnic na geodetické souřadnice
 def geo_coords_to_blh_wgs(X, Y, Z):
     # WGS-84 ellipsoid parameters
-    """Provádí funkci ``geo_coords_to_blh_wgs`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``geo_coords_to_blh_wgs``.
+    
+    :param X: Vstupní hodnota parametru ``X`` použitého při zpracování.
+    :param Y: Vstupní hodnota parametru ``Y`` použitého při zpracování.
+    :param Z: Vstupní hodnota parametru ``Z`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     a = 6378137.0
     e2 = 0.006694380022901
     L = math.atan(Y / X)
@@ -328,7 +386,13 @@ def geo_coords_to_blh_wgs(X, Y, Z):
 # Coordinates transformation
 def ETRF2JTSK05transform_coords(xs, ys, zs):
     # koeficienty transformace z WGS-84 do JTSK
-    """Provádí funkci ``ETRF2JTSK05transform_coords`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``ETRF2JTSK05transform_coords``.
+    
+    :param xs: Vstupní hodnota parametru ``xs`` použitého při zpracování.
+    :param ys: Vstupní hodnota parametru ``ys`` použitého při zpracování.
+    :param zs: Vstupní hodnota parametru ``zs`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     p1 = -572.203
     p2 = -85.328
     p3 = -461.934
@@ -347,7 +411,13 @@ def ETRF2JTSK05transform_coords(xs, ys, zs):
 
 def JTSK052ETRFtransform_coords(xs, ys, zs):
     # koeficienty transformace z WGS-84 do JTSK
-    """Provádí funkci ``JTSK052ETRFtransform_coords`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``JTSK052ETRFtransform_coords``.
+    
+    :param xs: Vstupní hodnota parametru ``xs`` použitého při zpracování.
+    :param ys: Vstupní hodnota parametru ``ys`` použitého při zpracování.
+    :param zs: Vstupní hodnota parametru ``zs`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     p1 = 572.213
     p2 = 85.334
     p3 = 461.940
@@ -365,7 +435,13 @@ def JTSK052ETRFtransform_coords(xs, ys, zs):
 
 
 def WGS2ETRFtransform_coords(xs, ys, zs):
-    """Provádí funkci ``WGS2ETRFtransform_coords`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``WGS2ETRFtransform_coords``.
+    
+    :param xs: Vstupní hodnota parametru ``xs`` použitého při zpracování.
+    :param ys: Vstupní hodnota parametru ``ys`` použitého při zpracování.
+    :param zs: Vstupní hodnota parametru ``zs`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if "test" in sys.argv:
         today = date(2025, 6, 28)
     else:
@@ -387,7 +463,13 @@ def WGS2ETRFtransform_coords(xs, ys, zs):
 
 
 def ETRF2WGStransform_coords(xs, ys, zs):
-    """Provádí funkci ``ETRF2WGStransform_coords`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``ETRF2WGStransform_coords``.
+    
+    :param xs: Vstupní hodnota parametru ``xs`` použitého při zpracování.
+    :param ys: Vstupní hodnota parametru ``ys`` použitého při zpracování.
+    :param zs: Vstupní hodnota parametru ``zs`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if "test" in sys.argv:
         today = date(2025, 6, 28)
     else:
@@ -409,7 +491,12 @@ def ETRF2WGStransform_coords(xs, ys, zs):
 
 
 def jtsk05_to_jtsk(x05, y05):
-    """Provádí funkci ``jtsk05_to_jtsk`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``jtsk05_to_jtsk``.
+    
+    :param x05: Vstupní hodnota parametru ``x05`` použitého při zpracování.
+    :param y05: Vstupní hodnota parametru ``y05`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     x05 -= 5000000
     y05 -= 5000000
     hy = int(y05 / 2000) * 2000
@@ -445,7 +532,12 @@ def jtsk05_to_jtsk(x05, y05):
 
 
 def jtsk_to_jtsk05(X, Y):
-    """Provádí funkci ``jtsk_to_jtsk05`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``jtsk_to_jtsk05``.
+    
+    :param X: Vstupní hodnota parametru ``X`` použitého při zpracování.
+    :param Y: Vstupní hodnota parametru ``Y`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     hy = int(Y / 2000) * 2000
     hx = int(X / 2000) * 2000
     try:
@@ -479,7 +571,11 @@ def jtsk_to_jtsk05(X, Y):
 
 
 def get_multi_transform_to_sjtsk(wgs_points):
-    """Provádí funkci ``get_multi_transform_to_sjtsk`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``get_multi_transform_to_sjtsk``.
+    
+    :param wgs_points: Vstupní hodnota parametru ``wgs_points`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     my = []
     for i in wgs_points:
         [x1, x2] = convertToJTSK(float(i[0]), float(i[1]))
@@ -488,7 +584,11 @@ def get_multi_transform_to_sjtsk(wgs_points):
 
 
 def get_multi_transform_to_wgs84(jtsk_points):
-    """Provádí funkci ``get_multi_transform_to_wgs84`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``get_multi_transform_to_wgs84``.
+    
+    :param jtsk_points: Vstupní hodnota parametru ``jtsk_points`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     my = []
     for i in jtsk_points:
         [x1, x2] = convertToWGS84(float(i[0]), float(i[1]))
@@ -497,14 +597,23 @@ def get_multi_transform_to_wgs84(jtsk_points):
 
 
 def contains_two_floats(text):
-    """Provádí funkci ``contains_two_floats`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``contains_two_floats``.
+    
+    :param text: Vstupní hodnota parametru ``text`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     pattern = r"^-?\d+(\.\d+)?\s+-?\d+(\.\d+)?$"
     match = re.match(pattern, text.strip())
     return bool(match)
 
 
 def transform_geom(geom, transFunc):
-    """Provádí funkci ``transform_geom`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``transform_geom``.
+    
+    :param geom: Vstupní hodnota parametru ``geom`` použitého při zpracování.
+    :param transFunc: Vstupní hodnota parametru ``transFunc`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if not isinstance(geom, str):
         return "", "Not strig"
     while geom.find("  ") != -1:
@@ -538,10 +647,18 @@ def transform_geom(geom, transFunc):
 
 
 def transform_geom_to_sjtsk(geom):
-    """Provádí funkci ``transform_geom_to_sjtsk`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``transform_geom_to_sjtsk``.
+    
+    :param geom: Vstupní hodnota parametru ``geom`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     return transform_geom(geom, convertToJTSK)
 
 
 def transform_geom_to_wgs84(geom):
-    """Provádí funkci ``transform_geom_to_wgs84`` v rámci modulu ``webclient.core.coordTransform``."""
+    """Zajišťuje logiku funkce ``transform_geom_to_wgs84``.
+    
+    :param geom: Vstupní hodnota parametru ``geom`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     return transform_geom(geom, convertToWGS84)

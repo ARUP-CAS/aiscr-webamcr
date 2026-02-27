@@ -26,7 +26,11 @@ class Command(BaseCommand):
     help = _("core.management.commands.write_value_to_redis.Command.help")
 
     def add_arguments(self, parser):
-        """Zpracuje volání ``Command.add_arguments`` v rámci modulu ``webclient.core.management.commands.write_value_to_redis``."""
+        """Zajišťuje logiku funkce ``add_arguments``.
+        
+        :param parser: Vstupní hodnota parametru ``parser`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         parser.add_argument(
             "key",
             type=str,
@@ -39,7 +43,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
-        """Provádí funkci ``Command.handle`` v rámci modulu ``webclient.core.management.commands.write_value_to_redis``."""
+        """Zajišťuje logiku funkce ``handle``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("core.management.commands.write_value_to_redis.start")
         key = kwargs["key"]
         value = kwargs["value"]

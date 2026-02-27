@@ -9,12 +9,21 @@ from .models import Akce
 class BooleanValueColumn(tables.columns.Column):
     """Zapouzdřuje chování třídy ``BooleanValueColumn`` pro modul ``webclient.arch_z.tables``."""
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``BooleanValueColumn.__init__`` v rámci modulu ``webclient.arch_z.tables``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.value_labels = kwargs.pop("value_labels", None)
         super(BooleanValueColumn, self).__init__(*args, **kwargs)
 
     def render(self, value):
-        """Zpracuje volání ``BooleanValueColumn.render`` v rámci modulu ``webclient.arch_z.tables``."""
+        """Zajišťuje logiku funkce ``render``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         value = [x for x in self.value_labels if x[0] == bool(value)]
         if len(value) > 0:
             return value[0][1]
@@ -132,7 +141,12 @@ class AkceTable(SearchTable):
     )
 
     def order_vedouci_organizace(self, queryset, is_descending):
-        """Provádí funkci ``AkceTable.order_vedouci_organizace`` v rámci modulu ``webclient.arch_z.tables``."""
+        """Zajišťuje logiku funkce ``order_vedouci_organizace``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :param is_descending: Vstupní hodnota parametru ``is_descending`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         queryset = queryset.annotate(
             vedouci_organizace__nazev_zkraceny=StringAgg(
                 "akcevedouci__organizace__nazev_zkraceny",
@@ -203,7 +217,12 @@ class AkceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AkceTable.__init__`` v rámci modulu ``webclient.arch_z.tables``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(AkceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):

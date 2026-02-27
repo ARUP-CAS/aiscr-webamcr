@@ -16,7 +16,10 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``OznameniSeleniumTest`` pro modul ``webclient.oznameni.tests.test_selenium``."""
     @staticmethod
     def oznameni_projektu(self):
-        """Provádí funkci ``OznameniSeleniumTest.oznameni_projektu`` v rámci modulu ``webclient.oznameni.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``oznameni_projektu``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")
         self.ElementClick(By.ID, "id_oznamovatel")

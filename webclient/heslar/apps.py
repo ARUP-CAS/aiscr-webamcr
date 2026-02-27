@@ -6,7 +6,10 @@ class HeslarConfig(AppConfig):
     name = "heslar"
 
     def ready(self):
-        """Provádí funkci ``HeslarConfig.ready`` v rámci modulu ``webclient.heslar.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(HeslarConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import heslar.signals

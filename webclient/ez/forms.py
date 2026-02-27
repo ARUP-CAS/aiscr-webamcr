@@ -140,7 +140,15 @@ class ExterniZdrojForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):
-        """Provádí funkci ``ExterniZdrojForm.__init__`` v rámci modulu ``webclient.ez.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param readonly: Vstupní hodnota parametru ``readonly`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ExterniZdrojForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         if not readonly:
@@ -265,7 +273,13 @@ class ExterniOdkazForm(forms.ModelForm):
         }
 
     def __init__(self, type_arch=None, *args, **kwargs):
-        """Provádí funkci ``ExterniOdkazForm.__init__`` v rámci modulu ``webclient.ez.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param type_arch: Vstupní hodnota parametru ``type_arch`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ExterniOdkazForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -277,7 +291,14 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
     """
 
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
-        """Provádí funkci ``PripojitArchZaznamForm.__init__`` v rámci modulu ``webclient.ez.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param type_arch: Vstupní hodnota parametru ``type_arch`` použitého při zpracování.
+        :param dok: Vstupní hodnota parametru ``dok`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
         if dok:
@@ -326,7 +347,12 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
     """
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``PripojitExterniOdkazForm.__init__`` v rámci modulu ``webclient.ez.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
         new_choices = list(ExterniZdroj.objects.filter().values_list("id", "ident_cely"))

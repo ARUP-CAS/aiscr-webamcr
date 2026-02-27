@@ -40,7 +40,10 @@ logger = logging.getLogger(__name__)
 class Users(QuerySet):
     """Zapouzdřuje chování třídy ``Users`` pro modul ``webclient.projekt.filters``."""
     def active_processes(self):
-        """Provádí funkci ``Users.active_processes`` v rámci modulu ``webclient.projekt.filters``."""
+        """Zajišťuje logiku funkce ``active_processes``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.select_related("first_name", "last_name")
 
 
@@ -498,7 +501,11 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     )
 
     def filter_queryset(self, queryset):
-        """Zpracuje volání ``ProjektFilter.filter_queryset`` v rámci modulu ``webclient.projekt.filters``."""
+        """Zajišťuje logiku funkce ``filter_queryset``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
         queryset = super(ProjektFilter, self).filter_queryset(queryset)
         historie = self._get_history_subquery()
@@ -682,7 +689,12 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         form = ProjektFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ProjektFilter.__init__`` v rámci modulu ``webclient.projekt.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ProjektFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         self.filters["typ_akce"].extra["choices"] = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
@@ -700,7 +712,11 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Zpracuje volání ``ProjektFilterFormHelper.__init__`` v rámci modulu ``webclient.projekt.filters``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("projekt.filters.history.divider.label")
         }

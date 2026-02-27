@@ -125,7 +125,11 @@ class ProjektTable(SearchTable):
         )
 
     def render_planovane_zahajeni(self, value):
-        """Zpracuje volání ``ProjektTable.render_planovane_zahajeni`` v rámci modulu ``webclient.projekt.tables``."""
+        """Zajišťuje logiku funkce ``render_planovane_zahajeni``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
@@ -135,6 +139,11 @@ class ProjektTable(SearchTable):
         return str(value)
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ProjektTable.__init__`` v rámci modulu ``webclient.projekt.tables``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ProjektTable, self).__init__(*args, **kwargs)
         # self.set_hideable_columns(['ident_cely', 'stav']) Odkomentovat, až bude podpora dostupná.

@@ -29,7 +29,12 @@ class AkceVedouciFormSetHelper(FormHelper):
     """
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AkceVedouciFormSetHelper.__init__`` v rámci modulu ``webclient.arch_z.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset_vedouci.html"
         self.form_tag = False
@@ -49,7 +54,10 @@ def create_akce_vedouci_objekt_form(readonly=True):
     class CreateAkceVedouciObjektForm(forms.ModelForm):
         """Zapouzdřuje chování třídy ``CreateAkceVedouciObjektForm`` pro modul ``webclient.arch_z.forms``."""
         def clean(self):
-            """Provádí funkci ``CreateAkceVedouciObjektForm.clean`` v rámci modulu ``webclient.arch_z.forms``."""
+            """Zajišťuje logiku funkce ``clean``.
+            
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             cleaned_data = super().clean()
             if (cleaned_data.get("vedouci", None) is None and cleaned_data.get("organizace", None) is not None) or (
                 cleaned_data.get("vedouci", None) is not None and cleaned_data.get("organizace", None) is None
@@ -84,7 +92,12 @@ def create_akce_vedouci_objekt_form(readonly=True):
             }
 
         def __init__(self, *args, **kwargs):
-            """Provádí funkci ``CreateAkceVedouciObjektForm.__init__`` v rámci modulu ``webclient.arch_z.forms``."""
+            """Zajišťuje logiku funkce ``__init__``.
+            
+            :param args: Poziční argumenty předané voláním.
+            :param kwargs: Pojmenované argumenty předané voláním.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
             logger.debug("CreateAkceVedouciObjektForm.init", extra={"option": readonly, "initial": self.initial})
@@ -239,11 +252,19 @@ class CustomDateInput(forms.DateField):
 
     @classmethod
     def year_only(cls, value):
-        """Zpracuje volání ``CustomDateInput.year_only`` v rámci modulu ``webclient.arch_z.forms``."""
+        """Zajišťuje logiku funkce ``year_only``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return re.fullmatch(r"\d{4}", value)
 
     def get_date_based_on_year(self, year):
-        """Zpracuje volání ``CustomDateInput.get_date_based_on_year`` v rámci modulu ``webclient.arch_z.forms``."""
+        """Zajišťuje logiku funkce ``get_date_based_on_year``.
+        
+        :param year: Vstupní hodnota parametru ``year`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return datetime.date(year, self.year_only_month, self.year_only_day)
 
     def to_python(self, value):
@@ -405,7 +426,14 @@ class CreateAkceForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
-        """Provádí funkci ``CreateAkceForm.__init__`` v rámci modulu ``webclient.arch_z.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param required: Vstupní hodnota parametru ``required`` použitého při zpracování.
+        :param required_next: Vstupní hodnota parametru ``required_next`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         uzamknout_specifikace = kwargs.pop("uzamknout_specifikace", False)
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt

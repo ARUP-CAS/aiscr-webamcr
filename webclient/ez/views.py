@@ -99,7 +99,10 @@ class ExterniZdrojListView(SearchListView):
     vypis_app = "ez"
 
     def init_translations(self):
-        """Provádí funkci ``ExterniZdrojListView.init_translations`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translations``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().init_translations()
         self.page_title = _("ez.templates.ExterniZdrojListView.pageTitle.text")
         self.search_sum = _("ez.templates.ExterniZdrojListView.search_sum.text")
@@ -113,7 +116,11 @@ class ExterniZdrojListView(SearchListView):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Zpracuje volání ``ExterniZdrojListView.rename_field_for_ordering`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``rename_field_for_ordering``.
+        
+        :param field: Vstupní hodnota parametru ``field`` použitého při zpracování. (typ: ``str``).
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         field = field.replace("-", "")
         return {
             "autori": "autori_snapshot",
@@ -123,7 +130,10 @@ class ExterniZdrojListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Provádí funkci ``ExterniZdrojListView.get_queryset`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -148,7 +158,12 @@ class ExterniZdrojListView(SearchListView):
         return self.check_filter_permission(qs)
 
     def add_accessibility_lookup(self, permission, qs):
-        """Provádí funkci ``ExterniZdrojListView.add_accessibility_lookup`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``add_accessibility_lookup``.
+        
+        :param permission: Vstupní hodnota parametru ``permission`` použitého při zpracování.
+        :param qs: Vstupní hodnota parametru ``qs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return qs
 
 
@@ -162,7 +177,11 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
     slug_field = "ident_cely"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ExterniZdrojDetailView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = {}
         zaznam = self.get_object()
         ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=zaznam)
@@ -198,14 +217,21 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     form_class = ExterniZdrojForm
 
     def get_form_kwargs(self):
-        """Provádí funkci ``ExterniZdrojCreateView.get_form_kwargs`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_form_kwargs``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         kwargs = super().get_form_kwargs()
         required_fields = get_required_fields()
         kwargs.update({"required": required_fields, "required_next": required_fields})
         return kwargs
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ExterniZdrojCreateView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["toolbar_name"] = _("ez.templates.ExterniZdrojCreateView.toolbar.title")
         context["page_title"] = _("ez.templates.ExterniZdrojCreateView.pageTitle")
@@ -215,7 +241,11 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """Zpracuje volání ``ExterniZdrojCreateView.form_valid`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``form_valid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         ez = form.save(commit=False)
         ez: ExterniZdroj
         fedora_transaction = ez.create_transaction(self.request.user, EZ_USPESNE_ZAPSAN)
@@ -243,14 +273,24 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
             return super().form_invalid(form)
 
     def form_invalid(self, form):
-        """Zpracuje volání ``ExterniZdrojCreateView.form_invalid`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``form_invalid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniZdrojCreateView.get`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().get(request, *args, **kwargs)
 
 
@@ -265,14 +305,21 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     slug_field = "ident_cely"
 
     def get_form_kwargs(self):
-        """Provádí funkci ``ExterniZdrojEditView.get_form_kwargs`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_form_kwargs``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         kwargs = super().get_form_kwargs()
         required_fields = get_required_fields()
         kwargs.update({"required": required_fields, "required_next": required_fields})
         return kwargs
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ExterniZdrojEditView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["zaznam"] = self.object
         context["toolbar_name"] = _("ez.templates.ExterniZdrojEditView.toolbar.title")
@@ -283,7 +330,11 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     @method_decorator(handle_fedora_error)
     def form_valid(self, form):
-        """Zpracuje volání ``ExterniZdrojEditView.form_valid`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``form_valid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.object: ExterniZdroj = form.save(commit=False)
         self.object.active_transaction = self.object.create_transaction(self.request.user)
         self.object.active_transaction.redirect_on_error = True
@@ -296,18 +347,34 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
-        """Zpracuje volání ``ExterniZdrojEditView.form_invalid`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``form_invalid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniZdrojEditView.get`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniZdrojEditView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return super().post(request, *args, **kwargs)
 
 
@@ -324,12 +391,18 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     active_transaction = None
 
     def init_translation(self):
-        """Provádí funkci ``TransakceView.init_translation`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.title = "title"
         self.button = "button"
 
     def get_zaznam(self) -> ExterniZdroj:
-        """Provádí funkci ``TransakceView.get_zaznam`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_zaznam``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``ExterniZdroj``).
+        """
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("ez.views.TransakceView.get_zaznam.start", extra={"ident_cely": ident_cely})
         zaznam = get_object_or_404(
@@ -341,7 +414,11 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         return zaznam
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``TransakceView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.init_translation()
         zaznam = self.get_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": zaznam.stav})
@@ -355,7 +432,13 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        """Provádí funkci ``TransakceView.dispatch`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         zaznam = self.get_zaznam()
         if zaznam.stav not in self.allowed_states:
             logger.debug("ez.views.TransakceView.dispatch.start", extra={"value": self.action})
@@ -372,13 +455,25 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``TransakceView.get`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``TransakceView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.create_transaction(request.user, self.success_message)
@@ -399,7 +494,10 @@ class ExterniZdrojOdeslatView(TransakceView):
     action = "set_odeslany"
 
     def init_translation(self):
-        """Provádí funkci ``ExterniZdrojOdeslatView.init_translation`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.title = _("ez.templates.ExterniZdrojOdeslatView.title.text")
         self.button = _("ez.templates.ExterniZdrojOdeslatView.submitButton.text")
         self.success_message = EZ_USPESNE_ODESLAN
@@ -415,13 +513,22 @@ class ExterniZdrojPotvrditView(TransakceView):
     action = "set_potvrzeny"
 
     def init_translation(self):
-        """Provádí funkci ``ExterniZdrojPotvrditView.init_translation`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.title = _("ez.templates.ExterniZdrojPotvrditView.title.text")
         self.button = _("ez.templates.ExterniZdrojPotvrditView.submitButton.text")
         self.success_message = EZ_USPESNE_POTVRZEN
 
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniZdrojPotvrditView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         zaznam: ExterniZdroj = context["object"]
         fedora_transaction = zaznam.create_transaction(request.user, self.success_message)
@@ -458,14 +565,23 @@ class ExterniZdrojSmazatView(TransakceView):
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
     def init_translation(self):
-        """Provádí funkci ``ExterniZdrojSmazatView.init_translation`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.title = _("ez.templates.ExterniZdrojSmazatView.title.text")
         self.button = _("ez.templates.ExterniZdrojSmazatView.submitButton.text")
         self.success_message = ZAZNAM_USPESNE_SMAZAN
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniZdrojSmazatView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.deleted_by_user = request.user
@@ -497,13 +613,22 @@ class ExterniZdrojVratitView(TransakceView):
     action = "set_vraceny"
 
     def init_translation(self):
-        """Provádí funkci ``ExterniZdrojVratitView.init_translation`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.title = _("ez.templates.ExterniZdrojVratitView.title.text")
         self.button = _("ez.templates.ExterniZdrojVratitView.submitButton.text")
         self.success_message = EZ_USPESNE_VRACENA
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniZdrojVratitView.get`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         form = VratitForm(initial={"old_stav": context["object"].stav})
         context["form"] = form
@@ -511,7 +636,13 @@ class ExterniZdrojVratitView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniZdrojVratitView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         zaznam.create_transaction(request.user, self.success_message)
@@ -535,7 +666,13 @@ class ExterniOdkazOdpojitView(TransakceView):
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Provádí funkci ``ExterniOdkazOdpojitView.dispatch`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``HttpResponse``).
+        """
         eo = get_object_or_404(
             ExterniOdkaz,
             id=self.kwargs.get("eo_id"),
@@ -547,13 +684,20 @@ class ExterniOdkazOdpojitView(TransakceView):
         return super().dispatch(request, *args, **kwargs)
 
     def init_translation(self):
-        """Provádí funkci ``ExterniOdkazOdpojitView.init_translation`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.title = _("ez.templates.ExterniOdkazOdpojitView.title.text")
         self.button = _("ez.templates.ExterniOdkazOdpojitView.submitButton.text")
         self.success_message = EO_USPESNE_ODPOJEN
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ExterniOdkazOdpojitView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context["object"] = get_object_or_404(
             ArcheologickyZaznam,
@@ -563,7 +707,13 @@ class ExterniOdkazOdpojitView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniOdkazOdpojitView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.init_translation()
         ez = self.get_zaznam()
         lokalita_update = None
@@ -602,12 +752,19 @@ class ExterniOdkazPripojitView(TransakceView):
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
     def init_translation(self):
-        """Provádí funkci ``ExterniOdkazPripojitView.init_translation`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.title = _("ez.templates.ExterniOdkazPripojitView.title.text")
         self.button = _("ez.templates.ExterniOdkazPripojitView.submitButton.text")
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ExterniOdkazPripojitView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         type_arch = self.request.GET.get("type")
         form = PripojitArchZaznamForm(type_arch=type_arch)
@@ -619,7 +776,13 @@ class ExterniOdkazPripojitView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniOdkazPripojitView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"key": self.kwargs})
         ez = self.get_zaznam()
@@ -658,7 +821,13 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     active_transaction = None
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Provádí funkci ``ExterniOdkazEditView.dispatch`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``HttpResponse``).
+        """
         eo = self.get_object()
         if self.kwargs.get("typ_vazby") == "ez":
             check = eo.externi_zdroj.ident_cely != self.kwargs.get("ident_cely")
@@ -672,7 +841,11 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ExterniOdkazEditView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         context = {
             "object": self.object,
@@ -686,7 +859,10 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Provádí funkci ``ExterniOdkazEditView.get_success_url`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_success_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         next_url = self.request.GET.get("next_url")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -696,7 +872,11 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         return response
 
     def get_object(self, queryset=None):
-        """Zpracuje volání ``ExterniOdkazEditView.get_object`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_object``.
+        
+        :param queryset: Vstupní hodnota parametru ``queryset`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         object = super().get_object()
         object: ExterniOdkaz
         if self.active_transaction:
@@ -706,19 +886,33 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniOdkazEditView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.active_transaction = self.get_object().create_transaction(request.user)
         super().post(request, *args, **kwargs)
         self.active_transaction = None
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_valid(self, form):
-        """Zpracuje volání ``ExterniOdkazEditView.form_valid`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``form_valid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """Zpracuje volání ``ExterniOdkazEditView.form_invalid`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``form_invalid``.
+        
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
@@ -733,12 +927,21 @@ class ExterniOdkazOdpojitAZView(TransakceView):
     allowed_states = [AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY, AZ_STAV_ARCHIVOVANY]
 
     def init_translation(self):
-        """Provádí funkci ``ExterniOdkazOdpojitAZView.init_translation`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``init_translation``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().init_translation()
         self.success_message = EO_USPESNE_ODPOJEN
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Provádí funkci ``ExterniOdkazOdpojitAZView.dispatch`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``HttpResponse``).
+        """
         eo = get_object_or_404(
             ExterniOdkaz,
             id=self.kwargs.get("eo_id"),
@@ -750,7 +953,10 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
-        """Provádí funkci ``ExterniOdkazOdpojitAZView.get_zaznam`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_zaznam``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("ez.views.TransakceView.ExterniOdkazOdpojitAZView.start", extra={"ident_cely": ident_cely})
         return get_object_or_404(
@@ -759,7 +965,11 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         )
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ExterniOdkazOdpojitAZView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         logger.debug(
             "ez.views.TransakceView.ExterniOdkazOdpojitAZView.get_context_data",
@@ -776,7 +986,13 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniOdkazOdpojitAZView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         az = self.get_zaznam()
         lokalita_update = None
         self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_ODPOJEN"))
@@ -812,11 +1028,18 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
     typ_zmeny_lookup = ZAPSANI_EXT_ZD
 
     def get_result_label(self, result):
-        """Zpracuje volání ``ExterniZdrojAutocomplete.get_result_label`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_result_label``.
+        
+        :param result: Vstupní hodnota parametru ``result`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vydani_vzniku}: {result.nazev})"
 
     def get_queryset(self):
-        """Provádí funkci ``ExterniZdrojAutocomplete.get_queryset`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if not self.request.user.is_authenticated:
             return ExterniZdroj.objects.none()
 
@@ -831,7 +1054,12 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
         return self.check_filter_permission(qs)
 
     def add_accessibility_lookup(self, permission, qs):
-        """Provádí funkci ``ExterniZdrojAutocomplete.add_accessibility_lookup`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``add_accessibility_lookup``.
+        
+        :param permission: Vstupní hodnota parametru ``permission`` použitého při zpracování.
+        :param qs: Vstupní hodnota parametru ``qs`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return qs
 
 
@@ -841,7 +1069,11 @@ class ExterniZdrojTableRowView(LoginRequiredMixin, View):
     """
 
     def get(self, request):
-        """Zpracuje volání ``ExterniZdrojTableRowView.get`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         zaznam = ExterniZdroj.objects.get(id=request.GET.get("id", ""))
         context = {"ez": zaznam}
         context["hide_paginace"] = True
@@ -858,7 +1090,10 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
     def get_zaznam(self):
-        """Provádí funkci ``ExterniOdkazPripojitDoAzView.get_zaznam`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_zaznam``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
             ArcheologickyZaznam,
@@ -870,7 +1105,11 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
         return zaznam
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``ExterniOdkazPripojitDoAzView.get_context_data`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         form = PripojitExterniOdkazForm()
         context["form"] = form
@@ -886,7 +1125,13 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``ExterniOdkazPripojitDoAzView.post`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         az = self.get_zaznam()
         self.active_transaction = az.create_transaction(request.user, get_message(az, "EO_USPESNE_PRIPOJEN"))
         form = PripojitExterniOdkazForm(data=request.POST)
@@ -995,7 +1240,12 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
     """
 
     def get(self, request, ident_cely):
-        """Provádí funkci ``EzOdkazyTableView.get`` v rámci modulu ``webclient.ez.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param ident_cely: Vstupní hodnota parametru ``ident_cely`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         card_type = request.GET.get("card_type", False)
         action_type = request.GET.get("type", False)
         zaznam = ExterniZdroj.objects.get(ident_cely=ident_cely)

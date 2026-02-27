@@ -136,7 +136,15 @@ class CreateDJForm(forms.ModelForm):
         typ_akce=None,
         **kwargs,
     ):
-        """Provádí funkci ``CreateDJForm.__init__`` v rámci modulu ``webclient.dj.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param not_readonly: Vstupní hodnota parametru ``not_readonly`` použitého při zpracování.
+        :param typ_arch_z: Vstupní hodnota parametru ``typ_arch_z`` použitého při zpracování.
+        :param typ_akce: Vstupní hodnota parametru ``typ_akce`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
         if self.instance.ident_cely and typ_akce is None:
@@ -209,7 +217,12 @@ class ChangeKatastrForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ChangeKatastrForm.__init__`` v rámci modulu ``webclient.dj.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ChangeKatastrForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

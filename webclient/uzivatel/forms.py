@@ -73,7 +73,12 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AuthUserCreationForm.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.fields["telefon"].validators = [validate_phone_number]
@@ -129,7 +134,12 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
         )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AuthUserCreationFormWithRecaptcha.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(AuthUserCreationFormWithRecaptcha, self).__init__(*args, **kwargs)
         if settings.SKIP_RECAPTCHA:
             self.fields.pop("captcha")
@@ -156,7 +166,12 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AuthUserChangeForm.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -222,7 +237,12 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AuthReadOnlyUserChangeForm.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.fields["organizace"].widget.value = self.instance.organizace
         self.fields["hlavni_role"].widget.value = self.instance.hlavni_role
@@ -253,7 +273,12 @@ class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AuthUserChangeAdminForm.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
             widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
@@ -312,7 +337,10 @@ class UpdatePasswordSettings(forms.ModelForm):
     )
 
     def clean(self):
-        """Provádí funkci ``UpdatePasswordSettings.clean`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``clean``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         cleaned_data = super().clean()
         old_password = cleaned_data.get("old_password")[2:-2]
         password1 = cleaned_data.get("password1")[2:-2]
@@ -338,7 +366,12 @@ class UpdatePasswordSettings(forms.ModelForm):
         fields = ("password1", "password2")
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``UpdatePasswordSettings.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -358,7 +391,12 @@ class AuthUserLoginForm(AuthenticationForm):
     """
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``AuthUserLoginForm.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(AuthUserLoginForm, self).__init__(*args, **kwargs)
         self.fields["username"].help_text = _("uzivatel.forms.login.username.tooltip")
         self.fields["password"].help_text = _("uzivatel.forms.login.password.tooltip")
@@ -374,7 +412,10 @@ class AuthUserLoginForm(AuthenticationForm):
         )
 
     def get_invalid_login_error(self):
-        """Provádí funkci ``AuthUserLoginForm.get_invalid_login_error`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``get_invalid_login_error``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return ValidationError(
             _("uzivatel.forms.login.error"),
             code="invalid_login",
@@ -384,7 +425,12 @@ class AuthUserLoginForm(AuthenticationForm):
 class UserPasswordResetForm(PasswordResetForm):
     """Zapouzdřuje chování třídy ``UserPasswordResetForm`` pro modul ``webclient.uzivatel.forms``."""
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``UserPasswordResetForm.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)
         self.fields["email"].label = _("uzivatel.forms.passwordReset.email.label")
         self.fields["email"].help_text = _("uzivatel.forms.passwordReset.email.tooltip")
@@ -477,7 +523,12 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``OsobaForm.__init__`` v rámci modulu ``webclient.uzivatel.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         kwargs.pop("create", False)
         super(OsobaForm, self).__init__(*args, **kwargs)
         # Pokud jde o vytvoření:

@@ -25,19 +25,31 @@ class AkceTestClass(BaseSeleniumTestClass):
     __test__ = False
 
     def go_to_Projekty_vyper(self):
-        """Provádí funkci ``AkceTestClass.go_to_Projekty_vyper`` v rámci modulu ``webclient.arch_z.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_Projekty_vyper``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def go_to_Akce_zapsat(self):
-        """Provádí funkci ``AkceTestClass.go_to_Akce_zapsat`` v rámci modulu ``webclient.arch_z.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_Akce_zapsat``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/arch-z/akce/zapsat")
 
     def go_to_Akce_vybrat(self):
-        """Provádí funkci ``AkceTestClass.go_to_Akce_vybrat`` v rámci modulu ``webclient.arch_z.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_Akce_vybrat``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/arch-z/akce/vyber?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely")
 
     def draw_polygon(self):
-        """Provádí funkci ``AkceTestClass.draw_polygon`` v rámci modulu ``webclient.arch_z.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``draw_polygon``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.wait(1)
         self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
         self.wait(2)
@@ -1582,7 +1594,10 @@ const deadline = Date.now() + 10000;
 class AkceSamostatneAkce(AkceTestClass):
     """Zapouzdřuje chování třídy ``AkceSamostatneAkce`` pro modul ``webclient.arch_z.tests.test_selenium``."""
     def create_Samostatna_Akce(self):
-        """Provádí funkci ``AkceSamostatneAkce.create_Samostatna_Akce`` v rámci modulu ``webclient.arch_z.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``create_Samostatna_Akce``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.go_to_Akce_zapsat()
         self.ElementClick(By.ID, "select2-id_hlavni_katastr-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(

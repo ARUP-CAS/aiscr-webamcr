@@ -8,7 +8,14 @@ from nalez.models import NalezObjekt, NalezPredmet
 class NalezFormSetHelper(FormHelper):
     """Zapouzdřuje chování třídy ``NalezFormSetHelper`` pro modul ``webclient.nalez.forms``."""
     def __init__(self, typ=None, typ_vazby="dokument", *args, **kwargs):
-        """Provádí funkci ``NalezFormSetHelper.__init__`` v rámci modulu ``webclient.nalez.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param typ: Vstupní hodnota parametru ``typ`` použitého při zpracování.
+        :param typ_vazby: Vstupní hodnota parametru ``typ_vazby`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -46,7 +53,14 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
         def __init__(
             self, druh_objekt_choices=druh_obj_choices, specifikace_objekt_choices=spec_obj_choices, *args, **kwargs
         ):
-            """Provádí funkci ``CreateNalezObjektForm.__init__`` v rámci modulu ``webclient.nalez.forms``."""
+            """Zajišťuje logiku funkce ``__init__``.
+            
+            :param druh_objekt_choices: Vstupní hodnota parametru ``druh_objekt_choices`` použitého při zpracování.
+            :param specifikace_objekt_choices: Vstupní hodnota parametru ``specifikace_objekt_choices`` použitého při zpracování.
+            :param args: Poziční argumenty předané voláním.
+            :param kwargs: Pojmenované argumenty předané voláním.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             super(CreateNalezObjektForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
                 label=_("nalez.forms.nalezObjekt.druh.label"),
@@ -111,7 +125,12 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
             }
 
         def __init__(self, *args, **kwargs):
-            """Provádí funkci ``CreateNalezPredmetForm.__init__`` v rámci modulu ``webclient.nalez.forms``."""
+            """Zajišťuje logiku funkce ``__init__``.
+            
+            :param args: Poziční argumenty předané voláním.
+            :param kwargs: Pojmenované argumenty předané voláním.
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             super(CreateNalezPredmetForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
                 label=_("nalez.forms.nalezPredmet.druh.label"),

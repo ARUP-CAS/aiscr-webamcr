@@ -6,7 +6,10 @@ class ProjektConfig(AppConfig):
     name = "projekt"
 
     def ready(self):
-        """Provádí funkci ``ProjektConfig.ready`` v rámci modulu ``webclient.projekt.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(ProjektConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import projekt.signals

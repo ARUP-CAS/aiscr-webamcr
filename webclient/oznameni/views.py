@@ -37,7 +37,13 @@ logger = logging.getLogger(__name__)
 class OznameniView(View):
     """Zapouzdřuje chování třídy ``OznameniView`` pro modul ``webclient.oznameni.views``."""
     def dispatch(self, request, *args, **kwargs):
-        """Provádí funkci ``OznameniView.dispatch`` v rámci modulu ``webclient.oznameni.views``."""
+        """Zajišťuje logiku funkce ``dispatch``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.session_identifier = SessionIdentifier(request)
         self.ident_cely = kwargs.pop("ident_cely", None)
         return super().dispatch(request, *args, **kwargs)
@@ -134,7 +140,11 @@ class OznameniZapsatView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Zpracuje volání ``OznameniZapsatView.get`` v rámci modulu ``webclient.oznameni.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug("oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely})
@@ -193,7 +203,11 @@ class OznameniDokumentaceView(OznameniView):
     """
 
     def post(self, request):
-        """Zpracuje volání ``OznameniDokumentaceView.post`` v rámci modulu ``webclient.oznameni.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if "ident_cely" in request.POST:
             logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
             projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
@@ -215,7 +229,11 @@ class OznameniDokumentaceView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Zpracuje volání ``OznameniDokumentaceView.get`` v rámci modulu ``webclient.oznameni.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
@@ -253,7 +271,11 @@ class OznameniPotvrzeniView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Zpracuje volání ``OznameniPotvrzeniView.get`` v rámci modulu ``webclient.oznameni.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
@@ -339,7 +361,11 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``OznamovatelCreateView.get_context_data`` v rámci modulu ``webclient.oznameni.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
@@ -353,7 +379,13 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``OznamovatelCreateView.get`` v rámci modulu ``webclient.oznameni.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
@@ -365,7 +397,13 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``OznamovatelCreateView.post`` v rámci modulu ``webclient.oznameni.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]
         if check_stav_changed(request, projekt):

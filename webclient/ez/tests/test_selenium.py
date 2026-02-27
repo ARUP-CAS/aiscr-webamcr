@@ -16,15 +16,24 @@ logger = logging.getLogger("tests")
 class AkceExterniZdroj(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``AkceExterniZdroj`` pro modul ``webclient.ez.tests.test_selenium``."""
     def go_to_form_zapsat(self):
-        """Provádí funkci ``AkceExterniZdroj.go_to_form_zapsat`` v rámci modulu ``webclient.ez.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form_zapsat``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/ext-zdroj/zapsat")
 
     def go_to_form_vybrat(self):
-        """Provádí funkci ``AkceExterniZdroj.go_to_form_vybrat`` v rámci modulu ``webclient.ez.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form_vybrat``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/ext-zdroj/vyber?sort=autori&sort=rok_vydani_vzniku&sort=nazev")
 
     def zapsat_zaznam(self):
-        """Provádí funkci ``AkceExterniZdroj.zapsat_zaznam`` v rámci modulu ``webclient.ez.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``zapsat_zaznam``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-4 > .text")

@@ -23,11 +23,17 @@ logger = logging.getLogger("tests")
 class AkceLokality(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``AkceLokality`` pro modul ``webclient.lokalita.tests.test_selenium``."""
     def go_to_form_zapsat(self):
-        """Provádí funkci ``AkceLokality.go_to_form_zapsat`` v rámci modulu ``webclient.lokalita.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form_zapsat``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/arch-z/lokalita/zapsat")
 
     def go_to_form_vybrat(self):
-        """Provádí funkci ``AkceLokality.go_to_form_vybrat`` v rámci modulu ``webclient.lokalita.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form_vybrat``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/arch-z/lokalita/vyber?sort=nazev")
 
     def test_051_zapsani_lokality_p_001(self):

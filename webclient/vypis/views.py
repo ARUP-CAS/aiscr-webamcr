@@ -13,7 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 def add_section_data(instance, section, fields, sections_data, iterator=False, user=None):
-    """Provádí funkci ``add_section_data`` v rámci modulu ``webclient.vypis.views``."""
+    """Zajišťuje logiku funkce ``add_section_data``.
+    
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+    :param section: Vstupní hodnota parametru ``section`` použitého při zpracování.
+    :param fields: Vstupní hodnota parametru ``fields`` použitého při zpracování.
+    :param sections_data: Vstupní hodnota parametru ``sections_data`` použitého při zpracování.
+    :param iterator: Vstupní hodnota parametru ``iterator`` použitého při zpracování.
+    :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if fields["section_name"].get_permission(instance, user) is False:
         return None
     if isinstance(fields["section_name"], RepeatableSectionNameWithAccessor) and not iterator:
@@ -80,7 +89,11 @@ class VypisView(LoginRequiredMixin, TemplateView):
     template_name = "vypis/vypis.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``VypisView.get_context_data`` v rámci modulu ``webclient.vypis.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         name = kwargs.get("typ_vazby")
         ident_cely = kwargs.get("ident_cely")
@@ -126,7 +139,11 @@ class VypisListView(LoginRequiredMixin, TemplateView):
     template_name = "vypis/vypis_list.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``VypisListView.get_context_data`` v rámci modulu ``webclient.vypis.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         name = kwargs.get("typ_vazby")
         config = get_config(name)

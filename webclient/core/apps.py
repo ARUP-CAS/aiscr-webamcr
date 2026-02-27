@@ -6,7 +6,10 @@ class CoreConfig(AppConfig):
     name = "core"
 
     def ready(self):
-        """Provádí funkci ``CoreConfig.ready`` v rámci modulu ``webclient.core.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(CoreConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import core.signals

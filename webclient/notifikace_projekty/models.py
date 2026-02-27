@@ -18,11 +18,17 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
 
     @property
     def ident_cely(self):
-        """Provádí funkci ``Pes.ident_cely`` v rámci modulu ``webclient.notifikace_projekty.models``."""
+        """Zajišťuje logiku funkce ``ident_cely``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return getattr(self.content_object, "ident_cely", None)
 
     def __str__(self):
-        """Provádí funkci ``Pes.__str__`` v rámci modulu ``webclient.notifikace_projekty.models``."""
+        """Zajišťuje logiku funkce ``__str__``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return str(self.content_object)
 
     class Meta:
@@ -36,5 +42,8 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
         ]
 
     def get_create_user(self):
-        """Provádí funkci ``Pes.get_create_user`` v rámci modulu ``webclient.notifikace_projekty.models``."""
+        """Zajišťuje logiku funkce ``get_create_user``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return (self.user,)

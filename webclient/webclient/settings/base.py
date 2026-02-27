@@ -10,7 +10,12 @@ LOG_PATH = "/run/logs/"
 
 
 def get_secret(setting, default_value=None):
-    """Provádí funkci ``get_secret`` v rámci modulu ``webclient.webclient.settings.base``."""
+    """Zajišťuje logiku funkce ``get_secret``.
+    
+    :param setting: Vstupní hodnota parametru ``setting`` použitého při zpracování.
+    :param default_value: Vstupní hodnota parametru ``default_value`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     file_path = (
         "/run/secrets/db_conf"
         if os.path.exists("/run/secrets/db_conf")
@@ -35,7 +40,12 @@ def get_secret(setting, default_value=None):
 
 
 def get_mail_secret(setting, default_value=None):
-    """Provádí funkci ``get_mail_secret`` v rámci modulu ``webclient.webclient.settings.base``."""
+    """Zajišťuje logiku funkce ``get_mail_secret``.
+    
+    :param setting: Vstupní hodnota parametru ``setting`` použitého při zpracování.
+    :param default_value: Vstupní hodnota parametru ``default_value`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     file_mail_path = (
         "/run/secrets/mail_conf"
         if os.path.exists("/run/secrets/mail_conf")
@@ -58,7 +68,11 @@ def get_mail_secret(setting, default_value=None):
 
 # REDIS SETTINGS
 def get_plain_redis_pass(default_value=""):
-    """Provádí funkci ``get_plain_redis_pass`` v rámci modulu ``webclient.webclient.settings.base``."""
+    """Zajišťuje logiku funkce ``get_plain_redis_pass``.
+    
+    :param default_value: Vstupní hodnota parametru ``default_value`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
             return file.readline().rstrip()
@@ -67,7 +81,11 @@ def get_plain_redis_pass(default_value=""):
 
 
 def get_redis_pass(default_value=""):
-    """Provádí funkci ``get_redis_pass`` v rámci modulu ``webclient.webclient.settings.base``."""
+    """Zajišťuje logiku funkce ``get_redis_pass``.
+    
+    :param default_value: Vstupní hodnota parametru ``default_value`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
             return ":" + file.readline().rstrip() + "@"
@@ -276,7 +294,11 @@ ROSETTA_UWSGI_AUTO_RELOAD = False
 
 
 def rosetta_translation_rights(user):
-    """Provádí funkci ``rosetta_translation_rights`` v rámci modulu ``webclient.webclient.settings.base``."""
+    """Zajišťuje logiku funkce ``rosetta_translation_rights``.
+    
+    :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     from core.constants import ROLE_UPRAVA_TEXTU
 
     return user.groups.filter(id=ROLE_UPRAVA_TEXTU).count() > 0

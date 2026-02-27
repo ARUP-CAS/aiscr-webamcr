@@ -18,11 +18,17 @@ logger = logging.getLogger("tests")
 class AkceSamostatneNalezy(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``AkceSamostatneNalezy`` pro modul ``webclient.pas.tests.test_selenium``."""
     def go_to_form(self):
-        """Provádí funkci ``AkceSamostatneNalezy.go_to_form`` v rámci modulu ``webclient.pas.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/pas/zapsat")
 
     def create_PAS(self):
-        """Provádí funkci ``AkceSamostatneNalezy.create_PAS`` v rámci modulu ``webclient.pas.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``create_PAS``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.go_to_form()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("M-202105907")

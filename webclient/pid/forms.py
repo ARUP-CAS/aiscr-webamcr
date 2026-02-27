@@ -5,7 +5,10 @@ from django.utils.translation import gettext as _
 class FormWithOrcid:
     """Zapouzdřuje chování třídy ``FormWithOrcid`` pro modul ``webclient.pid.forms``."""
     def clean_orcid(self):
-        """Provádí funkci ``FormWithOrcid.clean_orcid`` v rámci modulu ``webclient.pid.forms``."""
+        """Zajišťuje logiku funkce ``clean_orcid``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         data = self.cleaned_data["orcid"]
         return "https://orcid.org/" + data if len(data) > 0 else None
 
@@ -13,7 +16,10 @@ class FormWithOrcid:
 class FormWithWikidata:
     """Zapouzdřuje chování třídy ``FormWithWikidata`` pro modul ``webclient.pid.forms``."""
     def clean_wikidata(self):
-        """Provádí funkci ``FormWithWikidata.clean_wikidata`` v rámci modulu ``webclient.pid.forms``."""
+        """Zajišťuje logiku funkce ``clean_wikidata``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         data = self.cleaned_data["wikidata"]
         return "https://www.wikidata.org/entity/" + data if len(data) > 0 else None
 

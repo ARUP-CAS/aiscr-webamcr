@@ -11,7 +11,10 @@ logger = logging.getLogger("request.timer")
 
 
 def get_slow_request_settings():
-    """Provádí funkci ``get_slow_request_settings`` v rámci modulu ``webclient.core.log_middleware``."""
+    """Zajišťuje logiku funkce ``get_slow_request_settings``.
+    
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     try:
         settings_query = CustomAdminSettings.objects.filter(item_group="settings", item_id="variables")
         return json.loads(settings_query.last().value)["SLOW_REQUEST_THRESHOLD"]
@@ -53,11 +56,19 @@ class LogMiddleware:
     """
 
     def __init__(self, get_response):
-        """Zpracuje volání ``LogMiddleware.__init__`` v rámci modulu ``webclient.core.log_middleware``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param get_response: Vstupní hodnota parametru ``get_response`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.get_response = get_response
 
     def __call__(self, request):
-        """Zpracuje volání ``LogMiddleware.__call__`` v rámci modulu ``webclient.core.log_middleware``."""
+        """Zajišťuje logiku funkce ``__call__``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         start = time.monotonic()
         log_request_data.url = request.get_full_path()
         log_request_data.user_id = (
@@ -100,10 +111,16 @@ class LogMiddleware:
 
     @staticmethod
     def get_request_url():
-        """Provádí funkci ``LogMiddleware.get_request_url`` v rámci modulu ``webclient.core.log_middleware``."""
+        """Zajišťuje logiku funkce ``get_request_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return getattr(log_request_data, "url", None)
 
     @staticmethod
     def get_user_id():
-        """Provádí funkci ``LogMiddleware.get_user_id`` v rámci modulu ``webclient.core.log_middleware``."""
+        """Zajišťuje logiku funkce ``get_user_id``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return getattr(log_request_data, "user_id", "anonymous")

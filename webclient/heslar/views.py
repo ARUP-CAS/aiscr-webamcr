@@ -21,7 +21,10 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
     """
 
     def get_queryset(self):
-        """Provádí funkci ``RuianKatastrAutocomplete.get_queryset`` v rámci modulu ``webclient.heslar.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = RuianKatastr.objects.all()
         if self.q:
             new_qs = qs.filter(nazev__istartswith=self.q).annotate(qs_order=Value(0, IntegerField()))
@@ -140,7 +143,10 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     """
 
     def get_queryset(self):
-        """Provádí funkci ``DokumentTypAutocomplete.get_queryset`` v rámci modulu ``webclient.heslar.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -153,7 +159,10 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
     """
 
     def get_queryset(self):
-        """Provádí funkci ``DokumentFormatAutocomplete.get_queryset`` v rámci modulu ``webclient.heslar.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(id__in=MODEL_3D_DOKUMENT_FORMATS)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -166,7 +175,10 @@ class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     """
 
     def get_queryset(self):
-        """Provádí funkci ``PristupnostAutocomplete.get_queryset`` v rámci modulu ``webclient.heslar.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -179,7 +191,10 @@ class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetVie
     """
 
     def get_queryset(self):
-        """Provádí funkci ``HeslarAutocompleteView.get_queryset`` v rámci modulu ``webclient.heslar.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = Heslar.objects.all()
         heslar_nazev = self.forwarded.get("heslar_nazev", None)
         if self.q:
@@ -195,7 +210,10 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
     """
 
     def get_queryset(self):
-        """Provádí funkci ``HeslarNazevAutocompleteView.get_queryset`` v rámci modulu ``webclient.heslar.views``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         qs = HeslarNazev.objects.all()
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -203,7 +221,13 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
 
 
 def heslar_list(heslo_nazev, filter={}, use_exclude=False):
-    """Provádí funkci ``heslar_list`` v rámci modulu ``webclient.heslar.views``."""
+    """Zajišťuje logiku funkce ``heslar_list``.
+    
+    :param heslo_nazev: Vstupní hodnota parametru ``heslo_nazev`` použitého při zpracování.
+    :param filter: Vstupní hodnota parametru ``filter`` použitého při zpracování.
+    :param use_exclude: Vstupní hodnota parametru ``use_exclude`` použitého při zpracování.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     hesla = Heslar.objects.filter(nazev_heslare=heslo_nazev)
     if use_exclude:
         hesla_filtered = hesla.exclude(**filter)

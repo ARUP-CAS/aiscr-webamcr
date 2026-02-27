@@ -25,7 +25,11 @@ class DateRangeField(forms.DateField):
     """
 
     def to_python(self, value):
-        """Zpracuje volání ``DateRangeField.to_python`` v rámci modulu ``webclient.oznameni.forms``."""
+        """Zajišťuje logiku funkce ``to_python``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if isinstance(value, DateRange):
             return value
         values = value.split("-")
@@ -53,7 +57,11 @@ class DateRangeWidget(forms.TextInput):
     """
 
     def format_value(self, value):
-        """Zpracuje volání ``DateRangeWidget.format_value`` v rámci modulu ``webclient.oznameni.forms``."""
+        """Zajišťuje logiku funkce ``format_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
@@ -113,7 +121,12 @@ class OznamovatelForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``OznamovatelForm.__init__`` v rámci modulu ``webclient.oznameni.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         required = kwargs.pop("required", True)
         required_next = kwargs.pop("required_next", False)
@@ -202,11 +215,19 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
     )
 
     def clean_send_mail(self):
-        """Provádí funkci ``OznamovatelProjektCreateForm.clean_send_mail`` v rámci modulu ``webclient.oznameni.forms``."""
+        """Zajišťuje logiku funkce ``clean_send_mail``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.cleaned_data.get("send_mail", False)
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``OznamovatelProjektCreateForm.__init__`` v rámci modulu ``webclient.oznameni.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         if "send_mail" in self.data and self.data["send_mail"] == "":
             self.data = self.data.copy()
@@ -288,7 +309,12 @@ class ProjektOznameniForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``ProjektOznameniForm.__init__`` v rámci modulu ``webclient.oznameni.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         change = kwargs.pop("change", False)
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
         self.fields["ident_cely"].required = False

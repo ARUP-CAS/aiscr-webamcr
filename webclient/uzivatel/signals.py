@@ -22,7 +22,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Organizace, weak=False)
 def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
-    """Provádí funkci ``orgnaizace_save_metadata`` v rámci modulu ``webclient.uzivatel.signals``."""
+    """Zajišťuje logiku funkce ``orgnaizace_save_metadata``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Organizace``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         fedora_transaction = get_or_create_transaction(instance)
@@ -35,7 +41,13 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
 
 @receiver(post_save, sender=Osoba, weak=False)
 def osoba_save_metadata(sender, instance: Osoba, **kwargs):
-    """Provádí funkci ``osoba_save_metadata`` v rámci modulu ``webclient.uzivatel.signals``."""
+    """Zajišťuje logiku funkce ``osoba_save_metadata``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Osoba``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         fedora_transaction = get_or_create_transaction(instance)
@@ -80,7 +92,14 @@ def create_ident_cely(sender, instance: User, **kwargs):
 
 @receiver(post_save, sender=User, weak=False)
 def user_post_save_method(sender, instance: User, created: bool, **kwargs):
-    """Provádí funkci ``user_post_save_method`` v rámci modulu ``webclient.uzivatel.signals``."""
+    """Zajišťuje logiku funkce ``user_post_save_method``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``User``).
+    :param created: Vstupní hodnota parametru ``created`` použitého při zpracování. (typ: ``bool``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     fedora_transaction = instance.active_transaction
     logger.debug(
         "uzivatel.signals.user_post_save_method.start",
@@ -96,7 +115,10 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
     if not instance.suppress_signal:
 
         def check_password_change():
-            """Provádí funkci ``check_password_change`` v rámci modulu ``webclient.uzivatel.signals``."""
+            """Zajišťuje logiku funkce ``check_password_change``.
+            
+            :return: Návratová hodnota funkce po zpracování vstupních dat.
+            """
             if created:
                 return False
             try:
@@ -162,7 +184,14 @@ def send_account_confirmed_email(sender, instance: User, created):
 
 @receiver(pre_delete, sender=User, weak=False)
 def delete_user_connections(sender, instance, *args, **kwargs):
-    """Provádí funkci ``delete_user_connections`` v rámci modulu ``webclient.uzivatel.signals``."""
+    """Zajišťuje logiku funkce ``delete_user_connections``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování.
+    :param args: Poziční argumenty předané voláním.
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("uzivatel.signals.delete_user_connections.start", extra={"ident_cely": instance.ident_cely})
     Historie.save_record_deletion_record(record=instance)
     if instance.active_transaction:
@@ -195,7 +224,13 @@ def delete_profile(sender, instance: User, *args, **kwargs):
 
 @receiver(pre_delete, sender=Osoba, weak=False)
 def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
-    """Provádí funkci ``osoba_delete_repository_container`` v rámci modulu ``webclient.uzivatel.signals``."""
+    """Zajišťuje logiku funkce ``osoba_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Osoba``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("uzivatel.signals.osoba_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = get_or_create_transaction(instance)
     instance.record_deletion(fedora_transaction, close_transaction=True)
@@ -207,7 +242,13 @@ def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
 
 @receiver(pre_delete, sender=Organizace, weak=False)
 def organizace_delete_repository_container(sender, instance: Organizace, **kwargs):
-    """Provádí funkci ``organizace_delete_repository_container`` v rámci modulu ``webclient.uzivatel.signals``."""
+    """Zajišťuje logiku funkce ``organizace_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Organizace``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(
         "uzivatel.signals.organizace_delete_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )
@@ -222,7 +263,14 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
 @receiver(user_logged_in, weak=False)
 def log_user_signin(sender, user, request, **kwargs):
     # Získá IP adresu z objektu request.
-    """Provádí funkci ``log_user_signin`` v rámci modulu ``webclient.uzivatel.signals``."""
+    """Zajišťuje logiku funkce ``log_user_signin``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param user: Vstupní hodnota parametru ``user`` použitého při zpracování.
+    :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
         ip_address = x_forwarded_for.split(",")[0]

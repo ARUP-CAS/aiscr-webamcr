@@ -95,7 +95,11 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
             )
 
     def arch_z_save_metadata(inner_close_transaction=False):
-        """Provádí funkci ``arch_z_save_metadata`` v rámci modulu ``webclient.dj.signals``."""
+        """Zajišťuje logiku funkce ``arch_z_save_metadata``.
+        
+        :param inner_close_transaction: Vstupní hodnota parametru ``inner_close_transaction`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         instance.archeologicky_zaznam.save_metadata(fedora_transaction)
         if inner_close_transaction:
             fedora_transaction.mark_transaction_as_closed()
@@ -118,7 +122,13 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
 
 @receiver(pre_delete, sender=DokumentacniJednotka, weak=False)
 def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
-    """Provádí funkci ``pre_delete_dokumentacni_jednotka`` v rámci modulu ``webclient.dj.signals``."""
+    """Zajišťuje logiku funkce ``pre_delete_dokumentacni_jednotka``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``DokumentacniJednotka``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("dj.signals.pre_delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
     pian: Pian = instance.pian
@@ -156,7 +166,13 @@ def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **k
 
 @receiver(post_delete, sender=DokumentacniJednotka, weak=False)
 def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
-    """Provádí funkci ``delete_dokumentacni_jednotka`` v rámci modulu ``webclient.dj.signals``."""
+    """Zajišťuje logiku funkce ``delete_dokumentacni_jednotka``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``DokumentacniJednotka``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("dj.signals.delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     if instance.suppress_signal:
         logger.debug(
@@ -182,7 +198,10 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
         if instance.close_active_transaction_when_finished:
 
             def save_metadata():
-                """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.dj.signals``."""
+                """Zajišťuje logiku funkce ``save_metadata``.
+                
+                :return: Návratová hodnota funkce po zpracování vstupních dat.
+                """
                 if not instance.suppress_signal_arch_z:
                     instance.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
                 if instance.save_pian_metadata:

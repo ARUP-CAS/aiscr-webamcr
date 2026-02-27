@@ -22,34 +22,50 @@ class RedisConnector:
 
     @classmethod
     def _create_connection(cls):
-        """Provádí funkci ``RedisConnector._create_connection`` v rámci modulu ``webclient.core.connectors``."""
+        """Zajišťuje logiku funkce ``_create_connection``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         cls.r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass())
 
     # Tento konektor vrací přímo řetězec, takže není potřeba volat `decode("utf-8")`.
     @classmethod
     def _create_connection_decode(cls):
-        """Provádí funkci ``RedisConnector._create_connection_decode`` v rámci modulu ``webclient.core.connectors``."""
+        """Zajišťuje logiku funkce ``_create_connection_decode``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         cls.r_decode = redis.Redis(
             host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass(), decode_responses=True
         )
 
     @classmethod
     def get_connection(cls) -> redis.Redis:
-        """Provádí funkci ``RedisConnector.get_connection`` v rámci modulu ``webclient.core.connectors``."""
+        """Zajišťuje logiku funkce ``get_connection``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``redis.Redis``).
+        """
         if not cls.r:
             cls._create_connection()
         return cls.r
 
     @classmethod
     def get_connection_decode(cls) -> redis.Redis:
-        """Provádí funkci ``RedisConnector.get_connection_decode`` v rámci modulu ``webclient.core.connectors``."""
+        """Zajišťuje logiku funkce ``get_connection_decode``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``redis.Redis``).
+        """
         if not cls.r_decode:
             cls._create_connection_decode()
         return cls.r_decode
 
     @staticmethod
     def prepare_model_for_redis(table):
-        """Zpracuje volání ``RedisConnector.prepare_model_for_redis`` v rámci modulu ``webclient.core.connectors``."""
+        """Zajišťuje logiku funkce ``prepare_model_for_redis``.
+        
+        :param table: Vstupní hodnota parametru ``table`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         columns = table.columns.iterall()
         row = table.rows[0]
         data = {}

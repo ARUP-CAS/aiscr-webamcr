@@ -17,7 +17,11 @@ logger = logging.getLogger(__name__)
 class AdbReadOnlyTextInput(forms.TextInput):
     """Zapouzdřuje chování třídy ``AdbReadOnlyTextInput`` pro modul ``webclient.adb.forms``."""
     def format_value(self, value):
-        """Zpracuje volání ``AdbReadOnlyTextInput.format_value`` v rámci modulu ``webclient.adb.forms``."""
+        """Zajišťuje logiku funkce ``format_value``.
+        
+        :param value: Vstupní hodnota parametru ``value`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if value:
             osoba_query = Osoba.objects.filter(pk=value)
             if osoba_query.count():
@@ -191,7 +195,12 @@ class VyskovyBodFormSetHelper(FormHelper):
     """
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``VyskovyBodFormSetHelper.__init__`` v rámci modulu ``webclient.adb.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False

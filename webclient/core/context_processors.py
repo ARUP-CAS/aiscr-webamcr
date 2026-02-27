@@ -50,7 +50,11 @@ def digi_links_from_settings(request):
 
 
 def logout_next_url(request):
-    """Provádí funkci ``logout_next_url`` v rámci modulu ``webclient.core.context_processors``."""
+    """Zajišťuje logiku funkce ``logout_next_url``.
+    
+    :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(f"request path: {request.path}")
     return {"logout_next_url": request.path}
 
@@ -128,7 +132,11 @@ def auto_logout_client(request):
 
 
 def main_shows(request):
-    """Provádí funkci ``main_shows`` v rámci modulu ``webclient.core.context_processors``."""
+    """Zajišťuje logiku funkce ``main_shows``.
+    
+    :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     main_show = {}
     if request.user.is_authenticated:
         if request.user.hlavni_role.id == ROLE_ADMIN_ID:

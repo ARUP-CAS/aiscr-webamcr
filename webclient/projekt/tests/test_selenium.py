@@ -31,12 +31,22 @@ logger = logging.getLogger("tests")
 class ProjektSeleniumTest(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``ProjektSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def _get_table_columns(self, table):
-        """Zpracuje volání ``ProjektSeleniumTest._get_table_columns`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_get_table_columns``.
+        
+        :param table: Vstupní hodnota parametru ``table`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         elements = table.find_elements(By.TAG_NAME, "th")
         return [e.find_element(By.TAG_NAME, "a").text for e in elements]
 
     def _check_column_hiding(self, element_id_initial, column_header_text, initial=True):
-        """Provádí funkci ``ProjektSeleniumTest._check_column_hiding`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``_check_column_hiding``.
+        
+        :param element_id_initial: Vstupní hodnota parametru ``element_id_initial`` použitého při zpracování.
+        :param column_header_text: Vstupní hodnota parametru ``column_header_text`` použitého při zpracování.
+        :param initial: Vstupní hodnota parametru ``initial`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.info(
             "CoreSeleniumTest._check_column_hiding",
             extra={
@@ -506,7 +516,14 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
     def ProjektZapsat(
         self, *, date_from=2, date_to=5, telefon="+420556123654", css_selector=".step:nth-child(3) .bs-stepper-circle"
     ):
-        """Provádí funkci ``ProjektZapsatSeleniumTest.ProjektZapsat`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``ProjektZapsat``.
+        
+        :param date_from: Vstupní hodnota parametru ``date_from`` použitého při zpracování.
+        :param date_to: Vstupní hodnota parametru ``date_to`` použitého při zpracování.
+        :param telefon: Vstupní hodnota parametru ``telefon`` použitého při zpracování.
+        :param css_selector: Vstupní hodnota parametru ``css_selector`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.login()
         self.go_to_form()
         project_count_old = Projekt.objects.count()
@@ -542,7 +559,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         return [project_count_old, project_count_new]
 
     def go_to_form(self):
-        """Provádí funkci ``ProjektZapsatSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/zapsat")
 
     def test_003_projekt_zapsat_p_001(self):
@@ -653,7 +673,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
 class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``ProjektZahajitVyzkumSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Provádí funkci ``ProjektZahajitVyzkumSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/vyber?stav=2&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_007_projekt_zahajit_vyzkum_p_001(self):
@@ -712,7 +735,10 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
 class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``ProjektUkoncitVyzkumSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Provádí funkci ``ProjektUkoncitVyzkumSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/vyber?stav=3&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_008_projekt_ukoncit_vyzkum_p_001(self):
@@ -815,7 +841,10 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
 class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``ProjektUzavritSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Provádí funkci ``ProjektUzavritSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/vyber?stav=4&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_010_projekt_uzavrit_p_001(self):
@@ -897,7 +926,10 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
     next_stav_projektu = PROJEKT_STAV_ARCHIVOVANY
 
     def go_to_form(self):
-        """Provádí funkci ``ProjektArchivovatSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/vyber?stav=5&sort=datum_ukonceni&sort=ident_cely")
 
     def test_012_projekt_archivovat_p_001(self):
@@ -981,7 +1013,10 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
 class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``ProjektVratitSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Provádí funkci ``ProjektVratitSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_014_projekt_vratit_p_001(self):
@@ -1190,7 +1225,10 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``ProjektNavrhnoutZrusitSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Provádí funkci ``ProjektNavrhnoutZrusitSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_019_projekt_zrusit_p_001(self):
@@ -1420,7 +1458,10 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
 class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
     """Zapouzdřuje chování třídy ``ProjektVytvoreniProjektoveAkce`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Provádí funkci ``ProjektVytvoreniProjektoveAkce.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
+        """Zajišťuje logiku funkce ``go_to_form``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_023_projekt_vytvori_akci_p_001(self):

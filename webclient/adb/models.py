@@ -95,15 +95,26 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         db_table = "adb"
 
     def get_absolute_url(self):
-        """Provádí funkci ``Adb.get_absolute_url`` v rámci modulu ``webclient.adb.models``."""
+        """Zajišťuje logiku funkce ``get_absolute_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
-        """Provádí funkci ``Adb.get_permission_object`` v rámci modulu ``webclient.adb.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.dokumentacni_jednotka.get_permission_object()
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``Adb.__init__`` v rámci modulu ``webclient.adb.models``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(Adb, self).__init__(*args, **kwargs)
         try:
             self.initial_dokumentacni_jednotka = self.dokumentacni_jednotka
@@ -114,7 +125,14 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None, main_record=None):
-        """Provádí funkci ``Adb.create_transaction`` v rámci modulu ``webclient.adb.models``."""
+        """Zajišťuje logiku funkce ``create_transaction``.
+        
+        :param transaction_user: Vstupní hodnota parametru ``transaction_user`` použitého při zpracování.
+        :param success_message: Vstupní hodnota parametru ``success_message`` použitého při zpracování.
+        :param error_message: Vstupní hodnota parametru ``error_message`` použitého při zpracování.
+        :param main_record: Vstupní hodnota parametru ``main_record`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -228,11 +246,17 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         ]
 
     def get_absolute_url(self):
-        """Provádí funkci ``VyskovyBod.get_absolute_url`` v rámci modulu ``webclient.adb.models``."""
+        """Zajišťuje logiku funkce ``get_absolute_url``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.adb.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
-        """Provádí funkci ``VyskovyBod.get_permission_object`` v rámci modulu ``webclient.adb.models``."""
+        """Zajišťuje logiku funkce ``get_permission_object``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         return self.adb.get_permission_object()
 
 

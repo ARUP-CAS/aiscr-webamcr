@@ -7,7 +7,10 @@ class LokalitaConfig(AppConfig):
     name = "lokalita"
 
     def ready(self):
-        """Provádí funkci ``LokalitaConfig.ready`` v rámci modulu ``webclient.lokalita.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(LokalitaConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import lokalita.signals

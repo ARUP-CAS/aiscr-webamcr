@@ -56,7 +56,11 @@ class PesListView(LoginRequiredMixin, TemplateView):
     template_name = "notifikace_projekty/pes_list.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``PesListView.get_context_data`` v rámci modulu ``webclient.notifikace_projekty.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = super().get_context_data(**kwargs)
         old_pes_post = self.request.session.pop("_old_pes_post", None)
         PesFormset = {}
@@ -129,7 +133,13 @@ class PesCreateView(LoginRequiredMixin, View):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``PesCreateView.post`` v rámci modulu ``webclient.notifikace_projekty.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         formsets = []
         valid = True
         pes_form_valid = False
@@ -196,7 +206,10 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
     button = _("notifikaceProjekty.views.pesSmazatView.submitButton")
 
     def get_zaznam(self) -> Pes:
-        """Provádí funkci ``PesSmazatView.get_zaznam`` v rámci modulu ``webclient.notifikace_projekty.views``."""
+        """Zajišťuje logiku funkce ``get_zaznam``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``Pes``).
+        """
         id = self.kwargs.get("pk")
         return get_object_or_404(
             Pes,
@@ -204,7 +217,10 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         )
 
     def get_object_identification(self) -> str:
-        """Provádí funkci ``PesSmazatView.get_object_identification`` v rámci modulu ``webclient.notifikace_projekty.views``."""
+        """Zajišťuje logiku funkce ``get_object_identification``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat. (typ: ``str``).
+        """
         pes: Pes = self.get_zaznam()
         object = pes.content_object
         if isinstance(object, RuianKatastr) or isinstance(object, RuianOkres) or isinstance(object, RuianKraj):
@@ -214,7 +230,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         return ""
 
     def get_context_data(self, **kwargs):
-        """Zpracuje volání ``PesSmazatView.get_context_data`` v rámci modulu ``webclient.notifikace_projekty.views``."""
+        """Zajišťuje logiku funkce ``get_context_data``.
+        
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
@@ -227,12 +247,24 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Provádí funkci ``PesSmazatView.get`` v rámci modulu ``webclient.notifikace_projekty.views``."""
+        """Zajišťuje logiku funkce ``get``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Provádí funkci ``PesSmazatView.post`` v rámci modulu ``webclient.notifikace_projekty.views``."""
+        """Zajišťuje logiku funkce ``post``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         try:
             zaznam = self.get_zaznam()
             zaznam.delete()

@@ -12,7 +12,14 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Adb, weak=False)
 def adb_save_metadata(sender, instance: Adb, created, **kwargs):
-    """Provádí funkci ``adb_save_metadata`` v rámci modulu ``webclient.adb.signals``."""
+    """Zajišťuje logiku funkce ``adb_save_metadata``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Adb``).
+    :param created: Vstupní hodnota parametru ``created`` použitého při zpracování.
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(
         "adb.signals.adb_save_metadata.start",
         extra={"ident_cely": instance.ident_cely, "signal": instance.suppress_signal},
@@ -35,7 +42,13 @@ def adb_save_metadata(sender, instance: Adb, created, **kwargs):
 
 @receiver(post_save, sender=VyskovyBod, weak=False)
 def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
-    """Provádí funkci ``vyskovy_bod_save_metadata`` v rámci modulu ``webclient.adb.signals``."""
+    """Zajišťuje logiku funkce ``vyskovy_bod_save_metadata``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``VyskovyBod``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug(
         "adb.signals.vyskovy_bod_save_metadata.start",
         extra={"ident_cely": instance.ident_cely, "signal": instance.suppress_signal},
@@ -56,7 +69,13 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
 
 @receiver(post_delete, sender=Adb, weak=False)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
-    """Provádí funkci ``adb_delete_repository_container`` v rámci modulu ``webclient.adb.signals``."""
+    """Zajišťuje logiku funkce ``adb_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``Adb``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     invalidate_arch_z_related_models()
     fedora_transaction = instance.active_transaction
@@ -78,7 +97,13 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
 
 @receiver(post_delete, sender=VyskovyBod, weak=False)
 def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwargs):
-    """Provádí funkci ``vyskovy_bod_delete_repository_container`` v rámci modulu ``webclient.adb.signals``."""
+    """Zajišťuje logiku funkce ``vyskovy_bod_delete_repository_container``.
+    
+    :param sender: Vstupní hodnota parametru ``sender`` použitého při zpracování.
+    :param instance: Vstupní hodnota parametru ``instance`` použitého při zpracování. (typ: ``VyskovyBod``).
+    :param kwargs: Pojmenované argumenty předané voláním.
+    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    """
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
     invalidate_arch_z_related_models()

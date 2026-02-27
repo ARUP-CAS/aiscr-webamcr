@@ -18,5 +18,10 @@ class UpdateMetadataFileForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``UpdateMetadataFileForm.__init__`` v rámci modulu ``webclient.fedora_management.forms``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super().__init__(*args, **kwargs)

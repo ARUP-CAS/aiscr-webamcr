@@ -47,7 +47,12 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
     """
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``UserNotificationTypeInlineForm.__init__`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
             Q(ident_cely__icontains="S-E-A")
@@ -63,7 +68,12 @@ class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     model = UserNotificationType.user.through
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``UserNotificationTypeInlineFormset.__init__`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
             notification_ids = UserNotificationType.objects.filter(
@@ -93,7 +103,11 @@ class UserNotificationTypeInline(admin.TabularInline):
     verbose_name_plural = _("uzivatel.admin.form.notifikace.user")
 
     def get_queryset(self, request):
-        """Zpracuje volání ``UserNotificationTypeInline.get_queryset`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(self.model._default_manager)
         queryset = super(UserNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(
@@ -106,7 +120,13 @@ class UserNotificationTypeInline(admin.TabularInline):
         return queryset
 
     def get_extra(self, request, obj=None, **kwargs):
-        """Provádí funkci ``UserNotificationTypeInline.get_extra`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``get_extra``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         extra = 1  # Výchozí hodnota je 0.
         if not obj:  # pouze při vytváření nového záznamu
             extra = UserNotificationType.objects.filter(
@@ -118,7 +138,12 @@ class UserNotificationTypeInline(admin.TabularInline):
         return extra
 
     def __init__(self, parent_model, admin_site):
-        """Provádí funkci ``UserNotificationTypeInline.__init__`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param parent_model: Vstupní hodnota parametru ``parent_model`` použitého při zpracování.
+        :param admin_site: Vstupní hodnota parametru ``admin_site`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
 
 
@@ -133,7 +158,11 @@ class PesNotificationTypeInline(admin.TabularInline):
     form.admin_app = True
 
     def get_queryset(self, request):
-        """Zpracuje volání ``PesNotificationTypeInline.get_queryset`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         queryset = super(PesNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(content_type__model=self.model_type)
         return queryset
@@ -181,7 +210,12 @@ class PesUserNotificationTypeInlineForm(forms.ModelForm):
     """
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``PesUserNotificationTypeInlineForm.__init__`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PesUserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
             Q(ident_cely__in=PES_NOTIFICATIONS)
@@ -193,7 +227,12 @@ class PesUserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     model = UserNotificationType.user.through
 
     def __init__(self, *args, **kwargs):
-        """Provádí funkci ``PesUserNotificationTypeInlineFormset.__init__`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``__init__``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(PesUserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
             notification_ids = UserNotificationType.objects.filter(Q(ident_cely__in=PES_NOTIFICATIONS)).values_list(
@@ -220,14 +259,24 @@ class PesUserNotificationTypeInline(admin.TabularInline):
     verbose_name_plural = _("uzivatel.admin.form.notifikace.psy")
 
     def get_queryset(self, request):
-        """Zpracuje volání ``PesUserNotificationTypeInline.get_queryset`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``get_queryset``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug(self.model._default_manager)
         queryset = super(PesUserNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(Q(usernotificationtype__ident_cely__in=PES_NOTIFICATIONS))
         return queryset
 
     def get_extra(self, request, obj=None, **kwargs):
-        """Provádí funkci ``PesUserNotificationTypeInline.get_extra`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``get_extra``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         extra = 1  # Výchozí hodnota je 0.
         if not obj:  # pouze při vytváření nového záznamu
             extra = UserNotificationType.objects.filter(Q(ident_cely__in=PES_NOTIFICATIONS)).count()
@@ -319,14 +368,26 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     change_form_template = "admin/admin_user_change.html"
 
     def has_delete_permission(self, request, obj=None):
-        """Provádí funkci ``CustomUserAdmin.has_delete_permission`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``has_delete_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj:
             if Historie.objects.filter(uzivatel=obj).count() > 1000:
                 return False
         return True
 
     def save_model(self, request, obj: User, form, change):
-        """Provádí funkci ``CustomUserAdmin.save_model`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``save_model``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování. (typ: ``User``).
+        :param form: Vstupní hodnota parametru ``form`` použitého při zpracování.
+        :param change: Vstupní hodnota parametru ``change`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         fedora_transaction = FedoraTransaction()
         user = request.user
         obj.created_from_admin_panel = True
@@ -460,7 +521,13 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         obj.save()
 
     def user_change_password(self, request, id, form_url=""):
-        """Provádí funkci ``CustomUserAdmin.user_change_password`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``user_change_password``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param id: Vstupní hodnota parametru ``id`` použitého při zpracování.
+        :param form_url: Vstupní hodnota parametru ``form_url`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if request.method == "POST":
             user = self.get_object(request, unquote(id))
             form = self.change_password_form(user, request.POST)
@@ -473,12 +540,23 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return super(CustomUserAdmin, self).user_change_password(request, id, form_url=form_url)
 
     def log_deletion(self, request, object, object_repr):
-        """Provádí funkci ``CustomUserAdmin.log_deletion`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``log_deletion``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param object: Vstupní hodnota parametru ``object`` použitého při zpracování.
+        :param object_repr: Vstupní hodnota parametru ``object_repr`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         object.deleted_by_user = request.user
         super().log_deletion(request, object, object_repr)
 
     def get_readonly_fields(self, request, obj=None):
-        """Provádí funkci ``CustomUserAdmin.get_readonly_fields`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``get_readonly_fields``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         fields = super().get_readonly_fields(request, obj)
         if obj:
             if request.user.ident_cely == obj.ident_cely:
@@ -486,7 +564,13 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return fields
 
     def render_change_form(self, request, context, **kwargs):
-        """Provádí funkci ``CustomUserAdmin.render_change_form`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``render_change_form``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param context: Vstupní hodnota parametru ``context`` použitého při zpracování.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         object_id = request.resolver_match.kwargs.get("object_id")
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
         context.update(
@@ -502,7 +586,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return super().render_change_form(request, context, **kwargs)
 
     def get_urls(self):
-        """Provádí funkci ``CustomUserAdmin.get_urls`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``get_urls``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         urls = super().get_urls()
         custom_urls = [
             path(
@@ -514,7 +601,11 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return custom_urls + urls
 
     def get_histore_related_records(self, object_id):
-        """Zpracuje volání ``CustomUserAdmin.get_histore_related_records`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``get_histore_related_records``.
+        
+        :param object_id: Vstupní hodnota parametru ``object_id`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if User.objects.filter(pk=object_id).exists():
             uzivatel = User.objects.get(pk=object_id)
             history = Historie.objects.filter(uzivatel=uzivatel)
@@ -525,7 +616,14 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             return None, None
 
     def delete_history_records(self, request, object_id, *args, **kwargs):
-        """Provádí funkci ``CustomUserAdmin.delete_history_records`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``delete_history_records``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param object_id: Vstupní hodnota parametru ``object_id`` použitého při zpracování.
+        :param args: Poziční argumenty předané voláním.
+        :param kwargs: Pojmenované argumenty předané voláním.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
         obj: User = self.get_object(request, object_id)
         if request.method == "GET":
@@ -557,7 +655,12 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             return HttpResponseRedirect(change_url)
 
     def delete_model(self, request, obj):
-        """Provádí funkci ``CustomUserAdmin.delete_model`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``delete_model``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         with transaction.atomic():
             pes_set = obj.pes_set.all()
             for item in pes_set:
@@ -573,7 +676,12 @@ class CustomGroupAdmin(admin.ModelAdmin):
     """
 
     def has_delete_permission(self, request, obj=None):
-        """Provádí funkci ``CustomGroupAdmin.has_delete_permission`` v rámci modulu ``webclient.uzivatel.admin``."""
+        """Zajišťuje logiku funkce ``has_delete_permission``.
+        
+        :param request: HTTP požadavek zpracovávaný view funkcí nebo metodou.
+        :param obj: Vstupní hodnota parametru ``obj`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         if obj is not None:
             obj: Group
             user_count = User.objects.filter(groups__id__in=[obj.pk]).count()

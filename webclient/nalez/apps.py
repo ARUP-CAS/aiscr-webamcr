@@ -6,7 +6,10 @@ class NalezConfig(AppConfig):
     name = "nalez"
 
     def ready(self):
-        """Provádí funkci ``NalezConfig.ready`` v rámci modulu ``webclient.nalez.apps``."""
+        """Zajišťuje logiku funkce ``ready``.
+        
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         super(NalezConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import nalez.signals

@@ -32,7 +32,12 @@ class Command(BaseCommand):
     help = _("core.management.commands.import_permissions.Command.help")
 
     def handle(self, *args, **options):
-        """Provádí funkci ``Command.handle`` v rámci modulu ``webclient.core.management.commands.import_permissions``."""
+        """Zajišťuje logiku funkce ``handle``.
+        
+        :param args: Poziční argumenty předané voláním.
+        :param options: Vstupní hodnota parametru ``options`` použitého při zpracování.
+        :return: Návratová hodnota funkce po zpracování vstupních dat.
+        """
         logger.debug("core.management.commands.import_permissions.start")
         with open("core/resources/uzivatelska_prava.csv", "rb") as f:
             permission_file = SimpleUploadedFile(
