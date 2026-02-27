@@ -377,7 +377,7 @@
 {% endblock %}
 
 {% block modal-form %}
-  <div class="modal fade app-modal-form" tabindex="-1" role="dialog" id="modal-form">
+  <div class="modal fade app-modal-form" tabindex="-1" role="dialog" id="modal-form" data-bs-focus="false">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
       <div class="modal-content form" id="id-modal-content"></div>
     </div>
@@ -708,6 +708,28 @@
         }, 1000);
       })
     })
+
+  //Fix for select2 multiple select, when clicking on x to remove selected item, 
+  //the item is removed from select2 but not from select element, 
+  //so we need to trigger change event on select element to update the select2
+  $(document).on('mousedown', '.select2-selection__choice__remove', function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      var $choice = $(this).closest('.select2-selection__choice');
+      var val = $choice.data('select2-id'); // or use the title attribute
+
+      // Find the bound select element and deselect the value
+      var $select = $(this).closest('.select2-container').prev('select');
+      // OR: var $select = $('#your-select-id');
+
+      var choiceText = $choice.attr('title');
+      $select.find('option').filter(function() {
+          return $(this).text() === choiceText || $(this).val() === choiceText;
+      }).prop('selected', false);
+
+      $select.trigger('change');
+  });
 
   $('.selectpicker.form-select').on('show.bs.select', function () {
       const closestDiv = $(this).closest('.content-with-table-responsive');

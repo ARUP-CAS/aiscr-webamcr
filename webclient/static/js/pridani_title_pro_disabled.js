@@ -1,5 +1,5 @@
 function initializeTooltips() {
-    $('[rel="tooltip"]').tooltip({
+    $('[data-bs-toggle="tooltip"]').tooltip({
         container: '#app-page-wrapper',
         html: true,
     });
@@ -10,8 +10,8 @@ window.onload = function () {
     for (let index = 0; index < inputs.length; ++index) {
         if (inputs[index].readOnly === true) {
             inputs[index].title = inputs[index].value
-            inputs[index].setAttribute("data-toggle", "tooltip")
-            inputs[index].setAttribute("data-placement", "top")
+            inputs[index].setAttribute("data-bs-toggle", "tooltip")
+            inputs[index].setAttribute("data-bs-placement", "top")
             inputs[index].setAttribute("rel", "tooltip")
         }
     }
@@ -19,8 +19,8 @@ window.onload = function () {
     for (let index = 0; index < textareas.length; ++index) {
         if (textareas[index].readOnly === true) {
             textareas[index].title = textareas[index].value
-            textareas[index].setAttribute("data-toggle", "tooltip")
-            textareas[index].setAttribute("data-placement", "top")
+            textareas[index].setAttribute("data-bs-toggle", "tooltip")
+            textareas[index].setAttribute("data-bs-placement", "top")
             textareas[index].setAttribute("rel", "tooltip")
         }
     }
@@ -29,8 +29,8 @@ window.onload = function () {
         const element = elements[index]
         if (element.disabled) {
             element.title = element.value
-            element.setAttribute("data-toggle", "tooltip")
-            element.setAttribute("data-placement", "top")
+            element.setAttribute("data-bs-toggle", "tooltip")
+            element.setAttribute("data-bs-placement", "top")
             element.setAttribute("rel", "tooltip")
         }
     }

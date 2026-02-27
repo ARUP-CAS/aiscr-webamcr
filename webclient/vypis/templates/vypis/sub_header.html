@@ -1,7 +1,7 @@
 {% for section, field in sub_header.items %}
         {% if section != "section_name" and section != "template" %}
         {% if field.value %}
-        <div><strong>{{field.label}}:</strong>&nbsp;{{ field.value }}{% if not forloop.last %}&nbsp;|&nbsp;{% endif %}</div>
+        <strong>{{field.label}}:</strong>&nbsp;{{ field.value }}{% if not forloop.last %}&nbsp;|&nbsp;{% endif %}
         {% endif %}
         {% endif %}
     {% endfor %}

@@ -116,31 +116,26 @@
   padding: 0;
 }
 
-.input-osoba.form-group #div_id_vedouci_projektu .input-group {
-  display: grid;
-  grid-template-columns: auto min-content;
+.input-osoba .mb-3#div_id_vedouci_projektu .input-group {
+  flex-wrap: nowrap;
 
   .dropdown-menu.show {
     width: inherit;
   }
 
-  .input-group-text {
-    grid-column: 2;
-
-    .btn {
-      height: 1.5rem !important;
-      margin-bottom: unset !important;
-    }
+  .input-group-text .btn {
+    height: 1.5rem !important;
+    margin-bottom: unset !important;
   }
 }
 
-.input-osoba .form-group .input-group-append .input-group-text {
+.input-osoba .mb-3 .input-group-text {
   padding-left: 0rem !important;
   padding-right: 0rem !important;
   border: 0px solid #ced4da;
 }
 
-.input-osoba .input-group-append .input-group-text {
+.input-osoba .input-group .input-group-text {
   padding-left: 0rem !important;
   padding-right: 0rem !important;
   border: 0px solid #ced4da;
@@ -376,21 +371,23 @@ form {
 
   }
 
-  .input-group:has(#other_cadastre_id) .input-group-text .material-icons {
-    font-size: 16px;
-    align-content: center;
+  .input-group:has(#other_cadastre_id) .input-group-text {
+    background-color: #c8cacd;
+    justify-content: center;
+
+    .material-icons {
+      font-size: 16px;
+      align-content: center;
+      cursor: pointer;
+    }
   }
 
-  .input-group-append {
-    cursor: pointer;
+  .input-group .input-group-text {
+    @extend .pt-0, .pb-0, .ps-1, .pe-1 !optional;
+    border-radius: 0rem 0.25rem 0.25rem 0rem !important;
 
-    .input-group-text {
-      @extend .pt-0, .pb-0, .ps-1, .pe-1 !optional;
-      border-radius: 0rem 0.25rem 0.25rem 0rem !important;
-
-      .material-icons {
-        @include setIcon(22);
-      }
+    .material-icons {
+      @include setIcon(22);
     }
   }
 
@@ -1144,7 +1141,7 @@ span.badge-span .badge {
     display: grid;
     grid-template-columns: 0 auto 15%;
 
-    .input-group-append {
+    .input-group-text {
       position: relative;
       grid-column: 3;
 
