@@ -50,7 +50,7 @@ services:
 
   redis:
     build: ./redis
-    image: redis:8.6.0
+    image: redis:8.6.1
     ports:
       - "6379:6379"
     secrets:
