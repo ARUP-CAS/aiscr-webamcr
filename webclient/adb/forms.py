@@ -199,7 +199,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
     Funkce která vrací formulář VB pro formset.
 
     Args:
-        pian (pian): pian objeckt.
+        pian (pian): objekt PIAN.
 
         niveleta (niveleta): niveleta objekt.
 
@@ -262,12 +262,12 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def _has_initial_values(self):
             """
-            Metoda která vrací či ma formulář vyplnená initial hodnota
+            Metoda, která vrací, zda má formulář vyplněné initial hodnoty.
             Args:
-            pian (pian): pian objeckt.
+            pian (pian): objekt PIAN.
             niveleta (niveleta): niveleta objekt
             Returns:
-            has_initial_values: boolean jestli formulář má initial hodnotu nebo ne.
+            has_initial_values: boolean, zda formulář má initial hodnotu, nebo ne.
             """
             cleaned_data = self.cleaned_data
             has_initial_values = False
@@ -298,7 +298,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def is_valid(self):
             """
-            Metoda která vrací zda je formulář správně vyplněn, zakomponována metoda na vyplnení initial hodnoty.
+            Metoda, která vrací, zda je formulář správně vyplněn; je zde zakomponována metoda na vyplnění initial hodnoty.
             """
             parent_is_valid = super().is_valid()
             if self._has_initial_values():
@@ -307,7 +307,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def save(self, commit=True):
             """
-            Metoda která ukládá formulář do modelu, zakomponována metoda na vyplnení initial hodnoty.
+            Metoda, která ukládá formulář do modelu; je zde zakomponována metoda na vyplnění initial hodnoty.
             """
             if self._has_initial_values():
                 return None

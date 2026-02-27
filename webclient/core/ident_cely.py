@@ -42,7 +42,7 @@ def get_temporary_project_ident(region: str) -> str:
     """
     Metoda pro výpočet dočasného identu projektu. Přiděluje se pro projekty vytvoření v rámci oznámení.
 
-    Logika složení je: "X-" + region (M anebo C) + "-" + 9 místne číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
+    Logika složení je: "X-" + region (M nebo C) + "-" + 9místné číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
     Příklad: "X-M-000001234"
     """
     id_number = f"{get_next_sequence('projekt_xident_seq'):09}"
@@ -54,7 +54,7 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
     Metoda pro výpočet identu projektové akce.
 
     Logika složení je: ident_cely projektu + písmeno abecedy v posloupnosti od A po Z
-    Pri překročení maxima čísla sekvence (99999) se vráti uživateli na web chybová hláška.
+    Při překročení maxima čísla sekvence (99999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A"
     """
     MAXIMAL_PROJECT_EVENTS: int = 26
@@ -104,7 +104,7 @@ def get_temp_dokument_ident(rada, region):
     """
     Metoda pro výpočet dočasného identu dokumentu.
 
-    Logika složení je: "X-" + region (M anebo C) + "-" + řada (TX/DD/3D) + "-" 9 místní číslo (id ze sequence dokument_xident_seq doplněno na 9 čísel nulami)
+    Logika složení je: "X-" + region (M nebo C) + "-" + řada (TX/DD/3D) + "-" 9místné číslo (ID ze sekvence dokument_xident_seq doplněné na 9 číslic nulami)
     Příklad: "X-M-TX-000000034"
     """
     sequence = f"{get_next_sequence('dokument_xident_seq'):09}"
@@ -117,7 +117,7 @@ def get_cast_dokumentu_ident(dokument: Dokument) -> str:
     Metoda pro výpočet identu části dokumentu.
 
     Logika složení je: ident_cely dokumentu + "-D" + pořadové číslo části per dokument doplněno na 3 číslice nulami.
-    Pri překročení maxima DJ u dokumentu (999) se vráti uživateli na web chybová hláška.
+    Při překročení maxima DJ u dokumentu (999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-DD-202100034-D001"
     """
     MAXIMUM: int = 999
@@ -142,7 +142,7 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
     Metoda pro výpočet identu dokumentační jednotky akce.
 
     Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ per arch záznam doplněno na 2 číslice nulami.
-    Pri překročení maxima DJ u arch záznamu (99) se vráti uživateli na web chybová hláška.
+    Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-D01"
     """
     MAXIMAL_EVENT_DJS: int = 99
@@ -164,8 +164,8 @@ def get_komponenta_ident(zaznam, fedora_transaction: FedoraTransaction) -> str:
     """
     Metoda pro výpočet identu komponenty DJ a dokument části.
 
-    Logika složení je: ident_cely arch záznamu anebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulama.
-    Pri prekročení maxima komponent u záznamu (999) se vráti uživateli na web chybová hláška.
+    Logika složení je: ident_cely arch záznamu nebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
+    Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
     """
     MAXIMAL_KOMPONENTAS: int = 999
@@ -229,8 +229,8 @@ def get_sn_ident(projekt: Projekt) -> str:
     """
     Metoda pro výpočet identu samostatního nálezu projektu.
 
-    Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 číslic nulama.
-    Pri prekročení maxima SN u projektu (99999) se vráti uživateli na web chybová hláška.
+    Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 číslic nulami.
+    Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-N00001"
     """
     MAXIMAL_FINDS: int = 99999
@@ -251,8 +251,8 @@ def get_adb_ident(pian: Pian) -> str:
     """
     Metoda pro výpočet identu ADB.
 
-    Logika složení je: "ADB-" + mapno pro sm5 + "-" + číslo sekvence z tabulky 'adb_sekvence' (podle kladysm5) doplněno na 6 číslic nulama.
-    Pri prekročení maxima sekvence u ADB (999999) se vráti uživateli na web chybová hláška.
+    Logika složení je: "ADB-" + mapno pro sm5 + "-" + číslo sekvence z tabulky 'adb_sekvence' (podle kladysm5) doplněno na 6 číslic nulami.
+    Při překročení maxima sekvence u ADB (999999) se uživateli na web vrátí chybová hláška.
     Příklad: "ADB-PRAH43-000012"
     """
     MAXIMAL_ADBS: int = 999999
@@ -298,7 +298,7 @@ def get_temp_lokalita_ident(typ, region):
     """
     Metoda pro výpočet dočasného identu lokality.
 
-    Logika složení je: "X-" + region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence lokalita_xident_seq doplněno na 9 číslic.
+    Logika složení je: "X-" + region (M nebo C) + "-" + typ + 9místné číslo ze sekvence lokalita_xident_seq doplněné na 9 číslic.
 
     Příklad: "X-M-L000123456"
     """
@@ -311,7 +311,7 @@ def get_temp_akce_ident(region):
     """
     Metoda pro výpočet dočasného identu samostatný akce.
 
-    Logika složení je: "X-" + region (M anebo C) + "-9" + 9 místní číslo ze sekvence akce_xident_seq doplněno na 9 číslic -A.
+    Logika složení je: "X-" + region (M nebo C) + "-9" + 9místné číslo ze sekvence akce_xident_seq doplněné na 9 číslic a suffix „-A“.
 
     Příklad: "X-M-9000123456A"
     """

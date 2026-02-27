@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadata):
     """
-    Class pro db model externí zdroj.
+    Databázový model externího zdroje.
     """
 
     STATES = (
@@ -232,7 +232,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 def get_perm_ez_ident():
     """
     Funkce pro výpočet ident celý pro externí zdroj.
-    Funkce vráti pro permanentní ident id podle sekvence externího zdroje.
+    Funkce vrátí pro permanentní ident ID podle sekvence externího zdroje.
     """
     MAXIMUM: int = 9999999
     prefix = "BIB-"
@@ -264,7 +264,7 @@ def get_perm_ez_ident():
 
 class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), models.Model):
     """
-    Class pro db model autora externího zdroje, zohledňuje pořadí zadání.
+    Databázový model autora externího zdroje se zohledněním pořadí zadání.
     """
 
     externi_zdroj = models.ForeignKey(ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
@@ -281,7 +281,7 @@ class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), model
 
 class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), models.Model):
     """
-    Class pro db model editora externího zdroje, zohledňuje pořadí zadání.
+    Databázový model editora externího zdroje se zohledněním pořadí zadání.
     """
 
     externi_zdroj = models.ForeignKey(ExterniZdroj, models.CASCADE, db_column="externi_zdroj")

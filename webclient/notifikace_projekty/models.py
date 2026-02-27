@@ -7,7 +7,7 @@ from uzivatel.models import User
 
 class Pes(ExportModelOperationsMixin("pes"), models.Model):
     """
-    Class pro db model hlídací pes.
+    Databázový model hlídacího psa.
     """
 
     user = models.ForeignKey(User, models.CASCADE)

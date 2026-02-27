@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     """
-    Class pro db model pian.
+    Databázový model PIAN.
     """
 
     STATES = (
@@ -193,8 +193,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def set_permanent_ident_cely(self):
         """
-        Metoda pro nastavení permanentního ident celý pro pian.
-        Metoda vráti ident podle sekvence pianu.
+        Metoda pro nastavení permanentního identifikátoru pro PIAN.
+        Metoda vrátí identifikátor podle sekvence PIAN.
         """
         katastr = True if self.presnost.zkratka == "4" else False
         maximum: int = 999999 if katastr else 899999
@@ -249,7 +249,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
 class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
     """
-    Class pro db model klady zm.
+    Databázový model kladu ZM.
     """
 
     gid = models.AutoField(primary_key=True)
@@ -263,7 +263,7 @@ class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
 
 class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
     """
-    Class pro db model sekvence pianu podle klady zm 50 a katastru.
+    Databázový model sekvence PIAN podle kladu ZM 50 a katastru.
     """
 
     kladyzm50 = models.ForeignKey(

@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__)
 
 class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     """
-    Class pro db model dokument.
+    Databázový model dokumentu.
     """
 
     STATES = (
@@ -557,7 +557,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
     """
-    Class pro db model dokument část.
+    Databázový model části dokumentu.
     """
 
     archeologicky_zaznam = models.ForeignKey(
@@ -661,7 +661,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
     """
-    Class pro db model dokument extra data.
+    Databázový model doplňkových dat dokumentu.
     """
 
     dokument = models.OneToOneField(
@@ -744,7 +744,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
 
 class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
     """
-    Class pro db model dokument autori. Obsahuje pořadí.
+    Databázový model autorů dokumentu (včetně pořadí).
     """
 
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
@@ -759,7 +759,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
     """
-    Class pro db model dokument jazyky.
+    Databázový model jazyků dokumentu.
     """
 
     dokument = models.ForeignKey(
@@ -784,7 +784,7 @@ class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
 
 class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
     """
-    Class pro db model dokument osoby.
+    Databázový model osob dokumentu.
     """
 
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
@@ -797,7 +797,7 @@ class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
 
 class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Model):
     """
-    Class pro db model dokument posudky.
+    Databázový model posudků dokumentu.
     """
 
     dokument = models.ForeignKey(
@@ -822,7 +822,7 @@ class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Mod
 
 class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     """
-    Class pro db model tvary.
+    Databázový model tvarů.
     """
 
     dokument = models.ForeignKey(Dokument, on_delete=models.CASCADE, db_column="dokument")
@@ -853,7 +853,7 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
 
 class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):
     """
-    Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
+    Databázový model sekvence dokumentu podle roku a řady.
     """
 
     rada = models.ForeignKey(
@@ -874,7 +874,7 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
 
 class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     """
-    Class pro db model let.
+    Databázový model letu.
     """
 
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)

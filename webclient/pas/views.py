@@ -436,7 +436,7 @@ def vratit(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, sn):
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
@@ -500,7 +500,7 @@ def odeslat(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, sn):
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
@@ -598,7 +598,7 @@ def archivovat(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, sn):
         return JsonResponse(
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},

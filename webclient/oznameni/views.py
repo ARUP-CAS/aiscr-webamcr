@@ -111,7 +111,7 @@ class OznameniZapsatView(OznameniView):
                 projekt.katastry.add(*[i for i in dalsi_katastry])
                 projekt.save()
                 self.session_identifier.set_ident(projekt.ident_cely)
-                # Uložení vlastnictví projektu pro anonymního uživatele
+                # Uložení vlastnictví projektu pro anonymního uživatele.
                 self.session_identifier.set_project_ownership(projekt.ident_cely)
                 return redirect("oznameni:index2", ident_cely=projekt.ident_cely)
             else:

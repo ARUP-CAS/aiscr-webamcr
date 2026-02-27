@@ -389,7 +389,7 @@ def create(request):
                     projekt.set_zapsany(request.user)
                     form_projekt.save_m2m()
                     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-                        # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
+                        # Vytvoření oznamovatele – formulář je už zkontrolovaný na začátku.
                         oznamovatel = form_oznamovatel.save(commit=False)
                         oznamovatel.active_transaction = fedora_transaction
                         oznamovatel.projekt = projekt
@@ -659,7 +659,7 @@ def schvalit(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, projekt):
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
@@ -729,7 +729,7 @@ def prihlasit(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, projekt):
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
@@ -798,7 +798,7 @@ def zahajit_v_terenu(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, projekt):
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
@@ -848,7 +848,7 @@ def ukoncit_v_terenu(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, projekt):
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
@@ -897,14 +897,14 @@ def uzavrit(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, projekt):
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
     if request.method == "POST":
-        # Move all events to state A2
+        # Přesuň všechny akce do stavu A2.
         fedora_transaction = projekt.create_transaction(request.user, PROJEKT_USPESNE_UZAVREN)
         akce_query = Akce.objects.filter(projekt=projekt)
         for akce in akce_query:
@@ -981,7 +981,7 @@ def archivovat(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, projekt):
         return JsonResponse(
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},

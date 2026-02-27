@@ -1313,7 +1313,7 @@ def edit_model_3D(request, ident_cely):
             required=required_fields,
             required_next=required_fields_next,
         )
-        form_coor = CoordinatesDokumentForm(request.POST)  # Zmen musis ulozit data z formulare
+        form_coor = CoordinatesDokumentForm(request.POST)  # Pro uložení změn je potřeba zpracovat data z formuláře.
         form_komponenta = CreateKomponentaForm(
             obdobi_choices,
             areal_choices,
@@ -1506,7 +1506,7 @@ def create_model_3D(request):
                 dokument.ulozeni_originalu = Heslar.objects.get(id=PRIMARNE_DIGITALNI)
                 dokument.save()
                 dokument.set_zapsany(request.user)
-                # Vytvorit defaultni cast dokumentu
+                # Vytvořit výchozí část dokumentu.
                 kv = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
                 kv.save()
                 dc = DokumentCast(
@@ -1603,7 +1603,7 @@ def odeslat(request, ident_cely):
         logger.debug("dokument.views.odeslat.permission_denied", extra={"ident_cely": ident_cely})
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, dokument):
         logger.debug("dokument.views.odeslat.check_stav_changed", extra={"ident_cely": ident_cely})
 
@@ -1612,7 +1612,7 @@ def odeslat(request, ident_cely):
         fedora_transaction = dokument.create_transaction(request.user, DOKUMENT_USPESNE_ODESLAN, DOKUMENT_NELZE_ODESLAT)
         fedora_transaction.redirect_url = get_detail_json_view(ident_cely)
         old_ident = dokument.ident_cely
-        # Nastav identifikator na permanentny
+        # Nastav identifikátor na permanentní.
         returned_value = Dokument.set_permanent_identificator(dokument, request, messages, fedora_transaction)
         if isinstance(returned_value, JsonResponse):
             fedora_transaction.rollback_transaction()
@@ -1654,7 +1654,7 @@ def archivovat(request, ident_cely):
         logger.debug("dokument.views.archivovat.permission_denied", extra={"ident_cely": ident_cely})
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, dokument):
         logger.debug("dokument.views.archivovat.check_stav_changed", extra={"ident_cely": ident_cely})
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
@@ -1665,7 +1665,7 @@ def archivovat(request, ident_cely):
         dokument_casti = list(dokument.casti.all())
         try:
             with transaction.atomic():
-                # Nastav identifikator na permanentny
+                # Nastav identifikátor na permanentní.
                 if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
                     rada = get_dokument_rada(dokument.typ_dokumentu, dokument.material_originalu)
                     try:
@@ -1987,7 +1987,7 @@ def zapsat(request, zaznam=None):
                         ).save()
                         i = i + 1
 
-                    # Vytvorit defaultni cast dokumentu
+                    # Vytvořit výchozí část dokumentu.
                     if zaznam:
                         if isinstance(zaznam, ArcheologickyZaznam):
                             dc = DokumentCast(
@@ -2205,7 +2205,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         return JsonResponse({"redirect": redirect_name})
     else:
         if proj_ident_cely:
-            # Pridavam projektove dokumenty
+            # Přidávám projektové dokumenty.
             projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
             proj_dok_list = (
                 Dokument.objects.filter(casti__archeologicky_zaznam__akce__projekt=projekt)
@@ -2216,7 +2216,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
             context["pripojit"] = True
             return render(request, "core/transakce_table_modal.html", context)
         else:
-            # Pridavam vsechny dokumenty
+            # Přidávám všechny dokumenty.
             form = PripojitDokumentForm(ident_zaznam)
         context["form"] = form
         context["hide_table"] = True

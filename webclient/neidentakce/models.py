@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
     """
-    Class pro db model neident akce.
+    Databázový model neidentifikované akce.
     """
 
     katastr = models.ForeignKey(RuianKatastr, models.RESTRICT, db_column="katastr", blank=True, null=True)
@@ -47,7 +47,7 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
 
 class NeidentAkceVedouci(ExportModelOperationsMixin("neident_akce_vedouci"), models.Model):
     """
-    Class pro db model vedouciho neident akce.
+    Databázový model vedoucího neidentifikované akce.
     """
 
     neident_akce = models.ForeignKey(NeidentAkce, on_delete=models.CASCADE, db_column="neident_akce")

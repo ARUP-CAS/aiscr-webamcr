@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
     """
-    Třida pohledu pro zobrazení historie záznamu.
+    Třída pohledu pro zobrazení historie záznamu.
     Třída se dědí pro jednotlivá historie.
     """
 
@@ -36,7 +36,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     model = Historie
     template_name = "historie/historie_list.html"
     export_name = "export_historie_"
-    table_pagination = {"per_page": 25}  # defaultní počet záznamů v tabulce historie
+    table_pagination = {"per_page": 25}  # Výchozí počet záznamů v tabulce historie.
 
     context_typ = None  # např. "samostatny_nalez"
     lookup_kwarg = "ident_cely"  # URL parametr obsahující identifikátor
@@ -94,7 +94,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         if not fedora_data:
             return
         fedora_table = FedoraHistorieTable(fedora_data, prefix="fed-")
-        per_page = int(self.request.GET.get("fed-per_page", 25))  # defaultní počet záznamů v tabulce Fedora historie
+        per_page = int(self.request.GET.get("fed-per_page", 25))  # Výchozí počet záznamů v tabulce Fedora historie.
         RequestConfig(self.request, paginate={"per_page": per_page}).configure(fedora_table)
 
         context["fedora_table"] = fedora_table
@@ -131,7 +131,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
             fedora_table = context.get("fedora_table")
             if fedora_table is None:
                 return super().render_to_response(context, **response_kwargs)
-            # export tabulky Fedora historie
+            # Export tabulky Fedora historie.
             exporter = TableExport(export_format, fedora_table)
             return exporter.response(filename=self.get_export_filename(export_format, "export_fedora_historie_"))
         return super().render_to_response(context, **response_kwargs)
@@ -139,7 +139,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
 
 class ProjektHistorieListView(HistorieListView):
     """
-    Třida pohledu pro zobrazení historie projektu.
+    Třída pohledu pro zobrazení historie projektu.
     """
 
     context_typ = "projekt"
@@ -156,7 +156,7 @@ class ProjektHistorieListView(HistorieListView):
 
 class AkceHistorieListView(HistorieListView):
     """
-    Třida pohledu pro zobrazení historie akcií.
+    Třída pohledu pro zobrazení historie akcí.
     """
 
     context_typ = "akce"

@@ -16,7 +16,7 @@ class ExpertniListCreator(DocumentCreator):
     @staticmethod
     def _utf16_decimals(char, chunk_size=2):
         encoded_char = char.encode("utf-16-be")
-        # convert every `chunk_size` bytes to an integer
+        # Převede každých `chunk_size` bajtů na celé číslo.
         decimals = []
         for i in range(0, len(encoded_char), chunk_size):
             chunk = encoded_char[i : i + chunk_size]

@@ -91,7 +91,7 @@ class PianCreateForm(forms.ModelForm):
         validation_geom_jtsk = self.data.get("geom_sjtsk")
         self.validate_geom(validation_geom_jtsk, "5514")
         geom = self.cleaned_data.get("geom")
-        # Assign base map references
+        # Přiřaď referenční mapové listy.
         if isinstance(geom, Point):
             self.instance.typ = Heslar.objects.get(id=GEOMETRY_BOD)
             point = geom

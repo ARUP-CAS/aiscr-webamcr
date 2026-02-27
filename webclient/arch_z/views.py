@@ -384,7 +384,7 @@ class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRel
         show = self.get_shows()
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         jednotky = self.get_jednotky()
-        # zkontrolovat po MR
+        # Zkontrolovat po MR.
         context["j"] = get_dj_form_detail("akce", jednotka, jednotky, show, old_adb_post, self.request.user)
         return context
 
@@ -586,9 +586,9 @@ class AdbCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     """
-    Funkce pohledu pro zobrazení a spracováni editace akce.
-    Na začátku se kontroluje jestli stav není archivovaný.
-    Zobrazení pozostáva ze 3 formulářů: CreateArchZForm, CreateAkceForm, formset na další vedoucí.
+    Funkce pohledu pro zobrazení a zpracování editace akce.
+    Na začátku se kontroluje, jestli stav není archivovaný.
+    Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
     """
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if zaznam.stav == AZ_STAV_ARCHIVOVANY:
@@ -686,10 +686,10 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
     """
-    Funkce pohledu pro zobrazení a spracováni odeslání akce.
-    Na začátku se kontroluje jestli stav není jiný než zapsaný nebo nekdo nezmenil stav akce během odesílaní.
-    Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metody na modelu.
-    Po post volání se volá metoda na modelu pro posun stavu do odeslaná.
+    Funkce pohledu pro zobrazení a zpracování odeslání akce.
+    Na začátku se kontroluje, jestli stav není jiný než zapsaný nebo někdo nezměnil stav akce během odesílání.
+    Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
+    Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     az: ArcheologickyZaznam
@@ -746,10 +746,10 @@ def odeslat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
     """
-    Funkce pohledu pro zobrazení a spracováni archivace akce.
-    Na začátku se kontroluje jestli stav není jiný než odeslaný nebo nekdo nezmenil stav akce během archivace.
-    Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metody na modelu.
-    Po post volání se volá metoda na modelu pro posun stavu do odeslaná.
+    Funkce pohledu pro zobrazení a zpracování archivace akce.
+    Na začátku se kontroluje, jestli stav není jiný než odeslaný nebo někdo nezměnil stav akce během archivace.
+    Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
+    Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
     """
     logger.debug("arch_z.views.archivovat.start", extra={"ident_cely": ident_cely})
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
@@ -759,7 +759,7 @@ def archivovat(request, ident_cely):
             {"redirect": az.get_absolute_url()},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
+    # Momentálně zbytečné, případná chyba se propaguje výše.
     if check_stav_changed(request, az):
         return JsonResponse(
             {"redirect": az.get_absolute_url()},
@@ -832,10 +832,10 @@ def archivovat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     """
-    Funkce pohledu pro zobrazení a spracováni vrácení stacu akce o jedno naspátek.
-    Na začátku se kontroluje jestli nekdo nezmenil stav akce během vrácení.
-    Pro vrácení se používa formulář pro vrácení, který je jednotný napríč aplikací.
-    Po post volání se volá metoda na modelu pro posun stavu naspátek.
+    Funkce pohledu pro zobrazení a zpracování vrácení stavu akce o jeden krok zpět.
+    Na začátku se kontroluje, jestli někdo nezměnil stav akce během vrácení.
+    Pro vrácení se používá formulář pro vrácení, který je jednotný napříč aplikací.
+    Po POST volání se volá metoda na modelu pro posun stavu zpět.
     Pokud se jedná o projektovou akci, tak se vrací i stav projektu ze stavu uzavřený nebo archivovaný.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
@@ -940,24 +940,24 @@ def vratit(request, ident_cely):
 def zapsat(request, projekt_ident_cely=None):
     """
     Funkce pohledu pro vytvoření akce.
-    Na začátku se kontroluje jestli jde o vytvoření projektové nebo samostatné akce a případně zda je možné vytvořit projektovou akci.
-    Zobrazení pozostáva ze 3 formulářů: CreateArchZForm, CreateAkceForm, formset na další vedoucí.
+    Na začátku se kontroluje, jestli jde o vytvoření projektové nebo samostatné akce a zda je možné projektovou akci vytvořit.
+    Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
     """
     if projekt_ident_cely:
         projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
-        # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
+        # Projektové akce lze přidávat pouze pokud je projekt již přihlášen.
         if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
             logger.debug(
                 "arch_z.views.zapsat.stav_error", extra={"ident_cely": projekt_ident_cely, "stav": projekt.stav}
             )
-            raise PermissionDenied("Nelze pridat akci k projektu ve stavu " + str(projekt.stav))
-        # Projektove akce nelze vytvorit pro projekt typu pruzkum
+            raise PermissionDenied("Nelze přidat akci k projektu ve stavu " + str(projekt.stav))
+        # Projektové akce nelze vytvořit pro projekt typu průzkum.
         if projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
             logger.debug(
                 "arch_z.views.zapsat.typ_projektu_error",
                 extra={"ident_cely": projekt_ident_cely, "stav": projekt.stav},
             )
-            raise PermissionDenied(f"Nelze pridat akci k projektu typu {projekt.typ_projektu}")
+            raise PermissionDenied(f"Nelze přidat akci k projektu typu {projekt.typ_projektu}")
         uzamknout_specifik = True
         context = {
             "title": _("arch_z.views.zapsat.projektovaAkce.title.text"),
@@ -1022,7 +1022,7 @@ def zapsat(request, projekt_ident_cely=None):
                     az.save()
                     form_az.save_m2m()
                     # Toto je nutné zavolat pro uložení many-to-many vazeb (katastry).
-                    # protože používáme `commit = False`
+                    # Protože používáme `commit = False`.
                     az.set_zapsany(request.user)
                     akce = form_akce.save(commit=False)
 
@@ -1117,9 +1117,9 @@ def zapsat(request, projekt_ident_cely=None):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     """
-    Funkce pohledu pro zobrazení a spracováni smazání akce.
-    Na začátku se kontroluje jestli nekdo nezmenil stav akce během smazání.
-    Po post volání se volá metoda na modelu pro smazání akce.
+    Funkce pohledu pro zobrazení a zpracování smazání akce.
+    Na začátku se kontroluje, jestli někdo nezměnil stav akce během smazání.
+    Po POST volání se volá metoda na modelu pro smazání akce.
     """
     az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
@@ -1639,7 +1639,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
     def get(self, request, *args, **kwargs):
         """
-        Metoda pro vrácení stránky pri voláni GET.
+        Metoda pro vrácení stránky při volání GET.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
@@ -1711,7 +1711,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
     def get(self, request, *args, **kwargs):
         """
-        Metoda pro vrácení stránky pri voláni GET s formulářem pro výber projektu.
+        Metoda pro vrácení stránky při volání GET s formulářem pro výběr projektu.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):

@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
     """
-    Class pro db model kladysm5.
+    Databázový model kladu SM5.
     """
 
     gid = models.IntegerField(primary_key=True)
@@ -34,7 +34,7 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
 
 class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     """
-    Class pro db model ADB.
+    Databázový model ADB.
     Obsahuje vazbu na dokumentační jednotku.
     """
 
@@ -153,7 +153,7 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
 
 class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
     """
-    Class pro db model vyškový bod.
+    Databázový model výškového bodu.
     Obsahuje vazbu na ADB.
     """
 

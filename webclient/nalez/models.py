@@ -8,7 +8,7 @@ from komponenta.models import Komponenta
 
 class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
     """
-    Class pro db model nalez objekt.
+    Databázový model objektu nálezu.
     """
 
     komponenta = models.ForeignKey(
@@ -59,7 +59,7 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
 
 class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
     """
-    Class pro db model nalez predmet.
+    Databázový model předmětu nálezu.
     """
 
     komponenta = models.ForeignKey(
