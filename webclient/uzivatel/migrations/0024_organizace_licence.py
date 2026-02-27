@@ -5,14 +5,6 @@ from django.db import migrations, models
 
 
 def set_default_licence(apps, schema_editor):
-    """Funkce `set_default_licence` v modulu `webclient.uzivatel.migrations.0024_organizace_licence`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param apps: Vstupní hodnota používaná při zpracování.
-    :param schema_editor: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
     Organizace = apps.get_model('uzivatel', 'Organizace')
     get_default_licence = __import__('uzivatel.models', fromlist=['get_default_licence']).get_default_licence
     default_licence = get_default_licence()
@@ -21,10 +13,6 @@ def set_default_licence(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0024_organizace_licence`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ('heslar', '0011_ruiankraj_email'),
         ('uzivatel', '0023_add_notifikace_typ_E-N-09'),

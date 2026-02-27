@@ -5,10 +5,6 @@ from core.constants import PIAN_NEPOTVRZEN
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.pian.migrations.0002_default`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     initial = True
 
     dependencies = [

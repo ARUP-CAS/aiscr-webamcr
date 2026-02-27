@@ -4,10 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.ez.migrations.0008_rename_organizace_nazev_externizdroj_organizace`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("ez", "0007_remove_externizdroj_organizace_nazev_and_more"),
     ]

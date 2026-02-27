@@ -6,10 +6,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.projekt.migrations.0009_projekt_geom_sjtsk_projekt_geom_system`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("projekt", "0008_alter_projekt_datum_ukonceni_and_more"),
     ]

@@ -6,10 +6,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.dokument.migrations.0013_dokumentextradata_geom_sjtsk_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("dokument", "0012_alter_dokument_options_and_more"),
     ]

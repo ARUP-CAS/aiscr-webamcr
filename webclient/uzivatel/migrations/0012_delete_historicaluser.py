@@ -5,10 +5,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0012_delete_historicaluser`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("uzivatel", "0011_notificationslog_exception_notificationslog_status"),
     ]

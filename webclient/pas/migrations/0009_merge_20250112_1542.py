@@ -5,10 +5,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.pas.migrations.0009_merge_20250112_1542`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("pas", "0008_remove_samostatnynalez_geom_sjtsk_updated_at_and_more"),
         ("pas", "0008_samostatnynalez_igsn_alter_samostatnynalez_projekt"),

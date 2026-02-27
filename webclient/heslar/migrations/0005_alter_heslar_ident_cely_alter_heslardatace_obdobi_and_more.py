@@ -5,10 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.heslar.migrations.0005_alter_heslar_ident_cely_alter_heslardatace_obdobi_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("heslar", "0004_alter_ruiankatastr_kod_alter_ruiankatastr_nazev"),
     ]

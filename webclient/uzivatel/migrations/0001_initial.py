@@ -16,10 +16,6 @@ from core.constants import ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0001_initial`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     initial = True
 
     dependencies = [

@@ -5,10 +5,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.ez.migrations.0010_externizdroj_doi`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("ez", "0009_alter_externizdroj_datum_rd"),
     ]
