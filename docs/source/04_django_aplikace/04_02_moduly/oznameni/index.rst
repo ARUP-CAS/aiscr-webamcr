@@ -5,7 +5,7 @@ Dokumentace modulu oznameni.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Obsah:
+   :caption: Contents:
 
    models
    forms

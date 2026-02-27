@@ -5,7 +5,7 @@ Dokumentace modulu fedora_management.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Obsah:
+   :caption: Contents:
 
    forms
    views

@@ -5,7 +5,7 @@ Dokumentace modulu webclient.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Obsah:
+   :caption: Contents:
 
    asgi
    celery

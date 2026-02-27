@@ -5,7 +5,7 @@ Dokumentace modulu xml_generator.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Obsah:
+   :caption: Contents:
 
    models
    generator

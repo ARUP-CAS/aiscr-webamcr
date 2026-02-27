@@ -5,7 +5,7 @@ Dokumentace modulu lokalita.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Obsah:
+   :caption: Contents:
 
    models
    forms
