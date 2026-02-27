@@ -8,36 +8,60 @@ Třídy
 
 .. py:class:: HeslarHierarchieForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``HeslarHierarchieForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: HeslarOdkazForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``HeslarOdkazForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: OsobaAdminForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``OsobaAdminForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: OrganizaceAdminForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``OrganizaceAdminForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 

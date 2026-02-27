@@ -23,7 +23,7 @@ def allowed_user_groups(allowed_groups):
         @wraps(func)
         def _arguments_wrapper(request, *args, **kwargs):
             """Provádí operaci arguments wrapper.
-            
+
             :param request: Django HTTP požadavek použitý při zpracování.
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.

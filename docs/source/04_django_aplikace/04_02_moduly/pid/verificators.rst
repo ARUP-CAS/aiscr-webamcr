@@ -8,16 +8,28 @@ Funkce
 
 .. py:function:: verify_doi(doi)
 
-   Popis není k dispozici.
+   Provádí operaci verify doi.
+
+   :param doi: Vstupní hodnota ``doi`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: verify_orcid(orcid)
 
-   Popis není k dispozici.
+   Provádí operaci verify orcid.
+
+   :param orcid: Vstupní hodnota ``orcid`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: verify_ror(ror)
 
-   Popis není k dispozici.
+   Provádí operaci verify ror.
+
+   :param ror: Vstupní hodnota ``ror`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: verify_wikidata(wikidata)
 
-   Popis není k dispozici.
+   Provádí operaci verify wikidata.
+
+   :param wikidata: Vstupní hodnota ``wikidata`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.

@@ -14,6 +14,10 @@ Třídy
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: DokumentTypAutocomplete
 
@@ -22,6 +26,10 @@ Třídy
    **Metody:**
 
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentFormatAutocomplete
@@ -32,6 +40,10 @@ Třídy
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: PristupnostAutocomplete
 
@@ -40,6 +52,10 @@ Třídy
    **Metody:**
 
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: HeslarAutocompleteView
@@ -50,6 +66,10 @@ Třídy
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: HeslarNazevAutocompleteView
 
@@ -58,6 +78,10 @@ Třídy
    **Metody:**
 
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -85,4 +109,9 @@ Funkce
 
 .. py:function:: heslar_list(heslo_nazev, filter, use_exclude)
 
-   Popis není k dispozici.
+   Provádí operaci heslar list.
+
+   :param heslo_nazev: Vstupní hodnota ``heslo_nazev`` pro danou operaci.
+   :param filter: Vstupní hodnota ``filter`` pro danou operaci.
+   :param use_exclude: Vstupní hodnota ``use_exclude`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.

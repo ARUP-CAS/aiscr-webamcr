@@ -8,9 +8,14 @@ Třídy
 
 .. py:class:: UserLogFilter
 
-   Popis není k dispozici.
+   Implementuje komponentu ``UserLogFilter`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: filter()
+
+      Filtruje hodnotu.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 

@@ -30,7 +30,7 @@ class AkceVedouciFormSetHelper(FormHelper):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -52,9 +52,10 @@ def create_akce_vedouci_objekt_form(readonly=True):
 
     class CreateAkceVedouciObjektForm(forms.ModelForm):
         """Implementuje komponentu ``CreateAkceVedouciObjektForm`` v rámci aplikace."""
+
         def clean(self):
             """Provádí operaci clean.
-            
+
             :return: Vrací výsledek provedené operace."""
             cleaned_data = super().clean()
             if (cleaned_data.get("vedouci", None) is None and cleaned_data.get("organizace", None) is not None) or (
@@ -64,6 +65,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
 
         class Meta:
             """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = AkceVedouci
             fields = ["vedouci", "organizace"]
 
@@ -91,7 +93,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
 
         def __init__(self, *args, **kwargs):
             """Inicializuje instanci třídy.
-            
+
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
             :return: Funkce nevrací hodnotu (``None``)."""
@@ -112,6 +114,7 @@ class CreateArchZForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = ArcheologickyZaznam
         fields = (
             "hlavni_katastr",
@@ -250,14 +253,14 @@ class CustomDateInput(forms.DateField):
     @classmethod
     def year_only(cls, value):
         """Provádí operaci year only.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return re.fullmatch(r"\d{4}", value)
 
     def get_date_based_on_year(self, year):
         """Vrací date based on year.
-        
+
         :param year: Vstupní hodnota ``year`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return datetime.date(year, self.year_only_month, self.year_only_day)
@@ -331,6 +334,7 @@ class CreateAkceForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Akce
         fields = (
             "hlavni_vedouci",
@@ -422,7 +426,7 @@ class CreateAkceForm(forms.ModelForm):
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
@@ -565,4 +569,5 @@ class CreateAkceForm(forms.ModelForm):
 
 class ArchzFilterForm(BaseFilterForm):
     """Implementuje komponentu ``ArchzFilterForm`` v rámci aplikace."""
+
     list_to_check = ["historie_datum_zmeny_od", "datum_ukonceni", "datum_zahajeni"]

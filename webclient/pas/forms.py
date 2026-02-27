@@ -52,7 +52,7 @@ class ProjectModelChoiceField(ModelChoiceField):
 
     def label_from_instance(self, obj):
         """Provádí operaci label from instance.
-        
+
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
@@ -82,6 +82,7 @@ class PotvrditNalezForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = SamostatnyNalez
         fields = ("predano_organizace", "evidencni_cislo", "predano", "pristupnost")
         widgets = {
@@ -106,7 +107,7 @@ class PotvrditNalezForm(forms.ModelForm):
 
     def __init__(self, *args, readonly=False, predano_required=False, predano_hidden=False, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param predano_required: Vstupní hodnota ``predano_required`` pro danou operaci.
@@ -168,6 +169,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = SamostatnyNalez
         fields = (
             "projekt",
@@ -236,7 +238,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         self, *args, readonly=False, user=None, required=None, required_next=None, project_ident=None, **kwargs
     ):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
@@ -364,7 +366,7 @@ class CreateZadostForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -375,6 +377,7 @@ class CreateZadostForm(forms.Form):
 
 class PasFilterForm(BaseFilterForm):
     """Implementuje komponentu ``PasFilterForm`` v rámci aplikace."""
+
     list_to_check = ["historie_datum_zmeny_od", "datum_nalezu"]
 
 
@@ -391,7 +394,7 @@ class DeaktivovatSpolupraciForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

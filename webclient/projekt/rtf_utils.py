@@ -14,10 +14,11 @@ sys.path.append("../")
 
 class ExpertniListCreator(DocumentCreator):
     """Implementuje komponentu ``ExpertniListCreator`` v rámci aplikace."""
+
     @staticmethod
     def _utf16_decimals(char, chunk_size=2):
         """Provádí operaci utf16 decimals.
-        
+
         :param char: Vstupní hodnota ``char`` pro danou operaci.
         :param chunk_size: Vstupní hodnota ``chunk_size`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -34,7 +35,7 @@ class ExpertniListCreator(DocumentCreator):
     @staticmethod
     def _convert_text(text):
         """Převede text.
-        
+
         :param text: Vstupní hodnota ``text`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if text is None or len(str(text)) == 0:
@@ -46,7 +47,7 @@ class ExpertniListCreator(DocumentCreator):
     @staticmethod
     def _format_akce_str(akce):
         """Provádí operaci format akce str.
-        
+
         :param akce: Vstupní hodnota ``akce`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if akce.hlavni_typ is not None and akce.vedlejsi_typ is not None:
@@ -58,7 +59,7 @@ class ExpertniListCreator(DocumentCreator):
     @classmethod
     def _format_akce(cls, akce_all):
         """Provádí operaci format akce.
-        
+
         :param akce_all: Vstupní hodnota ``akce_all`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if akce_all.count() > 0:
@@ -69,7 +70,7 @@ class ExpertniListCreator(DocumentCreator):
 
     def _get_vysledek_text(self):
         """Vrací vysledek text.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.popup_parametry["vysledek"] == "pozitivni":
             text = """Potvrzujeme, že došlo ke splnění oznamovací povinnosti a bylo umožněno provést na dotčeném \n\
@@ -88,7 +89,7 @@ class ExpertniListCreator(DocumentCreator):
 
     def _get_typ_vyzkumu_text(self):
         """Vrací typ vyzkumu text.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         from projekt.forms import TYP_VYZKUMU_CHOICES
 
@@ -96,7 +97,7 @@ class ExpertniListCreator(DocumentCreator):
 
     def _generate_text(self):
         """Vygeneruje text.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         result = StyleSheet()
         normal_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22))
@@ -299,14 +300,14 @@ class ExpertniListCreator(DocumentCreator):
     @staticmethod
     def _open_file(name):
         """Provádí operaci open file.
-        
+
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return open(name, "w")
 
     def build_document(self) -> io.StringIO:
         """Sestaví document.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         self._generate_text()
         output = io.StringIO()
@@ -318,7 +319,7 @@ class ExpertniListCreator(DocumentCreator):
 
     def __init__(self, projekt, popup_parametry=None):
         """Inicializuje instanci třídy.
-        
+
         :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
         :param popup_parametry: Vstupní hodnota ``popup_parametry`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""

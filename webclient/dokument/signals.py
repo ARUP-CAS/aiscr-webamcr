@@ -72,7 +72,7 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
 @receiver(post_save, sender=Dokument, weak=False)
 def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     """Provádí operaci dokument save metadata.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -92,7 +92,7 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
 
         def save_metadata(close_transaction=False):
             """Uloží metadata.
-            
+
             :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             if instance.initial_let is None and instance.let is not None:
@@ -123,7 +123,7 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
 @receiver(post_save, sender=Let, weak=False)
 def let_save_metadata(sender, instance: Let, **kwargs):
     """Provádí operaci let save metadata.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -142,7 +142,7 @@ def let_save_metadata(sender, instance: Let, **kwargs):
 @receiver(post_delete, sender=Dokument, weak=False)
 def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
     """Provádí operaci dokument delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -162,7 +162,7 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
 
     def save_metadata(close_transaction=False):
         """Uloží metadata.
-        
+
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         for item in instance.casti.all():
@@ -188,7 +188,7 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
 @receiver(post_delete, sender=Let, weak=False)
 def let_delete_repository_container(sender, instance: Let, **kwargs):
     """Provádí operaci let delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -205,7 +205,7 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 @receiver(post_save, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **kwargs):
     """Provádí operaci dokument cast save metadata save.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param created: Vstupní hodnota ``created`` pro danou operaci.
@@ -261,7 +261,7 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
 @receiver(post_delete, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs):
     """Provádí operaci dokument cast save metadata delete.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -273,7 +273,7 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
 
     def save_metadata(close_transaction=False):
         """Uloží metadata.
-        
+
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if instance.initial_archeologicky_zaznam_id is not None and instance.suppress_signal_arch_z is False:
@@ -297,7 +297,7 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
 @receiver(post_save, sender=Tvar, weak=False)
 def tvar_save(sender, instance: Tvar, created, **kwargs):
     """Provádí operaci tvar save.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param created: Vstupní hodnota ``created`` pro danou operaci.
@@ -315,7 +315,7 @@ def tvar_save(sender, instance: Tvar, created, **kwargs):
 @receiver(post_delete, sender=Tvar, weak=False)
 def tvar_delete(sender, instance: Tvar, **kwargs):
     """Provádí operaci tvar delete.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.

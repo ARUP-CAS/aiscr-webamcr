@@ -16,7 +16,10 @@ Funkce
 
 .. py:function:: logout_next_url(request)
 
-   Popis není k dispozici.
+   Provádí operaci logout next url.
+
+   :param request: Django HTTP požadavek použitý při zpracování.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: auto_logout_client(request)
 
@@ -24,4 +27,7 @@ Funkce
 
 .. py:function:: main_shows(request)
 
-   Popis není k dispozici.
+   Provádí operaci main shows.
+
+   :param request: Django HTTP požadavek použitý při zpracování.
+   :return: Vrací výsledek provedené operace.

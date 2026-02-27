@@ -8,23 +8,31 @@ Třídy
 
 .. py:class:: FormWithOrcid
 
-   Popis není k dispozici.
+   Implementuje komponentu ``FormWithOrcid`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: clean_orcid()
 
+      Provádí operaci clean orcid.
+
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: FormWithWikidata
 
-   Popis není k dispozici.
+   Implementuje komponentu ``FormWithWikidata`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: clean_wikidata()
 
+      Provádí operaci clean wikidata.
+
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: UpdateDocumentObjectIdentifierFileForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``UpdateDocumentObjectIdentifierFileForm`` v rámci aplikace.
 

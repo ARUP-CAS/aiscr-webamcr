@@ -16,9 +16,10 @@ logger = logging.getLogger(__name__)
 
 class AdbReadOnlyTextInput(forms.TextInput):
     """Implementuje komponentu ``AdbReadOnlyTextInput`` v rámci aplikace."""
+
     def format_value(self, value):
         """Provádí operaci format value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if value:
@@ -35,6 +36,7 @@ class CreateADBForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Adb
         fields = (
             "typ_sondy",
@@ -195,7 +197,7 @@ class VyskovyBodFormSetHelper(FormHelper):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -246,6 +248,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         class Meta:
             """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = VyskovyBod
 
             fields = ("ident_cely", "typ", "northing", "easting", "niveleta")

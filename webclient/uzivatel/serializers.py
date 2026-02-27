@@ -23,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = ["ident_cely", "jmeno", "prijmeni", "email", "osoba"]
 

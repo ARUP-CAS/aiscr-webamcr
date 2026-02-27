@@ -10,9 +10,10 @@ from werkzeug.serving import make_ssl_devcert, run_simple
 
 class WerkzeugServerThread(Thread):
     """Implementuje komponentu ``WerkzeugServerThread`` v rámci aplikace."""
+
     def __init__(self, host="0.0.0.0", port=8000, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param host: Vstupní hodnota ``host`` pro danou operaci.
         :param port: Vstupní hodnota ``port`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -26,7 +27,7 @@ class WerkzeugServerThread(Thread):
 
     def setup_ssl(self):
         """Provádí operaci setup ssl.
-        
+
         :return: Vrací výsledek provedené operace."""
         try:
             cert_path, key_path = make_ssl_devcert("./core/tests/resources/ssl", host="localhost")
@@ -38,7 +39,7 @@ class WerkzeugServerThread(Thread):
 
     def run(self):
         """Spustí hodnotu.
-        
+
         :return: Vrací výsledek provedené operace."""
         try:
             self.setup_ssl()
@@ -57,13 +58,13 @@ class WerkzeugServerThread(Thread):
 
     def terminate(self):
         """Provádí operaci terminate.
-        
+
         :return: Vrací výsledek provedené operace."""
         pass
 
     def get_free_port(self):
         """Vrací free port.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(("127.0.0.1", 0))  # Bind na port 0, což znamená "najdi volný port"

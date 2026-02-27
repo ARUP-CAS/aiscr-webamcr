@@ -10,7 +10,7 @@ WIKIDATA_API_URL = "https://www.wikidata.org/wiki/"
 
 def verify_doi(doi):
     """Provádí operaci verify doi.
-    
+
     :param doi: Vstupní hodnota ``doi`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
     encoded_doi = quote(doi)
@@ -20,7 +20,7 @@ def verify_doi(doi):
 
 def verify_orcid(orcid):
     """Provádí operaci verify orcid.
-    
+
     :param orcid: Vstupní hodnota ``orcid`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
     headers = {"Accept": "application/json"}
@@ -30,7 +30,7 @@ def verify_orcid(orcid):
 
 def verify_ror(ror):
     """Provádí operaci verify ror.
-    
+
     :param ror: Vstupní hodnota ``ror`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
     response = requests.get(f"{ROR_API_URL}{ror}")
@@ -39,7 +39,7 @@ def verify_ror(ror):
 
 def verify_wikidata(wikidata):
     """Provádí operaci verify wikidata.
-    
+
     :param wikidata: Vstupní hodnota ``wikidata`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
     if wikidata.startswith("https://www.wikidata.org/entity/"):

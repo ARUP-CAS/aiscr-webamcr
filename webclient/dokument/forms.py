@@ -45,7 +45,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
     def clean(self, value):
         """Provádí operaci clean.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         qs = super().clean(value)
@@ -105,6 +105,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = DokumentExtraData
         fields = (
             "datum_vzniku",
@@ -223,7 +224,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
@@ -370,6 +371,7 @@ class EditDokumentForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         fields = (
             "typ_dokumentu",
@@ -465,7 +467,7 @@ class EditDokumentForm(forms.ModelForm):
         self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False, **kwargs
     ):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
@@ -582,6 +584,7 @@ class CreateModelDokumentForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         fields = (
             "typ_dokumentu",
@@ -633,7 +636,7 @@ class CreateModelDokumentForm(forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
@@ -699,6 +702,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = DokumentExtraData
         fields = (
             "format",
@@ -735,7 +739,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
@@ -776,7 +780,7 @@ class PripojitDokumentForm(forms.Form):
 
     def __init__(self, ident_zaznam, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param ident_zaznam: Vstupní hodnota ``ident_zaznam`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -811,12 +815,13 @@ class DokumentCastForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = DokumentCast
         fields = ("poznamka",)
 
     def __init__(self, readonly=False, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -846,7 +851,7 @@ class DokumentCastCreateForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -863,8 +868,10 @@ def create_tvar_form(not_readonly=True):
 
     class TvarForm(forms.ModelForm):
         """Implementuje komponentu ``TvarForm`` v rámci aplikace."""
+
         class Meta:
             """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = Tvar
             fields = ["tvar", "poznamka"]
             labels = {
@@ -888,7 +895,7 @@ def create_tvar_form(not_readonly=True):
 
         def __init__(self, *args, **kwargs):
             """Inicializuje instanci třídy.
-            
+
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
             :return: Funkce nevrací hodnotu (``None``)."""
@@ -915,7 +922,7 @@ class TvarFormSetHelper(FormHelper):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -927,4 +934,5 @@ class TvarFormSetHelper(FormHelper):
 
 class DokumentFilterForm(BaseFilterForm):
     """Implementuje komponentu ``DokumentFilterForm`` v rámci aplikace."""
+
     list_to_check = ["historie_datum_zmeny_od", "datum_vzniku", "let_datum", "datum_zverejneni"]

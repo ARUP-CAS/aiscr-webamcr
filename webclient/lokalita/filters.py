@@ -59,7 +59,7 @@ class LokalitaFilter(ArchZaznamFilter):
 
     def filter_queryset(self, queryset):
         """Filtruje queryset.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("lokalita.filters.LokalitaFilter.filter_queryset.start")
@@ -100,6 +100,7 @@ class LokalitaFilter(ArchZaznamFilter):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Lokalita
         exclude = (
             "nazev",
@@ -109,7 +110,7 @@ class LokalitaFilter(ArchZaznamFilter):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -126,7 +127,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
 
     def __init__(self, form=None):
         """Inicializuje instanci třídy.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {

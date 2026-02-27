@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 def get_next_sequence(sequence_name: str) -> str:
     """Vrací next sequence.
-    
+
     :param sequence_name: Vstupní hodnota ``sequence_name`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     query = "select nextval(%s)"
@@ -337,7 +337,7 @@ def get_temp_ez_ident():
 
 def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Type[User]) -> str:
     """Vrací next sequence integrity check.
-    
+
     :param object_class: Vstupní hodnota ``object_class`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     while True:

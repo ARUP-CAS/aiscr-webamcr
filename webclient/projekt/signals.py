@@ -72,7 +72,7 @@ def create_projekt_vazby(sender, instance, **kwargs):
 @receiver(post_delete, sender=Projekt, weak=False)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     """Provádí operaci projekt pre delete.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -91,7 +91,7 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
 
         def save_metadata(close_transaction=False):
             """Uloží metadata.
-            
+
             :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             if instance.soubory and instance.soubory.pk:
@@ -127,7 +127,7 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
 
             def save_metadata():
                 """Uloží metadata.
-                
+
                 :return: Vrací výsledek provedené operace."""
                 if instance.hlavni_katastr in instance.katastry.all():
                     # Toto je nutné provést ve funkci `on_commit`, viz

@@ -21,7 +21,12 @@ Funkce
 
 .. py:function:: projekt_pre_delete(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci projekt pre delete.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: projekt_post_save(sender, instance)
 

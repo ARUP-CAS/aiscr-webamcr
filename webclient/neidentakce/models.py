@@ -33,11 +33,12 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "neident_akce"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -61,5 +62,6 @@ class NeidentAkceVedouci(ExportModelOperationsMixin("neident_akce_vedouci"), mod
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "neident_akce_vedouci"
         unique_together = (("neident_akce", "vedouci"),)

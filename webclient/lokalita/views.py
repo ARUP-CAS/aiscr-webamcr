@@ -87,7 +87,7 @@ class LokalitaListView(SearchListView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         super().init_translations()
         self.page_title = _("lokalita.views.lokalitaListView.pageTitle.text")
@@ -103,7 +103,7 @@ class LokalitaListView(SearchListView):
     @staticmethod
     def rename_field_for_ordering(field: str):
         """Provádí operaci rename field for ordering.
-        
+
         :param field: Vstupní hodnota ``field`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         field = field.replace("-", "")
@@ -127,7 +127,7 @@ class LokalitaListView(SearchListView):
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
@@ -149,7 +149,7 @@ class LokalitaListView(SearchListView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -169,7 +169,7 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -186,7 +186,7 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
 
     def check_locality_arch_z_conflict(self):
         """Ověří locality arch z conflict.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         return
 
@@ -205,7 +205,7 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
 
     def get_shows(self):
         """Vrací shows.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return get_detail_template_shows(
             self.get_object().archeologicky_zaznam,
@@ -226,7 +226,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -252,7 +252,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         """Provádí operaci form valid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("lokalita.views.LokalitaCreateView.form_valid.start")
@@ -290,7 +290,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         """Provádí operaci form invalid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
@@ -301,7 +301,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -311,7 +311,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -331,7 +331,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -358,7 +358,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         """Provádí operaci form valid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("Lokalita.EditForm is valid")
@@ -380,7 +380,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """Provádí operaci form invalid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
@@ -391,7 +391,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -401,7 +401,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -427,7 +427,7 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -444,7 +444,7 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
 
     def dispatch(self, request, *args, **kwargs):
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -465,7 +465,7 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
 
     def get_dokumentacni_jednotka(self):
         """Vrací dokumentacni jednotka.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug(
@@ -477,7 +477,7 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -494,7 +494,7 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -513,7 +513,7 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -524,7 +524,7 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -541,7 +541,7 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def dispatch(self, request, *args, **kwargs):
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -562,7 +562,7 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get_komponenta(self):
         """Vrací komponenta.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         dj_ident_cely = self.kwargs["komponenta_ident_cely"]
         object = get_object_or_404(Komponenta, ident_cely=dj_ident_cely)
@@ -570,7 +570,7 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -593,7 +593,7 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -602,7 +602,7 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -642,7 +642,7 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def dispatch(self, request, *args, **kwargs):
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -663,14 +663,14 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get_pian(self):
         """Vrací pian.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         pian_ident_cely = self.kwargs["pian_ident_cely"]
         return get_object_or_404(Pian, ident_cely=pian_ident_cely)
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -681,7 +681,7 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

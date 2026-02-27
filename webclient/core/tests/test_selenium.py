@@ -57,7 +57,7 @@ class LocalResolver(etree.Resolver):
 
     def resolve(self, url, id, context):
         """Provádí operaci resolve.
-        
+
         :param url: Vstupní hodnota ``url`` pro danou operaci.
         :param id: Identifikátor zpracovávaného záznamu.
         :param context: Vstupní hodnota ``context`` pro danou operaci.
@@ -70,9 +70,10 @@ class LocalResolver(etree.Resolver):
 
 class WaitForPageLoad:
     """Implementuje komponentu ``WaitForPageLoad`` v rámci aplikace."""
+
     def __init__(self, browser, wait_time=20):
         """Inicializuje instanci třídy.
-        
+
         :param browser: Vstupní hodnota ``browser`` pro danou operaci.
         :param wait_time: Vstupní hodnota ``wait_time`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -81,27 +82,27 @@ class WaitForPageLoad:
 
     def __enter__(self):
         """Připraví objekt pro použití v kontextovém manageru.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
 
     def page_has_loaded(self):
         """Provádí operaci page has loaded.
-        
+
         :return: Vrací výsledek provedené operace."""
         new_page = self.browser.find_element(By.TAG_NAME, "html")
         return new_page.id != self.old_page.id
 
     def page_is_ready(self):
         """Provádí operaci page is ready.
-        
+
         :return: Vrací výsledek provedené operace."""
         page_state = self.browser.execute_script("return document.readyState;")
         return page_state == "complete"
 
     def __exit__(self, *_):
         """Ukončí kontextový manager a provede úklid.
-        
+
         :param _: Dodatečné poziční argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
         self.wait_for(self.page_has_loaded)
@@ -109,7 +110,7 @@ class WaitForPageLoad:
 
     def wait_for(self, condition_function):
         """Provádí operaci wait for.
-        
+
         :param condition_function: Vstupní hodnota ``condition_function`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         start_time = time.time()
@@ -151,7 +152,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         """Provádí operaci setUpClass.
-        
+
         :return: Vrací výsledek provedené operace."""
         super().setUpClass()
         cls.server_thread.is_ready.wait()
@@ -161,7 +162,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     @classmethod
     def tearDownClass(cls):
         """Provádí operaci tearDownClass.
-        
+
         :return: Vrací výsledek provedené operace."""
         cls.server_thread.terminate()
         super().tearDownClass()
@@ -174,26 +175,26 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     @classmethod
     def _terminate_thread(cls):
         """Provádí operaci terminate thread.
-        
+
         :return: Vrací výsledek provedené operace."""
         pass
 
     @classmethod
     def get_base_test_data(cls):
         """Vrací base test data.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         pass
 
     def setUp(self):
         """Provádí operaci setUp.
-        
+
         :return: Vrací výsledek provedené operace."""
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.start")
         self.wipe_Fedora()
@@ -225,7 +226,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def get_container_content(self, container_path):
         """Vrací container content.
-        
+
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         headers = {}
@@ -244,7 +245,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def save_container_content(self, container_path, path):
         """Uloží container content.
-        
+
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
         :param path: Vstupní hodnota ``path`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -296,7 +297,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def porovnej_png_obsah(self, bin1, bin2):
         """Provádí operaci porovnej png obsah.
-        
+
         :param bin1: Vstupní hodnota ``bin1`` pro danou operaci.
         :param bin2: Vstupní hodnota ``bin2`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -314,7 +315,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def check_container_content(self, container_path, path):
         """Ověří container content.
-        
+
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
         :param path: Vstupní hodnota ``path`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -380,7 +381,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def purge_container(self, container_path):
         """Provádí operaci purge container.
-        
+
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         response = requests.delete(container_path + "/fcr:tombstone", auth=self.auth)
@@ -392,7 +393,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def delete_container(self, container_path):
         """Odstraní container.
-        
+
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
         :return: Vrací výsledek operace odstranění."""
         response = requests.delete(container_path, auth=self.auth)
@@ -404,7 +405,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def wipe_Fedora_dir(self, name, deep):
         """Provádí operaci wipe Fedora dir.
-        
+
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param deep: Vstupní hodnota ``deep`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -416,7 +417,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def find_files(self, directory, filename):
         """Provádí operaci find files.
-        
+
         :param directory: Vstupní hodnota ``directory`` pro danou operaci.
         :param filename: Vstupní hodnota ``filename`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -428,7 +429,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def delete_tombstones(self, url, name, dir):
         """Odstraní tombstones.
-        
+
         :param url: Vstupní hodnota ``url`` pro danou operaci.
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param dir: Vstupní hodnota ``dir`` pro danou operaci.
@@ -444,7 +445,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def save_fedora_change(self, time, path):
         """Uloží fedora change.
-        
+
         :param time: Vstupní hodnota ``time`` pro danou operaci.
         :param path: Vstupní hodnota ``path`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -471,7 +472,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     def check_fedora_change(self, time, path):
         # Pomocný debug výpis změny ve Fedoře je zde záměrně vypnutý.
         """Ověří fedora change.
-        
+
         :param time: Vstupní hodnota ``time`` pro danou operaci.
         :param path: Vstupní hodnota ``path`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -506,7 +507,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def check_fedora_delete(self, records):
         """Ověří fedora delete.
-        
+
         :param records: Vstupní hodnota ``records`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         headers = {}
@@ -518,7 +519,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def wipe_Fedora(self):
         """Provádí operaci wipe Fedora.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/model", 0)
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/record", 2)
@@ -527,7 +528,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     @staticmethod
     def clone_Database():
         """Provádí operaci clone Database.
-        
+
         :return: Vrací výsledek provedené operace."""
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.clone_Database")
         prod_conn = None
@@ -567,7 +568,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def assertIn2(self, member1, member2, container, msg=None):
         """Provádí operaci assertIn2.
-        
+
         :param member1: Vstupní hodnota ``member1`` pro danou operaci.
         :param member2: Vstupní hodnota ``member2`` pro danou operaci.
         :param container: Vstupní hodnota ``container`` pro danou operaci.
@@ -590,7 +591,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def _is_ignored_browser_error(self, entry: dict) -> bool:
         """Určí, zda ignored browser error.
-        
+
         :param entry: Vstupní hodnota ``entry`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         msg = entry.get("message", "") or ""
@@ -620,7 +621,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def tearDown(self):
         """Provádí operaci tearDown.
-        
+
         :return: Vrací výsledek provedené operace."""
         self._collect_js_errors_at_end()
 
@@ -628,7 +629,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
         def has_issue():
             """Určí, zda issue.
-            
+
             :return: Vrací výsledek ověření nebo validačního pravidla."""
             return any(t is self and exc for t, exc in (result.errors + result.failures))
 
@@ -691,20 +692,20 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def _fixture_teardown(self):
         """Provádí operaci fixture teardown.
-        
+
         :return: Vrací výsledek provedené operace."""
         pass
 
     def wait(self, interval):
         """Provádí operaci wait.
-        
+
         :param interval: Vstupní hodnota ``interval`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         time.sleep(interval)
 
     def wait_for(self, condition_function, by, value, timeout=12, poll=0.5):
         """Provádí operaci wait for.
-        
+
         :param condition_function: Vstupní hodnota ``condition_function`` pro danou operaci.
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
@@ -724,7 +725,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def findElement(self, by, value):
         """Provádí operaci findElement.
-        
+
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -735,7 +736,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def ElementIsClickable(self, by, value):
         """Provádí operaci ElementIsClickable.
-        
+
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -747,7 +748,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def ElementClick(self, by=By.ID, value: Optional[str] = None):
         """Provádí operaci ElementClick.
-        
+
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -775,7 +776,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def ElementSendKeys(self, by, value, keys):
         """Provádí operaci ElementSendKeys.
-        
+
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param keys: Vstupní hodnota ``keys`` pro danou operaci.
@@ -810,7 +811,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def clickAt(self, el, position_x, position_y):
         """Provádí operaci clickAt.
-        
+
         :param el: Vstupní hodnota ``el`` pro danou operaci.
         :param position_x: Vstupní hodnota ``position_x`` pro danou operaci.
         :param position_y: Vstupní hodnota ``position_y`` pro danou operaci.
@@ -821,9 +822,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         action.perform()
 
     def clickAtMapCoord(self, lon, lat):
-
         """Provádí operaci clickAtMapCoord.
-        
+
         :param lon: Vstupní hodnota ``lon`` pro danou operaci.
         :param lat: Vstupní hodnota ``lat`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -849,14 +849,14 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def _username(self, type="archeolog"):
         """Provádí operaci username.
-        
+
         :param type: Vstupní hodnota ``type`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return USERS[type]["USERNAME"]
 
     def _password(sel, type="archeolog"):
         """Provádí operaci password.
-        
+
         :param sel: Vstupní hodnota ``sel`` pro danou operaci.
         :param type: Vstupní hodnota ``type`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -864,7 +864,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def _select_value_select_picker(self, field_id, selected_value):
         """Provádí operaci select value select picker.
-        
+
         :param field_id: Identifikátor objektu ``field``.
         :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -873,7 +873,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def _fill_text_field(self, field_id, field_value):
         """Provádí operaci fill text field.
-        
+
         :param field_id: Identifikátor objektu ``field``.
         :param field_value: Vstupní hodnota ``field_value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -882,7 +882,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def _select_map_point(self, field_id, click_count):
         """Provádí operaci select map point.
-        
+
         :param field_id: Identifikátor objektu ``field``.
         :param click_count: Vstupní hodnota ``click_count`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -892,7 +892,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def _select_radion_group_item(self, item_order=1):
         """Provádí operaci select radion group item.
-        
+
         :param item_order: Vstupní hodnota ``item_order`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self.driver.find_element(
@@ -901,7 +901,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def _fill_form_fields(self, test_data):
         """Provádí operaci fill form fields.
-        
+
         :param test_data: Vstupní hodnota ``test_data`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         for item, value in test_data.items():
@@ -926,7 +926,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def login(self, type="archeolog"):
         """Provádí operaci login.
-        
+
         :param type: Vstupní hodnota ``type`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self.goToAddress()
@@ -940,13 +940,13 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def logout(self):
         """Provádí operaci logout.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.ElementClick(By.ID, "buttonLogout")
 
     def goToAddress(self, rel_address="/"):
         """Provádí operaci goToAddress.
-        
+
         :param rel_address: Vstupní hodnota ``rel_address`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         port = self.server_thread.port
@@ -1062,7 +1062,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def createFedoraRecord(self, ident_cely, user_name="archeolog"):
         """Provádí operaci createFedoraRecord.
-        
+
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :param user_name: Vstupní hodnota ``user_name`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1171,7 +1171,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def _element_klic(self, elem):
         """Provádí operaci element klic.
-        
+
         :param elem: Vstupní hodnota ``elem`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         hodnoty = [elem.tag]
@@ -1201,7 +1201,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy, filename):
         """Provádí operaci xml to string bez ignorovanych z textu.
-        
+
         :param xml_text: Vstupní hodnota ``xml_text`` pro danou operaci.
         :param ignorovane_tagy: Vstupní hodnota ``ignorovane_tagy`` pro danou operaci.
         :param filename: Vstupní hodnota ``filename`` pro danou operaci.
@@ -1298,7 +1298,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def odstran_predikaty(self, graf, predikaty_k_ignoru):
         """Provádí operaci odstran predikaty.
-        
+
         :param graf: Vstupní hodnota ``graf`` pro danou operaci.
         :param predikaty_k_ignoru: Vstupní hodnota ``predikaty_k_ignoru`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1350,7 +1350,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def porovnej_rdf_obsah(self, aktualni_rdf, ocekavany_rdf, ignorovat_predikaty=None):
         """Provádí operaci porovnej rdf obsah.
-        
+
         :param aktualni_rdf: Vstupní hodnota ``aktualni_rdf`` pro danou operaci.
         :param ocekavany_rdf: Vstupní hodnota ``ocekavany_rdf`` pro danou operaci.
         :param ignorovat_predikaty: Vstupní hodnota ``ignorovat_predikaty`` pro danou operaci.
@@ -1384,7 +1384,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def uprav_rdf_pred_ulozenim(self, rdf_input, ignorovat_predikaty=None):
         """Provádí operaci uprav rdf pred ulozenim.
-        
+
         :param rdf_input: Vstupní hodnota ``rdf_input`` pro danou operaci.
         :param ignorovat_predikaty: Vstupní hodnota ``ignorovat_predikaty`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1500,7 +1500,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def json_uprav_pro_porovnani(self, json_text, klice_k_ignoraci=None):
         """Provádí operaci json uprav pro porovnani.
-        
+
         :param json_text: Vstupní hodnota ``json_text`` pro danou operaci.
         :param klice_k_ignoraci: Vstupní hodnota ``klice_k_ignoraci`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1514,7 +1514,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
         """Provádí operaci porovnej json rovnost.
-        
+
         :param vzor_json_text: Vstupní hodnota ``vzor_json_text`` pro danou operaci.
         :param vystup_json_text: Vstupní hodnota ``vystup_json_text`` pro danou operaci.
         :param klice_k_ignoraci: Vstupní hodnota ``klice_k_ignoraci`` pro danou operaci.
@@ -1532,7 +1532,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def getTime(self):
         """Provádí operaci getTime.
-        
+
         :return: Vrací výsledek provedené operace."""
         if os.name == "nt":
             self.wait(1.5)
@@ -1543,7 +1543,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def wait_for_select2_results(self):
         """Provádí operaci wait for select2 results.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.driver.set_script_timeout(6)
         try:
@@ -1565,6 +1565,7 @@ done("ok");
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``CoreSeleniumTest`` v rámci aplikace."""
+
     def test_001_core_001(self):
         """Test 001 Přihlášení do AMČR
 

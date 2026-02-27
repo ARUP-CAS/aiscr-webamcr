@@ -8,4 +8,8 @@ Funkce
 
 .. py:function:: handle_fedora_error(view_func, additional_exceptions)
 
-   Popis není k dispozici.
+   Zpracuje fedora error.
+
+   :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
+   :param additional_exceptions: Vstupní hodnota ``additional_exceptions`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.

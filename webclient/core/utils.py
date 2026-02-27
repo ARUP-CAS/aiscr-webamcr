@@ -33,12 +33,13 @@ cache = caches[rosetta_settings.ROSETTA_CACHE_NAME]
 
 class CannotFindCadasterCentre(Exception):
     """Implementuje komponentu ``CannotFindCadasterCentre`` v rámci aplikace."""
+
     pass
 
 
 def file_validate_epsg(epsg):
     """Provádí operaci file validate epsg.
-    
+
     :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
     if epsg == "4326":
@@ -51,7 +52,7 @@ def file_validate_epsg(epsg):
 
 def balanced_parentheses(expression):
     """Provádí operaci balanced parentheses.
-    
+
     :param expression: Vstupní hodnota ``expression`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
     stack = 0
@@ -69,7 +70,7 @@ def balanced_parentheses(expression):
 
 def load_database_translation_strings():
     """Načte database translation strings.
-    
+
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     return [
         _("pian.posgtres.importovatPian.check.unsupportedEPSG"),
@@ -884,7 +885,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
 
     def get_column_default_show(self):
         """Vrací column default show.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))
         return super(SearchTable, self).get_column_default_show()
@@ -1039,7 +1040,7 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
 def replace_last(source_string, old, new):
     """Provádí operaci replace last.
-    
+
     :param source_string: Vstupní hodnota ``source_string`` pro danou operaci.
     :param old: Vstupní hodnota ``old`` pro danou operaci.
     :param new: Vstupní hodnota ``new`` pro danou operaci.
@@ -1055,16 +1056,17 @@ def replace_last(source_string, old, new):
 
 class SessionIdentifier:
     """Implementuje komponentu ``SessionIdentifier`` v rámci aplikace."""
+
     def __init__(self, request):
         """Inicializuje instanci třídy.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.cache_key = self._generate_session_key(request)
 
     def _generate_session_key(self, request):
         """Vygeneruje session key.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací nově vytvořený výsledek operace."""
         if "session_uuid" not in request.session:
@@ -1074,13 +1076,13 @@ class SessionIdentifier:
 
     def clear_cached_files(self):
         """Provádí operaci clear cached files.
-        
+
         :return: Vrací výsledek provedené operace."""
         cache.delete(f"{self.cache_key}_files")
 
     def set_ident(self, ident_cely, timeout=3600):
         """Nastaví ident.
-        
+
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1091,13 +1093,13 @@ class SessionIdentifier:
 
     def get_ident(self):
         """Vrací ident.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return cache.get(self.cache_key, None)
 
     def add_file_reference(self, ident, timeout=3600):
         """Provádí operaci add file reference.
-        
+
         :param ident: Vstupní hodnota ``ident`` pro danou operaci.
         :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1107,7 +1109,7 @@ class SessionIdentifier:
 
     def file_exists(self, ident):
         """Provádí operaci file exists.
-        
+
         :param ident: Vstupní hodnota ``ident`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         files = cache.get(f"{self.cache_key}_files", set())
@@ -1117,7 +1119,7 @@ class SessionIdentifier:
 
     def remove_file_reference(self, ident):
         """Provádí operaci remove file reference.
-        
+
         :param ident: Vstupní hodnota ``ident`` pro danou operaci.
         :return: Vrací výsledek operace odstranění."""
         files = cache.get(f"{self.cache_key}_files", set())
@@ -1127,14 +1129,14 @@ class SessionIdentifier:
 
     def get_cached_files(self):
         """Vrací cached files.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         files = cache.get(f"{self.cache_key}_files", set())
         return files
 
     def set_project_ownership(self, ident_cely, timeout=7200):
         """Nastaví project ownership.
-        
+
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""

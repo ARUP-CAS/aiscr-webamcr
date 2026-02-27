@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: HistorieListView
 
-   Třida pohledu pro zobrazení historie záznamu.
+   Třída pohledu pro zobrazení historie záznamu.
    Třída se dědí pro jednotlivá historie.
 
    **Metody:**
@@ -27,6 +27,10 @@ Třídy
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_header_config()
 
       Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
@@ -38,27 +42,53 @@ Třídy
 
    .. py:method:: get_table()
 
+      Vrací table.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: render_to_response()
+
+      Vyrenderuje to response.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param response_kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjektHistorieListView
 
-   Třida pohledu pro zobrazení historie projektu.
+   Třída pohledu pro zobrazení historie projektu.
 
    **Metody:**
 
    .. py:method:: get_header_config()
+
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AkceHistorieListView
 
-   Třida pohledu pro zobrazení historie akcií.
+   Třída pohledu pro zobrazení historie akcí.
 
    **Metody:**
 
    .. py:method:: get_header_config()
+
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentHistorieListView
@@ -69,7 +99,17 @@ Třídy
 
    .. py:method:: get_header_config()
 
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: add_extra_context()
+
+      Provádí operaci add extra context.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: SamostatnyNalezHistorieListView
@@ -80,6 +120,11 @@ Třídy
 
    .. py:method:: get_header_config()
 
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: SpolupraceHistorieListView
 
@@ -88,6 +133,11 @@ Třídy
    **Metody:**
 
    .. py:method:: get_header_config()
+
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SouborHistorieListView
@@ -98,9 +148,24 @@ Třídy
 
    .. py:method:: prepare_queryset()
 
+      Provádí operaci prepare queryset.
+
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: add_extra_context()
 
+      Provádí operaci add extra context.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_header_config()
+
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: LokalitaHistorieListView
@@ -111,6 +176,11 @@ Třídy
 
    .. py:method:: get_header_config()
 
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: UzivatelHistorieListView
 
@@ -119,6 +189,11 @@ Třídy
    **Metody:**
 
    .. py:method:: get_header_config()
+
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ExterniZdrojHistorieListView
@@ -129,6 +204,11 @@ Třídy
 
    .. py:method:: get_header_config()
 
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: PianHistorieListView
 
@@ -137,6 +217,11 @@ Třídy
    **Metody:**
 
    .. py:method:: get_header_config()
+
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: PianLokalitaHistorieListView
@@ -147,6 +232,11 @@ Třídy
 
    .. py:method:: get_header_config()
 
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: AdbHistorieListView
 
@@ -155,4 +245,9 @@ Třídy
    **Metody:**
 
    .. py:method:: get_header_config()
+
+      Vrací header config.
+
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 

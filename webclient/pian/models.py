@@ -87,7 +87,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -97,7 +97,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     @property
     def pristupnost_pom(self):
         """Provádí operaci pristupnost pom.
-        
+
         :return: Vrací výsledek provedené operace."""
         try:
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -117,13 +117,13 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     @property
     def pristupnost(self):
         """Provádí operaci pristupnost.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.pristupnost_pom
 
     def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
         """Provádí operaci evaluate pristupnost change.
-        
+
         :param added_pristupnost_id: Identifikátor objektu ``added_pristupnost``.
         :param skip_zaznam_id: Identifikátor objektu ``skip_zaznam``.
         :return: Vrací výsledek provedené operace."""
@@ -144,6 +144,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "pian"
         constraints = [
             CheckConstraint(
@@ -158,13 +159,13 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
     def get_absolute_url(self, request=None):
         """Vrací absolute url.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -180,13 +181,13 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
         """Vrací create user.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             my_list = []
@@ -205,7 +206,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def get_create_org(self):
         """Vrací create org.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             our_list = []
@@ -292,6 +293,7 @@ class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "kladyzm"
 
 
@@ -311,6 +313,7 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "pian_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["kladyzm50", "katastr"], name="unique_sekvence_pian"),
@@ -357,7 +360,7 @@ def vytvor_pian(katastr, fedora_transaction):
 
 def get_ZM_from_point(point):
     """Vrací ZM from point.
-    
+
     :param point: Vstupní hodnota ``point`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     try:

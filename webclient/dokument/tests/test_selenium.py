@@ -18,9 +18,10 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceDokumenty(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceDokumenty`` v rámci aplikace."""
+
     def go_to_form_zapsat(self):
         """Provádí operaci go to form zapsat.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/dokument/zapsat")
 
@@ -1249,15 +1250,16 @@ class AkceDokumenty(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceKnihovna3D(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceKnihovna3D`` v rámci aplikace."""
+
     def go_to_form_zapsat(self):
         """Provádí operaci go to form zapsat.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/dokument/model/zapsat")
 
     def zapsat_zaznam(self):
         """Provádí operaci zapsat zaznam.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
@@ -1285,7 +1287,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
 
     def odeslat_zaznam(self, ident_cely):
         """Provádí operaci odeslat zaznam.
-        
+
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self.goToAddress(f"/dokument/model/detail/{ident_cely}")
@@ -1314,7 +1316,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
 
     def pridani_objektu(self, ident):
         """Provádí operaci pridani objektu.
-        
+
         :param ident: Vstupní hodnota ``ident`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .btn")
@@ -1331,7 +1333,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
 
     def pridani_predmetu(self, ident):
         """Provádí operaci pridani predmetu.
-        
+
         :param ident: Vstupní hodnota ``ident`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self.driver.execute_script("$(window).scrollTop(1500 );")

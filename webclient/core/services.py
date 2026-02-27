@@ -32,13 +32,13 @@ class PermissionService:
 
     def __init__(self):
         """Inicializuje instanci třídy.
-        
+
         :return: Funkce nevrací hodnotu (``None``)."""
         pass
 
     def run(self, docfile: InMemoryUploadedFile) -> tuple[pd.DataFrame, list[str]]:
         """Spustí hodnotu.
-        
+
         :param docfile: Vstupní hodnota ``docfile`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if docfile.name and docfile.name.lower().endswith(".csv"):

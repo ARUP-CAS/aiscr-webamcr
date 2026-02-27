@@ -100,12 +100,13 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "soubor_vazby"
 
     @property
     def navazany_objekt(self) -> Optional[ModelWithMetadata]:
         """Provádí operaci navazany objekt.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.typ_vazby == PROJEKT_RELATION_TYPE:
             return self.projekt_souboru
@@ -139,7 +140,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @property
     def url(self):
         """Provádí operaci url.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return f"{settings.DIGIARCHIV_SERVER_URL}id/{self.path.split('record/')[1]}"
@@ -148,14 +149,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @property
     def repository_uuid(self):
         """Provádí operaci repository uuid.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return self.path.split("/")[-1]
 
     def calculate_sha_512(self):
         """Provádí operaci calculate sha 512.
-        
+
         :return: Vrací výsledek provedené operace."""
         repository_content = self.get_repository_content()
         if repository_content is not None:
@@ -164,7 +165,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def delete(self, using=None, keep_parents=False):
         """Odstraní záznam objektu.
-        
+
         :param using: Vstupní hodnota ``using`` pro danou operaci.
         :param keep_parents: Vstupní hodnota ``keep_parents`` pro danou operaci.
         :return: Vrací výsledek operace odstranění."""
@@ -174,6 +175,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "soubor"
         indexes = [
             models.Index(
@@ -190,7 +192,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -202,7 +204,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.nazev
 
@@ -220,7 +222,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @property
     def vytvoreno(self):
         """Provádí operaci vytvoreno.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.historie is not None:
             return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
@@ -233,7 +235,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         self, ident_cely_old=None, thumb_small=False, thumb_large=False, timestamp=None
     ) -> Optional[RepositoryBinaryFile]:
         """Vrací repository content.
-        
+
         :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
         :param thumb_small: Vstupní hodnota ``thumb_small`` pro danou operaci.
         :param thumb_large: Vstupní hodnota ``thumb_large`` pro danou operaci.
@@ -290,7 +292,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @classmethod
     def get_file_extension_by_mime(cls, file):
         """Vrací file extension by mime.
-        
+
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         mime_type = cls.get_mime_types(file)
@@ -325,7 +327,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @classmethod
     def get_thumb_icon(cls, file):
         """Vrací thumb icon.
-        
+
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         mime_type = magic.from_buffer(file.read(), mime=True)
@@ -372,7 +374,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @classmethod
     def get_mime_types(cls, file, check_archive=False) -> Union[set, bool, str]:
         """Vrací mime types.
-        
+
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :param check_archive: Vstupní hodnota ``check_archive`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -438,7 +440,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @classmethod
     def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
         """Provádí operaci remove gps data.
-        
+
         :param bytes_io: Vstupní hodnota ``bytes_io`` pro danou operaci.
         :return: Vrací výsledek operace odstranění."""
         try:
@@ -505,7 +507,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @classmethod
     def check_mime_for_url(cls, file, source_url=""):
         """Ověří mime for url.
-        
+
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :param source_url: Vstupní hodnota ``source_url`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -611,7 +613,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def _create_file_response(self, rep_bin_file: RepositoryBinaryFile) -> FileResponse:
         """Vytvoří file response.
-        
+
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         content = rep_bin_file.content
@@ -625,7 +627,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @cached_property
     def large_thumbnail(self) -> FileResponse | None:
         """Provádí operaci large thumbnail.
-        
+
         :return: Vrací výsledek provedené operace."""
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
@@ -638,7 +640,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @cached_property
     def small_thumbnail(self) -> FileResponse | None:
         """Provádí operaci small thumbnail.
-        
+
         :return: Vrací výsledek provedené operace."""
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
@@ -651,7 +653,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @cached_property
     def content_file_response(self) -> FileResponse | None:
         """Provádí operaci content file response.
-        
+
         :return: Vrací výsledek provedené operace."""
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content()
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
@@ -660,7 +662,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def getMock(self):
         """Provádí operaci getMock.
-        
+
         :return: Vrací výsledek provedené operace."""
         return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
 
@@ -721,6 +723,7 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "projekt_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["region", "rok"], name="unique_sekvence_projekt"),
@@ -739,6 +742,7 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "odstavky_systemu"
         verbose_name = _("core.model.OdstavkaSystemu.modelTitle.label")
         verbose_name_plural = _("core.model.OdstavkaSystemu.modelTitles.label")
@@ -755,20 +759,23 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
 
     def __str__(self) -> str:
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
 
 
 class Permissions(models.Model):
     """Implementuje komponentu ``Permissions`` v rámci aplikace."""
+
     class ownershipChoices(models.TextChoices):
         """Implementuje komponentu ``ownershipChoices`` v rámci aplikace."""
+
         my = "my", _("core.models.permissions.ownershipChoices.my")
         our = "our", _("core.models.permissions.ownershipChoices.our")
 
     class actionChoices(models.TextChoices):
         """Implementuje komponentu ``actionChoices`` v rámci aplikace."""
+
         adb_smazat = "adb_smazat", _("core.models.permissions.actionChoices.adb_smazat")
         vb_smazat = "vb_smazat", _("core.models.permissions.actionChoices.vb_smazat")
         adb_zapsat = "adb_zapsat", _("core.models.permissions.actionChoices.adb_zapsat")
@@ -1068,12 +1075,13 @@ class Permissions(models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         verbose_name = _("core.model.permissions.modelTitle.label")
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
     def check_concrete_permission(self, user, ident=None, typ=None):
         """Ověří concrete permission.
-        
+
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :param ident: Vstupní hodnota ``ident`` pro danou operaci.
         :param typ: Vstupní hodnota ``typ`` pro danou operaci.
@@ -1107,7 +1115,7 @@ class Permissions(models.Model):
 
     def check_base(self):
         """Ověří base.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         if self.base:
             return True
@@ -1116,7 +1124,7 @@ class Permissions(models.Model):
 
     def check_status(self):
         """Ověří status.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         if self.status:
             if not self.permission_object:
@@ -1147,7 +1155,7 @@ class Permissions(models.Model):
 
     def check_ownership(self, ownership):
         """Ověří ownership.
-        
+
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         if ownership:
@@ -1168,7 +1176,7 @@ class Permissions(models.Model):
 
     def check_accessibility(self):
         """Ověří accessibility.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         if self.accessibility:
             if not self.check_ownership(self.accessibility):
@@ -1185,7 +1193,7 @@ class Permissions(models.Model):
 
     def check_permission_skip(self):
         """Ověří permission skip.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         if not self.permission_object:
             self.get_permission_object()
@@ -1211,7 +1219,7 @@ class Permissions(models.Model):
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         from core.ident_cely import get_record_from_ident
         from pas.models import UzivatelSpoluprace
@@ -1258,7 +1266,7 @@ class Permissions(models.Model):
 
 def check_permissions(action, user, ident=None):
     """Ověří permissions.
-    
+
     :param action: Vstupní hodnota ``action`` pro danou operaci.
     :param user: Vstupní hodnota ``user`` pro danou operaci.
     :param ident: Vstupní hodnota ``ident`` pro danou operaci.
@@ -1280,10 +1288,12 @@ def check_permissions(action, user, ident=None):
 
 class PermissionsSkip(models.Model):
     """Implementuje komponentu ``PermissionsSkip`` v rámci aplikace."""
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     ident_list = models.TextField()
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         verbose_name = _("core.model.permissionsSkip.modelTitle.label")
         verbose_name_plural = _("core.model.permissionsSkip.modelTitles.label")

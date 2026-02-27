@@ -33,6 +33,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param missing_columns: Vstupní hodnota ``missing_columns`` pro danou operaci.
+      :param excess_columns: Vstupní hodnota ``excess_columns`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: ImportDataIncorrectStructureContentObjectError
 
@@ -42,6 +48,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param columns: Vstupní hodnota ``columns`` pro danou operaci.
+      :param expected_colummns_options: Dodatečné poziční argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: ImportDataMissingReferencedValueError
 
@@ -50,6 +62,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param missing_value_id: Identifikátor objektu ``missing_value``.
+      :param missing_model_name: Vstupní hodnota ``missing_model_name`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ImportDataIntegrityError
@@ -62,6 +80,13 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param record_id: Identifikátor objektu ``record``.
+      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: ImportDataLimitChoicesError
 
@@ -70,6 +95,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param record_id: Identifikátor objektu ``record``.
+      :param limit_choices_to: Vstupní hodnota ``limit_choices_to`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ImportDataHeslarPresnostLimitChoicesError
@@ -80,6 +111,11 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param record_id: Identifikátor objektu ``record``.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: ImportDataUnsupportedFileError
 
@@ -88,6 +124,11 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ImportDataUnsupportedFilesError
@@ -98,6 +139,11 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param file_names: Vstupní hodnota ``file_names`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: ImportDataIncorrectPrimaryKeyFormatError
 
@@ -106,6 +152,11 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param primary_key_value: Vstupní hodnota ``primary_key_value`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: BaseImportField
@@ -117,17 +168,47 @@ Třídy
 
    .. py:method:: __init__()
 
-   .. py:method:: value()
+      Inicializuje instanci třídy.
+
+      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: value()
+
+      Provádí operaci value.
+
+      :return: Vrací výsledek provedené operace.
+
+   .. py:method:: value()
+
+      Provádí operaci value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: is_null()
 
+      Určí, zda null.
+
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: instance_value()
+
+      Provádí operaci instance value.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: serialized_value()
 
+      Provádí operaci serialized value.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _process_value()
+
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: IntegerImportField
@@ -138,7 +219,10 @@ Třídy
 
    .. py:method:: _process_value()
 
-      Převede hodnotu na int. Pokud hodnota není číslo, vyvolá ImportDataError.
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: PositiveIntegerImportField
@@ -149,6 +233,11 @@ Třídy
 
    .. py:method:: _process_value()
 
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: DecimalImportField
 
@@ -157,6 +246,11 @@ Třídy
    **Metody:**
 
    .. py:method:: _process_value()
+
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: BooleanImportField
@@ -167,7 +261,10 @@ Třídy
 
    .. py:method:: _process_value()
 
-      Převede řetězec na bool. Pokud hodnota není "true"/"1" ani "false"/"0", vyvolá ImportDataError.
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DateImportField
@@ -178,14 +275,29 @@ Třídy
 
    .. py:method:: value()
 
+      Provádí operaci value.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: value()
+
+      Provádí operaci value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: serialized_value()
 
+      Provádí operaci serialized value.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _process_value()
 
-      Převede řetězec na datum. Podporované formáty jsou "YYYY-MM-DD" a "DD.MM.YYYY".
-      Pokud hodnota neodpovídá žádnému formátu, vyvolá ImportDataError.
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DateTimeImportField
@@ -197,11 +309,29 @@ Třídy
 
    .. py:method:: value()
 
+      Provádí operaci value.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: value()
+
+      Provádí operaci value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: serialized_value()
 
+      Provádí operaci serialized value.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _process_value()
+
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DateRangeImportField
@@ -212,10 +342,16 @@ Třídy
 
    .. py:method:: serialized_value()
 
+      Provádí operaci serialized value.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _process_value()
 
-      Převede řetězec na DateRange ve formátu "[YYYY-MM-DD, YYYY-MM-DD)".
-      Pokud hodnota neodpovídá očekávanému formátu, vyvolá ImportDataError.
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: LookupImportField
@@ -226,14 +362,32 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
+      :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
+      :param limit_choices_to: Vstupní hodnota ``limit_choices_to`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: instance_value()
+
+      Provádí operaci instance value.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _check_limit_choices_to()
 
+      Ověří limit choices to.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: _process_value()
 
-      Ověří existenci hodnoty v databázi nebo v importovaných záznamech a vrátí odpovídající záznam.
-      Pokud referencovaný záznam neexistuje, vyvolá ImportDataMissingReferencedValueError.
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: RuianLookupImportField
@@ -244,6 +398,11 @@ Třídy
 
    .. py:method:: value()
 
+      Provádí operaci value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: VazbaLookupImportField
 
@@ -253,7 +412,19 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
+      :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
+      :param read_field_name: Vstupní hodnota ``read_field_name`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: _process_value()
+
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: GeomImportField
@@ -264,11 +435,23 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param srid: Vstupní hodnota ``srid`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: serialized_value()
+
+      Provádí operaci serialized value.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _process_value()
 
-      Převede řetězec na objekt GEOSGeometry. Pokud převod selže, vyvolá ImportDataError.
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: GenericForeignKeyImportField
@@ -279,9 +462,25 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
+      :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
+      :param serialized_attribute: Vstupní hodnota ``serialized_attribute`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: serialized_value()
 
+      Provádí operaci serialized value.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _process_value()
+
+      Provádí operaci process value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ImportModelMapper
@@ -292,6 +491,11 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param value_dict: Vstupní hodnota ``value_dict`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_import_data_mapper_dict()
 
@@ -311,7 +515,18 @@ Třídy
 
    .. py:method:: _parse_primary_key()
 
+      Zpracuje primary key.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _parse_primary_key_custom_prefix()
+
+      Zpracuje primary key custom prefix.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param prefix: Vstupní hodnota ``prefix`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: map_field()
 
@@ -319,9 +534,17 @@ Třídy
 
    .. py:method:: is_field_required()
 
+      Určí, zda field required.
+
+      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: create_records()
 
-      Vytvoří instanci záznamu nebo více instancí modelů připravených k uložení do databáze.
+      Vytvoří records.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: import_validation()
 
@@ -330,6 +553,12 @@ Třídy
 
    .. py:method:: _check_column_structure()
 
+      Ověří column structure.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: map()
 
       Nejprve ověří strukturu sloupců souboru — při nesouladu vyvolá ImportDataIncorrectStructureError.
@@ -337,16 +566,33 @@ Třídy
 
    .. py:method:: check_required_fields()
 
+      Ověří required fields.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: map_column_name_to_field_name()
 
-      Převede název sloupce z importního souboru na název pole Django modelu.
-      Používá se, pokud se název pole liší od názvu databázového sloupce.
+      Provádí operaci map column name to field name.
+
+      :param column_name: Vstupní hodnota ``column_name`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: create_relations()
 
-      Vytvoří vazební záznamy pro Historie, Komponenty a Soubory, pokud ještě neexistují.
+      Vytvoří relations.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: record_postprocessing()
+
+      Provádí operaci record postprocessing.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: GeometryTransformMixin
@@ -358,6 +604,12 @@ Třídy
 
    .. py:method:: transform_geometries()
 
+      Transformuje geometries.
+
+      :param mapping_dict: Vstupní hodnota ``mapping_dict`` pro danou operaci.
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: MultipleClassImportModelMapper
 
@@ -367,308 +619,541 @@ Třídy
 
    .. py:method:: import_validation()
 
+      Načte validation.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _get_filter_kwargs_primary_key()
+
+      Vrací filter kwargs primary key.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: create_records()
 
+      Vytvoří records.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: is_field_required()
+
+      Určí, zda field required.
+
+      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: HeslarMapper
 
-   Mapper pro model Heslar.
+   Mapovač pro model Heslar.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: HeslarDataceMapper
 
-   Mapper pro model HeslarDatace.
+   Mapovač pro model HeslarDatace.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: HeslarDokumentTypMaterialRadaMapper
 
-   Mapper pro model HeslarDokumentTypMaterialRada.
+   Mapovač pro model HeslarDokumentTypMaterialRada.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: HeslarHierarchieMapper
 
-   Mapper pro model HeslarHierarchie.
+   Mapovač pro model HeslarHierarchie.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: HeslarOdkazMapper
 
-   Mapper pro model HeslarOdkaz.
+   Mapovač pro model HeslarOdkaz.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: OrganizaceMapper
 
-   Mapper pro model Organizace.
+   Mapovač pro model Organizace.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: OsobaMapper
 
-   Mapper pro model Osoba.
+   Mapovač pro model Osoba.
 
 
 .. py:class:: ProjektMapper
 
-   Mapper pro model Projekt.
+   Mapovač pro model Projekt.
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: map()
+
+      Provádí operaci map.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
+      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjektKatastrMapper
 
-   Mapper pro model ProjektKatastr.
+   Mapovač pro model ProjektKatastr.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ProjektOznamovatelMapper
 
-   Mapper pro model Oznamovatel.
+   Mapovač pro model Oznamovatel.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SamostatnyNalezMapper
 
-   Mapper pro model SamostatnyNalez.
+   Mapovač pro model SamostatnyNalez.
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: map()
+
+      Provádí operaci map.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
+      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ArcheologickyZaznamAkceMapper
 
-   Mapper pro modely ArcheologickyZaznam a Akce.
+   Mapovač pro modely ArcheologickyZaznam a Akce.
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: map_field()
 
+      Provádí operaci map field.
+
+      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: record_postprocessing()
+
+      Provádí operaci record postprocessing.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: LokalitaMapper
 
-   Mapper pro modely ArcheologickyZaznam a Lokalita.
+   Mapovač pro modely ArcheologickyZaznam a Lokalita.
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: map_field()
+
+      Provádí operaci map field.
+
+      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: AkceVedouciMapper
 
-   Mapper pro model AkceVedouci.
+   Mapovač pro model AkceVedouci.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ArcheologickyZaznamKatastrMapper
 
-   Mapper pro model ArcheologickyZaznamKatastr.
+   Mapovač pro model ArcheologickyZaznamKatastr.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: PianMapper
 
-   Mapper pro model Pian.
+   Mapovač pro model Pian.
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: map()
+
+      Provádí operaci map.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
+      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentacniJednotkaMapper
 
-   Mapper pro model DokumentacniJednotka.
+   Mapovač pro model DokumentacniJednotka.
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: record_postprocessing()
+
+      Provádí operaci record postprocessing.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: AdbMapper
 
-   Mapper pro model Adb.
+   Mapovač pro model Adb.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AdbVyskovyBod
 
-   Mapper pro model VyskovyBod.
+   Mapovač pro model VyskovyBod.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentLetMapper
 
-   Mapper pro model Let.
+   Mapovač pro model Let.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentMapper
 
-   Mapper pro modely Dokument a DokumentExtraData.
+   Mapovač pro modely Dokument a DokumentExtraData.
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: map_field()
+
+      Provádí operaci map field.
+
+      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: create_records()
 
-      Vytvoří instanci Dokument a DokumentExtraData s vazbou na Dokument.
+      Vytvoří records.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: map()
+
+      Provádí operaci map.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
+      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentAutorMapper
 
-   Mapper pro model DokumentAutor.
+   Mapovač pro model DokumentAutor.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentJazykMapper
 
-   Mapper pro model DokumentJazyk.
+   Mapovač pro model DokumentJazyk.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentOsobaMapper
 
-   Mapper pro model DokumentOsoba.
+   Mapovač pro model DokumentOsoba.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentPosudekMapper
 
-   Mapper pro model DokumentPosudek.
+   Mapovač pro model DokumentPosudek.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: TvarMapper
 
-   Mapper pro model Tvar.
+   Mapovač pro model Tvar.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentCastMapper
 
-   Mapper pro model DokumentCast.
+   Mapovač pro model DokumentCast.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: NeidentAkceMapper
 
-   Mapper pro model NeidentAkce.
+   Mapovač pro model NeidentAkce.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: NeidentAkceVedouciMapper
 
-   Mapper pro model NeidentAkceVedouci.
+   Mapovač pro model NeidentAkceVedouci.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: KomponentaMapper
 
-   Mapper pro model Komponenta.
+   Mapovač pro model Komponenta.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: KomponentaAktivitaMapper
 
-   Mapper pro model KomponentaAktivita.
+   Mapovač pro model KomponentaAktivita.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: NalezMapper
@@ -678,139 +1163,260 @@ Třídy
 
 .. py:class:: NalezObjektMapper
 
-   Mapper pro model NalezObjekt.
+   Mapovač pro model NalezObjekt.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: NalezPredmetMapper
 
-   Mapper pro model NalezPredmet.
+   Mapovač pro model NalezPredmet.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ExterniZdrojMapper
 
-   Mapper pro model ExterniZdroj.
+   Mapovač pro model ExterniZdroj.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ExterniZdrojAutorMapper
 
-   Mapper pro model ExterniZdrojAutor.
+   Mapovač pro model ExterniZdrojAutor.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ExterniZdrojEditorMapper
 
-   Mapper pro model ExterniZdrojEditor.
+   Mapovač pro model ExterniZdrojEditor.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ExterniOdkazMapper
 
-   Mapper pro model ExterniOdkaz.
+   Mapovač pro model ExterniOdkaz.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UzivatelMapper
 
-   Mapper pro model User.
+   Mapovač pro model User.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UzivatelNotifikaceProjektMapper
 
-   Mapper pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN).
+   Mapovač pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN).
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: _get_filter_kwargs_primary_key()
+
+      Vrací filter kwargs primary key.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: map_field()
 
+      Provádí operaci map field.
+
+      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: create_records()
+
+      Vytvoří records.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: _check_column_structure()
 
+      Ověří column structure.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: map()
+
+      Provádí operaci map.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
+      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UzivatelSpolupraceMapper
 
-   Mapper pro model UzivatelSpoluprace.
+   Mapovač pro model UzivatelSpoluprace.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UzivatelOpravneniMapper
 
-   Mapper pro přiřazení skupinových oprávnění uživateli (model User).
+   Mapovač pro přiřazení skupinových oprávnění uživateli (model User).
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: _get_filter_kwargs_primary_key()
+
+      Vrací filter kwargs primary key.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: create_records()
 
+      Vytvoří records.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: import_validation()
+
+      Načte validation.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: SouborMapper
 
-   Mapper pro model Soubor.
+   Mapovač pro model Soubor.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UzivatelNotifikaceMapper
 
-   Mapper pro přiřazení typů notifikací uživateli (model User).
+   Mapovač pro přiřazení typů notifikací uživateli (model User).
 
    **Metody:**
 
    .. py:method:: get_mapping()
 
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: _get_filter_kwargs_primary_key()
+
+      Vrací filter kwargs primary key.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: create_records()
 
+      Vytvoří records.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: import_validation()
+
+      Načte validation.
+
+      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: HistorieMapper
 
-   Mapper pro model Historie.
+   Mapovač pro model Historie.
 
    **Metody:**
 
    .. py:method:: get_mapping()
+
+      Vrací mapping.
+
+      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 

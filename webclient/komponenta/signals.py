@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Komponenta, weak=False)
 def komponenta_save(sender, instance: Komponenta, **kwargs):
     """Provádí operaci komponenta save.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -54,7 +54,7 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
 @receiver(post_delete, sender=Komponenta, weak=False)
 def komponenta_delete(sender, instance: Komponenta, **kwargs):
     """Provádí operaci komponenta delete.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -71,7 +71,7 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
 
         def save_metadata():
             """Uloží metadata.
-            
+
             :return: Vrací výsledek provedené operace."""
             if isinstance(navazany_objekt, DokumentCast):
                 navazany_objekt.dokument.save_metadata(fedora_transaction, skip_container_check=True)

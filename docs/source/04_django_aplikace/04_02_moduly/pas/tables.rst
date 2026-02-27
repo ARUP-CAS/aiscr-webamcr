@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: SamostatnyNalezTable
 
-   Class pro definování tabulky pro samostatný nález použitých pro zobrazení přehledu nálezu a exportu.
+   Definuje tabulku samostatných nálezů pro přehled i export.
 
    **Metody:**
 
@@ -18,32 +18,62 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: AktivaceDeaktivaceColumn
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AktivaceDeaktivaceColumn`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: render()
+
+      Vyrenderuje hodnotu.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param table: Vstupní hodnota ``table`` pro danou operaci.
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: smazatColumn
 
-   Popis není k dispozici.
+   Implementuje komponentu ``smazatColumn`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: render()
 
+      Vyrenderuje hodnotu.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param table: Vstupní hodnota ``table`` pro danou operaci.
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: UzivatelSpolupraceTable
 
-   Class pro definování tabulky pro uživatelskou spolupráci použitých pro zobrazení přehledu spoluprác a exportu.
+   Definuje tabulku uživatelských spoluprací pro přehled i export.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_all_idents()
 

@@ -14,6 +14,11 @@ Třídy
 
    .. py:method:: to_python()
 
+      Provádí operaci to python.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: DateRangeWidget
 
@@ -23,6 +28,11 @@ Třídy
 
    .. py:method:: format_value()
 
+      Provádí operaci format value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: OznamovatelForm
 
@@ -31,6 +41,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: OznamovatelProjektForm
@@ -46,7 +62,17 @@ Třídy
 
    .. py:method:: clean_send_mail()
 
+      Provádí operaci clean send mail.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ProjektOznameniForm
@@ -56,6 +82,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: FormWithCaptcha

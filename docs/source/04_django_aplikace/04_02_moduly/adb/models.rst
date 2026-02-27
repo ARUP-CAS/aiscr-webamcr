@@ -8,28 +8,50 @@ Třídy
 
 .. py:class:: Kladysm5
 
-   Class pro db model kladysm5.
+   Databázový model kladu SM5.
 
 
 .. py:class:: Adb
 
-   Class pro db model ADB.
+   Databázový model ADB.
    Obsahuje vazbu na dokumentační jednotku.
 
    **Metody:**
 
    .. py:method:: get_absolute_url()
 
+      Vrací absolute url.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_permission_object()
+
+      Vrací permission object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: create_transaction()
+
+      Vytvoří transaction.
+
+      :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
+      :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
+      :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+      :param main_record: Vstupní hodnota ``main_record`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
 
 
 .. py:class:: VyskovyBod
 
-   Class pro db model vyškový bod.
+   Databázový model výškového bodu.
    Obsahuje vazbu na ADB.
 
    **Metody:**
@@ -48,7 +70,15 @@ Třídy
 
    .. py:method:: get_absolute_url()
 
+      Vrací absolute url.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_permission_object()
+
+      Vrací permission object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AdbSekvence

@@ -63,6 +63,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "lokalita"
 
     def get_absolute_url(self):
@@ -76,13 +77,13 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def set_igsn(self):
         """Nastaví igsn.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.igsn = f"{settings.IGSN_PREFIX}/{self.archeologicky_zaznam.ident_cely}"
 
     def set_snapshots(self):
         """Nastaví snapshots.
-        
+
         :return: Vrací výsledek provedené operace."""
         if not self.archeologicky_zaznam.katastry.all():
             self.dalsi_katastry_snapshot = None
@@ -96,7 +97,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
     @property
     def redis_snapshot_id(self):
         """Provádí operaci redis snapshot id.
-        
+
         :return: Vrací výsledek provedené operace."""
         from lokalita.views import LokalitaListView
 
@@ -104,7 +105,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def generate_redis_snapshot(self):
         """Vygeneruje redis snapshot.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         from lokalita.tables import LokalitaTable
 
@@ -115,7 +116,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def _get_igsn_client(self):
         """Vrací igsn client.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         from pid.client import DigitalObjectIdentifierClient
 
@@ -124,13 +125,13 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
     @property
     def igsn_exists(self):
         """Provádí operaci igsn exists.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self, check_status=True):
         """Provádí operaci igsn delete.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if self.igsn:
@@ -138,7 +139,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def igsn_hide(self, check_status=True):
         """Provádí operaci igsn hide.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if self.igsn:
@@ -146,14 +147,14 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     def igsn_publish(self, check_status=True):
         """Provádí operaci igsn publish.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return self._get_igsn_client().publish_record(check_status)
 
     def igsn_update(self, check_status=True, reload_record=False):
         """Provádí operaci igsn update.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -163,14 +164,14 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
     @property
     def igsn_url(self):
         """Provádí operaci igsn url.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._get_igsn_client().get_record_url()
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
         """Vrací by ident cely.
-        
+
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:

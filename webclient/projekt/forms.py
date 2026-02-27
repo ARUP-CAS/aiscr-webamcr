@@ -40,6 +40,7 @@ class CreateProjektForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = (
             "typ_projektu",
@@ -89,7 +90,7 @@ class CreateProjektForm(forms.ModelForm):
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
@@ -158,7 +159,7 @@ class CreateProjektForm(forms.ModelForm):
 
     def clean(self):
         """Provádí operaci clean.
-        
+
         :return: Vrací výsledek provedené operace."""
         cleaned_data = super().clean()
 
@@ -199,6 +200,7 @@ class EditProjektForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = (
             "typ_projektu",
@@ -284,7 +286,7 @@ class EditProjektForm(forms.ModelForm):
 
     def __init__(self, *args, required=None, required_next=None, edit_fields=None, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
@@ -441,7 +443,7 @@ class NavrhnoutZruseniProjektForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -484,6 +486,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = (
             "vedouci_projektu",
@@ -522,7 +525,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -595,6 +598,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = ("datum_zahajeni",)
         labels = {
@@ -604,7 +608,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -628,7 +632,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
 
     def clean(self):
         """Provádí operaci clean.
-        
+
         :return: Vrací výsledek provedené operace."""
         cleaned_data = super().clean()
         poslat_email_kraj = cleaned_data.get("poslat_email_kraj")
@@ -668,6 +672,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = ("datum_ukonceni",)
         labels = {
@@ -679,7 +684,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -732,7 +737,7 @@ class ZruseniProjektForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -762,7 +767,7 @@ class GenerovatNovePotvrzeniForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -825,7 +830,7 @@ class GenerovatExpertniListForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -865,7 +870,7 @@ class PripojitProjektForm(forms.Form):
 
     def __init__(self, dok=False, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param dok: Vstupní hodnota ``dok`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -909,6 +914,7 @@ class PripojitProjektForm(forms.Form):
 
 class ProjektFilterForm(BaseFilterForm):
     """Implementuje komponentu ``ProjektFilterForm`` v rámci aplikace."""
+
     list_to_check = [
         "historie_datum_zmeny_od",
         "planovane_zahajeni",
@@ -922,9 +928,10 @@ class ProjektFilterForm(BaseFilterForm):
 
 class ZadostProjektForm(forms.Form):
     """Implementuje komponentu ``ZadostProjektForm`` v rámci aplikace."""
+
     def __init__(self, label="", help_text="", *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param label: Vstupní hodnota ``label`` pro danou operaci.
         :param help_text: Vstupní hodnota ``help_text`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
@@ -943,6 +950,7 @@ class ZadostProjektForm(forms.Form):
 
 class UpravitDatumOznameniForm(forms.ModelForm):
     """Implementuje komponentu ``UpravitDatumOznameniForm`` v rámci aplikace."""
+
     datum_oznameni = forms.DateField(
         label=_("projekt.forms.upravitDatumOznameni.datumOznameni.label"),
         widget=forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
@@ -962,6 +970,7 @@ class UpravitDatumOznameniForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Historie
         fields = ("datum_oznameni", "cas_oznameni", "poznamka")
         help_texts = {
@@ -973,7 +982,7 @@ class UpravitDatumOznameniForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -1010,7 +1019,7 @@ class NeodeslatMailForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

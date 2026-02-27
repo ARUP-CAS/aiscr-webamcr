@@ -26,7 +26,7 @@ class DateRangeField(forms.DateField):
 
     def to_python(self, value):
         """Provádí operaci to python.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if isinstance(value, DateRange):
@@ -57,7 +57,7 @@ class DateRangeWidget(forms.TextInput):
 
     def format_value(self, value):
         """Provádí operaci format value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if value == "" or value is None:
@@ -94,6 +94,7 @@ class OznamovatelForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Oznamovatel
         fields = ("oznamovatel", "odpovedna_osoba", "telefon", "email", "adresa", "poznamka")
         widgets = {
@@ -120,7 +121,7 @@ class OznamovatelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -213,13 +214,13 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
 
     def clean_send_mail(self):
         """Provádí operaci clean send mail.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.cleaned_data.get("send_mail", False)
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -270,6 +271,7 @@ class ProjektOznameniForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = (
             "ident_cely",
@@ -305,7 +307,7 @@ class ProjektOznameniForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

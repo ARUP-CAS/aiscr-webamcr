@@ -84,10 +84,11 @@ ALWAYS_ACTIVE = [
 
 class Mailer:
     """Implementuje komponentu ``Mailer`` v rámci aplikace."""
+
     @classmethod
     def __strip_tags(cls, html):
         """Provádí operaci strip tags.
-        
+
         :param html: Vstupní hodnota ``html`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         s = MLStripper()
@@ -99,7 +100,7 @@ class Mailer:
         cls, notification_type: "uzivatel.models.UserNotificationType", user: "uzivatel.models.User"
     ):
         """Provádí operaci notification should be sent.
-        
+
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -139,7 +140,7 @@ class Mailer:
         cls, notification_type: "uzivatel.models.UserNotificationType", user: "uzivatel.models.User"
     ):
         """Provádí operaci notification was sent.
-        
+
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -163,7 +164,7 @@ class Mailer:
         log_user=None,
     ):
         """Provádí operaci log notification.
-        
+
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :param receiver_object: Vstupní hodnota ``receiver_object`` pro danou operaci.
         :param receiver_address: Vstupní hodnota ``receiver_address`` pro danou operaci.
@@ -216,7 +217,7 @@ class Mailer:
         cc=None,
     ):
         """Odešle hodnotu.
-        
+
         :param subject: Vstupní hodnota ``subject`` pro danou operaci.
         :param to: Vstupní hodnota ``to`` pro danou operaci.
         :param html_content: Vstupní hodnota ``html_content`` pro danou operaci.
@@ -268,7 +269,7 @@ class Mailer:
     @classmethod
     def send_eu02(cls, user: "uzivatel.models.User"):
         """Odešle eu02.
-        
+
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-U-02"
@@ -292,7 +293,7 @@ class Mailer:
     @classmethod
     def send_eu03(cls, user: "uzivatel.models.User"):
         """Odešle eu03.
-        
+
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-U-03"
@@ -305,7 +306,7 @@ class Mailer:
     @classmethod
     def send_eu04(cls, user: "uzivatel.models.User"):
         """Odešle eu04.
-        
+
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-U-04"
@@ -339,7 +340,7 @@ class Mailer:
     @classmethod
     def send_eu06(cls, user: "uzivatel.models.User", groups):
         """Odešle eu06.
-        
+
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :param groups: Vstupní hodnota ``groups`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -364,7 +365,7 @@ class Mailer:
     @classmethod
     def send_eu07(cls, user: "uzivatel.models.User", request):
         """Odešle eu07.
-        
+
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
@@ -388,7 +389,7 @@ class Mailer:
     @classmethod
     def _send_notification_for_project(cls, project, notification_type):
         """Odešle notification for project.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -422,7 +423,7 @@ class Mailer:
     @classmethod
     def _send_notification_for_projects(cls, projects, notification_type):
         """Odešle notification for projects.
-        
+
         :param projects: Vstupní hodnota ``projects`` pro danou operaci.
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -436,7 +437,7 @@ class Mailer:
     @classmethod
     def send_enz01(cls):
         """Odešle enz01.
-        
+
         :return: Vrací výsledek provedené operace."""
         today_plus_90_days = (datetime.now() + timedelta(days=90)).date()
         IDENT_CELY = "E-NZ-01"
@@ -450,7 +451,7 @@ class Mailer:
     @classmethod
     def send_enz02(cls):
         """Odešle enz02.
-        
+
         :return: Vrací výsledek provedené operace."""
         today_minus_1_day = (datetime.now() - timedelta(days=1)).date()
         IDENT_CELY = "E-NZ-02"
@@ -464,7 +465,7 @@ class Mailer:
     @classmethod
     def send_ev01(cls, zaznam: "arch_z.models.ArcheologickyZaznam", reason):
         """Odešle ev01.
-        
+
         :param zaznam: Vstupní hodnota ``zaznam`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -507,7 +508,7 @@ class Mailer:
         user: "uzivatel.models.User" = None,
     ):
         """Odešle a.
-        
+
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
@@ -549,7 +550,7 @@ class Mailer:
     @classmethod
     def send_ea01(cls, project: "projekt.models.Projekt", user: "uzivatel.models.User"):
         """Odešle ea01.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -563,7 +564,7 @@ class Mailer:
     @classmethod
     def send_ea02(cls, arch_z: "arch_z.models.ArcheologickyZaznam"):
         """Odešle ea02.
-        
+
         :param arch_z: Vstupní hodnota ``arch_z`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-A-02"
@@ -574,7 +575,7 @@ class Mailer:
     @classmethod
     def _send_e(cls, project, notification_type):
         """Odešle e.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -597,7 +598,7 @@ class Mailer:
     @classmethod
     def send_eo01(cls, project: "projekt.models.Projekt"):
         """Odešle eo01.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-O-01"
@@ -608,7 +609,7 @@ class Mailer:
     @classmethod
     def send_eo02(cls, project: "projekt.models.Projekt"):
         """Odešle eo02.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-O-02"
@@ -619,7 +620,7 @@ class Mailer:
     @classmethod
     def _send_ep01(cls, project, notification_type, rep_bin_file=None):
         """Odešle ep01.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
@@ -684,7 +685,7 @@ class Mailer:
     @classmethod
     def send_ep01a(cls, project: "projekt.models.Projekt", rep_bin_file=None):
         """Odešle ep01a.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -696,7 +697,7 @@ class Mailer:
     @classmethod
     def send_ep01b(cls, project: "projekt.models.Projekt", rep_bin_file=None):
         """Odešle ep01b.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -708,7 +709,7 @@ class Mailer:
     @classmethod
     def send_ep02(cls, psi, project):
         """Odešle ep02.
-        
+
         :param psi: Vstupní hodnota ``psi`` pro danou operaci.
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -740,7 +741,7 @@ class Mailer:
     @classmethod
     def _send_ep03(cls, project, notification_type):
         """Odešle ep03.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -773,7 +774,7 @@ class Mailer:
     @classmethod
     def send_ep03a(cls, project: "projekt.models.Projekt"):
         """Odešle ep03a.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-P-03a"
@@ -784,7 +785,7 @@ class Mailer:
     @classmethod
     def send_ep03b(cls, project: "projekt.models.Projekt"):
         """Odešle ep03b.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-P-03b"
@@ -795,7 +796,7 @@ class Mailer:
     @classmethod
     def send_ep07(cls, project: "projekt.models.Projekt", reason, user):
         """Odešle ep07.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
@@ -829,7 +830,7 @@ class Mailer:
     @classmethod
     def send_ep04(cls, project: "projekt.models.Projekt", reason):
         """Odešle ep04.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -863,7 +864,7 @@ class Mailer:
     @classmethod
     def send_ep05(cls, project: "projekt.models.Projekt"):
         """Odešle ep05.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-P-05"
@@ -899,7 +900,7 @@ class Mailer:
     @classmethod
     def _get_ep06_attachment(cls, project) -> RepositoryBinaryFile | None:
         """Vrací ep06 attachment.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         project_files = project.soubory.soubory.filter(
@@ -933,7 +934,7 @@ class Mailer:
     @classmethod
     def _send_ep06(cls, project, notification_type, reason, rep_bin_file=None):
         """Odešle ep06.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
@@ -970,7 +971,7 @@ class Mailer:
     @classmethod
     def send_ep06a(cls, project: "projekt.models.Projekt", reason, rep_bin_file=None):
         """Odešle ep06a.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
@@ -983,7 +984,7 @@ class Mailer:
     @classmethod
     def send_ep06b(cls, project: "projekt.models.Projekt", reason, rep_bin_file=None):
         """Odešle ep06b.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
@@ -996,7 +997,7 @@ class Mailer:
     @classmethod
     def _send_en01_02(cls, projekt_ident_list, notification_type, send_to):
         """Odešle en01 02.
-        
+
         :param projekt_ident_list: Vstupní hodnota ``projekt_ident_list`` pro danou operaci.
         :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
         :param send_to: Vstupní hodnota ``send_to`` pro danou operaci.
@@ -1014,7 +1015,7 @@ class Mailer:
     @classmethod
     def send_en01(cls, send_to, projekt_ident_list):
         """Odešle en01.
-        
+
         :param send_to: Vstupní hodnota ``send_to`` pro danou operaci.
         :param projekt_ident_list: Vstupní hodnota ``projekt_ident_list`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1026,7 +1027,7 @@ class Mailer:
     @classmethod
     def send_en02(cls, send_to, projekt_ident_list):
         """Odešle en02.
-        
+
         :param send_to: Vstupní hodnota ``send_to`` pro danou operaci.
         :param projekt_ident_list: Vstupní hodnota ``projekt_ident_list`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1038,7 +1039,7 @@ class Mailer:
     @classmethod
     def send_en03_en04(cls, samostatny_nalez: "pas.models.SamostatnyNalez", reason):
         """Odešle en03 en04.
-        
+
         :param samostatny_nalez: Vstupní hodnota ``samostatny_nalez`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1079,7 +1080,7 @@ class Mailer:
     @classmethod
     def send_en05(cls, email_to, reason, user: "uzivatel.models.User", spoluprace_id):
         """Odešle en05.
-        
+
         :param email_to: Vstupní hodnota ``email_to`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
@@ -1110,7 +1111,7 @@ class Mailer:
     @classmethod
     def send_en06(cls, cooperation: "pas.models.UzivatelSpoluprace"):
         """Odešle en06.
-        
+
         :param cooperation: Vstupní hodnota ``cooperation`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-N-06"
@@ -1138,7 +1139,7 @@ class Mailer:
     @classmethod
     def send_en07(cls, cooperation: "pas.models.UzivatelSpoluprace", reason):
         """Odešle en07.
-        
+
         :param cooperation: Vstupní hodnota ``cooperation`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1178,7 +1179,7 @@ class Mailer:
     @classmethod
     def send_ek01(cls, document: "dokument.models.Dokument"):
         """Odešle ek01.
-        
+
         :param document: Vstupní hodnota ``document`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         IDENT_CELY = "E-K-01"
@@ -1205,7 +1206,7 @@ class Mailer:
     @classmethod
     def send_ek02(cls, document: "dokument.models.Dokument", reason):
         """Odešle ek02.
-        
+
         :param document: Vstupní hodnota ``document`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1238,7 +1239,7 @@ class Mailer:
     @staticmethod
     def get_en01_data() -> Dict:
         """Vrací en01 data.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         invalidate_model(SamostatnyNalez)
         now = timezone.now()
@@ -1275,7 +1276,7 @@ class Mailer:
     @staticmethod
     def get_en02_data() -> Dict:
         """Vrací en02 data.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -1311,7 +1312,7 @@ class Mailer:
     @classmethod
     def send_ep08(cls, project: "projekt.models.Projekt", reason, user):
         """Odešle ep08.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
@@ -1335,7 +1336,7 @@ class Mailer:
     @classmethod
     def send_ep09(cls, project: "projekt.models.Projekt", info_text, user, kraje_s_emailem):
         """Odešle ep09.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param info_text: Vstupní hodnota ``info_text`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
@@ -1367,7 +1368,7 @@ class Mailer:
     @classmethod
     def send_ep10(cls, project: "projekt.models.Projekt", info_text, user, kraje_s_emailem):
         """Odešle ep10.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param info_text: Vstupní hodnota ``info_text`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
@@ -1399,7 +1400,7 @@ class Mailer:
     @classmethod
     def send_ep11(cls, project: "projekt.models.Projekt", reason, user, request):
         """Odešle ep11.
-        
+
         :param project: Vstupní hodnota ``project`` pro danou operaci.
         :param reason: Vstupní hodnota ``reason`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=NeidentAkce, weak=False)
 def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
     """Provádí operaci neident akce post save.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -31,7 +31,7 @@ def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
 @receiver(post_delete, sender=NeidentAkce, weak=False)
 def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
     """Provádí operaci neident akce post delete.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.

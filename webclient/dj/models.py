@@ -54,6 +54,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokumentacni_jednotka"
         ordering = ["ident_cely"]
 
@@ -69,7 +70,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
     @property
     def ident_cely_safe(self):
         """Provádí operaci ident cely safe.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.ident_cely.replace("-", "_")
 
@@ -86,13 +87,13 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.archeologicky_zaznam
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

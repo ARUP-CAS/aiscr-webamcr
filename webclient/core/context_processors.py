@@ -51,7 +51,7 @@ def digi_links_from_settings(request):
 
 def logout_next_url(request):
     """Provádí operaci logout next url.
-    
+
     :param request: Django HTTP požadavek použitý při zpracování.
     :return: Vrací výsledek provedené operace."""
     logger.debug(f"request path: {request.path}")
@@ -132,7 +132,7 @@ def auto_logout_client(request):
 
 def main_shows(request):
     """Provádí operaci main shows.
-    
+
     :param request: Django HTTP požadavek použitý při zpracování.
     :return: Vrací výsledek provedené operace."""
     main_show = {}

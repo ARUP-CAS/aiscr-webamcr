@@ -61,12 +61,13 @@ logger = logging.getLogger(__name__)
 
 class NumberRangeWidget(SuffixedMultiWidget):
     """Implementuje komponentu ``NumberRangeWidget`` v rámci aplikace."""
+
     template_name = "django_filters/widgets/multiwidget.html"
     suffixes = ["min", "max"]
 
     def __init__(self, attrs=None):
         """Inicializuje instanci třídy.
-        
+
         :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         widgets = (NumberInput, NumberInput)
@@ -74,7 +75,7 @@ class NumberRangeWidget(SuffixedMultiWidget):
 
     def decompress(self, value):
         """Provádí operaci decompress.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if value:
@@ -84,11 +85,13 @@ class NumberRangeWidget(SuffixedMultiWidget):
 
 class NumberRangeField(RangeField):
     """Implementuje komponentu ``NumberRangeField`` v rámci aplikace."""
+
     widget = NumberRangeWidget
 
 
 class NumberRangeFilter(RangeFilter):
     """Implementuje komponentu ``NumberRangeFilter`` v rámci aplikace."""
+
     field_class = NumberRangeField
 
 
@@ -313,7 +316,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -672,7 +675,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_by_z_range(self, queryset, name, value):
         """Filtruje by z range.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
@@ -686,7 +689,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_queryset(self, queryset):
         """Filtruje queryset.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
@@ -719,13 +722,14 @@ class AkceFilter(ArchZaznamFilter):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Akce
         exclude = ("projekt",)
         form = ArchzFilterForm
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -748,7 +752,7 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
 
     def __init__(self, form=None):
         """Inicializuje instanci třídy.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {

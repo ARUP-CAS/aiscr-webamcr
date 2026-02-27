@@ -36,9 +36,10 @@ logger = logging.getLogger(__name__)
 
 class OznameniView(View):
     """Implementuje komponentu ``OznameniView`` v rámci aplikace."""
+
     def dispatch(self, request, *args, **kwargs):
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -140,7 +141,7 @@ class OznameniZapsatView(OznameniView):
     @method_decorator(never_cache)
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.ident_cely:
@@ -202,7 +203,7 @@ class OznameniDokumentaceView(OznameniView):
 
     def post(self, request):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         if "ident_cely" in request.POST:
@@ -227,7 +228,7 @@ class OznameniDokumentaceView(OznameniView):
     @method_decorator(never_cache)
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.ident_cely:
@@ -268,7 +269,7 @@ class OznameniPotvrzeniView(OznameniView):
     @method_decorator(never_cache)
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.ident_cely:
@@ -357,7 +358,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
@@ -374,7 +375,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -391,7 +392,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def get_settings(item_group, item_id):
     """Vrací settings.
-    
+
     :param item_group: Vstupní hodnota ``item_group`` pro danou operaci.
     :param item_id: Identifikátor objektu ``item``.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -42,7 +42,7 @@ def get_id_from_database(table, heslo, ident_cely, heslarDB) -> int:
 
 def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
     """Načte constants.
-    
+
     :param model: Vstupní hodnota ``model`` pro danou operaci.
     :param constant_name: Vstupní hodnota ``constant_name`` pro danou operaci.
     :param CONSTANTS: Vstupní hodnota ``CONSTANTS`` pro danou operaci.

@@ -37,26 +37,27 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
     @property
     def dokument_typ_material_rada(self):
         """Provádí operaci dokument typ material rada.
-        
+
         :return: Vrací výsledek provedené operace."""
         return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):
         """Provádí operaci podrazena hesla.
-        
+
         :return: Vrací výsledek provedené operace."""
         return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
 
     @property
     def nadrazena_hesla(self):
         """Provádí operaci nadrazena hesla.
-        
+
         :return: Vrací výsledek provedené operace."""
         return HeslarHierarchie.objects.filter(heslo_podrazene=self)
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar"
         unique_together = (
             ("nazev_heslare", "zkratka"),
@@ -68,7 +69,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         if get_language() == "en":
             if self.heslo_en:
@@ -85,7 +86,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -120,12 +121,13 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_datace"
         verbose_name_plural = "Heslář datace"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -170,13 +172,14 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_dokument_typ_material_rada"
         unique_together = (("dokument_typ", "dokument_material"),)
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -216,6 +219,7 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_hierarchie"
         unique_together = (("heslo_podrazene", "heslo_nadrazene", "typ"),)
         verbose_name_plural = "Heslář hierarchie"
@@ -228,7 +232,7 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -252,12 +256,13 @@ class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.nazev
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_nazev"
         verbose_name_plural = "Heslář název"
 
@@ -295,12 +300,13 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_odkaz"
         verbose_name_plural = "Heslář odkaz"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -336,7 +342,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
     @property
     def pian_ident_cely(self):
         """Provádí operaci pian ident cely.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.pian is not None:
             return self.pian.ident_cely
@@ -345,26 +351,27 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "ruian_katastr"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian katastry"
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return f"{self.nazev} ({self.okres.nazev}; {self.kod})"
 
     @property
     def ident_cely(self):
         """Provádí operaci ident cely.
-        
+
         :return: Vrací výsledek provedené operace."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -395,26 +402,27 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "ruian_kraj"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian kraje"
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.nazev
 
     @property
     def ident_cely(self):
         """Provádí operaci ident cely.
-        
+
         :return: Vrací výsledek provedené operace."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -447,26 +455,27 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "ruian_okres"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian okresy"
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.nazev
 
     @property
     def ident_cely(self):
         """Provádí operaci ident cely.
-        
+
         :return: Vrací výsledek provedené operace."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""

@@ -8,25 +8,35 @@ Třídy
 
 .. py:class:: VypisView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``VypisView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: VypisOnlyView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``VypisOnlyView`` v rámci aplikace.
 
 
 .. py:class:: VypisListView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``VypisListView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -34,4 +44,12 @@ Funkce
 
 .. py:function:: add_section_data(instance, section, fields, sections_data, iterator, user)
 
-   Popis není k dispozici.
+   Provádí operaci add section data.
+
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param section: Vstupní hodnota ``section`` pro danou operaci.
+   :param fields: Vstupní hodnota ``fields`` pro danou operaci.
+   :param sections_data: Vstupní hodnota ``sections_data`` pro danou operaci.
+   :param iterator: Vstupní hodnota ``iterator`` pro danou operaci.
+   :param user: Vstupní hodnota ``user`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Lokalita, weak=False)
 def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
     """Uloží lokalita snapshot.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -41,7 +41,7 @@ def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
 @receiver(post_save, sender=Lokalita, weak=False)
 def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
     """Uloží lokalita redis snapshot.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -61,7 +61,7 @@ def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
 @receiver(pre_delete, sender=Lokalita, weak=False)
 def delete_lokalita(sender, instance: Lokalita, **kwargs):
     """Odstraní lokalita.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.

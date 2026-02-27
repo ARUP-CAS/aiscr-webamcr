@@ -8,32 +8,73 @@ Třídy
 
 .. py:class:: Pian
 
-   Class pro db model pian.
+   Databázový model PIAN.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: pristupnost_pom()
+
+      Provádí operaci pristupnost pom.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: pristupnost()
 
+      Provádí operaci pristupnost.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: evaluate_pristupnost_change()
+
+      Provádí operaci evaluate pristupnost change.
+
+      :param added_pristupnost_id: Identifikátor objektu ``added_pristupnost``.
+      :param skip_zaznam_id: Identifikátor objektu ``skip_zaznam``.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __str__()
 
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_absolute_url()
+
+      Vrací absolute url.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_permission_object()
 
+      Vrací permission object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_create_user()
+
+      Vrací create user.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_org()
 
+      Vrací create org.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: set_permanent_ident_cely()
 
-      Metoda pro nastavení permanentního ident celý pro pian.
-      Metoda vráti ident podle sekvence pianu.
+      Metoda pro nastavení permanentního identifikátoru pro PIAN.
+      Metoda vrátí identifikátor podle sekvence PIAN.
 
    .. py:method:: set_vymezeny()
 
@@ -50,12 +91,12 @@ Třídy
 
 .. py:class:: Kladyzm
 
-   Class pro db model klady zm.
+   Databázový model kladu ZM.
 
 
 .. py:class:: PianSekvence
 
-   Class pro db model sekvence pianu podle klady zm 50 a katastru.
+   Databázový model sekvence PIAN podle kladu ZM 50 a katastru.
 
 
 Funkce
@@ -67,4 +108,7 @@ Funkce
 
 .. py:function:: get_ZM_from_point(point)
 
-   Popis není k dispozici.
+   Vrací ZM from point.
+
+   :param point: Vstupní hodnota ``point`` pro danou operaci.
+   :return: Vrací načtená data odpovídající vstupním parametrům.

@@ -15,21 +15,22 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceExterniZdroj(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceExterniZdroj`` v rámci aplikace."""
+
     def go_to_form_zapsat(self):
         """Provádí operaci go to form zapsat.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/ext-zdroj/zapsat")
 
     def go_to_form_vybrat(self):
         """Provádí operaci go to form vybrat.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/ext-zdroj/vyber?sort=autori&sort=rok_vydani_vzniku&sort=nazev")
 
     def zapsat_zaznam(self):
         """Provádí operaci zapsat zaznam.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .btn")

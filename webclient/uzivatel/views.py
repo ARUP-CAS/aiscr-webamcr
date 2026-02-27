@@ -69,7 +69,7 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Osoba.objects.all()
         if self.q:
@@ -84,14 +84,14 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
     def get_result_label(self, result):
         """Vrací result label.
-        
+
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return result.display_name(viewer=self.request.user)
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = User.objects.select_related("organizace")
 
@@ -116,7 +116,7 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
     def add_accessibility_lookup(self, permission, qs):
         """Provádí operaci add accessibility lookup.
-        
+
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -124,7 +124,7 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
     def add_ownership_lookup(self, ownership, qs=None):
         """Provádí operaci add ownership lookup.
-        
+
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -138,14 +138,14 @@ class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySe
 
     def get_result_label(self, result):
         """Vrací result label.
-        
+
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return result.display_name()
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = User.objects.all().select_related("organizace").order_by("ident_cely")
         if self.q:
@@ -221,7 +221,7 @@ class UserRegistrationView(RegistrationView):
 
     def send_activation_email(self, user):
         """Odešle activation email.
-        
+
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         try:
@@ -254,7 +254,7 @@ class UserLogoutView(LogoutView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -278,7 +278,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def get_object(self, queryset=None):
         """Vrací object.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         user_pk = self.request.user.pk
@@ -286,7 +286,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.object = self.get_object()
@@ -305,7 +305,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def _change_password(self, request, request_data):
         """Provádí operaci change password.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param request_data: Vstupní hodnota ``request_data`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -332,7 +332,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         # Atribut "object" musí existovat.
         # Důvod: Django `get_context_data()` používá objekt pro jeho předání do contextu.
         """Provádí operaci invalid form context.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :param form_tag: Vstupní hodnota ``form_tag`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -345,7 +345,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -428,7 +428,7 @@ class UserActivationView(ActivationView):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -437,7 +437,7 @@ class UserActivationView(ActivationView):
 
     def activate(self, form):
         """Provádí operaci activate.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         username = form.cleaned_data["activation_key"]
@@ -477,7 +477,7 @@ class UserPasswordResetView(PasswordResetView):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -495,7 +495,7 @@ class TokenAuthenticationBearer(TokenAuthentication):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -504,7 +504,7 @@ class TokenAuthenticationBearer(TokenAuthentication):
 
     def authenticate_credentials(self, key):
         """Provádí operaci authenticate credentials.
-        
+
         :param key: Vstupní hodnota ``key`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         model = self.get_model()
@@ -555,7 +555,7 @@ class GetUserInfo(APIView):
 
     def get(self, request, format=None):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param format: Vstupní hodnota ``format`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -564,7 +564,7 @@ class GetUserInfo(APIView):
 
     def handle_exception(self, exc):
         """Zpracuje exception.
-        
+
         :param exc: Vstupní hodnota ``exc`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self.is_exception = True
@@ -572,7 +572,7 @@ class GetUserInfo(APIView):
 
     def perform_content_negotiation(self, request, force=False):
         """Provádí operaci perform content negotiation.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param force: Vstupní hodnota ``force`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -584,7 +584,7 @@ class GetUserInfo(APIView):
 
     def finalize_response(self, request, response, *args, **kwargs):
         """Provádí operaci finalize response.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param response: Vstupní hodnota ``response`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
@@ -606,7 +606,7 @@ class ObtainAuthTokenWithUpdate(ObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -634,7 +634,7 @@ class UserDeleteRequest(LoginRequiredMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -646,7 +646,7 @@ class UserDeleteRequest(LoginRequiredMixin, UpdateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

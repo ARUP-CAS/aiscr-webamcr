@@ -14,14 +14,26 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: UserNotificationTypeInlineFormset
 
-   Popis není k dispozici.
+   Implementuje komponentu ``UserNotificationTypeInlineFormset`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: UserNotificationTypeInline
@@ -32,9 +44,27 @@ Třídy
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_extra()
 
+      Vrací extra.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param parent_model: Vstupní hodnota ``parent_model`` pro danou operaci.
+      :param admin_site: Vstupní hodnota ``admin_site`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: PesNotificationTypeInline
@@ -44,6 +74,11 @@ Třídy
    **Metody:**
 
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: PesKrajNotificationTypeInline
@@ -69,14 +104,26 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: PesUserNotificationTypeInlineFormset
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PesUserNotificationTypeInlineFormset`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: PesUserNotificationTypeInline
@@ -87,7 +134,19 @@ Třídy
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_extra()
+
+      Vrací extra.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: CustomUserAdmin
@@ -98,23 +157,87 @@ Třídy
 
    .. py:method:: has_delete_permission()
 
+      Určí, zda delete permission.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: save_model()
+
+      Uloží model.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param change: Vstupní hodnota ``change`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: user_change_password()
 
+      Provádí operaci user change password.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param id: Identifikátor zpracovávaného záznamu.
+      :param form_url: Vstupní hodnota ``form_url`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: log_deletion()
+
+      Provádí operaci log deletion.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param object: Vstupní hodnota ``object`` pro danou operaci.
+      :param object_repr: Vstupní hodnota ``object_repr`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_readonly_fields()
 
+      Vrací readonly fields.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: render_change_form()
+
+      Vyrenderuje change form.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_urls()
 
+      Vrací urls.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_histore_related_records()
+
+      Vrací histore related records.
+
+      :param object_id: Identifikátor objektu ``object``.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: delete_history_records()
 
+      Odstraní history records.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param object_id: Identifikátor objektu ``object``.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek operace odstranění.
+
    .. py:method:: delete_model()
+
+      Odstraní model.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :return: Vrací výsledek operace odstranění.
 
 
 .. py:class:: CustomGroupAdmin
@@ -124,4 +247,10 @@ Třídy
    **Metody:**
 
    .. py:method:: has_delete_permission()
+
+      Určí, zda delete permission.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 

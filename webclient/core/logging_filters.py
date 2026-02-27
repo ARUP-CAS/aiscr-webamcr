@@ -3,9 +3,10 @@ import logging
 
 class UserLogFilter(logging.Filter):
     """Implementuje komponentu ``UserLogFilter`` v rámci aplikace."""
+
     def filter(self, record):
         """Filtruje hodnotu.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         from core.log_middleware import LogMiddleware

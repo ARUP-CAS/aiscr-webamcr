@@ -7,9 +7,10 @@ from nalez.models import NalezObjekt, NalezPredmet
 
 class NalezFormSetHelper(FormHelper):
     """Implementuje komponentu ``NalezFormSetHelper`` v rámci aplikace."""
+
     def __init__(self, typ=None, typ_vazby="dokument", *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param typ: Vstupní hodnota ``typ`` pro danou operaci.
         :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
@@ -30,10 +31,12 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
 
     class CreateNalezObjektForm(forms.ModelForm):
         """Implementuje komponentu ``CreateNalezObjektForm`` v rámci aplikace."""
+
         typ = forms.CharField(widget=forms.HiddenInput())
 
         class Meta:
             """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = NalezObjekt
             fields = ["druh", "specifikace", "pocet", "poznamka"]
             labels = {
@@ -53,7 +56,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
             self, druh_objekt_choices=druh_obj_choices, specifikace_objekt_choices=spec_obj_choices, *args, **kwargs
         ):
             """Inicializuje instanci třídy.
-            
+
             :param druh_objekt_choices: Vstupní hodnota ``druh_objekt_choices`` pro danou operaci.
             :param specifikace_objekt_choices: Vstupní hodnota ``specifikace_objekt_choices`` pro danou operaci.
             :param args: Dodatečné poziční argumenty předané voláním.
@@ -100,10 +103,12 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
 
     class CreateNalezPredmetForm(forms.ModelForm):
         """Implementuje komponentu ``CreateNalezPredmetForm`` v rámci aplikace."""
+
         typ = forms.CharField(widget=forms.HiddenInput())
 
         class Meta:
             """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = NalezPredmet
 
             fields = ["druh", "specifikace", "pocet", "poznamka"]
@@ -124,7 +129,7 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
 
         def __init__(self, *args, **kwargs):
             """Inicializuje instanci třídy.
-            
+
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
             :return: Funkce nevrací hodnotu (``None``)."""

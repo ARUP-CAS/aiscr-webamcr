@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Provádí operaci add arguments.
-        
+
         :param parser: Vstupní hodnota ``parser`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         parser.add_argument(
@@ -56,7 +56,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Zpracuje hodnotu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""

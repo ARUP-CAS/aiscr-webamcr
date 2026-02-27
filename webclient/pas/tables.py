@@ -80,6 +80,7 @@ class SamostatnyNalezTable(SearchTable):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = SamostatnyNalez
         fields = (
             "nahled",
@@ -162,7 +163,7 @@ class SamostatnyNalezTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -171,9 +172,10 @@ class SamostatnyNalezTable(SearchTable):
 
 class AktivaceDeaktivaceColumn(tables.TemplateColumn):
     """Implementuje komponentu ``AktivaceDeaktivaceColumn`` v rámci aplikace."""
+
     def render(self, record, table, value, bound_column, **kwargs):
         """Vyrenderuje hodnotu.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param table: Vstupní hodnota ``table`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
@@ -194,9 +196,10 @@ class AktivaceDeaktivaceColumn(tables.TemplateColumn):
 
 class smazatColumn(tables.TemplateColumn):
     """Implementuje komponentu ``smazatColumn`` v rámci aplikace."""
+
     def render(self, record, table, value, bound_column, **kwargs):
         """Vyrenderuje hodnotu.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param table: Vstupní hodnota ``table`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
@@ -271,6 +274,7 @@ class UzivatelSpolupraceTable(SearchTable):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = UzivatelSpoluprace
         fields = (
             "stav",
@@ -292,7 +296,7 @@ class UzivatelSpolupraceTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

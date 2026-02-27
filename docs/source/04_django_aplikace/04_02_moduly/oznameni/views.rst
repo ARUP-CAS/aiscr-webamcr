@@ -8,11 +8,18 @@ Třídy
 
 .. py:class:: OznameniView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``OznameniView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: dispatch()
+
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: OznameniZapsatView
@@ -28,6 +35,11 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: OznameniDokumentaceView
 
@@ -37,7 +49,17 @@ Třídy
 
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: OznameniPotvrzeniView
@@ -48,6 +70,11 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: OznamovatelCreateView
 
@@ -57,9 +84,28 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 Funkce

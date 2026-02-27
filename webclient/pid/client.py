@@ -41,7 +41,7 @@ class DigitalObjectIdentifierClient:
 
     def _check_response_status(self, response):
         """Ověří response status.
-        
+
         :param response: Vstupní hodnota ``response`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         if not str(response.status_code).startswith("2"):
@@ -96,7 +96,7 @@ class DigitalObjectIdentifierClient:
 
     def hide_record(self, check_status=True):
         """Provádí operaci hide record.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug(
@@ -140,7 +140,7 @@ class DigitalObjectIdentifierClient:
 
     def update_record(self, check_status=True, reload_record=False):
         """Aktualizuje record.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""

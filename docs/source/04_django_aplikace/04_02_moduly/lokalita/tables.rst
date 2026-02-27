@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: LokalitaTable
 
-   Class pro definování tabulky pro lokaity použitých pro zobrazení přehledu lokalit a exportu.
+   Definuje tabulku lokalit pro přehled i export.
 
    **Metody:**
 

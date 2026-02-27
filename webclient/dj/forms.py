@@ -87,6 +87,7 @@ class CreateDJForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = DokumentacniJednotka
         fields = ("typ", "negativni_jednotka", "nazev", "pian")
 
@@ -137,7 +138,7 @@ class CreateDJForm(forms.ModelForm):
         **kwargs,
     ):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param not_readonly: Vstupní hodnota ``not_readonly`` pro danou operaci.
         :param typ_arch_z: Vstupní hodnota ``typ_arch_z`` pro danou operaci.
@@ -217,7 +218,7 @@ class ChangeKatastrForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

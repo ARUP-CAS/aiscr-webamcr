@@ -43,12 +43,13 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "nalez_objekt"
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -58,13 +59,13 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.druh.heslo
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.komponenta.get_permission_object()
 
@@ -106,12 +107,13 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "nalez_predmet"
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init_(self, *args, **kwargs):
         """Provádí operaci init.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -121,12 +123,12 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.druh.heslo
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.komponenta.get_permission_object()

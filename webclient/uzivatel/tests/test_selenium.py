@@ -16,6 +16,7 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceUzivatel(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceUzivatel`` v rámci aplikace."""
+
     def test_148_test_Fedora_uzivatel_001(self):
         """Test 148 Test Fedory pro uživatele (pozitivní scénář 1)
 
@@ -370,6 +371,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceOrganizace(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceOrganizace`` v rámci aplikace."""
+
     def test_152_test_Fedora_organizace_001(self):
         """Test 152 Test Fedory pro organizaci (pozitivní scénář 1)
 
@@ -428,6 +430,7 @@ class AkceOrganizace(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceOsoba(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceOsoba`` v rámci aplikace."""
+
     def test_153_test_Fedora_osoba_001(self):
         """Test 153 Test Fedory pro osobu (pozitivní scénář 1)
 

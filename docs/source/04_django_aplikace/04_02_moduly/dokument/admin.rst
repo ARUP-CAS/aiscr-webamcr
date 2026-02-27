@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: DokumentWithMetadataAdmin
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DokumentWithMetadataAdmin`` v rámci aplikace.
 
 
 .. py:class:: LetAdmin
@@ -18,4 +18,10 @@ Třídy
    **Metody:**
 
    .. py:method:: get_readonly_fields()
+
+      Vrací readonly fields.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 

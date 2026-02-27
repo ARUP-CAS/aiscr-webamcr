@@ -26,9 +26,10 @@ def get_message(message):
 
 class QuerystringNodeMulti(Node):
     """Implementuje komponentu ``QuerystringNodeMulti`` v rámci aplikace."""
+
     def __init__(self, updates, removals, asvar=None):
         """Inicializuje instanci třídy.
-        
+
         :param updates: Vstupní hodnota ``updates`` pro danou operaci.
         :param removals: Vstupní hodnota ``removals`` pro danou operaci.
         :param asvar: Vstupní hodnota ``asvar`` pro danou operaci.
@@ -40,7 +41,7 @@ class QuerystringNodeMulti(Node):
 
     def render(self, context):
         """Vyrenderuje hodnotu.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if "request" not in context:
@@ -84,7 +85,7 @@ class QuerystringNodeMulti(Node):
 @register.tag
 def querystring_multi(parser, token):
     """Provádí operaci querystring multi.
-    
+
     :param parser: Vstupní hodnota ``parser`` pro danou operaci.
     :param token: Vstupní hodnota ``token`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
@@ -115,7 +116,7 @@ def querystring_multi(parser, token):
 @register.simple_tag
 def get_maintenance():
     """Vrací maintenance.
-    
+
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     if get_set_maintenance_in_cache():
         return True
@@ -137,7 +138,7 @@ def get_site_url():
 @register.simple_tag
 def get_settings(item_group, item_id):
     """Vrací settings.
-    
+
     :param item_group: Vstupní hodnota ``item_group`` pro danou operaci.
     :param item_id: Identifikátor objektu ``item``.
     :return: Vrací načtená data odpovídající vstupním parametrům."""

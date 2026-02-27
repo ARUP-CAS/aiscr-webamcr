@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def invalidate_arch_z_related_models():
     """Provádí operaci invalidate arch z related models.
-    
+
     :return: Vrací výsledek provedené operace."""
     invalidate_model(Akce)
     invalidate_model(Projekt)
@@ -86,7 +86,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 
         def save_metadata(inner_close_transaction=False):
             """Uloží metadata.
-            
+
             :param inner_close_transaction: Vstupní hodnota ``inner_close_transaction`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             try:
@@ -129,7 +129,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 @receiver(post_save, sender=Akce, weak=False)
 def update_akce_snapshot(sender, instance: Akce, **kwargs):
     """Aktualizuje akce snapshot.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -212,7 +212,7 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
 @receiver(post_delete, sender=ArcheologickyZaznam, weak=False)
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
     """Odstraní arch z repository update connected records.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -225,7 +225,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
 
     def save_metadata(close_transaction=False):
         """Uloží metadata.
-        
+
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         invalidate_arch_z_related_models()
@@ -264,7 +264,7 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
 
     def save_metadata(inner_close_transaction=False):
         """Uloží metadata.
-        
+
         :param inner_close_transaction: Vstupní hodnota ``inner_close_transaction`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:

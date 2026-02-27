@@ -14,6 +14,11 @@ Třídy
 
    .. py:method:: label_from_instance()
 
+      Provádí operaci label from instance.
+
+      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: PotvrditNalezForm
 
@@ -22,6 +27,15 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+      :param predano_required: Vstupní hodnota ``predano_required`` pro danou operaci.
+      :param predano_hidden: Vstupní hodnota ``predano_hidden`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: CreateSamostatnyNalezForm
@@ -32,6 +46,17 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param required: Vstupní hodnota ``required`` pro danou operaci.
+      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param project_ident: Vstupní hodnota ``project_ident`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: CreateZadostForm
 
@@ -41,10 +66,16 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: PasFilterForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PasFilterForm`` v rámci aplikace.
 
 
 .. py:class:: DeaktivovatSpolupraciForm
@@ -54,6 +85,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 Funkce

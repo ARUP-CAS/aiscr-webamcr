@@ -81,6 +81,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "archeologicky_zaznam"
         constraints = [
             CheckConstraint(
@@ -330,7 +331,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def _set_connected_records_ident(self, new_ident):
         """Nastaví connected records ident.
-        
+
         :param new_ident: Vstupní hodnota ``new_ident`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         for dj in self.dokumentacni_jednotky_akce.all():
@@ -347,7 +348,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_akce_ident(self, ident=None, delete_container=True):
         """Nastaví akce ident.
-        
+
         :param ident: Vstupní hodnota ``ident`` pro danou operaci.
         :param delete_container: Vstupní hodnota ``delete_container`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -394,13 +395,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
         """Vrací create user.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel,)
@@ -410,7 +411,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def get_create_org(self):
         """Vrací create org.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.get_create_user():
             return (self.get_create_user()[0].organizace,)
@@ -419,7 +420,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def check_set_permanent_ident(self):
         """Ověří set permanent ident.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         poznamka_historie = None
         old_ident = None
@@ -446,7 +447,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -456,7 +457,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     @property
     def initial_casti_dokumentu(self):
         """Provádí operaci initial casti dokumentu.
-        
+
         :return: Vrací výsledek provedené operace."""
         try:
             return self.casti_dokumentu.all().values_list("id", flat=True)
@@ -466,7 +467,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     @property
     def initial_pristupnost(self):
         """Provádí operaci initial pristupnost.
-        
+
         :return: Vrací výsledek provedené operace."""
         if hasattr(self, "_initial_pristupnost"):
             return self._initial_pristupnost
@@ -479,14 +480,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     @initial_pristupnost.setter
     def initial_pristupnost(self, value):
         """Provádí operaci initial pristupnost.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self._initial_pristupnost = value
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -498,7 +499,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def igsn_lokalita_hide(self, check_status=True):
         """Provádí operaci igsn lokalita hide.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
@@ -506,7 +507,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def igsn_lokalita_publish(self, check_status=True):
         """Provádí operaci igsn lokalita publish.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA and self.stav == AZ_STAV_ARCHIVOVANY:
@@ -514,7 +515,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def igsn_lokalita_delete(self, check_status=True):
         """Provádí operaci igsn lokalita delete.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
@@ -522,7 +523,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def igsn_lokalita_update(self, check_status=True, reload_record=False):
         """Provádí operaci igsn lokalita update.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -544,6 +545,7 @@ class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zazna
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "archeologicky_zaznam_katastr"
         unique_together = (("archeologicky_zaznam", "katastr"),)
 
@@ -620,6 +622,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "akce"
         constraints = [
             CheckConstraint(
@@ -636,7 +639,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -649,7 +652,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     @property
     def initial_projekt(self):
         """Provádí operaci initial projekt.
-        
+
         :return: Vrací výsledek provedené operace."""
         from projekt.models import Projekt
 
@@ -665,20 +668,20 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     def vedouci_organizace(self):
         """Provádí operaci vedouci organizace.
-        
+
         :return: Vrací výsledek provedené operace."""
         return ", ".join([str(x.organizace) for x in self.akcevedouci_set.all()])
 
     @cached_property
     def vedouci(self):
         """Provádí operaci vedouci.
-        
+
         :return: Vrací výsledek provedené operace."""
         return ", ".join([str(x.vedouci) for x in self.akcevedouci_set.all()])
 
     def set_snapshots(self):
         """Nastaví snapshots.
-        
+
         :return: Vrací výsledek provedené operace."""
         if not self.akcevedouci_set.all():
             self.vedouci_snapshot = None
@@ -695,7 +698,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     @property
     def redis_snapshot_id(self):
         """Provádí operaci redis snapshot id.
-        
+
         :return: Vrací výsledek provedené operace."""
         from arch_z.views import AkceListView
 
@@ -703,7 +706,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     def generate_redis_snapshot(self):
         """Vygeneruje redis snapshot.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         from arch_z.tables import AkceTable
 
@@ -722,7 +725,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
         """Vrací by ident cely.
-        
+
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
@@ -742,6 +745,7 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "akce_vedouci"
         unique_together = (("akce", "vedouci"),)
         ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
@@ -780,11 +784,12 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "externi_odkaz"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -796,7 +801,7 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
 
     def create_transaction(self, transaction_user):
         """Vytvoří transaction.
-        
+
         :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         from core.repository_connector import FedoraTransaction
@@ -857,6 +862,7 @@ class LokalitaSekvence(models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "lokalita_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["region", "typ"], name="unique_sekvence_lokalita"),
@@ -873,6 +879,7 @@ class AkceSekvence(models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "akce_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["region"], name="unique_sekvence_akce"),

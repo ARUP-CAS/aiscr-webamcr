@@ -70,10 +70,11 @@ logger = logging.getLogger(__name__)
 
 class SouborTypFilter(MultipleChoiceFilter):
     """Implementuje komponentu ``SouborTypFilter`` v rámci aplikace."""
+
     @property
     def field(self):
         """Provádí operaci field.
-        
+
         :return: Vrací výsledek provedené operace."""
         qs = self.model._default_manager.distinct()
         qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
@@ -92,7 +93,7 @@ class HistorieFilter(FilterSet):
 
     def set_filter_fields(self, user):
         """Nastaví filter fields.
-        
+
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
@@ -149,7 +150,7 @@ class HistorieFilter(FilterSet):
 
     def _get_history_subquery(self):
         """Vrací history subquery.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
         uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
@@ -316,7 +317,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     def filter_queryset(self, queryset):
         """Filtruje queryset.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("dokument.filters.AkceFilter.filter_queryset.start")
@@ -394,13 +395,14 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         exclude = []
         form = DokumentFilterForm
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -499,7 +501,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
 
     def __init__(self, form=None):
         """Inicializuje instanci třídy.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
@@ -1133,7 +1135,7 @@ class DokumentFilter(Model3DFilter):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -1150,7 +1152,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
 
     def __init__(self, form=None):
         """Inicializuje instanci třídy.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {

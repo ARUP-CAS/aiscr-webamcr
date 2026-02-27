@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: ExterniZdroj
 
-   Class pro db model externí zdroj.
+   Databázový model externího zdroje.
 
    **Metody:**
 
@@ -17,6 +17,10 @@ Třídy
       Metoda pro získaní absolut url záznamu podle identu.
 
    .. py:method:: __str__()
+
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: set_odeslany()
 
@@ -37,35 +41,71 @@ Třídy
 
    .. py:method:: get_permission_object()
 
+      Vrací permission object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_create_user()
+
+      Vrací create user.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_org()
 
+      Vrací create org.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: set_snapshots()
+
+      Nastaví snapshots.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: redis_snapshot_id()
 
+      Provádí operaci redis snapshot id.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: generate_redis_snapshot()
 
+      Vygeneruje redis snapshot.
+
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: check_set_permanent_ident()
+
+      Ověří set permanent ident.
+
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: ExterniZdrojAutor
 
-   Class pro db model autora externího zdroje, zohledňuje pořadí zadání.
+   Databázový model autora externího zdroje se zohledněním pořadí zadání.
 
    **Metody:**
 
    .. py:method:: get_osoba()
+
+      Vrací osoba.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ExterniZdrojEditor
 
-   Class pro db model editora externího zdroje, zohledňuje pořadí zadání.
+   Databázový model editora externího zdroje se zohledněním pořadí zadání.
 
    **Metody:**
 
    .. py:method:: get_osoba()
+
+      Vrací osoba.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ExterniZdrojSekvence
@@ -79,4 +119,4 @@ Funkce
 .. py:function:: get_perm_ez_ident()
 
    Funkce pro výpočet ident celý pro externí zdroj.
-   Funkce vráti pro permanentní ident id podle sekvence externího zdroje.
+   Funkce vrátí pro permanentní ident ID podle sekvence externího zdroje.

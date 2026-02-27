@@ -14,7 +14,19 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param required: Vstupní hodnota ``required`` pro danou operaci.
+      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: clean()
+
+      Provádí operaci clean.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: EditProjektForm
@@ -24,6 +36,15 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param required: Vstupní hodnota ``required`` pro danou operaci.
+      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param edit_fields: Vstupní hodnota ``edit_fields`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: clean()
 
@@ -38,6 +59,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: clean()
 
       Metoda na kontrolu obsahu důvodu pro zrušení.
@@ -51,6 +78,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: ZahajitVTerenuForm
 
@@ -60,7 +93,17 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: clean()
+
+      Provádí operaci clean.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UkoncitVTerenuForm
@@ -70,6 +113,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: clean()
 
@@ -84,6 +133,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: GenerovatNovePotvrzeniForm
 
@@ -92,6 +147,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: GenerovatExpertniListForm
@@ -102,6 +163,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: PripojitProjektForm
 
@@ -111,28 +178,49 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param dok: Vstupní hodnota ``dok`` pro danou operaci.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: ProjektFilterForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ProjektFilterForm`` v rámci aplikace.
 
 
 .. py:class:: ZadostProjektForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ZadostProjektForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param label: Vstupní hodnota ``label`` pro danou operaci.
+      :param help_text: Vstupní hodnota ``help_text`` pro danou operaci.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: UpravitDatumOznameniForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``UpravitDatumOznameniForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NeodeslatMailForm
@@ -142,4 +230,10 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 

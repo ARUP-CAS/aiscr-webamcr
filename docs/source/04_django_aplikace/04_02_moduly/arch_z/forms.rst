@@ -14,6 +14,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: CreateArchZForm
 
@@ -34,7 +40,17 @@ Třídy
 
    .. py:method:: year_only()
 
+      Provádí operaci year only.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_date_based_on_year()
+
+      Vrací date based on year.
+
+      :param year: Vstupní hodnota ``year`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: to_python()
 
@@ -63,6 +79,14 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param required: Vstupní hodnota ``required`` pro danou operaci.
+      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: clean_odlozena_nz()
 
       Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True.
@@ -86,7 +110,7 @@ Třídy
 
 .. py:class:: ArchzFilterForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ArchzFilterForm`` v rámci aplikace.
 
 
 Funkce

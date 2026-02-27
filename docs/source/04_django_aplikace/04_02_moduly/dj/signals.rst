@@ -13,8 +13,18 @@ Funkce
 
 .. py:function:: pre_delete_dokumentacni_jednotka(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci pre delete dokumentacni jednotka.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: delete_dokumentacni_jednotka(sender, instance)
 
-   Popis není k dispozici.
+   Odstraní dokumentacni jednotka.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek operace odstranění.

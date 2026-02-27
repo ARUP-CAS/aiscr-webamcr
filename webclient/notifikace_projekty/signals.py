@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Pes, weak=False)
 def pes_save(sender, instance: Pes, **kwargs):
     """Provádí operaci pes save.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -29,7 +29,7 @@ def pes_save(sender, instance: Pes, **kwargs):
 @receiver(pre_delete, sender=Pes, weak=False)
 def pes_delete(sender, instance: Pes, **kwargs):
     """Provádí operaci pes delete.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.

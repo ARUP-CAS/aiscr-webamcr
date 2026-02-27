@@ -8,11 +8,19 @@ Třídy
 
 .. py:class:: NalezFormSetHelper
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NalezFormSetHelper`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param typ: Vstupní hodnota ``typ`` pro danou operaci.
+      :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 Funkce

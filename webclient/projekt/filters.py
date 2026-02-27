@@ -39,9 +39,10 @@ logger = logging.getLogger(__name__)
 
 class Users(QuerySet):
     """Implementuje komponentu ``Users`` v rámci aplikace."""
+
     def active_processes(self):
         """Provádí operaci active processes.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.select_related("first_name", "last_name")
 
@@ -501,7 +502,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_queryset(self, queryset):
         """Filtruje queryset.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
@@ -679,6 +680,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = [
             "ident_cely",
@@ -688,7 +690,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -710,7 +712,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
 
     def __init__(self, form=None):
         """Inicializuje instanci třídy.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {

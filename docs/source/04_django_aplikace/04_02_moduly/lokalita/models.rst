@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: Lokalita
 
-   Class pro db model lokalita.
+   Databázový model lokality.
 
    **Metody:**
 
@@ -18,25 +18,79 @@ Třídy
 
    .. py:method:: set_igsn()
 
+      Nastaví igsn.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: set_snapshots()
+
+      Nastaví snapshots.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: redis_snapshot_id()
 
+      Provádí operaci redis snapshot id.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: generate_redis_snapshot()
+
+      Vygeneruje redis snapshot.
+
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: _get_igsn_client()
 
+      Vrací igsn client.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: igsn_exists()
+
+      Provádí operaci igsn exists.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: igsn_delete()
 
+      Provádí operaci igsn delete.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: igsn_hide()
+
+      Provádí operaci igsn hide.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: igsn_publish()
 
+      Provádí operaci igsn publish.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: igsn_update()
+
+      Provádí operaci igsn update.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: igsn_url()
 
+      Provádí operaci igsn url.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_by_ident_cely()
+
+      Vrací by ident cely.
+
+      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 

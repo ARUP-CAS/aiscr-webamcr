@@ -14,3 +14,8 @@ Třídy
 
    .. py:method:: user_can_authenticate()
 
+      Provádí operaci user can authenticate.
+
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+

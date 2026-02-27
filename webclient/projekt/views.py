@@ -280,7 +280,7 @@ class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMi
 
     def post(self, request):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         body = json.loads(request.body.decode("utf-8"))
@@ -310,7 +310,7 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
 
     def post(self, request):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         body = json.loads(request.body.decode("utf-8"))
@@ -579,9 +579,10 @@ def smazat(request, ident_cely):
 
 class ProjektPermissionFilterMixin(PermissionFilterMixin):
     """Implementuje komponentu ``ProjektPermissionFilterMixin`` v rámci aplikace."""
+
     def add_ownership_lookup(self, ownership, qs=None):
         """Provádí operaci add ownership lookup.
-        
+
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -592,7 +593,7 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
 
     def add_accessibility_lookup(self, permission, qs):
         """Provádí operaci add accessibility lookup.
-        
+
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -623,7 +624,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         super().init_translations()
         self.page_title = _("projekt.views.projektListView.pageTitle")
@@ -635,7 +636,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -653,7 +654,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = super().get_queryset()
         qs = qs.order_by(*self._get_sort_params())
@@ -1367,12 +1368,13 @@ def generovat_oznameni(request, ident_cely):
 
 class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
     """Implementuje komponentu ``GenerovatOznameniView`` v rámci aplikace."""
+
     http_method_names = ["POST"]
 
     @method_decorator(handle_fedora_error)
     def get_redirect_url(self, *args, **kwargs):
         """Vrací redirect url.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -1525,7 +1527,7 @@ def get_detail_template_shows(projekt, user):
 
 def get_show_oznamovatel(projekt, user):
     """Vrací show oznamovatel.
-    
+
     :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
     :param user: Vstupní hodnota ``user`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -1638,14 +1640,14 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
 
     def get_result_label(self, result):
         """Vrací result label.
-        
+
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return f"{result.ident_cely} ({result.hlavni_katastr}; {result.vedouci_projektu})"
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not self.request.user.is_authenticated:
             return Projekt.objects.none()
@@ -1674,7 +1676,7 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
 
     def check_filter_permission(self, qs):
         """Ověří filter permission.
-        
+
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         permissions = Permissions.objects.filter(
@@ -1700,7 +1702,7 @@ class ProjectTableRowView(LoginRequiredMixin, View):
 
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
@@ -1709,11 +1711,12 @@ class ProjectTableRowView(LoginRequiredMixin, View):
 
 class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
     """Implementuje komponentu ``UpravitDatumOznameniView`` v rámci aplikace."""
+
     template_name = "core/transakce_modal.html"
 
     def _get_existing_record(self, projekt):
         """Vrací existing record.
-        
+
         :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         historie_objects = Historie.objects.filter(vazba=projekt.historie, typ_zmeny=OZNAMENI_PROJ_MANUALNI)
@@ -1722,7 +1725,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
@@ -1737,7 +1740,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1761,7 +1764,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1810,7 +1813,7 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self):
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
@@ -1821,7 +1824,7 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1842,7 +1845,7 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1867,7 +1870,7 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self):
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
@@ -1878,7 +1881,7 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1899,7 +1902,7 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1924,7 +1927,7 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self):
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
@@ -1935,7 +1938,7 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1956,7 +1959,7 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

@@ -151,7 +151,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -168,7 +168,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     @classmethod
     def save_record_deletion_record(cls, record):
         """Uloží record deletion record.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("history.models.save_record_deletion_record.start")
@@ -200,6 +200,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "historie"
         verbose_name = "historie"
         ordering = [
@@ -241,12 +242,13 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "historie_vazby"
         verbose_name = "historie_vazby"
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 

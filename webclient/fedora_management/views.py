@@ -15,9 +15,10 @@ logger = logging.getLogger(__name__)
 
 class AdminRecordProcessingView(LoginRequiredMixin, View):
     """Implementuje komponentu ``AdminRecordProcessingView`` v rámci aplikace."""
+
     def process_record(self, record, result, **kwargs):
         """Provádí operaci process record.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -26,7 +27,7 @@ class AdminRecordProcessingView(LoginRequiredMixin, View):
 
     def get(self, request, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -65,9 +66,10 @@ class AdminRecordProcessingView(LoginRequiredMixin, View):
 
 class ContinueMedataProcessing(AdminRecordProcessingView):
     """Implementuje komponentu ``ContinueMedataProcessing`` v rámci aplikace."""
+
     def process_record(self, record, result, **kwargs):
         """Provádí operaci process record.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

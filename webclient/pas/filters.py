@@ -254,6 +254,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = SamostatnyNalez
         fields = {
             "predano": ["exact"],
@@ -262,7 +263,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -279,7 +280,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
 
     def filter_queryset(self, queryset):
         """Filtruje queryset.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.start")
@@ -368,12 +369,13 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = UzivatelSpoluprace
         fields = ["stav"]
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -420,7 +422,7 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
 
     def filter_queryset(self, queryset):
         """Filtruje queryset.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.start")
@@ -451,7 +453,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
 
     def __init__(self, form=None):
         """Inicializuje instanci třídy.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
@@ -515,7 +517,7 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
 
     def __init__(self, form=None):
         """Inicializuje instanci třídy.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
