@@ -78,8 +78,22 @@ jobs:
         id: hooks
         run: |
           set +e
-          pre-commit run --all-files
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          pre-commit run --all-files 2>&1 | tee precommit.log
+          PRECOMMIT_EXIT=${PIPESTATUS[0]}
+          echo "exit_code=${PRECOMMIT_EXIT}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "warnings<<EOF"
+            grep -E "WARNING DOC[0-9]{3}" precommit.log || true
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "log_tail<<EOF"
+            tail -n 80 precommit.log
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
           exit 0
 
       # 🔎 Detect ANY changes (formatting or RST)
@@ -126,8 +140,23 @@ jobs:
           echo "## ⚠️ Pre-commit results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Pre-commit exit code: ${{ steps.hooks.outputs.exit_code }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Changes detected: ${{ steps.changes.outputs.changed || 'false' }}" >> $GITHUB_STEP_SUMMARY      
-          echo "" >> $GITHUB_STEP_SUMMARY      
+          echo "- Changes detected: ${{ steps.changes.outputs.changed || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "${{ steps.hooks.outputs.warnings }}" ]; then
+            echo "### Docstring warnings" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.hooks.outputs.warnings }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "### Pre-commit log (tail)" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.hooks.outputs.log_tail }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
           if [ "${{ steps.changes.outputs.changed }}" = "true" ]; then
             echo "A fix PR has been created or updated." >> $GITHUB_STEP_SUMMARY
           else
@@ -141,6 +170,8 @@ jobs:
           script: |
             const changed = "${{ steps.changes.outputs.changed }}" === "true";
             const exitCode = "${{ steps.hooks.outputs.exit_code }}";
+            const warnings = ${{ toJSON(steps.hooks.outputs.warnings) }};
+            const logTail = ${{ toJSON(steps.hooks.outputs.log_tail) }};
             const marker = "<!-- precommit-bot-comment -->";
             let body = `${marker}
             ## ⚠️ Pre-commit results
@@ -168,6 +199,31 @@ jobs:
               Pre-commit checks failed and require manual fixes.
               `;
             }
+
+            if (warnings && warnings.trim()) {
+                body += `
+
+                ### Docstring warnings
+
+                \`\`\`
+                ${warnings}
+                \`\`\`
+                `;
+            }
+
+            if (logTail && logTail.trim()) {
+                body += `
+
+                <details>
+                <summary>Pre-commit log (tail)</summary>
+
+                \`\`\`
+                ${logTail}
+                \`\`\`
+                </details>
+                `;
+            }
+
             body = body.replace(/^[ \t]+/gm, '');
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
