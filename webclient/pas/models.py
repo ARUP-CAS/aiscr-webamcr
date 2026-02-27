@@ -40,7 +40,7 @@ from uzivatel.models import Organizace, Osoba, User
 
 class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithMetadata):
     """
-    Class pro db model samostantý nález.
+    Databázový model samostatného nálezu.
     """
 
     PAS_STATES = [
@@ -416,7 +416,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
     """
-    Class pro db model spolupráce.
+    Databázový model spolupráce.
     """
 
     SPOLUPRACE_STATES = [

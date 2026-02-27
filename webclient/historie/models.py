@@ -68,11 +68,11 @@ logger = logging.getLogger(__name__)
 
 class Historie(ExportModelOperationsMixin("historie"), models.Model):
     """
-    Class pro db model historie.
+    Databázový model pro záznam historie změn.
     """
 
     CHOICES = (
-        # Project related choices
+        # Volby navázané na projekt.
         (OZNAMENI_PROJ, _("historie.models.historieStav.projekt.Px0")),
         (OZNAMENI_PROJ_MANUALNI, _("historie.models.historieStav.projekt.Px0M")),
         (SCHVALENI_OZNAMENI_PROJ, _("historie.models.historieStav.projekt.P01")),
@@ -88,45 +88,45 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (VRACENI_NAVRHU_ZRUSENI, _("historie.models.historieStav.projekt.P71")),
         (VRACENI_ZRUSENI, _("historie.models.historieStav.projekt.P81")),
         (RUSENI_STARE_PROJ, _("historie.models.historieStav.projekt.P18")),
-        # Akce + Lokalita (archeologicke zaznamy)
+        # Akce + lokalita (archeologické záznamy).
         (ZAPSANI_AZ, _("historie.models.historieStav.az.AZ01")),
         (ODESLANI_AZ, _("historie.models.historieStav.az.AZ12")),
         (ARCHIVACE_AZ, _("historie.models.historieStav.az.AZ23")),
         (VRACENI_AZ, _("historie.models.historieStav.az.AZ-1")),
         (ZMENA_AZ, _("historie.models.historieStav.az.AZ-2")),
-        # Dokument
+        # Dokument.
         (ZAPSANI_DOK, _("historie.models.historieStav.dokument.D01")),
         (ODESLANI_DOK, _("historie.models.historieStav.dokument.D12")),
         (ARCHIVACE_DOK, _("historie.models.historieStav.dokument.D23")),
         (VRACENI_DOK, _("historie.models.historieStav.dokument.D-1")),
-        # Samostatny nalez
+        # Samostatný nález.
         (ZAPSANI_SN, _("historie.models.historieStav.sn.SN01")),
         (ODESLANI_SN, _("historie.models.historieStav.sn.SN12")),
         (POTVRZENI_SN, _("historie.models.historieStav.sn.SN23")),
         (ARCHIVACE_SN, _("historie.models.historieStav.sn.SN34")),
         (VRACENI_SN, _("historie.models.historieStav.sn.SN-1")),
-        # Uzivatel
+        # Uživatel.
         (ZMENA_HLAVNI_ROLE, _("historie.models.historieStav.uzivatel.HR")),
         (ZMENA_UDAJU_ADMIN, _("historie.models.historieStav.uzivatel.ZUA")),
         (ADMIN_UPDATE, _("historie.models.historieStav.uzivatel.ZHA")),
         (ZMENA_HESLA_ADMIN, _("historie.models.historieStav.uzivatel.ZUU")),
         (ZMENA_UDAJU_UZIVATEL, _("historie.models.historieStav.uzivatel.ZUU")),
         (ZMENA_HESLA_UZIVATEL, _("historie.models.historieStav.uzivatel.ZHU")),
-        # Katastr
+        # Katastr.
         (ZMENA_KATASTRU, _("historie.models.historieStav.katastr.KAT")),
-        # Pian
+        # PIAN.
         (ZAPSANI_PIAN, _("historie.models.historieStav.pian.PI01")),
         (POTVRZENI_PIAN, _("historie.models.historieStav.pian.PI12")),
-        # Uzivatel_spoluprace
+        # Uživatel/spolupráce.
         (SPOLUPRACE_ZADOST, _("historie.models.historieStav.spoluprace.SP01")),
         (SPOLUPRACE_AKTIVACE, _("historie.models.historieStav.spoluprace.SP12")),
         (SPOLUPRACE_DEAKTIVACE, _("historie.models.historieStav.spoluprace.SP-1")),
-        # Externi_zdroj
+        # Externí zdroj.
         (ZAPSANI_EXT_ZD, _("historie.models.historieStav.ez.EZ01")),
         (ODESLANI_EXT_ZD, _("historie.models.historieStav.ez.EZ12")),
         (POTVRZENI_EXT_ZD, _("historie.models.historieStav.ez.EZ23")),
         (VRACENI_EXT_ZD, _("historie.models.historieStav.ez.EZ-1")),
-        # Soubor
+        # Soubor.
         (NAHRANI_SBR, _("historie.models.historieStav.soubor.SBR0")),
     )
 
@@ -154,6 +154,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         self.suppress_signal = False
 
     def uzivatel_protected(self, anonymized=True):
+        """Vrátí textovou reprezentaci uživatele v anonymizované nebo plné podobě."""
         if anonymized:
             return f"{self.uzivatel.ident_cely} ({self.uzivatel.organizace})"
         else:
@@ -161,6 +162,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
 
     @classmethod
     def save_record_deletion_record(cls, record):
+        """Uloží historizační záznam o smazání navázaného objektu."""
         logger.debug("history.models.save_record_deletion_record.start")
         from arch_z.models import ArcheologickyZaznam
 
@@ -182,6 +184,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         logger.debug("history.models.save_record_deletion_record.end")
 
     def set_snapshots(self):
+        """Synchronizuje snapshot organizace s aktuální organizací uživatele."""
         if self.organizace_snapshot != self.uzivatel.organizace:
             self.organizace_snapshot = self.uzivatel.organizace
             self.suppress_signal = True
@@ -209,7 +212,8 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
 
 class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     """
-    Class pro db model historie vazby.
+    Databázový model vazeb historie.
+
     Model se používa k napojení na jednotlivé záznamy.
     """
 
@@ -231,11 +235,12 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         verbose_name = "historie_vazby"
 
     def __str__(self):
+        """Vrací textovou reprezentaci vazby historie."""
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
     def get_last_transaction_date(self, transaction_type, anonymized: bool = True, user_protected: bool = True) -> dict:
         """
-        Metoda pro zjištení datumu posledné transakce daného typu.
+        Vrátí datum a uživatele poslední transakce požadovaného typu.
         """
         resp = {}
         if isinstance(transaction_type, list):
@@ -256,6 +261,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
 
     @property
     def navazany_objekt(self):
+        """Vrátí objekt navázaný na danou vazbu historie."""
         if hasattr(self, "projekt_historie"):
             return self.projekt_historie
         elif hasattr(self, "dokument_historie"):

@@ -227,7 +227,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         distinct=True,
     )
 
-    # Dle transakci nevyuzito"
+    # Dle transakcí nevyužito.
     """
     datum_oznameni_od = DateFilter(
         method="filter_announced_after",

@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
-    Class pro db model heslar.
+    Databázový model hesláře.
     """
 
-    # TextField by měl být změněn na CharField, pokud se neočekává dlouhý text.
+    # Zvažte změnu na CharField, pokud se neočekává dlouhý text.
     ident_cely = models.TextField(unique=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
         "HeslarNazev", models.RESTRICT, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")
@@ -82,7 +82,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
 class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
     """
-    Class pro db model heslar datace.
+    Databázový model datace hesláře.
     """
 
     obdobi = models.OneToOneField(
@@ -116,7 +116,7 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
 
 class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
     """
-    Class pro db model heslar dokument typ materialu.
+    Databázový model vazby typu dokumentu, materiálu a řady.
     """
 
     dokument_rada = models.ForeignKey(
@@ -159,7 +159,7 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
 
 class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
     """
-    Class pro db model heslar hierarchie.
+    Databázový model hierarchie hesláře.
     """
 
     TYP_CHOICES = [
@@ -208,7 +208,7 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
 
 class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
     """
-    Class pro db model heslar nazev.
+    Databázový model názvu hesláře.
     """
 
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.HeslarNazev.nazev"))
@@ -224,7 +224,7 @@ class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
 
 class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     """
-    Class pro db model heslar odkaz.
+    Databázový model odkazu hesláře.
     """
 
     SKOS_MAPPING_RELATION_CHOICES = [
@@ -269,7 +269,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
 
 class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadata):
     """
-    Class pro db model ruian katastr.
+    Databázový model katastru RÚIAN.
     """
 
     okres = models.ForeignKey(
@@ -319,7 +319,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
 class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     """
-    Class pro db model ruian kraj.
+    Databázový model kraje RÚIAN.
     """
 
     nazev = models.CharField(unique=True, max_length=100, verbose_name=_("heslar.models.RuianKraj.nazev"))
@@ -357,7 +357,7 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
 
 class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
     """
-    Class pro db model ruian okres.
+    Databázový model okresu RÚIAN.
     """
 
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianOkres.nazev"))

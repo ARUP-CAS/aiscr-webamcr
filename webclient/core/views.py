@@ -354,14 +354,14 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         ident_cely = self.kwargs.get("ident_cely")
         file_id = self.kwargs.get("file_id")
 
-        # Získání bezpečné URL pro přesměrování
+        # Získání bezpečné URL pro přesměrování.
         next_url = request.GET.get("next", "core:home")
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
             safe_redirect = next_url
         else:
             safe_redirect = "/"
 
-        # Ověření vazby souboru
+        # Ověření vazby souboru.
         try:
             check_soubor_vazba(typ_vazby, ident_cely, file_id)
         except ZaznamSouborNotmatching as e:
@@ -775,7 +775,7 @@ class NewFileUploadView(BasePostUploadView):
                 - new_name (str): Vygenerovaný standardizovaný název souboru
             Při chybě vrací JsonResponse s chybovou zprávou a status kódem 403/500
         """
-        # Mapování typu vazby na permission action
+        # Mapování typu vazby na oprávnění akce.
         action_map = {
             "projekt": Permissions.actionChoices.soubor_nahrat_projekt,
             "dokument": Permissions.actionChoices.soubor_nahrat_dokument,
@@ -783,7 +783,7 @@ class NewFileUploadView(BasePostUploadView):
             "pas": Permissions.actionChoices.soubor_nahrat_pas,
         }
 
-        # Kontrola platnosti typu vazby
+        # Kontrola platnosti typu vazby.
         action = action_map.get(typ_vazby)
         if action is None:
             self.fedora_transaction.rollback_transaction()
@@ -796,7 +796,7 @@ class NewFileUploadView(BasePostUploadView):
                 status=400,
             )
 
-        # Rozlišení objektu podle typu vazby - dotazy pouze pro relevantní typ
+        # Rozlišení objektu podle typu vazby – dotazy pouze pro relevantní typ.
         objekt = None
         new_name = None
 
@@ -901,7 +901,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
         file_id = kwargs.get("file_id")
         logger.debug("core.views.post_upload.updating", extra={"pk": file_id, "source_url": self.source_url})
 
-        # Kontrola platnosti typu vazby a oprávnění
+        # Kontrola platnosti typu vazby. a oprávnění
         permission_check = self._check_update_permissions(request, typ_vazby, ident_cely, file_id)
         if isinstance(permission_check, JsonResponse):
             return permission_check
@@ -1009,15 +1009,15 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             bool | JsonResponse: True pokud je vše v pořádku,
                                  JsonResponse s chybovou zprávou při problému
         """
-        # Mapování typu vazby na permission action
-        # Poznámka: projekt není v mapování - nahrazení souborů projektu není povoleno
+        # Mapování typu vazby na oprávnění akce.
+        # Poznámka: projekt není v mapování – nahrazení souborů projektu není povoleno.
         action_map = {
             "dokument": Permissions.actionChoices.soubor_nahradit_dokument,
             "model3d": Permissions.actionChoices.soubor_nahradit_model3d,
             "pas": Permissions.actionChoices.soubor_nahradit_pas,
         }
 
-        # Kontrola platnosti typu vazby
+        # Kontrola platnosti typu vazby.
         action = action_map.get(typ_vazby)
         if action is None:
             self.fedora_transaction.rollback_transaction()
@@ -1030,7 +1030,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
                 status=400,
             )
 
-        # Rozlišení objektu podle typu vazby - dotazy pouze pro relevantní typ
+        # Rozlišení objektu podle typu vazby – dotazy pouze pro relevantní typ.
         objekt = None
 
         if typ_vazby in ("dokument", "model3d"):
@@ -1100,12 +1100,12 @@ def get_projekt_soubor_name(projekt: Projekt, file_name):
     nfkd_form = unicodedata.normalize("NFKD", split_file[0])
     only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
     return re.sub("[^A-Za-z0-9_]", "_", only_ascii) + split_file[1]
-    # potrebne odstranit constraint soubor_filepath_key
+    # Potřebné odstranit omezení `soubor_filepath_key`.
 
 
 def check_stav_changed(request, zaznam):
     """
-    Funkce pro oveření jestli se zmenil stav záznamu pri uložení formuláře oproti jeho načtení.
+    Funkce pro ověření, jestli se změnil stav záznamu při uložení formuláře oproti jeho načtení.
     """
     logger.debug("core.views.check_stav_changed.start", extra={"pk": zaznam.pk})
     if request.method == "POST":
@@ -1684,7 +1684,7 @@ class ReadTempValueView(View):
                 # Ošetření případu, kdy klíč v Redis neexistuje.
                 return JsonResponse({"percent": 0, "text": _("core.templates.core.export_modal.file_being_generated")})
         else:
-            # Vrátí JSON odpověď se stavem 403 Forbidden.
+            # Vrátí JSON odpověď se stavem 403 (zakázáno).
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
@@ -1697,7 +1697,7 @@ class DeleteTempValueView(View):
             logger.debug("core.views.ResetTempValueView.get.result", extra={"value": temp_name})
             return JsonResponse({"result": "success"})
         else:
-            # Vrátí JSON odpověď se stavem 403 Forbidden.
+            # Vrátí JSON odpověď se stavem 403 (zakázáno).
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
@@ -1710,7 +1710,7 @@ class AbortDownloadUpdateTempValueView(View):
             logger.debug("core.views.AbortDownloadUpdateTempValueView.get.result", extra={"value": temp_name})
             return JsonResponse({"result": "success"})
         else:
-            # Vrátí JSON odpověď se stavem 403 Forbidden.
+            # Vrátí JSON odpověď se stavem 403 (zakázáno).
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
@@ -1946,7 +1946,7 @@ class ApplicationRestartView(LoginRequiredMixin, View):
         try:
             import uwsgi
 
-            uwsgi.reload()  # pretty easy right?
+            uwsgi.reload()  # Jednoduché volání restartu aplikace.
             messages.add_message(self.request, messages.SUCCESS, APPLICATION_RESTART_SUCCESS)
         except Exception as e:
             logger.debug("core.views.ApplicationRestartView.exception", extra={"exception": e})
@@ -1954,7 +1954,7 @@ class ApplicationRestartView(LoginRequiredMixin, View):
         referer = request.META.get("HTTP_REFERER")
         fallback_url = "/admin"
         if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts=settings.ALLOWED_HOSTS):
-            # Validate referer URL
+            # Ověření referenční URL.
             try:
                 validator = URLValidator()
                 validator(referer)
@@ -1962,7 +1962,7 @@ class ApplicationRestartView(LoginRequiredMixin, View):
                 referer = fallback_url
         else:
             referer = fallback_url
-        # Redirect to referer or fallback URL
+        # Přesměrování na referer nebo záložní URL.
         return redirect(referer)
 
 

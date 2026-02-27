@@ -5,7 +5,7 @@ from projekt.models import Projekt
 
 class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
     """
-    Class pro db model oznamovatel.
+    Databázový model oznamovatele.
     """
 
     projekt = models.OneToOneField(

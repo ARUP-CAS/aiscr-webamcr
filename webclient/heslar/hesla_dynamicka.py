@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_settings(item_group, item_id):
+    """Načte nastavení z administrace a vrátí ho jako slovník."""
     try:
         settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
         if settings_query.count() > 0:
@@ -19,6 +20,7 @@ def get_settings(item_group, item_id):
 
 
 def get_id_from_database(table, heslo, ident_cely, heslarDB) -> int:
+    """Vrátí ID položky hesláře podle mapování nebo výchozího identifikátoru."""
     try:
         if heslo in heslarDB:
             heslar_obj = table.objects.filter(ident_cely=heslarDB[heslo]).values_list("pk", flat=True).first()
@@ -35,6 +37,7 @@ def get_id_from_database(table, heslo, ident_cely, heslarDB) -> int:
 
 
 def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
+    """Načte konstanty z nastavení a uloží je do globálního jmenného prostoru modulu."""
     heslarDB = get_settings("constants", constant_name)
     missing_keys = set(heslarDB.keys()) - set(CONSTANTS.keys())
     if missing_keys:
@@ -66,7 +69,7 @@ def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
         globals()[key] = group
 
 
-# Pouzite heslare v kodu
+# Použité hesláře v kódu.
 HESLAR_CONSTANTS = {
     "TYP_PROJEKTU_ZACHRANNY_ID": "HES-001136",
     "TYP_PROJEKTU_PRUZKUM_ID": "HES-001138",
@@ -128,7 +131,7 @@ HESLAR_CONSTANTS = {
     "TYP_DOKUMENTU_PLAN_OBJEKTU": "HES-001109",
     "TYP_DOKUMENTU_KRESBA_PREDMETU": "HES-001110",
     "TYP_DOKUMENTU_MAPA": "HES-001111",
-    # Knihovna 3D
+    # Knihovna 3D.
     "REKONSTRUKCE_3D_ID": "HES-001113",
     "TEXTURA_3D_ID": "HES-001115",
     "DOKUMENTACE_3D_ID": "HES-001114",

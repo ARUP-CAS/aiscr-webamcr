@@ -59,7 +59,7 @@ def get_default_licence():
 
 class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin, ModelWithMetadata):
     """
-    Class pro db model user.
+    Databázový model uživatele.
     """
 
     EMAIL_FIELD = "email"
@@ -195,7 +195,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 .select_related("vedouci__organizace")
                 .values_list("vedouci__organizace", flat=True)
             )
-            # Archeologum jeste k spolupracim s jinymi archeology pridat jejich organizaci
+            # Archeologům přidej ke spolupracím s jinými archeology i jejich organizaci.
             if self.hlavni_role == archeolog_group:
                 moje_spolupracujici_organizace.append(self.organizace)
             return moje_spolupracujici_organizace
@@ -237,6 +237,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             logger.error("user.email_user.error", extra={"pk": self.pk, "email": self.email})
 
     def name_and_id(self):
+        """Vrátí jméno uživatele včetně jeho plného identifikátoru."""
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
 
     @property
@@ -249,7 +250,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def save(self, *args, **kwargs):
         """
-        save metoda pro přidělení identu celý.
+        Uloží uživatele a případně provede související synchronizace stavů.
         """
         logger.debug("uzivatel.User.save.start", extra={"option": self._state.adding})
         # Náhodný řetězec je dočasný, než je přiřazeno ID.
@@ -261,7 +262,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 )
             else:
                 logger.debug("uzivatel.User.save.deactivate_spoluprace", extra={"option": self.is_active})
-            # local import to avoid circual import issue
+            # Lokální import zabraňuje problému s cyklickým importem.
             from pas.models import UzivatelSpoluprace
 
             spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
@@ -288,12 +289,14 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def metadata(self):
+        """Načte metadata uživatele z repozitáře Fedora."""
         from core.repository_connector import FedoraRepositoryConnector
 
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
     def save_metadata(self, fedora_transaction=None, close_transaction=False, **kwargs):
+        """Uloží metadata uživatele do Fedora repozitáře v rámci transakce."""
         from core.repository_connector import FedoraTransaction
 
         if fedora_transaction is None and self.active_transaction is not None:
@@ -301,7 +304,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         elif (fedora_transaction is None and self.active_transaction is None) or not isinstance(
             fedora_transaction, FedoraTransaction
         ):
-            # Handling log-in page
+            # Volání bez transakce je očekávané například na přihlašovací stránce.
             return
         logger.debug(
             "uzivatel.models.User.save_metadata.start",
@@ -332,6 +335,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         )
 
     def record_deletion(self, fedora_transaction=None, close_transaction=False):
+        """Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby."""
         logger.debug("uzivatel.models.User.delete_repository_container.start")
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
@@ -394,7 +398,7 @@ class UzivatelPrihlaseniLog(models.Model):
 
 class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
-    Class pro db model organizace.
+    Databázový model organizace.
     """
 
     IDENT_PREFIX = "ORG"
@@ -465,7 +469,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     def save(self, *args, **kwargs):
         """
-        save metoda pro přidělení identu celý.
+        Uloží organizaci a při vytvoření doplní její identifikátor.
         """
         logger.debug("Organizace.save.start")
         if self._state.adding and not self.ident_cely:
@@ -526,7 +530,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
 class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
-    Class pro db model osoba.
+    Databázový model osoby.
     """
 
     IDENT_PREFIX = "OS"
@@ -547,7 +551,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def save(self, *args, **kwargs):
         """
-        save metoda pro přidělení identu celý.
+        Uloží osobu a při vytvoření doplní její identifikátor.
         """
         logger.debug("Osoba.save.start")
         # Náhodný řetězec je dočasný, než je přiřazeno ID.
@@ -577,7 +581,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
 class UserNotificationType(ExportModelOperationsMixin("user_notification_type"), models.Model):
     """
-    Class pro db model typ user notifikace.
+    Databázový model typu uživatelské notifikace.
     """
 
     NOTIFICATION_GROUPS_NAMES = {
@@ -638,7 +642,7 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
 
 class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
     """
-    Class pro db model logu notifikací.
+    Databázový model logu notifikací.
     """
 
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)

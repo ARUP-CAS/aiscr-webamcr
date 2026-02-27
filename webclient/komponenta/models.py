@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Model):
     """
-    Class pro db model komponenta vazby.
+    Databázový model vazeb komponenty.
     Model se používa k napojení na jednotlivé záznamy.
     """
 
@@ -42,7 +42,7 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
 
 class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
     """
-    Class pro db model komponenty.
+    Databázový model komponenty.
     """
 
     obdobi = models.ForeignKey(
@@ -149,7 +149,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
 class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), models.Model):
     """
-    Class pro db model komponenta aktivity.
+    Databázový model aktivit komponenty.
     """
 
     komponenta = models.ForeignKey(Komponenta, models.CASCADE, db_column="komponenta")

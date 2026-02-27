@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
     """
-    Class pro db model lokalita.
+    Databázový model lokality.
     """
 
     druh = models.ForeignKey(

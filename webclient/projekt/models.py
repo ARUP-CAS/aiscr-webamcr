@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 
 class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     """
-    Class pro db model projekt.
+    Databázový model projektu.
     """
 
     CHOICES = (
@@ -436,7 +436,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_archivaci(self):
         """
-        Metoda na kontrolu prerekvizit pred posunem do stavu archivovaný:
+        Metoda pro kontrolu prerekvizit před posunem do stavu archivovaný:
 
             kontrola jako před uzavřením a navíc
 
@@ -451,9 +451,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_navrzeni_k_zruseni(self):
         """
-        Metoda na kontrolu prerekvizit pred posunem do stavu navržen ke zrušení:
+        Metoda pro kontrolu prerekvizit před posunem do stavu navržen ke zrušení:
 
-            Projekt nesmí mít pripojené akce.
+            Projekt nesmí mít připojené akce.
         """
         has_event = len(self.akce_set.all()) > 0
         if has_event:
@@ -463,7 +463,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_smazanim(self) -> list:
         """
-        Metoda na kontrolu prerekvizit pred smazaním projektu:
+        Metoda pro kontrolu prerekvizit před smazáním projektu:
 
             Projekt nesmí mít žádnou akci, soubor ani samostatný nález.
         """
@@ -482,9 +482,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_uzavrenim(self):
         """
-        Metoda na kontrolu prerekvizit pred posunem do stavu uzavřený:
+        Metoda pro kontrolu prerekvizit před posunem do stavu uzavřený:
 
-            Projekt musí mít alespoň jednou akci která projde svou kontrolou před odesláním.
+            Projekt musí mít alespoň jednu akci, která projde svou kontrolou před odesláním.
         """
         does_not_have_event = len(self.akce_set.all()) == 0
         result = {}
@@ -507,9 +507,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def check_pred_zahajenim_v_terenu(self):
         """
-        Metoda na kontrolu prerekvizit pred posunem do stavu zahájen v terénu:
+        Metoda pro kontrolu prerekvizit před posunem do stavu „zahájen v terénu“:
 
-            Projektu musí mít lokalizaci
+            Projekt musí mít lokalizaci.
         """
         resp = []
         if self.geom is None or len(self.geom) < 2:
@@ -519,7 +519,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def parse_ident_cely(self):
         """
-        Metoda pro rozdelení identu na region, rok, pořadové číslo a jestli je permanentí.
+        Metoda pro rozdělení identu na region, rok, pořadové číslo a informaci, zda je permanentní.
         """
         year = None
         number = None
@@ -543,7 +543,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def has_oznamovatel(self):
         """
-        Metoda na kontrolu jestli má projekt oznamovatele.
+        Metoda pro kontrolu, jestli má projekt oznamovatele.
         """
         has_oznamovatel = False
         try:
@@ -780,7 +780,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
     """
-    Class pro db model dalších katastru proketu.
+    Databázový model dalších katastrů projektu.
     """
 
     projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)

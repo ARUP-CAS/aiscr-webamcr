@@ -458,7 +458,7 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
     def __init__(self, *args, **kwargs):
         kwargs.pop("create", False)
         super(OsobaForm, self).__init__(*args, **kwargs)
-        # pokud jde o vytvoření:
+        # Pokud jde o vytvoření:
         # self.fields["orcid"] = OrcidAutocompleteField(
         #     widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
         #     label=_("uzivatel.forms.AuthUserChangeForm.orcid.label"),

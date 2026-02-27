@@ -43,12 +43,12 @@ class CreateProjektForm(forms.ModelForm):
         fields = (
             "typ_projektu",
             "hlavni_katastr",
-            "katastry",  # optional
+            "katastry",  # Nepovinné pole.
             "planovane_zahajeni",
             "podnet",
             "lokalizace",
             "parcelni_cislo",
-            "oznaceni_stavby",  # optional
+            "oznaceni_stavby",  # Nepovinné pole.
         )
         widgets = {
             "typ_projektu": forms.Select(
@@ -879,7 +879,7 @@ class UpravitDatumOznameniForm(forms.ModelForm):
         label=_("projekt.forms.upravitDatumOznameni.casOznameni.label"),
         widget=forms.TimeInput(
             format="%H:%M", attrs={"type": "time", "autocomplete": "off"}
-        ),  # Type "time" provides a time picker
+        ),  # Typ "time" zobrazí časový picker.
         help_text=_("projekt.forms.upravitDatumOznameni.casOznameni.tooltip"),
     )
 

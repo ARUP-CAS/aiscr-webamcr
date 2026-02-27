@@ -279,7 +279,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
             return self.invalid_form_context(form, "form_password")
 
     def invalid_form_context(self, form, form_tag="form"):
-        # Attribute "object" needs to exist.
+        # Atribut "object" musí existovat.
         # Důvod: Django `get_context_data()` používá objekt pro jeho předání do contextu.
         self.object = None
         context = self.get_context_data()
@@ -507,8 +507,8 @@ class ObtainAuthTokenWithUpdate(ObtainAuthToken):
                     Token.objects.filter(user=user).delete()
                     token = Token.objects.create(user=user)
             except IntegrityError:
-                # pokud mezitím druhý request token vytvořil,
-                # jen si ho načteme
+                # Pokud mezitím druhý request token vytvořil,
+                # jen si ho načteme.
                 token = Token.objects.get(user=user)
         return Response({"token": token.key})
 

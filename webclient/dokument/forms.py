@@ -703,7 +703,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
-        # Disabled hodnoty se neposilaji na server
+        # Hodnoty z disabled polí se na server neodesílají.
         self.fields["visible_x1"].widget.attrs["disabled"] = "disabled"
         self.fields["visible_x2"].widget.attrs["disabled"] = "disabled"
         self.fields["format"].choices = [("", "")] + heslar_list(

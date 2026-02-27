@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), ModelWithMetadata):
     """
-    Class pro db model archeologicky_zaznam.
+    Databázový model archeologického záznamu.
     """
 
     TYP_ZAZNAMU_LOKALITA = "L"
@@ -133,7 +133,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 dokument.active_transaction = self.active_transaction
                 Dokument.set_permanent_identificator(dokument, request, messages, self.active_transaction)
                 dokument.set_odeslany(user, old_ident)
-        # posun Zdroju do stavu ZAPSANY
+        # Posun zdrojů do stavu ZAPSANÝ.
         externi_zdroje = ExterniZdroj.objects.filter(
             stav=EZ_STAV_ZAPSANY, externi_odkazy_zdroje__archeologicky_zaznam=self
         )
@@ -172,7 +172,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def check_pred_odeslanim(self):
         """
-        Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+        Metoda pro kontrolu prerekvizit před posunem do stavu odeslaný:
 
             polia: datum_zahajeni, datum_ukonceni, lokalizace_okolnosti, specifikace_data, hlavni_katastr, hlavni_vedouci a hlavni_typ jsou vyplněna.
 
@@ -260,7 +260,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def check_pred_archivaci(self):
         """
-        Metoda na kontrolu prerekvizit pred archivací:
+        Metoda pro kontrolu prerekvizit před archivací:
 
             kontrola jako před odesláním a navíc
 
@@ -290,7 +290,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_lokalita_permanent_ident_cely(self):
         """
-        Metoda pro nastavení permanentního ident celý pro lokality z lokality sekvence.
+        Metoda pro nastavení permanentního identifikátoru lokality ze sekvence lokalit.
         """
         MAXIMUM: int = 9999999
         region = self.hlavni_katastr.okres.kraj.rada_id
@@ -306,7 +306,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             prefix = f"{region}-{typ.zkratka}"
             lokality = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
             if lokality.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count() > 0:
-                # číslo bez mezer
+                # Číslo bez mezer.
                 idents = list(lokality.values_list("ident_cely", flat=True).order_by("ident_cely"))
                 idents = [sub.replace(prefix, "") for sub in idents]
                 idents = [sub.lstrip("0") for sub in idents]
@@ -379,7 +379,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def __str__(self):
         """
-        Metoda vráti jako str reprezentaci modelu ident_cely.
+        Metoda vrátí str reprezentaci modelu ident_cely.
         """
         if self.ident_cely:
             return self.ident_cely
@@ -477,7 +477,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
     """
-    Class pro db model archeologicky_zaznam_katastr, který drží v sobe relace na další katastry arch záznamu.
+    Databázový model vazeb archeologického záznamu na další katastry.
     """
 
     archeologicky_zaznam = models.ForeignKey(
@@ -494,7 +494,7 @@ class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zazna
 
 class Akce(ExportModelOperationsMixin("akce"), models.Model):
     """
-    Class pro db model akce.
+    Databázový model akce.
     """
 
     TYP_AKCE_PROJEKTOVA = "R"
@@ -649,7 +649,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """
-    Class pro db model akce_vedouci, který drží v sobe relace na dalších vedoucích arch záznamu.
+    Databázový model vazeb na další vedoucí archeologického záznamu.
     """
 
     akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
@@ -663,20 +663,20 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
 
     def __str__(self):
         """
-        Metoda vráti jako str reprezentaci modelu vedouci.
+        Metoda vrátí str reprezentaci modelu vedouci.
         """
         return f"{self.vedouci.vypis_cely} ({self.organizace})"
 
     def vypis_name(self):
         """
-        Metoda vráti jako str reprezentaci modelu vedouci pro vypis.
+        Metoda vrátí str reprezentaci modelu vedouci pro vypis.
         """
         return f"{self.vedouci.vypis_cely} ({self.organizace.get_nazev()})"
 
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
     """
-    Class pro db model externi_odkaz, který drží v sobe relace na externí odkazy arch záznamu.
+    Databázový model externích odkazů archeologického záznamu.
     """
 
     externi_zdroj = models.ForeignKey(
@@ -714,7 +714,7 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
 
 def get_akce_ident(region):
     """
-    Metoda pro získaní permanentního ident celý pro akci z akce sekvence.
+    Metoda pro získání permanentního identifikátoru akce ze sekvence akcí.
     """
     MAXIMUM: int = 999999
     try:
@@ -730,7 +730,7 @@ def get_akce_ident(region):
             ident_cely__startswith=f"{prefix}", ident_cely__endswith="A"
         ).order_by("-ident_cely")
         if akce.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:06}").count() > 0:
-            # číslo bez mezer
+            # Číslo bez mezer.
             idents = list(akce.values_list("ident_cely", flat=True).order_by("ident_cely"))
             idents = [sub.replace(prefix, "") for sub in idents]
             idents = [sub.replace("A", "") for sub in idents]
