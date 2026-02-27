@@ -10,7 +10,7 @@ from uzivatel.models import User
 
 class HistorieTable(ColumnShiftTableBootstrap4):
     """
-    Class pro definování tabulky pro zobrazení historie.
+    Definuje tabulku pro zobrazení historie změn.
     """
 
     datum_zmeny = columns.DateTimeColumn(
@@ -23,22 +23,16 @@ class HistorieTable(ColumnShiftTableBootstrap4):
     )
 
     def render_uzivatel_custom(self, record):
-        """Funkce `HistorieTable.render_uzivatel_custom` v modulu `webclient.historie.tables`.
+        """Vyrenderuje uzivatel custom.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if not record.uzivatel:
             return ""
         return record.uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
 
     class Meta:
-        """Třída `HistorieTable.Meta` v modulu `webclient.historie.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Historie
         fields = (
             "typ_zmeny",
@@ -49,23 +43,17 @@ class HistorieTable(ColumnShiftTableBootstrap4):
 
 
 class SimpleHistoryTable(ColumnShiftTableBootstrap4):
-    """Třída `SimpleHistoryTable` v modulu `webclient.historie.tables`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``SimpleHistoryTable`` v rámci aplikace."""
     history_date = columns.DateTimeColumn(format="Y-m-d, H:i", default="")
 
     class Meta:
-        """Třída `SimpleHistoryTable.Meta` v modulu `webclient.historie.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         fields = ("history_date",)
 
 
 class FedoraHistorieTable(ColumnShiftTableBootstrap4):
     """
-    Class pro definování tabulky pro zobrazení fedora verzí metadat nebo souborů na stránce pod historií.
+    Definuje tabulku verzí metadat a souborů z Fedory na stránce historie.
     """
 
     column_excluded = ["url"]
@@ -92,27 +80,21 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
     )
 
     def render_uzivatel(self, record):
-        """Funkce `FedoraHistorieTable.render_uzivatel` v modulu `webclient.historie.tables`.
+        """Vyrenderuje uzivatel.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         uzivatel = User.objects.filter(ident_cely=record["uzivatel"]).first()
         if uzivatel is None:
             return record["uzivatel"]
         return uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
 
     def render_url(self, value, record):
-        """Funkce `FedoraHistorieTable.render_url` v modulu `webclient.historie.tables`.
+        """Vyrenderuje url.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         return format_html(
             '<a href="{}" class="btn-sm" target="_blank">'
             '<span class="material-icons" style="vertical-align:middle;">download</span>'
@@ -121,21 +103,15 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         )
 
     def value_url(self, value, record):
-        """Funkce `FedoraHistorieTable.value_url` v modulu `webclient.historie.tables`.
+        """Provádí operaci value url.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         return f"{settings.SITE_URL}{record['url']}"
 
     class Meta:
-        """Třída `FedoraHistorieTable.Meta` v modulu `webclient.historie.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         attrs = {"class": "table-shifter table fedora-table"}
         fields = ("url", "datum", "uzivatel")
         order_by = ("-datum",)

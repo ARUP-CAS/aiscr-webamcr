@@ -60,50 +60,35 @@ logger = logging.getLogger(__name__)
 
 
 class NumberRangeWidget(SuffixedMultiWidget):
-    """Třída `NumberRangeWidget` v modulu `webclient.arch_z.filters`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``NumberRangeWidget`` v rámci aplikace."""
     template_name = "django_filters/widgets/multiwidget.html"
     suffixes = ["min", "max"]
 
     def __init__(self, attrs=None):
-        """Funkce `NumberRangeWidget.__init__` v modulu `webclient.arch_z.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param attrs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         widgets = (NumberInput, NumberInput)
         super().__init__(widgets, attrs)
 
     def decompress(self, value):
-        """Funkce `NumberRangeWidget.decompress` v modulu `webclient.arch_z.filters`.
+        """Provádí operaci decompress.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if value:
             return [value.start, value.stop]
         return [None, None]
 
 
 class NumberRangeField(RangeField):
-    """Třída `NumberRangeField` v modulu `webclient.arch_z.filters`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``NumberRangeField`` v rámci aplikace."""
     widget = NumberRangeWidget
 
 
 class NumberRangeFilter(RangeFilter):
-    """Třída `NumberRangeFilter` v modulu `webclient.arch_z.filters`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``NumberRangeFilter`` v rámci aplikace."""
     field_class = NumberRangeField
 
 
@@ -327,14 +312,11 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         ).distinct()
 
     def __init__(self, *args, **kwargs):
-        """Funkce `ArchZaznamFilter.__init__` v modulu `webclient.arch_z.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(ArchZaznamFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
@@ -689,15 +671,12 @@ class AkceFilter(ArchZaznamFilter):
         return queryset.filter(Q(**{lookup1: value}) | Q(**{lookup2: value})).distinct()
 
     def filter_by_z_range(self, queryset, name, value):
-        """Funkce `AkceFilter.filter_by_z_range` v modulu `webclient.arch_z.filters`.
+        """Filtruje by z range.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :param name: Vstupní hodnota používaná při zpracování.
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param name: Vstupní hodnota ``name`` pro danou operaci.
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if value:
             if name == "vb_niveleta_od":
                 queryset = queryset.extra(where=["ST_Z(geom) >= %s"], params=[value])
@@ -706,13 +685,10 @@ class AkceFilter(ArchZaznamFilter):
         return queryset
 
     def filter_queryset(self, queryset):
-        """Funkce `AkceFilter.filter_queryset` v modulu `webclient.arch_z.filters`.
+        """Filtruje queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(AkceFilter, self).filter_queryset(queryset)
@@ -742,23 +718,17 @@ class AkceFilter(ArchZaznamFilter):
         return queryset
 
     class Meta:
-        """Třída `AkceFilter.Meta` v modulu `webclient.arch_z.filters`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Akce
         exclude = ("projekt",)
         form = ArchzFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Funkce `AkceFilter.__init__` v modulu `webclient.arch_z.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(AkceFilter, self).__init__(*args, **kwargs)
         self.filters["typ"].extra["choices"] = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
         self.filters["historie_uzivatel_organizace"] = HistorieOrganizaceMultipleChoiceFilter(
@@ -777,13 +747,10 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `AkceFilterFormHelper.__init__` v modulu `webclient.arch_z.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("arch_z.filters.AkceFilterFormHelper.djPian.divider.label")
         }

@@ -11,15 +11,12 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=NeidentAkce, weak=False)
 def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
-    """Funkce `neident_akce_post_save` v modulu `webclient.neidentakce.signals`.
+    """Provádí operaci neident akce post save.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :return: Vrací výsledek provedené operace."""
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(
@@ -33,15 +30,12 @@ def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
 
 @receiver(post_delete, sender=NeidentAkce, weak=False)
 def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
-    """Funkce `neident_akce_post_delete` v modulu `webclient.neidentakce.signals`.
+    """Provádí operaci neident akce post delete.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :return: Vrací výsledek provedené operace."""
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(

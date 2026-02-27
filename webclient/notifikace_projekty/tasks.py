@@ -17,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_project_type_notification(projekt_type):
-    """
-    Vrací typ notifikace pro projekt podle typu.
-    """
+    """Vrací project type notification.
+    
+    :param projekt_type: Vstupní hodnota ``projekt_type`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     projekt_notifikace = {
         TYP_PROJEKTU_BADATELSKY_ID: "S-E-P-02a",
         TYP_PROJEKTU_PRUZKUM_ID: "S-E-P-02b",

@@ -37,13 +37,10 @@ from .fields import (
 
 
 def get_config(name):
-    """Funkce `get_config` v modulu `webclient.vypis.config`.
+    """Vrací config.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param name: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param name: Vstupní hodnota ``name`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     configs = {
         "dokument": DOKUMENTY_CONFIG,
         "projekt": PROJEKTY_CONFIG,

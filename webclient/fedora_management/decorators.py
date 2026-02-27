@@ -10,32 +10,23 @@ logger = logging.getLogger(__name__)
 
 
 def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
-    """Funkce `handle_fedora_error` v modulu `webclient.fedora_management.decorators`.
+    """Zpracuje fedora error.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param view_func: Vstupní hodnota používaná při zpracování.
-    :param additional_exceptions: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
+    :param additional_exceptions: Vstupní hodnota ``additional_exceptions`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     def decorator(func):
-        """Funkce `decorator` v modulu `webclient.fedora_management.decorators`.
+        """Provádí operaci decorator.
         
-        Zajišťuje dílčí aplikační logiku pro tento modul.
-        
-        :param func: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param func: Vstupní hodnota ``func`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         @wraps(func)
         def _wrapped(*args, **kwargs):
-            """Funkce `_wrapped` v modulu `webclient.fedora_management.decorators`.
+            """Provádí operaci wrapped.
             
-            Zajišťuje dílčí aplikační logiku pro tento modul.
-            
-            :param args: Vstupní hodnota používaná při zpracování.
-            :param kwargs: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            :param args: Dodatečné poziční argumenty předané voláním.
+            :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+            :return: Vrací výsledek provedené operace."""
             try:
                 return func(*args, **kwargs)
             except (FedoraError,) + additional_exceptions as err:

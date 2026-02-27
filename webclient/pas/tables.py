@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class SamostatnyNalezTable(SearchTable):
     """
-    Class pro definování tabulky pro samostatný nález použitých pro zobrazení přehledu nálezu a exportu.
+    Definuje tabulku samostatných nálezů pro přehled i export.
     """
 
     ident_cely = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.ident_cely.label"), linkify=True)
@@ -79,10 +79,7 @@ class SamostatnyNalezTable(SearchTable):
     )
 
     class Meta:
-        """Třída `SamostatnyNalezTable.Meta` v modulu `webclient.pas.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = SamostatnyNalez
         fields = (
             "nahled",
@@ -164,34 +161,25 @@ class SamostatnyNalezTable(SearchTable):
         return ""
 
     def __init__(self, *args, **kwargs):
-        """Funkce `SamostatnyNalezTable.__init__` v modulu `webclient.pas.tables`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(SamostatnyNalezTable, self).__init__(*args, **kwargs)
 
 
 class AktivaceDeaktivaceColumn(tables.TemplateColumn):
-    """Třída `AktivaceDeaktivaceColumn` v modulu `webclient.pas.tables`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``AktivaceDeaktivaceColumn`` v rámci aplikace."""
     def render(self, record, table, value, bound_column, **kwargs):
-        """Funkce `AktivaceDeaktivaceColumn.render` v modulu `webclient.pas.tables`.
+        """Vyrenderuje hodnotu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param table: Vstupní hodnota používaná při zpracování.
-        :param value: Vstupní hodnota používaná při zpracování.
-        :param bound_column: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param table: Vstupní hodnota ``table`` pro danou operaci.
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         if not hasattr(table, "request"):
             return ""
         if record.aktivni:
@@ -205,22 +193,16 @@ class AktivaceDeaktivaceColumn(tables.TemplateColumn):
 
 
 class smazatColumn(tables.TemplateColumn):
-    """Třída `smazatColumn` v modulu `webclient.pas.tables`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``smazatColumn`` v rámci aplikace."""
     def render(self, record, table, value, bound_column, **kwargs):
-        """Funkce `smazatColumn.render` v modulu `webclient.pas.tables`.
+        """Vyrenderuje hodnotu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param table: Vstupní hodnota používaná při zpracování.
-        :param value: Vstupní hodnota používaná při zpracování.
-        :param bound_column: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param table: Vstupní hodnota ``table`` pro danou operaci.
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         if not hasattr(table, "request"):
             return ""
         if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user, record.id):
@@ -231,7 +213,7 @@ class smazatColumn(tables.TemplateColumn):
 
 class UzivatelSpolupraceTable(SearchTable):
     """
-    Class pro definování tabulky pro uživatelskou spolupráci použitých pro zobrazení přehledu spoluprác a exportu.
+    Definuje tabulku uživatelských spoluprací pro přehled i export.
     """
 
     stav = tables.Column(verbose_name="Stav", default="")
@@ -288,10 +270,7 @@ class UzivatelSpolupraceTable(SearchTable):
     app = "spoluprace"
 
     class Meta:
-        """Třída `UzivatelSpolupraceTable.Meta` v modulu `webclient.pas.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = UzivatelSpoluprace
         fields = (
             "stav",
@@ -312,14 +291,11 @@ class UzivatelSpolupraceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `UzivatelSpolupraceTable.__init__` v modulu `webclient.pas.tables`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):

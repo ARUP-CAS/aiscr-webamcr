@@ -11,11 +11,9 @@ logger = logging.getLogger("request.timer")
 
 
 def get_slow_request_settings():
-    """Funkce `get_slow_request_settings` v modulu `webclient.core.log_middleware`.
+    """Vrací slow request settings.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     try:
         settings_query = CustomAdminSettings.objects.filter(item_group="settings", item_id="variables")
         return json.loads(settings_query.last().value)["SLOW_REQUEST_THRESHOLD"]
@@ -57,23 +55,17 @@ class LogMiddleware:
     """
 
     def __init__(self, get_response):
-        """Funkce `LogMiddleware.__init__` v modulu `webclient.core.log_middleware`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param get_response: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         self.get_response = get_response
 
     def __call__(self, request):
-        """Funkce `LogMiddleware.__call__` v modulu `webclient.core.log_middleware`.
+        """Provádí operaci call.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací výsledek provedené operace."""
         start = time.monotonic()
         log_request_data.url = request.get_full_path()
         log_request_data.user_id = (
@@ -116,18 +108,14 @@ class LogMiddleware:
 
     @staticmethod
     def get_request_url():
-        """Funkce `LogMiddleware.get_request_url` v modulu `webclient.core.log_middleware`.
+        """Vrací request url.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return getattr(log_request_data, "url", None)
 
     @staticmethod
     def get_user_id():
-        """Funkce `LogMiddleware.get_user_id` v modulu `webclient.core.log_middleware`.
+        """Vrací user id.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return getattr(log_request_data, "user_id", "anonymous")

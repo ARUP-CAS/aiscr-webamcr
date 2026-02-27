@@ -10,14 +10,11 @@ LOG_PATH = "/run/logs/"
 
 
 def get_secret(setting, default_value=None):
-    """Funkce `get_secret` v modulu `webclient.webclient.settings.base`.
+    """Vrací secret.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param setting: Vstupní hodnota používaná při zpracování.
-    :param default_value: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param setting: Vstupní hodnota ``setting`` pro danou operaci.
+    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     file_path = (
         "/run/secrets/db_conf"
         if os.path.exists("/run/secrets/db_conf")
@@ -42,14 +39,11 @@ def get_secret(setting, default_value=None):
 
 
 def get_mail_secret(setting, default_value=None):
-    """Funkce `get_mail_secret` v modulu `webclient.webclient.settings.base`.
+    """Vrací mail secret.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param setting: Vstupní hodnota používaná při zpracování.
-    :param default_value: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param setting: Vstupní hodnota ``setting`` pro danou operaci.
+    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     file_mail_path = (
         "/run/secrets/mail_conf"
         if os.path.exists("/run/secrets/mail_conf")
@@ -72,13 +66,10 @@ def get_mail_secret(setting, default_value=None):
 
 # REDIS SETTINGS
 def get_plain_redis_pass(default_value=""):
-    """Funkce `get_plain_redis_pass` v modulu `webclient.webclient.settings.base`.
+    """Vrací plain redis pass.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param default_value: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
             return file.readline().rstrip()
@@ -87,13 +78,10 @@ def get_plain_redis_pass(default_value=""):
 
 
 def get_redis_pass(default_value=""):
-    """Funkce `get_redis_pass` v modulu `webclient.webclient.settings.base`.
+    """Vrací redis pass.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param default_value: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
             return ":" + file.readline().rstrip() + "@"
@@ -302,13 +290,10 @@ ROSETTA_UWSGI_AUTO_RELOAD = False
 
 
 def rosetta_translation_rights(user):
-    """Funkce `rosetta_translation_rights` v modulu `webclient.webclient.settings.base`.
+    """Provádí operaci rosetta translation rights.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param user: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param user: Vstupní hodnota ``user`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     from core.constants import ROLE_UPRAVA_TEXTU
 
     return user.groups.filter(id=ROLE_UPRAVA_TEXTU).count() > 0

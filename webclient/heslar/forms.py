@@ -14,10 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class HeslarHierarchieForm(forms.ModelForm):
-    """Třída `HeslarHierarchieForm` v modulu `webclient.heslar.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``HeslarHierarchieForm`` v rámci aplikace."""
     heslar_nazev_podrazene = forms.ModelChoiceField(
         empty_label=None,
         label=_("heslar.forms.heslarOdkazForm.heslar_nazev_podrazene.label"),
@@ -36,10 +33,7 @@ class HeslarHierarchieForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `HeslarHierarchieForm.Meta` v modulu `webclient.heslar.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = HeslarHierarchie
         fields = (
             "heslo_podrazene",
@@ -56,14 +50,11 @@ class HeslarHierarchieForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Funkce `HeslarHierarchieForm.__init__` v modulu `webclient.heslar.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(HeslarHierarchieForm, self).__init__(*args, **kwargs)
         logger.debug(self.instance)
         if self.instance.pk is not None:
@@ -72,10 +63,7 @@ class HeslarHierarchieForm(forms.ModelForm):
 
 
 class HeslarOdkazForm(forms.ModelForm):
-    """Třída `HeslarOdkazForm` v modulu `webclient.heslar.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``HeslarOdkazForm`` v rámci aplikace."""
     heslar_nazev = forms.ModelChoiceField(
         empty_label=None,
         label=_("heslar.forms.heslarOdkazForm.heslar_nazev.label"),
@@ -86,23 +74,17 @@ class HeslarOdkazForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `HeslarOdkazForm.Meta` v modulu `webclient.heslar.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = HeslarOdkaz
         fields = "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation"
         widgets = {"heslo": AutocompleteModelSelect2(url="heslar:heslar-autocomplete", forward=["heslar_nazev"])}
 
     def __init__(self, *args, **kwargs):
-        """Funkce `HeslarOdkazForm.__init__` v modulu `webclient.heslar.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(HeslarOdkazForm, self).__init__(*args, **kwargs)
         logger.debug(self.instance)
         if self.instance.pk is not None:
@@ -110,27 +92,18 @@ class HeslarOdkazForm(forms.ModelForm):
 
 
 class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
-    """Třída `OsobaAdminForm` v modulu `webclient.heslar.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``OsobaAdminForm`` v rámci aplikace."""
     class Meta:
-        """Třída `OsobaAdminForm.Meta` v modulu `webclient.heslar.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Osoba
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
-        """Funkce `OsobaAdminForm.__init__` v modulu `webclient.heslar.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
             widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
@@ -153,27 +126,18 @@ class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
 
 
 class OrganizaceAdminForm(forms.ModelForm):
-    """Třída `OrganizaceAdminForm` v modulu `webclient.heslar.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``OrganizaceAdminForm`` v rámci aplikace."""
     class Meta:
-        """Třída `OrganizaceAdminForm.Meta` v modulu `webclient.heslar.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Organizace
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
-        """Funkce `OrganizaceAdminForm.__init__` v modulu `webclient.heslar.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)
         self.fields["ror"] = RorAutocompleteField(
             widget=AutocompleteListSelect2(url="pid:ror-autocomplete"),

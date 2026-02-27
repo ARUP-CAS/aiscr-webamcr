@@ -13,5 +13,5 @@ Tato sekce popisuje základní komponenty Django aplikace.
    permissions
    signals
    management_commands
-
+   docstring_style_guide
 

@@ -14,31 +14,22 @@ logger = logging.getLogger(__name__)
 
 
 class AdminRecordProcessingView(LoginRequiredMixin, View):
-    """Třída `AdminRecordProcessingView` v modulu `webclient.fedora_management.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``AdminRecordProcessingView`` v rámci aplikace."""
     def process_record(self, record, result, **kwargs):
-        """Funkce `AdminRecordProcessingView.process_record` v modulu `webclient.fedora_management.views`.
+        """Provádí operaci process record.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param result: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         pass
 
     def get(self, request, **kwargs):
-        """Funkce `AdminRecordProcessingView.get` v modulu `webclient.fedora_management.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         r = RedisConnector().get_connection()
         job_id = kwargs.get("job_id")
         job_data = r.get(job_id).decode("utf-8")
@@ -73,20 +64,14 @@ class AdminRecordProcessingView(LoginRequiredMixin, View):
 
 
 class ContinueMedataProcessing(AdminRecordProcessingView):
-    """Třída `ContinueMedataProcessing` v modulu `webclient.fedora_management.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``ContinueMedataProcessing`` v rámci aplikace."""
     def process_record(self, record, result, **kwargs):
-        """Funkce `ContinueMedataProcessing.process_record` v modulu `webclient.fedora_management.views`.
+        """Provádí operaci process record.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param result: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
             try:
                 fedora_transaction = FedoraTransaction()

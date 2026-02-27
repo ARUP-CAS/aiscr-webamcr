@@ -41,10 +41,7 @@ class ExterniZdrojForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `ExterniZdrojForm.Meta` v modulu `webclient.ez.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = ExterniZdroj
         fields = (
             "typ",
@@ -143,17 +140,14 @@ class ExterniZdrojForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):
-        """Funkce `ExterniZdrojForm.__init__` v modulu `webclient.ez.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param required: Vstupní hodnota používaná při zpracování.
-        :param required_next: Vstupní hodnota používaná při zpracování.
-        :param readonly: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param required: Vstupní hodnota ``required`` pro danou operaci.
+        :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+        :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(ExterniZdrojForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         if not readonly:
@@ -264,10 +258,7 @@ class ExterniOdkazForm(forms.ModelForm):
     """
 
     class Meta:
-        """Třída `ExterniOdkazForm.Meta` v modulu `webclient.ez.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = ExterniOdkaz
         fields = ("paginace",)
         labels = {
@@ -281,15 +272,12 @@ class ExterniOdkazForm(forms.ModelForm):
         }
 
     def __init__(self, type_arch=None, *args, **kwargs):
-        """Funkce `ExterniOdkazForm.__init__` v modulu `webclient.ez.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param type_arch: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param type_arch: Vstupní hodnota ``type_arch`` pro danou operaci.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(ExterniOdkazForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -301,16 +289,13 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
     """
 
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
-        """Funkce `PripojitArchZaznamForm.__init__` v modulu `webclient.ez.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param type_arch: Vstupní hodnota používaná při zpracování.
-        :param dok: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param type_arch: Vstupní hodnota ``type_arch`` pro danou operaci.
+        :param dok: Vstupní hodnota ``dok`` pro danou operaci.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
         if dok:
@@ -359,14 +344,11 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
     """
 
     def __init__(self, *args, **kwargs):
-        """Funkce `PripojitExterniOdkazForm.__init__` v modulu `webclient.ez.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
         new_choices = list(ExterniZdroj.objects.filter().values_list("id", "ident_cely"))

@@ -180,10 +180,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     doi = models.CharField(max_length=255, null=True, blank=True, db_index=True)
 
     class Meta:
-        """Třída `Dokument.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "dokument"
         indexes = [
             models.Index(fields=["stav", "ident_cely"]),
@@ -194,23 +191,18 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         ]
 
     def __init__(self, *args, **kwargs):
-        """Funkce `Dokument.__init__` v modulu `webclient.dokument.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)
         self.initial_let = self.let
 
     def __str__(self):
-        """Funkce `Dokument.__str__` v modulu `webclient.dokument.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.ident_cely
 
     def get_absolute_url(self):
@@ -222,11 +214,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_doi(self):
-        """Funkce `Dokument.set_doi` v modulu `webclient.dokument.models`.
+        """Nastaví doi.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.doi = f"{settings.DOI_PREFIX}/{self.ident_cely}"
 
     def set_zapsany(self, user):
@@ -243,16 +233,13 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @staticmethod
     def set_permanent_identificator(dokument, request, messages, fedora_transaction) -> Optional[JsonResponse]:
-        """Funkce `Dokument.set_permanent_identificator` v modulu `webclient.dokument.models`.
+        """Nastaví permanent identificator.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param dokument: Vstupní hodnota používaná při zpracování.
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param messages: Vstupní hodnota používaná při zpracování.
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param dokument: Vstupní hodnota ``dokument`` pro danou operaci.
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param messages: Vstupní hodnota ``messages`` pro danou operaci.
+        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         from core.message_constants import MAXIMUM_IDENT_DOSAZEN
         from dokument.views import get_detail_json_view
 
@@ -477,19 +464,15 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.datum_zverejneni = datetime.date(year, month, day)
 
     def get_permission_object(self):
-        """Funkce `Dokument.get_permission_object` v modulu `webclient.dokument.models`.
+        """Vrací permission object.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
-        """Funkce `Dokument.get_create_user` v modulu `webclient.dokument.models`.
+        """Vrací create user.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel,)
         except Exception as e:
@@ -497,11 +480,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Funkce `Dokument.get_create_org` v modulu `webclient.dokument.models`.
+        """Vrací create org.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.get_create_user()[0].organizace,)
         except Exception as e:
@@ -510,21 +491,17 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @property
     def thumbnail_image(self):
-        """Funkce `Dokument.thumbnail_image` v modulu `webclient.dokument.models`.
+        """Provádí operaci thumbnail image.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if self.thumbnail_image_file:
             return self.thumbnail_image_file.pk
 
     @property
     def thumbnail_image_file(self) -> Soubor | None:
-        """Funkce `Dokument.thumbnail_image_file` v modulu `webclient.dokument.models`.
+        """Provádí operaci thumbnail image file.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if self.soubory.soubory.count() > 0:
             soubory = [x for x in self.soubory.soubory.all()]
             soubory = list(sorted(soubory, key=lambda x: x.nazev))
@@ -532,11 +509,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @cached_property
     def large_thumbnail(self):
-        """Funkce `Dokument.large_thumbnail` v modulu `webclient.dokument.models`.
+        """Provádí operaci large thumbnail.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         soubor = self.thumbnail_image_file
         if soubor:
             return soubor.large_thumbnail
@@ -544,22 +519,18 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @cached_property
     def small_thumbnail(self):
-        """Funkce `Dokument.small_thumbnail` v modulu `webclient.dokument.models`.
+        """Provádí operaci small thumbnail.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         soubor = self.thumbnail_image_file
         if soubor:
             return soubor.small_thumbnail
         return None
 
     def set_snapshots(self):
-        """Funkce `Dokument.set_snapshots` v modulu `webclient.dokument.models`.
+        """Nastaví snapshots.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if not self.dokumentautor_set.all():
             self.autori_snapshot = None
         else:
@@ -575,11 +546,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @property
     def redis_snapshot_id(self):
-        """Funkce `Dokument.redis_snapshot_id` v modulu `webclient.dokument.models`.
+        """Provádí operaci redis snapshot id.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if self.ident_cely.startswith("3D"):
             from dokument.views import Model3DListView
 
@@ -590,11 +559,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return f"{DokumentListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Funkce `Dokument.generate_redis_snapshot` v modulu `webclient.dokument.models`.
+        """Vygeneruje redis snapshot.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací nově vytvořený výsledek operace."""
         from dokument.tables import DokumentTable, Model3DTable
 
         if self.ident_cely.startswith("3D"):
@@ -609,75 +576,57 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return self.redis_snapshot_id, data
 
     def _get_doi_client(self):
-        """Funkce `Dokument._get_doi_client` v modulu `webclient.dokument.models`.
+        """Vrací doi client.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         from pid.client import DigitalObjectIdentifierClient
 
         return DigitalObjectIdentifierClient(self)
 
     @property
     def doi_exists(self):
-        """Funkce `Dokument.doi_exists` v modulu `webclient.dokument.models`.
+        """Provádí operaci doi exists.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self._get_doi_client().check_record_exists()
 
     def doi_delete(self, check_status=True):
-        """Funkce `Dokument.doi_delete` v modulu `webclient.dokument.models`.
+        """Provádí operaci doi delete.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param check_status: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if self.doi:
             return self._get_doi_client().delete_record(check_status)
 
     def doi_hide(self, check_status=True):
-        """Funkce `Dokument.doi_hide` v modulu `webclient.dokument.models`.
+        """Provádí operaci doi hide.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param check_status: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if self.doi:
             return self._get_doi_client().hide_record(check_status)
 
     def doi_publish(self, check_status=True):
-        """Funkce `Dokument.doi_publish` v modulu `webclient.dokument.models`.
+        """Provádí operaci doi publish.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param check_status: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         return self._get_doi_client().publish_record(check_status)
 
     def doi_update(self, check_status=True, reload_record=False):
-        """Funkce `Dokument.doi_update` v modulu `webclient.dokument.models`.
+        """Provádí operaci doi update.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param check_status: Vstupní hodnota používaná při zpracování.
-        :param reload_record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if self.doi:
             return self._get_doi_client().update_record(check_status, reload_record)
 
     @property
     def doi_url(self):
-        """Funkce `Dokument.doi_url` v modulu `webclient.dokument.models`.
+        """Provádí operaci doi url.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self._get_doi_client().get_record_url()
 
 
@@ -715,10 +664,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
     )
 
     class Meta:
-        """Třída `DokumentCast.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "dokument_cast"
         constraints = [
             CheckConstraint(
@@ -750,22 +696,17 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         )
 
     def get_permission_object(self):
-        """Funkce `DokumentCast.get_permission_object` v modulu `webclient.dokument.models`.
+        """Vrací permission object.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.dokument.get_permission_object()
 
     def __init__(self, *args, **kwargs):
-        """Funkce `DokumentCast.__init__` v modulu `webclient.dokument.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)
         self.initial_projekt_id = self.projekt_id
         self.initial_archeologicky_zaznam_id = self.archeologicky_zaznam_id
@@ -784,25 +725,20 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     @property
     def initial_projekt(self) -> Projekt | None:
-        """Funkce `DokumentCast.initial_projekt` v modulu `webclient.dokument.models`.
+        """Provádí operaci initial projekt.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if self.initial_projekt_id is not None:
             return Projekt.objects.get(pk=self.initial_projekt_id)
         return None
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
-        """Funkce `DokumentCast.create_transaction` v modulu `webclient.dokument.models`.
+        """Vytvoří transaction.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param transaction_user: Vstupní hodnota používaná při zpracování.
-        :param success_message: Vstupní hodnota používaná při zpracování.
-        :param error_message: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
+        :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
+        :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+        :return: Vrací nově vytvořený výsledek operace."""
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -812,11 +748,9 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     @property
     def dokument_doi(self):
-        """Funkce `DokumentCast.dokument_doi` v modulu `webclient.dokument.models`.
+        """Provádí operaci dokument doi.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if self.dokument:
             return self.dokument.doi
 
@@ -895,10 +829,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
     geom_system = models.CharField(max_length=6, default="4326")
 
     class Meta:
-        """Třída `DokumentExtraData.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "dokument_extra_data"
         constraints = [
             CheckConstraint(
@@ -918,10 +849,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
     poradi = models.IntegerField(db_index=True)
 
     class Meta:
-        """Třída `DokumentAutor.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = ("poradi",)
@@ -945,19 +873,14 @@ class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
     )
 
     class Meta:
-        """Třída `DokumentJazyk.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "dokument_jazyk"
         unique_together = (("dokument", "jazyk"),)
 
     def __str__(self):
-        """Funkce `DokumentJazyk.__str__` v modulu `webclient.dokument.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return "D: " + str(self.dokument) + " - J: " + str(self.jazyk)
 
 
@@ -970,10 +893,7 @@ class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
     osoba = models.ForeignKey(Osoba, models.RESTRICT, db_column="osoba")
 
     class Meta:
-        """Třída `DokumentOsoba.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "dokument_osoba"
         unique_together = (("dokument", "osoba"),)
 
@@ -996,19 +916,14 @@ class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Mod
     )
 
     class Meta:
-        """Třída `DokumentPosudek.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "dokument_posudek"
         unique_together = (("dokument", "posudek"),)
 
     def __str__(self):
-        """Funkce `DokumentPosudek.__str__` v modulu `webclient.dokument.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return "D: " + str(self.dokument) + " - P: " + str(self.posudek)
 
 
@@ -1024,38 +939,29 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
-        """Třída `Tvar.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "tvar"
         unique_together = (("dokument", "tvar", "poznamka"),)
         ordering = ["tvar__razeni"]
 
     def __init__(self, *args, **kwargs):
-        """Funkce `Tvar.__init__` v modulu `webclient.dokument.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)
         self.active_transaction = None
         self.close_active_transaction_when_finished = None
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
-        """Funkce `Tvar.create_transaction` v modulu `webclient.dokument.models`.
+        """Vytvoří transaction.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param transaction_user: Vstupní hodnota používaná při zpracování.
-        :param success_message: Vstupní hodnota používaná při zpracování.
-        :param error_message: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
+        :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
+        :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+        :return: Vrací nově vytvořený výsledek operace."""
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -1079,10 +985,7 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
     sekvence = models.IntegerField()
 
     class Meta:
-        """Třída `DokumentSekvence.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "dokument_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["rada", "region", "rok"], name="unique_sekvence_dokument"),
@@ -1144,31 +1047,23 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     ident_cely = models.TextField(unique=True)
 
     class Meta:
-        """Třída `Let.Meta` v modulu `webclient.dokument.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "let"
         ordering = ["ident_cely"]
         verbose_name_plural = "Lety"
 
     def __str__(self):
-        """Funkce `Let.__str__` v modulu `webclient.dokument.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.ident_cely
 
     def save(self, *args, **kwargs):
-        """Funkce `Let.save` v modulu `webclient.dokument.models`.
+        """Uloží změny objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -1179,11 +1074,9 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
             raise ValidationError(_("dokument.models.Let.save.check_container_deleted_or_not_exists.invalid"))
 
     def get_absolute_url(self):
-        """Funkce `Let.get_absolute_url` v modulu `webclient.dokument.models`.
+        """Vrací absolute url.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return reverse("admin:dokument_let_change", args=[self.pk])
 
 

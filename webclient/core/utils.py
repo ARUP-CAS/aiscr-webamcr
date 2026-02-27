@@ -32,21 +32,15 @@ cache = caches[rosetta_settings.ROSETTA_CACHE_NAME]
 
 
 class CannotFindCadasterCentre(Exception):
-    """Třída `CannotFindCadasterCentre` v modulu `webclient.core.utils`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``CannotFindCadasterCentre`` v rámci aplikace."""
     pass
 
 
 def file_validate_epsg(epsg):
-    """Funkce `file_validate_epsg` v modulu `webclient.core.utils`.
+    """Provádí operaci file validate epsg.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param epsg: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     if epsg == "4326":
         return True
     elif epsg == "5514":
@@ -56,13 +50,10 @@ def file_validate_epsg(epsg):
 
 
 def balanced_parentheses(expression):
-    """Funkce `balanced_parentheses` v modulu `webclient.core.utils`.
+    """Provádí operaci balanced parentheses.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param expression: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param expression: Vstupní hodnota ``expression`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     stack = 0
     for char in expression:
         if char == "(":
@@ -77,11 +68,9 @@ def balanced_parentheses(expression):
 
 
 def load_database_translation_strings():
-    """Funkce `load_database_translation_strings` v modulu `webclient.core.utils`.
+    """Načte database translation strings.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     return [
         _("pian.posgtres.importovatPian.check.unsupportedEPSG"),
         _("pian.posgtres.importovatPian.check.wrongGeometry"),
@@ -894,11 +883,9 @@ class SearchTable(ColumnShiftTableBootstrap4):
     column_excluded = ["ident_cely"]
 
     def get_column_default_show(self):
-        """Funkce `SearchTable.get_column_default_show` v modulu `webclient.core.utils`.
+        """Vrací column default show.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))
         return super(SearchTable, self).get_column_default_show()
 
@@ -1051,15 +1038,12 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
 
 def replace_last(source_string, old, new):
-    """Funkce `replace_last` v modulu `webclient.core.utils`.
+    """Provádí operaci replace last.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param source_string: Vstupní hodnota používaná při zpracování.
-    :param old: Vstupní hodnota používaná při zpracování.
-    :param new: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param source_string: Vstupní hodnota ``source_string`` pro danou operaci.
+    :param old: Vstupní hodnota ``old`` pro danou operaci.
+    :param new: Vstupní hodnota ``new`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     index = source_string.rfind(old)
     if index != -1:
         start_part = source_string[:index]
@@ -1070,120 +1054,90 @@ def replace_last(source_string, old, new):
 
 
 class SessionIdentifier:
-    """Třída `SessionIdentifier` v modulu `webclient.core.utils`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``SessionIdentifier`` v rámci aplikace."""
     def __init__(self, request):
-        """Funkce `SessionIdentifier.__init__` v modulu `webclient.core.utils`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Funkce nevrací hodnotu (``None``)."""
         self.cache_key = self._generate_session_key(request)
 
     def _generate_session_key(self, request):
-        """Funkce `SessionIdentifier._generate_session_key` v modulu `webclient.core.utils`.
+        """Vygeneruje session key.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací nově vytvořený výsledek operace."""
         if "session_uuid" not in request.session:
             request.session["session_uuid"] = str(uuid.uuid4())  # Vytvoří unikátní ID
             request.session.modified = True
         return f"session_{request.session['session_uuid']}_key"
 
     def clear_cached_files(self):
-        """Funkce `SessionIdentifier.clear_cached_files` v modulu `webclient.core.utils`.
+        """Provádí operaci clear cached files.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         cache.delete(f"{self.cache_key}_files")
 
     def set_ident(self, ident_cely, timeout=3600):
-        """Funkce `SessionIdentifier.set_ident` v modulu `webclient.core.utils`.
+        """Nastaví ident.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident_cely: Vstupní hodnota používaná při zpracování.
-        :param timeout: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         old_ident_cely = self.get_ident()
         if old_ident_cely != ident_cely:
             self.clear_cached_files()
         cache.set(self.cache_key, ident_cely, timeout)
 
     def get_ident(self):
-        """Funkce `SessionIdentifier.get_ident` v modulu `webclient.core.utils`.
+        """Vrací ident.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return cache.get(self.cache_key, None)
 
     def add_file_reference(self, ident, timeout=3600):
-        """Funkce `SessionIdentifier.add_file_reference` v modulu `webclient.core.utils`.
+        """Provádí operaci add file reference.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident: Vstupní hodnota používaná při zpracování.
-        :param timeout: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+        :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         files = cache.get(f"{self.cache_key}_files", set())
         files.add(ident)
         cache.set(f"{self.cache_key}_files", files, timeout)
 
     def file_exists(self, ident):
-        """Funkce `SessionIdentifier.file_exists` v modulu `webclient.core.utils`.
+        """Provádí operaci file exists.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
             return True
         return False
 
     def remove_file_reference(self, ident):
-        """Funkce `SessionIdentifier.remove_file_reference` v modulu `webclient.core.utils`.
+        """Provádí operaci remove file reference.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+        :return: Vrací výsledek operace odstranění."""
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
             files.remove(ident)
             cache.set(f"{self.cache_key}_files", files)
 
     def get_cached_files(self):
-        """Funkce `SessionIdentifier.get_cached_files` v modulu `webclient.core.utils`.
+        """Vrací cached files.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         files = cache.get(f"{self.cache_key}_files", set())
         return files
 
     def set_project_ownership(self, ident_cely, timeout=7200):
-        """
-        Uloží vlastnictví projektu pro anonymního uživatele do Redis.
-        Používá se pro ověření, že anonymní uživatel může nahrávat soubory pouze k projektu, který sám vytvořil.
-
-        Args:
-            ident_cely: identifikátor projektu
-            timeout: timeout v sekundách (defaultně 2 hodiny)
-        """
+        """Nastaví project ownership.
+        
+        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         from core.connectors import RedisConnector
 
         r = RedisConnector.get_connection_decode()

@@ -16,14 +16,11 @@ CLAMD_PORT = 3310
 
 
 def get_test_secret(setting, default_value=None):
-    """Funkce `get_test_secret` v modulu `webclient.webclient.settings.dev_test`.
+    """Vrací test secret.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param setting: Vstupní hodnota používaná při zpracování.
-    :param default_value: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param setting: Vstupní hodnota ``setting`` pro danou operaci.
+    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     file_test_path = (
         "/run/secrets/test_conf"
         if os.path.exists("/run/secrets/test_conf")

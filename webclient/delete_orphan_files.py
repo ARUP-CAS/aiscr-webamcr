@@ -10,23 +10,18 @@ logger = logging.getLogger(__name__)
 
 def list_files_in_db():
     # Provede vlastní zpracování.
-    """Funkce `list_files_in_db` v modulu `webclient.delete_orphan_files`.
+    """Provádí operaci list files in db.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     soubory_query = Soubor.objects.all()
     return [soubor.path.path for soubor in soubory_query if soubor.path.name != "not specified yet"]
 
 
 def remove_orphans(files_in_database):
-    """Funkce `remove_orphans` v modulu `webclient.delete_orphan_files`.
+    """Provádí operaci remove orphans.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param files_in_database: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param files_in_database: Vstupní hodnota ``files_in_database`` pro danou operaci.
+    :return: Vrací výsledek operace odstranění."""
     for path, subdirs, files in os.walk(MEDIA_ROOT):
         for name in files:
             file_path = os.path.join(path, name)

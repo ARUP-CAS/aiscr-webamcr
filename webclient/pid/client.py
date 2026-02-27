@@ -40,7 +40,10 @@ class DigitalObjectIdentifierClient:
             raise ValueError(_("doi.client.DigitalObjectIdentifierClient.invalid_record_class"))
 
     def _check_response_status(self, response):
-        """Ověří úspěšnost HTTP odpovědi a při chybě vyvolá doménovou výjimku."""
+        """Ověří response status.
+        
+        :param response: Vstupní hodnota ``response`` pro danou operaci.
+        :return: Vrací výsledek ověření nebo validačního pravidla."""
         if not str(response.status_code).startswith("2"):
             logger.error(
                 "doi.client.DigitalObjectIdentifierClient._check_response_status.error",
@@ -92,7 +95,10 @@ class DigitalObjectIdentifierClient:
             )
 
     def hide_record(self, check_status=True):
-        """Nastaví záznam v DataCite do neveřejného režimu."""
+        """Provádí operaci hide record.
+        
+        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.hide_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
@@ -133,7 +139,11 @@ class DigitalObjectIdentifierClient:
         return response.json()
 
     def update_record(self, check_status=True, reload_record=False):
-        """Aktualizuje existující záznam v DataCite."""
+        """Aktualizuje record.
+        
+        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.update_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},

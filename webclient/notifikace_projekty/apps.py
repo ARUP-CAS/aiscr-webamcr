@@ -2,19 +2,14 @@ from django.apps import AppConfig
 
 
 class NotifikaceProjektyConfig(AppConfig):
-    """Třída `NotifikaceProjektyConfig` v modulu `webclient.notifikace_projekty.apps`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``NotifikaceProjektyConfig`` v rámci aplikace."""
     default_auto_field = "django.db.models.BigAutoField"
     name = "notifikace_projekty"
 
     def ready(self):
-        """Funkce `NotifikaceProjektyConfig.ready` v modulu `webclient.notifikace_projekty.apps`.
+        """Provádí operaci ready.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         super(NotifikaceProjektyConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import notifikace_projekty.signals

@@ -32,13 +32,10 @@ def validate_phone_number(number):
 
 
 def validate_date_min_1600(value):
-    """Funkce `validate_date_min_1600` v modulu `webclient.core.validators`.
+    """Validuje date min 1600.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param value: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param value: Vstupní hodnota ``value`` pro danou operaci.
+    :return: Vrací výsledek ověření nebo validačního pravidla."""
     min_date = datetime(1600, 1, 1).date()
     if isinstance(value, DateRange):
         if value.lower <= min_date:

@@ -69,17 +69,12 @@ logger = logging.getLogger(__name__)
 
 
 class SouborTypFilter(MultipleChoiceFilter):
-    """Třída `SouborTypFilter` v modulu `webclient.dokument.filters`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``SouborTypFilter`` v rámci aplikace."""
     @property
     def field(self):
-        """Funkce `SouborTypFilter.field` v modulu `webclient.dokument.filters`.
+        """Provádí operaci field.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         qs = self.model._default_manager.distinct()
         qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
         self.extra["choices"] = [(o, o) for o in qs if o is not None]
@@ -96,13 +91,10 @@ class HistorieFilter(FilterSet):
     TYP_VAZBY = None
 
     def set_filter_fields(self, user):
-        """Funkce `HistorieFilter.set_filter_fields` v modulu `webclient.dokument.filters`.
+        """Nastaví filter fields.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param user: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
             self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.all(),
@@ -156,11 +148,9 @@ class HistorieFilter(FilterSet):
         )
 
     def _get_history_subquery(self):
-        """Funkce `HistorieFilter._get_history_subquery` v modulu `webclient.dokument.filters`.
+        """Vrací history subquery.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
         uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
         zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
@@ -325,13 +315,10 @@ class Model3DFilter(HistorieFilter, FilterSet):
     )
 
     def filter_queryset(self, queryset):
-        """Funkce `Model3DFilter.filter_queryset` v modulu `webclient.dokument.filters`.
+        """Filtruje queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         logger.debug("dokument.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(Model3DFilter, self).filter_queryset(queryset)
@@ -406,23 +393,17 @@ class Model3DFilter(HistorieFilter, FilterSet):
         return queryset
 
     class Meta:
-        """Třída `Model3DFilter.Meta` v modulu `webclient.dokument.filters`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Dokument
         exclude = []
         form = DokumentFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Funkce `Model3DFilter.__init__` v modulu `webclient.dokument.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(Model3DFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         self.filters["obdobi"] = MultipleChoiceFilter(
@@ -517,13 +498,10 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `Model3DFilterFormHelper.__init__` v modulu `webclient.dokument.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("dokument.filters.model3DFilterFormHelper.historyDivider.label")
         }
@@ -1154,14 +1132,11 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def __init__(self, *args, **kwargs):
-        """Funkce `DokumentFilter.__init__` v modulu `webclient.dokument.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(DokumentFilter, self).__init__(*args, **kwargs)
         self.helper = DokumentFilterFormHelper()
 
@@ -1174,13 +1149,10 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `DokumentFilterFormHelper.__init__` v modulu `webclient.dokument.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("dokument.filters.dokumentFilterFormHelper.historyDivider.label")
         }

@@ -44,13 +44,10 @@ class Command(BaseCommand):
     help = _("core.management.commands.remove_gps_data.Command.help")
 
     def add_arguments(self, parser):
-        """Funkce `Command.add_arguments` v modulu `webclient.core.management.commands.remove_gps_data`.
+        """Provádí operaci add arguments.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param parser: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param parser: Vstupní hodnota ``parser`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         parser.add_argument(
             "csv_file",
             type=str,
@@ -58,14 +55,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Funkce `Command.handle` v modulu `webclient.core.management.commands.remove_gps_data`.
+        """Zpracuje hodnotu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param options: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param options: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         csv_file = options["csv_file"]
 
         logger.debug(

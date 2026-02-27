@@ -21,23 +21,17 @@ class PermissionMiddleware:
     """
 
     def __init__(self, get_response):
-        """Funkce `PermissionMiddleware.__init__` v modulu `webclient.core.middleware`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param get_response: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         self.get_response = get_response
 
     def __call__(self, request):
-        """Funkce `PermissionMiddleware.__call__` v modulu `webclient.core.middleware`.
+        """Provádí operaci call.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací výsledek provedené operace."""
         response = self.get_response(request)
         return response
 
@@ -83,40 +77,28 @@ class PermissionMiddleware:
 
 
 class ErrorMiddleware:
-    """Třída `ErrorMiddleware` v modulu `webclient.core.middleware`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``ErrorMiddleware`` v rámci aplikace."""
     def __init__(self, get_response):
-        """Funkce `ErrorMiddleware.__init__` v modulu `webclient.core.middleware`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param get_response: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         self.get_response = get_response
 
     def __call__(self, request):
-        """Funkce `ErrorMiddleware.__call__` v modulu `webclient.core.middleware`.
+        """Provádí operaci call.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací výsledek provedené operace."""
         response = self.get_response(request)
         return response
 
     def process_exception(self, request, exception):
-        """Funkce `ErrorMiddleware.process_exception` v modulu `webclient.core.middleware`.
+        """Provádí operaci process exception.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param exception: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param exception: Vstupní hodnota ``exception`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
             return render(request, "fedora_error.html", context, status=500)
@@ -127,45 +109,33 @@ class ErrorMiddleware:
 
 
 class StatusMessageMiddleware:
-    """Třída `StatusMessageMiddleware` v modulu `webclient.core.middleware`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``StatusMessageMiddleware`` v rámci aplikace."""
     pattern = re.compile(r"[\w-]+\d+[A-Z]?")
 
     def __init__(self, get_response):
-        """Funkce `StatusMessageMiddleware.__init__` v modulu `webclient.core.middleware`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param get_response: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         self.get_response = get_response
         r = RedisConnector()
         self.redis_connection = r.get_connection()
 
     def __call__(self, request):
-        """Funkce `StatusMessageMiddleware.__call__` v modulu `webclient.core.middleware`.
+        """Provádí operaci call.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací výsledek provedené operace."""
         response = self.get_response(request)
         return response
 
     def _show_message(self, value, request, redis_key):
-        """Funkce `StatusMessageMiddleware._show_message` v modulu `webclient.core.middleware`.
+        """Provádí operaci show message.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param redis_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param redis_key: Vstupní hodnota ``redis_key`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         value = int(value.decode("utf-8"))
         if value == FedoraTransactionResult.COMMITED.value:
             try:
@@ -192,16 +162,13 @@ class StatusMessageMiddleware:
         self.redis_connection.delete(redis_key)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        """Funkce `StatusMessageMiddleware.process_view` v modulu `webclient.core.middleware`.
+        """Provádí operaci process view.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param view_func: Vstupní hodnota používaná při zpracování.
-        :param view_args: Vstupní hodnota používaná při zpracování.
-        :param view_kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
+        :param view_args: Vstupní hodnota ``view_args`` pro danou operaci.
+        :param view_kwargs: Vstupní hodnota ``view_kwargs`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         regex_result = self.pattern.findall(request.path)
         for item in regex_result:
             redis_key = FedoraTransaction.get_transaction_redis_key(item, request.user.id)

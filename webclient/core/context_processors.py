@@ -50,13 +50,10 @@ def digi_links_from_settings(request):
 
 
 def logout_next_url(request):
-    """Funkce `logout_next_url` v modulu `webclient.core.context_processors`.
+    """Provádí operaci logout next url.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param request: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param request: Django HTTP požadavek použitý při zpracování.
+    :return: Vrací výsledek provedené operace."""
     logger.debug(f"request path: {request.path}")
     return {"logout_next_url": request.path}
 
@@ -134,13 +131,10 @@ def auto_logout_client(request):
 
 
 def main_shows(request):
-    """Funkce `main_shows` v modulu `webclient.core.context_processors`.
+    """Provádí operaci main shows.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param request: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param request: Django HTTP požadavek použitý při zpracování.
+    :return: Vrací výsledek provedené operace."""
     main_show = {}
     if request.user.is_authenticated:
         if request.user.hlavni_role.id == ROLE_ADMIN_ID:

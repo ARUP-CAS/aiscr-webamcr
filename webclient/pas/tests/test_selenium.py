@@ -16,24 +16,17 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneNalezy(BaseSeleniumTestClass):
-    """Třída `AkceSamostatneNalezy` v modulu `webclient.pas.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``AkceSamostatneNalezy`` v rámci aplikace."""
     def go_to_form(self):
-        """Funkce `AkceSamostatneNalezy.go_to_form` v modulu `webclient.pas.tests.test_selenium`.
+        """Provádí operaci go to form.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.goToAddress("/pas/zapsat")
 
     def create_PAS(self):
-        """Funkce `AkceSamostatneNalezy.create_PAS` v modulu `webclient.pas.tests.test_selenium`.
+        """Vytvoří PAS.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací nově vytvořený výsledek operace."""
         self.go_to_form()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("M-202105907")

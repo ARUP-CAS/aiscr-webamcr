@@ -121,13 +121,10 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     )
 
     def filter_queryset(self, queryset):
-        """Funkce `ExterniZdrojFilter.filter_queryset` v modulu `webclient.ez.filters`.
+        """Filtruje queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(ExterniZdrojFilter, self).filter_queryset(queryset)
@@ -181,10 +178,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         )
 
     class Meta:
-        """Třída `ExterniZdrojFilter.Meta` v modulu `webclient.ez.filters`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = ExterniZdroj
         exclude = (
             "nazev",
@@ -203,14 +197,11 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `ExterniZdrojFilter.__init__` v modulu `webclient.ez.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         user: User = kwargs.get("request").user
         super(ExterniZdrojFilter, self).__init__(*args, **kwargs)
         self.set_filter_fields(user)
@@ -225,13 +216,10 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `ExterniZdrojFilterFormHelper.__init__` v modulu `webclient.ez.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("ez.filters.history.divider.label")
         }

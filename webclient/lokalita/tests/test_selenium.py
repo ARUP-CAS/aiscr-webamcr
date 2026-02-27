@@ -21,24 +21,17 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceLokality(BaseSeleniumTestClass):
-    """Třída `AkceLokality` v modulu `webclient.lokalita.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``AkceLokality`` v rámci aplikace."""
     def go_to_form_zapsat(self):
-        """Funkce `AkceLokality.go_to_form_zapsat` v modulu `webclient.lokalita.tests.test_selenium`.
+        """Provádí operaci go to form zapsat.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.goToAddress("/arch-z/lokalita/zapsat")
 
     def go_to_form_vybrat(self):
-        """Funkce `AkceLokality.go_to_form_vybrat` v modulu `webclient.lokalita.tests.test_selenium`.
+        """Provádí operaci go to form vybrat.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.goToAddress("/arch-z/lokalita/vyber?sort=nazev")
 
     def test_051_zapsani_lokality_p_001(self):

@@ -9,15 +9,12 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=Historie, weak=False)
 def soubor_update_metadata(sender, instance: Historie, **kwargs):
-    """Funkce `soubor_update_metadata` v modulu `webclient.historie.signals`.
+    """Provádí operaci soubor update metadata.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :return: Vrací výsledek provedené operace."""
     logger.debug("historie.signals.soubor_update_metadata.start")
     if instance.uzivatel:
         instance.organizace_snapshot = instance.uzivatel.organizace

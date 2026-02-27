@@ -34,15 +34,12 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(post_save, sender=ExterniZdroj, weak=False)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
-    """Funkce `externi_zdroj_save_metadata` v modulu `webclient.ez.signals`.
+    """Provádí operaci externi zdroj save metadata.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :return: Vrací výsledek provedené operace."""
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(ExterniZdroj)
     if not instance.suppress_signal:
@@ -60,15 +57,12 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(pre_delete, sender=ExterniZdroj, weak=False)
 def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
-    """Funkce `delete_externi_zdroj_repository_container` v modulu `webclient.ez.signals`.
+    """Odstraní externi zdroj repository container.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :return: Vrací výsledek operace odstranění."""
     logger.debug(
         "ez.signals.delete_externi_zdroj_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )

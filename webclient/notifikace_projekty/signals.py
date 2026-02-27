@@ -11,15 +11,12 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Pes, weak=False)
 def pes_save(sender, instance: Pes, **kwargs):
-    """Funkce `pes_save` v modulu `webclient.notifikace_projekty.signals`.
+    """Provádí operaci pes save.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :return: Vrací výsledek provedené operace."""
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(lambda: instance.user.save_metadata(fedora_transaction, close_transaction=True))
@@ -31,15 +28,12 @@ def pes_save(sender, instance: Pes, **kwargs):
 
 @receiver(pre_delete, sender=Pes, weak=False)
 def pes_delete(sender, instance: Pes, **kwargs):
-    """Funkce `pes_delete` v modulu `webclient.notifikace_projekty.signals`.
+    """Provádí operaci pes delete.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :return: Vrací výsledek provedené operace."""
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()
         try:

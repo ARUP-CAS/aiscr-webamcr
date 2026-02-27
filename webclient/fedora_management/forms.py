@@ -3,10 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class UpdateMetadataFileForm(forms.Form):
-    """Třída `UpdateMetadataFileForm` v modulu `webclient.fedora_management.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``UpdateMetadataFileForm`` v rámci aplikace."""
     ident_list_file = forms.FileField(
         required=True,
         label=_("core.forms.UpdateMetadataFileForm.file.label"),
@@ -21,12 +18,9 @@ class UpdateMetadataFileForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `UpdateMetadataFileForm.__init__` v modulu `webclient.fedora_management.forms`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)

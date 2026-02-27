@@ -150,14 +150,11 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     vazba = models.ForeignKey("HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True)
 
     def __init__(self, *args, **kwargs):
-        """Funkce `Historie.__init__` v modulu `webclient.historie.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)
         self.suppress_signal = False
 
@@ -170,7 +167,10 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
 
     @classmethod
     def save_record_deletion_record(cls, record):
-        """Uloží historizační záznam o smazání navázaného objektu."""
+        """Uloží record deletion record.
+        
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         logger.debug("history.models.save_record_deletion_record.start")
         from arch_z.models import ArcheologickyZaznam
 
@@ -199,10 +199,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
             self.save()
 
     class Meta:
-        """Třída `Historie.Meta` v modulu `webclient.historie.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "historie"
         verbose_name = "historie"
         ordering = [
@@ -243,15 +240,14 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     typ_vazby = models.TextField(max_length=24, choices=CHOICES, db_index=True)
 
     class Meta:
-        """Třída `HistorieVazby.Meta` v modulu `webclient.historie.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "historie_vazby"
         verbose_name = "historie_vazby"
 
     def __str__(self):
-        """Vrací textovou reprezentaci vazby historie."""
+        """Vrací textovou reprezentaci objektu.
+        
+        :return: Vrací výsledek provedené operace."""
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
     def get_last_transaction_date(self, transaction_type, anonymized: bool = True, user_protected: bool = True) -> dict:

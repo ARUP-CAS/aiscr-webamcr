@@ -21,11 +21,9 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
     """
 
     def get_queryset(self):
-        """Funkce `RuianKatastrAutocomplete.get_queryset` v modulu `webclient.heslar.views`.
+        """Vrací queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = RuianKatastr.objects.all()
         if self.q:
             new_qs = qs.filter(nazev__istartswith=self.q).annotate(qs_order=Value(0, IntegerField()))
@@ -144,11 +142,9 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     """
 
     def get_queryset(self):
-        """Funkce `DokumentTypAutocomplete.get_queryset` v modulu `webclient.heslar.views`.
+        """Vrací queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -161,11 +157,9 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
     """
 
     def get_queryset(self):
-        """Funkce `DokumentFormatAutocomplete.get_queryset` v modulu `webclient.heslar.views`.
+        """Vrací queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(id__in=MODEL_3D_DOKUMENT_FORMATS)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -178,11 +172,9 @@ class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     """
 
     def get_queryset(self):
-        """Funkce `PristupnostAutocomplete.get_queryset` v modulu `webclient.heslar.views`.
+        """Vrací queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -195,11 +187,9 @@ class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetVie
     """
 
     def get_queryset(self):
-        """Funkce `HeslarAutocompleteView.get_queryset` v modulu `webclient.heslar.views`.
+        """Vrací queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Heslar.objects.all()
         heslar_nazev = self.forwarded.get("heslar_nazev", None)
         if self.q:
@@ -215,11 +205,9 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
     """
 
     def get_queryset(self):
-        """Funkce `HeslarNazevAutocompleteView.get_queryset` v modulu `webclient.heslar.views`.
+        """Vrací queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = HeslarNazev.objects.all()
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -227,15 +215,12 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
 
 
 def heslar_list(heslo_nazev, filter={}, use_exclude=False):
-    """Funkce `heslar_list` v modulu `webclient.heslar.views`.
+    """Provádí operaci heslar list.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param heslo_nazev: Vstupní hodnota používaná při zpracování.
-    :param filter: Vstupní hodnota používaná při zpracování.
-    :param use_exclude: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param heslo_nazev: Vstupní hodnota ``heslo_nazev`` pro danou operaci.
+    :param filter: Vstupní hodnota ``filter`` pro danou operaci.
+    :param use_exclude: Vstupní hodnota ``use_exclude`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     hesla = Heslar.objects.filter(nazev_heslare=heslo_nazev)
     if use_exclude:
         hesla_filtered = hesla.exclude(**filter)
