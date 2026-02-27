@@ -38,8 +38,8 @@ jobs:
       - name: Validate tag format
         run: |
           set -euo pipefail
-          if [[ ! "${{ inputs.new_tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid tag format. Must be vX.Y.Z"
+          if [[ ! "${{ inputs.new_tag }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid tag format. Must be vX.Y.Z or vX.Y.Z-suffix"
             exit 1
           fi
       
@@ -132,7 +132,6 @@ jobs:
           tag: ${{ inputs.new_tag }}
           commit_sha: ${{ needs.update_files.outputs.sha }}
           message: "Release ${{ inputs.new_tag }}"
-          annotated: true
 
   docker_deploy:
     needs: new_version
