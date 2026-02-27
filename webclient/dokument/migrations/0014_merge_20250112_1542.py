@@ -5,10 +5,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.dokument.migrations.0014_merge_20250112_1542`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("dokument", "0013_dokument_doi_alter_dokument_jazyky_and_more"),
         ("dokument", "0013_dokumentextradata_geom_sjtsk_and_more"),

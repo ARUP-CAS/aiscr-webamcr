@@ -6,10 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.core.migrations.0015_alter_permissions_accessibility_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("core", "0014_permissions_action"),

@@ -5,10 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0009_alter_historicaluser_telefon_alter_user_telefon_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("uzivatel", "0008_alter_usernotificationtype_options_and_more"),
     ]

@@ -5,10 +5,6 @@ from core.constants import  PROJEKT_STAV_OZNAMENY
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.projekt.migrations.0004_default`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     initial = True
 
     dependencies = [

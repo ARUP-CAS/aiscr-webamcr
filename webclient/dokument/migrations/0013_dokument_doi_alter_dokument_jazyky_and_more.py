@@ -5,10 +5,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.dokument.migrations.0013_dokument_doi_alter_dokument_jazyky_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("dokument", "0012_alter_dokument_options_and_more"),
         ("heslar", "0008_heslarodkaz_scheme_uri"),

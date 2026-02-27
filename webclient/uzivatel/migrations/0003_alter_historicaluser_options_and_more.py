@@ -5,10 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0003_alter_historicaluser_options_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ("historie", "0003_triggers"),
         ("uzivatel", "0002_default"),

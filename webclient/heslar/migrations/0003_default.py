@@ -5,10 +5,6 @@ from core.constants import PROJEKT_STAV_OZNAMENY, CESKY, ORGANIZACE_MESICU_DO_ZV
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.heslar.migrations.0003_default`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     initial = True
 
     dependencies = [

@@ -6,10 +6,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.pas.migrations.0007_remove_samostatnynalez_samostatny_nalez_geom_check_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     dependencies = [
         ('core', '0016_alter_customadminsettings_options_and_more'),
         ('heslar', '0007_alter_heslar_unique_together_and_more'),

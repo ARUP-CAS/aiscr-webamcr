@@ -6,10 +6,6 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.arch_z.migrations.0003_archeologickyzaznamkatastr_katastr`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     initial = True
 
     dependencies = [

@@ -4,10 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.core.migrations.0009_ident_sequences_v2`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     replaces = [
         ("core", "0009_ident_sequences"),
         ("core", "0010_rename_rada_projektsekvence_region_and_more"),

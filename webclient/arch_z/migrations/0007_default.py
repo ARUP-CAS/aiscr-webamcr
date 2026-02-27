@@ -7,10 +7,6 @@ from django_add_default_value import AddDefaultValue
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.arch_z.migrations.0007_default`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
     initial = True
 
     dependencies = [
