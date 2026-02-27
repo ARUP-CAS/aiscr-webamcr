@@ -16,65 +16,40 @@ scan_response = re.compile(r"^(?P<path>.*): ((?P<virus>.+) )?(?P<status>(FOUND|O
 
 
 class RedisConnector:
-    """Třída `RedisConnector` v modulu `webclient.core.connectors`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``RedisConnector`` pro modul ``webclient.core.connectors``."""
     r = None
     r_decode = None
 
     @classmethod
     def _create_connection(cls):
-        """Funkce `RedisConnector._create_connection` v modulu `webclient.core.connectors`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``RedisConnector._create_connection`` v rámci modulu ``webclient.core.connectors``."""
         cls.r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass())
 
     # Tento konektor vrací přímo řetězec, takže není potřeba volat `decode("utf-8")`.
     @classmethod
     def _create_connection_decode(cls):
-        """Funkce `RedisConnector._create_connection_decode` v modulu `webclient.core.connectors`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``RedisConnector._create_connection_decode`` v rámci modulu ``webclient.core.connectors``."""
         cls.r_decode = redis.Redis(
             host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass(), decode_responses=True
         )
 
     @classmethod
     def get_connection(cls) -> redis.Redis:
-        """Funkce `RedisConnector.get_connection` v modulu `webclient.core.connectors`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``RedisConnector.get_connection`` v rámci modulu ``webclient.core.connectors``."""
         if not cls.r:
             cls._create_connection()
         return cls.r
 
     @classmethod
     def get_connection_decode(cls) -> redis.Redis:
-        """Funkce `RedisConnector.get_connection_decode` v modulu `webclient.core.connectors`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``RedisConnector.get_connection_decode`` v rámci modulu ``webclient.core.connectors``."""
         if not cls.r_decode:
             cls._create_connection_decode()
         return cls.r_decode
 
     @staticmethod
     def prepare_model_for_redis(table):
-        """Funkce `RedisConnector.prepare_model_for_redis` v modulu `webclient.core.connectors`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param table: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``RedisConnector.prepare_model_for_redis`` v rámci modulu ``webclient.core.connectors``."""
         columns = table.columns.iterall()
         row = table.rows[0]
         data = {}

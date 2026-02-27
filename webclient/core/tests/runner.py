@@ -71,31 +71,14 @@ class CustomTextTestRunner(unittest.runner.TextTestRunner):
 
 
 class AMCRSeleniumTestRunner(BaseRunner):
-    """Třída `AMCRSeleniumTestRunner` v modulu `webclient.core.tests.runner`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AMCRSeleniumTestRunner`` pro modul ``webclient.core.tests.runner``."""
     def __init__(self, *args, **kwargs):
-        """Funkce `AMCRSeleniumTestRunner.__init__` v modulu `webclient.core.tests.runner`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AMCRSeleniumTestRunner.__init__`` v rámci modulu ``webclient.core.tests.runner``."""
         super(AMCRSeleniumTestRunner, self).__init__(*args, **kwargs)
         self.test_runner = CustomTextTestRunner
 
     def setup_databases(self, *args, **kwargs):
-        """Funkce `AMCRSeleniumTestRunner.setup_databases` v modulu `webclient.core.tests.runner`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AMCRSeleniumTestRunner.setup_databases`` v rámci modulu ``webclient.core.tests.runner``."""
         self.keepdb = True
         temp_return = super().setup_databases(*args, **kwargs)
         return temp_return
@@ -103,12 +86,5 @@ class AMCRSeleniumTestRunner(BaseRunner):
     def teardown_databases(self, *args, **kwargs):
         # do somthing
         # return super().teardown_databases(*args, **kwargs)
-        """Funkce `AMCRSeleniumTestRunner.teardown_databases` v modulu `webclient.core.tests.runner`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AMCRSeleniumTestRunner.teardown_databases`` v rámci modulu ``webclient.core.tests.runner``."""
         pass

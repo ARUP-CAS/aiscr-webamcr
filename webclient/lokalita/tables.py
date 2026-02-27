@@ -7,7 +7,7 @@ from .models import Lokalita
 
 class LokalitaTable(SearchTable):
     """
-    Class pro definování tabulky pro lokaity použitých pro zobrazení přehledu lokalit a exportu.
+    Definuje tabulku lokalit pro přehled i export.
     """
 
     ident_cely = tables.Column(
@@ -71,10 +71,7 @@ class LokalitaTable(SearchTable):
     first_columns = None
 
     class Meta:
-        """Třída `LokalitaTable.Meta` v modulu `webclient.lokalita.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``LokalitaTable.Meta`` pro modul ``webclient.lokalita.tables``."""
         model = Lokalita
         fields = (
             "druh",

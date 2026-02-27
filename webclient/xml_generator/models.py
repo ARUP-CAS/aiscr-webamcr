@@ -11,15 +11,7 @@ UPDATE_REDIS_SNAPSHOT = 20
 
 
 def check_if_task_queued(class_name, pk, task_name):
-    """Funkce `check_if_task_queued` v modulu `webclient.xml_generator.models`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param class_name: Vstupní hodnota používaná při zpracování.
-    :param pk: Vstupní hodnota používaná při zpracování.
-    :param task_name: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``check_if_task_queued`` v rámci modulu ``webclient.xml_generator.models``."""
     try:
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
@@ -60,50 +52,29 @@ class BaseAmcrModel(models.Model):
     """
 
     class Meta:
-        """Třída `BaseAmcrModel.Meta` v modulu `webclient.xml_generator.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``BaseAmcrModel.Meta`` pro modul ``webclient.xml_generator.models``."""
         abstract = True
 
     def __str__(self):
-        """Funkce `BaseAmcrModel.__str__` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``BaseAmcrModel.__str__`` v rámci modulu ``webclient.xml_generator.models``."""
         return f"{self.pk}"
 
     @property
     def get_ident_cely_link(self):
-        """Funkce `BaseAmcrModel.get_ident_cely_link` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``BaseAmcrModel.get_ident_cely_link`` v rámci modulu ``webclient.xml_generator.models``."""
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
             return f"<a href='{self.get_absolute_url()}' target='_blank'>{self.ident_cely}</a>"
 
 
 class ModelWithMetadata(BaseAmcrModel):
-    """Třída `ModelWithMetadata` v modulu `webclient.xml_generator.models`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ModelWithMetadata`` pro modul ``webclient.xml_generator.models``."""
     IDENT_PREFIX = None
     SEQUENCE_NAME = None
 
     ident_cely = models.TextField(unique=True)
 
     def __init__(self, *args, **kwargs):
-        """Funkce `ModelWithMetadata.__init__` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ModelWithMetadata.__init__`` v rámci modulu ``webclient.xml_generator.models``."""
         self.suppress_signal = False
         self.deleted_by_user = None
         self.active_transaction = None
@@ -113,15 +84,7 @@ class ModelWithMetadata(BaseAmcrModel):
         super(ModelWithMetadata, self).__init__(*args, **kwargs)
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
-        """Funkce `ModelWithMetadata.create_transaction` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param transaction_user: Vstupní hodnota používaná při zpracování.
-        :param success_message: Vstupní hodnota používaná při zpracování.
-        :param error_message: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ModelWithMetadata.create_transaction`` v rámci modulu ``webclient.xml_generator.models``."""
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -131,11 +94,7 @@ class ModelWithMetadata(BaseAmcrModel):
 
     @property
     def metadata(self):
-        """Funkce `ModelWithMetadata.metadata` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ModelWithMetadata.metadata`` v rámci modulu ``webclient.xml_generator.models``."""
         from core.repository_connector import FedoraRepositoryConnector
 
         connector = FedoraRepositoryConnector(self)
@@ -183,16 +142,7 @@ class ModelWithMetadata(BaseAmcrModel):
     def save_metadata(
         self, fedora_transaction=None, include_files=False, close_transaction=False, skip_container_check=False
     ):
-        """Funkce `ModelWithMetadata.save_metadata` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :param include_files: Vstupní hodnota používaná při zpracování.
-        :param close_transaction: Vstupní hodnota používaná při zpracování.
-        :param skip_container_check: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
         from core.repository_connector import DryRunFedoraTransaction, FedoraDeletionOnlyTransaction, FedoraTransaction
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
@@ -252,14 +202,7 @@ class ModelWithMetadata(BaseAmcrModel):
         )
 
     def save_record_deletion_record(self, fedora_transaction, deleted_by_user=None):
-        """Funkce `ModelWithMetadata.save_record_deletion_record` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :param deleted_by_user: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ModelWithMetadata.save_record_deletion_record`` v rámci modulu ``webclient.xml_generator.models``."""
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
 
         from arch_z.models import ArcheologickyZaznam
@@ -287,13 +230,7 @@ class ModelWithMetadata(BaseAmcrModel):
             self.deletion_record_saved = True
 
     def _get_fedora_transaction(self, fedora_transaction):
-        """Funkce `ModelWithMetadata._get_fedora_transaction` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ModelWithMetadata._get_fedora_transaction`` v rámci modulu ``webclient.xml_generator.models``."""
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
@@ -305,14 +242,7 @@ class ModelWithMetadata(BaseAmcrModel):
         return fedora_transaction
 
     def record_deletion(self, fedora_transaction=None, close_transaction=False):
-        """Funkce `ModelWithMetadata.record_deletion` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :param close_transaction: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ModelWithMetadata.record_deletion`` v rámci modulu ``webclient.xml_generator.models``."""
         logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.start")
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
@@ -362,16 +292,7 @@ class ModelWithMetadata(BaseAmcrModel):
             fedora_transaction.mark_transaction_as_closed()
 
     def record_ident_change(self, old_ident_cely, fedora_transaction=None, new_ident_cely=None, delete_container=True):
-        """Funkce `ModelWithMetadata.record_ident_change` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param old_ident_cely: Vstupní hodnota používaná při zpracování.
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :param new_ident_cely: Vstupní hodnota používaná při zpracování.
-        :param delete_container: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ModelWithMetadata.record_ident_change`` v rámci modulu ``webclient.xml_generator.models``."""
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
@@ -421,13 +342,7 @@ class ModelWithMetadata(BaseAmcrModel):
             from projekt.models import Projekt
 
             def process_arch_z(record: ArcheologickyZaznam):
-                """Funkce `ModelWithMetadata.process_arch_z` v modulu `webclient.xml_generator.models`.
-                
-                Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-                
-                :param record: Vstupní hodnota používaná při zpracování.
-                :return: Výsledek odpovídající účelu volání.
-                """
+                """Zpracuje volání ``ModelWithMetadata.process_arch_z`` v rámci modulu ``webclient.xml_generator.models``."""
                 for inner_item in record.dokumentacni_jednotky_akce.all():
                     inner_item: DokumentacniJednotka
                     try:
@@ -457,13 +372,7 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Dokument):
 
                 def save_metadata(record: Dokument):
-                    """Funkce `ModelWithMetadata.save_metadata` v modulu `webclient.xml_generator.models`.
-                    
-                    Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-                    
-                    :param record: Vstupní hodnota používaná při zpracování.
-                    :return: Výsledek odpovídající účelu volání.
-                    """
+                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
                     for item in record.casti.all():
                         item: DokumentCast
                         if item.archeologicky_zaznam:
@@ -478,13 +387,7 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, ExterniZdroj):
 
                 def save_metadata(record: ExterniZdroj):
-                    """Funkce `ModelWithMetadata.save_metadata` v modulu `webclient.xml_generator.models`.
-                    
-                    Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-                    
-                    :param record: Vstupní hodnota používaná při zpracování.
-                    :return: Výsledek odpovídající účelu volání.
-                    """
+                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
                     for item in record.externi_odkazy_zdroje.all():
                         item: ExterniOdkaz
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -494,13 +397,7 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Projekt):
 
                 def save_metadata(record: Projekt):
-                    """Funkce `ModelWithMetadata.save_metadata` v modulu `webclient.xml_generator.models`.
-                    
-                    Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-                    
-                    :param record: Vstupní hodnota používaná při zpracování.
-                    :return: Výsledek odpovídající účelu volání.
-                    """
+                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
                     for item in record.casti_dokumentu.all():
                         item: DokumentCast
                         item.dokument.save_metadata(fedora_transaction)
@@ -513,13 +410,7 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Lokalita):
 
                 def save_metadata(record: Lokalita):
-                    """Funkce `ModelWithMetadata.save_metadata` v modulu `webclient.xml_generator.models`.
-                    
-                    Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-                    
-                    :param record: Vstupní hodnota používaná při zpracování.
-                    :return: Výsledek odpovídající účelu volání.
-                    """
+                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
                     archeologicky_zaznam: ArcheologickyZaznam = record.archeologicky_zaznam
                     process_arch_z(archeologicky_zaznam)
 
@@ -528,13 +419,7 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, SamostatnyNalez):
 
                 def save_metadata(record: SamostatnyNalez):
-                    """Funkce `ModelWithMetadata.save_metadata` v modulu `webclient.xml_generator.models`.
-                    
-                    Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-                    
-                    :param record: Vstupní hodnota používaná při zpracování.
-                    :return: Výsledek odpovídající účelu volání.
-                    """
+                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
                     if record.projekt:
                         record.projekt.save_metadata(fedora_transaction)
 
@@ -543,13 +428,7 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Pian):
 
                 def save_metadata(record: Pian):
-                    """Funkce `ModelWithMetadata.save_metadata` v modulu `webclient.xml_generator.models`.
-                    
-                    Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-                    
-                    :param record: Vstupní hodnota používaná při zpracování.
-                    :return: Výsledek odpovídající účelu volání.
-                    """
+                    """Zpracuje volání ``ModelWithMetadata.save_metadata`` v rámci modulu ``webclient.xml_generator.models``."""
                     for item in record.dokumentacni_jednotky_pianu.all():
                         item: DokumentacniJednotka
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -575,21 +454,12 @@ class ModelWithMetadata(BaseAmcrModel):
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
-        """Funkce `ModelWithMetadata.get_by_ident_cely` v modulu `webclient.xml_generator.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident_cely: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ModelWithMetadata.get_by_ident_cely`` v rámci modulu ``webclient.xml_generator.models``."""
         try:
             return cls.objects.get(ident_cely=ident_cely)
         except Exception:
             return None
 
     class Meta:
-        """Třída `ModelWithMetadata.Meta` v modulu `webclient.xml_generator.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``ModelWithMetadata.Meta`` pro modul ``webclient.xml_generator.models``."""
         abstract = True

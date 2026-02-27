@@ -13,15 +13,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=Lokalita, weak=False)
 def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
-    """Funkce `save_lokalita_snapshot` v modulu `webclient.lokalita.signals`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``save_lokalita_snapshot`` v rámci modulu ``webclient.lokalita.signals``."""
     logger.debug(
         "lokalita.signals.save_lokalita_snapshot.start", extra={"ident_cely": instance.archeologicky_zaznam.ident_cely}
     )
@@ -43,15 +35,7 @@ def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
 
 @receiver(post_save, sender=Lokalita, weak=False)
 def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
-    """Funkce `save_lokalita_redis_snapshot` v modulu `webclient.lokalita.signals`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``save_lokalita_redis_snapshot`` v rámci modulu ``webclient.lokalita.signals``."""
     logger.debug(
         "lokalita.signals.save_lokalita_redis_snapshot.start",
         extra={"ident_cely": instance.archeologicky_zaznam.ident_cely},
@@ -66,15 +50,7 @@ def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
 
 @receiver(pre_delete, sender=Lokalita, weak=False)
 def delete_lokalita(sender, instance: Lokalita, **kwargs):
-    """Funkce `delete_lokalita` v modulu `webclient.lokalita.signals`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``delete_lokalita`` v rámci modulu ``webclient.lokalita.signals``."""
     logger.debug(
         "lokalita.signals.delete_lokalita.start", extra={"ident_cely": instance.archeologicky_zaznam.ident_cely}
     )

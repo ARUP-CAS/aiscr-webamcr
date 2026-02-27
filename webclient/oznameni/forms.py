@@ -25,13 +25,7 @@ class DateRangeField(forms.DateField):
     """
 
     def to_python(self, value):
-        """Funkce `DateRangeField.to_python` v modulu `webclient.oznameni.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DateRangeField.to_python`` v rámci modulu ``webclient.oznameni.forms``."""
         if isinstance(value, DateRange):
             return value
         values = value.split("-")
@@ -59,13 +53,7 @@ class DateRangeWidget(forms.TextInput):
     """
 
     def format_value(self, value):
-        """Funkce `DateRangeWidget.format_value` v modulu `webclient.oznameni.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DateRangeWidget.format_value`` v rámci modulu ``webclient.oznameni.forms``."""
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
@@ -99,10 +87,7 @@ class OznamovatelForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `OznamovatelForm.Meta` v modulu `webclient.oznameni.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``OznamovatelForm.Meta`` pro modul ``webclient.oznameni.forms``."""
         model = Oznamovatel
         fields = ("oznamovatel", "odpovedna_osoba", "telefon", "email", "adresa", "poznamka")
         widgets = {
@@ -128,14 +113,7 @@ class OznamovatelForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Funkce `OznamovatelForm.__init__` v modulu `webclient.oznameni.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OznamovatelForm.__init__`` v rámci modulu ``webclient.oznameni.forms``."""
         self.uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         required = kwargs.pop("required", True)
         required_next = kwargs.pop("required_next", False)
@@ -224,22 +202,11 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
     )
 
     def clean_send_mail(self):
-        """Funkce `OznamovatelProjektCreateForm.clean_send_mail` v modulu `webclient.oznameni.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OznamovatelProjektCreateForm.clean_send_mail`` v rámci modulu ``webclient.oznameni.forms``."""
         return self.cleaned_data.get("send_mail", False)
 
     def __init__(self, *args, **kwargs):
-        """Funkce `OznamovatelProjektCreateForm.__init__` v modulu `webclient.oznameni.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OznamovatelProjektCreateForm.__init__`` v rámci modulu ``webclient.oznameni.forms``."""
         super().__init__(*args, **kwargs)
         if "send_mail" in self.data and self.data["send_mail"] == "":
             self.data = self.data.copy()
@@ -286,10 +253,7 @@ class ProjektOznameniForm(forms.ModelForm):
     ident_cely = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
-        """Třída `ProjektOznameniForm.Meta` v modulu `webclient.oznameni.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``ProjektOznameniForm.Meta`` pro modul ``webclient.oznameni.forms``."""
         model = Projekt
         fields = (
             "ident_cely",
@@ -324,14 +288,7 @@ class ProjektOznameniForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Funkce `ProjektOznameniForm.__init__` v modulu `webclient.oznameni.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektOznameniForm.__init__`` v rámci modulu ``webclient.oznameni.forms``."""
         change = kwargs.pop("change", False)
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
         self.fields["ident_cely"].required = False

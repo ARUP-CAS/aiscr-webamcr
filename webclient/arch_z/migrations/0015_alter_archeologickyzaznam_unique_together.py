@@ -5,10 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.arch_z.migrations.0015_alter_archeologickyzaznam_unique_together`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.arch_z.migrations.0015_alter_archeologickyzaznam_unique_together``."""
     dependencies = [
         ("historie", "0008_alter_historie_datum_zmeny_alter_historie_poznamka"),
         ("arch_z", "0014_alter_archeologickyzaznam_typ_zaznamu"),

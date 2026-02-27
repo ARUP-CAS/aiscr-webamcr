@@ -4,40 +4,23 @@ from pid.views import DoiAutocompleteView, OrcidAutocompleteView, RorAutocomplet
 
 
 class PidAutocompleteField(autocomplete.Select2ListChoiceField):
-    """Třída `PidAutocompleteField` v modulu `webclient.pid.fields`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``PidAutocompleteField`` pro modul ``webclient.pid.fields``."""
     autocomplete_class = None
     attribute_name = None
 
     def __init__(self, **kwargs):
-        """Funkce `PidAutocompleteField.__init__` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``PidAutocompleteField.__init__`` v rámci modulu ``webclient.pid.fields``."""
         self.instance = kwargs.pop("instance", None)
         self.initial_value = kwargs.pop("initial_value", None)
         super().__init__(**kwargs)
         self._set_initial_values()
 
     def _get_initial_value_from_instance(self):
-        """Funkce `PidAutocompleteField._get_initial_value_from_instance` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PidAutocompleteField._get_initial_value_from_instance`` v rámci modulu ``webclient.pid.fields``."""
         return getattr(self.instance, self.attribute_name)
 
     def _set_initial_values(self):
-        """Funkce `PidAutocompleteField._set_initial_values` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PidAutocompleteField._set_initial_values`` v rámci modulu ``webclient.pid.fields``."""
         if self.initial_value:
             result_list = self.autocomplete_class.api_call(self.initial_value, True)
         elif self.instance and getattr(self.instance, self.attribute_name, None):
@@ -50,156 +33,76 @@ class PidAutocompleteField(autocomplete.Select2ListChoiceField):
 
 
 class DoiAutocompleteField(PidAutocompleteField):
-    """Třída `DoiAutocompleteField` v modulu `webclient.pid.fields`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``DoiAutocompleteField`` pro modul ``webclient.pid.fields``."""
     autocomplete_class = DoiAutocompleteView
     attribute_name = "doi"
 
     def valid_value(self, value):
-        """Funkce `DoiAutocompleteField.valid_value` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DoiAutocompleteField.valid_value`` v rámci modulu ``webclient.pid.fields``."""
         return verify_doi(value)
 
     def validate(self, value):
-        """Funkce `DoiAutocompleteField.validate` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DoiAutocompleteField.validate`` v rámci modulu ``webclient.pid.fields``."""
         return verify_doi(value)
 
 
 class OrcidAutocompleteField(PidAutocompleteField):
-    """Třída `OrcidAutocompleteField` v modulu `webclient.pid.fields`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``OrcidAutocompleteField`` pro modul ``webclient.pid.fields``."""
     autocomplete_class = OrcidAutocompleteView
     attribute_name = "orcid"
 
     def _get_initial_value_from_instance(self):
-        """Funkce `OrcidAutocompleteField._get_initial_value_from_instance` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OrcidAutocompleteField._get_initial_value_from_instance`` v rámci modulu ``webclient.pid.fields``."""
         value = super()._get_initial_value_from_instance()
         value = value.replace("https://orcid.org/", "") if value else None
         return value
 
     def prepare_value(self, value):
-        """Funkce `OrcidAutocompleteField.prepare_value` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OrcidAutocompleteField.prepare_value`` v rámci modulu ``webclient.pid.fields``."""
         return value.replace("https://orcid.org/", "") if value else None
 
     def valid_value(self, value):
-        """Funkce `OrcidAutocompleteField.valid_value` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OrcidAutocompleteField.valid_value`` v rámci modulu ``webclient.pid.fields``."""
         return verify_orcid(value)
 
     def validate(self, value):
-        """Funkce `OrcidAutocompleteField.validate` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OrcidAutocompleteField.validate`` v rámci modulu ``webclient.pid.fields``."""
         return verify_orcid(value)
 
 
 class RorAutocompleteField(PidAutocompleteField):
-    """Třída `RorAutocompleteField` v modulu `webclient.pid.fields`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``RorAutocompleteField`` pro modul ``webclient.pid.fields``."""
     autocomplete_class = RorAutocompleteView
     attribute_name = "ror"
 
     def valid_value(self, value):
-        """Funkce `RorAutocompleteField.valid_value` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``RorAutocompleteField.valid_value`` v rámci modulu ``webclient.pid.fields``."""
         return verify_ror(value)
 
     def validate(self, value):
-        """Funkce `RorAutocompleteField.validate` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``RorAutocompleteField.validate`` v rámci modulu ``webclient.pid.fields``."""
         return verify_ror(value)
 
 
 class WikiDataAutocompleteField(PidAutocompleteField):
-    """Třída `WikiDataAutocompleteField` v modulu `webclient.pid.fields`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``WikiDataAutocompleteField`` pro modul ``webclient.pid.fields``."""
     autocomplete_class = WikiDataAutocompleteView
     attribute_name = "wikidata"
 
     def _get_initial_value_from_instance(self):
-        """Funkce `WikiDataAutocompleteField._get_initial_value_from_instance` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``WikiDataAutocompleteField._get_initial_value_from_instance`` v rámci modulu ``webclient.pid.fields``."""
         value = super()._get_initial_value_from_instance()
         value = value.replace("https://www.wikidata.org/entity/", "") if value else None
         return value
 
     def prepare_value(self, value):
-        """Funkce `WikiDataAutocompleteField.prepare_value` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``WikiDataAutocompleteField.prepare_value`` v rámci modulu ``webclient.pid.fields``."""
         return value.replace("https://www.wikidata.org/entity/", "") if value else None
 
     def valid_value(self, value):
-        """Funkce `WikiDataAutocompleteField.valid_value` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``WikiDataAutocompleteField.valid_value`` v rámci modulu ``webclient.pid.fields``."""
         return verify_wikidata(value)
 
     def validate(self, value):
-        """Funkce `WikiDataAutocompleteField.validate` v modulu `webclient.pid.fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``WikiDataAutocompleteField.validate`` v rámci modulu ``webclient.pid.fields``."""
         return verify_wikidata(value)

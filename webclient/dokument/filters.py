@@ -69,17 +69,10 @@ logger = logging.getLogger(__name__)
 
 
 class SouborTypFilter(MultipleChoiceFilter):
-    """Třída `SouborTypFilter` v modulu `webclient.dokument.filters`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``SouborTypFilter`` pro modul ``webclient.dokument.filters``."""
     @property
     def field(self):
-        """Funkce `SouborTypFilter.field` v modulu `webclient.dokument.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SouborTypFilter.field`` v rámci modulu ``webclient.dokument.filters``."""
         qs = self.model._default_manager.distinct()
         qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
         self.extra["choices"] = [(o, o) for o in qs if o is not None]
@@ -96,13 +89,7 @@ class HistorieFilter(FilterSet):
     TYP_VAZBY = None
 
     def set_filter_fields(self, user):
-        """Funkce `HistorieFilter.set_filter_fields` v modulu `webclient.dokument.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param user: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``HistorieFilter.set_filter_fields`` v rámci modulu ``webclient.dokument.filters``."""
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
             self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.all(),
@@ -156,11 +143,7 @@ class HistorieFilter(FilterSet):
         )
 
     def _get_history_subquery(self):
-        """Funkce `HistorieFilter._get_history_subquery` v modulu `webclient.dokument.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``HistorieFilter._get_history_subquery`` v rámci modulu ``webclient.dokument.filters``."""
         logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
         uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
         zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
@@ -325,13 +308,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
     )
 
     def filter_queryset(self, queryset):
-        """Funkce `Model3DFilter.filter_queryset` v modulu `webclient.dokument.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``Model3DFilter.filter_queryset`` v rámci modulu ``webclient.dokument.filters``."""
         logger.debug("dokument.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(Model3DFilter, self).filter_queryset(queryset)
@@ -406,23 +383,13 @@ class Model3DFilter(HistorieFilter, FilterSet):
         return queryset
 
     class Meta:
-        """Třída `Model3DFilter.Meta` v modulu `webclient.dokument.filters`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``Model3DFilter.Meta`` pro modul ``webclient.dokument.filters``."""
         model = Dokument
         exclude = []
         form = DokumentFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Funkce `Model3DFilter.__init__` v modulu `webclient.dokument.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``Model3DFilter.__init__`` v rámci modulu ``webclient.dokument.filters``."""
         super(Model3DFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         self.filters["obdobi"] = MultipleChoiceFilter(
@@ -517,13 +484,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `Model3DFilterFormHelper.__init__` v modulu `webclient.dokument.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``Model3DFilterFormHelper.__init__`` v rámci modulu ``webclient.dokument.filters``."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("dokument.filters.model3DFilterFormHelper.historyDivider.label")
         }
@@ -1154,14 +1115,7 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def __init__(self, *args, **kwargs):
-        """Funkce `DokumentFilter.__init__` v modulu `webclient.dokument.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentFilter.__init__`` v rámci modulu ``webclient.dokument.filters``."""
         super(DokumentFilter, self).__init__(*args, **kwargs)
         self.helper = DokumentFilterFormHelper()
 
@@ -1174,13 +1128,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `DokumentFilterFormHelper.__init__` v modulu `webclient.dokument.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentFilterFormHelper.__init__`` v rámci modulu ``webclient.dokument.filters``."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("dokument.filters.dokumentFilterFormHelper.historyDivider.label")
         }

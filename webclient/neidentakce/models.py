@@ -32,21 +32,11 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
     )
 
     class Meta:
-        """Třída `NeidentAkce.Meta` v modulu `webclient.neidentakce.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``NeidentAkce.Meta`` pro modul ``webclient.neidentakce.models``."""
         db_table = "neident_akce"
 
     def __init__(self, *args, **kwargs):
-        """Funkce `NeidentAkce.__init__` v modulu `webclient.neidentakce.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NeidentAkce.__init__`` v rámci modulu ``webclient.neidentakce.models``."""
         super(NeidentAkce, self).__init__(*args, **kwargs)
         try:
             dokument_cast: DokumentCast = self.dokument_cast
@@ -66,9 +56,6 @@ class NeidentAkceVedouci(ExportModelOperationsMixin("neident_akce_vedouci"), mod
     vedouci = models.ForeignKey(Osoba, models.RESTRICT, db_column="vedouci")
 
     class Meta:
-        """Třída `NeidentAkceVedouci.Meta` v modulu `webclient.neidentakce.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``NeidentAkceVedouci.Meta`` pro modul ``webclient.neidentakce.models``."""
         db_table = "neident_akce_vedouci"
         unique_together = (("neident_akce", "vedouci"),)

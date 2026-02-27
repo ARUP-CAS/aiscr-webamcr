@@ -4,10 +4,7 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.pas.migrations.0004_triggers`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.pas.migrations.0004_triggers``."""
     initial = True
 
     dependencies = [

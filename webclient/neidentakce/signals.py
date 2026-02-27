@@ -11,15 +11,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=NeidentAkce, weak=False)
 def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
-    """Funkce `neident_akce_post_save` v modulu `webclient.neidentakce.signals`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``neident_akce_post_save`` v rámci modulu ``webclient.neidentakce.signals``."""
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(
@@ -33,15 +25,7 @@ def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
 
 @receiver(post_delete, sender=NeidentAkce, weak=False)
 def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
-    """Funkce `neident_akce_post_delete` v modulu `webclient.neidentakce.signals`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``neident_akce_post_delete`` v rámci modulu ``webclient.neidentakce.signals``."""
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(

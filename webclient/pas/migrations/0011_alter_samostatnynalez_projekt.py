@@ -6,10 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.pas.migrations.0011_alter_samostatnynalez_projekt`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.pas.migrations.0011_alter_samostatnynalez_projekt``."""
     dependencies = [
         ('pas', '0010_alter_samostatnynalez_igsn_and_more'),
         ('projekt', '0010_projekt_pristupnost_snapshot'),

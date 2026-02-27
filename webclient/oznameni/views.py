@@ -35,20 +35,9 @@ logger = logging.getLogger(__name__)
 
 
 class OznameniView(View):
-    """Třída `OznameniView` v modulu `webclient.oznameni.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``OznameniView`` pro modul ``webclient.oznameni.views``."""
     def dispatch(self, request, *args, **kwargs):
-        """Funkce `OznameniView.dispatch` v modulu `webclient.oznameni.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OznameniView.dispatch`` v rámci modulu ``webclient.oznameni.views``."""
         self.session_identifier = SessionIdentifier(request)
         self.ident_cely = kwargs.pop("ident_cely", None)
         return super().dispatch(request, *args, **kwargs)
@@ -145,13 +134,7 @@ class OznameniZapsatView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Funkce `OznameniZapsatView.get` v modulu `webclient.oznameni.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OznameniZapsatView.get`` v rámci modulu ``webclient.oznameni.views``."""
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug("oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely})
@@ -210,13 +193,7 @@ class OznameniDokumentaceView(OznameniView):
     """
 
     def post(self, request):
-        """Funkce `OznameniDokumentaceView.post` v modulu `webclient.oznameni.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OznameniDokumentaceView.post`` v rámci modulu ``webclient.oznameni.views``."""
         if "ident_cely" in request.POST:
             logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
             projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
@@ -238,13 +215,7 @@ class OznameniDokumentaceView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Funkce `OznameniDokumentaceView.get` v modulu `webclient.oznameni.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OznameniDokumentaceView.get`` v rámci modulu ``webclient.oznameni.views``."""
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
@@ -282,13 +253,7 @@ class OznameniPotvrzeniView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Funkce `OznameniPotvrzeniView.get` v modulu `webclient.oznameni.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OznameniPotvrzeniView.get`` v rámci modulu ``webclient.oznameni.views``."""
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
@@ -374,13 +339,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):
-        """Funkce `OznamovatelCreateView.get_context_data` v modulu `webclient.oznameni.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OznamovatelCreateView.get_context_data`` v rámci modulu ``webclient.oznameni.views``."""
         ident_cely = self.kwargs.get("ident_cely")
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
@@ -394,15 +353,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Funkce `OznamovatelCreateView.get` v modulu `webclient.oznameni.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OznamovatelCreateView.get`` v rámci modulu ``webclient.oznameni.views``."""
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
@@ -414,15 +365,7 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Funkce `OznamovatelCreateView.post` v modulu `webclient.oznameni.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OznamovatelCreateView.post`` v rámci modulu ``webclient.oznameni.views``."""
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]
         if check_stav_changed(request, projekt):

@@ -7,10 +7,7 @@ from core.constants import OBLAST_CECHY, OBLAST_MORAVA
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.arch_z.migrations.0009_lokalitasekvence_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.arch_z.migrations.0009_lokalitasekvence_and_more``."""
     dependencies = [
         ("heslar", "0003_default"),
         ("arch_z", "0008_alter_akce_typ"),

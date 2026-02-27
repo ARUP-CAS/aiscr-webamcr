@@ -5,10 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.lokalita.migrations.0002_lokalita_igsn`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.lokalita.migrations.0002_lokalita_igsn``."""
     dependencies = [
         ("lokalita", "0001_initial"),
     ]

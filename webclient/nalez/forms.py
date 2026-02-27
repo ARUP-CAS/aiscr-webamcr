@@ -6,21 +6,9 @@ from nalez.models import NalezObjekt, NalezPredmet
 
 
 class NalezFormSetHelper(FormHelper):
-    """Třída `NalezFormSetHelper` v modulu `webclient.nalez.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``NalezFormSetHelper`` pro modul ``webclient.nalez.forms``."""
     def __init__(self, typ=None, typ_vazby="dokument", *args, **kwargs):
-        """Funkce `NalezFormSetHelper.__init__` v modulu `webclient.nalez.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param typ: Vstupní hodnota používaná při zpracování.
-        :param typ_vazby: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NalezFormSetHelper.__init__`` v rámci modulu ``webclient.nalez.forms``."""
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -35,17 +23,11 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
     """
 
     class CreateNalezObjektForm(forms.ModelForm):
-        """Třída `CreateNalezObjektForm` v modulu `webclient.nalez.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``CreateNalezObjektForm`` pro modul ``webclient.nalez.forms``."""
         typ = forms.CharField(widget=forms.HiddenInput())
 
         class Meta:
-            """Třída `CreateNalezObjektForm.Meta` v modulu `webclient.nalez.forms`.
-            
-            Zapouzdřuje související data a chování v rámci dané části aplikace.
-            """
+            """Zapouzdřuje chování třídy ``CreateNalezObjektForm.Meta`` pro modul ``webclient.nalez.forms``."""
             model = NalezObjekt
             fields = ["druh", "specifikace", "pocet", "poznamka"]
             labels = {
@@ -64,16 +46,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
         def __init__(
             self, druh_objekt_choices=druh_obj_choices, specifikace_objekt_choices=spec_obj_choices, *args, **kwargs
         ):
-            """Funkce `CreateNalezObjektForm.__init__` v modulu `webclient.nalez.forms`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param druh_objekt_choices: Vstupní hodnota používaná při zpracování.
-            :param specifikace_objekt_choices: Vstupní hodnota používaná při zpracování.
-            :param args: Vstupní hodnota používaná při zpracování.
-            :param kwargs: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Provádí funkci ``CreateNalezObjektForm.__init__`` v rámci modulu ``webclient.nalez.forms``."""
             super(CreateNalezObjektForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
                 label=_("nalez.forms.nalezObjekt.druh.label"),
@@ -114,17 +87,11 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
     """
 
     class CreateNalezPredmetForm(forms.ModelForm):
-        """Třída `CreateNalezPredmetForm` v modulu `webclient.nalez.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``CreateNalezPredmetForm`` pro modul ``webclient.nalez.forms``."""
         typ = forms.CharField(widget=forms.HiddenInput())
 
         class Meta:
-            """Třída `CreateNalezPredmetForm.Meta` v modulu `webclient.nalez.forms`.
-            
-            Zapouzdřuje související data a chování v rámci dané části aplikace.
-            """
+            """Zapouzdřuje chování třídy ``CreateNalezPredmetForm.Meta`` pro modul ``webclient.nalez.forms``."""
             model = NalezPredmet
 
             fields = ["druh", "specifikace", "pocet", "poznamka"]
@@ -144,14 +111,7 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
             }
 
         def __init__(self, *args, **kwargs):
-            """Funkce `CreateNalezPredmetForm.__init__` v modulu `webclient.nalez.forms`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param args: Vstupní hodnota používaná při zpracování.
-            :param kwargs: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Provádí funkci ``CreateNalezPredmetForm.__init__`` v rámci modulu ``webclient.nalez.forms``."""
             super(CreateNalezPredmetForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
                 label=_("nalez.forms.nalezPredmet.druh.label"),

@@ -29,31 +29,14 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektSeleniumTest(BaseSeleniumTestClass):
-    """Třída `ProjektSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def _get_table_columns(self, table):
-        """Funkce `ProjektSeleniumTest._get_table_columns` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param table: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ProjektSeleniumTest._get_table_columns`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         elements = table.find_elements(By.TAG_NAME, "th")
         return [e.find_element(By.TAG_NAME, "a").text for e in elements]
 
     def _check_column_hiding(self, element_id_initial, column_header_text, initial=True):
-        """Funkce `ProjektSeleniumTest._check_column_hiding` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param element_id_initial: Vstupní hodnota používaná při zpracování.
-        :param column_header_text: Vstupní hodnota používaná při zpracování.
-        :param initial: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektSeleniumTest._check_column_hiding`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         logger.info(
             "CoreSeleniumTest._check_column_hiding",
             extra={
@@ -519,23 +502,11 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
-    """Třída `ProjektZapsatSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektZapsatSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def ProjektZapsat(
         self, *, date_from=2, date_to=5, telefon="+420556123654", css_selector=".step:nth-child(3) .bs-stepper-circle"
     ):
-        """Funkce `ProjektZapsatSeleniumTest.ProjektZapsat` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param date_from: Vstupní hodnota používaná při zpracování.
-        :param date_to: Vstupní hodnota používaná při zpracování.
-        :param telefon: Vstupní hodnota používaná při zpracování.
-        :param css_selector: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektZapsatSeleniumTest.ProjektZapsat`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.login()
         self.go_to_form()
         project_count_old = Projekt.objects.count()
@@ -571,11 +542,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         return [project_count_old, project_count_new]
 
     def go_to_form(self):
-        """Funkce `ProjektZapsatSeleniumTest.go_to_form` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektZapsatSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.goToAddress("/projekt/zapsat")
 
     def test_003_projekt_zapsat_p_001(self):
@@ -684,16 +651,9 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
-    """Třída `ProjektZahajitVyzkumSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektZahajitVyzkumSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Funkce `ProjektZahajitVyzkumSeleniumTest.go_to_form` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektZahajitVyzkumSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.goToAddress("/projekt/vyber?stav=2&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_007_projekt_zahajit_vyzkum_p_001(self):
@@ -750,16 +710,9 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
-    """Třída `ProjektUkoncitVyzkumSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektUkoncitVyzkumSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Funkce `ProjektUkoncitVyzkumSeleniumTest.go_to_form` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektUkoncitVyzkumSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.goToAddress("/projekt/vyber?stav=3&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_008_projekt_ukoncit_vyzkum_p_001(self):
@@ -860,16 +813,9 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
-    """Třída `ProjektUzavritSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektUzavritSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Funkce `ProjektUzavritSeleniumTest.go_to_form` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektUzavritSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.goToAddress("/projekt/vyber?stav=4&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
     def test_010_projekt_uzavrit_p_001(self):
@@ -946,19 +892,12 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
-    """Třída `ProjektArchivovatSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektArchivovatSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     stav_projektu = PROJEKT_STAV_UZAVRENY
     next_stav_projektu = PROJEKT_STAV_ARCHIVOVANY
 
     def go_to_form(self):
-        """Funkce `ProjektArchivovatSeleniumTest.go_to_form` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektArchivovatSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.goToAddress("/projekt/vyber?stav=5&sort=datum_ukonceni&sort=ident_cely")
 
     def test_012_projekt_archivovat_p_001(self):
@@ -1040,16 +979,9 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
-    """Třída `ProjektVratitSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektVratitSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Funkce `ProjektVratitSeleniumTest.go_to_form` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektVratitSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_014_projekt_vratit_p_001(self):
@@ -1256,16 +1188,9 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
-    """Třída `ProjektNavrhnoutZrusitSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektNavrhnoutZrusitSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Funkce `ProjektNavrhnoutZrusitSeleniumTest.go_to_form` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektNavrhnoutZrusitSeleniumTest.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_019_projekt_zrusit_p_001(self):
@@ -1406,10 +1331,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
 
-    """Třída `ProjektZrusitSeleniumTest` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektZrusitSeleniumTest`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def test_022_projekt_zrusit_p_001(self):
         """Test 022 Zrušení projektu (pozitivní scénář 1)
 
@@ -1496,16 +1418,9 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
-    """Třída `ProjektVytvoreniProjektoveAkce` v modulu `webclient.projekt.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ProjektVytvoreniProjektoveAkce`` pro modul ``webclient.projekt.tests.test_selenium``."""
     def go_to_form(self):
-        """Funkce `ProjektVytvoreniProjektoveAkce.go_to_form` v modulu `webclient.projekt.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektVytvoreniProjektoveAkce.go_to_form`` v rámci modulu ``webclient.projekt.tests.test_selenium``."""
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_023_projekt_vytvori_akci_p_001(self):

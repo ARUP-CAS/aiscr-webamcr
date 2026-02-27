@@ -213,11 +213,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
 
     def check_locality_arch_z_conflict(self):
-        """Funkce `AkceRelatedRecordUpdateView.check_locality_arch_z_conflict` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceRelatedRecordUpdateView.check_locality_arch_z_conflict`` v rámci modulu ``webclient.arch_z.views``."""
         try:
             if self.get_archeologicky_zaznam().lokalita:
                 raise Http404(_("arch_z.views.AkceRelatedRecordUpdateView.get_context_data.lokalita_error"))
@@ -297,15 +293,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
     template_name = "arch_z/dj/dj_update.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Funkce `DokumentacniJednotkaRelatedUpdateView.dispatch` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentacniJednotkaRelatedUpdateView.dispatch`` v rámci modulu ``webclient.arch_z.views``."""
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         az = get_object_or_404(ArcheologickyZaznam, ident_cely=self.kwargs["ident_cely"])
         if not dj.archeologicky_zaznam == az:
@@ -339,15 +327,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Funkce `DokumentacniJednotkaRelatedUpdateView.get` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentacniJednotkaRelatedUpdateView.get`` v rámci modulu ``webclient.arch_z.views``."""
         return super().get(request, *args, **kwargs)
 
 
@@ -387,15 +367,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Funkce `DokumentacniJednotkaCreateView.get` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentacniJednotkaCreateView.get`` v rámci modulu ``webclient.arch_z.views``."""
         return super().get(request, *args, **kwargs)
 
 
@@ -446,15 +418,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
     template_name = "arch_z/dj/komponenta_detail.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Funkce `KomponentaUpdateView.dispatch` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``KomponentaUpdateView.dispatch`` v rámci modulu ``webclient.arch_z.views``."""
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
         if not dj.komponenty == komponenta.komponenta_vazby:
@@ -478,11 +442,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
         return object
 
     def get_dokumentacni_jednotka(self):
-        """Funkce `KomponentaUpdateView.get_dokumentacni_jednotka` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``KomponentaUpdateView.get_dokumentacni_jednotka`` v rámci modulu ``webclient.arch_z.views``."""
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"ident_cely": dj_ident_cely})
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
@@ -523,15 +483,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Funkce `PianCreateView.get` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PianCreateView.get`` v rámci modulu ``webclient.arch_z.views``."""
         context = self.get_context_data(**kwargs)
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
@@ -566,15 +518,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     template_name = "arch_z/dj/pian_update.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Funkce `PianUpdateView.dispatch` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PianUpdateView.dispatch`` v rámci modulu ``webclient.arch_z.views``."""
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         pian = get_object_or_404(Pian, ident_cely=self.kwargs["pian_ident_cely"])
         if not dj.pian == pian:
@@ -599,15 +543,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Funkce `PianUpdateView.get` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PianUpdateView.get`` v rámci modulu ``webclient.arch_z.views``."""
         context = self.get_context_data(**kwargs)
         if context["j"].pian.stav == PIAN_POTVRZEN:
             raise PermissionDenied
@@ -1555,10 +1491,7 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
 
 
 class GetAkceOtherKatastrView(LoginRequiredMixin, View, PermissionFilterMixin):
-    """Třída `GetAkceOtherKatastrView` v modulu `webclient.arch_z.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``GetAkceOtherKatastrView`` pro modul ``webclient.arch_z.views``."""
     typ_zmeny_lookup = ZAPSANI_AZ
 
     def post(self, request):
@@ -1621,11 +1554,7 @@ class AkceListView(SearchListView):
     vypis_app = "akce"
 
     def init_translations(self):
-        """Funkce `AkceListView.init_translations` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceListView.init_translations`` v rámci modulu ``webclient.arch_z.views``."""
         super().init_translations()
         self.page_title = _("arch_z.views.AkceListView.page_title.text")
         self.search_sum = _("arch_z.views.AkceListView.search_sum.text")
@@ -1639,13 +1568,7 @@ class AkceListView(SearchListView):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Funkce `AkceListView.rename_field_for_ordering` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``AkceListView.rename_field_for_ordering`` v rámci modulu ``webclient.arch_z.views``."""
         field = field.replace("-", "")
         return {
             "ident_cely": "archeologicky_zaznam__ident_cely",
@@ -1666,11 +1589,7 @@ class AkceListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Funkce `AkceListView.get_queryset` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceListView.get_queryset`` v rámci modulu ``webclient.arch_z.views``."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -1874,24 +1793,14 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
     typ_zmeny_lookup = ZAPSANI_AZ
 
     def get_result_label(self, result):
-        """Funkce `ArchZAutocomplete.get_result_label` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param result: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ArchZAutocomplete.get_result_label`` v rámci modulu ``webclient.arch_z.views``."""
         if self.lookup_type == "akce":
             return f"{result.ident_cely} ({result.hlavni_katastr}; {result.akce.hlavni_vedouci}; {result.akce.datum_zahajeni} - {result.akce.datum_ukonceni})"
         else:
             return f"{result.ident_cely} ({result.lokalita.nazev})"
 
     def get_queryset(self):
-        """Funkce `ArchZAutocomplete.get_queryset` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ArchZAutocomplete.get_queryset`` v rámci modulu ``webclient.arch_z.views``."""
         if not self.request.user.is_authenticated:
             return ArcheologickyZaznam.objects.none()
         self.lookup_type = self.kwargs.get("type")
@@ -1924,13 +1833,7 @@ class ArchZTableRowView(LoginRequiredMixin, View):
     """
 
     def get(self, request):
-        """Funkce `ArchZTableRowView.get` v modulu `webclient.arch_z.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ArchZTableRowView.get`` v rámci modulu ``webclient.arch_z.views``."""
         zaznam = ArcheologickyZaznam.objects.get(id=request.GET.get("id", ""))
         context = {"arch_z": zaznam}
         if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:

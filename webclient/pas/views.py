@@ -107,46 +107,25 @@ def index(request):
 
 
 class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
-    """Třída `SamostatnyNalezCreateView` v modulu `webclient.pas.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``SamostatnyNalezCreateView`` pro modul ``webclient.pas.views``."""
     model = SamostatnyNalez
     form_class = CreateSamostatnyNalezForm
     template_name = "pas/create.html"
 
     class ActionType(Enum):
-        """Třída `SamostatnyNalezCreateView.ActionType` v modulu `webclient.pas.views`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``SamostatnyNalezCreateView.ActionType`` pro modul ``webclient.pas.views``."""
         CREATE = 1
         CREATE_FROM_PROJECT = 2
         CREATE_AS_COPY = 3
 
     def __init__(self, *args, **kwargs):
-        """Funkce `SamostatnyNalezCreateView.__init__` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalezCreateView.__init__`` v rámci modulu ``webclient.pas.views``."""
         self.get_action_type = None
         self.copy_source = None
         super().__init__(*args, **kwargs)
 
     def dispatch(self, request, *args, **kwargs):
-        """Funkce `SamostatnyNalezCreateView.dispatch` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalezCreateView.dispatch`` v rámci modulu ``webclient.pas.views``."""
         if "kopie" in self.request.path:
             get_action_type = self.ActionType.CREATE_AS_COPY.value
             self._set_copy_source()
@@ -158,11 +137,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def _set_copy_source(self):
-        """Funkce `SamostatnyNalezCreateView._set_copy_source` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalezCreateView._set_copy_source`` v rámci modulu ``webclient.pas.views``."""
         copy_source = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
         copy_source.id = None
         copy_source.soubory = None
@@ -174,11 +149,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         self.copy_source = copy_source
 
     def get_form_kwargs(self):
-        """Funkce `SamostatnyNalezCreateView.get_form_kwargs` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalezCreateView.get_form_kwargs`` v rámci modulu ``webclient.pas.views``."""
         kwargs = super().get_form_kwargs()
         if self.get_action_type == self.ActionType.CREATE_AS_COPY.value:
             kwargs["instance"] = self.copy_source
@@ -191,13 +162,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         return kwargs
 
     def get_context_data(self, **kwargs):
-        """Funkce `SamostatnyNalezCreateView.get_context_data` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalezCreateView.get_context_data`` v rámci modulu ``webclient.pas.views``."""
         context = super().get_context_data(**kwargs)
         if self.get_action_type in (self.ActionType.CREATE.value, self.ActionType.CREATE_FROM_PROJECT.value):
             context["formCoor"] = CoordinatesDokumentForm()
@@ -210,13 +175,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """Funkce `SamostatnyNalezCreateView.form_valid` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalezCreateView.form_valid`` v rámci modulu ``webclient.pas.views``."""
         form_coor = CoordinatesDokumentForm(self.request.POST)
         sn = form.save(commit=False)
         geom, geom_sjtsk = self.handle_geometry(form_coor)
@@ -694,19 +653,9 @@ def archivovat(request, ident_cely):
 
 
 class PasPermissionFilterMixin(PermissionFilterMixin):
-    """Třída `PasPermissionFilterMixin` v modulu `webclient.pas.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``PasPermissionFilterMixin`` pro modul ``webclient.pas.views``."""
     def add_ownership_lookup(self, ownership, qs):
-        """Funkce `PasPermissionFilterMixin.add_ownership_lookup` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ownership: Vstupní hodnota používaná při zpracování.
-        :param qs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PasPermissionFilterMixin.add_ownership_lookup`` v rámci modulu ``webclient.pas.views``."""
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == p.ownershipChoices.our:
@@ -733,11 +682,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     vypis_app = "pas"
 
     def init_translations(self):
-        """Funkce `SamostatnyNalezListView.init_translations` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalezListView.init_translations`` v rámci modulu ``webclient.pas.views``."""
         super().init_translations()
         self.page_title = _("pas.views.samostatnyNalezListView.pageTitle")
         self.search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
@@ -751,13 +696,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Funkce `SamostatnyNalezListView.rename_field_for_ordering` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalezListView.rename_field_for_ordering`` v rámci modulu ``webclient.pas.views``."""
         field = field.replace("-", "")
         return {
             "katastr": "katastr__nazev",
@@ -773,11 +712,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         }.get(field, field)
 
     def get_queryset(self):
-        """Funkce `SamostatnyNalezListView.get_queryset` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalezListView.get_queryset`` v rámci modulu ``webclient.pas.views``."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -954,11 +889,7 @@ class UzivatelSpolupraceListView(SearchListView):
     typ_zmeny_lookup = SPOLUPRACE_ZADOST
 
     def init_translations(self):
-        """Funkce `UzivatelSpolupraceListView.init_translations` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpolupraceListView.init_translations`` v rámci modulu ``webclient.pas.views``."""
         super().init_translations()
         self.page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
         self.search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
@@ -967,13 +898,7 @@ class UzivatelSpolupraceListView(SearchListView):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Funkce `UzivatelSpolupraceListView.rename_field_for_ordering` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelSpolupraceListView.rename_field_for_ordering`` v rámci modulu ``webclient.pas.views``."""
         field = field.replace("-", "")
         return {
             "organizace_vedouci": "vedouci__organizace__nazev_zkraceny",
@@ -981,11 +906,7 @@ class UzivatelSpolupraceListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Funkce `UzivatelSpolupraceListView.get_queryset` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpolupraceListView.get_queryset`` v rámci modulu ``webclient.pas.views``."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -1011,14 +932,7 @@ class UzivatelSpolupraceListView(SearchListView):
         return self.check_filter_permission(qs).order_by("id")
 
     def add_ownership_lookup(self, ownership, qs=None):
-        """Funkce `UzivatelSpolupraceListView.add_ownership_lookup` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ownership: Vstupní hodnota používaná při zpracování.
-        :param qs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpolupraceListView.add_ownership_lookup`` v rámci modulu ``webclient.pas.views``."""
         filtered_my = Q(spolupracovnik=self.request.user)
         if ownership == p.ownershipChoices.our:
             filtered_our = Q(vedouci__organizace=self.request.user.organizace)
@@ -1027,24 +941,11 @@ class UzivatelSpolupraceListView(SearchListView):
             return filtered_my
 
     def add_accessibility_lookup(self, permission, qs):
-        """Funkce `UzivatelSpolupraceListView.add_accessibility_lookup` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param permission: Vstupní hodnota používaná při zpracování.
-        :param qs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpolupraceListView.add_accessibility_lookup`` v rámci modulu ``webclient.pas.views``."""
         return qs
 
     def get_context_data(self, **kwargs):
-        """Funkce `UzivatelSpolupraceListView.get_context_data` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelSpolupraceListView.get_context_data`` v rámci modulu ``webclient.pas.views``."""
         context = super().get_context_data(**kwargs)
         context["show_zadost"] = check_permissions(p.actionChoices.spoluprace_zadost, self.request.user)
         context["trans_deaktivovat"] = _("pas.templates.aktivace_deaktivace_cell.deaktivovat")
@@ -1053,11 +954,7 @@ class UzivatelSpolupraceListView(SearchListView):
         return context
 
     def get_table_kwargs(self):
-        """Funkce `UzivatelSpolupraceListView.get_table_kwargs` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpolupraceListView.get_table_kwargs`` v rámci modulu ``webclient.pas.views``."""
         if self.request.user.hlavni_role.id != ROLE_ADMIN_ID:
             return {"exclude": ("smazani",)}
         return {}
@@ -1106,23 +1003,12 @@ def aktivace(request, pk):
 
 
 class AktivaceEmailView(LoginRequiredMixin, DetailView):
-    """Třída `AktivaceEmailView` v modulu `webclient.pas.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AktivaceEmailView`` pro modul ``webclient.pas.views``."""
     template_name = "pas/potvrdit_spolupraci.html"
     model = UzivatelSpoluprace
 
     def post(self, request, *args, **kwargs):
-        """Funkce `AktivaceEmailView.post` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AktivaceEmailView.post`` v rámci modulu ``webclient.pas.views``."""
         obj: UzivatelSpoluprace = self.get_object()
         fedora_transaction = FedoraTransaction()
         try:
@@ -1141,28 +1027,17 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
 
 class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
     """
-    class pohledu pro deaktivaci spolupráce pomocí modalu.
+    Definuje pohled pro deaktivaci spolupráce v modálním dialogu.
     """
 
     template_name = "core/transakce_modal.html"
 
     def get_object(self):
-        """Funkce `DeaktivaceSpolupraceView.get_object` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DeaktivaceSpolupraceView.get_object`` v rámci modulu ``webclient.pas.views``."""
         return get_object_or_404(UzivatelSpoluprace, id=self.kwargs["pk"])
 
     def get_context_data(self, *args, **kwargs):
-        """Funkce `DeaktivaceSpolupraceView.get_context_data` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DeaktivaceSpolupraceView.get_context_data`` v rámci modulu ``webclient.pas.views``."""
         obj: UzivatelSpoluprace = self.get_object()
         form = DeaktivovatSpolupraciForm()
         context = {
@@ -1180,15 +1055,7 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Funkce `DeaktivaceSpolupraceView.get` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DeaktivaceSpolupraceView.get`` v rámci modulu ``webclient.pas.views``."""
         context = self.get_context_data()
         warnings = context["object"].check_pred_deaktivaci()
         if warnings:
@@ -1198,15 +1065,7 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Funkce `DeaktivaceSpolupraceView.post` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DeaktivaceSpolupraceView.post`` v rámci modulu ``webclient.pas.views``."""
         obj: UzivatelSpoluprace = self.get_object()
         logger.info("pas.views.deaktivace_spoluprace.start", extra={"pk": obj.pk})
         form = DeaktivovatSpolupraciForm(request.POST)
@@ -1404,14 +1263,7 @@ class ProjektPasTableView(LoginRequiredMixin, View):
     """
 
     def get(self, request, ident_cely):
-        """Funkce `ProjektPasTableView.get` v modulu `webclient.pas.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param ident_cely: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektPasTableView.get`` v rámci modulu ``webclient.pas.views``."""
         projekt = Projekt.objects.get(ident_cely=ident_cely)
         qs = (
             projekt.samostatne_nalezy.select_related("obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr")

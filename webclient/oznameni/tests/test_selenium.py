@@ -13,17 +13,10 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class OznameniSeleniumTest(BaseSeleniumTestClass):
-    """Třída `OznameniSeleniumTest` v modulu `webclient.oznameni.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``OznameniSeleniumTest`` pro modul ``webclient.oznameni.tests.test_selenium``."""
     @staticmethod
     def oznameni_projektu(self):
-        """Funkce `OznameniSeleniumTest.oznameni_projektu` v modulu `webclient.oznameni.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OznameniSeleniumTest.oznameni_projektu`` v rámci modulu ``webclient.oznameni.tests.test_selenium``."""
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")
         self.ElementClick(By.ID, "id_oznamovatel")

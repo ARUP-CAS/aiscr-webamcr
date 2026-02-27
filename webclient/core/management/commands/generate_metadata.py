@@ -31,13 +31,7 @@ class Command(BaseCommand):
     help = _("core.management.commands.generate_metadata.Command.help")
 
     def add_arguments(self, parser):
-        """Funkce `Command.add_arguments` v modulu `webclient.core.management.commands.generate_metadata`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param parser: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``Command.add_arguments`` v rámci modulu ``webclient.core.management.commands.generate_metadata``."""
         parser.add_argument(
             "--model",
             type=str,
@@ -58,14 +52,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Funkce `Command.handle` v modulu `webclient.core.management.commands.generate_metadata`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param options: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``Command.handle`` v rámci modulu ``webclient.core.management.commands.generate_metadata``."""
         model_class = options.get("model")
         limit = options.get("limit")
         start_with_pk = options.get("start_with_pk")

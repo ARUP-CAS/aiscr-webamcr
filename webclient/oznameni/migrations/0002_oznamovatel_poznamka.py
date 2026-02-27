@@ -4,10 +4,7 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.oznameni.migrations.0002_oznamovatel_poznamka`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.oznameni.migrations.0002_oznamovatel_poznamka``."""
     dependencies = [
         ("oznameni", "0001_initial"),
     ]

@@ -7,10 +7,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0013_uzivatelprihlasenilog`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.uzivatel.migrations.0013_uzivatelprihlasenilog``."""
     dependencies = [
         ("uzivatel", "0012_delete_historicaluser"),
     ]

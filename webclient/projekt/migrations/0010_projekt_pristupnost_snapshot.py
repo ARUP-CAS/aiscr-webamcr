@@ -4,10 +4,7 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.projekt.migrations.0010_projekt_pristupnost_snapshot`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.projekt.migrations.0010_projekt_pristupnost_snapshot``."""
     atomic = False
 
     dependencies = [

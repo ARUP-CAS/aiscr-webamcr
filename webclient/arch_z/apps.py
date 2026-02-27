@@ -2,18 +2,11 @@ from django.apps import AppConfig
 
 
 class ArchZConfig(AppConfig):
-    """Třída `ArchZConfig` v modulu `webclient.arch_z.apps`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ArchZConfig`` pro modul ``webclient.arch_z.apps``."""
     name = "arch_z"
 
     def ready(self):
-        """Funkce `ArchZConfig.ready` v modulu `webclient.arch_z.apps`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ArchZConfig.ready`` v rámci modulu ``webclient.arch_z.apps``."""
         super(ArchZConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import arch_z.signals

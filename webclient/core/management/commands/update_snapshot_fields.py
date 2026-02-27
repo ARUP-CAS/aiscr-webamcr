@@ -26,14 +26,7 @@ class Command(BaseCommand):
     help = _("core.management.commands.update_snapshot_fields.Command.help")
 
     def handle(self, *args, **options):
-        """Funkce `Command.handle` v modulu `webclient.core.management.commands.update_snapshot_fields`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param options: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``Command.handle`` v rámci modulu ``webclient.core.management.commands.update_snapshot_fields``."""
         logger.debug("core.management.commands.update_snapshot_fields.start")
         update_snapshot_fields()
         logger.debug("core.management.commands.update_snapshot_fields.end")

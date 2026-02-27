@@ -44,13 +44,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
     """
 
     def clean(self, value):
-        """Funkce `AutoriField.clean` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``AutoriField.clean`` v rámci modulu ``webclient.dokument.forms``."""
         qs = super().clean(value)
         if value:
             i = 1
@@ -107,10 +101,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `EditDokumentExtraDataForm.Meta` v modulu `webclient.dokument.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``EditDokumentExtraDataForm.Meta`` pro modul ``webclient.dokument.forms``."""
         model = DokumentExtraData
         fields = (
             "datum_vzniku",
@@ -228,17 +219,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Funkce `EditDokumentExtraDataForm.__init__` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param readonly: Vstupní hodnota používaná při zpracování.
-        :param required: Vstupní hodnota používaná při zpracování.
-        :param required_next: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``EditDokumentExtraDataForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
         dok_osoby = kwargs.pop("dok_osoby", None)
@@ -378,10 +359,7 @@ class EditDokumentForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `EditDokumentForm.Meta` v modulu `webclient.dokument.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``EditDokumentForm.Meta`` pro modul ``webclient.dokument.forms``."""
         model = Dokument
         fields = (
             "typ_dokumentu",
@@ -476,18 +454,7 @@ class EditDokumentForm(forms.ModelForm):
     def __init__(
         self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False, **kwargs
     ):
-        """Funkce `EditDokumentForm.__init__` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param readonly: Vstupní hodnota používaná při zpracování.
-        :param required: Vstupní hodnota používaná při zpracování.
-        :param required_next: Vstupní hodnota používaná při zpracování.
-        :param can_edit_datum_zverejneni: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``EditDokumentForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
@@ -596,10 +563,7 @@ class CreateModelDokumentForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `CreateModelDokumentForm.Meta` v modulu `webclient.dokument.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``CreateModelDokumentForm.Meta`` pro modul ``webclient.dokument.forms``."""
         model = Dokument
         fields = (
             "typ_dokumentu",
@@ -650,17 +614,7 @@ class CreateModelDokumentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Funkce `CreateModelDokumentForm.__init__` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param readonly: Vstupní hodnota používaná při zpracování.
-        :param required: Vstupní hodnota používaná při zpracování.
-        :param required_next: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``CreateModelDokumentForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
@@ -719,10 +673,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `CreateModelExtraDataForm.Meta` v modulu `webclient.dokument.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``CreateModelExtraDataForm.Meta`` pro modul ``webclient.dokument.forms``."""
         model = DokumentExtraData
         fields = (
             "format",
@@ -758,17 +709,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Funkce `CreateModelExtraDataForm.__init__` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param readonly: Vstupní hodnota používaná při zpracování.
-        :param required: Vstupní hodnota používaná při zpracování.
-        :param required_next: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``CreateModelExtraDataForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
         # Hodnoty z disabled polí se na server neodesílají.
@@ -802,15 +743,7 @@ class PripojitDokumentForm(forms.Form):
     """
 
     def __init__(self, ident_zaznam, *args, **kwargs):
-        """Funkce `PripojitDokumentForm.__init__` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident_zaznam: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PripojitDokumentForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
         super(PripojitDokumentForm, self).__init__(*args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
             label=_("dokument.forms.pripojitDokumentForm.dokument.label"),
@@ -840,23 +773,12 @@ class DokumentCastForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `DokumentCastForm.Meta` v modulu `webclient.dokument.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``DokumentCastForm.Meta`` pro modul ``webclient.dokument.forms``."""
         model = DokumentCast
         fields = ("poznamka",)
 
     def __init__(self, readonly=False, *args, **kwargs):
-        """Funkce `DokumentCastForm.__init__` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param readonly: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentCastForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
         super(DokumentCastForm, self).__init__(*args, **kwargs)
 
         self.helper = FormHelper(self)
@@ -881,14 +803,7 @@ class DokumentCastCreateForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `DokumentCastCreateForm.__init__` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentCastCreateForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
         super(DokumentCastCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -901,15 +816,9 @@ def create_tvar_form(not_readonly=True):
     """
 
     class TvarForm(forms.ModelForm):
-        """Třída `TvarForm` v modulu `webclient.dokument.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``TvarForm`` pro modul ``webclient.dokument.forms``."""
         class Meta:
-            """Třída `TvarForm.Meta` v modulu `webclient.dokument.forms`.
-            
-            Zapouzdřuje související data a chování v rámci dané části aplikace.
-            """
+            """Zapouzdřuje chování třídy ``TvarForm.Meta`` pro modul ``webclient.dokument.forms``."""
             model = Tvar
             fields = ["tvar", "poznamka"]
             labels = {
@@ -932,14 +841,7 @@ def create_tvar_form(not_readonly=True):
             }
 
         def __init__(self, *args, **kwargs):
-            """Funkce `TvarForm.__init__` v modulu `webclient.dokument.forms`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param args: Vstupní hodnota používaná při zpracování.
-            :param kwargs: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Provádí funkci ``TvarForm.__init__`` v rámci modulu ``webclient.dokument.forms``."""
             super(TvarForm, self).__init__(*args, **kwargs)
             if not not_readonly:
                 self.fields["tvar"].required = False
@@ -962,14 +864,7 @@ class TvarFormSetHelper(FormHelper):
     """
 
     def __init__(self, *args, **kwargs):
-        """Funkce `TvarFormSetHelper.__init__` v modulu `webclient.dokument.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``TvarFormSetHelper.__init__`` v rámci modulu ``webclient.dokument.forms``."""
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -977,8 +872,5 @@ class TvarFormSetHelper(FormHelper):
 
 
 class DokumentFilterForm(BaseFilterForm):
-    """Třída `DokumentFilterForm` v modulu `webclient.dokument.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``DokumentFilterForm`` pro modul ``webclient.dokument.forms``."""
     list_to_check = ["historie_datum_zmeny_od", "datum_vzniku", "let_datum", "datum_zverejneni"]

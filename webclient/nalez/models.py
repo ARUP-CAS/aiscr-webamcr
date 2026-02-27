@@ -42,40 +42,22 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
-        """Třída `NalezObjekt.Meta` v modulu `webclient.nalez.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``NalezObjekt.Meta`` pro modul ``webclient.nalez.models``."""
         db_table = "nalez_objekt"
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init__(self, *args, **kwargs):
-        """Funkce `NalezObjekt.__init__` v modulu `webclient.nalez.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NalezObjekt.__init__`` v rámci modulu ``webclient.nalez.models``."""
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
-        """Funkce `NalezObjekt.__str__` v modulu `webclient.nalez.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NalezObjekt.__str__`` v rámci modulu ``webclient.nalez.models``."""
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Funkce `NalezObjekt.get_permission_object` v modulu `webclient.nalez.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NalezObjekt.get_permission_object`` v rámci modulu ``webclient.nalez.models``."""
         return self.komponenta.get_permission_object()
 
 
@@ -115,38 +97,20 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
-        """Třída `NalezPredmet.Meta` v modulu `webclient.nalez.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``NalezPredmet.Meta`` pro modul ``webclient.nalez.models``."""
         db_table = "nalez_predmet"
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init_(self, *args, **kwargs):
-        """Funkce `NalezPredmet.__init_` v modulu `webclient.nalez.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NalezPredmet.__init_`` v rámci modulu ``webclient.nalez.models``."""
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
-        """Funkce `NalezPredmet.__str__` v modulu `webclient.nalez.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NalezPredmet.__str__`` v rámci modulu ``webclient.nalez.models``."""
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Funkce `NalezPredmet.get_permission_object` v modulu `webclient.nalez.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NalezPredmet.get_permission_object`` v rámci modulu ``webclient.nalez.models``."""
         return self.komponenta.get_permission_object()

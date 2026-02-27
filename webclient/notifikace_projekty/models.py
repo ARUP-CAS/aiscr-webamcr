@@ -18,26 +18,15 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
 
     @property
     def ident_cely(self):
-        """Funkce `Pes.ident_cely` v modulu `webclient.notifikace_projekty.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``Pes.ident_cely`` v rámci modulu ``webclient.notifikace_projekty.models``."""
         return getattr(self.content_object, "ident_cely", None)
 
     def __str__(self):
-        """Funkce `Pes.__str__` v modulu `webclient.notifikace_projekty.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``Pes.__str__`` v rámci modulu ``webclient.notifikace_projekty.models``."""
         return str(self.content_object)
 
     class Meta:
-        """Třída `Pes.Meta` v modulu `webclient.notifikace_projekty.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``Pes.Meta`` pro modul ``webclient.notifikace_projekty.models``."""
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
@@ -47,9 +36,5 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
         ]
 
     def get_create_user(self):
-        """Funkce `Pes.get_create_user` v modulu `webclient.notifikace_projekty.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``Pes.get_create_user`` v rámci modulu ``webclient.notifikace_projekty.models``."""
         return (self.user,)

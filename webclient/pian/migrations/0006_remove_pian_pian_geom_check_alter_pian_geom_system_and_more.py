@@ -5,10 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.pian.migrations.0006_remove_pian_pian_geom_check_alter_pian_geom_system_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.pian.migrations.0006_remove_pian_pian_geom_check_alter_pian_geom_system_and_more``."""
     dependencies = [
         ('heslar', '0007_alter_heslar_unique_together_and_more'),
         ('historie', '0009_alter_historie_typ_zmeny'),

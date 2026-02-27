@@ -6,10 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.dokument.migrations.0017_alter_tvar_tvar`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.dokument.migrations.0017_alter_tvar_tvar``."""
     dependencies = [
         ("dokument", "0016_alter_dokument_jazyky_alter_dokument_posudky"),
         ("heslar", "0011_ruiankraj_email"),

@@ -23,17 +23,10 @@ class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
     poznamka = models.CharField(max_length=1000, null=True, blank=True)
 
     def __str__(self):
-        """Funkce `Oznamovatel.__str__` v modulu `webclient.oznameni.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``Oznamovatel.__str__`` v rámci modulu ``webclient.oznameni.models``."""
         return self.odpovedna_osoba + " (" + self.email + ")"
 
     class Meta:
-        """Třída `Oznamovatel.Meta` v modulu `webclient.oznameni.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``Oznamovatel.Meta`` pro modul ``webclient.oznameni.models``."""
         db_table = "oznamovatel"
         verbose_name = "oznamovatele"

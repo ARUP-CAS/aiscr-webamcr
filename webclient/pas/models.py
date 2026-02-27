@@ -153,11 +153,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @property
     def initial_pristupnost(self):
-        """Funkce `SamostatnyNalez.initial_pristupnost` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.initial_pristupnost`` v rámci modulu ``webclient.pas.models``."""
         if hasattr(self, "_initial_pristupnost"):
             return self._initial_pristupnost
         if hasattr(self, "pristupnost"):
@@ -168,24 +164,11 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @initial_pristupnost.setter
     def initial_pristupnost(self, value):
-        """Funkce `SamostatnyNalez.initial_pristupnost` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalez.initial_pristupnost`` v rámci modulu ``webclient.pas.models``."""
         self._initial_pristupnost = value
 
     def save(self, *args, **kwargs):
-        """Funkce `SamostatnyNalez.save` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.save`` v rámci modulu ``webclient.pas.models``."""
         if self.pk is not None:
             previous = SamostatnyNalez.objects.get(pk=self.pk)
             if previous.pristupnost != self.pristupnost:
@@ -260,11 +243,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
     def check_pred_archivaci(self):
-        """Funkce `SamostatnyNalez.check_pred_archivaci` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.check_pred_archivaci`` v rámci modulu ``webclient.pas.models``."""
         resp = []
         if not self.soubory.soubory.exists():
             resp.append(_("pas.models.samostatnyNalez.checkPredArchivaci.soubory.text"))
@@ -272,11 +251,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return resp
 
     def check_pred_potvrzenim(self):
-        """Funkce `SamostatnyNalez.check_pred_potvrzenim` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.check_pred_potvrzenim`` v rámci modulu ``webclient.pas.models``."""
         resp = []
         if not self.soubory.soubory.exists():
             resp.append(_("pas.models.samostatnyNalez.checkPredPotvrzenim.soubory.text"))
@@ -319,11 +294,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @property
     def nahled_soubor(self):
-        """Funkce `SamostatnyNalez.nahled_soubor` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.nahled_soubor`` v rámci modulu ``webclient.pas.models``."""
         if self.soubory.soubory.count() > 0:
             return self.soubory.soubory.first()
         else:
@@ -331,11 +302,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @cached_property
     def large_thumbnail(self):
-        """Funkce `SamostatnyNalez.large_thumbnail` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.large_thumbnail`` v rámci modulu ``webclient.pas.models``."""
         soubor = self.nahled_soubor
         if soubor:
             return soubor.large_thumbnail
@@ -343,22 +310,14 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @cached_property
     def small_thumbnail(self):
-        """Funkce `SamostatnyNalez.small_thumbnail` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.small_thumbnail`` v rámci modulu ``webclient.pas.models``."""
         soubor = self.nahled_soubor
         if soubor:
             return soubor.small_thumbnail
         return None
 
     def generate_coord_forms_initial(self):
-        """Funkce `SamostatnyNalez.generate_coord_forms_initial` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.generate_coord_forms_initial`` v rámci modulu ``webclient.pas.models``."""
         geom = "0 0"
         if self.geom:
             geom = str(self.geom).split("(")[1].replace(", ", ",").replace(")", "")
@@ -388,10 +347,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         }
 
     class Meta:
-        """Třída `SamostatnyNalez.Meta` v modulu `webclient.pas.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``SamostatnyNalez.Meta`` pro modul ``webclient.pas.models``."""
         db_table = "samostatny_nalez"
         constraints = [
             CheckConstraint(
@@ -405,60 +361,36 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         ]
 
     def __str__(self):
-        """Funkce `SamostatnyNalez.__str__` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.__str__`` v rámci modulu ``webclient.pas.models``."""
         if self.ident_cely:
             return self.ident_cely
         else:
             return "Samostatny nalez [ident_cely not yet assigned]"
 
     def get_permission_object(self):
-        """Funkce `SamostatnyNalez.get_permission_object` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.get_permission_object`` v rámci modulu ``webclient.pas.models``."""
         return self
 
     def get_create_user(self):
-        """Funkce `SamostatnyNalez.get_create_user` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.get_create_user`` v rámci modulu ``webclient.pas.models``."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel,)
         except Exception:
             return ()
 
     def get_create_org(self):
-        """Funkce `SamostatnyNalez.get_create_org` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.get_create_org`` v rámci modulu ``webclient.pas.models``."""
         return (self.projekt.organizace,)
 
     @property
     def redis_snapshot_id(self):
-        """Funkce `SamostatnyNalez.redis_snapshot_id` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.redis_snapshot_id`` v rámci modulu ``webclient.pas.models``."""
         from pas.views import SamostatnyNalezListView
 
         return f"{SamostatnyNalezListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Funkce `SamostatnyNalez.generate_redis_snapshot` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.generate_redis_snapshot`` v rámci modulu ``webclient.pas.models``."""
         from pas.tables import SamostatnyNalezTable
 
         data = SamostatnyNalez.objects.filter(pk=self.pk)
@@ -467,83 +399,42 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return self.redis_snapshot_id, data
 
     def set_igsn(self):
-        """Funkce `SamostatnyNalez.set_igsn` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.set_igsn`` v rámci modulu ``webclient.pas.models``."""
         self.igsn = f"{settings.IGSN_PREFIX}/{self.ident_cely}"
 
     def _get_igsn_client(self):
-        """Funkce `SamostatnyNalez._get_igsn_client` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez._get_igsn_client`` v rámci modulu ``webclient.pas.models``."""
         from pid.client import DigitalObjectIdentifierClient
 
         return DigitalObjectIdentifierClient(self)
 
     @property
     def igsn_exists(self):
-        """Funkce `SamostatnyNalez.igsn_exists` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.igsn_exists`` v rámci modulu ``webclient.pas.models``."""
         return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self, check_status=True):
-        """Funkce `SamostatnyNalez.igsn_delete` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param check_status: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalez.igsn_delete`` v rámci modulu ``webclient.pas.models``."""
         if self.igsn:
             return self._get_igsn_client().delete_record(check_status)
 
     def igsn_hide(self, check_status=True):
-        """Funkce `SamostatnyNalez.igsn_hide` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param check_status: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalez.igsn_hide`` v rámci modulu ``webclient.pas.models``."""
         if self.igsn:
             return self._get_igsn_client().hide_record(check_status)
 
     def igsn_publish(self, check_status=True):
-        """Funkce `SamostatnyNalez.igsn_publish` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param check_status: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalez.igsn_publish`` v rámci modulu ``webclient.pas.models``."""
         return self._get_igsn_client().publish_record(check_status)
 
     def igsn_update(self, check_status=True, reload_record=False):
-        """Funkce `SamostatnyNalez.igsn_update` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param check_status: Vstupní hodnota používaná při zpracování.
-        :param reload_record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.igsn_update`` v rámci modulu ``webclient.pas.models``."""
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
 
     @property
     def igsn_url(self):
-        """Funkce `SamostatnyNalez.igsn_url` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalez.igsn_url`` v rámci modulu ``webclient.pas.models``."""
         return self._get_igsn_client().get_record_url()
 
 
@@ -580,14 +471,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `UzivatelSpoluprace.__init__` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpoluprace.__init__`` v rámci modulu ``webclient.pas.models``."""
         super().__init__(*args, **kwargs)
         self.suppress_signal = False
         self.active_transaction = None
@@ -595,11 +479,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     @property
     def aktivni(self):
-        """Funkce `UzivatelSpoluprace.aktivni` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpoluprace.aktivni`` v rámci modulu ``webclient.pas.models``."""
         return self.stav == SPOLUPRACE_AKTIVNI
 
     def set_aktivni(self, user):
@@ -648,54 +528,31 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         return result
 
     class Meta:
-        """Třída `UzivatelSpoluprace.Meta` v modulu `webclient.pas.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``UzivatelSpoluprace.Meta`` pro modul ``webclient.pas.models``."""
         db_table = "uzivatel_spoluprace"
         unique_together = (("vedouci", "spolupracovnik"),)
 
     def __str__(self):
-        """Funkce `UzivatelSpoluprace.__str__` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpoluprace.__str__`` v rámci modulu ``webclient.pas.models``."""
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
 
     def get_create_user(self):
-        """Funkce `UzivatelSpoluprace.get_create_user` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpoluprace.get_create_user`` v rámci modulu ``webclient.pas.models``."""
         return (self.spolupracovnik,)
 
     def get_create_org(self):
-        """Funkce `UzivatelSpoluprace.get_create_org` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpoluprace.get_create_org`` v rámci modulu ``webclient.pas.models``."""
         return (self.vedouci.organizace,)
 
     @property
     def redis_snapshot_id(self):
-        """Funkce `UzivatelSpoluprace.redis_snapshot_id` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpoluprace.redis_snapshot_id`` v rámci modulu ``webclient.pas.models``."""
         from pas.views import UzivatelSpolupraceListView
 
         return f"{UzivatelSpolupraceListView.redis_snapshot_prefix}_{self.pk}"
 
     def generate_redis_snapshot(self):
-        """Funkce `UzivatelSpoluprace.generate_redis_snapshot` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpoluprace.generate_redis_snapshot`` v rámci modulu ``webclient.pas.models``."""
         from pas.tables import UzivatelSpolupraceTable
 
         data = UzivatelSpoluprace.objects.filter(pk=self.pk)
@@ -705,13 +562,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     @classmethod
     def get_by_ident_cely(cls, pk):
-        """Funkce `UzivatelSpoluprace.get_by_ident_cely` v modulu `webclient.pas.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param pk: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelSpoluprace.get_by_ident_cely`` v rámci modulu ``webclient.pas.models``."""
         try:
             return cls.objects.get(pk=pk)
         except Exception:

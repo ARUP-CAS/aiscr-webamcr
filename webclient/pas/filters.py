@@ -253,10 +253,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
     )
 
     class Meta:
-        """Třída `SamostatnyNalezFilter.Meta` v modulu `webclient.pas.filters`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``SamostatnyNalezFilter.Meta`` pro modul ``webclient.pas.filters``."""
         model = SamostatnyNalez
         fields = {
             "predano": ["exact"],
@@ -264,14 +261,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         form = PasFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Funkce `SamostatnyNalezFilter.__init__` v modulu `webclient.pas.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalezFilter.__init__`` v rámci modulu ``webclient.pas.filters``."""
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         self.filters["obdobi"].extra["choices"] = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:]
@@ -284,13 +274,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_queryset(self, queryset):
-        """Funkce `SamostatnyNalezFilter.filter_queryset` v modulu `webclient.pas.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalezFilter.filter_queryset`` v rámci modulu ``webclient.pas.filters``."""
         logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(SamostatnyNalezFilter, self).filter_queryset(queryset)
@@ -376,22 +360,12 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
     )
 
     class Meta:
-        """Třída `UzivatelSpolupraceFilter.Meta` v modulu `webclient.pas.filters`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``UzivatelSpolupraceFilter.Meta`` pro modul ``webclient.pas.filters``."""
         model = UzivatelSpoluprace
         fields = ["stav"]
 
     def __init__(self, *args, **kwargs):
-        """Funkce `UzivatelSpolupraceFilter.__init__` v modulu `webclient.pas.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelSpolupraceFilter.__init__`` v rámci modulu ``webclient.pas.filters``."""
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
@@ -434,13 +408,7 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         self.helper = UzivatelSpolupraceFilterFormHelper()
 
     def filter_queryset(self, queryset):
-        """Funkce `UzivatelSpolupraceFilter.filter_queryset` v modulu `webclient.pas.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelSpolupraceFilter.filter_queryset`` v rámci modulu ``webclient.pas.filters``."""
         logger.debug("pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(UzivatelSpolupraceFilter, self).filter_queryset(queryset)
@@ -468,13 +436,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `SamostatnyNalezFilterFormHelper.__init__` v modulu `webclient.pas.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalezFilterFormHelper.__init__`` v rámci modulu ``webclient.pas.filters``."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.samostatnyNalezFilterFormHelper.history.divider.label")
         }
@@ -535,13 +497,7 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `UzivatelSpolupraceFilterFormHelper.__init__` v modulu `webclient.pas.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelSpolupraceFilterFormHelper.__init__`` v rámci modulu ``webclient.pas.filters``."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.UzivatelSpolupraceFilterFormHelper.history.divider.label")
         }

@@ -4,10 +4,7 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.dokument.migrations.0007_alter_dokumentautor_options_alter_let_options`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.dokument.migrations.0007_alter_dokumentautor_options_alter_let_options``."""
     dependencies = [
         ("dokument", "0006_uprava_dokumentsekvence"),
     ]

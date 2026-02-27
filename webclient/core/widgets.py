@@ -10,14 +10,7 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
     """
 
     def __init__(self, value=None, attrs=None):
-        """Funkce `ForeignKeyReadOnlyTextInput.__init__` v modulu `webclient.core.widgets`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :param attrs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ForeignKeyReadOnlyTextInput.__init__`` v rámci modulu ``webclient.core.widgets``."""
         if attrs is None:
             attrs = {}
         attrs["readonly"] = True
@@ -25,21 +18,12 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
         self.value = None
 
     def format_value(self, value):
-        """Funkce `ForeignKeyReadOnlyTextInput.format_value` v modulu `webclient.core.widgets`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ForeignKeyReadOnlyTextInput.format_value`` v rámci modulu ``webclient.core.widgets``."""
         return str(self.value)
 
 
 class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
-    """Třída `AutocompleteSelect2WidgetMixin` v modulu `webclient.core.widgets`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AutocompleteSelect2WidgetMixin`` pro modul ``webclient.core.widgets``."""
     def build_attrs(self, *args, **kwargs):
         """Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy."""
         attrs = super(AutocompleteSelect2WidgetMixin, self).build_attrs(*args, **kwargs)
@@ -61,32 +45,20 @@ class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
 
 
 class AutocompleteListSelect2(AutocompleteSelect2WidgetMixin, ListSelect2):
-    """Třída `AutocompleteListSelect2` v modulu `webclient.core.widgets`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AutocompleteListSelect2`` pro modul ``webclient.core.widgets``."""
     pass
 
 
 class AutocompleteSelect2Multiple(AutocompleteSelect2WidgetMixin, Select2Multiple):
-    """Třída `AutocompleteSelect2Multiple` v modulu `webclient.core.widgets`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AutocompleteSelect2Multiple`` pro modul ``webclient.core.widgets``."""
     pass
 
 
 class AutocompleteModelSelect2(AutocompleteSelect2WidgetMixin, ModelSelect2):
-    """Třída `AutocompleteModelSelect2` v modulu `webclient.core.widgets`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AutocompleteModelSelect2`` pro modul ``webclient.core.widgets``."""
     pass
 
 
 class AutocompleteModelSelect2Multiple(AutocompleteSelect2WidgetMixin, ModelSelect2Multiple):
-    """Třída `AutocompleteModelSelect2Multiple` v modulu `webclient.core.widgets`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AutocompleteModelSelect2Multiple`` pro modul ``webclient.core.widgets``."""
     pass

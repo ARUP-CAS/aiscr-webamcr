@@ -4,10 +4,7 @@ from heslar.admin import ObjectWithMetadataAdmin
 
 
 class DokumentWithMetadataAdmin(ObjectWithMetadataAdmin):
-    """Třída `DokumentWithMetadataAdmin` v modulu `webclient.dokument.admin`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``DokumentWithMetadataAdmin`` pro modul ``webclient.dokument.admin``."""
     pass
 
 
@@ -48,14 +45,7 @@ class LetAdmin(DokumentWithMetadataAdmin):
     search_fields = ("ident_cely", "uzivatelske_oznaceni")
 
     def get_readonly_fields(self, request, obj=None):
-        """Funkce `LetAdmin.get_readonly_fields` v modulu `webclient.dokument.admin`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param obj: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``LetAdmin.get_readonly_fields`` v rámci modulu ``webclient.dokument.admin``."""
         if obj:  # editace existujícího objektu
             return self.readonly_fields + ("ident_cely",)
         return self.readonly_fields

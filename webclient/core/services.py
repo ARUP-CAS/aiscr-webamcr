@@ -31,11 +31,7 @@ class PermissionService:
     """
 
     def __init__(self):
-        """Funkce `PermissionService.__init__` v modulu `webclient.core.services`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PermissionService.__init__`` v rámci modulu ``webclient.core.services``."""
         pass
 
     def run(self, docfile: InMemoryUploadedFile) -> tuple[pd.DataFrame, list[str]]:

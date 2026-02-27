@@ -2,18 +2,11 @@ from django.apps import AppConfig
 
 
 class DokumentConfig(AppConfig):
-    """Třída `DokumentConfig` v modulu `webclient.dokument.apps`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``DokumentConfig`` pro modul ``webclient.dokument.apps``."""
     name = "dokument"
 
     def ready(self):
-        """Funkce `DokumentConfig.ready` v modulu `webclient.dokument.apps`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentConfig.ready`` v rámci modulu ``webclient.dokument.apps``."""
         super(DokumentConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import dokument.signals

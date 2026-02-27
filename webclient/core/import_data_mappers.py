@@ -135,14 +135,7 @@ class ImportDataIncorrectStructureError(ImportDataError):
     """
 
     def __init__(self, missing_columns, excess_columns):
-        """Funkce `ImportDataIncorrectStructureError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param missing_columns: Vstupní hodnota používaná při zpracování.
-        :param excess_columns: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ImportDataIncorrectStructureError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         super().__init__(
             _("core_admin.ImportDataIncorrectStructureError.message.part_1")
             + " "
@@ -171,14 +164,7 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
     """
 
     def __init__(self, columns, *expected_colummns_options):
-        """Funkce `ImportDataIncorrectStructureContentObjectError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param columns: Vstupní hodnota používaná při zpracování.
-        :param expected_colummns_options: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ImportDataIncorrectStructureContentObjectError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         super().__init__(
             f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1")} '
             + (
@@ -196,14 +182,7 @@ class ImportDataMissingReferencedValueError(ImportDataError):
     """
 
     def __init__(self, missing_value_id, missing_model_name=None):
-        """Funkce `ImportDataMissingReferencedValueError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param missing_value_id: Vstupní hodnota používaná při zpracování.
-        :param missing_model_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ImportDataMissingReferencedValueError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
         super().__init__(
@@ -225,15 +204,7 @@ class ImportDataIntegrityError(ImportDataError):
     """
 
     def __init__(self, record_id, model_name, performed_action):
-        """Funkce `ImportDataIntegrityError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record_id: Vstupní hodnota používaná při zpracování.
-        :param model_name: Vstupní hodnota používaná při zpracování.
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ImportDataIntegrityError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self.record_id = record_id
         self.model_name = model_name
         self.performed_action = performed_action
@@ -254,14 +225,7 @@ class ImportDataLimitChoicesError(ImportDataError):
     """Výjimka vyvolaná při hodnotě cizího klíče, která nesplňuje omezení limit_choices_to."""
 
     def __init__(self, record_id, limit_choices_to: dict):
-        """Funkce `ImportDataLimitChoicesError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record_id: Vstupní hodnota používaná při zpracování.
-        :param limit_choices_to: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ImportDataLimitChoicesError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self.record_id = record_id
         self.limit_choices_to = limit_choices_to
         super().__init__(
@@ -279,13 +243,7 @@ class ImportDataHeslarPresnostLimitChoicesError(ImportDataError):
     """Výjimka vyvolaná při neplatné hodnotě přesnosti v hesláři u importovaného záznamu."""
 
     def __init__(self, record_id):
-        """Funkce `ImportDataHeslarPresnostLimitChoicesError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record_id: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ImportDataHeslarPresnostLimitChoicesError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self.record_id = record_id
         super().__init__(
             f'{_("core_admin.ImportDataLimitChoicesError.message.part_1")} '
@@ -299,13 +257,7 @@ class ImportDataUnsupportedFileError(ImportDataError):
     """
 
     def __init__(self, file_name):
-        """Funkce `ImportDataUnsupportedFileError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param file_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ImportDataUnsupportedFileError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self.file_name = file_name
         super().__init__(
             "{} {} {}".format(
@@ -322,13 +274,7 @@ class ImportDataUnsupportedFilesError(ImportDataError):
     """
 
     def __init__(self, file_names):
-        """Funkce `ImportDataUnsupportedFilesError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param file_names: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ImportDataUnsupportedFilesError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self.file_names = file_names
         super().__init__(
             "{} {} {}".format(
@@ -345,13 +291,7 @@ class ImportDataIncorrectPrimaryKeyFormatError(ImportDataError):
     """
 
     def __init__(self, primary_key_value):
-        """Funkce `ImportDataIncorrectPrimaryKeyFormatError.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param primary_key_value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ImportDataIncorrectPrimaryKeyFormatError.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self.primary_key_value = primary_key_value
         super().__init__(
             "{} {}".format(
@@ -368,70 +308,38 @@ class BaseImportField:
     """
 
     def __init__(self):
-        """Funkce `BaseImportField.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``BaseImportField.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self._value = None
 
     @property
     def value(self):
-        """Funkce `BaseImportField.value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``BaseImportField.value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._value
 
     @value.setter
     def value(self, value):
-        """Funkce `BaseImportField.value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``BaseImportField.value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if str(value).lower() == "nan":
             value = None
         self._value = self._process_value(value)
 
     @property
     def is_null(self):
-        """Funkce `BaseImportField.is_null` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``BaseImportField.is_null`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._value is None or str(self._value).lower() == "nan"
 
     @property
     def instance_value(self):
-        """Funkce `BaseImportField.instance_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``BaseImportField.instance_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._value
 
     @property
     def serialized_value(self):
-        """Funkce `BaseImportField.serialized_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``BaseImportField.serialized_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._value
 
     def _process_value(self, value):
-        """Funkce `BaseImportField._process_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``BaseImportField._process_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return value
 
 
@@ -464,13 +372,7 @@ class PositiveIntegerImportField(BaseImportField):
     """Importní pole pro kladné celočíselné hodnoty. Záporná čísla způsobí vyvolání ImportDataError."""
 
     def _process_value(self, value) -> int | None:
-        """Funkce `PositiveIntegerImportField._process_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``PositiveIntegerImportField._process_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         value = super()._process_value(value)
         if value is not None and value < 0:
             raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_positive_integer_value')}: {value}")
@@ -483,13 +385,7 @@ class DecimalImportField(BaseImportField):
     pattern = re.compile(r"\d+\.\d*")
 
     def _process_value(self, value) -> float | None:
-        """Funkce `DecimalImportField._process_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DecimalImportField._process_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if not value:
             return None
         if isinstance(value, Decimal) or isinstance(value, float):
@@ -533,31 +429,17 @@ class DateImportField(BaseImportField):
 
     @property
     def value(self):
-        """Funkce `DateImportField.value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DateImportField.value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._value.isoformat() if self._value else None
 
     @value.setter
     def value(self, value):
-        """Funkce `DateImportField.value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DateImportField.value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self._value = self._process_value(value)
 
     @property
     def serialized_value(self):
-        """Funkce `DateImportField.serialized_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DateImportField.serialized_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._value.strftime("%Y-%m-%d") if self._value else None
 
     def _process_value(self, value) -> datetime.date | None:
@@ -588,41 +470,21 @@ class DateTimeImportField(BaseImportField):
 
     @property
     def value(self):
-        """Funkce `DateTimeImportField.value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DateTimeImportField.value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._value.strftime("%Y-%m-%d %H:%M:%S") if self._value else None
 
     @value.setter
     def value(self, value):
-        """Funkce `DateTimeImportField.value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DateTimeImportField.value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self._value = self._process_value(value)
 
     @property
     def serialized_value(self):
-        """Funkce `DateTimeImportField.serialized_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DateTimeImportField.serialized_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._value.strftime("%Y-%m-%d %H:%M:%S") if self._value else None
 
     def _process_value(self, value) -> datetime.datetime | None:
-        """Funkce `DateTimeImportField._process_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DateTimeImportField._process_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if not value or str(value).lower() == "nan":
             return None
         elif isinstance(value, str):
@@ -643,11 +505,7 @@ class DateRangeImportField(BaseImportField):
 
     @property
     def serialized_value(self):
-        """Funkce `DateRangeImportField.serialized_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DateRangeImportField.serialized_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return f"[{self.value.lower.strftime('%Y-%m-%d')},{self.value.upper.strftime('%Y-%m-%d')})"
 
     def _process_value(self, value) -> DateRange | None:
@@ -677,15 +535,7 @@ class LookupImportField(BaseImportField):
     def __init__(
         self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", limit_choices_to: dict | None = None
     ):
-        """Funkce `LookupImportField.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param lookup_model_classes: Vstupní hodnota používaná při zpracování.
-        :param lookup_field_name: Vstupní hodnota používaná při zpracování.
-        :param limit_choices_to: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``LookupImportField.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         super().__init__()
         if not isinstance(lookup_model_classes, Iterable):
             self.lookup_model_class_list = [
@@ -703,21 +553,11 @@ class LookupImportField(BaseImportField):
 
     @property
     def instance_value(self):
-        """Funkce `LookupImportField.instance_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``LookupImportField.instance_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._instance_value
 
     def _check_limit_choices_to(self, record):
-        """Funkce `LookupImportField._check_limit_choices_to` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``LookupImportField._check_limit_choices_to`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if self.limit_choices_to:
             if not all(getattr(record, k).pk == v for k, v in self.limit_choices_to.items()):
                 raise ImportDataLimitChoicesError(record, self.limit_choices_to)
@@ -757,13 +597,7 @@ class RuianLookupImportField(LookupImportField):
 
     @LookupImportField.value.setter
     def value(self, value):
-        """Funkce `RuianLookupImportField.value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``RuianLookupImportField.value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if isinstance(value, str):
             match = re.match(r"ruian-(\d+)", value)
             value = int(match.group(1))
@@ -776,26 +610,12 @@ class VazbaLookupImportField(LookupImportField):
     """
 
     def __init__(self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", read_field_name: str = None):
-        """Funkce `VazbaLookupImportField.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param lookup_model_classes: Vstupní hodnota používaná při zpracování.
-        :param lookup_field_name: Vstupní hodnota používaná při zpracování.
-        :param read_field_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``VazbaLookupImportField.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         super().__init__(lookup_model_classes, lookup_field_name)
         self.read_field_name = read_field_name
 
     def _process_value(self, value):
-        """Funkce `VazbaLookupImportField._process_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``VazbaLookupImportField._process_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         try:
             record = get_record_from_ident(value)
         except Exception:
@@ -831,23 +651,13 @@ class GeomImportField(BaseImportField):
     """
 
     def __init__(self, srid):
-        """Funkce `GeomImportField.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param srid: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``GeomImportField.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         super().__init__()
         self.srid = srid
 
     @property
     def serialized_value(self):
-        """Funkce `GeomImportField.serialized_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``GeomImportField.serialized_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return getattr(self._value, "wkt", None)
 
     def _process_value(self, value) -> GEOSGeometry | None:
@@ -871,38 +681,20 @@ class GenericForeignKeyImportField(LookupImportField):
     def __init__(
         self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", serialized_attribute: str = None
     ):
-        """Funkce `GenericForeignKeyImportField.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param lookup_model_classes: Vstupní hodnota používaná při zpracování.
-        :param lookup_field_name: Vstupní hodnota používaná při zpracování.
-        :param serialized_attribute: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``GenericForeignKeyImportField.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         super().__init__(lookup_model_classes, lookup_field_name)
         self.serialized_attribute = serialized_attribute
 
     @property
     def serialized_value(self):
-        """Funkce `GenericForeignKeyImportField.serialized_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``GenericForeignKeyImportField.serialized_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if self.serialized_attribute:
             return getattr(self._value, self.serialized_attribute)
         else:
             return self._value.pk
 
     def _process_value(self, value: str | int):
-        """Funkce `GenericForeignKeyImportField._process_value` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``GenericForeignKeyImportField._process_value`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if isinstance(value, str) and (match := re.match(r"(?:\w+-)?(\d+)", value)):
             value = int(match.group(1))
 
@@ -933,13 +725,7 @@ class ImportModelMapper(ABC):
     allow_update = True
 
     def __init__(self, value_dict):
-        """Funkce `ImportModelMapper.__init__` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value_dict: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ImportModelMapper.__init__`` v rámci modulu ``webclient.core.import_data_mappers``."""
         self.value_dict = value_dict
         if self.require_primary_key_value is None:
             self.require_primary_key_value = isinstance(self.primary_key, tuple)
@@ -1029,13 +815,7 @@ class ImportModelMapper(ABC):
         """
 
         def value_dict_name(value):
-            """Funkce `ImportModelMapper.value_dict_name` v modulu `webclient.core.import_data_mappers`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param value: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Zpracuje volání ``ImportModelMapper.value_dict_name`` v rámci modulu ``webclient.core.import_data_mappers``."""
             return value.split("__")[0] if "__" in value else value
 
         if (
@@ -1068,13 +848,7 @@ class ImportModelMapper(ABC):
 
     @classmethod
     def _parse_primary_key(cls, value):
-        """Funkce `ImportModelMapper._parse_primary_key` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ImportModelMapper._parse_primary_key`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if isinstance(value, str) and cls.primary_key_prefix:
             match = re.match(f"{cls.primary_key_prefix}-(.*)", value)
             if match:
@@ -1085,14 +859,7 @@ class ImportModelMapper(ABC):
 
     @staticmethod
     def _parse_primary_key_custom_prefix(value, prefix):
-        """Funkce `ImportModelMapper._parse_primary_key_custom_prefix` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :param prefix: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ImportModelMapper._parse_primary_key_custom_prefix`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if isinstance(value, str) and prefix:
             return int(re.match(f"{prefix}-(.*)", value).group(1))
         return value
@@ -1134,13 +901,7 @@ class ImportModelMapper(ABC):
 
     @classmethod
     def is_field_required(cls, field_name) -> bool:
-        """Funkce `ImportModelMapper.is_field_required` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ImportModelMapper.is_field_required`` v rámci modulu ``webclient.core.import_data_mappers``."""
         try:
             model_field = cls.model_class._meta.get_field(field_name)
             return not model_field.null
@@ -1206,14 +967,7 @@ class ImportModelMapper(ABC):
             return self._get_filter_kwargs_primary_key()
 
     def _check_column_structure(self, performed_action, include_primary_key=False):
-        """Funkce `ImportModelMapper._check_column_structure` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ImportModelMapper._check_column_structure`` v rámci modulu ``webclient.core.import_data_mappers``."""
         primary_keys = set((self.primary_key,) if isinstance(self.primary_key, str) else self.primary_key)
         mapping_column_set = set(self.value_dict.keys())
         value_dict_column_set = set(self.get_mapping(include_primary_key).keys()) | primary_keys
@@ -1267,13 +1021,7 @@ class ImportModelMapper(ABC):
         return mapping_dict
 
     def check_required_fields(self, performed_action):
-        """Funkce `ImportModelMapper.check_required_fields` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ImportModelMapper.check_required_fields`` v rámci modulu ``webclient.core.import_data_mappers``."""
         for key, value in self.value_dict.items():
             required = self.is_field_required(key)
             if required and (value is None or str(value).lower().strip() in ("nan", "") or pd.isna(value)):
@@ -1308,15 +1056,7 @@ class ImportModelMapper(ABC):
 
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
-        """Funkce `ImportModelMapper.record_postprocessing` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ImportModelMapper.record_postprocessing`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return record
 
 
@@ -1327,14 +1067,7 @@ class GeometryTransformMixin:
     """
 
     def transform_geometries(self, mapping_dict, performed_action):
-        """Funkce `GeometryTransformMixin.transform_geometries` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param mapping_dict: Vstupní hodnota používaná při zpracování.
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``GeometryTransformMixin.transform_geometries`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             if mapping_dict.get("geom_system") == 4326 and mapping_dict.get("geom"):
                 mapping_dict["geom_sjtsk"] = transform_geom_to_sjtsk(mapping_dict["geom"])
@@ -1350,13 +1083,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
     classes = tuple()
 
     def import_validation(self, performed_action):
-        """Funkce `MultipleClassImportModelMapper.import_validation` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``MultipleClassImportModelMapper.import_validation`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if (
             performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
             and self.value_dict.get("ident_cely")
@@ -1376,21 +1103,11 @@ class MultipleClassImportModelMapper(ImportModelMapper):
         return self._get_filter_kwargs_primary_key()
 
     def _get_filter_kwargs_primary_key(self):
-        """Funkce `MultipleClassImportModelMapper._get_filter_kwargs_primary_key` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``MultipleClassImportModelMapper._get_filter_kwargs_primary_key`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return {"ident_cely": self.value_dict.get("ident_cely")}
 
     def create_records(self, performed_action) -> list:
-        """Funkce `MultipleClassImportModelMapper.create_records` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``MultipleClassImportModelMapper.create_records`` v rámci modulu ``webclient.core.import_data_mappers``."""
         class_0_fields = [item for model, item in self.fields + self.foreign_key_fields if model == self.classes[0][0]]
         class_1_fields = [item for model, item in self.fields + self.foreign_key_fields if model == self.classes[1][0]]
         mapping_dict = self.map(performed_action, True)
@@ -1419,13 +1136,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
 
     @classmethod
     def is_field_required(cls, field_name) -> bool:
-        """Funkce `MultipleClassImportModelMapper.is_field_required` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``MultipleClassImportModelMapper.is_field_required`` v rámci modulu ``webclient.core.import_data_mappers``."""
         for mapper_class_tuple in cls.classes:
             mapper_class = mapper_class_tuple[1]
             try:
@@ -1453,13 +1164,7 @@ class HeslarMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `HeslarMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``HeslarMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["nazev_heslare"] = LookupImportField(HeslarNazev, "nazev")
         return field_mapping
@@ -1481,13 +1186,7 @@ class HeslarDataceMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `HeslarDataceMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``HeslarDataceMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["obdobi"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBDOBI})
         return field_mapping
@@ -1502,13 +1201,7 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `HeslarDokumentTypMaterialRadaMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``HeslarDokumentTypMaterialRadaMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument_typ"] = LookupImportField(
             Heslar, limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP}
@@ -1532,13 +1225,7 @@ class HeslarHierarchieMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `HeslarHierarchieMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``HeslarHierarchieMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["heslo_nadrazene"] = LookupImportField(Heslar)
         field_mapping["heslo_podrazene"] = LookupImportField(Heslar)
@@ -1562,13 +1249,7 @@ class HeslarOdkazMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `HeslarOdkazMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``HeslarOdkazMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["heslo"] = LookupImportField(Heslar)
         return field_mapping
@@ -1599,13 +1280,7 @@ class OrganizaceMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `OrganizaceMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``OrganizaceMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["soucast"] = LookupImportField(Organizace)
         field_mapping["typ_organizace"] = LookupImportField(
@@ -1663,13 +1338,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ProjektMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ProjektMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["typ_projektu"] = LookupImportField(
             Heslar, limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP}
@@ -1683,16 +1352,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         return field_mapping
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
-        """Funkce `ProjektMapper.map` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param instance_values: Vstupní hodnota používaná při zpracování.
-        :param serialize: Vstupní hodnota používaná při zpracování.
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektMapper.map`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
@@ -1708,13 +1368,7 @@ class ProjektKatastrMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ProjektKatastrMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ProjektKatastrMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["projekt"] = LookupImportField(Projekt)
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
@@ -1731,13 +1385,7 @@ class ProjektOznamovatelMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ProjektOznamovatelMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ProjektOznamovatelMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["projekt"] = LookupImportField(Projekt)
         return field_mapping
@@ -1767,13 +1415,7 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `SamostatnyNalezMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SamostatnyNalezMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["projekt"] = LookupImportField(Projekt)
         field_mapping["pristupnost"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST})
@@ -1793,16 +1435,7 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
         return field_mapping
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
-        """Funkce `SamostatnyNalezMapper.map` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param instance_values: Vstupní hodnota používaná při zpracování.
-        :param serialize: Vstupní hodnota používaná při zpracování.
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``SamostatnyNalezMapper.map`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
@@ -1861,13 +1494,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ArcheologickyZaznamAkceMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ArcheologickyZaznamAkceMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = {}
         for __, item in cls.fields:
             field_mapping[item] = cls.map_field(item)
@@ -1876,13 +1503,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
 
     @classmethod
     def map_field(cls, field_name):
-        """Funkce `ArcheologickyZaznamAkceMapper.map_field` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ArcheologickyZaznamAkceMapper.map_field`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = {
             "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
         }
@@ -1891,15 +1512,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
 
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
-        """Funkce `ArcheologickyZaznamAkceMapper.record_postprocessing` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ArcheologickyZaznamAkceMapper.record_postprocessing`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             record.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
         return super().record_postprocessing(record, performed_action, fedora_transaction)
@@ -1948,13 +1561,7 @@ class LokalitaMapper(MultipleClassImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `LokalitaMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``LokalitaMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = {}
         for __, item in cls.fields:
             field_mapping[item] = cls.map_field(item)
@@ -1963,13 +1570,7 @@ class LokalitaMapper(MultipleClassImportModelMapper):
 
     @classmethod
     def map_field(cls, field_name):
-        """Funkce `LokalitaMapper.map_field` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``LokalitaMapper.map_field`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = {
             "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
         }
@@ -1986,13 +1587,7 @@ class AkceVedouciMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `AkceVedouciMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``AkceVedouciMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["akce"] = LookupImportField(Akce, "archeologicky_zaznam__ident_cely")
         field_mapping["vedouci"] = LookupImportField(Osoba)
@@ -2011,13 +1606,7 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ArcheologickyZaznamKatastrMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ArcheologickyZaznamKatastrMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
@@ -2033,13 +1622,7 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `PianMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``PianMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP})
         field_mapping["presnost"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PIAN_PRESNOST})
@@ -2048,16 +1631,7 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
         return field_mapping
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
-        """Funkce `PianMapper.map` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param instance_values: Vstupní hodnota používaná při zpracování.
-        :param serialize: Vstupní hodnota používaná při zpracování.
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PianMapper.map`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
@@ -2072,13 +1646,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `DokumentacniJednotkaMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentacniJednotkaMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
         field_mapping["pian"] = LookupImportField(Pian)
@@ -2087,15 +1655,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
 
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
-        """Funkce `DokumentacniJednotkaMapper.record_postprocessing` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentacniJednotkaMapper.record_postprocessing`` v rámci modulu ``webclient.core.import_data_mappers``."""
         record: DokumentacniJednotka
         if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
             record.pian = pian
@@ -2123,13 +1683,7 @@ class AdbMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `AdbMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``AdbMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokumentacni_jednotka"] = LookupImportField(DokumentacniJednotka)
         field_mapping["typ_sondy"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP})
@@ -2149,13 +1703,7 @@ class AdbVyskovyBod(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `AdbVyskovyBod.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``AdbVyskovyBod.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["adb"] = LookupImportField(Adb)
         field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP})
@@ -2180,13 +1728,7 @@ class DokumentLetMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `DokumentLetMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentLetMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["letiste_start"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETISTE})
         field_mapping["letiste_cil"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETISTE})
@@ -2267,13 +1809,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `DokumentMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = {}
         for __, item in cls.fields:
             field_mapping[item] = cls.map_field(item)
@@ -2282,13 +1818,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
 
     @classmethod
     def map_field(cls, field_name):
-        """Funkce `DokumentMapper.map_field` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentMapper.map_field`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = cls.lookup_fields_mapping
         return mapping_dict.get(field_name, BaseImportField())
 
@@ -2338,16 +1868,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         return []
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
-        """Funkce `DokumentMapper.map` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param instance_values: Vstupní hodnota používaná při zpracování.
-        :param serialize: Vstupní hodnota používaná při zpracování.
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentMapper.map`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
@@ -2363,13 +1884,7 @@ class DokumentAutorMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `DokumentAutorMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentAutorMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
         field_mapping["autor"] = LookupImportField(Osoba)
@@ -2386,13 +1901,7 @@ class DokumentJazykMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `DokumentJazykMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentJazykMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
         field_mapping["jazyk"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_JAZYK})
@@ -2409,13 +1918,7 @@ class DokumentOsobaMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `DokumentOsobaMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentOsobaMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
         field_mapping["osoba"] = LookupImportField(Osoba)
@@ -2432,13 +1935,7 @@ class DokumentPosudekMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `DokumentPosudekMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentPosudekMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
         field_mapping["posudek"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP})
@@ -2455,13 +1952,7 @@ class TvarMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `TvarMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``TvarMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
         field_mapping["tvar"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETFOTO_TVAR})
@@ -2478,13 +1969,7 @@ class DokumentCastMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `DokumentCastMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DokumentCastMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
@@ -2502,13 +1987,7 @@ class NeidentAkceMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `NeidentAkceMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``NeidentAkceMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument_cast"] = LookupImportField(DokumentCast)
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
@@ -2525,13 +2004,7 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `NeidentAkceVedouciMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``NeidentAkceVedouciMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["neident_akce"] = LookupImportField(DokumentCast)
         field_mapping["vedouci"] = LookupImportField(Osoba)
@@ -2547,13 +2020,7 @@ class KomponentaMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `KomponentaMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``KomponentaMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vazba"] = VazbaLookupImportField(
             (DokumentacniJednotka, DokumentCast), read_field_name="komponenty"
@@ -2573,13 +2040,7 @@ class KomponentaAktivitaMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `KomponentaAktivitaMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``KomponentaAktivitaMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
         field_mapping["aktivita"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AKTIVITA})
@@ -2601,13 +2062,7 @@ class NalezObjektMapper(NalezMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `NalezObjektMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``NalezObjektMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
         field_mapping["druh"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_DRUH})
@@ -2625,13 +2080,7 @@ class NalezPredmetMapper(NalezMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `NalezPredmetMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``NalezPredmetMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
         field_mapping["druh"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH})
@@ -2669,13 +2118,7 @@ class ExterniZdrojMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ExterniZdrojMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ExterniZdrojMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_EXTERNI_ZDROJ_TYP})
         field_mapping["typ_dokumentu"] = LookupImportField(
@@ -2695,13 +2138,7 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ExterniZdrojAutorMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ExterniZdrojAutorMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
         field_mapping["autor"] = LookupImportField(Osoba)
@@ -2719,13 +2156,7 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ExterniZdrojEditorMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ExterniZdrojEditorMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
         field_mapping["editor"] = LookupImportField(Osoba)
@@ -2742,13 +2173,7 @@ class ExterniOdkazMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `ExterniOdkazMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ExterniOdkazMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
         field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
@@ -2777,13 +2202,7 @@ class UzivatelMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `UzivatelMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["osoba"] = LookupImportField(Osoba)
         field_mapping["organizace"] = LookupImportField(Organizace)
@@ -2801,24 +2220,14 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `UzivatelNotifikaceProjektMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelNotifikaceProjektMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(False)
         field_mapping["uzivatel"] = LookupImportField(User, "ident_cely")
         field_mapping["ruian"] = GenericForeignKeyImportField([RuianKatastr, RuianOkres, RuianKraj], "kod", "kod")
         return field_mapping
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """Funkce `UzivatelNotifikaceProjektMapper._get_filter_kwargs_primary_key` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelNotifikaceProjektMapper._get_filter_kwargs_primary_key`` v rámci modulu ``webclient.core.import_data_mappers``."""
         primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
         content_object = primary_key_import_field._process_value(self.value_dict["ruian"])
         return {
@@ -2829,25 +2238,13 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     @classmethod
     def map_field(cls, field_name):
-        """Funkce `UzivatelNotifikaceProjektMapper.map_field` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param field_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelNotifikaceProjektMapper.map_field`` v rámci modulu ``webclient.core.import_data_mappers``."""
         if field_name == "uzivatel":
             field_name = "user"
         return super().map_field(field_name)
 
     def create_records(self, performed_action) -> list:
-        """Funkce `UzivatelNotifikaceProjektMapper.create_records` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelNotifikaceProjektMapper.create_records`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = self.map(performed_action, True)
         mapping_dict = {self.map_column_name_to_field_name(field): value for field, value in mapping_dict.items()}
         app_label, model = mapping_dict["content_type"].split(".")
@@ -2864,14 +2261,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         ]
 
     def _check_column_structure(self, performed_action, include_primary_key=False):
-        """Funkce `UzivatelNotifikaceProjektMapper._check_column_structure` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelNotifikaceProjektMapper._check_column_structure`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_column_set = set(self.value_dict.keys())
         expected_column_set_import = {"uzivatel", "ruian"}
         expected_column_set_job = {"uzivatel", "content_type", "object_id"}
@@ -2881,16 +2271,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
             )
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
-        """Funkce `UzivatelNotifikaceProjektMapper.map` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :param instance_values: Vstupní hodnota používaná při zpracování.
-        :param serialize: Vstupní hodnota používaná při zpracování.
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelNotifikaceProjektMapper.map`` v rámci modulu ``webclient.core.import_data_mappers``."""
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
         content_object = primary_key_import_field._process_value(
@@ -2914,13 +2295,7 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `UzivatelSpolupraceMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelSpolupraceMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vedouci"] = LookupImportField(User)
         field_mapping["spolupracovnik"] = LookupImportField(User)
@@ -2936,42 +2311,20 @@ class UzivatelOpravneniMapper(ImportModelMapper):
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `UzivatelOpravneniMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelOpravneniMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = {"uzivatel": LookupImportField(User), "skupina": LookupImportField(Group, "name")}
         return field_mapping
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """Funkce `UzivatelOpravneniMapper._get_filter_kwargs_primary_key` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelOpravneniMapper._get_filter_kwargs_primary_key`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return {"ident_cely": self.value_dict["uzivatel"]}
 
     def create_records(self, performed_action):
-        """Funkce `UzivatelOpravneniMapper.create_records` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelOpravneniMapper.create_records`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
     def import_validation(self, performed_action):
-        """Funkce `UzivatelOpravneniMapper.import_validation` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelOpravneniMapper.import_validation`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._get_filter_kwargs_primary_key()
 
 
@@ -2985,13 +2338,7 @@ class SouborMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `SouborMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``SouborMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="soubory")
         return field_mapping
@@ -3006,42 +2353,20 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
     column_to_field_mapping = {"uzivatel": "ident_cely"}
 
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `UzivatelNotifikaceMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelNotifikaceMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = {"uzivatel": LookupImportField(User), "notifikace": LookupImportField(UserNotificationType)}
         return field_mapping
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """Funkce `UzivatelNotifikaceMapper._get_filter_kwargs_primary_key` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``UzivatelNotifikaceMapper._get_filter_kwargs_primary_key`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return {"ident_cely": self.value_dict["uzivatel"]}
 
     def create_records(self, performed_action):
-        """Funkce `UzivatelNotifikaceMapper.create_records` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelNotifikaceMapper.create_records`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
     def import_validation(self, performed_action):
-        """Funkce `UzivatelNotifikaceMapper.import_validation` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param performed_action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``UzivatelNotifikaceMapper.import_validation`` v rámci modulu ``webclient.core.import_data_mappers``."""
         return self._get_filter_kwargs_primary_key()
 
 
@@ -3059,13 +2384,7 @@ class HistorieMapper(ImportModelMapper):
 
     @classmethod
     def get_mapping(cls, include_primary_key=False):
-        """Funkce `HistorieMapper.get_mapping` v modulu `webclient.core.import_data_mappers`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param include_primary_key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``HistorieMapper.get_mapping`` v rámci modulu ``webclient.core.import_data_mappers``."""
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="historie")
         field_mapping["uzivatel"] = LookupImportField(User)

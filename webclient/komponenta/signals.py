@@ -14,15 +14,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Komponenta, weak=False)
 def komponenta_save(sender, instance: Komponenta, **kwargs):
-    """Funkce `komponenta_save` v modulu `webclient.komponenta.signals`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``komponenta_save`` v rámci modulu ``webclient.komponenta.signals``."""
     logger.debug("komponenta.signals.komponenta_save.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_save.suppress_signal", extra={"pk": instance.pk})
@@ -56,15 +48,7 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
 
 @receiver(post_delete, sender=Komponenta, weak=False)
 def komponenta_delete(sender, instance: Komponenta, **kwargs):
-    """Funkce `komponenta_delete` v modulu `webclient.komponenta.signals`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param sender: Vstupní hodnota používaná při zpracování.
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param kwargs: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``komponenta_delete`` v rámci modulu ``webclient.komponenta.signals``."""
     logger.debug("komponenta.signals.komponenta_delete.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_delete.suppress_signal", extra={"pk": instance.pk})
@@ -76,11 +60,7 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
 
         def save_metadata():
-            """Funkce `save_metadata` v modulu `webclient.komponenta.signals`.
-            
-            Zajišťuje dílčí aplikační logiku pro tento modul.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Provádí funkci ``save_metadata`` v rámci modulu ``webclient.komponenta.signals``."""
             if isinstance(navazany_objekt, DokumentCast):
                 navazany_objekt.dokument.save_metadata(fedora_transaction, skip_container_check=True)
             elif isinstance(navazany_objekt, DokumentacniJednotka):

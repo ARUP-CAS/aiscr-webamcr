@@ -2,18 +2,11 @@ from django.apps import AppConfig
 
 
 class AdbConfig(AppConfig):
-    """Třída `AdbConfig` v modulu `webclient.adb.apps`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AdbConfig`` pro modul ``webclient.adb.apps``."""
     name = "adb"
 
     def ready(self):
-        """Funkce `AdbConfig.ready` v modulu `webclient.adb.apps`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AdbConfig.ready`` v rámci modulu ``webclient.adb.apps``."""
         super(AdbConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import adb.signals

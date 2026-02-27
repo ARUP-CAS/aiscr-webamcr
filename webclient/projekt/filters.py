@@ -38,16 +38,9 @@ logger = logging.getLogger(__name__)
 
 
 class Users(QuerySet):
-    """Třída `Users` v modulu `webclient.projekt.filters`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Users`` pro modul ``webclient.projekt.filters``."""
     def active_processes(self):
-        """Funkce `Users.active_processes` v modulu `webclient.projekt.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``Users.active_processes`` v rámci modulu ``webclient.projekt.filters``."""
         return self.select_related("first_name", "last_name")
 
 
@@ -505,13 +498,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     )
 
     def filter_queryset(self, queryset):
-        """Funkce `ProjektFilter.filter_queryset` v modulu `webclient.projekt.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ProjektFilter.filter_queryset`` v rámci modulu ``webclient.projekt.filters``."""
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
         queryset = super(ProjektFilter, self).filter_queryset(queryset)
         historie = self._get_history_subquery()
@@ -686,10 +673,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         ).distinct()
 
     class Meta:
-        """Třída `ProjektFilter.Meta` v modulu `webclient.projekt.filters`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``ProjektFilter.Meta`` pro modul ``webclient.projekt.filters``."""
         model = Projekt
         fields = [
             "ident_cely",
@@ -698,14 +682,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         form = ProjektFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Funkce `ProjektFilter.__init__` v modulu `webclient.projekt.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ProjektFilter.__init__`` v rámci modulu ``webclient.projekt.filters``."""
         super(ProjektFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         self.filters["typ_akce"].extra["choices"] = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
@@ -723,13 +700,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `ProjektFilterFormHelper.__init__` v modulu `webclient.projekt.filters`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ProjektFilterFormHelper.__init__`` v rámci modulu ``webclient.projekt.filters``."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("projekt.filters.history.divider.label")
         }

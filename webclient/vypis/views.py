@@ -13,18 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_section_data(instance, section, fields, sections_data, iterator=False, user=None):
-    """Funkce `add_section_data` v modulu `webclient.vypis.views`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param instance: Vstupní hodnota používaná při zpracování.
-    :param section: Vstupní hodnota používaná při zpracování.
-    :param fields: Vstupní hodnota používaná při zpracování.
-    :param sections_data: Vstupní hodnota používaná při zpracování.
-    :param iterator: Vstupní hodnota používaná při zpracování.
-    :param user: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``add_section_data`` v rámci modulu ``webclient.vypis.views``."""
     if fields["section_name"].get_permission(instance, user) is False:
         return None
     if isinstance(fields["section_name"], RepeatableSectionNameWithAccessor) and not iterator:
@@ -87,20 +76,11 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
 
 
 class VypisView(LoginRequiredMixin, TemplateView):
-    """Třída `VypisView` v modulu `webclient.vypis.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``VypisView`` pro modul ``webclient.vypis.views``."""
     template_name = "vypis/vypis.html"
 
     def get_context_data(self, **kwargs):
-        """Funkce `VypisView.get_context_data` v modulu `webclient.vypis.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``VypisView.get_context_data`` v rámci modulu ``webclient.vypis.views``."""
         context = super().get_context_data(**kwargs)
         name = kwargs.get("typ_vazby")
         ident_cely = kwargs.get("ident_cely")
@@ -137,28 +117,16 @@ class VypisView(LoginRequiredMixin, TemplateView):
 
 
 class VypisOnlyView(VypisView):
-    """Třída `VypisOnlyView` v modulu `webclient.vypis.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``VypisOnlyView`` pro modul ``webclient.vypis.views``."""
     template_name = "vypis/vypis_only.html"
 
 
 class VypisListView(LoginRequiredMixin, TemplateView):
-    """Třída `VypisListView` v modulu `webclient.vypis.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``VypisListView`` pro modul ``webclient.vypis.views``."""
     template_name = "vypis/vypis_list.html"
 
     def get_context_data(self, **kwargs):
-        """Funkce `VypisListView.get_context_data` v modulu `webclient.vypis.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``VypisListView.get_context_data`` v rámci modulu ``webclient.vypis.views``."""
         context = super().get_context_data(**kwargs)
         name = kwargs.get("typ_vazby")
         config = get_config(name)

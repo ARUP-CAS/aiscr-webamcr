@@ -6,10 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.pas.migrations.0008_remove_samostatnynalez_geom_sjtsk_updated_at_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.pas.migrations.0008_remove_samostatnynalez_geom_sjtsk_updated_at_and_more``."""
     dependencies = [
         ('pas', '0007_remove_samostatnynalez_samostatny_nalez_geom_check_and_more'),
     ]

@@ -5,10 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0011_notificationslog_exception_notificationslog_status`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.uzivatel.migrations.0011_notificationslog_exception_notificationslog_status``."""
     dependencies = [
         ("uzivatel", "0010_alter_historicaluser_first_name_and_more"),
     ]

@@ -29,14 +29,7 @@ class AkceVedouciFormSetHelper(FormHelper):
     """
 
     def __init__(self, *args, **kwargs):
-        """Funkce `AkceVedouciFormSetHelper.__init__` v modulu `webclient.arch_z.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceVedouciFormSetHelper.__init__`` v rámci modulu ``webclient.arch_z.forms``."""
         super().__init__(*args, **kwargs)
         self.template = "inline_formset_vedouci.html"
         self.form_tag = False
@@ -54,16 +47,9 @@ def create_akce_vedouci_objekt_form(readonly=True):
     """
 
     class CreateAkceVedouciObjektForm(forms.ModelForm):
-        """Třída `CreateAkceVedouciObjektForm` v modulu `webclient.arch_z.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``CreateAkceVedouciObjektForm`` pro modul ``webclient.arch_z.forms``."""
         def clean(self):
-            """Funkce `CreateAkceVedouciObjektForm.clean` v modulu `webclient.arch_z.forms`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Provádí funkci ``CreateAkceVedouciObjektForm.clean`` v rámci modulu ``webclient.arch_z.forms``."""
             cleaned_data = super().clean()
             if (cleaned_data.get("vedouci", None) is None and cleaned_data.get("organizace", None) is not None) or (
                 cleaned_data.get("vedouci", None) is not None and cleaned_data.get("organizace", None) is None
@@ -71,10 +57,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 raise forms.ValidationError(_("arch_z.forms.CreateAkceVedouciObjektForm.clean.error"))
 
         class Meta:
-            """Třída `CreateAkceVedouciObjektForm.Meta` v modulu `webclient.arch_z.forms`.
-            
-            Zapouzdřuje související data a chování v rámci dané části aplikace.
-            """
+            """Zapouzdřuje chování třídy ``CreateAkceVedouciObjektForm.Meta`` pro modul ``webclient.arch_z.forms``."""
             model = AkceVedouci
             fields = ["vedouci", "organizace"]
 
@@ -101,14 +84,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
             }
 
         def __init__(self, *args, **kwargs):
-            """Funkce `CreateAkceVedouciObjektForm.__init__` v modulu `webclient.arch_z.forms`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param args: Vstupní hodnota používaná při zpracování.
-            :param kwargs: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Provádí funkci ``CreateAkceVedouciObjektForm.__init__`` v rámci modulu ``webclient.arch_z.forms``."""
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
             logger.debug("CreateAkceVedouciObjektForm.init", extra={"option": readonly, "initial": self.initial})
@@ -125,10 +101,7 @@ class CreateArchZForm(forms.ModelForm):
     """
 
     class Meta:
-        """Třída `CreateArchZForm.Meta` v modulu `webclient.arch_z.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``CreateArchZForm.Meta`` pro modul ``webclient.arch_z.forms``."""
         model = ArcheologickyZaznam
         fields = (
             "hlavni_katastr",
@@ -266,23 +239,11 @@ class CustomDateInput(forms.DateField):
 
     @classmethod
     def year_only(cls, value):
-        """Funkce `CustomDateInput.year_only` v modulu `webclient.arch_z.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``CustomDateInput.year_only`` v rámci modulu ``webclient.arch_z.forms``."""
         return re.fullmatch(r"\d{4}", value)
 
     def get_date_based_on_year(self, year):
-        """Funkce `CustomDateInput.get_date_based_on_year` v modulu `webclient.arch_z.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param year: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``CustomDateInput.get_date_based_on_year`` v rámci modulu ``webclient.arch_z.forms``."""
         return datetime.date(year, self.year_only_month, self.year_only_day)
 
     def to_python(self, value):
@@ -353,10 +314,7 @@ class CreateAkceForm(forms.ModelForm):
         return self.cleaned_data
 
     class Meta:
-        """Třída `CreateAkceForm.Meta` v modulu `webclient.arch_z.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``CreateAkceForm.Meta`` pro modul ``webclient.arch_z.forms``."""
         model = Akce
         fields = (
             "hlavni_vedouci",
@@ -447,16 +405,7 @@ class CreateAkceForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
-        """Funkce `CreateAkceForm.__init__` v modulu `webclient.arch_z.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param required: Vstupní hodnota používaná při zpracování.
-        :param required_next: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``CreateAkceForm.__init__`` v rámci modulu ``webclient.arch_z.forms``."""
         uzamknout_specifikace = kwargs.pop("uzamknout_specifikace", False)
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
@@ -593,8 +542,5 @@ class CreateAkceForm(forms.ModelForm):
 
 
 class ArchzFilterForm(BaseFilterForm):
-    """Třída `ArchzFilterForm` v modulu `webclient.arch_z.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ArchzFilterForm`` pro modul ``webclient.arch_z.forms``."""
     list_to_check = ["historie_datum_zmeny_od", "datum_ukonceni", "datum_zahajeni"]

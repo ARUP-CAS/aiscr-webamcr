@@ -21,71 +21,34 @@ from SPARQLWrapper import JSON, SPARQLWrapper
 
 
 class ApiView(autocomplete.Select2ListView):
-    """Třída `ApiView` v modulu `webclient.pid.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ApiView`` pro modul ``webclient.pid.views``."""
     API_URL = None
     CACHE_PREFIX = None
     r = RedisConnector().get_connection()
 
     def __init__(self, **kwargs):
-        """Funkce `ApiView.__init__` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ApiView.__init__`` v rámci modulu ``webclient.pid.views``."""
         super().__init__(**kwargs)
 
     @classmethod
     def _get_value_from_cache(cls, key):
-        """Funkce `ApiView._get_value_from_cache` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param key: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ApiView._get_value_from_cache`` v rámci modulu ``webclient.pid.views``."""
         cached_value = cls.r.get(f"{cls.CACHE_PREFIX}_{key}")
         if cached_value:
             return [key, cached_value.decode("utf-8")]
 
     @classmethod
     def _save_value_to_cache(cls, key, value):
-        """Funkce `ApiView._save_value_to_cache` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param key: Vstupní hodnota používaná při zpracování.
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ApiView._save_value_to_cache`` v rámci modulu ``webclient.pid.views``."""
         cls.r.set(f"{cls.CACHE_PREFIX}_{key}", value)
 
     @classmethod
     def api_call(cls, q, use_cache=False):
-        """Funkce `ApiView.api_call` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param q: Vstupní hodnota používaná při zpracování.
-        :param use_cache: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ApiView.api_call`` v rámci modulu ``webclient.pid.views``."""
         pass
 
     def get(self, request, *args, **kwargs):
-        """Funkce `ApiView.get` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ApiView.get`` v rámci modulu ``webclient.pid.views``."""
         if self.q:
             results = self.get_list()
             results = self.autocomplete_results(results)
@@ -94,41 +57,22 @@ class ApiView(autocomplete.Select2ListView):
             return JsonResponse({"results": []})
 
     def autocomplete_results(self, results):
-        """Funkce `ApiView.autocomplete_results` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param results: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ApiView.autocomplete_results`` v rámci modulu ``webclient.pid.views``."""
         return [dict(id=x, text=y) for x, y in results]
 
     def get_list(self):
-        """Funkce `ApiView.get_list` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ApiView.get_list`` v rámci modulu ``webclient.pid.views``."""
         return self.api_call(self.q)
 
 
 class DoiAutocompleteView(LoginRequiredMixin, ApiView):
-    """Třída `DoiAutocompleteView` v modulu `webclient.pid.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``DoiAutocompleteView`` pro modul ``webclient.pid.views``."""
     API_URL = settings.DATACITE_URL
     CACHE_PREFIX = "DOI"
 
     @classmethod
     def _api_call_data_cite(cls, q):
-        """Funkce `DoiAutocompleteView._api_call_data_cite` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param q: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DoiAutocompleteView._api_call_data_cite`` v rámci modulu ``webclient.pid.views``."""
         params = {
             "query": f"doi:*{q.upper()}*",
         }
@@ -145,13 +89,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _api_call_cross_ref_doi(cls, q):
-        """Funkce `DoiAutocompleteView._api_call_cross_ref_doi` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param q: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DoiAutocompleteView._api_call_cross_ref_doi`` v rámci modulu ``webclient.pid.views``."""
         base_url = f"https://api.crossref.org/works/{q}"
         response = requests.get(base_url)
         if response.status_code == 200:
@@ -179,13 +117,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _api_call_cross_ref_title(cls, q):
-        """Funkce `DoiAutocompleteView._api_call_cross_ref_title` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param q: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DoiAutocompleteView._api_call_cross_ref_title`` v rámci modulu ``webclient.pid.views``."""
         base_url = f"https://api.crossref.org/works"
         params = {"query.title": q}
         response = requests.get(base_url, params=params)
@@ -200,13 +132,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _doi_item_exists(cls, doi: str) -> list:
-        """Funkce `DoiAutocompleteView._doi_item_exists` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param doi: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``DoiAutocompleteView._doi_item_exists`` v rámci modulu ``webclient.pid.views``."""
         url = f"https://doi.org/{doi}"
         resp = requests.head(url, allow_redirects=True, timeout=5)
         if resp.status_code < 400:
@@ -216,14 +142,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
-        """Funkce `DoiAutocompleteView.api_call` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param q: Vstupní hodnota používaná při zpracování.
-        :param use_cache: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DoiAutocompleteView.api_call`` v rámci modulu ``webclient.pid.views``."""
         results = cls._api_call_cross_ref_doi(q)
         if not results:
             results = cls._api_call_data_cite(q) + cls._api_call_cross_ref_title(q)
@@ -233,24 +152,14 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
 
 class OrcidAutocompleteView(ApiView):
-    """Třída `OrcidAutocompleteView` v modulu `webclient.pid.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``OrcidAutocompleteView`` pro modul ``webclient.pid.views``."""
     API_URL = "https://pub.orcid.org/v3.0/expanded-search"
     HEADERS = {"Accept": "application/json", "User-Agent": "Python-Requests"}
     CACHE_PREFIX = "ORCID"
 
     @classmethod
     def api_call(cls, q, use_cache=True):
-        """Funkce `OrcidAutocompleteView.api_call` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param q: Vstupní hodnota používaná při zpracování.
-        :param use_cache: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``OrcidAutocompleteView.api_call`` v rámci modulu ``webclient.pid.views``."""
         if use_cache:
             cached_value = cls._get_value_from_cache(q)
             if cached_value:
@@ -280,23 +189,13 @@ class OrcidAutocompleteView(ApiView):
 
 
 class RorAutocompleteView(LoginRequiredMixin, ApiView):
-    """Třída `RorAutocompleteView` v modulu `webclient.pid.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``RorAutocompleteView`` pro modul ``webclient.pid.views``."""
     API_URL = "https://api.ror.org/organizations"
     HEADERS = {"Accept": "application/json", "User-Agent": "Python-Requests"}
 
     @classmethod
     def api_call(cls, q, use_cache=False):
-        """Funkce `RorAutocompleteView.api_call` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param q: Vstupní hodnota používaná při zpracování.
-        :param use_cache: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``RorAutocompleteView.api_call`` v rámci modulu ``webclient.pid.views``."""
         params = {
             "query": q,
         }
@@ -323,24 +222,14 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
 
 
 class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
-    """Třída `WikiDataAutocompleteView` v modulu `webclient.pid.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``WikiDataAutocompleteView`` pro modul ``webclient.pid.views``."""
     API_URL = "https://query.wikidata.org/sparql"
     CACHE_PREFIX = "WIKIDATA"
     ID_REGEX = re.compile(r".*Q\d+")
 
     @classmethod
     def api_call(cls, q, use_cache=False):
-        """Funkce `WikiDataAutocompleteView.api_call` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param q: Vstupní hodnota používaná při zpracování.
-        :param use_cache: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``WikiDataAutocompleteView.api_call`` v rámci modulu ``webclient.pid.views``."""
         if not q:
             return []
         if q.startswith("https://www.wikidata.org/entity/"):
@@ -395,22 +284,10 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 
 
 class ContinuePidProcessing(AdminRecordProcessingView):
-    """Třída `ContinuePidProcessing` v modulu `webclient.pid.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ContinuePidProcessing`` pro modul ``webclient.pid.views``."""
     @staticmethod
     def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
-        """Funkce `ContinuePidProcessing._perform_client_action` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param attribute_name: Vstupní hodnota používaná při zpracování.
-        :param publish_callable_method: Vstupní hodnota používaná při zpracování.
-        :param set_callable_method: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ContinuePidProcessing._perform_client_action`` v rámci modulu ``webclient.pid.views``."""
         try:
             result = publish_callable_method()
             if set_callable_method:
@@ -427,15 +304,7 @@ class ContinuePidProcessing(AdminRecordProcessingView):
             )
 
     def process_record(self, record, result, **kwargs):
-        """Funkce `ContinuePidProcessing.process_record` v modulu `webclient.pid.views`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :param result: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ContinuePidProcessing.process_record`` v rámci modulu ``webclient.pid.views``."""
         fedora_transaction = FedoraTransaction()
         record.active_transaction = fedora_transaction
         performed_action = kwargs.get("performed_action")

@@ -6,10 +6,7 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0006_remove_notificationslog_notifikace__content_009350_idx_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.uzivatel.migrations.0006_remove_notificationslog_notifikace__content_009350_idx_and_more``."""
     dependencies = [
         ("uzivatel", "0005_alter_auth_user_groups_id"),
     ]

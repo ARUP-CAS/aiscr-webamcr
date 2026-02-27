@@ -5,10 +5,7 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.projekt.migrations.0007_alter_projekt_typ_projektu`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.projekt.migrations.0007_alter_projekt_typ_projektu``."""
     dependencies = [
         ("heslar", "0005_alter_heslar_ident_cely_alter_heslardatace_obdobi_and_more"),
         ("projekt", "0006_alter_projekt_stav"),

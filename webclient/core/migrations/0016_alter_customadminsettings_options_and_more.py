@@ -5,10 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.core.migrations.0016_alter_customadminsettings_options_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.core.migrations.0016_alter_customadminsettings_options_and_more``."""
     dependencies = [
         ('core', '0015_alter_permissions_accessibility_and_more'),
     ]

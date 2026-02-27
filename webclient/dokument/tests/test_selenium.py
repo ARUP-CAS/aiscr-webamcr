@@ -17,16 +17,9 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceDokumenty(BaseSeleniumTestClass):
-    """Třída `AkceDokumenty` v modulu `webclient.dokument.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AkceDokumenty`` pro modul ``webclient.dokument.tests.test_selenium``."""
     def go_to_form_zapsat(self):
-        """Funkce `AkceDokumenty.go_to_form_zapsat` v modulu `webclient.dokument.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceDokumenty.go_to_form_zapsat`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
         self.goToAddress("/dokument/zapsat")
 
     def test_064_zapsani_dokumentu_p_001(self):
@@ -1253,24 +1246,13 @@ class AkceDokumenty(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceKnihovna3D(BaseSeleniumTestClass):
-    """Třída `AkceKnihovna3D` v modulu `webclient.dokument.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AkceKnihovna3D`` pro modul ``webclient.dokument.tests.test_selenium``."""
     def go_to_form_zapsat(self):
-        """Funkce `AkceKnihovna3D.go_to_form_zapsat` v modulu `webclient.dokument.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceKnihovna3D.go_to_form_zapsat`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
         self.goToAddress("/dokument/model/zapsat")
 
     def zapsat_zaznam(self):
-        """Funkce `AkceKnihovna3D.zapsat_zaznam` v modulu `webclient.dokument.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceKnihovna3D.zapsat_zaznam`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("švejcar")
@@ -1296,13 +1278,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         return ident
 
     def odeslat_zaznam(self, ident_cely):
-        """Funkce `AkceKnihovna3D.odeslat_zaznam` v modulu `webclient.dokument.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident_cely: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``AkceKnihovna3D.odeslat_zaznam`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
         self.goToAddress(f"/dokument/model/detail/{ident_cely}")
         self.ElementClick(By.ID, "buttonEdit")
 
@@ -1328,13 +1304,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         return ident
 
     def pridani_objektu(self, ident):
-        """Funkce `AkceKnihovna3D.pridani_objektu` v modulu `webclient.dokument.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``AkceKnihovna3D.pridani_objektu`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-specifikace .btn")
@@ -1348,13 +1318,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "editNalezSubmitButton")
 
     def pridani_predmetu(self, ident):
-        """Funkce `AkceKnihovna3D.pridani_predmetu` v modulu `webclient.dokument.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ident: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``AkceKnihovna3D.pridani_predmetu`` v rámci modulu ``webclient.dokument.tests.test_selenium``."""
         self.driver.execute_script("$(window).scrollTop(1500 );")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-11-6 > .text")

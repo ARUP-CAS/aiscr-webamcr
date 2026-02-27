@@ -5,10 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.arch_z.migrations.0018_akce_akce_archeol_75782e_idx_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.arch_z.migrations.0018_akce_akce_archeol_75782e_idx_and_more``."""
     dependencies = [
         ("arch_z", "0017_archeologickyzaznam_archeologic_hlavni__e8b941_idx_and_more"),
         ("heslar", "0007_alter_heslar_unique_together_and_more"),

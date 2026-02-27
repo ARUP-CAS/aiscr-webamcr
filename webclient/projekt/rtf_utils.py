@@ -13,20 +13,10 @@ sys.path.append("../")
 
 
 class ExpertniListCreator(DocumentCreator):
-    """Třída `ExpertniListCreator` v modulu `webclient.projekt.rtf_utils`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``ExpertniListCreator`` pro modul ``webclient.projekt.rtf_utils``."""
     @staticmethod
     def _utf16_decimals(char, chunk_size=2):
-        """Funkce `ExpertniListCreator._utf16_decimals` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param char: Vstupní hodnota používaná při zpracování.
-        :param chunk_size: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ExpertniListCreator._utf16_decimals`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         encoded_char = char.encode("utf-16-be")
         # Převede každých `chunk_size` bajtů na celé číslo.
         decimals = []
@@ -39,13 +29,7 @@ class ExpertniListCreator(DocumentCreator):
 
     @staticmethod
     def _convert_text(text):
-        """Funkce `ExpertniListCreator._convert_text` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param text: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ExpertniListCreator._convert_text`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         if text is None or len(str(text)) == 0:
             return ""
         text = [ExpertniListCreator._utf16_decimals(char) for char in str(text)]
@@ -54,13 +38,7 @@ class ExpertniListCreator(DocumentCreator):
 
     @staticmethod
     def _format_akce_str(akce):
-        """Funkce `ExpertniListCreator._format_akce_str` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param akce: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ExpertniListCreator._format_akce_str`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         if akce.hlavni_typ is not None and akce.vedlejsi_typ is not None:
             return f"{akce.hlavni_typ}; {akce.vedlejsi_typ}"
         elif akce.hlavni_typ is not None:
@@ -69,13 +47,7 @@ class ExpertniListCreator(DocumentCreator):
 
     @classmethod
     def _format_akce(cls, akce_all):
-        """Funkce `ExpertniListCreator._format_akce` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param akce_all: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ExpertniListCreator._format_akce`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         if akce_all.count() > 0:
             akce_list = [cls._format_akce_str(akce) for akce in akce_all if akce.hlavni_typ is not None]
             return " ".join(akce_list)
@@ -83,11 +55,7 @@ class ExpertniListCreator(DocumentCreator):
             return ""
 
     def _get_vysledek_text(self):
-        """Funkce `ExpertniListCreator._get_vysledek_text` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ExpertniListCreator._get_vysledek_text`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         if self.popup_parametry["vysledek"] == "pozitivni":
             text = """Potvrzujeme, že došlo ke splnění oznamovací povinnosti a bylo umožněno provést na dotčeném \n\
             území záchranný archeologický výzkum podle ustanovení § 22, odst. 2, zákona č. 20/1987 Sb., o státní \n\
@@ -104,21 +72,13 @@ class ExpertniListCreator(DocumentCreator):
         return self._convert_text(text.replace("\n", ""))
 
     def _get_typ_vyzkumu_text(self):
-        """Funkce `ExpertniListCreator._get_typ_vyzkumu_text` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ExpertniListCreator._get_typ_vyzkumu_text`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         from projekt.forms import TYP_VYZKUMU_CHOICES
 
         return str(dict(TYP_VYZKUMU_CHOICES).get(self.popup_parametry["typ_vyzkumu"]))
 
     def _generate_text(self):
-        """Funkce `ExpertniListCreator._generate_text` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ExpertniListCreator._generate_text`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         result = StyleSheet()
         normal_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22))
         normal_text_par_style = ParagraphStyle(
@@ -319,21 +279,11 @@ class ExpertniListCreator(DocumentCreator):
 
     @staticmethod
     def _open_file(name):
-        """Funkce `ExpertniListCreator._open_file` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Zpracuje volání ``ExpertniListCreator._open_file`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         return open(name, "w")
 
     def build_document(self) -> io.StringIO:
-        """Funkce `ExpertniListCreator.build_document` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ExpertniListCreator.build_document`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         self._generate_text()
         output = io.StringIO()
         DR = Renderer()
@@ -343,14 +293,7 @@ class ExpertniListCreator(DocumentCreator):
         return output
 
     def __init__(self, projekt, popup_parametry=None):
-        """Funkce `ExpertniListCreator.__init__` v modulu `webclient.projekt.rtf_utils`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param projekt: Vstupní hodnota používaná při zpracování.
-        :param popup_parametry: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``ExpertniListCreator.__init__`` v rámci modulu ``webclient.projekt.rtf_utils``."""
         from projekt.models import Projekt
 
         self.projekt: Projekt = projekt

@@ -17,10 +17,7 @@ class NeidentAkceForm(forms.ModelForm):
     """
 
     class Meta:
-        """Třída `NeidentAkceForm.Meta` v modulu `webclient.neidentakce.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``NeidentAkceForm.Meta`` pro modul ``webclient.neidentakce.forms``."""
         model = NeidentAkce
         fields = (
             "katastr",
@@ -76,22 +73,11 @@ class NeidentAkceForm(forms.ModelForm):
         }
 
     class Media:
-        """Třída `NeidentAkceForm.Media` v modulu `webclient.neidentakce.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``NeidentAkceForm.Media`` pro modul ``webclient.neidentakce.forms``."""
         js = ["js/create_osoba_modal.js"]
 
     def __init__(self, *args, readonly=False, **kwargs):
-        """Funkce `NeidentAkceForm.__init__` v modulu `webclient.neidentakce.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param readonly: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``NeidentAkceForm.__init__`` v rámci modulu ``webclient.neidentakce.forms``."""
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False

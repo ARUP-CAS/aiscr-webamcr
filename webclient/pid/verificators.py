@@ -9,51 +9,27 @@ WIKIDATA_API_URL = "https://www.wikidata.org/wiki/"
 
 
 def verify_doi(doi):
-    """Funkce `verify_doi` v modulu `webclient.pid.verificators`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param doi: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``verify_doi`` v rámci modulu ``webclient.pid.verificators``."""
     encoded_doi = quote(doi)
     response = requests.get(f"{DOI_API_URL}{encoded_doi}")
     return response.status_code == 200
 
 
 def verify_orcid(orcid):
-    """Funkce `verify_orcid` v modulu `webclient.pid.verificators`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param orcid: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``verify_orcid`` v rámci modulu ``webclient.pid.verificators``."""
     headers = {"Accept": "application/json"}
     response = requests.get(f"{ORCID_API_URL}{orcid}", headers=headers)
     return response.status_code == 200
 
 
 def verify_ror(ror):
-    """Funkce `verify_ror` v modulu `webclient.pid.verificators`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param ror: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``verify_ror`` v rámci modulu ``webclient.pid.verificators``."""
     response = requests.get(f"{ROR_API_URL}{ror}")
     return response.status_code == 200
 
 
 def verify_wikidata(wikidata):
-    """Funkce `verify_wikidata` v modulu `webclient.pid.verificators`.
-    
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param wikidata: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    """Provádí funkci ``verify_wikidata`` v rámci modulu ``webclient.pid.verificators``."""
     if wikidata.startswith("https://www.wikidata.org/entity/"):
         wikidata = wikidata.replace("https://www.wikidata.org/entity/", "")
     response = requests.get(f"{WIKIDATA_API_URL}{wikidata}")

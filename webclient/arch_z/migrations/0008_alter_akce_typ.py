@@ -4,10 +4,7 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """Třída `Migration` v modulu `webclient.arch_z.migrations.0008_alter_akce_typ`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.arch_z.migrations.0008_alter_akce_typ``."""
     dependencies = [
         ("arch_z", "0007_default"),
     ]

@@ -31,29 +31,16 @@ def create_pes_form(not_readonly=True, model_typ=None):
     """
 
     class PesForm(forms.ModelForm):
-        """Třída `PesForm` v modulu `webclient.notifikace_projekty.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``PesForm`` pro modul ``webclient.notifikace_projekty.forms``."""
         admin_app = False
 
         class Meta:
-            """Třída `PesForm.Meta` v modulu `webclient.notifikace_projekty.forms`.
-            
-            Zapouzdřuje související data a chování v rámci dané části aplikace.
-            """
+            """Zapouzdřuje chování třídy ``PesForm.Meta`` pro modul ``webclient.notifikace_projekty.forms``."""
             model = Pes
             fields = ["object_id"]
 
         def __init__(self, *args, **kwargs):
-            """Funkce `PesForm.__init__` v modulu `webclient.notifikace_projekty.forms`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param args: Vstupní hodnota používaná při zpracování.
-            :param kwargs: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Provádí funkci ``PesForm.__init__`` v rámci modulu ``webclient.notifikace_projekty.forms``."""
             super(PesForm, self).__init__(*args, **kwargs)
             self.model_typ = model_typ
             if model_typ == KRAJ_CONTENT_TYPE:
@@ -125,13 +112,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
                     self.fields[key].help_text = ""
 
         def save(self, commit=True):
-            """Funkce `PesForm.save` v modulu `webclient.notifikace_projekty.forms`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param commit: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Zpracuje volání ``PesForm.save`` v rámci modulu ``webclient.notifikace_projekty.forms``."""
             instance = super(PesForm, self).save(commit=False)
             if self.admin_app:
                 instance.suppress_signal = True
@@ -144,14 +125,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
             return instance
 
         def clean(self, *args, **kwargs):
-            """Funkce `PesForm.clean` v modulu `webclient.notifikace_projekty.forms`.
-            
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param args: Vstupní hodnota používaná při zpracování.
-            :param kwargs: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            """Provádí funkci ``PesForm.clean`` v rámci modulu ``webclient.notifikace_projekty.forms``."""
             super().clean(*args, **kwargs)
             # Načte hodnoty a zkontroluje duplicity.
 
@@ -172,19 +146,9 @@ def create_pes_form(not_readonly=True, model_typ=None):
 
 
 class PesFormSetHelper(FormHelper):
-    """Třída `PesFormSetHelper` v modulu `webclient.notifikace_projekty.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``PesFormSetHelper`` pro modul ``webclient.notifikace_projekty.forms``."""
     def __init__(self, *args, **kwargs):
-        """Funkce `PesFormSetHelper.__init__` v modulu `webclient.notifikace_projekty.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PesFormSetHelper.__init__`` v rámci modulu ``webclient.notifikace_projekty.forms``."""
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -205,34 +169,19 @@ class PesNotificationsForm(forms.ModelForm):
     )
 
     class Meta:
-        """Třída `PesNotificationsForm.Meta` v modulu `webclient.notifikace_projekty.forms`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``PesNotificationsForm.Meta`` pro modul ``webclient.notifikace_projekty.forms``."""
         model = User
         fields = ("notification_types",)
 
     def __init__(self, pes_object_count=0, *args, **kwargs):
-        """Funkce `PesNotificationsForm.__init__` v modulu `webclient.notifikace_projekty.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param pes_object_count: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PesNotificationsForm.__init__`` v rámci modulu ``webclient.notifikace_projekty.forms``."""
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.pes_object_count = pes_object_count
 
     def clean(self):
-        """Funkce `PesNotificationsForm.clean` v modulu `webclient.notifikace_projekty.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PesNotificationsForm.clean`` v rámci modulu ``webclient.notifikace_projekty.forms``."""
         cleaned_data = super().clean()
         if self.pes_object_count == 0 or not cleaned_data.get("notification_types"):
             self.add_error(
@@ -242,16 +191,9 @@ class PesNotificationsForm(forms.ModelForm):
 
 
 class PesInlineFormSet(forms.BaseInlineFormSet):
-    """Třída `PesInlineFormSet` v modulu `webclient.notifikace_projekty.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``PesInlineFormSet`` pro modul ``webclient.notifikace_projekty.forms``."""
     def count_non_empty_forms(self):
-        """Funkce `PesInlineFormSet.count_non_empty_forms` v modulu `webclient.notifikace_projekty.forms`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``PesInlineFormSet.count_non_empty_forms`` v rámci modulu ``webclient.notifikace_projekty.forms``."""
         non_empty_count = 0
         for form in self.forms:
             if any(field_value for field_value in form.cleaned_data.values()):

@@ -5,10 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0014_rename_ip_address_uzivatelprihlasenilog_ip_adresa_and_more`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.uzivatel.migrations.0014_rename_ip_address_uzivatelprihlasenilog_ip_adresa_and_more``."""
     dependencies = [
         ("uzivatel", "0013_uzivatelprihlasenilog"),
     ]

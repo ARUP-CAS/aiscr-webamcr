@@ -53,10 +53,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
     tracker = FieldTracker()
 
     class Meta:
-        """Třída `DokumentacniJednotka.Meta` v modulu `webclient.dj.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Zapouzdřuje chování třídy ``DokumentacniJednotka.Meta`` pro modul ``webclient.dj.models``."""
         db_table = "dokumentacni_jednotka"
         ordering = ["ident_cely"]
 
@@ -71,11 +68,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     @property
     def ident_cely_safe(self):
-        """Funkce `DokumentacniJednotka.ident_cely_safe` v modulu `webclient.dj.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentacniJednotka.ident_cely_safe`` v rámci modulu ``webclient.dj.models``."""
         return self.ident_cely.replace("-", "_")
 
     def has_adb(self):
@@ -90,22 +83,11 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         return has_adb
 
     def get_permission_object(self):
-        """Funkce `DokumentacniJednotka.get_permission_object` v modulu `webclient.dj.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentacniJednotka.get_permission_object`` v rámci modulu ``webclient.dj.models``."""
         return self.archeologicky_zaznam
 
     def __init__(self, *args, **kwargs):
-        """Funkce `DokumentacniJednotka.__init__` v modulu `webclient.dj.models`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``DokumentacniJednotka.__init__`` v rámci modulu ``webclient.dj.models``."""
         super(DokumentacniJednotka, self).__init__(*args, **kwargs)
         self.initial_pian_id = self.pian_id
         self.active_transaction = None

@@ -14,32 +14,17 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceExterniZdroj(BaseSeleniumTestClass):
-    """Třída `AkceExterniZdroj` v modulu `webclient.ez.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Zapouzdřuje chování třídy ``AkceExterniZdroj`` pro modul ``webclient.ez.tests.test_selenium``."""
     def go_to_form_zapsat(self):
-        """Funkce `AkceExterniZdroj.go_to_form_zapsat` v modulu `webclient.ez.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceExterniZdroj.go_to_form_zapsat`` v rámci modulu ``webclient.ez.tests.test_selenium``."""
         self.goToAddress("/ext-zdroj/zapsat")
 
     def go_to_form_vybrat(self):
-        """Funkce `AkceExterniZdroj.go_to_form_vybrat` v modulu `webclient.ez.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceExterniZdroj.go_to_form_vybrat`` v rámci modulu ``webclient.ez.tests.test_selenium``."""
         self.goToAddress("/ext-zdroj/vyber?sort=autori&sort=rok_vydani_vzniku&sort=nazev")
 
     def zapsat_zaznam(self):
-        """Funkce `AkceExterniZdroj.zapsat_zaznam` v modulu `webclient.ez.tests.test_selenium`.
-        
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        """Provádí funkci ``AkceExterniZdroj.zapsat_zaznam`` v rámci modulu ``webclient.ez.tests.test_selenium``."""
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-4 > .text")
