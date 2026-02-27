@@ -150,6 +150,14 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     vazba = models.ForeignKey("HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True)
 
     def __init__(self, *args, **kwargs):
+        """Funkce `Historie.__init__` v modulu `webclient.historie.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.suppress_signal = False
 
@@ -191,6 +199,10 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
             self.save()
 
     class Meta:
+        """Třída `Historie.Meta` v modulu `webclient.historie.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "historie"
         verbose_name = "historie"
         ordering = [
@@ -231,6 +243,10 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     typ_vazby = models.TextField(max_length=24, choices=CHOICES, db_index=True)
 
     class Meta:
+        """Třída `HistorieVazby.Meta` v modulu `webclient.historie.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "historie_vazby"
         verbose_name = "historie_vazby"
 

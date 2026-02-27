@@ -303,14 +303,37 @@ def delete_file(request, typ_vazby, ident_cely, pk):
 
 
 class DownloadFile(LoginRequiredMixin, View):
+    """Třída `DownloadFile` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     thumb_small = False
     thumb_large = False
 
     @staticmethod
     def _preprocess_image(file_content: BytesIO) -> BytesIO:
+        """Funkce `DownloadFile._preprocess_image` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param file_content: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return file_content
 
     def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
+        """Funkce `DownloadFile.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param typ_vazby: Vstupní hodnota používaná při zpracování.
+        :param ident_cely: Vstupní hodnota používaná při zpracování.
+        :param pk: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             check_soubor_vazba(typ_vazby, ident_cely, pk)
         except ZaznamSouborNotmatching as e:
@@ -335,10 +358,18 @@ class DownloadFile(LoginRequiredMixin, View):
 
 
 class DownloadThumbnailSmall(DownloadFile):
+    """Třída `DownloadThumbnailSmall` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     thumb_small = True
 
 
 class DownloadThumbnailLarge(DownloadFile):
+    """Třída `DownloadThumbnailLarge` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     thumb_large = True
 
 
@@ -350,6 +381,15 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
     template_name = "core/upload_file.html"
 
     def get(self, request, *args, **kwargs):
+        """Funkce `UpdateFileView.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         typ_vazby = self.kwargs.get("typ_vazby")
         ident_cely = self.kwargs.get("ident_cely")
         file_id = self.kwargs.get("file_id")
@@ -372,6 +412,15 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `UpdateFileView.post` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         next_url = request.GET.get("next", "core:home")
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
             safe_redirect = next_url
@@ -380,6 +429,13 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         return redirect(safe_redirect)
 
     def get_context_data(self, **kwargs):
+        """Funkce `UpdateFileView.get_context_data` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         context["ident_cely"] = self.kwargs.get("ident_cely")
         context["back_url"] = self.request.GET.get("next", "/")
@@ -398,6 +454,11 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
     http_method_names = ["get", "post"]
 
     def get_zaznam(self):
+        """Funkce `UploadFileView.get_zaznam` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.typ_vazby = self.kwargs.get("typ_vazby")
         self.ident = self.kwargs.get("ident_cely")
         logger.debug(
@@ -417,6 +478,13 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
             return get_object_or_404(Projekt, ident_cely=self.ident)
 
     def get_context_data(self, **kwargs):
+        """Funkce `UploadFileView.get_context_data` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.zaznam = self.get_zaznam()
         pk_set = self.session_identifier.get_cached_files()
         queryset = Soubor.objects.filter(pk__in=list(pk_set))
@@ -437,12 +505,30 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
+        """Funkce `UploadFileView.dispatch` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         self.session_identifier = SessionIdentifier(request)
         self.session_identifier.set_ident(ident_cely)
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `UploadFileView.post` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.session_identifier.clear_cached_files()
         self.zaznam = self.get_zaznam()
         return redirect(self.zaznam.get_absolute_url())
@@ -1235,6 +1321,14 @@ class ExportMixinDate(ExportMixin):
     """
 
     def get_export_filename(self, export_format, export_name=None):
+        """Funkce `ExportMixinDate.get_export_filename` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param export_format: Vstupní hodnota používaná při zpracování.
+        :param export_name: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if export_name is None:
             export_name = self.export_name
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -1242,6 +1336,10 @@ class ExportMixinDate(ExportMixin):
 
 
 class PermissionFilterMixin:
+    """Třída `PermissionFilterMixin` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     permission_model_lookup = ""
     typ_zmeny_lookup = ""
     group_to_accessibility = {
@@ -1262,6 +1360,14 @@ class PermissionFilterMixin:
     }
 
     def check_filter_permission(self, qs, action=None):
+        """Funkce `PermissionFilterMixin.check_filter_permission` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :param action: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if action:
             permissions = Permissions.objects.filter(
                 main_role=self.request.user.hlavni_role, address_in_app=self.request.resolver_match.route, action=action
@@ -1297,6 +1403,14 @@ class PermissionFilterMixin:
         return qs
 
     def filter_by_permission(self, qs, permission):
+        """Funkce `PermissionFilterMixin.filter_by_permission` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :param permission: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         qs = qs.annotate(
             historie_zapsat=FilteredRelation(
                 self.permission_model_lookup + "historie__historie",
@@ -1316,6 +1430,13 @@ class PermissionFilterMixin:
         return qs
 
     def add_status_lookup(self, permission):
+        """Funkce `PermissionFilterMixin.add_status_lookup` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param permission: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         filterdoc = {}
         subed_status = re.sub("[a-zA-Z]", "", permission.status)
         if ">" in subed_status:
@@ -1341,6 +1462,14 @@ class PermissionFilterMixin:
         return filterdoc
 
     def add_ownership_lookup(self, ownership, qs=None):
+        """Funkce `PermissionFilterMixin.add_ownership_lookup` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ownership: Vstupní hodnota používaná při zpracování.
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == Permissions.ownershipChoices.our:
@@ -1351,6 +1480,14 @@ class PermissionFilterMixin:
             return Q(**{"historie_zapsat__in": filtered_my})
 
     def add_accessibility_lookup(self, permission, qs):
+        """Funkce `PermissionFilterMixin.add_accessibility_lookup` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param permission: Vstupní hodnota používaná při zpracování.
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         accessibility_key = self.permission_model_lookup + "pristupnost__in"
         accessibilities = Heslar.objects.filter(
             nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id)
@@ -1376,19 +1513,54 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     table_pagination = {"per_page": 100}
 
     def create_export(self, export_format):
+        """Funkce `SearchListView.create_export` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param export_format: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from redis import Redis
 
         def check_if_aborted(r_inner: Redis, key_inner: str):
+            """Funkce `SearchListView.check_if_aborted` v modulu `webclient.core.views`.
+            
+            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+            
+            :param r_inner: Vstupní hodnota používaná při zpracování.
+            :param key_inner: Vstupní hodnota používaná při zpracování.
+            :return: Výsledek odpovídající účelu volání.
+            """
             aborted = r_inner.get(key_inner + "_stat") == "-1"
             if aborted:
                 r_inner.delete(key_inner)
             return aborted
 
         def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int, message: str):
+            """Funkce `SearchListView.update_progress_bar` v modulu `webclient.core.views`.
+            
+            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+            
+            :param r_inner: Vstupní hodnota používaná při zpracování.
+            :param key_inner: Vstupní hodnota používaná při zpracování.
+            :param new_value: Vstupní hodnota používaná při zpracování.
+            :param message: Vstupní hodnota používaná při zpracování.
+            :return: Výsledek odpovídající účelu volání.
+            """
             r_inner.set(key_inner, json.dumps({"percent": int(new_value), "text": message}), ex=3600)
             return check_if_aborted(r_inner, key_inner)
 
         def file_iterator(content, r, redis_variable_name, chunk_size=8192):
+            """Funkce `SearchListView.file_iterator` v modulu `webclient.core.views`.
+            
+            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+            
+            :param content: Vstupní hodnota používaná při zpracování.
+            :param r: Vstupní hodnota používaná při zpracování.
+            :param redis_variable_name: Vstupní hodnota používaná při zpracování.
+            :param chunk_size: Vstupní hodnota používaná při zpracování.
+            :return: Výsledek odpovídající účelu volání.
+            """
             bytes_sent = 0
             file_size = len(content)
             try:
@@ -1502,6 +1674,11 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return response
 
     def init_translations(self):
+        """Funkce `SearchListView.init_translations` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.page_title = ""
         self.search_sum = ""
         self.pick_text = ""
@@ -1515,10 +1692,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         self.toolbar_label = ""
 
     def _get_sort_params(self):
+        """Funkce `SearchListView._get_sort_params` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         sort_params = self.request.GET.getlist("sort")
         return sort_params
 
     def get_context_data(self, **kwargs):
+        """Funkce `SearchListView.get_context_data` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         self.init_translations()
         context["export_formats"] = self.export_formats
@@ -1541,12 +1730,26 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return context
 
     def get_queryset(self):
+        """Funkce `SearchListView.get_queryset` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         qs = super().get_queryset()
         qs.cache()
         return qs
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
+        """Funkce `SearchListView.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return super().get(request, *args, **kwargs)
 
 
@@ -1568,11 +1771,28 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
     }
 
     def get(self, request, model_name, ident_cely, timestamp):
+        """Funkce `StahnoutDataHistorickaView.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param model_name: Vstupní hodnota používaná při zpracování.
+        :param ident_cely: Vstupní hodnota používaná při zpracování.
+        :param timestamp: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         Model = self.MODEL_MAP.get(model_name)
         if Model is None:
             raise Http404
 
         def context_processor(content):
+            """Funkce `StahnoutDataHistorickaView.context_processor` v modulu `webclient.core.views`.
+            
+            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+            
+            :param content: Vstupní hodnota používaná při zpracování.
+            :return: Výsledek odpovídající účelu volání.
+            """
             yield content
 
         if model_name == "Soubor":
@@ -1588,7 +1808,20 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
 
 
 class CheckUserAuthentication(View):
+    """Třída `CheckUserAuthentication` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def get(self, request, *args, **kwargs):
+        """Funkce `CheckUserAuthentication.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return JsonResponse({"is_authenticated": request.user.is_authenticated})
 
 
@@ -1660,6 +1893,15 @@ def post_ajax_get_pas_and_pian_limit(request):
 
 
 def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
+    """Funkce `check_soubor_vazba` v modulu `webclient.core.views`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param typ_vazby: Vstupní hodnota používaná při zpracování.
+    :param ident: Vstupní hodnota používaná při zpracování.
+    :param id_zaznamu: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     if typ_vazby == "model3d" or typ_vazby == "dokument":
         soubor = get_object_or_404(Dokument, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
     elif typ_vazby == "pas":
@@ -1673,7 +1915,18 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
 
 
 class ReadTempValueView(View):
+    """Třída `ReadTempValueView` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def get(self, request):
+        """Funkce `ReadTempValueView.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         r = RedisConnector.get_connection_decode()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -1689,7 +1942,18 @@ class ReadTempValueView(View):
 
 
 class DeleteTempValueView(View):
+    """Třída `DeleteTempValueView` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def get(self, request):
+        """Funkce `DeleteTempValueView.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -1702,7 +1966,18 @@ class DeleteTempValueView(View):
 
 
 class AbortDownloadUpdateTempValueView(View):
+    """Třída `AbortDownloadUpdateTempValueView` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def get(self, request):
+        """Funkce `AbortDownloadUpdateTempValueView.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -1758,6 +2033,13 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     form_class = TransaltionImportForm
 
     def form_valid(self, form):
+        """Funkce `TranslationImportView.form_valid` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param form: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         new_pofile = form.cleaned_data["file"]
         tmp_path = None
         try:
@@ -1794,6 +2076,13 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
 
     def get_context_data(self, **kwargs):
+        """Funkce `TranslationImportView.get_context_data` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super(TranslationImportView, self).get_context_data(**kwargs)
         rosetta_i18n_lang_name = str(dict(rosetta_settings.ROSETTA_LANGUAGES).get(self.language_id))
         context.update(
@@ -1809,6 +2098,13 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         return context
 
     def handle_uploaded_file(self, f):
+        """Funkce `TranslationImportView.handle_uploaded_file` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param f: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         with open(self.po_file_path, "wb+") as destination:
             for chunk in f.chunks():
                 destination.write(chunk)
@@ -1820,6 +2116,13 @@ class TranslationFileListWithBackupView(TranslationFileListView):
     """
 
     def get_context_data(self, **kwargs):
+        """Funkce `TranslationFileListWithBackupView.get_context_data` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super(TranslationFileListView, self).get_context_data(**kwargs)
 
         third_party_apps = self.po_filter in ("all", "third-party")
@@ -1856,6 +2159,13 @@ class TranslationFormWithBackupView(RosettaFileLevelMixinWithBackup, LoginRequir
     """
 
     def get_context_data(self, **kwargs):
+        """Funkce `TranslationFormWithBackupView.get_context_data` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super(TranslationFormWithBackupView, self).get_context_data(**kwargs)
         po_filename = self.po_file_path.split("/")[-1]
         context["po_filename"] = po_filename
@@ -1869,6 +2179,15 @@ class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequir
     """
 
     def get(self, request, *args, **kwargs):
+        """Funkce `TranslationFileDownloadBackup.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             if len(self.po_file_path.split("/")) >= 5:
                 offered_fn = "_".join(self.po_file_path.split("/")[-5:])
@@ -1902,6 +2221,15 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
     template_name = "core/transakce_modal.html"
 
     def get(self, request, *args, **kwargs):
+        """Funkce `TranslationFileSmazatBackup.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = {
             "object_identification": self.po_file_path.split("/")[-1],
             "title": _("core.views.translationFileSmazatbackup.title.text"),
@@ -1911,6 +2239,15 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `TranslationFileSmazatBackup.post` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.po_file_path.split("/")[-1] == "django.po":
             messages.add_message(self.request, messages.ERROR, TRANSLATION_DELETE_CANNOT_MAIN)
         else:
@@ -1929,6 +2266,15 @@ class PrometheusMetricsView(IPWhitelistMixin, View):
     """
 
     def get(self, request, *args, **kwargs):
+        """Funkce `PrometheusMetricsView.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return ExportToDjangoView(request)
 
 
@@ -1941,6 +2287,15 @@ class ApplicationRestartView(LoginRequiredMixin, View):
 
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
+        """Funkce `ApplicationRestartView.post` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if request.user.hlavni_role.id != ROLE_ADMIN_ID:
             raise PermissionDenied
         try:
@@ -1967,7 +2322,19 @@ class ApplicationRestartView(LoginRequiredMixin, View):
 
 
 class DataImportProgress(LoginRequiredMixin, View):
+    """Třída `DataImportProgress` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def get(self, request, **kwargs):
+        """Funkce `DataImportProgress.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")
@@ -2010,7 +2377,19 @@ class DataImportProgress(LoginRequiredMixin, View):
 
 
 class DataImportStop(LoginRequiredMixin, View):
+    """Třída `DataImportStop` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def get(self, request, **kwargs):
+        """Funkce `DataImportStop.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")
@@ -2020,7 +2399,19 @@ class DataImportStop(LoginRequiredMixin, View):
 
 
 class DataImportStart(LoginRequiredMixin, View):
+    """Třída `DataImportStart` v modulu `webclient.core.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def get(self, request, **kwargs):
+        """Funkce `DataImportStart.get` v modulu `webclient.core.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")

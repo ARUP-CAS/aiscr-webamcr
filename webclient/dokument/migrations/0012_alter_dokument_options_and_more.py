@@ -5,6 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
+    """Třída `Migration` v modulu `webclient.dokument.migrations.0012_alter_dokument_options_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("arch_z", "0017_archeologickyzaznam_archeologic_hlavni__e8b941_idx_and_more"),
         ("dokument", "0011_rename_region_dokumentextradata_region_extra_and_more"),

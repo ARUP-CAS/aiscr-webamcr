@@ -7,11 +7,30 @@ from .models import Akce
 
 
 class BooleanValueColumn(tables.columns.Column):
+    """Třída `BooleanValueColumn` v modulu `webclient.arch_z.tables`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def __init__(self, *args, **kwargs):
+        """Funkce `BooleanValueColumn.__init__` v modulu `webclient.arch_z.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.value_labels = kwargs.pop("value_labels", None)
         super(BooleanValueColumn, self).__init__(*args, **kwargs)
 
     def render(self, value):
+        """Funkce `BooleanValueColumn.render` v modulu `webclient.arch_z.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         value = [x for x in self.value_labels if x[0] == bool(value)]
         if len(value) > 0:
             return value[0][1]
@@ -129,6 +148,14 @@ class AkceTable(SearchTable):
     )
 
     def order_vedouci_organizace(self, queryset, is_descending):
+        """Funkce `AkceTable.order_vedouci_organizace` v modulu `webclient.arch_z.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param queryset: Vstupní hodnota používaná při zpracování.
+        :param is_descending: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         queryset = queryset.annotate(
             vedouci_organizace__nazev_zkraceny=StringAgg(
                 "akcevedouci__organizace__nazev_zkraceny",
@@ -156,6 +183,10 @@ class AkceTable(SearchTable):
     first_columns = None
 
     class Meta:
+        """Třída `AkceTable.Meta` v modulu `webclient.arch_z.tables`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Akce
         fields = (
             "pristupnost",
@@ -198,6 +229,14 @@ class AkceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `AkceTable.__init__` v modulu `webclient.arch_z.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(AkceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):

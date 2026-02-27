@@ -71,6 +71,15 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Projekt, weak=False)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
+    """Funkce `projekt_pre_delete` v modulu `webclient.projekt.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug(
         "projekt.signals.projekt_pre_delete.start",
         extra={"ident_cely": instance.ident_cely, "initial": instance.initial_dokumenty},
@@ -84,6 +93,13 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if not instance.suppress_signal:
 
         def save_metadata(close_transaction=False):
+            """Funkce `save_metadata` v modulu `webclient.projekt.signals`.
+            
+            Zajišťuje dílčí aplikační logiku pro tento modul.
+            
+            :param close_transaction: Vstupní hodnota používaná při zpracování.
+            :return: Výsledek odpovídající účelu volání.
+            """
             if instance.soubory and instance.soubory.pk:
                 instance.soubory.delete()
             for dokument_pk in instance.initial_dokumenty:
@@ -116,6 +132,11 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         if instance.close_active_transaction_when_finished:
 
             def save_metadata():
+                """Funkce `save_metadata` v modulu `webclient.projekt.signals`.
+                
+                Zajišťuje dílčí aplikační logiku pro tento modul.
+                :return: Výsledek odpovídající účelu volání.
+                """
                 if instance.hlavni_katastr in instance.katastry.all():
                     # Toto je nutné provést ve funkci `on_commit`, viz
                     # Viz dokumentace k přístupu k many-to-many poli v post_save signálu.

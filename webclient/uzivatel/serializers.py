@@ -22,6 +22,10 @@ class UserSerializer(serializers.ModelSerializer):
     osoba = serializers.SerializerMethodField(label="amcr:osoba")
 
     class Meta:
+        """Třída `UserSerializer.Meta` v modulu `webclient.uzivatel.serializers`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = User
         fields = ["ident_cely", "jmeno", "prijmeni", "email", "osoba"]
 

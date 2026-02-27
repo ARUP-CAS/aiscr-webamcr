@@ -274,12 +274,18 @@ def post_ajax_get_project_one(request):
 class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMixin):
     """
     Trida pohledu pro získaní heatmapy pas.
-    @jiri-bartos presunuto z post_ajax_get_project_pas_limit
     """
 
     typ_zmeny_lookup = ZAPSANI_SN
 
     def post(self, request):
+        """Funkce `ProjectPasFromEnvelopeView.post` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         body = json.loads(request.body.decode("utf-8"))
         pians = get_project_pas_from_envelope(
             body["southEast"]["lng"],
@@ -301,11 +307,18 @@ class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMi
 
 class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilterMixin):
     """
+    @jiri-bartos presunuto z post_ajax_get_project_pas_limit
     Trida pohledu pro získaní heatmapy pianu.
-    @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
     """
 
     def post(self, request):
+        """Funkce `ProjectPianFromEnvelopeView.post` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         body = json.loads(request.body.decode("utf-8"))
         queries = get_project_pian_from_envelope(
             body["southEast"]["lng"],
@@ -339,6 +352,7 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
 @require_http_methods(["GET", "POST"])
 def create(request):
     """
+    @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
     Funkce pohledu pro vytvoření projektu.
     """
     logger.debug("projekt.views.create.start")
@@ -570,13 +584,33 @@ def smazat(request, ident_cely):
 
 
 class ProjektPermissionFilterMixin(PermissionFilterMixin):
+    """Třída `ProjektPermissionFilterMixin` v modulu `webclient.projekt.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def add_ownership_lookup(self, ownership, qs=None):
+        """Funkce `ProjektPermissionFilterMixin.add_ownership_lookup` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ownership: Vstupní hodnota používaná při zpracování.
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if ownership == Permissions.ownershipChoices.our:
             return Q(**{"organizace": self.request.user.organizace})
         else:
             return Q()
 
     def add_accessibility_lookup(self, permission, qs):
+        """Funkce `ProjektPermissionFilterMixin.add_accessibility_lookup` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param permission: Vstupní hodnota používaná při zpracování.
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         accessibility_key = "pristupnost_snapshot__in"
         accessibilities = Heslar.objects.filter(
             nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id)
@@ -603,6 +637,11 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
     vypis_app = "projekt"
 
     def init_translations(self):
+        """Funkce `ProjektListView.init_translations` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().init_translations()
         self.page_title = _("projekt.views.projektListView.pageTitle")
         self.search_sum = _("projekt.views.projektListView.pocetVyhledanych")
@@ -612,6 +651,13 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         self.default_header = _("projekt.views.projektListView.header.default")
 
     def get_context_data(self, **kwargs):
+        """Funkce `ProjektListView.get_context_data` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         context["hasSchvalitOznameni_header"] = _("projekt.views.projektListView.header.hasSchvalitOznameni")
         context["hasPrihlasit_header"] = _("projekt.views.projektListView.header.hasPrihlasit")
@@ -626,6 +672,11 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         return context
 
     def get_queryset(self):
+        """Funkce `ProjektListView.get_queryset` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         qs = super().get_queryset()
         qs = qs.order_by(*self._get_sort_params())
         qs = (
@@ -1337,10 +1388,22 @@ def generovat_oznameni(request, ident_cely):
 
 
 class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
+    """Třída `GenerovatOznameniView` v modulu `webclient.projekt.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     http_method_names = ["POST"]
 
     @method_decorator(handle_fedora_error)
     def get_redirect_url(self, *args, **kwargs):
+        """Funkce `GenerovatOznameniView.get_redirect_url` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = kwargs["ident_cely"]
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         fedora_transaction = projekt.create_transaction(self.request.user)
@@ -1489,6 +1552,14 @@ def get_detail_template_shows(projekt, user):
 
 
 def get_show_oznamovatel(projekt, user):
+    """Funkce `get_show_oznamovatel` v modulu `webclient.projekt.views`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param projekt: Vstupní hodnota používaná při zpracování.
+    :param user: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
         if user.is_archiver_or_more:
             return True
@@ -1597,9 +1668,21 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
     typ_zmeny_lookup = ZAPSANI_PROJ
 
     def get_result_label(self, result):
+        """Funkce `ProjektAutocompleteBezZrusenych.get_result_label` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param result: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return f"{result.ident_cely} ({result.hlavni_katastr}; {result.vedouci_projektu})"
 
     def get_queryset(self):
+        """Funkce `ProjektAutocompleteBezZrusenych.get_queryset` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not self.request.user.is_authenticated:
             return Projekt.objects.none()
         self.typ = self.kwargs.get("typ")
@@ -1626,6 +1709,13 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
         return self.check_filter_permission(qs)
 
     def check_filter_permission(self, qs):
+        """Funkce `ProjektAutocompleteBezZrusenych.check_filter_permission` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         permissions = Permissions.objects.filter(
             main_role=self.request.user.hlavni_role,
             address_in_app=self.request.resolver_match.route,
@@ -1648,19 +1738,44 @@ class ProjectTableRowView(LoginRequiredMixin, View):
     """
 
     def get(self, request):
+        """Funkce `ProjectTableRowView.get` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
         return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))
 
 
 class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
+    """Třída `UpravitDatumOznameniView` v modulu `webclient.projekt.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     template_name = "core/transakce_modal.html"
 
     def _get_existing_record(self, projekt):
+        """Funkce `UpravitDatumOznameniView._get_existing_record` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param projekt: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         historie_objects = Historie.objects.filter(vazba=projekt.historie, typ_zmeny=OZNAMENI_PROJ_MANUALNI)
         if historie_objects.exists():
             return historie_objects.last()
 
     def get_context_data(self, **kwargs):
+        """Funkce `UpravitDatumOznameniView.get_context_data` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         context = {
@@ -1672,6 +1787,15 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """Funkce `UpravitDatumOznameniView.get` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]
         instance = self._get_existing_record(projekt)
@@ -1690,6 +1814,15 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `UpravitDatumOznameniView.post` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]
         form = UpravitDatumOznameniForm(request.POST)
@@ -1733,6 +1866,11 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
+        """Funkce `ZadostUdajeOznamovatelView.get_zaznam` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
             Projekt,
@@ -1741,6 +1879,15 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
         return zaznam
 
     def get(self, request, *args, **kwargs):
+        """Funkce `ZadostUdajeOznamovatelView.get` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
@@ -1756,6 +1903,15 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `ZadostUdajeOznamovatelView.post` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         form = ZadostProjektForm(data=request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
@@ -1775,6 +1931,11 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
+        """Funkce `ZadostOdhlaseniProjektuView.get_zaznam` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
             Projekt,
@@ -1783,6 +1944,15 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
         return zaznam
 
     def get(self, request, *args, **kwargs):
+        """Funkce `ZadostOdhlaseniProjektuView.get` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
@@ -1798,6 +1968,15 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `ZadostOdhlaseniProjektuView.post` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         form = ZadostProjektForm(data=request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
@@ -1817,6 +1996,11 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
+        """Funkce `ZadostZruseniProjektuView.get_zaznam` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
             Projekt,
@@ -1825,6 +2009,15 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
         return zaznam
 
     def get(self, request, *args, **kwargs):
+        """Funkce `ZadostZruseniProjektuView.get` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam()
         form = ZadostProjektForm(
             _("projekt.forms.ZadostZruseniProjektu.duvod.label"),
@@ -1840,6 +2033,15 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `ZadostZruseniProjektuView.post` v modulu `webclient.projekt.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         form = ZadostProjektForm(data=request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]

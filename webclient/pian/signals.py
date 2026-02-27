@@ -58,6 +58,15 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
 
 @receiver(pre_delete, sender=Pian, weak=False)
 def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, **kwargs):
+    """Funkce `samostatny_nalez_okres_delete_repository_container` v modulu `webclient.pian.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug(
         "pian.signals.samostatny_nalez_okres_delete_repository_container.start", extra={"instance": instance.ident_cely}
     )

@@ -5,6 +5,10 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
+    """Třída `Migration` v modulu `webclient.neidentakce.migrations.0004_alter_neidentakcevedouci_neident_akce`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("neidentakce", "0003_auto_20230328_1612"),
     ]

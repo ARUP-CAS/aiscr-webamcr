@@ -51,6 +51,13 @@ class ProjectModelChoiceField(ModelChoiceField):
     """
 
     def label_from_instance(self, obj):
+        """Funkce `ProjectModelChoiceField.label_from_instance` v modulu `webclient.pas.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param obj: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
 
 
@@ -77,6 +84,10 @@ class PotvrditNalezForm(forms.ModelForm):
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     class Meta:
+        """Třída `PotvrditNalezForm.Meta` v modulu `webclient.pas.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = SamostatnyNalez
         fields = ("predano_organizace", "evidencni_cislo", "predano", "pristupnost")
         widgets = {
@@ -100,6 +111,17 @@ class PotvrditNalezForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, predano_required=False, predano_hidden=False, **kwargs):
+        """Funkce `PotvrditNalezForm.__init__` v modulu `webclient.pas.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param readonly: Vstupní hodnota používaná při zpracování.
+        :param predano_required: Vstupní hodnota používaná při zpracování.
+        :param predano_hidden: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
         self.fields["evidencni_cislo"].required = True
         self.fields["predano_organizace"].required = False
@@ -154,6 +176,10 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `CreateSamostatnyNalezForm.Meta` v modulu `webclient.pas.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = SamostatnyNalez
         fields = (
             "projekt",
@@ -221,6 +247,19 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     def __init__(
         self, *args, readonly=False, user=None, required=None, required_next=None, project_ident=None, **kwargs
     ):
+        """Funkce `CreateSamostatnyNalezForm.__init__` v modulu `webclient.pas.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param readonly: Vstupní hodnota používaná při zpracování.
+        :param user: Vstupní hodnota používaná při zpracování.
+        :param required: Vstupní hodnota používaná při zpracování.
+        :param required_next: Vstupní hodnota používaná při zpracování.
+        :param project_ident: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         projekt_disabed = kwargs.pop("projekt_disabled", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 2
@@ -339,12 +378,24 @@ class CreateZadostForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `CreateZadostForm.__init__` v modulu `webclient.pas.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(CreateZadostForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
 
 class PasFilterForm(BaseFilterForm):
+    """Třída `PasFilterForm` v modulu `webclient.pas.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     list_to_check = ["historie_datum_zmeny_od", "datum_nalezu"]
 
 
@@ -360,6 +411,14 @@ class DeaktivovatSpolupraciForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `DeaktivovatSpolupraciForm.__init__` v modulu `webclient.pas.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(DeaktivovatSpolupraciForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

@@ -35,6 +35,13 @@ class Command(BaseCommand):
     help = _("core.management.commands.save_single_file_from_storage.Command.help")
 
     def add_arguments(self, parser):
+        """Funkce `Command.add_arguments` v modulu `webclient.core.management.commands.save_single_file_from_storage`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param parser: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         parser.add_argument(
             "pk",
             type=int,
@@ -59,6 +66,14 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """Funkce `Command.handle` v modulu `webclient.core.management.commands.save_single_file_from_storage`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param options: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pk = options["pk"]
         storage_path = options["storage_path"]
         save_thumbs = options["save_thumbs"]

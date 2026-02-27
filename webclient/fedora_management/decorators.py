@@ -10,9 +10,32 @@ logger = logging.getLogger(__name__)
 
 
 def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
+    """Funkce `handle_fedora_error` v modulu `webclient.fedora_management.decorators`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param view_func: Vstupní hodnota používaná při zpracování.
+    :param additional_exceptions: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     def decorator(func):
+        """Funkce `decorator` v modulu `webclient.fedora_management.decorators`.
+        
+        Zajišťuje dílčí aplikační logiku pro tento modul.
+        
+        :param func: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         @wraps(func)
         def _wrapped(*args, **kwargs):
+            """Funkce `_wrapped` v modulu `webclient.fedora_management.decorators`.
+            
+            Zajišťuje dílčí aplikační logiku pro tento modul.
+            
+            :param args: Vstupní hodnota používaná při zpracování.
+            :param kwargs: Vstupní hodnota používaná při zpracování.
+            :return: Výsledek odpovídající účelu volání.
+            """
             try:
                 return func(*args, **kwargs)
             except (FedoraError,) + additional_exceptions as err:

@@ -31,6 +31,13 @@ class Command(BaseCommand):
     help = _("core.management.commands.update_pristupnost_snapshot.Command.help")
 
     def add_arguments(self, parser):
+        """Funkce `Command.add_arguments` v modulu `webclient.core.management.commands.update_pristupnost_snapshot`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param parser: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         parser.add_argument(
             "--batch-size",
             type=int,
@@ -39,6 +46,14 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """Funkce `Command.handle` v modulu `webclient.core.management.commands.update_pristupnost_snapshot`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param options: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from projekt.models import Projekt
 
         batch_size = options["batch_size"]

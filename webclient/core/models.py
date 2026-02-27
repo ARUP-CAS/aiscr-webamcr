@@ -50,6 +50,10 @@ logger = logging.getLogger(__name__)
 
 class AntivirusCheckResult(Enum):
     # Antivirus vrátil odpověď, že soubor je v pořádku
+    """Třída `AntivirusCheckResult` v modulu `webclient.core.models`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     PASSES = 0
     # Antivirus nalezl v souboru virus
     VIRUS_FOUND = 1
@@ -98,10 +102,19 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
     suppress_signal = False
 
     class Meta:
+        """Třída `SouborVazby.Meta` v modulu `webclient.core.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "soubor_vazby"
 
     @property
     def navazany_objekt(self) -> Optional[ModelWithMetadata]:
+        """Funkce `SouborVazby.navazany_objekt` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.typ_vazby == PROJEKT_RELATION_TYPE:
             return self.projekt_souboru
         if self.typ_vazby == DOKUMENT_RELATION_TYPE:
@@ -133,27 +146,54 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def url(self):
+        """Funkce `Soubor.url` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return f"{settings.DIGIARCHIV_SERVER_URL}id/{self.path.split('record/')[1]}"
         return ""
 
     @property
     def repository_uuid(self):
+        """Funkce `Soubor.repository_uuid` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return self.path.split("/")[-1]
 
     def calculate_sha_512(self):
+        """Funkce `Soubor.calculate_sha_512` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         repository_content = self.get_repository_content()
         if repository_content is not None:
             return repository_content.sha_512
         return ""
 
     def delete(self, using=None, keep_parents=False):
+        """Funkce `Soubor.delete` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param using: Vstupní hodnota používaná při zpracování.
+        :param keep_parents: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.historie is None:
             self.create_soubor_vazby()
         super().delete(using, keep_parents)
 
     class Meta:
+        """Třída `Soubor.Meta` v modulu `webclient.core.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "soubor"
         indexes = [
             models.Index(
@@ -169,6 +209,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         ]
 
     def __init__(self, *args, **kwargs):
+        """Funkce `Soubor.__init__` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(Soubor, self).__init__(*args, **kwargs)
         self.suppress_signal = False
         self.active_transaction = None
@@ -176,6 +224,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         self.binary_data = None
 
     def __str__(self):
+        """Funkce `Soubor.__str__` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self.nazev
 
     def create_soubor_vazby(self):
@@ -191,6 +244,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def vytvoreno(self):
+        """Funkce `Soubor.vytvoreno` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.historie is not None:
             return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
         else:
@@ -201,6 +259,16 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def get_repository_content(
         self, ident_cely_old=None, thumb_small=False, thumb_large=False, timestamp=None
     ) -> Optional[RepositoryBinaryFile]:
+        """Funkce `Soubor.get_repository_content` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ident_cely_old: Vstupní hodnota používaná při zpracování.
+        :param thumb_small: Vstupní hodnota používaná při zpracování.
+        :param thumb_large: Vstupní hodnota používaná při zpracování.
+        :param timestamp: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from .repository_connector import FedoraRepositoryConnector
 
         record = self.vazba.navazany_objekt
@@ -251,6 +319,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def get_file_extension_by_mime(cls, file):
+        """Funkce `Soubor.get_file_extension_by_mime` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param file: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         mime_type = cls.get_mime_types(file)
         return {
             "image/jpeg": ("jpeg", "jpg", "jpe", "jfif", "jfif-tbnl", "jif", "pjpg"),
@@ -282,6 +357,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def get_thumb_icon(cls, file):
+        """Funkce `Soubor.get_thumb_icon` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param file: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug("core.models.Soubor.get_thumb_icon.start", extra={"mime_type": mime_type})
         icon_filename = {
@@ -325,6 +407,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def get_mime_types(cls, file, check_archive=False) -> Union[set, bool, str]:
+        """Funkce `Soubor.get_mime_types` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param file: Vstupní hodnota používaná při zpracování.
+        :param check_archive: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         file.seek(0)
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug(
@@ -462,6 +552,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def check_mime_for_url(cls, file, source_url=""):
+        """Funkce `Soubor.check_mime_for_url` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param file: Vstupní hodnota používaná při zpracování.
+        :param source_url: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         mime = cls.get_mime_types(file, check_archive=True)
         logger.debug("core.models.Soubor.check_mime_for_url.mime_types", extra={"mime_type": mime})
         if mime == "encrypted":
@@ -563,6 +661,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         return AntivirusCheckResult.SKIPPED
 
     def _create_file_response(self, rep_bin_file: RepositoryBinaryFile) -> FileResponse:
+        """Funkce `Soubor._create_file_response` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param rep_bin_file: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         content = rep_bin_file.content
         response = FileResponse(content, filename=self.nazev)
         content.seek(0)
@@ -573,6 +678,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @cached_property
     def large_thumbnail(self) -> FileResponse | None:
+        """Funkce `Soubor.large_thumbnail` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
             response = self._create_file_response(rep_bin_file)
@@ -583,6 +693,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @cached_property
     def small_thumbnail(self) -> FileResponse | None:
+        """Funkce `Soubor.small_thumbnail` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
             response = self._create_file_response(rep_bin_file)
@@ -593,12 +708,22 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @cached_property
     def content_file_response(self) -> FileResponse | None:
+        """Funkce `Soubor.content_file_response` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content()
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
             return self._create_file_response(rep_bin_file)
         return None
 
     def getMock(self):
+        """Funkce `Soubor.getMock` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
 
     def get_historicke_verze(self):
@@ -657,6 +782,10 @@ class ProjektSekvence(models.Model):
     sekvence = models.IntegerField()
 
     class Meta:
+        """Třída `ProjektSekvence.Meta` v modulu `webclient.core.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "projekt_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["region", "rok"], name="unique_sekvence_projekt"),
@@ -674,6 +803,10 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
     status = models.BooleanField(_("core.model.OdstavkaSystemu.status.label"), default=True)
 
     class Meta:
+        """Třída `OdstavkaSystemu.Meta` v modulu `webclient.core.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "odstavky_systemu"
         verbose_name = _("core.model.OdstavkaSystemu.modelTitle.label")
         verbose_name_plural = _("core.model.OdstavkaSystemu.modelTitles.label")
@@ -689,15 +822,32 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
         super(OdstavkaSystemu, self).clean()
 
     def __str__(self) -> str:
+        """Funkce `OdstavkaSystemu.__str__` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
 
 
 class Permissions(models.Model):
+    """Třída `Permissions` v modulu `webclient.core.models`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     class ownershipChoices(models.TextChoices):
+        """Třída `Permissions.ownershipChoices` v modulu `webclient.core.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         my = "my", _("core.models.permissions.ownershipChoices.my")
         our = "our", _("core.models.permissions.ownershipChoices.our")
 
     class actionChoices(models.TextChoices):
+        """Třída `Permissions.actionChoices` v modulu `webclient.core.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         adb_smazat = "adb_smazat", _("core.models.permissions.actionChoices.adb_smazat")
         vb_smazat = "vb_smazat", _("core.models.permissions.actionChoices.vb_smazat")
         adb_zapsat = "adb_zapsat", _("core.models.permissions.actionChoices.adb_zapsat")
@@ -996,10 +1146,23 @@ class Permissions(models.Model):
     )
 
     class Meta:
+        """Třída `Permissions.Meta` v modulu `webclient.core.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         verbose_name = _("core.model.permissions.modelTitle.label")
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
     def check_concrete_permission(self, user, ident=None, typ=None):
+        """Funkce `Permissions.check_concrete_permission` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param user: Vstupní hodnota používaná při zpracování.
+        :param ident: Vstupní hodnota používaná při zpracování.
+        :param typ: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.typ = typ
         self.object = None
         self.logged_in_user = user
@@ -1028,12 +1191,22 @@ class Permissions(models.Model):
         return perm_check
 
     def check_base(self):
+        """Funkce `Permissions.check_base` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.base:
             return True
         else:
             return False
 
     def check_status(self):
+        """Funkce `Permissions.check_status` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.status:
             if not self.permission_object:
                 self.get_permission_object()
@@ -1062,6 +1235,13 @@ class Permissions(models.Model):
         return True
 
     def check_ownership(self, ownership):
+        """Funkce `Permissions.check_ownership` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ownership: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if ownership:
             if not self.permission_object:
                 self.get_permission_object()
@@ -1079,6 +1259,11 @@ class Permissions(models.Model):
         return True
 
     def check_accessibility(self):
+        """Funkce `Permissions.check_accessibility` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.accessibility:
             if not self.check_ownership(self.accessibility):
                 permission_object_pristupnost = self.permission_object.pristupnost.pk
@@ -1093,6 +1278,11 @@ class Permissions(models.Model):
         return True
 
     def check_permission_skip(self):
+        """Funkce `Permissions.check_permission_skip` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not self.permission_object:
             self.get_permission_object()
             if self.permission_object == "error":
@@ -1116,6 +1306,11 @@ class Permissions(models.Model):
         return False
 
     def get_permission_object(self):
+        """Funkce `Permissions.get_permission_object` v modulu `webclient.core.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from core.ident_cely import get_record_from_ident
         from pas.models import UzivatelSpoluprace
 
@@ -1160,6 +1355,15 @@ class Permissions(models.Model):
 
 
 def check_permissions(action, user, ident=None):
+    """Funkce `check_permissions` v modulu `webclient.core.models`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param action: Vstupní hodnota používaná při zpracování.
+    :param user: Vstupní hodnota používaná při zpracování.
+    :param ident: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     permission_set = Permissions.objects.filter(
         main_role=user.hlavni_role,
         action=action,
@@ -1176,9 +1380,17 @@ def check_permissions(action, user, ident=None):
 
 
 class PermissionsSkip(models.Model):
+    """Třída `PermissionsSkip` v modulu `webclient.core.models`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     ident_list = models.TextField()
 
     class Meta:
+        """Třída `PermissionsSkip.Meta` v modulu `webclient.core.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         verbose_name = _("core.model.permissionsSkip.modelTitle.label")
         verbose_name_plural = _("core.model.permissionsSkip.modelTitles.label")

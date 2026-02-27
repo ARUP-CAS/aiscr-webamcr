@@ -25,13 +25,33 @@ def get_message(message):
 
 
 class QuerystringNodeMulti(Node):
+    """Třída `QuerystringNodeMulti` v modulu `webclient.core.templatetags.template_tags`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def __init__(self, updates, removals, asvar=None):
+        """Funkce `QuerystringNodeMulti.__init__` v modulu `webclient.core.templatetags.template_tags`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param updates: Vstupní hodnota používaná při zpracování.
+        :param removals: Vstupní hodnota používaná při zpracování.
+        :param asvar: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__()
         self.updates = updates
         self.removals = removals
         self.asvar = asvar
 
     def render(self, context):
+        """Funkce `QuerystringNodeMulti.render` v modulu `webclient.core.templatetags.template_tags`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if "request" not in context:
             raise ImproperlyConfigured(context_processor_error_msg % "querystring")
 
@@ -108,6 +128,11 @@ def querystring_multi(parser, token):
 # Vrátí informaci o zapnutém režimu údržby.
 @register.simple_tag
 def get_maintenance():
+    """Funkce `get_maintenance` v modulu `webclient.core.templatetags.template_tags`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    :return: Výsledek odpovídající účelu volání.
+    """
     if get_set_maintenance_in_cache():
         return True
     return False

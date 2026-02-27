@@ -15,7 +15,18 @@ logger = logging.getLogger(__name__)
 
 
 class AdbReadOnlyTextInput(forms.TextInput):
+    """Třída `AdbReadOnlyTextInput` v modulu `webclient.adb.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def format_value(self, value):
+        """Funkce `AdbReadOnlyTextInput.format_value` v modulu `webclient.adb.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if value:
             osoba_query = Osoba.objects.filter(pk=value)
             if osoba_query.count():
@@ -29,6 +40,10 @@ class CreateADBForm(forms.ModelForm):
     """
 
     class Meta:
+        """Třída `CreateADBForm.Meta` v modulu `webclient.adb.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Adb
         fields = (
             "typ_sondy",
@@ -188,6 +203,14 @@ class VyskovyBodFormSetHelper(FormHelper):
     """
 
     def __init__(self, *args, **kwargs):
+        """Funkce `VyskovyBodFormSetHelper.__init__` v modulu `webclient.adb.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -234,6 +257,10 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         )
 
         class Meta:
+            """Třída `CreateVyskovyBodForm.Meta` v modulu `webclient.adb.forms`.
+            
+            Zapouzdřuje související data a chování v rámci dané části aplikace.
+            """
             model = VyskovyBod
 
             fields = ("ident_cely", "typ", "northing", "easting", "niveleta")

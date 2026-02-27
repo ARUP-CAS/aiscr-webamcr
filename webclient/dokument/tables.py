@@ -60,6 +60,10 @@ class Model3DTable(SearchTable):
     )
 
     class Meta:
+        """Třída `Model3DTable.Meta` v modulu `webclient.dokument.tables`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Dokument
         fields = (
             "ident_cely",
@@ -95,6 +99,14 @@ class Model3DTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `Model3DTable.__init__` v modulu `webclient.dokument.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(Model3DTable, self).__init__(*args, **kwargs)
 
     def render_nahled(self, value, record):
@@ -281,6 +293,10 @@ class DokumentTable(SearchTable):
         return ""
 
     class Meta:
+        """Třída `DokumentTable.Meta` v modulu `webclient.dokument.tables`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Dokument
         fields = (
             "nahled",
@@ -359,4 +375,12 @@ class DokumentTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `DokumentTable.__init__` v modulu `webclient.dokument.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(DokumentTable, self).__init__(*args, **kwargs)

@@ -29,6 +29,10 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
     geom = pgmodels.PolygonField(srid=5514)
 
     class Meta:
+        """Třída `Kladysm5.Meta` v modulu `webclient.adb.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "kladysm5"
 
 
@@ -90,15 +94,37 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     tracker = FieldTracker()
 
     class Meta:
+        """Třída `Adb.Meta` v modulu `webclient.adb.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "adb"
 
     def get_absolute_url(self):
+        """Funkce `Adb.get_absolute_url` v modulu `webclient.adb.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
+        """Funkce `Adb.get_permission_object` v modulu `webclient.adb.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self.dokumentacni_jednotka.get_permission_object()
 
     def __init__(self, *args, **kwargs):
+        """Funkce `Adb.__init__` v modulu `webclient.adb.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(Adb, self).__init__(*args, **kwargs)
         try:
             self.initial_dokumentacni_jednotka = self.dokumentacni_jednotka
@@ -109,6 +135,16 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None, main_record=None):
+        """Funkce `Adb.create_transaction` v modulu `webclient.adb.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param transaction_user: Vstupní hodnota používaná při zpracování.
+        :param success_message: Vstupní hodnota používaná při zpracování.
+        :param error_message: Vstupní hodnota používaná při zpracování.
+        :param main_record: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -215,15 +251,29 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         self.suppress_signal = False
 
     class Meta:
+        """Třída `VyskovyBod.Meta` v modulu `webclient.adb.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "vyskovy_bod"
         ordering = [
             "ident_cely",
         ]
 
     def get_absolute_url(self):
+        """Funkce `VyskovyBod.get_absolute_url` v modulu `webclient.adb.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self.adb.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
+        """Funkce `VyskovyBod.get_permission_object` v modulu `webclient.adb.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self.adb.get_permission_object()
 
 
@@ -241,4 +291,8 @@ class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):
     sekvence = models.IntegerField()
 
     class Meta:
+        """Třída `AdbSekvence.Meta` v modulu `webclient.adb.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "adb_sekvence"

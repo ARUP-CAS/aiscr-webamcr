@@ -6,6 +6,10 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    """Třída `Migration` v modulu `webclient.ez.migrations.0002_externizdroj_historie`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     initial = True
 
     dependencies = [

@@ -312,6 +312,11 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     id_tag = "zmenit-katastr-form"
 
     def get_zaznam(self) -> DokumentacniJednotka:
+        """Funkce `ChangeKatastrView.get_zaznam` v modulu `webclient.dj.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             DokumentacniJednotka,
@@ -319,6 +324,13 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
+        """Funkce `ChangeKatastrView.get_context_data` v modulu `webclient.dj.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam()
         form = ChangeKatastrForm(initial={"katastr": zaznam.archeologicky_zaznam.hlavni_katastr})
         context = {
@@ -331,11 +343,29 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """Funkce `ChangeKatastrView.get` v modulu `webclient.dj.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `ChangeKatastrView.post` v modulu `webclient.dj.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam: DokumentacniJednotka = self.get_zaznam()
         form = ChangeKatastrForm(data=request.POST)
         if form.is_valid():

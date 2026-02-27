@@ -56,6 +56,15 @@ class LocalResolver(etree.Resolver):
     """
 
     def resolve(self, url, id, context):
+        """Funkce `LocalResolver.resolve` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param url: Vstupní hodnota používaná při zpracování.
+        :param id: Vstupní hodnota používaná při zpracování.
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if url == "http://www.w3.org/2001/03/xml.xsd":
             local_path = "xml_generator/definitions/xml.xsd"
             return self.resolve_filename(local_path, context)
@@ -63,26 +72,67 @@ class LocalResolver(etree.Resolver):
 
 
 class WaitForPageLoad:
+    """Třída `WaitForPageLoad` v modulu `webclient.core.tests.test_selenium`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def __init__(self, browser, wait_time=20):
+        """Funkce `WaitForPageLoad.__init__` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param browser: Vstupní hodnota používaná při zpracování.
+        :param wait_time: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.browser = browser
         self.wait_time = wait_time
 
     def __enter__(self):
+        """Funkce `WaitForPageLoad.__enter__` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
 
     def page_has_loaded(self):
+        """Funkce `WaitForPageLoad.page_has_loaded` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         new_page = self.browser.find_element(By.TAG_NAME, "html")
         return new_page.id != self.old_page.id
 
     def page_is_ready(self):
+        """Funkce `WaitForPageLoad.page_is_ready` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         page_state = self.browser.execute_script("return document.readyState;")
         return page_state == "complete"
 
     def __exit__(self, *_):
+        """Funkce `WaitForPageLoad.__exit__` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param _: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.wait_for(self.page_has_loaded)
         self.wait_for(self.page_is_ready)
 
     def wait_for(self, condition_function):
+        """Funkce `WaitForPageLoad.wait_for` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param condition_function: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         start_time = time.time()
         while time.time() < start_time + self.wait_time:
             if condition_function():
@@ -96,6 +146,10 @@ class WaitForPageLoad:
 # @override_settings(DEBUG=True)
 class BaseSeleniumTestClass(LiveServerTestCase):
     # port = 8808
+    """Třída `BaseSeleniumTestClass` v modulu `webclient.core.tests.test_selenium`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     host = "0.0.0.0"
     del settings.DATABASES["test_db"]
     databases = {"default", "urgent"}
@@ -120,6 +174,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
+        """Funkce `BaseSeleniumTestClass.setUpClass` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().setUpClass()
         cls.server_thread.is_ready.wait()
         if cls.server_thread.error:
@@ -127,6 +186,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """Funkce `BaseSeleniumTestClass.tearDownClass` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cls.server_thread.terminate()
         super().tearDownClass()
 
@@ -137,16 +201,36 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def _terminate_thread(cls):
+        """Funkce `BaseSeleniumTestClass._terminate_thread` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pass
 
     @classmethod
     def get_base_test_data(cls):
+        """Funkce `BaseSeleniumTestClass.get_base_test_data` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pass
 
     def go_to_form(self):
+        """Funkce `BaseSeleniumTestClass.go_to_form` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pass
 
     def setUp(self):
+        """Funkce `BaseSeleniumTestClass.setUp` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.start")
         self.wipe_Fedora()
         self.clone_Database()
@@ -176,6 +260,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.end")
 
     def get_container_content(self, container_path):
+        """Funkce `BaseSeleniumTestClass.get_container_content` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param container_path: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -191,6 +282,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return members
 
     def save_container_content(self, container_path, path):
+        """Funkce `BaseSeleniumTestClass.save_container_content` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param container_path: Vstupní hodnota používaná při zpracování.
+        :param path: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -255,6 +354,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return not rozdil.getbbox()
 
     def check_container_content(self, container_path, path):
+        """Funkce `BaseSeleniumTestClass.check_container_content` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param container_path: Vstupní hodnota používaná při zpracování.
+        :param path: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -316,6 +423,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     auth = requests.auth.HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
 
     def purge_container(self, container_path):
+        """Funkce `BaseSeleniumTestClass.purge_container` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param container_path: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         response = requests.delete(container_path + "/fcr:tombstone", auth=self.auth)
         if not str(response.status_code).startswith("2"):
             logger.error(
@@ -324,6 +438,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
     def delete_container(self, container_path):
+        """Funkce `BaseSeleniumTestClass.delete_container` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param container_path: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         response = requests.delete(container_path, auth=self.auth)
         if not str(response.status_code).startswith("2"):
             logger.error(
@@ -332,6 +453,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
     def wipe_Fedora_dir(self, name, deep):
+        """Funkce `BaseSeleniumTestClass.wipe_Fedora_dir` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param name: Vstupní hodnota používaná při zpracování.
+        :param deep: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         mem = self.get_container_content(name)
         for item in mem:
             self.wipe_Fedora_dir(item, deep + 1)
@@ -339,6 +468,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.delete_container(item)
 
     def find_files(self, directory, filename):
+        """Funkce `BaseSeleniumTestClass.find_files` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param directory: Vstupní hodnota používaná při zpracování.
+        :param filename: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         matches = []
         for root, _, files in os.walk(directory):
             if filename in files:
@@ -346,6 +483,15 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return matches
 
     def delete_tombstones(self, url, name, dir):
+        """Funkce `BaseSeleniumTestClass.delete_tombstones` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param url: Vstupní hodnota používaná při zpracování.
+        :param name: Vstupní hodnota používaná při zpracování.
+        :param dir: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         results = self.find_files(dir, "fcr-root.json")
         for res in results:
             if os.path.isfile(res):
@@ -356,6 +502,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                     self.purge_container(f"{url}{matches}")
 
     def save_fedora_change(self, time, path):
+        """Funkce `BaseSeleniumTestClass.save_fedora_change` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param time: Vstupní hodnota používaná při zpracování.
+        :param path: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         headers = {}
         response = requests.get(
             f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
@@ -378,6 +532,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def check_fedora_change(self, time, path):
         # Pomocný debug výpis změny ve Fedoře je zde záměrně vypnutý.
+        """Funkce `BaseSeleniumTestClass.check_fedora_change` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param time: Vstupní hodnota používaná při zpracování.
+        :param path: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if os.name == "nt":
             self.wait(1.5)
             self.save_fedora_change(
@@ -408,6 +570,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.check_container_content(n["fedora_id"], path)
 
     def check_fedora_delete(self, records):
+        """Funkce `BaseSeleniumTestClass.check_fedora_delete` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param records: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         headers = {}
         for item in records:
             response = requests.get(
@@ -416,12 +585,22 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.assertIn(response.status_code, [410, 404])
 
     def wipe_Fedora(self):
+        """Funkce `BaseSeleniumTestClass.wipe_Fedora` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/model", 0)
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/record", 2)
         self.delete_tombstones(self.api_url, settings.FEDORA_SERVER_NAME, settings.FEDORA_PATH)
 
     @staticmethod
     def clone_Database():
+        """Funkce `BaseSeleniumTestClass.clone_Database` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.clone_Database")
         prod_conn = None
         prod_cursor = None
@@ -459,6 +638,16 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         connection.connect()
 
     def assertIn2(self, member1, member2, container, msg=None):
+        """Funkce `BaseSeleniumTestClass.assertIn2` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param member1: Vstupní hodnota používaná při zpracování.
+        :param member2: Vstupní hodnota používaná při zpracování.
+        :param container: Vstupní hodnota používaná při zpracování.
+        :param msg: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         container_result = container.current_url
         repeat = 0
         while (member1 not in container_result and member2 not in container_result) and repeat < 10:
@@ -475,6 +664,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.fail(self._formatMessage(msg, standardMsg))
 
     def _is_ignored_browser_error(self, entry: dict) -> bool:
+        """Funkce `BaseSeleniumTestClass._is_ignored_browser_error` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param entry: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         msg = entry.get("message", "") or ""
         for path, err in self.IGNORED_BROWSER_ERRORS:
             if path and path not in msg:
@@ -501,11 +697,21 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self._js_errors = []
 
     def tearDown(self):
+        """Funkce `BaseSeleniumTestClass.tearDown` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self._collect_js_errors_at_end()
 
         result = self._outcome.result
 
         def has_issue():
+            """Funkce `BaseSeleniumTestClass.has_issue` v modulu `webclient.core.tests.test_selenium`.
+            
+            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+            :return: Výsledek odpovídající účelu volání.
+            """
             return any(t is self and exc for t, exc in (result.errors + result.failures))
 
         # Pokud test zatím OK a máme JS chyby => přidej FAILURE
@@ -566,12 +772,35 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         super().tearDown()
 
     def _fixture_teardown(self):
+        """Funkce `BaseSeleniumTestClass._fixture_teardown` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pass
 
     def wait(self, interval):
+        """Funkce `BaseSeleniumTestClass.wait` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param interval: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         time.sleep(interval)
 
     def wait_for(self, condition_function, by, value, timeout=12, poll=0.5):
+        """Funkce `BaseSeleniumTestClass.wait_for` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param condition_function: Vstupní hodnota používaná při zpracování.
+        :param by: Vstupní hodnota používaná při zpracování.
+        :param value: Vstupní hodnota používaná při zpracování.
+        :param timeout: Vstupní hodnota používaná při zpracování.
+        :param poll: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         end = time.time() + timeout
         while time.time() < end:
             try:
@@ -584,12 +813,28 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return False
 
     def findElement(self, by, value):
+        """Funkce `BaseSeleniumTestClass.findElement` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param by: Vstupní hodnota používaná při zpracování.
+        :param value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             return len(self.driver.find_elements(by, value)) > 0
         except StaleElementReferenceException:
             return False
 
     def ElementIsClickable(self, by, value):
+        """Funkce `BaseSeleniumTestClass.ElementIsClickable` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param by: Vstupní hodnota používaná při zpracování.
+        :param value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             element = self.driver.find_element(by, value)
             return element.is_displayed() and element.is_enabled()
@@ -597,6 +842,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             return False
 
     def ElementClick(self, by=By.ID, value: Optional[str] = None):
+        """Funkce `BaseSeleniumTestClass.ElementClick` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param by: Vstupní hodnota používaná při zpracování.
+        :param value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not self.wait_for(self.findElement, by, value):
             logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "value": value})
             raise Exception("ElementClickError")
@@ -620,6 +873,15 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         raise Exception("ElementClickError")
 
     def ElementSendKeys(self, by, value, keys):
+        """Funkce `BaseSeleniumTestClass.ElementSendKeys` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param by: Vstupní hodnota používaná při zpracování.
+        :param value: Vstupní hodnota používaná při zpracování.
+        :param keys: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         res = self.wait_for(self.findElement, by, value)
         if res is False:
             logger.warning(
@@ -649,6 +911,15 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             raise Exception("ElementSendKeysError")
 
     def clickAt(self, el, position_x, position_y):
+        """Funkce `BaseSeleniumTestClass.clickAt` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param el: Vstupní hodnota používaná při zpracování.
+        :param position_x: Vstupní hodnota používaná při zpracování.
+        :param position_y: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(el, position_x, position_y)
         action.click()
@@ -656,6 +927,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def clickAtMapCoord(self, lon, lat):
 
+        """Funkce `BaseSeleniumTestClass.clickAtMapCoord` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param lon: Vstupní hodnota používaná při zpracování.
+        :param lat: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.driver.execute_script(f"""
  window.getToday = function() {{
 return new Date('2025-06-28T12:00:00Z');}};
@@ -677,30 +956,83 @@ return new Date('2025-06-28T12:00:00Z');}};
 }});""")
 
     def _username(self, type="archeolog"):
+        """Funkce `BaseSeleniumTestClass._username` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param type: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return USERS[type]["USERNAME"]
 
     def _password(sel, type="archeolog"):
+        """Funkce `BaseSeleniumTestClass._password` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param sel: Vstupní hodnota používaná při zpracování.
+        :param type: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return USERS[type]["PASSWORD"]
 
     def _select_value_select_picker(self, field_id, selected_value):
+        """Funkce `BaseSeleniumTestClass._select_value_select_picker` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param field_id: Vstupní hodnota používaná při zpracování.
+        :param selected_value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         dropdown = self.driver.find_element(By.ID, field_id)
         dropdown.find_element(By.XPATH, f"//option[. = '{selected_value}']").click()
 
     def _fill_text_field(self, field_id, field_value):
+        """Funkce `BaseSeleniumTestClass._fill_text_field` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param field_id: Vstupní hodnota používaná při zpracování.
+        :param field_value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.driver.find_element(By.ID, field_id).click()
         self.driver.find_element(By.ID, field_id).send_keys(field_value)
 
     def _select_map_point(self, field_id, click_count):
+        """Funkce `BaseSeleniumTestClass._select_map_point` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param field_id: Vstupní hodnota používaná při zpracování.
+        :param click_count: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         for _ in range(click_count):
             self.driver.find_element(By.ID, field_id).click()
             time.sleep(1)
 
     def _select_radion_group_item(self, item_order=1):
+        """Funkce `BaseSeleniumTestClass._select_radion_group_item` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param item_order: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.driver.find_element(
             By.CSS_SELECTOR, f".custom-radio:nth-child({item_order}) > .custom-control-label"
         ).click()
 
     def _fill_form_fields(self, test_data):
+        """Funkce `BaseSeleniumTestClass._fill_form_fields` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param test_data: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         for item, value in test_data.items():
             field_type = value["field_type"]
             logger.info(
@@ -722,6 +1054,13 @@ return new Date('2025-06-28T12:00:00Z');}};
                 )
 
     def login(self, type="archeolog"):
+        """Funkce `BaseSeleniumTestClass.login` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param type: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.goToAddress()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "czech")
@@ -732,9 +1071,21 @@ return new Date('2025-06-28T12:00:00Z');}};
             self.ElementClick(By.CSS_SELECTOR, ".btn")
 
     def logout(self):
+        """Funkce `BaseSeleniumTestClass.logout` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.ElementClick(By.ID, "buttonLogout")
 
     def goToAddress(self, rel_address="/"):
+        """Funkce `BaseSeleniumTestClass.goToAddress` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param rel_address: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
@@ -847,6 +1198,14 @@ return new Date('2025-06-28T12:00:00Z');}};
             raise AssertionError(f"Upload failed: {result}")
 
     def createFedoraRecord(self, ident_cely, user_name="archeolog"):
+        """Funkce `BaseSeleniumTestClass.createFedoraRecord` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ident_cely: Vstupní hodnota používaná při zpracování.
+        :param user_name: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             record = get_record_from_ident(ident_cely)
             user = User.objects.get(email=self._username(user_name))
@@ -1122,6 +1481,15 @@ return new Date('2025-06-28T12:00:00Z');}};
             graf.add(triple)
 
     def porovnej_rdf_obsah(self, aktualni_rdf, ocekavany_rdf, ignorovat_predikaty=None):
+        """Funkce `BaseSeleniumTestClass.porovnej_rdf_obsah` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param aktualni_rdf: Vstupní hodnota používaná při zpracování.
+        :param ocekavany_rdf: Vstupní hodnota používaná při zpracování.
+        :param ignorovat_predikaty: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         g1 = Graph()
         g1.parse(data=aktualni_rdf, format="turtle")
 
@@ -1265,6 +1633,14 @@ return new Date('2025-06-28T12:00:00Z');}};
             return data
 
     def json_uprav_pro_porovnani(self, json_text, klice_k_ignoraci=None):
+        """Funkce `BaseSeleniumTestClass.json_uprav_pro_porovnani` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param json_text: Vstupní hodnota používaná při zpracování.
+        :param klice_k_ignoraci: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         json_obj = json.loads(json_text)
         if klice_k_ignoraci:
             json_obj = self.odstran_klice(json_obj, klice_k_ignoraci)
@@ -1274,6 +1650,15 @@ return new Date('2025-06-28T12:00:00Z');}};
         return json_obj
 
     def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
+        """Funkce `BaseSeleniumTestClass.porovnej_json_rovnost` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param vzor_json_text: Vstupní hodnota používaná při zpracování.
+        :param vystup_json_text: Vstupní hodnota používaná při zpracování.
+        :param klice_k_ignoraci: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         json_vzor = self.json_uprav_pro_porovnani(vzor_json_text, klice_k_ignoraci)
         json_vystup = self.json_uprav_pro_porovnani(vystup_json_text, klice_k_ignoraci)
 
@@ -1286,6 +1671,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def getTime(self):
+        """Funkce `BaseSeleniumTestClass.getTime` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if os.name == "nt":
             self.wait(1.5)
         t = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -1294,6 +1684,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         return t
 
     def wait_for_select2_results(self):
+        """Funkce `BaseSeleniumTestClass.wait_for_select2_results` v modulu `webclient.core.tests.test_selenium`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.driver.set_script_timeout(6)
         try:
             self.driver.find_element(By.CSS_SELECTOR, ".loading-results")
@@ -1313,6 +1708,10 @@ done("ok");
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
+    """Třída `CoreSeleniumTest` v modulu `webclient.core.tests.test_selenium`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def test_001_core_001(self):
         """Test 001 Přihlášení do AMČR
 

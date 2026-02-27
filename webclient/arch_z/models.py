@@ -80,6 +80,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     )
 
     class Meta:
+        """Třída `ArcheologickyZaznam.Meta` v modulu `webclient.arch_z.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "archeologicky_zaznam"
         constraints = [
             CheckConstraint(
@@ -328,6 +332,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.save()
 
     def _set_connected_records_ident(self, new_ident):
+        """Funkce `ArcheologickyZaznam._set_connected_records_ident` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param new_ident: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         for dj in self.dokumentacni_jednotky_akce.all():
             dj.ident_cely = new_ident + dj.ident_cely[-4:]
             if dj.komponenty is None:
@@ -387,9 +398,19 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return "[ident_cely not yet assigned]"
 
     def get_permission_object(self):
+        """Funkce `ArcheologickyZaznam.get_permission_object` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self
 
     def get_create_user(self):
+        """Funkce `ArcheologickyZaznam.get_create_user` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel,)
         except Exception as e:
@@ -397,12 +418,22 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return ()
 
     def get_create_org(self):
+        """Funkce `ArcheologickyZaznam.get_create_org` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.get_create_user():
             return (self.get_create_user()[0].organizace,)
         else:
             return ()
 
     def check_set_permanent_ident(self):
+        """Funkce `ArcheologickyZaznam.check_set_permanent_ident` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         poznamka_historie = None
         old_ident = None
         ident_change_recorded = False
@@ -427,11 +458,24 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         return poznamka_historie
 
     def __init__(self, *args, **kwargs):
+        """Funkce `ArcheologickyZaznam.__init__` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         self.initial_stav = self.stav
 
     @property
     def initial_casti_dokumentu(self):
+        """Funkce `ArcheologickyZaznam.initial_casti_dokumentu` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             return self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError:
@@ -439,6 +483,11 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @property
     def initial_pristupnost(self):
+        """Funkce `ArcheologickyZaznam.initial_pristupnost` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if hasattr(self, "_initial_pristupnost"):
             return self._initial_pristupnost
         if hasattr(self, "pristupnost"):
@@ -449,9 +498,24 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @initial_pristupnost.setter
     def initial_pristupnost(self, value):
+        """Funkce `ArcheologickyZaznam.initial_pristupnost` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self._initial_pristupnost = value
 
     def save(self, *args, **kwargs):
+        """Funkce `ArcheologickyZaznam.save` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.pk is not None:
             previous = ArcheologickyZaznam.objects.get(pk=self.pk)
             if previous.pristupnost != self.pristupnost:
@@ -459,18 +523,47 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         super(ArcheologickyZaznam, self).save(*args, **kwargs)
 
     def igsn_lokalita_hide(self, check_status=True):
+        """Funkce `ArcheologickyZaznam.igsn_lokalita_hide` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param check_status: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_hide(check_status)
 
     def igsn_lokalita_publish(self, check_status=True):
+        """Funkce `ArcheologickyZaznam.igsn_lokalita_publish` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param check_status: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA and self.stav == AZ_STAV_ARCHIVOVANY:
             self.lokalita.igsn_publish(check_status)
 
     def igsn_lokalita_delete(self, check_status=True):
+        """Funkce `ArcheologickyZaznam.igsn_lokalita_delete` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param check_status: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_delete(check_status)
 
     def igsn_lokalita_update(self, check_status=True, reload_record=False):
+        """Funkce `ArcheologickyZaznam.igsn_lokalita_update` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param check_status: Vstupní hodnota používaná při zpracování.
+        :param reload_record: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_update(check_status, reload_record)
 
@@ -488,6 +581,10 @@ class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zazna
     katastr = models.ForeignKey(RuianKatastr, on_delete=models.RESTRICT, db_column="katastr_id")
 
     class Meta:
+        """Třída `ArcheologickyZaznamKatastr.Meta` v modulu `webclient.arch_z.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "archeologicky_zaznam_katastr"
         unique_together = (("archeologicky_zaznam", "katastr"),)
 
@@ -563,6 +660,10 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
     vedouci_snapshot = models.CharField(max_length=5000, null=True, blank=True)
 
     class Meta:
+        """Třída `Akce.Meta` v modulu `webclient.arch_z.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "akce"
         constraints = [
             CheckConstraint(
@@ -578,6 +679,14 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         ]
 
     def __init__(self, *args, **kwargs):
+        """Funkce `Akce.__init__` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.initial_projekt_id = self.projekt_id
         self.suppress_signal = False
@@ -586,6 +695,11 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def initial_projekt(self):
+        """Funkce `Akce.initial_projekt` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from projekt.models import Projekt
 
         if self.initial_projekt_id is not None:
@@ -599,13 +713,28 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         return reverse("arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely})
 
     def vedouci_organizace(self):
+        """Funkce `Akce.vedouci_organizace` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return ", ".join([str(x.organizace) for x in self.akcevedouci_set.all()])
 
     @cached_property
     def vedouci(self):
+        """Funkce `Akce.vedouci` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return ", ".join([str(x.vedouci) for x in self.akcevedouci_set.all()])
 
     def set_snapshots(self):
+        """Funkce `Akce.set_snapshots` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not self.akcevedouci_set.all():
             self.vedouci_snapshot = None
         else:
@@ -620,11 +749,21 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def redis_snapshot_id(self):
+        """Funkce `Akce.redis_snapshot_id` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from arch_z.views import AkceListView
 
         return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
+        """Funkce `Akce.generate_redis_snapshot` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from arch_z.tables import AkceTable
 
         data = Akce.objects.filter(archeologicky_zaznam=self)
@@ -641,6 +780,13 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
+        """Funkce `Akce.get_by_ident_cely` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ident_cely: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
         except Exception:
@@ -657,6 +803,10 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     organizace = models.ForeignKey(Organizace, on_delete=models.RESTRICT, db_column="organizace")
 
     class Meta:
+        """Třída `AkceVedouci.Meta` v modulu `webclient.arch_z.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "akce_vedouci"
         unique_together = (("akce", "vedouci"),)
         ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
@@ -694,9 +844,21 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
     )
 
     class Meta:
+        """Třída `ExterniOdkaz.Meta` v modulu `webclient.arch_z.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "externi_odkaz"
 
     def __init__(self, *args, **kwargs):
+        """Funkce `ExterniOdkaz.__init__` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.suppress_signal_arch_z = False
         self.active_transaction = None
@@ -704,6 +866,13 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user):
+        """Funkce `ExterniOdkaz.create_transaction` v modulu `webclient.arch_z.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param transaction_user: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -761,6 +930,10 @@ class LokalitaSekvence(models.Model):
     sekvence = models.IntegerField()
 
     class Meta:
+        """Třída `LokalitaSekvence.Meta` v modulu `webclient.arch_z.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "lokalita_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["region", "typ"], name="unique_sekvence_lokalita"),
@@ -776,6 +949,10 @@ class AkceSekvence(models.Model):
     sekvence = models.IntegerField()
 
     class Meta:
+        """Třída `AkceSekvence.Meta` v modulu `webclient.arch_z.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "akce_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["region"], name="unique_sekvence_akce"),

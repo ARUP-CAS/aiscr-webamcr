@@ -21,6 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 def invalidate_arch_z_related_models():
+    """Funkce `invalidate_arch_z_related_models` v modulu `webclient.arch_z.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    :return: Výsledek odpovídající účelu volání.
+    """
     invalidate_model(Akce)
     invalidate_model(Projekt)
 
@@ -82,6 +87,13 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
         close_transaction = instance.close_active_transaction_when_finished
 
         def save_metadata(inner_close_transaction=False):
+            """Funkce `save_metadata` v modulu `webclient.arch_z.signals`.
+            
+            Zajišťuje dílčí aplikační logiku pro tento modul.
+            
+            :param inner_close_transaction: Vstupní hodnota používaná při zpracování.
+            :return: Výsledek odpovídající účelu volání.
+            """
             try:
                 if (
                     instance.akce
@@ -121,6 +133,15 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 
 @receiver(post_save, sender=Akce, weak=False)
 def update_akce_snapshot(sender, instance: Akce, **kwargs):
+    """Funkce `update_akce_snapshot` v modulu `webclient.arch_z.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"pk": instance.pk})
     if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
@@ -198,6 +219,15 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
 
 @receiver(post_delete, sender=ArcheologickyZaznam, weak=False)
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
+    """Funkce `delete_arch_z_repository_update_connected_records` v modulu `webclient.arch_z.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_update_connected_records.start",
         extra={"ident_cely": instance.ident_cely},
@@ -205,6 +235,13 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     fedora_transaction: FedoraTransaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
+        """Funkce `save_metadata` v modulu `webclient.arch_z.signals`.
+        
+        Zajišťuje dílčí aplikační logiku pro tento modul.
+        
+        :param close_transaction: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         invalidate_arch_z_related_models()
         try:
             if instance.akce and instance.akce.projekt is not None:
@@ -240,6 +277,13 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     invalidate_arch_z_related_models()
 
     def save_metadata(inner_close_transaction=False):
+        """Funkce `save_metadata` v modulu `webclient.arch_z.signals`.
+        
+        Zajišťuje dílčí aplikační logiku pro tento modul.
+        
+        :param inner_close_transaction: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
             instance.archeologicky_zaznam.save_metadata(fedora_transaction)
         if instance.externi_zdroj is not None:

@@ -249,6 +249,11 @@ class Model3DListView(SearchListView):
     vypis_app = "model"
 
     def init_translations(self):
+        """Funkce `Model3DListView.init_translations` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().init_translations()
         self.page_title = _("dokument.views.Model3DListView.pageTitle.text")
         self.search_sum = _("dokument.views.Model3DListView.search_sum.text")
@@ -261,6 +266,13 @@ class Model3DListView(SearchListView):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
+        """Funkce `Model3DListView.rename_field_for_ordering` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param field: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         field = field.replace("-", "")
         return {
             "typ_dokumentu": "typ_dokumentu__razeni",
@@ -270,11 +282,23 @@ class Model3DListView(SearchListView):
         }.get(field, field)
 
     def get_context_data(self, **kwargs):
+        """Funkce `Model3DListView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         context["is_3d"] = True
         return context
 
     def get_queryset(self):
+        """Funkce `Model3DListView.get_queryset` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -318,6 +342,11 @@ class DokumentListView(SearchListView):
     vypis_app = "dokument"
 
     def init_translations(self):
+        """Funkce `DokumentListView.init_translations` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().init_translations()
         self.page_title = _("dokument.views.DokumentListView.pageTitle.text")
         self.search_sum = _("dokument.views.DokumentListView.search_sum.text")
@@ -329,12 +358,26 @@ class DokumentListView(SearchListView):
         self.default_header = _("dokument.views.DokumentListView.default_header.text")
 
     def get_context_data(self, **kwargs):
+        """Funkce `DokumentListView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         context["is_3d"] = False
         return context
 
     @staticmethod
     def rename_field_for_ordering(field: str):
+        """Funkce `DokumentListView.rename_field_for_ordering` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param field: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         field = field.replace("-", "")
         return {
             "typ_dokumentu": "typ_dokumentu__razeni",
@@ -354,6 +397,11 @@ class DokumentListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
+        """Funkce `DokumentListView.get_queryset` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -558,6 +606,15 @@ class DokumentDetailView(RelatedContext):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
+        """Funkce `DokumentDetailView.get` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return super().get(request, *args, **kwargs)
 
 
@@ -569,6 +626,15 @@ class DokumentCastDetailView(RelatedContext):
     template_name = "dokument/dok/detail_cast_dokumentu.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        """Funkce `DokumentCastDetailView.dispatch` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cast = get_object_or_404(DokumentCast, ident_cely=self.kwargs["cast_ident_cely"])
         if cast.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Dokument cast wrong relation")
@@ -583,6 +649,13 @@ class DokumentCastDetailView(RelatedContext):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        """Funkce `DokumentCastDetailView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         cast = get_object_or_404(
             DokumentCast,
@@ -606,6 +679,13 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     active_transaction = None
 
     def get_context_data(self, **kwargs):
+        """Funkce `DokumentCastEditView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         zaznam = self.object
         context = {
@@ -620,11 +700,23 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
+        """Funkce `DokumentCastEditView.get_success_url` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = self.get_context_data()
         dc = context["object"]
         return dc.get_absolute_url()
 
     def get_object(self, queryset=None):
+        """Funkce `DokumentCastEditView.get_object` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param queryset: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if hasattr(self, "object"):
             self.object = self.object
         else:
@@ -635,6 +727,15 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `DokumentCastEditView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.active_transaction = self.get_object().create_transaction(request.user)
         self.active_transaction.redirect_on_error = False
         super().post(request, *args, **kwargs)
@@ -642,6 +743,13 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_invalid(self, form):
+        """Funkce `DokumentCastEditView.form_invalid` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param form: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("dokument.views.DokumentCastEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
@@ -655,6 +763,15 @@ class KomponentaDokumentDetailView(RelatedContext):
     template_name = "dokument/dok/detail_komponenta.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        """Funkce `KomponentaDokumentDetailView.dispatch` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komp_ident_cely"])
         if komponenta.komponenta_vazby.casti_dokumentu.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Komponenta wrong relation")
@@ -669,6 +786,13 @@ class KomponentaDokumentDetailView(RelatedContext):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        """Funkce `KomponentaDokumentDetailView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         komponenta = get_object_or_404(
             Komponenta.objects.select_related(
@@ -697,6 +821,15 @@ class KomponentaDokumentCreateView(RelatedContext):
     template_name = "dokument/dok/create_komponenta.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        """Funkce `KomponentaDokumentCreateView.dispatch` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cast = get_object_or_404(DokumentCast, ident_cely=self.kwargs["cast_ident_cely"])
         if cast.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Dokument cast wrong relation")
@@ -711,6 +844,13 @@ class KomponentaDokumentCreateView(RelatedContext):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        """Funkce `KomponentaDokumentCreateView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         cast = get_object_or_404(
             DokumentCast,
@@ -722,6 +862,15 @@ class KomponentaDokumentCreateView(RelatedContext):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
+        """Funkce `KomponentaDokumentCreateView.get` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return super().get(request, *args, **kwargs)
 
 
@@ -732,6 +881,15 @@ class TvarEditView(LoginRequiredMixin, View):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `TvarEditView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         dokument: Dokument = get_object_or_404(
             Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES),
             ident_cely=self.kwargs["ident_cely"],
@@ -768,6 +926,15 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
     id_tag = "smazat-tvar-form"
 
     def dispatch(self, request, *args: Any, **kwargs: Any) -> HttpResponse:
+        """Funkce `TvarSmazatView.dispatch` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         tvar = self.get_zaznam()
         if tvar.dokument.ident_cely != self.kwargs.get("ident_cely"):
             logger.debug("Dokument - Tvar wrong relation")
@@ -776,6 +943,11 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
+        """Funkce `TvarSmazatView.get_zaznam` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         id = self.kwargs.get("pk")
         return get_object_or_404(
             Tvar,
@@ -783,6 +955,13 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
+        """Funkce `TvarSmazatView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
@@ -794,11 +973,29 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """Funkce `TvarSmazatView.get` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `TvarSmazatView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam: Tvar = self.get_zaznam()
         zaznam.active_transaction = zaznam.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         zaznam.close_active_transaction_when_finished = True
@@ -817,6 +1014,11 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     id_tag = "vytvor-cast-form"
 
     def get_zaznam(self) -> Dokument:
+        """Funkce `VytvoritCastView.get_zaznam` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES),
@@ -824,6 +1026,13 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
+        """Funkce `VytvoritCastView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam()
         form = DokumentCastCreateForm()
         context = {
@@ -836,11 +1045,29 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """Funkce `VytvoritCastView.get` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `VytvoritCastView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam: Dokument = self.get_zaznam()
         form = DokumentCastCreateForm(data=request.POST)
         if form.is_valid():
@@ -886,10 +1113,20 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     action = ""
 
     def init_translations(self):
+        """Funkce `TransakceView.init_translations` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.title = "title"
         self.button = "button"
 
     def get_zaznam(self) -> DokumentCast:
+        """Funkce `TransakceView.get_zaznam` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("dokument.views.TransakceView.get_zaznam", extra={"ident_cely": ident_cely})
         return get_object_or_404(
@@ -898,6 +1135,13 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
+        """Funkce `TransakceView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.init_translations()
         zaznam = self.get_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": zaznam.dokument.stav})
@@ -911,6 +1155,15 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
+        """Funkce `TransakceView.dispatch` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam().dokument
         if zaznam.stav not in self.allowed_states:
             logger.debug("dokument.views.TransakceView.dispatch", extra={"value": self.action})
@@ -927,10 +1180,28 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
+        """Funkce `TransakceView.get` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `TransakceView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam()
         getattr(Dokument, self.action)(zaznam, request.user)
         messages.add_message(request, messages.SUCCESS, self.success_message)
@@ -947,11 +1218,23 @@ class DokumentCastPripojitAkciView(TransakceView):
     id_tag = "pripojit-eo-form"
 
     def init_translations(self):
+        """Funkce `DokumentCastPripojitAkciView.init_translations` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
         self.success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
+        """Funkce `DokumentCastPripojitAkciView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         type_arch = self.request.GET.get("type")
         form = PripojitArchZaznamForm(type_arch=type_arch, dok=True)
@@ -963,6 +1246,15 @@ class DokumentCastPripojitAkciView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `DokumentCastPripojitAkciView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cast = self.get_zaznam()
         cast: DokumentCast
         type_arch = self.request.GET.get("type")
@@ -992,11 +1284,23 @@ class DokumentCastPripojitProjektView(TransakceView):
     id_tag = "pripojit-projekt-form"
 
     def init_translations(self):
+        """Funkce `DokumentCastPripojitProjektView.init_translations` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
         self.success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
+        """Funkce `DokumentCastPripojitProjektView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         form = PripojitProjektForm(dok=True)
         context["form"] = form
@@ -1005,6 +1309,15 @@ class DokumentCastPripojitProjektView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `DokumentCastPripojitProjektView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cast = self.get_zaznam()
         form = PripojitProjektForm(data=request.POST, dok=True)
         if form.is_valid():
@@ -1030,11 +1343,23 @@ class DokumentCastOdpojitView(TransakceView):
     id_tag = "odpojit-cast-form"
 
     def init_translations(self):
+        """Funkce `DokumentCastOdpojitView.init_translations` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.title = _("dokument.views.DokumentCastOdpojitView.title.text")
         self.button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
         self.success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
 
     def get_context_data(self, **kwargs):
+        """Funkce `DokumentCastOdpojitView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         cast = self.get_zaznam()
         if cast.archeologicky_zaznam is not None:
@@ -1051,6 +1376,15 @@ class DokumentCastOdpojitView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `DokumentCastOdpojitView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cast = self.get_zaznam()
         fedora_transaction = cast.create_transaction(request.user, self.success_message)
         fedora_transaction.redirect_url = cast.get_absolute_url()
@@ -1099,11 +1433,25 @@ class DokumentCastSmazatView(TransakceView):
     id_tag = "smazat-cast-form"
 
     def init_translations(self):
+        """Funkce `DokumentCastSmazatView.init_translations` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.title = _("dokument.views.DokumentCastSmazatView.title.text")
         self.button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
         self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
+        """Funkce `DokumentCastSmazatView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cast = self.get_zaznam()
         cast.create_transaction(request.user, self.success_message)
         dokument = cast.dokument
@@ -1159,16 +1507,37 @@ class DokumentNeidentAkceSmazatView(TransakceView):
     id_tag = "smazat-neident-akce-form"
 
     def init_translations(self):
+        """Funkce `DokumentNeidentAkceSmazatView.init_translations` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
         self.button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
         self.success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
 
     def get_context_data(self, **kwargs):
+        """Funkce `DokumentNeidentAkceSmazatView.get_context_data` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         context["object"] = context["object"].neident_akce
         return context
 
     def post(self, request, *args, **kwargs):
+        """Funkce `DokumentNeidentAkceSmazatView.post` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cast = self.get_zaznam()
         if cast.neident_akce:
             cast.neident_akce.delete()
@@ -1844,9 +2213,21 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_result_label(self, result):
+        """Funkce `DokumentAutocomplete.get_result_label` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param result: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})"
 
     def get_queryset(self):
+        """Funkce `DokumentAutocomplete.get_queryset` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
         ident = self.request.GET.get("ident")
@@ -2463,6 +2844,15 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
     """
 
     def get(self, request, typ_vazby, ident_cely):
+        """Funkce `DokumentyAzTableView.get` v modulu `webclient.dokument.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param typ_vazby: Vstupní hodnota používaná při zpracování.
+        :param ident_cely: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if typ_vazby == "arch_z":
             qs = (
                 Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)

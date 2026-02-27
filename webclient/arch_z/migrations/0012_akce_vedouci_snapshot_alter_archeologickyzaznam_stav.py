@@ -4,6 +4,10 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+    """Třída `Migration` v modulu `webclient.arch_z.migrations.0012_akce_vedouci_snapshot_alter_archeologickyzaznam_stav`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("arch_z", "0011_alter_akcevedouci_options"),
     ]

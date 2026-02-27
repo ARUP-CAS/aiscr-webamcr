@@ -289,7 +289,19 @@ def mapa_dj(request, ident_cely):
 
 
 class PianPermissionFilterMixin(PermissionFilterMixin):
+    """Třída `PianPermissionFilterMixin` v modulu `webclient.pian.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def filter_by_permission(self, qs, permission):
+        """Funkce `PianPermissionFilterMixin.filter_by_permission` v modulu `webclient.pian.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :param permission: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         qs = qs.annotate(
             historie_zapsat_pian=FilteredRelation(
                 "historie__historie",
@@ -315,6 +327,14 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         return qs
 
     def add_ownership_lookup(self, ownership, qs=None):
+        """Funkce `PianPermissionFilterMixin.add_ownership_lookup` v modulu `webclient.pian.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ownership: Vstupní hodnota používaná při zpracování.
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
         filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
         if ownership == Permissions.ownershipChoices.our:
@@ -339,6 +359,14 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
             )
 
     def add_accessibility_lookup(self, permission, qs):
+        """Funkce `PianPermissionFilterMixin.add_accessibility_lookup` v modulu `webclient.pian.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param permission: Vstupní hodnota používaná při zpracování.
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         accessibility_key = self.permission_model_lookup + "pristupnost_filter__in"
         accessibilities = Heslar.objects.filter(
             nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id)
@@ -363,6 +391,11 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pia
     """
 
     def get_queryset(self):
+        """Funkce `PianAutocomplete.get_queryset` v modulu `webclient.pian.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         qs = Pian.objects.all().order_by("ident_cely")
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
@@ -382,6 +415,13 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
     template_name = "pian/pian_import_table.html"
 
     def post(self, request):
+        """Funkce `ImportovatPianView.post` v modulu `webclient.pian.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         docfile = request.FILES["file"]
         if docfile.size == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
@@ -468,4 +508,11 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
 
     def check_epsg(self, epsg):
         # @jiribartos kontrola geometrie
+        """Funkce `ImportovatPianView.check_epsg` v modulu `webclient.pian.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param epsg: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return file_validate_epsg(epsg)
