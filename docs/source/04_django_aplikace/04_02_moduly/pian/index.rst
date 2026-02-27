@@ -5,7 +5,7 @@ Dokumentace modulu pian.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Obsah:
+   :caption: Contents:
 
    models
    forms

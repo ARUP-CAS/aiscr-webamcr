@@ -5,7 +5,7 @@ Dokumentace modulu pid.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Obsah:
+   :caption: Contents:
 
    forms
    views

@@ -5,11 +5,10 @@ Dokumentace modulu arch_z.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Obsah:
+   :caption: Contents:
 
    models
    forms
-   helpers
    views
    signals
    filters
