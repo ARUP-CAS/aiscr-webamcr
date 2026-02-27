@@ -5,7 +5,7 @@ Dokumentace modulu uzivatel.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Obsah:
 
    models
    forms

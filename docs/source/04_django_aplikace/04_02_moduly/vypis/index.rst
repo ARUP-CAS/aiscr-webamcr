@@ -5,7 +5,7 @@ Dokumentace modulu vypis.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Obsah:
 
    views
    config
