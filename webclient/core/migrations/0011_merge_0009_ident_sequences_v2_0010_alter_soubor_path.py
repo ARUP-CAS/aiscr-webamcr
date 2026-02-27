@@ -4,7 +4,10 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.core.migrations.0011_merge_0009_ident_sequences_v2_0010_alter_soubor_path``."""
+    """Třída `Migration` v modulu `webclient.core.migrations.0011_merge_0009_ident_sequences_v2_0010_alter_soubor_path`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("core", "0009_ident_sequences_v2"),
         ("core", "0010_alter_soubor_path"),

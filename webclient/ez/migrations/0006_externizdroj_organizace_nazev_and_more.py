@@ -4,11 +4,13 @@ from django.db import migrations, models
 
 
 def populate_organizace_nazev(apps, schema_editor):
-    """Zajišťuje logiku funkce ``populate_organizace_nazev``.
+    """Funkce `populate_organizace_nazev` v modulu `webclient.ez.migrations.0006_externizdroj_organizace_nazev_and_more`.
     
-    :param apps: Vstupní hodnota parametru ``apps`` použitého při zpracování.
-    :param schema_editor: Vstupní hodnota parametru ``schema_editor`` použitého při zpracování.
-    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param apps: Vstupní hodnota používaná při zpracování.
+    :param schema_editor: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
     """
     ExterniZdroj = apps.get_model('ez', 'ExterniZdroj')
     for instance in ExterniZdroj.objects.all():
@@ -19,7 +21,10 @@ def populate_organizace_nazev(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.ez.migrations.0006_externizdroj_organizace_nazev_and_more``."""
+    """Třída `Migration` v modulu `webclient.ez.migrations.0006_externizdroj_organizace_nazev_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("ez", "0005_change_organizace_field_type"),
     ]

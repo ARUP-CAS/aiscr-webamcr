@@ -4,7 +4,10 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.nalez.migrations.0003_alter_nalezobjekt_options_alter_nalezpredmet_options``."""
+    """Třída `Migration` v modulu `webclient.nalez.migrations.0003_alter_nalezobjekt_options_alter_nalezpredmet_options`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("nalez", "0002_alter_nalezobjekt_druh_alter_nalezobjekt_specifikace_and_more"),
     ]

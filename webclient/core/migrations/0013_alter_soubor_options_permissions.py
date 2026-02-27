@@ -5,7 +5,10 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.core.migrations.0013_alter_soubor_options_permissions``."""
+    """Třída `Migration` v modulu `webclient.core.migrations.0013_alter_soubor_options_permissions`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("auth", "0012_alter_user_first_name_max_length"),
         ("core", "0012_customadminsettings_alter_odstavkasystemu_options_and_more"),

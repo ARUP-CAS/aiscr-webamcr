@@ -5,7 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.uzivatel.migrations.0016_organizace_cteni_dokumentu``."""
+    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0016_organizace_cteni_dokumentu`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("uzivatel", "0015_alter_user_jazyk"),
     ]

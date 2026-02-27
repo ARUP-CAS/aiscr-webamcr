@@ -6,7 +6,10 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.dokument.migrations.0011_rename_region_dokumentextradata_region_extra_and_more``."""
+    """Třída `Migration` v modulu `webclient.dokument.migrations.0011_rename_region_dokumentextradata_region_extra_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("heslar", "0006_alter_heslar_ident_cely_alter_heslardatace_obdobi_and_more"),
         ("dokument", "0010_alter_dokumentextradata_region_and_more"),

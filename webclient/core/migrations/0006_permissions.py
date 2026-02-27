@@ -4,7 +4,10 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.core.migrations.0006_permissions``."""
+    """Třída `Migration` v modulu `webclient.core.migrations.0006_permissions`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     initial = True
 
     dependencies = [

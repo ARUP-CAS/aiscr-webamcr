@@ -6,7 +6,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.nalez.migrations.0004_alter_nalezobjekt_druh_alter_nalezobjekt_pocet_and_more``."""
+    """Třída `Migration` v modulu `webclient.nalez.migrations.0004_alter_nalezobjekt_druh_alter_nalezobjekt_pocet_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("heslar", "0007_alter_heslar_unique_together_and_more"),
         ("nalez", "0003_alter_nalezobjekt_options_alter_nalezpredmet_options"),

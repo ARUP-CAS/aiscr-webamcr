@@ -6,7 +6,10 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.dj.migrations.0003_initial``."""
+    """Třída `Migration` v modulu `webclient.dj.migrations.0003_initial`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     initial = True
 
     dependencies = [

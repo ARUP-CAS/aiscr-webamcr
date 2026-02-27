@@ -7,11 +7,13 @@ except ImportError:
 
 
 def insert_customadminsettings_heslar_group(apps, schema_editor):
-    """Zajišťuje logiku funkce ``insert_customadminsettings_heslar_group``.
+    """Funkce `insert_customadminsettings_heslar_group` v modulu `webclient.core.migrations.0018_insert_custom_admin_settings_user`.
     
-    :param apps: Vstupní hodnota parametru ``apps`` použitého při zpracování.
-    :param schema_editor: Vstupní hodnota parametru ``schema_editor`` použitého při zpracování.
-    :return: Návratová hodnota funkce po zpracování vstupních dat.
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param apps: Vstupní hodnota používaná při zpracování.
+    :param schema_editor: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
     """
     CustomAdminSettings.objects.create(
         item_group='constants',
@@ -26,7 +28,10 @@ def insert_customadminsettings_heslar_group(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.core.migrations.0018_insert_custom_admin_settings_user``."""
+    """Třída `Migration` v modulu `webclient.core.migrations.0018_insert_custom_admin_settings_user`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ('core', '0017_insert_customadminsettings'),
     ]

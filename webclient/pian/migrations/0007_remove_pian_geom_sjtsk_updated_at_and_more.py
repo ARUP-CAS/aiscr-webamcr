@@ -5,7 +5,10 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.pian.migrations.0007_remove_pian_geom_sjtsk_updated_at_and_more``."""
+    """Třída `Migration` v modulu `webclient.pian.migrations.0007_remove_pian_geom_sjtsk_updated_at_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ('pian', '0006_remove_pian_pian_geom_check_alter_pian_geom_system_and_more'),
     ]

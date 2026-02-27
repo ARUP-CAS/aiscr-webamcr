@@ -4,7 +4,10 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.core.migrations.0009_soubor_repository_uuid``."""
+    """Třída `Migration` v modulu `webclient.core.migrations.0009_soubor_repository_uuid`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("core", "0008_alter_soubor_mimetype"),
     ]

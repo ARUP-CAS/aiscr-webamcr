@@ -5,7 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.heslar.migrations.0008_heslarodkaz_scheme_uri``."""
+    """Třída `Migration` v modulu `webclient.heslar.migrations.0008_heslarodkaz_scheme_uri`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("heslar", "0007_alter_heslar_unique_together_and_more"),
     ]

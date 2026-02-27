@@ -5,7 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.historie.migrations.0008_alter_historie_datum_zmeny_alter_historie_poznamka``."""
+    """Třída `Migration` v modulu `webclient.historie.migrations.0008_alter_historie_datum_zmeny_alter_historie_poznamka`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("historie", "0007_historie_organizace_snapshot_and_more"),
     ]

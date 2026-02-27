@@ -4,7 +4,10 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.uzivatel.migrations.0007_usernotificationtype_text_cs_and_more``."""
+    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0007_usernotificationtype_text_cs_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         (
             "uzivatel",

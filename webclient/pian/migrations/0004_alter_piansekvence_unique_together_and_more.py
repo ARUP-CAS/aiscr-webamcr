@@ -4,7 +4,10 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.pian.migrations.0004_alter_piansekvence_unique_together_and_more``."""
+    """Třída `Migration` v modulu `webclient.pian.migrations.0004_alter_piansekvence_unique_together_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("pian", "0003_views"),
     ]

@@ -5,7 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.ez.migrations.0009_alter_externizdroj_datum_rd``."""
+    """Třída `Migration` v modulu `webclient.ez.migrations.0009_alter_externizdroj_datum_rd`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("ez", "0008_rename_organizace_nazev_externizdroj_organizace"),
     ]

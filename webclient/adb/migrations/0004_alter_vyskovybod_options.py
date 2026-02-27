@@ -4,7 +4,10 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.adb.migrations.0004_alter_vyskovybod_options``."""
+    """Třída `Migration` v modulu `webclient.adb.migrations.0004_alter_vyskovybod_options`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("adb", "0003_initial"),
     ]

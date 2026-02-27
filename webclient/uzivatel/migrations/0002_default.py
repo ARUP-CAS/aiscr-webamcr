@@ -5,7 +5,10 @@ from core.constants import PROJEKT_STAV_OZNAMENY, CESKY, ORGANIZACE_MESICU_DO_ZV
 
 
 class Migration(migrations.Migration):
-    """Zapouzdřuje chování třídy ``Migration`` pro modul ``webclient.uzivatel.migrations.0002_default``."""
+    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0002_default`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     initial = True
 
     dependencies = [
