@@ -14,6 +14,10 @@ on:
         description: 'Update the list od dependencies'
         type: boolean
         default: true
+      bypass_docstring_exclusions:
+        description: 'Bypass file/class/method exclusions in docstring reminder hook'
+        type: boolean
+        default: false
         
 
 permissions:
@@ -76,6 +80,8 @@ jobs:
       # 🔍 Run pre-commit and capture exit code
       - name: Run pre-commit
         id: hooks
+        env:
+          DOCSTRING_CHECK_BYPASS_EXCLUSIONS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bypass_docstring_exclusions == 'true' }}
         run: |
           set +e
           pre-commit run --all-files 2>&1 | tee precommit.log
