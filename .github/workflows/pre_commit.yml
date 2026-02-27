@@ -59,10 +59,6 @@ jobs:
 
       # 🔧 Install project dependencies
       - name: Install Dependencies
-        if: |
-          (github.event_name == 'pull_request' && github.base_ref == 'dev') ||
-          (github.event_name == 'push' && github.ref_name == 'dev') ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.dependencies == 'true')
         run: |
           pip install --upgrade pip
           pip install pip-licenses
