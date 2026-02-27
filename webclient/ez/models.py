@@ -87,10 +87,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     doi = models.CharField(max_length=255, blank=True, null=True, db_index=True)
 
     class Meta:
-        """Třída `ExterniZdroj.Meta` v modulu `webclient.ez.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "externi_zdroj"
 
     def get_absolute_url(self):
@@ -103,11 +100,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         )
 
     def __str__(self):
-        """Funkce `ExterniZdroj.__str__` v modulu `webclient.ez.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if self.ident_cely:
             return self.ident_cely
         else:
@@ -183,19 +178,15 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         self.save()
 
     def get_permission_object(self):
-        """Funkce `ExterniZdroj.get_permission_object` v modulu `webclient.ez.models`.
+        """Vrací permission object.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
-        """Funkce `ExterniZdroj.get_create_user` v modulu `webclient.ez.models`.
+        """Vrací create user.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_EXT_ZD)[0].uzivatel,)
         except Exception as e:
@@ -203,11 +194,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return ()
 
     def get_create_org(self):
-        """Funkce `ExterniZdroj.get_create_org` v modulu `webclient.ez.models`.
+        """Vrací create org.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.get_create_user()[0].organizace,)
         except Exception as e:
@@ -215,11 +204,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return ()
 
     def set_snapshots(self):
-        """Funkce `ExterniZdroj.set_snapshots` v modulu `webclient.ez.models`.
+        """Nastaví snapshots.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if not self.externizdrojautor_set.all():
             self.autori_snapshot = None
         else:
@@ -235,21 +222,17 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     @property
     def redis_snapshot_id(self):
-        """Funkce `ExterniZdroj.redis_snapshot_id` v modulu `webclient.ez.models`.
+        """Provádí operaci redis snapshot id.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         from ez.views import ExterniZdrojListView
 
         return f"{ExterniZdrojListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Funkce `ExterniZdroj.generate_redis_snapshot` v modulu `webclient.ez.models`.
+        """Vygeneruje redis snapshot.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací nově vytvořený výsledek operace."""
         from ez.tables import ExterniZdrojTable
 
         data = ExterniZdroj.objects.filter(pk=self.pk)
@@ -258,11 +241,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         return self.redis_snapshot_id, data
 
     def check_set_permanent_ident(self):
-        """Funkce `ExterniZdroj.check_set_permanent_ident` v modulu `webclient.ez.models`.
+        """Ověří set permanent ident.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek ověření nebo validačního pravidla."""
         historie_poznamka = None
         if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             old_ident = self.ident_cely
@@ -316,18 +297,13 @@ class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), model
     poradi = models.IntegerField()
 
     def get_osoba(self):
-        """Funkce `ExterniZdrojAutor.get_osoba` v modulu `webclient.ez.models`.
+        """Vrací osoba.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.autor.vypis_cely
 
     class Meta:
-        """Třída `ExterniZdrojAutor.Meta` v modulu `webclient.ez.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "externi_zdroj_autor"
         unique_together = (("externi_zdroj", "autor"), ("externi_zdroj", "poradi"))
 
@@ -342,18 +318,13 @@ class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), mod
     poradi = models.IntegerField()
 
     def get_osoba(self):
-        """Funkce `ExterniZdrojEditor.get_osoba` v modulu `webclient.ez.models`.
+        """Vrací osoba.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.editor.vypis_cely
 
     class Meta:
-        """Třída `ExterniZdrojEditor.Meta` v modulu `webclient.ez.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "externi_zdroj_editor"
         unique_together = (
             ("externi_zdroj", "editor"),
@@ -370,9 +341,6 @@ class ExterniZdrojSekvence(models.Model):
     sekvence = models.IntegerField()
 
     class Meta:
-        """Třída `ExterniZdrojSekvence.Meta` v modulu `webclient.ez.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "externi_zdroj_sekvence"
         constraints = [models.CheckConstraint(name="constraint_only_one_sekvence", condition=models.Q(id=1))]

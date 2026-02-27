@@ -76,13 +76,10 @@ output_buffer = StringIO()
 
 
 def reader_and_capture(pipe):
-    """Funkce `reader_and_capture` v modulu `webclient.run_tests`.
+    """Provádí operaci reader and capture.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param pipe: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param pipe: Vstupní hodnota ``pipe`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     while True:
         line = pipe.readline()
         if not line:
@@ -92,13 +89,10 @@ def reader_and_capture(pipe):
 
 
 def filelog(pipe):
-    """Funkce `filelog` v modulu `webclient.run_tests`.
+    """Provádí operaci filelog.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param pipe: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param pipe: Vstupní hodnota ``pipe`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     with open("/vol/web/selenium_test/test.log", "a") as file:
         while True:
             line = pipe.read(1)

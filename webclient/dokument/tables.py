@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Model3DTable(SearchTable):
     """
-    Class pro definování tabulky pro modelu 3D použitých pro zobrazení přehledu modelu 3D a exportu.
+    Definuje tabulku 3D modelů pro přehled i export.
     """
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.modelTable.ident_cely.label"))
@@ -60,10 +60,7 @@ class Model3DTable(SearchTable):
     )
 
     class Meta:
-        """Třída `Model3DTable.Meta` v modulu `webclient.dokument.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Dokument
         fields = (
             "ident_cely",
@@ -99,14 +96,11 @@ class Model3DTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `Model3DTable.__init__` v modulu `webclient.dokument.tables`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(Model3DTable, self).__init__(*args, **kwargs)
 
     def render_nahled(self, value, record):
@@ -146,7 +140,7 @@ class Model3DTable(SearchTable):
 
 class DokumentTable(SearchTable):
     """
-    Class pro definování tabulky pro dokumenty použitých pro zobrazení přehledu dokumentů a exportu.
+    Definuje tabulku dokumentů pro přehled i export.
     """
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.ident_cely.label"))
@@ -293,10 +287,7 @@ class DokumentTable(SearchTable):
         return ""
 
     class Meta:
-        """Třída `DokumentTable.Meta` v modulu `webclient.dokument.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Dokument
         fields = (
             "nahled",
@@ -375,12 +366,9 @@ class DokumentTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `DokumentTable.__init__` v modulu `webclient.dokument.tables`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(DokumentTable, self).__init__(*args, **kwargs)

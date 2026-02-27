@@ -46,121 +46,90 @@ from uzivatel.models import Heslar, Organizace, Osoba
 
 
 class ModelSerializer(ABC):
-    """Třída `ModelSerializer` v modulu `webclient.pid.model_serializers`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``ModelSerializer`` v rámci aplikace."""
     def __init__(self, record):
-        """Funkce `ModelSerializer.__init__` v modulu `webclient.pid.model_serializers`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         self.record = record
 
     @staticmethod
     def format_date(date):
-        """Funkce `ModelSerializer.format_date` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci format date.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param date: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param date: Vstupní hodnota ``date`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         return date.strftime("%Y-%m-%d")
 
     @staticmethod
     def format_date_time(date_time):
-        """Funkce `ModelSerializer.format_date_time` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci format date time.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param date_time: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param date_time: Vstupní hodnota ``date_time`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         return date_time.strftime("%Y-%m-%dT%H:%M:%S%z")
 
     @abstractmethod
     def _get_creators(self):
-        """Funkce `ModelSerializer._get_creators` v modulu `webclient.pid.model_serializers`.
+        """Vrací creators.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     @abstractmethod
     def _get_historie_queryset(self):
-        """Funkce `ModelSerializer._get_historie_queryset` v modulu `webclient.pid.model_serializers`.
+        """Vrací historie queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     @abstractmethod
     def get_ident_cely(self):
-        """Funkce `ModelSerializer.get_ident_cely` v modulu `webclient.pid.model_serializers`.
+        """Vrací ident cely.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     @abstractmethod
     def _get_publication_year(self):
-        """Funkce `ModelSerializer._get_publication_year` v modulu `webclient.pid.model_serializers`.
+        """Vrací publication year.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     def _get_language(self):
-        """Funkce `ModelSerializer._get_language` v modulu `webclient.pid.model_serializers`.
+        """Vrací language.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return "cs"
 
     @abstractmethod
     def _get_prefix(self):
-        """Funkce `ModelSerializer._get_prefix` v modulu `webclient.pid.model_serializers`.
+        """Vrací prefix.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     @abstractmethod
     def _get_soubory_queryset(self):
-        """Funkce `ModelSerializer._get_soubory_queryset` v modulu `webclient.pid.model_serializers`.
+        """Vrací soubory queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     @abstractmethod
     def _get_title(self, language: str):
-        """Funkce `ModelSerializer._get_title` v modulu `webclient.pid.model_serializers`.
+        """Vrací title.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param language: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param language: Vstupní hodnota ``language`` pro danou operaci.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     def _serialize_alternate_identifiers(self):
-        """Funkce `ModelSerializer._serialize_alternate_identifiers` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize alternate identifiers.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         result = [
             {
                 "alternateIdentifierType": "Local accession number",
@@ -170,11 +139,9 @@ class ModelSerializer(ABC):
         return result
 
     def _serialize_contributors(self):
-        """Funkce `ModelSerializer._serialize_contributors` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize contributors.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         result = [
             {
                 "name": "Archaeological Information System of the Czech Republic",
@@ -194,46 +161,36 @@ class ModelSerializer(ABC):
 
     @abstractmethod
     def _serialize_creators(self):
-        """Funkce `ModelSerializer._serialize_creators` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize creators.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         pass
 
     @abstractmethod
     def _serialize_dates(self):
-        """Funkce `ModelSerializer._serialize_dates` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize dates.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         pass
 
     @abstractmethod
     def _serialize_descriptions(self):
-        """Funkce `ModelSerializer._serialize_descriptions` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize descriptions.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         pass
 
     @abstractmethod
     def _serialize_geolocations(self):
-        """Funkce `ModelSerializer._serialize_geolocations` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize geolocations.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         pass
 
     def _serialize_related_identifiers(self):
-        """Funkce `ModelSerializer._serialize_related_identifiers` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize related identifiers.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         result = [
             {
                 "relationType": "HasMetadata",
@@ -248,19 +205,15 @@ class ModelSerializer(ABC):
 
     @abstractmethod
     def _serialize_rightslist(self):
-        """Funkce `ModelSerializer._serialize_rightslist` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize rightslist.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         pass
 
     def _serialize_subjects(self):
-        """Funkce `ModelSerializer._serialize_subjects` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize subjects.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         result = [
             frozenset(
                 {
@@ -277,28 +230,22 @@ class ModelSerializer(ABC):
 
     @abstractmethod
     def _serialize_types(self):
-        """Funkce `ModelSerializer._serialize_types` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize types.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         pass
 
     @abstractmethod
     def _get_formats(self):
-        """Funkce `ModelSerializer._get_formats` v modulu `webclient.pid.model_serializers`.
+        """Vrací formats.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     def serialize_delete(self):
-        """Funkce `ModelSerializer.serialize_delete` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize delete.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return {
             "data": {
                 "type": "dois",
@@ -317,19 +264,15 @@ class ModelSerializer(ABC):
         }
 
     def serialize_hide(self):
-        """Funkce `ModelSerializer.serialize_hide` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize hide.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return {"data": {"type": "dois", "attributes": {"event": "hide"}}}
 
     def serialize_publish(self):
-        """Funkce `ModelSerializer.serialize_publish` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize publish.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         data = {
             "data": {
                 "type": "dois",
@@ -385,48 +328,35 @@ class ModelSerializer(ABC):
         return data
 
     def serialize_update(self):
-        """Funkce `ModelSerializer.serialize_update` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize update.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         result = self.serialize_publish()
         result["data"]["attributes"].pop("event")
         return result
 
 
 class PartialSerializer(ABC):
-    """Třída `PartialSerializer` v modulu `webclient.pid.model_serializers`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``PartialSerializer`` v rámci aplikace."""
     def __init__(self, record):
-        """Funkce `PartialSerializer.__init__` v modulu `webclient.pid.model_serializers`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         self.record = record
 
     def serialize_publish(self):
-        """Funkce `PartialSerializer.serialize_publish` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize publish.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         pass
 
 
 def convert_geo_location_to_dict(item) -> Dict:
-    """Funkce `convert_geo_location_to_dict` v modulu `webclient.pid.model_serializers`.
+    """Převede geo location to dict.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param item: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param item: Vstupní hodnota ``item`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     item = dict(item)
     if "geoLocationPoint" in item:
         item["geoLocationPoint"] = dict(item["geoLocationPoint"])
@@ -434,24 +364,18 @@ def convert_geo_location_to_dict(item) -> Dict:
 
 
 def serialize_ez_creator(autor: Osoba) -> Dict[str, str]:
-    """Funkce `serialize_ez_creator` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize ez creator.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param autor: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param autor: Vstupní hodnota ``autor`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     return {"name": autor.vypis_cely, "givenName": autor.jmeno, "familyName": autor.prijmeni, "nameType": "Personal"}
 
 
 def serialize_ez_contributor(contributor: Osoba) -> Dict[str, str]:
-    """Funkce `serialize_ez_contributor` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize ez contributor.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param contributor: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param contributor: Vstupní hodnota ``contributor`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     return {
         "name": contributor.vypis_cely,
         "givenName": contributor.jmeno,
@@ -462,15 +386,12 @@ def serialize_ez_contributor(contributor: Osoba) -> Dict[str, str]:
 
 
 def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool | None = False) -> frozenset:
-    """Funkce `serialize_geom` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize geom.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param geom: Vstupní hodnota používaná při zpracování.
-    :param katastr: Vstupní hodnota používaná při zpracování.
-    :param verejne: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param geom: Vstupní hodnota ``geom`` pro danou operaci.
+    :param katastr: Vstupní hodnota ``katastr`` pro danou operaci.
+    :param verejne: Vstupní hodnota ``verejne`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     serialized_geom = {}
     if geom and verejne:
         serialized_geom.update(
@@ -491,13 +412,10 @@ def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool
 
 
 def serialize_affiliation(organizace: Organizace):
-    """Funkce `serialize_affiliation` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize affiliation.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param organizace: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param organizace: Vstupní hodnota ``organizace`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     serialized_affiliation = {"name": organizace.nazev}
     if organizace.ror:
         serialized_affiliation["affiliationIdentifier"] = organizace.ror
@@ -507,14 +425,11 @@ def serialize_affiliation(organizace: Organizace):
 
 
 def serialize_organizace_contributor(organizace: Organizace, contributor_type: str):
-    """Funkce `serialize_organizace_contributor` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize organizace contributor.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param organizace: Vstupní hodnota používaná při zpracování.
-    :param contributor_type: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param organizace: Vstupní hodnota ``organizace`` pro danou operaci.
+    :param contributor_type: Vstupní hodnota ``contributor_type`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     return {
         "name": organizace.nazev,
         "nameType": "Organizational",
@@ -535,13 +450,10 @@ def serialize_organizace_contributor(organizace: Organizace, contributor_type: s
 
 
 def serialize_osoba_identifiers(osoba: Osoba):
-    """Funkce `serialize_osoba_identifiers` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize osoba identifiers.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param osoba: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param osoba: Vstupní hodnota ``osoba`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     result = [
         {
             "schemeUri": settings.DIGI_LINKS["OAPI_link"],
@@ -563,15 +475,12 @@ def serialize_osoba_identifiers(osoba: Osoba):
 
 
 def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contributor_type: str | None = None) -> Dict:
-    """Funkce `serialize_osoba` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize osoba.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param osoba: Vstupní hodnota používaná při zpracování.
-    :param organizace: Vstupní hodnota používaná při zpracování.
-    :param contributor_type: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param osoba: Vstupní hodnota ``osoba`` pro danou operaci.
+    :param organizace: Vstupní hodnota ``organizace`` pro danou operaci.
+    :param contributor_type: Vstupní hodnota ``contributor_type`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     serialized_record = {
         "name": osoba.vypis_cely if osoba.pk != OSOBA_ANONYM else ":unkn",
         "nameType": "Personal",
@@ -588,15 +497,12 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
 
 
 def serialize_subject(serialized_record, subject_attr="heslo_en", lang="en"):
-    """Funkce `serialize_subject` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize subject.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param serialized_record: Vstupní hodnota používaná při zpracování.
-    :param subject_attr: Vstupní hodnota používaná při zpracování.
-    :param lang: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param serialized_record: Vstupní hodnota ``serialized_record`` pro danou operaci.
+    :param subject_attr: Vstupní hodnota ``subject_attr`` pro danou operaci.
+    :param lang: Vstupní hodnota ``lang`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     if serialized_record is None:
         return frozenset()
     output = {
@@ -611,13 +517,10 @@ def serialize_subject(serialized_record, subject_attr="heslo_en", lang="en"):
 
 
 def serialize_subjects_komponenty(komp: Komponenta):
-    """Funkce `serialize_subjects_komponenty` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize subjects komponenty.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param komp: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param komp: Vstupní hodnota ``komp`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     result = [serialize_subject(komp.obdobi)]
     result += [serialize_subject(komp.areal)]
     result += [serialize_subject(aktivita) for aktivita in komp.aktivity.all()]
@@ -629,13 +532,10 @@ def serialize_subjects_komponenty(komp: Komponenta):
 
 
 def serialize_dates_coverage(datace: Heslar) -> frozenset | None:
-    """Funkce `serialize_dates_coverage` v modulu `webclient.pid.model_serializers`.
+    """Provádí operaci serialize dates coverage.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param datace: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param datace: Vstupní hodnota ``datace`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     try:
         result = frozenset(
             {
@@ -650,100 +550,75 @@ def serialize_dates_coverage(datace: Heslar) -> frozenset | None:
 
 
 class DokumentSerializer(ModelSerializer):
-    """Třída `DokumentSerializer` v modulu `webclient.pid.model_serializers`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``DokumentSerializer`` v rámci aplikace."""
     def __init__(self, record: Dokument):
-        """Funkce `DokumentSerializer.__init__` v modulu `webclient.pid.model_serializers`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(record)
         self.record: Dokument
 
     def _get_creators(self):
-        """Funkce `DokumentSerializer._get_creators` v modulu `webclient.pid.model_serializers`.
+        """Vrací creators.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.dokumentautor_set.all()
 
     def _get_historie_queryset(self):
-        """Funkce `DokumentSerializer._get_historie_queryset` v modulu `webclient.pid.model_serializers`.
+        """Vrací historie queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.historie.historie_set
 
     def get_ident_cely(self):
-        """Funkce `DokumentSerializer.get_ident_cely` v modulu `webclient.pid.model_serializers`.
+        """Vrací ident cely.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.ident_cely
 
     def _get_language(self):
-        """Funkce `DokumentSerializer._get_language` v modulu `webclient.pid.model_serializers`.
+        """Vrací language.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         jazyk = self.record.jazyky.exclude(pk=JAZYK_NERELEVANTNI).order_by("razeni").first()
         if jazyk is None:
             return None
         return jazyk.zkratka
 
     def _get_publication_year(self):
-        """Funkce `DokumentSerializer._get_publication_year` v modulu `webclient.pid.model_serializers`.
+        """Vrací publication year.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.rok_vzniku
 
     def _get_prefix(self):
-        """Funkce `DokumentSerializer._get_prefix` v modulu `webclient.pid.model_serializers`.
+        """Vrací prefix.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return settings.DOI_PREFIX
 
     def _get_soubory_queryset(self):
-        """Funkce `DokumentSerializer._get_soubory_queryset` v modulu `webclient.pid.model_serializers`.
+        """Vrací soubory queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.record.soubory:
             return self.record.soubory.soubory
 
     def _get_title(self, language: str):
-        """Funkce `DokumentSerializer._get_title` v modulu `webclient.pid.model_serializers`.
+        """Vrací title.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param language: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param language: Vstupní hodnota ``language`` pro danou operaci.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
             "en": f"AMCR {self.get_ident_cely()} – {self.record.typ_dokumentu.heslo_en}",
             "cs": f"AMCR {self.get_ident_cely()} – {self.record.typ_dokumentu.heslo}",
         }[language]
 
     def _serialize_alternate_identifiers(self):
-        """Funkce `DokumentSerializer._serialize_alternate_identifiers` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize alternate identifiers.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         alternate_identifiers = super()._serialize_alternate_identifiers()
         if self.record.oznaceni_originalu:
             alternate_identifiers += [
@@ -755,11 +630,9 @@ class DokumentSerializer(ModelSerializer):
         return alternate_identifiers
 
     def _serialize_contributors(self):
-        """Funkce `DokumentSerializer._serialize_contributors` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize contributors.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         contributors = super()._serialize_contributors()
         if self.record.let and self.record.let.pozorovatel:
             contributors += [serialize_osoba(self.record.let.pozorovatel, self.record.let.organizace, "ProjectLeader")]
@@ -795,19 +668,15 @@ class DokumentSerializer(ModelSerializer):
         return contributors
 
     def _serialize_creators(self):
-        """Funkce `DokumentSerializer._serialize_creators` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize creators.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return [serialize_osoba(author.autor, self.record.organizace) for author in self._get_creators()]
 
     def _serialize_dates(self):
-        """Funkce `DokumentSerializer._serialize_dates` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize dates.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         dates = []
         try:
             if self.record.extra_data and self.record.extra_data.datum_vzniku:
@@ -845,11 +714,9 @@ class DokumentSerializer(ModelSerializer):
         return dates
 
     def _serialize_descriptions(self) -> List[Dict]:
-        """Funkce `DokumentSerializer._serialize_descriptions` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize descriptions.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         descriptions = []
         if self.record.popis:
             descriptions.append({"lang": "cs", "description": self.record.popis, "descriptionType": "Abstract"})
@@ -858,11 +725,9 @@ class DokumentSerializer(ModelSerializer):
         return descriptions
 
     def _serialize_geolocations(self):
-        """Funkce `DokumentSerializer._serialize_geolocations` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize geolocations.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         geo_locations: List[frozenset] = []
         try:
             if self.record.extra_data.geom and self.record.rada.pk == DOKUMENT_RADA_DATA_3D:
@@ -906,11 +771,9 @@ class DokumentSerializer(ModelSerializer):
         return result
 
     def _serialize_related_identifiers(self):
-        """Funkce `DokumentSerializer._serialize_related_identifiers` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize related identifiers.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         related_identifiers = super()._serialize_related_identifiers()
         for soubor in self._get_soubory_queryset().all():
             soubor: Soubor
@@ -979,11 +842,9 @@ class DokumentSerializer(ModelSerializer):
         return related_identifiers
 
     def _serialize_rightslist(self):
-        """Funkce `DokumentSerializer._serialize_rightslist` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize rightslist.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         result = []
         if self.record.licence:
             serialized_rights = {
@@ -1000,11 +861,9 @@ class DokumentSerializer(ModelSerializer):
         return result
 
     def _serialize_subjects(self):
-        """Funkce `DokumentSerializer._serialize_subjects` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize subjects.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         serialized_subjects = super()._serialize_subjects()
         serialized_subjects += [serialize_subject(posudek) for posudek in self.record.posudky.all()]
         serialized_subjects += [serialize_subject(osoba, "vypis_cely", "") for osoba in self.record.osoby.all()]
@@ -1043,11 +902,9 @@ class DokumentSerializer(ModelSerializer):
         return serialized_subjects
 
     def _serialize_types(self) -> dict:
-        """Funkce `DokumentSerializer._serialize_types` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize types.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         resource_type_query = self.record.typ_dokumentu.heslar_odkaz.filter(zdroj="DataCite").filter(
             nazev_kodu="resourceTypeGeneral"
         )
@@ -1061,11 +918,9 @@ class DokumentSerializer(ModelSerializer):
         return serialized_types
 
     def _get_formats(self):
-        """Funkce `DokumentSerializer._get_formats` v modulu `webclient.pid.model_serializers`.
+        """Vrací formats.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         result = []
         soubory_queryset = self._get_soubory_queryset()
         if soubory_queryset and soubory_queryset.exists():
@@ -1077,68 +932,50 @@ class DokumentSerializer(ModelSerializer):
 
 
 class SamostatnyNalezSerializer(ModelSerializer):
-    """Třída `SamostatnyNalezSerializer` v modulu `webclient.pid.model_serializers`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``SamostatnyNalezSerializer`` v rámci aplikace."""
     def __init__(self, record: SamostatnyNalez):
-        """Funkce `SamostatnyNalezSerializer.__init__` v modulu `webclient.pid.model_serializers`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(record)
         self.record: SamostatnyNalez
 
     def _get_creators(self):
-        """Funkce `SamostatnyNalezSerializer._get_creators` v modulu `webclient.pid.model_serializers`.
+        """Vrací creators.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     def _get_historie_queryset(self):
-        """Funkce `SamostatnyNalezSerializer._get_historie_queryset` v modulu `webclient.pid.model_serializers`.
+        """Vrací historie queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.historie.historie_set
 
     def get_ident_cely(self):
-        """Funkce `SamostatnyNalezSerializer.get_ident_cely` v modulu `webclient.pid.model_serializers`.
+        """Vrací ident cely.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.ident_cely
 
     def _get_soubory_queryset(self):
-        """Funkce `SamostatnyNalezSerializer._get_soubory_queryset` v modulu `webclient.pid.model_serializers`.
+        """Vrací soubory queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.record.soubory:
             return self.record.soubory.soubory
 
     def _get_prefix(self):
-        """Funkce `SamostatnyNalezSerializer._get_prefix` v modulu `webclient.pid.model_serializers`.
+        """Vrací prefix.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return settings.IGSN_PREFIX
 
     def _get_publication_year(self):
-        """Funkce `SamostatnyNalezSerializer._get_publication_year` v modulu `webclient.pid.model_serializers`.
+        """Vrací publication year.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         publication_year_history = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_SN)
         if publication_year_history.exists():
             return publication_year_history.first().datum_zmeny.year
@@ -1147,24 +984,19 @@ class SamostatnyNalezSerializer(ModelSerializer):
             return datetime.now().year
 
     def _get_title(self, language: str):
-        """Funkce `SamostatnyNalezSerializer._get_title` v modulu `webclient.pid.model_serializers`.
+        """Vrací title.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param language: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param language: Vstupní hodnota ``language`` pro danou operaci.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
             "en": f"AMCR {self.record.ident_cely} – {self.record.druh_nalezu.heslo_en if self.record.druh_nalezu else ''} ({self.record.specifikace.heslo_en if self.record.specifikace else ''}), {self.record.obdobi.heslo_en if self.record.obdobi else ''}",
             "cs": f"AMCR {self.record.ident_cely} – {self.record.druh_nalezu.heslo if self.record.druh_nalezu else ''} ({self.record.specifikace.heslo if self.record.specifikace else ''}), {self.record.obdobi.heslo if self.record.obdobi else ''}",
         }[language]
 
     def _serialize_alternate_identifiers(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_alternate_identifiers` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize alternate identifiers.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         alternate_identifiers = super()._serialize_alternate_identifiers()
         if self.record.evidencni_cislo:
             alternate_identifiers += [
@@ -1176,11 +1008,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return alternate_identifiers
 
     def _serialize_contributors(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_contributors` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize contributors.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         contributors = super()._serialize_contributors()
         if self.record.projekt.vedouci_projektu and self.record.projekt.organizace:
             contributors += [
@@ -1191,11 +1021,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return contributors
 
     def _serialize_creators(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_creators` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize creators.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if self.record.nalezce:
             result = [serialize_osoba(self.record.nalezce, self.record.projekt.organizace)]
         else:
@@ -1203,11 +1031,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return result
 
     def _serialize_dates(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_dates` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize dates.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         dates = []
         if self.record.datum_nalezu:
             dates += [{"date": self.format_date(self.record.datum_nalezu), "dateType": "Collected"}]
@@ -1233,11 +1059,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return dates
 
     def _serialize_descriptions(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_descriptions` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize descriptions.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         descriptions = [{"lang": "en", "description": "Collected by field survey.", "descriptionType": "Methods"}]
         if self.record.poznamka:
             descriptions.append({"lang": "cs", "description": self.record.poznamka, "descriptionType": "Abstract"})
@@ -1260,11 +1084,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return descriptions
 
     def _serialize_geolocations(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_geolocations` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize geolocations.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         geo_locations: List[Dict] = []
         if self.record.katastr:
             verejne = self.record.pristupnost.pk == PRISTUPNOST_ANONYM_ID
@@ -1276,11 +1098,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return geo_locations
 
     def _serialize_related_identifiers(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_related_identifiers` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize related identifiers.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         related_identifiers = super()._serialize_related_identifiers()
         for soubor in self._get_soubory_queryset().all():
             soubor: Soubor
@@ -1303,11 +1123,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return related_identifiers
 
     def _serialize_rightslist(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_rightslist` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize rightslist.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return [
             {
                 "rights": "Creative Commons Attribution-NonCommercial 4.0 International",
@@ -1320,11 +1138,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
         ]
 
     def _serialize_subjects(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_subjects` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize subjects.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         serialized_subjects = super()._serialize_subjects()
         if self.record.obdobi:
             serialized_subjects += [
@@ -1342,92 +1158,68 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return serialized_subjects
 
     def _serialize_types(self):
-        """Funkce `SamostatnyNalezSerializer._serialize_types` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize types.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return {"resourceType": "archaeological object", "resourceTypeGeneral": "PhysicalObject"}
 
     def _get_formats(self):
-        """Funkce `SamostatnyNalezSerializer._get_formats` v modulu `webclient.pid.model_serializers`.
+        """Vrací formats.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return []
 
 
 class LokalitaSerializer(ModelSerializer):
-    """Třída `LokalitaSerializer` v modulu `webclient.pid.model_serializers`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``LokalitaSerializer`` v rámci aplikace."""
     def __init__(self, record: Lokalita):
-        """Funkce `LokalitaSerializer.__init__` v modulu `webclient.pid.model_serializers`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param record: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(record)
         self.record: Lokalita
 
     def _get_creators(self):
-        """Funkce `LokalitaSerializer._get_creators` v modulu `webclient.pid.model_serializers`.
+        """Vrací creators.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         pass
 
     def get_ident_cely(self):
-        """Funkce `LokalitaSerializer.get_ident_cely` v modulu `webclient.pid.model_serializers`.
+        """Vrací ident cely.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.archeologicky_zaznam.ident_cely
 
     def _get_historie_queryset(self):
-        """Funkce `LokalitaSerializer._get_historie_queryset` v modulu `webclient.pid.model_serializers`.
+        """Vrací historie queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.archeologicky_zaznam.historie.historie_set
 
     def _get_prefix(self):
-        """Funkce `LokalitaSerializer._get_prefix` v modulu `webclient.pid.model_serializers`.
+        """Vrací prefix.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return settings.IGSN_PREFIX
 
     def _serialize_contributors(self):
-        """Funkce `LokalitaSerializer._serialize_contributors` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize contributors.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return super()._serialize_contributors()
 
     def _get_soubory_queryset(self):
-        """Funkce `LokalitaSerializer._get_soubory_queryset` v modulu `webclient.pid.model_serializers`.
+        """Vrací soubory queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return None
 
     def _serialize_dates(self) -> List[Dict]:
-        """Funkce `LokalitaSerializer._serialize_dates` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize dates.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         dates: List[Dict] = []
         for date in self.record.archeologicky_zaznam.historie.historie_set.all():
             date: Historie
@@ -1453,11 +1245,9 @@ class LokalitaSerializer(ModelSerializer):
         return dates
 
     def _serialize_descriptions(self):
-        """Funkce `LokalitaSerializer._serialize_descriptions` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize descriptions.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         descriptions = [
             {
                 "lang": "en",
@@ -1488,21 +1278,17 @@ class LokalitaSerializer(ModelSerializer):
         return descriptions
 
     def _get_externi_odkaz_query(self):
-        """Funkce `LokalitaSerializer._get_externi_odkaz_query` v modulu `webclient.pid.model_serializers`.
+        """Vrací externi odkaz query.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.record.archeologicky_zaznam.externi_odkazy.filter(
             externi_zdroj__typ__heslar_odkaz__zdroj="DataCite"
         ).filter(externi_zdroj__typ__heslar_odkaz__nazev_kodu="resourceTypeGeneral")
 
     def _serialize_geolocations(self):
-        """Funkce `LokalitaSerializer._serialize_geolocations` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize geolocations.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         geo_locations: List[frozenset] = []
         verejne = self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID
         geo_locations.append(
@@ -1519,11 +1305,9 @@ class LokalitaSerializer(ModelSerializer):
         return result
 
     def _get_publication_year(self):
-        """Funkce `LokalitaSerializer._get_publication_year` v modulu `webclient.pid.model_serializers`.
+        """Vrací publication year.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         archivace_history_queryset = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_AZ)
         if archivace_history_queryset.exists():
             return archivace_history_queryset.first().datum_zmeny.year
@@ -1532,11 +1316,9 @@ class LokalitaSerializer(ModelSerializer):
             return datetime.now().year
 
     def _serialize_rightslist(self):
-        """Funkce `LokalitaSerializer._serialize_rightslist` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize rightslist.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return [
             {
                 "rights": "Creative Commons Attribution-NonCommercial 4.0 International",
@@ -1549,24 +1331,19 @@ class LokalitaSerializer(ModelSerializer):
         ]
 
     def _get_title(self, language: str):
-        """Funkce `LokalitaSerializer._get_title` v modulu `webclient.pid.model_serializers`.
+        """Vrací title.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param language: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param language: Vstupní hodnota ``language`` pro danou operaci.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
             "en": f"AMCR {self.get_ident_cely()} – {self.record.druh.heslo_en} {self.record.nazev * (self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID)}",
             "cs": f"AMCR {self.get_ident_cely()} – {self.record.druh.heslo} {self.record.nazev * (self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID)}",
         }[language]
 
     def _serialize_alternate_identifiers(self):
-        """Funkce `LokalitaSerializer._serialize_alternate_identifiers` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize alternate identifiers.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         alternate_identifiers = super()._serialize_alternate_identifiers()
         if self.record.archeologicky_zaznam.uzivatelske_oznaceni:
             alternate_identifiers += [
@@ -1578,11 +1355,9 @@ class LokalitaSerializer(ModelSerializer):
         return alternate_identifiers
 
     def _serialize_creators(self):
-        """Funkce `LokalitaSerializer._serialize_creators` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize creators.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         result = [
             {
                 "name": "Archaeological Information System of the Czech Republic",
@@ -1600,11 +1375,9 @@ class LokalitaSerializer(ModelSerializer):
         return result
 
     def _serialize_related_identifiers(self):
-        """Funkce `LokalitaSerializer._serialize_related_identifiers` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize related identifiers.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         related_identifiers = super()._serialize_related_identifiers()
         casti_dokumentu_query = (
             self.record.archeologicky_zaznam.casti_dokumentu.filter(
@@ -1655,11 +1428,9 @@ class LokalitaSerializer(ModelSerializer):
         return related_identifiers
 
     def _serialize_related_items(self):
-        """Funkce `LokalitaSerializer._serialize_related_items` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize related items.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         related_items = []
         for externi_odkaz in self._get_externi_odkaz_query():
             externi_odkaz: ExterniOdkaz
@@ -1709,11 +1480,9 @@ class LokalitaSerializer(ModelSerializer):
         return related_items
 
     def _serialize_subjects(self):
-        """Funkce `LokalitaSerializer._serialize_subjects` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize subjects.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         serialized_subjects = super()._serialize_subjects()
         if self.record.druh:
             serialized_subjects += [serialize_subject(self.record.druh)]
@@ -1726,37 +1495,29 @@ class LokalitaSerializer(ModelSerializer):
         return serialized_subjects
 
     def _serialize_types(self):
-        """Funkce `LokalitaSerializer._serialize_types` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize types.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return {"resourceType": "archaeological site", "resourceTypeGeneral": "PhysicalObject"}
 
     def _get_formats(self):
-        """Funkce `LokalitaSerializer._get_formats` v modulu `webclient.pid.model_serializers`.
+        """Vrací formats.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return []
 
     def serialize_publish(self):
-        """Funkce `LokalitaSerializer.serialize_publish` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize publish.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         publish = super().serialize_publish()
         publish["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
         return publish
 
     def serialize_update(self):
-        """Funkce `LokalitaSerializer.serialize_update` v modulu `webclient.pid.model_serializers`.
+        """Provádí operaci serialize update.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         result = super().serialize_publish()
         result["data"]["attributes"].pop("event")
         result["data"]["attributes"]["relatedItems"] = self._serialize_related_items()

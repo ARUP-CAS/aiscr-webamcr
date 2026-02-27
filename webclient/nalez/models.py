@@ -42,40 +42,30 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
-        """Třída `NalezObjekt.Meta` v modulu `webclient.nalez.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "nalez_objekt"
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init__(self, *args, **kwargs):
-        """Funkce `NalezObjekt.__init__` v modulu `webclient.nalez.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
-        """Funkce `NalezObjekt.__str__` v modulu `webclient.nalez.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Funkce `NalezObjekt.get_permission_object` v modulu `webclient.nalez.models`.
+        """Vrací permission object.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.komponenta.get_permission_object()
 
 
@@ -115,38 +105,28 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
-        """Třída `NalezPredmet.Meta` v modulu `webclient.nalez.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "nalez_predmet"
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init_(self, *args, **kwargs):
-        """Funkce `NalezPredmet.__init_` v modulu `webclient.nalez.models`.
+        """Provádí operaci init.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
-        """Funkce `NalezPredmet.__str__` v modulu `webclient.nalez.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Funkce `NalezPredmet.get_permission_object` v modulu `webclient.nalez.models`.
+        """Vrací permission object.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.komponenta.get_permission_object()

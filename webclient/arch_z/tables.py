@@ -7,30 +7,21 @@ from .models import Akce
 
 
 class BooleanValueColumn(tables.columns.Column):
-    """Třída `BooleanValueColumn` v modulu `webclient.arch_z.tables`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``BooleanValueColumn`` v rámci aplikace."""
     def __init__(self, *args, **kwargs):
-        """Funkce `BooleanValueColumn.__init__` v modulu `webclient.arch_z.tables`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         self.value_labels = kwargs.pop("value_labels", None)
         super(BooleanValueColumn, self).__init__(*args, **kwargs)
 
     def render(self, value):
-        """Funkce `BooleanValueColumn.render` v modulu `webclient.arch_z.tables`.
+        """Vyrenderuje hodnotu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         value = [x for x in self.value_labels if x[0] == bool(value)]
         if len(value) > 0:
             return value[0][1]
@@ -39,7 +30,7 @@ class BooleanValueColumn(tables.columns.Column):
 
 class AkceTable(SearchTable):
     """
-    Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
+    Definuje tabulku akcí pro přehled i export.
     """
 
     ident_cely = tables.Column(
@@ -148,14 +139,11 @@ class AkceTable(SearchTable):
     )
 
     def order_vedouci_organizace(self, queryset, is_descending):
-        """Funkce `AkceTable.order_vedouci_organizace` v modulu `webclient.arch_z.tables`.
+        """Provádí operaci order vedouci organizace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :param is_descending: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param is_descending: Vstupní hodnota ``is_descending`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         queryset = queryset.annotate(
             vedouci_organizace__nazev_zkraceny=StringAgg(
                 "akcevedouci__organizace__nazev_zkraceny",
@@ -183,10 +171,7 @@ class AkceTable(SearchTable):
     first_columns = None
 
     class Meta:
-        """Třída `AkceTable.Meta` v modulu `webclient.arch_z.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Akce
         fields = (
             "pristupnost",
@@ -229,14 +214,11 @@ class AkceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `AkceTable.__init__` v modulu `webclient.arch_z.tables`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(AkceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):

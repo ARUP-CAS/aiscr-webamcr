@@ -19,7 +19,10 @@ logger = logging.getLogger(__name__)
 
 @register.filter
 def url_to_classes(value):
-    """Převede URL cestu na CSS třídy používané v navigaci."""
+    """Provádí operaci url to classes.
+    
+    :param value: Vstupní hodnota ``value`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     if value == "/":
         return "app-home"
     if value.endswith("/"):
@@ -105,7 +108,10 @@ def check_if_none(value):
 
 @register.filter
 def get_katastr_name(value):
-    """Převede identifikátor(y) katastru na textový název."""
+    """Vrací katastr name.
+    
+    :param value: Vstupní hodnota ``value`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     if isinstance(value, list):
         katastre = RuianKatastr.objects.filter(pk__in=value)
         katastr_str = []
@@ -167,7 +173,11 @@ def get_osoby_name(widget):
 
 @register.simple_tag
 def get_value_from_heslar(nazev_heslare, hodnota):
-    """Převede klíč hesláře a hodnotu na odpovídající interní konstantu."""
+    """Vrací value from heslar.
+    
+    :param nazev_heslare: Vstupní hodnota ``nazev_heslare`` pro danou operaci.
+    :param hodnota: Vstupní hodnota ``hodnota`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     values = {
         ("externi_zdroj_typ", "kniha"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_KNIHA,
         ("externi_zdroj_typ", "cast_knihy"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_CAST_KNIHY,

@@ -21,42 +21,31 @@ logger = logging.getLogger("tests")
 
 
 class AkceTestClass(BaseSeleniumTestClass):
-    """Třída `AkceTestClass` v modulu `webclient.arch_z.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``AkceTestClass`` v rámci aplikace."""
     __test__ = False
 
     def go_to_Projekty_vyper(self):
-        """Funkce `AkceTestClass.go_to_Projekty_vyper` v modulu `webclient.arch_z.tests.test_selenium`.
+        """Provádí operaci go to Projekty vyper.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def go_to_Akce_zapsat(self):
-        """Funkce `AkceTestClass.go_to_Akce_zapsat` v modulu `webclient.arch_z.tests.test_selenium`.
+        """Provádí operaci go to Akce zapsat.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.goToAddress("/arch-z/akce/zapsat")
 
     def go_to_Akce_vybrat(self):
-        """Funkce `AkceTestClass.go_to_Akce_vybrat` v modulu `webclient.arch_z.tests.test_selenium`.
+        """Provádí operaci go to Akce vybrat.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.goToAddress("/arch-z/akce/vyber?zahrnout_projektove=False&sort=hlavni_katastr&sort=ident_cely")
 
     def draw_polygon(self):
-        """Funkce `AkceTestClass.draw_polygon` v modulu `webclient.arch_z.tests.test_selenium`.
+        """Provádí operaci draw polygon.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.wait(1)
         self.driver.execute_script("""map.setZoom(16); return map.getZoom();""")
         self.wait(2)
@@ -75,10 +64,7 @@ class AkceTestClass(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceProjektoveAkce(AkceTestClass):
-    """Třída `AkceProjektoveAkce` v modulu `webclient.arch_z.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``AkceProjektoveAkce`` v rámci aplikace."""
     def test_024_pridani_dokumentacni_jednotky_p_001(self):
         """Test 024 Přidání dokumentační jednotky celek akce (pozitivní scénář 1)
 
@@ -1602,16 +1588,11 @@ const deadline = Date.now() + 10000;
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneAkce(AkceTestClass):
-    """Třída `AkceSamostatneAkce` v modulu `webclient.arch_z.tests.test_selenium`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``AkceSamostatneAkce`` v rámci aplikace."""
     def create_Samostatna_Akce(self):
-        """Funkce `AkceSamostatneAkce.create_Samostatna_Akce` v modulu `webclient.arch_z.tests.test_selenium`.
+        """Vytvoří Samostatna Akce.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací nově vytvořený výsledek operace."""
         self.go_to_Akce_zapsat()
         self.ElementClick(By.ID, "select2-id_hlavni_katastr-container")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search--dropdown > .select2-search__field").send_keys(

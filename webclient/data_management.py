@@ -2,11 +2,9 @@ from django.db import connection
 
 
 def my_custom_sql(self):
-    """Funkce `my_custom_sql` v modulu `webclient.data_management`.
+    """Provádí operaci my custom sql.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :return: Vrací výsledek provedené operace."""
     with connection.cursor() as cursor:
         cursor.execute("""
             DO

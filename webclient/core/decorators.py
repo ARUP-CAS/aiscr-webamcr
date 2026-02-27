@@ -22,7 +22,12 @@ def allowed_user_groups(allowed_groups):
 
         @wraps(func)
         def _arguments_wrapper(request, *args, **kwargs):
-            """Ověří oprávnění uživatele a případně předá řízení původnímu pohledu."""
+            """Provádí operaci arguments wrapper.
+            
+            :param request: Django HTTP požadavek použitý při zpracování.
+            :param args: Dodatečné poziční argumenty předané voláním.
+            :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+            :return: Vrací výsledek provedené operace."""
             hlavni_role = request.user.hlavni_role
             if hlavni_role.id not in allowed_groups:
                 raise PermissionError("Nepovolená uživatelská role")

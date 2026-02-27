@@ -7,7 +7,7 @@ from .models import ExterniZdroj
 
 class ExterniZdrojTable(SearchTable):
     """
-    Class pro definování tabulky pro externí zdroj použitých pro zobrazení přehledu zdrojů a exportu.
+    Definuje tabulku externích zdrojů pro přehled i export.
     """
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("ez.tables.ezTable.ident_cely.label"))
@@ -52,10 +52,7 @@ class ExterniZdrojTable(SearchTable):
     first_columns = None
 
     class Meta:
-        """Třída `ExterniZdrojTable.Meta` v modulu `webclient.ez.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = ExterniZdroj
         fields = (
             "stav",

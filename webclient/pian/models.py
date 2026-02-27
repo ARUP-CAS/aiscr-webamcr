@@ -86,24 +86,19 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN, db_index=True)
 
     def __init__(self, *args, **kwargs):
-        """Funkce `Pian.__init__` v modulu `webclient.pian.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(*args, **kwargs)
         self.update_all_azs = True
 
     @property
     def pristupnost_pom(self):
-        """Funkce `Pian.pristupnost_pom` v modulu `webclient.pian.models`.
+        """Provádí operaci pristupnost pom.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         try:
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
             pristupnosti_ids = set()
@@ -121,22 +116,17 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     @property
     def pristupnost(self):
-        """Funkce `Pian.pristupnost` v modulu `webclient.pian.models`.
+        """Provádí operaci pristupnost.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.pristupnost_pom
 
     def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
-        """Funkce `Pian.evaluate_pristupnost_change` v modulu `webclient.pian.models`.
+        """Provádí operaci evaluate pristupnost change.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param added_pristupnost_id: Vstupní hodnota používaná při zpracování.
-        :param skip_zaznam_id: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param added_pristupnost_id: Identifikátor objektu ``added_pristupnost``.
+        :param skip_zaznam_id: Identifikátor objektu ``skip_zaznam``.
+        :return: Vrací výsledek provedené operace."""
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         pristupnosti_ids = set()
         for dok_jednotka in dok_jednotky:
@@ -153,10 +143,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         return Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
 
     class Meta:
-        """Třída `Pian.Meta` v modulu `webclient.pian.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "pian"
         constraints = [
             CheckConstraint(
@@ -170,21 +157,16 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         ]
 
     def __str__(self):
-        """Funkce `Pian.__str__` v modulu `webclient.pian.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
     def get_absolute_url(self, request=None):
-        """Funkce `Pian.get_absolute_url` v modulu `webclient.pian.models`.
+        """Vrací absolute url.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         if dok_jednotky:
             for dok_jednotka in dok_jednotky:
@@ -197,19 +179,15 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return reverse("core:home")
 
     def get_permission_object(self):
-        """Funkce `Pian.get_permission_object` v modulu `webclient.pian.models`.
+        """Vrací permission object.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
-        """Funkce `Pian.get_create_user` v modulu `webclient.pian.models`.
+        """Vrací create user.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             my_list = []
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -226,11 +204,9 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Funkce `Pian.get_create_org` v modulu `webclient.pian.models`.
+        """Vrací create org.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             our_list = []
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -315,10 +291,7 @@ class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
     the_geom = pgmodels.PolygonField(srid=5514)
 
     class Meta:
-        """Třída `Kladyzm.Meta` v modulu `webclient.pian.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "kladyzm"
 
 
@@ -337,10 +310,7 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
     katastr = models.BooleanField()
 
     class Meta:
-        """Třída `PianSekvence.Meta` v modulu `webclient.pian.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "pian_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["kladyzm50", "katastr"], name="unique_sekvence_pian"),
@@ -386,13 +356,10 @@ def vytvor_pian(katastr, fedora_transaction):
 
 
 def get_ZM_from_point(point):
-    """Funkce `get_ZM_from_point` v modulu `webclient.pian.models`.
+    """Vrací ZM from point.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param point: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param point: Vstupní hodnota ``point`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     try:
         zm10s = list(Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=point))
         zm50s = list(Kladyzm.objects.filter(kategorie=KLADYZM50).filter(the_geom__contains=point))

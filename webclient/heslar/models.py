@@ -36,36 +36,27 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def dokument_typ_material_rada(self):
-        """Funkce `Heslar.dokument_typ_material_rada` v modulu `webclient.heslar.models`.
+        """Provádí operaci dokument typ material rada.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):
-        """Funkce `Heslar.podrazena_hesla` v modulu `webclient.heslar.models`.
+        """Provádí operaci podrazena hesla.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
 
     @property
     def nadrazena_hesla(self):
-        """Funkce `Heslar.nadrazena_hesla` v modulu `webclient.heslar.models`.
+        """Provádí operaci nadrazena hesla.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return HeslarHierarchie.objects.filter(heslo_podrazene=self)
 
     class Meta:
-        """Třída `Heslar.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "heslar"
         unique_together = (
             ("nazev_heslare", "zkratka"),
@@ -76,11 +67,9 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
         verbose_name_plural = "Heslář"
 
     def __str__(self):
-        """Funkce `Heslar.__str__` v modulu `webclient.heslar.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if get_language() == "en":
             if self.heslo_en:
                 return self.heslo_en
@@ -95,14 +84,11 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
                 return ""
 
     def save(self, *args, **kwargs):
-        """Funkce `Heslar.save` v modulu `webclient.heslar.models`.
+        """Uloží změny objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         from core.repository_connector import FedoraRepositoryConnector
 
         super().save(*args, **kwargs)
@@ -133,22 +119,16 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
     poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.HeslarDatace.poznamka"))
 
     class Meta:
-        """Třída `HeslarDatace.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "heslar_datace"
         verbose_name_plural = "Heslář datace"
 
     def __init__(self, *args, **kwargs):
-        """Funkce `HeslarDatace.__init__` v modulu `webclient.heslar.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(HeslarDatace, self).__init__(*args, **kwargs)
         try:
             self.initial_obdobi = self.obdobi
@@ -189,23 +169,17 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
     )
 
     class Meta:
-        """Třída `HeslarDokumentTypMaterialRada.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "heslar_dokument_typ_material_rada"
         unique_together = (("dokument_typ", "dokument_material"),)
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
     def __init__(self, *args, **kwargs):
-        """Funkce `HeslarDokumentTypMaterialRada.__init__` v modulu `webclient.heslar.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(HeslarDokumentTypMaterialRada, self).__init__(*args, **kwargs)
         self.initial_dokument_rada = self.dokument_rada
         self.initial_dokument_typ = self.dokument_typ
@@ -241,10 +215,7 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
 
     class Meta:
-        """Třída `HeslarHierarchie.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "heslar_hierarchie"
         unique_together = (("heslo_podrazene", "heslo_nadrazene", "typ"),)
         verbose_name_plural = "Heslář hierarchie"
@@ -256,14 +227,11 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         ]
 
     def __init__(self, *args, **kwargs):
-        """Funkce `HeslarHierarchie.__init__` v modulu `webclient.heslar.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(HeslarHierarchie, self).__init__(*args, **kwargs)
         if self.pk:
             self.initial_heslo_podrazene = self.heslo_podrazene
@@ -283,18 +251,13 @@ class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
     povolit_zmeny = models.BooleanField(default=True, verbose_name=_("heslar.models.HeslarNazev.povolit_zmeny"))
 
     def __str__(self):
-        """Funkce `HeslarNazev.__str__` v modulu `webclient.heslar.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.nazev
 
     class Meta:
-        """Třída `HeslarNazev.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "heslar_nazev"
         verbose_name_plural = "Heslář název"
 
@@ -331,22 +294,16 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     scheme_uri = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
-        """Třída `HeslarOdkaz.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "heslar_odkaz"
         verbose_name_plural = "Heslář odkaz"
 
     def __init__(self, *args, **kwargs):
-        """Funkce `HeslarOdkaz.__init__` v modulu `webclient.heslar.models`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(HeslarOdkaz, self).__init__(*args, **kwargs)
         if self.pk:
             logger.debug(self.heslo)
@@ -378,51 +335,39 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def pian_ident_cely(self):
-        """Funkce `RuianKatastr.pian_ident_cely` v modulu `webclient.heslar.models`.
+        """Provádí operaci pian ident cely.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         if self.pian is not None:
             return self.pian.ident_cely
         else:
             return ""
 
     class Meta:
-        """Třída `RuianKatastr.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "ruian_katastr"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian katastry"
 
     def __str__(self):
-        """Funkce `RuianKatastr.__str__` v modulu `webclient.heslar.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return f"{self.nazev} ({self.okres.nazev}; {self.kod})"
 
     @property
     def ident_cely(self):
-        """Funkce `RuianKatastr.ident_cely` v modulu `webclient.heslar.models`.
+        """Provádí operaci ident cely.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Funkce `RuianKatastr.save` v modulu `webclient.heslar.models`.
+        """Uloží změny objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -449,40 +394,30 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     email = models.CharField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.email"), max_length=254)
 
     class Meta:
-        """Třída `RuianKraj.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "ruian_kraj"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian kraje"
 
     def __str__(self):
-        """Funkce `RuianKraj.__str__` v modulu `webclient.heslar.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Funkce `RuianKraj.ident_cely` v modulu `webclient.heslar.models`.
+        """Provádí operaci ident cely.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Funkce `RuianKraj.save` v modulu `webclient.heslar.models`.
+        """Uloží změny objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -511,40 +446,30 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
     hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
 
     class Meta:
-        """Třída `RuianOkres.Meta` v modulu `webclient.heslar.models`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         db_table = "ruian_okres"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian okresy"
 
     def __str__(self):
-        """Funkce `RuianOkres.__str__` v modulu `webclient.heslar.models`.
+        """Vrací textovou reprezentaci objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Funkce `RuianOkres.ident_cely` v modulu `webclient.heslar.models`.
+        """Provádí operaci ident cely.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Funkce `RuianOkres.save` v modulu `webclient.heslar.models`.
+        """Uloží změny objektu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(

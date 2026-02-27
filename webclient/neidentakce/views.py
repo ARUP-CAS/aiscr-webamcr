@@ -29,23 +29,18 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     prefix = "neident_modal"
 
     def get_form_kwargs(self):
-        """Funkce `NeidentAkceEditView.get_form_kwargs` v modulu `webclient.neidentakce.views`.
+        """Vrací form kwargs.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         kwargs = super().get_form_kwargs()
         kwargs["prefix"] = self.prefix
         return kwargs
 
     def get_context_data(self, **kwargs):
-        """Funkce `NeidentAkceEditView.get_context_data` v modulu `webclient.neidentakce.views`.
+        """Vrací context data.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
         zaznam = self.object
         context = {
@@ -58,11 +53,9 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Funkce `NeidentAkceEditView.get_success_url` v modulu `webclient.neidentakce.views`.
+        """Vrací success url.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = self.get_context_data()
         dc = context["object"].dokument_cast
         return reverse(
@@ -74,37 +67,28 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         )
 
     def post(self, request, *args, **kwargs):
-        """Funkce `NeidentAkceEditView.post` v modulu `webclient.neidentakce.views`.
+        """Obsluhuje HTTP metodu POST.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         super().post(request, *args, **kwargs)
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_valid(self, form):
-        """Funkce `NeidentAkceEditView.form_valid` v modulu `webclient.neidentakce.views`.
+        """Provádí operaci form valid.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """Funkce `NeidentAkceEditView.form_invalid` v modulu `webclient.neidentakce.views`.
+        """Provádí operaci form invalid.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)

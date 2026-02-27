@@ -172,14 +172,11 @@ class PermissionAdmin(admin.ModelAdmin):
     search_fields = ["address_in_app", "action"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
-        """Funkce `PermissionAdmin.changelist_view` v modulu `webclient.core.admin`.
+        """Provádí operaci changelist view.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param extra_context: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         return super().changelist_view(request, {"import_list": True})
 
     def get_urls(self):
@@ -354,14 +351,11 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     search_fields = ["user"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
-        """Funkce `PermissionSkipAdmin.changelist_view` v modulu `webclient.core.admin`.
+        """Provádí operaci changelist view.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param extra_context: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         return super().changelist_view(request, {"import_skip_list": True})
 
     def get_urls(self):
@@ -447,13 +441,10 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         )
 
     def check_save_row(self, row):
-        """Funkce `PermissionSkipAdmin.check_save_row` v modulu `webclient.core.admin`.
+        """Ověří save row.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param row: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param row: Vstupní hodnota ``row`` pro danou operaci.
+        :return: Vrací výsledek ověření nebo validačního pravidla."""
         try:
             PermissionsSkip.objects.create(
                 user=User.objects.get(ident_cely=row.iloc[0]),
@@ -497,14 +488,11 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         )
 
     def export_as_csv(self, request, queryset):
-        """Funkce `PermissionSkipAdmin.export_as_csv` v modulu `webclient.core.admin`.
+        """Exportuje as csv.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=opravneni_override.csv"
         writer = csv.writer(response, delimiter=";")
@@ -517,22 +505,16 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
 
 class FedoraCustomAdminSite(admin.AdminSite):
-    """Třída `FedoraCustomAdminSite` v modulu `webclient.core.admin`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``FedoraCustomAdminSite`` v rámci aplikace."""
     redis_connector = RedisConnector().get_connection_decode()
 
     @staticmethod
     def _read_file(uploaded_file, context):
-        """Funkce `FedoraCustomAdminSite._read_file` v modulu `webclient.core.admin`.
+        """Načte file.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param uploaded_file: Vstupní hodnota používaná při zpracování.
-        :param context: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param uploaded_file: Vstupní hodnota ``uploaded_file`` pro danou operaci.
+        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         sheet = None
         if uploaded_file.content_type == "text/csv":
             try:
@@ -564,13 +546,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
         return sheet
 
     def update_doi(self, request):
-        """Funkce `FedoraCustomAdminSite.update_doi` v modulu `webclient.core.admin`.
+        """Aktualizuje doi.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací výsledek provedené operace."""
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -593,13 +572,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
         return TemplateResponse(request, "admin/doi_management/update_doi.html", context)
 
     def update_metadata_file_upload(self, request):
-        """Funkce `FedoraCustomAdminSite.update_metadata_file_upload` v modulu `webclient.core.admin`.
+        """Aktualizuje metadata file upload.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací výsledek provedené operace."""
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -625,13 +601,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
         """
 
         def normalize_file_name(name: str) -> str:
-            """Funkce `FedoraCustomAdminSite.normalize_file_name` v modulu `webclient.core.admin`.
+            """Provádí operaci normalize file name.
             
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param name: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            :param name: Vstupní hodnota ``name`` pro danou operaci.
+            :return: Vrací výsledek provedené operace."""
             if "/" in name:
                 name = name.split("/")[-1]
             return name.strip().lower()
@@ -687,13 +660,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
                             mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
 
                             def format_primary_key(pk):
-                                """Funkce `FedoraCustomAdminSite.format_primary_key` v modulu `webclient.core.admin`.
+                                """Provádí operaci format primary key.
                                 
-                                Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-                                
-                                :param pk: Vstupní hodnota používaná při zpracování.
-                                :return: Výsledek odpovídající účelu volání.
-                                """
+                                :param pk: Primární klíč zpracovávaného záznamu.
+                                :return: Vrací výsledek provedené operace."""
                                 if isinstance(pk, dict):
                                     return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
                                 return str(pk)
@@ -788,11 +758,9 @@ class FedoraCustomAdminSite(admin.AdminSite):
     def get_urls(
         self,
     ):
-        """Funkce `FedoraCustomAdminSite.get_urls` v modulu `webclient.core.admin`.
+        """Vrací urls.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return [
             path(
                 "update-metadata/",

@@ -72,10 +72,7 @@ class ProjektTable(SearchTable):
     app = "projekt"
 
     class Meta:
-        """Třída `ProjektTable.Meta` v modulu `webclient.projekt.tables`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Projekt
         fields = (
             "ident_cely",
@@ -128,13 +125,10 @@ class ProjektTable(SearchTable):
         )
 
     def render_planovane_zahajeni(self, value):
-        """Funkce `ProjektTable.render_planovane_zahajeni` v modulu `webclient.projekt.tables`.
+        """Vyrenderuje planovane zahajeni.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param value: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
@@ -144,13 +138,10 @@ class ProjektTable(SearchTable):
         return str(value)
 
     def __init__(self, *args, **kwargs):
-        """Funkce `ProjektTable.__init__` v modulu `webclient.projekt.tables`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(ProjektTable, self).__init__(*args, **kwargs)
         # self.set_hideable_columns(['ident_cely', 'stav']) Odkomentovat, až bude podpora dostupná.

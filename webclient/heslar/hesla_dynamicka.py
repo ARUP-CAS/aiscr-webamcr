@@ -9,7 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 def get_settings(item_group, item_id):
-    """Načte nastavení z administrace a vrátí ho jako slovník."""
+    """Vrací settings.
+    
+    :param item_group: Vstupní hodnota ``item_group`` pro danou operaci.
+    :param item_id: Identifikátor objektu ``item``.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     try:
         settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
         if settings_query.count() > 0:
@@ -37,7 +41,13 @@ def get_id_from_database(table, heslo, ident_cely, heslarDB) -> int:
 
 
 def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
-    """Načte konstanty z nastavení a uloží je do globálního jmenného prostoru modulu."""
+    """Načte constants.
+    
+    :param model: Vstupní hodnota ``model`` pro danou operaci.
+    :param constant_name: Vstupní hodnota ``constant_name`` pro danou operaci.
+    :param CONSTANTS: Vstupní hodnota ``CONSTANTS`` pro danou operaci.
+    :param COMPOSITE_CONSTANTS: Vstupní hodnota ``COMPOSITE_CONSTANTS`` pro danou operaci.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     heslarDB = get_settings("constants", constant_name)
     missing_keys = set(heslarDB.keys()) - set(CONSTANTS.keys())
     if missing_keys:

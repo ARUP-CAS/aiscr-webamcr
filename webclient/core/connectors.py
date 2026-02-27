@@ -16,65 +16,51 @@ scan_response = re.compile(r"^(?P<path>.*): ((?P<virus>.+) )?(?P<status>(FOUND|O
 
 
 class RedisConnector:
-    """Třída `RedisConnector` v modulu `webclient.core.connectors`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``RedisConnector`` v rámci aplikace."""
     r = None
     r_decode = None
 
     @classmethod
     def _create_connection(cls):
-        """Funkce `RedisConnector._create_connection` v modulu `webclient.core.connectors`.
+        """Vytvoří connection.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací nově vytvořený výsledek operace."""
         cls.r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass())
 
     # Tento konektor vrací přímo řetězec, takže není potřeba volat `decode("utf-8")`.
     @classmethod
     def _create_connection_decode(cls):
-        """Funkce `RedisConnector._create_connection_decode` v modulu `webclient.core.connectors`.
+        """Vytvoří connection decode.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací nově vytvořený výsledek operace."""
         cls.r_decode = redis.Redis(
             host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass(), decode_responses=True
         )
 
     @classmethod
     def get_connection(cls) -> redis.Redis:
-        """Funkce `RedisConnector.get_connection` v modulu `webclient.core.connectors`.
+        """Vrací connection.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not cls.r:
             cls._create_connection()
         return cls.r
 
     @classmethod
     def get_connection_decode(cls) -> redis.Redis:
-        """Funkce `RedisConnector.get_connection_decode` v modulu `webclient.core.connectors`.
+        """Vrací connection decode.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not cls.r_decode:
             cls._create_connection_decode()
         return cls.r_decode
 
     @staticmethod
     def prepare_model_for_redis(table):
-        """Funkce `RedisConnector.prepare_model_for_redis` v modulu `webclient.core.connectors`.
+        """Provádí operaci prepare model for redis.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param table: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param table: Vstupní hodnota ``table`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         columns = table.columns.iterall()
         row = table.rows[0]
         data = {}
@@ -169,19 +155,10 @@ class ClamdNetworkSocket:
             self._close_socket()
 
     def _basic_command(self, command):
-        """
-        Odešle příkaz na clamav server a vrátí odpověď.
-
-        Args:
-            command (str): příkaz k odeslání
-
-        Returns:
-            str: odpověď od clamd
-
-        Raises:
-            ClamdConnectionError: při problému s komunikací
-            ClamdResponseError: pokud clamd vrátí chybu
-        """
+        """Provádí operaci basic command.
+        
+        :param command: Vstupní hodnota ``command`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         self._init_socket()
         try:
             self._send_command(command)
@@ -232,15 +209,11 @@ class ClamdNetworkSocket:
             )
 
     def _send_command(self, cmd, *args):
-        """
-        Odešle příkaz do clamd.
-
-        Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
-
-        Args:
-            cmd (str): příkaz k odeslání
-            *args: dodatečné argumenty pro příkaz
-        """
+        """Odešle command.
+        
+        :param cmd: Vstupní hodnota ``cmd`` pro danou operaci.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         concat_args = ""
         if args:
             concat_args = " " + " ".join(args)

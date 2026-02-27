@@ -3,40 +3,27 @@ from django.utils.translation import gettext as _
 
 
 class FormWithOrcid:
-    """Třída `FormWithOrcid` v modulu `webclient.pid.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``FormWithOrcid`` v rámci aplikace."""
     def clean_orcid(self):
-        """Funkce `FormWithOrcid.clean_orcid` v modulu `webclient.pid.forms`.
+        """Provádí operaci clean orcid.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         data = self.cleaned_data["orcid"]
         return "https://orcid.org/" + data if len(data) > 0 else None
 
 
 class FormWithWikidata:
-    """Třída `FormWithWikidata` v modulu `webclient.pid.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``FormWithWikidata`` v rámci aplikace."""
     def clean_wikidata(self):
-        """Funkce `FormWithWikidata.clean_wikidata` v modulu `webclient.pid.forms`.
+        """Provádí operaci clean wikidata.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         data = self.cleaned_data["wikidata"]
         return "https://www.wikidata.org/entity/" + data if len(data) > 0 else None
 
 
 class UpdateDocumentObjectIdentifierFileForm(forms.Form):
-    """Třída `UpdateDocumentObjectIdentifierFileForm` v modulu `webclient.pid.forms`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``UpdateDocumentObjectIdentifierFileForm`` v rámci aplikace."""
     ident_list_file = forms.FileField(
         required=True,
         label=_("core.forms.UpdateDocumentObjectIdentifierFileForm.file.label"),

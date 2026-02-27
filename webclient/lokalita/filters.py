@@ -58,13 +58,10 @@ class LokalitaFilter(ArchZaznamFilter):
     )
 
     def filter_queryset(self, queryset):
-        """Funkce `LokalitaFilter.filter_queryset` v modulu `webclient.lokalita.filters`.
+        """Filtruje queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param queryset: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         logger.debug("lokalita.filters.LokalitaFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(LokalitaFilter, self).filter_queryset(queryset)
@@ -102,10 +99,7 @@ class LokalitaFilter(ArchZaznamFilter):
         ).distinct()
 
     class Meta:
-        """Třída `LokalitaFilter.Meta` v modulu `webclient.lokalita.filters`.
-        
-        Zapouzdřuje související data a chování v rámci dané části aplikace.
-        """
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
         model = Lokalita
         exclude = (
             "nazev",
@@ -114,14 +108,11 @@ class LokalitaFilter(ArchZaznamFilter):
         )
 
     def __init__(self, *args, **kwargs):
-        """Funkce `LokalitaFilter.__init__` v modulu `webclient.lokalita.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super(LokalitaFilter, self).__init__(*args, **kwargs)
         self.helper = LokalitaFilterFormHelper()
 
@@ -134,13 +125,10 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Funkce `LokalitaFilterFormHelper.__init__` v modulu `webclient.lokalita.filters`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("lokalita.filters.djPian.divider.label")
         }

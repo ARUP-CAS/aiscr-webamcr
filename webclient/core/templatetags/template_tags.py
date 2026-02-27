@@ -25,33 +25,24 @@ def get_message(message):
 
 
 class QuerystringNodeMulti(Node):
-    """Třída `QuerystringNodeMulti` v modulu `webclient.core.templatetags.template_tags`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``QuerystringNodeMulti`` v rámci aplikace."""
     def __init__(self, updates, removals, asvar=None):
-        """Funkce `QuerystringNodeMulti.__init__` v modulu `webclient.core.templatetags.template_tags`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param updates: Vstupní hodnota používaná při zpracování.
-        :param removals: Vstupní hodnota používaná při zpracování.
-        :param asvar: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param updates: Vstupní hodnota ``updates`` pro danou operaci.
+        :param removals: Vstupní hodnota ``removals`` pro danou operaci.
+        :param asvar: Vstupní hodnota ``asvar`` pro danou operaci.
+        :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__()
         self.updates = updates
         self.removals = removals
         self.asvar = asvar
 
     def render(self, context):
-        """Funkce `QuerystringNodeMulti.render` v modulu `webclient.core.templatetags.template_tags`.
+        """Vyrenderuje hodnotu.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param context: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if "request" not in context:
             raise ImproperlyConfigured(context_processor_error_msg % "querystring")
 
@@ -92,16 +83,11 @@ class QuerystringNodeMulti(Node):
 
 @register.tag
 def querystring_multi(parser, token):
-    """Sestaví query string z aktuální URL a upraví jej podle parametrů tagu.
-
-    Příklad (pokud je URL ``/abc/?gender=male&name=Brad``)::
-        # {% querystring "name"="abc" "age"=15 %}
-        ?name=abc&gender=male&age=15
-        {% querystring "name"="Ayers" "age"=20 %}
-        ?name=Ayers&gender=male&age=20
-        {% querystring "name"="Ayers" without "gender" %}
-        ?name=Ayers
-    """
+    """Provádí operaci querystring multi.
+    
+    :param parser: Vstupní hodnota ``parser`` pro danou operaci.
+    :param token: Vstupní hodnota ``token`` pro danou operaci.
+    :return: Vrací výsledek provedené operace."""
     bits = token.split_contents()
     tag = bits.pop(0)
     updates = token_kwargs(bits, parser)
@@ -128,11 +114,9 @@ def querystring_multi(parser, token):
 # Vrátí informaci o zapnutém režimu údržby.
 @register.simple_tag
 def get_maintenance():
-    """Funkce `get_maintenance` v modulu `webclient.core.templatetags.template_tags`.
+    """Vrací maintenance.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     if get_set_maintenance_in_cache():
         return True
     return False
@@ -152,7 +136,11 @@ def get_site_url():
 
 @register.simple_tag
 def get_settings(item_group, item_id):
-    """Načte hodnotu konfigurační položky z administrátorského nastavení."""
+    """Vrací settings.
+    
+    :param item_group: Vstupní hodnota ``item_group`` pro danou operaci.
+    :param item_id: Identifikátor objektu ``item``.
+    :return: Vrací načtená data odpovídající vstupním parametrům."""
     settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
     if settings_query.count() > 0:
         return settings_query.last().value

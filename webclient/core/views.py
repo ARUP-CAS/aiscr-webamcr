@@ -303,37 +303,28 @@ def delete_file(request, typ_vazby, ident_cely, pk):
 
 
 class DownloadFile(LoginRequiredMixin, View):
-    """Třída `DownloadFile` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``DownloadFile`` v rámci aplikace."""
     thumb_small = False
     thumb_large = False
 
     @staticmethod
     def _preprocess_image(file_content: BytesIO) -> BytesIO:
-        """Funkce `DownloadFile._preprocess_image` v modulu `webclient.core.views`.
+        """Provádí operaci preprocess image.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param file_content: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         return file_content
 
     def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
-        """Funkce `DownloadFile.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param typ_vazby: Vstupní hodnota používaná při zpracování.
-        :param ident_cely: Vstupní hodnota používaná při zpracování.
-        :param pk: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
+        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param pk: Primární klíč zpracovávaného záznamu.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             check_soubor_vazba(typ_vazby, ident_cely, pk)
         except ZaznamSouborNotmatching as e:
@@ -358,18 +349,12 @@ class DownloadFile(LoginRequiredMixin, View):
 
 
 class DownloadThumbnailSmall(DownloadFile):
-    """Třída `DownloadThumbnailSmall` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``DownloadThumbnailSmall`` v rámci aplikace."""
     thumb_small = True
 
 
 class DownloadThumbnailLarge(DownloadFile):
-    """Třída `DownloadThumbnailLarge` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``DownloadThumbnailLarge`` v rámci aplikace."""
     thumb_large = True
 
 
@@ -381,15 +366,12 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
     template_name = "core/upload_file.html"
 
     def get(self, request, *args, **kwargs):
-        """Funkce `UpdateFileView.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         typ_vazby = self.kwargs.get("typ_vazby")
         ident_cely = self.kwargs.get("ident_cely")
         file_id = self.kwargs.get("file_id")
@@ -412,15 +394,12 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        """Funkce `UpdateFileView.post` v modulu `webclient.core.views`.
+        """Obsluhuje HTTP metodu POST.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         next_url = request.GET.get("next", "core:home")
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
             safe_redirect = next_url
@@ -429,13 +408,10 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         return redirect(safe_redirect)
 
     def get_context_data(self, **kwargs):
-        """Funkce `UpdateFileView.get_context_data` v modulu `webclient.core.views`.
+        """Vrací context data.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
         context["ident_cely"] = self.kwargs.get("ident_cely")
         context["back_url"] = self.request.GET.get("next", "/")
@@ -454,11 +430,9 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
     http_method_names = ["get", "post"]
 
     def get_zaznam(self):
-        """Funkce `UploadFileView.get_zaznam` v modulu `webclient.core.views`.
+        """Vrací zaznam.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.typ_vazby = self.kwargs.get("typ_vazby")
         self.ident = self.kwargs.get("ident_cely")
         logger.debug(
@@ -478,13 +452,10 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
             return get_object_or_404(Projekt, ident_cely=self.ident)
 
     def get_context_data(self, **kwargs):
-        """Funkce `UploadFileView.get_context_data` v modulu `webclient.core.views`.
+        """Vrací context data.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.zaznam = self.get_zaznam()
         pk_set = self.session_identifier.get_cached_files()
         queryset = Soubor.objects.filter(pk__in=list(pk_set))
@@ -505,30 +476,24 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        """Funkce `UploadFileView.dispatch` v modulu `webclient.core.views`.
+        """Provádí operaci dispatch.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         ident_cely = self.kwargs.get("ident_cely")
         self.session_identifier = SessionIdentifier(request)
         self.session_identifier.set_ident(ident_cely)
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        """Funkce `UploadFileView.post` v modulu `webclient.core.views`.
+        """Obsluhuje HTTP metodu POST.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         self.session_identifier.clear_cached_files()
         self.zaznam = self.get_zaznam()
         return redirect(self.zaznam.get_absolute_url())
@@ -559,28 +524,12 @@ class BasePostUploadView(View):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
-        """
-        Zpracuje POST request s nahrávaným souborem.
-
-        Metoda provádí kompletní validaci nahrávaného souboru před jeho uložením:
-        - Kontroluje přítomnost souboru v requestu
-        - Validuje MIME typ a detekuje šifrované soubory
-        - Provádí antivirovou kontrolu obsahu
-        - Deleguje finální zpracování na potomky prostřednictvím handle_upload()
-
-        Args:
-            request (HttpRequest): Django HTTP request objekt obsahující nahrávaný soubor
-            *args: Poziční argumenty předané z URL dispatcheru
-            **kwargs: Klíčové argumenty z URL patternu (např. ident_cely, typ_vazby)
-
-        Returns:
-            JsonResponse: JSON odpověď s výsledkem operace
-
-        Response Status Codes:
-            200: Soubor byl úspěšně validován a zpracován
-            400: Validační chyba (chybějící soubor, šifrovaný, virus, neplatný MIME typ)
-            500: Neznámá chyba při zpracování
-        """
+        """Obsluhuje HTTP metodu POST.
+        
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         self.source_url = request.POST.get("source-url", "")
         self.fedora_transaction = FedoraTransaction()
         soubor: TemporaryUploadedFile = request.FILES.get("file")
@@ -1321,14 +1270,11 @@ class ExportMixinDate(ExportMixin):
     """
 
     def get_export_filename(self, export_format, export_name=None):
-        """Funkce `ExportMixinDate.get_export_filename` v modulu `webclient.core.views`.
+        """Vrací export filename.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param export_format: Vstupní hodnota používaná při zpracování.
-        :param export_name: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
+        :param export_name: Vstupní hodnota ``export_name`` pro danou operaci.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         if export_name is None:
             export_name = self.export_name
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -1336,10 +1282,7 @@ class ExportMixinDate(ExportMixin):
 
 
 class PermissionFilterMixin:
-    """Třída `PermissionFilterMixin` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``PermissionFilterMixin`` v rámci aplikace."""
     permission_model_lookup = ""
     typ_zmeny_lookup = ""
     group_to_accessibility = {
@@ -1360,14 +1303,11 @@ class PermissionFilterMixin:
     }
 
     def check_filter_permission(self, qs, action=None):
-        """Funkce `PermissionFilterMixin.check_filter_permission` v modulu `webclient.core.views`.
+        """Ověří filter permission.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param qs: Vstupní hodnota používaná při zpracování.
-        :param action: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param action: Vstupní hodnota ``action`` pro danou operaci.
+        :return: Vrací výsledek ověření nebo validačního pravidla."""
         if action:
             permissions = Permissions.objects.filter(
                 main_role=self.request.user.hlavni_role, address_in_app=self.request.resolver_match.route, action=action
@@ -1403,14 +1343,11 @@ class PermissionFilterMixin:
         return qs
 
     def filter_by_permission(self, qs, permission):
-        """Funkce `PermissionFilterMixin.filter_by_permission` v modulu `webclient.core.views`.
+        """Filtruje by permission.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param qs: Vstupní hodnota používaná při zpracování.
-        :param permission: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         qs = qs.annotate(
             historie_zapsat=FilteredRelation(
                 self.permission_model_lookup + "historie__historie",
@@ -1430,13 +1367,10 @@ class PermissionFilterMixin:
         return qs
 
     def add_status_lookup(self, permission):
-        """Funkce `PermissionFilterMixin.add_status_lookup` v modulu `webclient.core.views`.
+        """Provádí operaci add status lookup.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param permission: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         filterdoc = {}
         subed_status = re.sub("[a-zA-Z]", "", permission.status)
         if ">" in subed_status:
@@ -1462,14 +1396,11 @@ class PermissionFilterMixin:
         return filterdoc
 
     def add_ownership_lookup(self, ownership, qs=None):
-        """Funkce `PermissionFilterMixin.add_ownership_lookup` v modulu `webclient.core.views`.
+        """Provádí operaci add ownership lookup.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param ownership: Vstupní hodnota používaná při zpracování.
-        :param qs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
+        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == Permissions.ownershipChoices.our:
@@ -1480,14 +1411,11 @@ class PermissionFilterMixin:
             return Q(**{"historie_zapsat__in": filtered_my})
 
     def add_accessibility_lookup(self, permission, qs):
-        """Funkce `PermissionFilterMixin.add_accessibility_lookup` v modulu `webclient.core.views`.
+        """Provádí operaci add accessibility lookup.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param permission: Vstupní hodnota používaná při zpracování.
-        :param qs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         accessibility_key = self.permission_model_lookup + "pristupnost__in"
         accessibilities = Heslar.objects.filter(
             nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id)
@@ -1513,54 +1441,42 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     table_pagination = {"per_page": 100}
 
     def create_export(self, export_format):
-        """Funkce `SearchListView.create_export` v modulu `webclient.core.views`.
+        """Vytvoří export.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param export_format: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
+        :return: Vrací nově vytvořený výsledek operace."""
         from redis import Redis
 
         def check_if_aborted(r_inner: Redis, key_inner: str):
-            """Funkce `SearchListView.check_if_aborted` v modulu `webclient.core.views`.
+            """Ověří if aborted.
             
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param r_inner: Vstupní hodnota používaná při zpracování.
-            :param key_inner: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            :param r_inner: Vstupní hodnota ``r_inner`` pro danou operaci.
+            :param key_inner: Vstupní hodnota ``key_inner`` pro danou operaci.
+            :return: Vrací výsledek ověření nebo validačního pravidla."""
             aborted = r_inner.get(key_inner + "_stat") == "-1"
             if aborted:
                 r_inner.delete(key_inner)
             return aborted
 
         def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int, message: str):
-            """Funkce `SearchListView.update_progress_bar` v modulu `webclient.core.views`.
+            """Aktualizuje progress bar.
             
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param r_inner: Vstupní hodnota používaná při zpracování.
-            :param key_inner: Vstupní hodnota používaná při zpracování.
-            :param new_value: Vstupní hodnota používaná při zpracování.
-            :param message: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            :param r_inner: Vstupní hodnota ``r_inner`` pro danou operaci.
+            :param key_inner: Vstupní hodnota ``key_inner`` pro danou operaci.
+            :param new_value: Vstupní hodnota ``new_value`` pro danou operaci.
+            :param message: Vstupní hodnota ``message`` pro danou operaci.
+            :return: Vrací výsledek provedené operace."""
             r_inner.set(key_inner, json.dumps({"percent": int(new_value), "text": message}), ex=3600)
             return check_if_aborted(r_inner, key_inner)
 
         def file_iterator(content, r, redis_variable_name, chunk_size=8192):
-            """Funkce `SearchListView.file_iterator` v modulu `webclient.core.views`.
+            """Provádí operaci file iterator.
             
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param content: Vstupní hodnota používaná při zpracování.
-            :param r: Vstupní hodnota používaná při zpracování.
-            :param redis_variable_name: Vstupní hodnota používaná při zpracování.
-            :param chunk_size: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            :param content: Vstupní hodnota ``content`` pro danou operaci.
+            :param r: Vstupní hodnota ``r`` pro danou operaci.
+            :param redis_variable_name: Vstupní hodnota ``redis_variable_name`` pro danou operaci.
+            :param chunk_size: Vstupní hodnota ``chunk_size`` pro danou operaci.
+            :return: Vrací výsledek provedené operace."""
             bytes_sent = 0
             file_size = len(content)
             try:
@@ -1674,11 +1590,9 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return response
 
     def init_translations(self):
-        """Funkce `SearchListView.init_translations` v modulu `webclient.core.views`.
+        """Provádí operaci init translations.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací výsledek provedené operace."""
         self.page_title = ""
         self.search_sum = ""
         self.pick_text = ""
@@ -1692,22 +1606,17 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         self.toolbar_label = ""
 
     def _get_sort_params(self):
-        """Funkce `SearchListView._get_sort_params` v modulu `webclient.core.views`.
+        """Vrací sort params.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         sort_params = self.request.GET.getlist("sort")
         return sort_params
 
     def get_context_data(self, **kwargs):
-        """Funkce `SearchListView.get_context_data` v modulu `webclient.core.views`.
+        """Vrací context data.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
         self.init_translations()
         context["export_formats"] = self.export_formats
@@ -1730,26 +1639,21 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return context
 
     def get_queryset(self):
-        """Funkce `SearchListView.get_queryset` v modulu `webclient.core.views`.
+        """Vrací queryset.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = super().get_queryset()
         qs.cache()
         return qs
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Funkce `SearchListView.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return super().get(request, *args, **kwargs)
 
 
@@ -1771,28 +1675,22 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
     }
 
     def get(self, request, model_name, ident_cely, timestamp):
-        """Funkce `StahnoutDataHistorickaView.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param model_name: Vstupní hodnota používaná při zpracování.
-        :param ident_cely: Vstupní hodnota používaná při zpracování.
-        :param timestamp: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         Model = self.MODEL_MAP.get(model_name)
         if Model is None:
             raise Http404
 
         def context_processor(content):
-            """Funkce `StahnoutDataHistorickaView.context_processor` v modulu `webclient.core.views`.
+            """Provádí operaci context processor.
             
-            Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-            
-            :param content: Vstupní hodnota používaná při zpracování.
-            :return: Výsledek odpovídající účelu volání.
-            """
+            :param content: Vstupní hodnota ``content`` pro danou operaci.
+            :return: Vrací výsledek provedené operace."""
             yield content
 
         if model_name == "Soubor":
@@ -1808,20 +1706,14 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
 
 
 class CheckUserAuthentication(View):
-    """Třída `CheckUserAuthentication` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``CheckUserAuthentication`` v rámci aplikace."""
     def get(self, request, *args, **kwargs):
-        """Funkce `CheckUserAuthentication.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return JsonResponse({"is_authenticated": request.user.is_authenticated})
 
 
@@ -1893,15 +1785,12 @@ def post_ajax_get_pas_and_pian_limit(request):
 
 
 def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
-    """Funkce `check_soubor_vazba` v modulu `webclient.core.views`.
+    """Ověří soubor vazba.
     
-    Zajišťuje dílčí aplikační logiku pro tento modul.
-    
-    :param typ_vazby: Vstupní hodnota používaná při zpracování.
-    :param ident: Vstupní hodnota používaná při zpracování.
-    :param id_zaznamu: Vstupní hodnota používaná při zpracování.
-    :return: Výsledek odpovídající účelu volání.
-    """
+    :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
+    :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+    :param id_zaznamu: Vstupní hodnota ``id_zaznamu`` pro danou operaci.
+    :return: Vrací výsledek ověření nebo validačního pravidla."""
     if typ_vazby == "model3d" or typ_vazby == "dokument":
         soubor = get_object_or_404(Dokument, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
     elif typ_vazby == "pas":
@@ -1915,18 +1804,12 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
 
 
 class ReadTempValueView(View):
-    """Třída `ReadTempValueView` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``ReadTempValueView`` v rámci aplikace."""
     def get(self, request):
-        """Funkce `ReadTempValueView.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         r = RedisConnector.get_connection_decode()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -1942,18 +1825,12 @@ class ReadTempValueView(View):
 
 
 class DeleteTempValueView(View):
-    """Třída `DeleteTempValueView` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``DeleteTempValueView`` v rámci aplikace."""
     def get(self, request):
-        """Funkce `DeleteTempValueView.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -1966,18 +1843,12 @@ class DeleteTempValueView(View):
 
 
 class AbortDownloadUpdateTempValueView(View):
-    """Třída `AbortDownloadUpdateTempValueView` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``AbortDownloadUpdateTempValueView`` v rámci aplikace."""
     def get(self, request):
-        """Funkce `AbortDownloadUpdateTempValueView.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -2033,13 +1904,10 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
     form_class = TransaltionImportForm
 
     def form_valid(self, form):
-        """Funkce `TranslationImportView.form_valid` v modulu `webclient.core.views`.
+        """Provádí operaci form valid.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param form: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         new_pofile = form.cleaned_data["file"]
         tmp_path = None
         try:
@@ -2076,13 +1944,10 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
 
     def get_context_data(self, **kwargs):
-        """Funkce `TranslationImportView.get_context_data` v modulu `webclient.core.views`.
+        """Vrací context data.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super(TranslationImportView, self).get_context_data(**kwargs)
         rosetta_i18n_lang_name = str(dict(rosetta_settings.ROSETTA_LANGUAGES).get(self.language_id))
         context.update(
@@ -2098,13 +1963,10 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         return context
 
     def handle_uploaded_file(self, f):
-        """Funkce `TranslationImportView.handle_uploaded_file` v modulu `webclient.core.views`.
+        """Zpracuje uploaded file.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param f: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param f: Vstupní hodnota ``f`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         with open(self.po_file_path, "wb+") as destination:
             for chunk in f.chunks():
                 destination.write(chunk)
@@ -2116,13 +1978,10 @@ class TranslationFileListWithBackupView(TranslationFileListView):
     """
 
     def get_context_data(self, **kwargs):
-        """Funkce `TranslationFileListWithBackupView.get_context_data` v modulu `webclient.core.views`.
+        """Vrací context data.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super(TranslationFileListView, self).get_context_data(**kwargs)
 
         third_party_apps = self.po_filter in ("all", "third-party")
@@ -2159,13 +2018,10 @@ class TranslationFormWithBackupView(RosettaFileLevelMixinWithBackup, LoginRequir
     """
 
     def get_context_data(self, **kwargs):
-        """Funkce `TranslationFormWithBackupView.get_context_data` v modulu `webclient.core.views`.
+        """Vrací context data.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super(TranslationFormWithBackupView, self).get_context_data(**kwargs)
         po_filename = self.po_file_path.split("/")[-1]
         context["po_filename"] = po_filename
@@ -2179,15 +2035,12 @@ class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequir
     """
 
     def get(self, request, *args, **kwargs):
-        """Funkce `TranslationFileDownloadBackup.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             if len(self.po_file_path.split("/")) >= 5:
                 offered_fn = "_".join(self.po_file_path.split("/")[-5:])
@@ -2221,15 +2074,12 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
     template_name = "core/transakce_modal.html"
 
     def get(self, request, *args, **kwargs):
-        """Funkce `TranslationFileSmazatBackup.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = {
             "object_identification": self.po_file_path.split("/")[-1],
             "title": _("core.views.translationFileSmazatbackup.title.text"),
@@ -2239,15 +2089,12 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Funkce `TranslationFileSmazatBackup.post` v modulu `webclient.core.views`.
+        """Obsluhuje HTTP metodu POST.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         if self.po_file_path.split("/")[-1] == "django.po":
             messages.add_message(self.request, messages.ERROR, TRANSLATION_DELETE_CANNOT_MAIN)
         else:
@@ -2266,15 +2113,12 @@ class PrometheusMetricsView(IPWhitelistMixin, View):
     """
 
     def get(self, request, *args, **kwargs):
-        """Funkce `PrometheusMetricsView.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         return ExportToDjangoView(request)
 
 
@@ -2287,15 +2131,12 @@ class ApplicationRestartView(LoginRequiredMixin, View):
 
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
-        """Funkce `ApplicationRestartView.post` v modulu `webclient.core.views`.
+        """Obsluhuje HTTP metodu POST.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param args: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace."""
         if request.user.hlavni_role.id != ROLE_ADMIN_ID:
             raise PermissionDenied
         try:
@@ -2322,19 +2163,13 @@ class ApplicationRestartView(LoginRequiredMixin, View):
 
 
 class DataImportProgress(LoginRequiredMixin, View):
-    """Třída `DataImportProgress` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``DataImportProgress`` v rámci aplikace."""
     def get(self, request, **kwargs):
-        """Funkce `DataImportProgress.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")
@@ -2377,19 +2212,13 @@ class DataImportProgress(LoginRequiredMixin, View):
 
 
 class DataImportStop(LoginRequiredMixin, View):
-    """Třída `DataImportStop` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``DataImportStop`` v rámci aplikace."""
     def get(self, request, **kwargs):
-        """Funkce `DataImportStop.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")
@@ -2399,19 +2228,13 @@ class DataImportStop(LoginRequiredMixin, View):
 
 
 class DataImportStart(LoginRequiredMixin, View):
-    """Třída `DataImportStart` v modulu `webclient.core.views`.
-    
-    Zapouzdřuje související data a chování v rámci dané části aplikace.
-    """
+    """Implementuje komponentu ``DataImportStart`` v rámci aplikace."""
     def get(self, request, **kwargs):
-        """Funkce `DataImportStart.get` v modulu `webclient.core.views`.
+        """Vrací výsledek operace.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        
-        :param request: Vstupní hodnota používaná při zpracování.
-        :param kwargs: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :param request: Django HTTP požadavek použitý při zpracování.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")

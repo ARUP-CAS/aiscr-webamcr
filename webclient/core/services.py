@@ -31,23 +31,16 @@ class PermissionService:
     """
 
     def __init__(self):
-        """Funkce `PermissionService.__init__` v modulu `webclient.core.services`.
+        """Inicializuje instanci třídy.
         
-        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
-        :return: Výsledek odpovídající účelu volání.
-        """
+        :return: Funkce nevrací hodnotu (``None``)."""
         pass
 
     def run(self, docfile: InMemoryUploadedFile) -> tuple[pd.DataFrame, list[str]]:
-        """
-        Zpracuje nahraný soubor s oprávněními, provede validaci, import oprávnění
-        a vrátí upravený list a seznam chybějících URL.
-
-        :param docfile: Nahraný CSV nebo Excel soubor s definicí oprávnění.
-        :type docfile: InMemoryUploadedFile
-        :return: Dvojice obsahující zpracovaný DataFrame a seznam chybějících URL.
-        :rtype: tuple[pandas.DataFrame, list[str]]
-        """
+        """Spustí hodnotu.
+        
+        :param docfile: Vstupní hodnota ``docfile`` pro danou operaci.
+        :return: Vrací výsledek provedené operace."""
         if docfile.name and docfile.name.lower().endswith(".csv"):
             sheet = pd.read_csv(docfile)
             sheet = self.validate_and_prepare_csv(sheet)
