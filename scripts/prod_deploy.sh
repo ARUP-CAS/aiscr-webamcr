@@ -254,7 +254,6 @@ while getopts "hxu:t:i" option; do
          echo_dec "Remove docker stack: ${stack_name}"
          if check_stack_exists; then
             er "${cmd_stack_rm}" && \
-            er "docker network rm ${network_name}" && \
             echo_dec "Stack ${stack_name} removal successful" || echo_dec "Stack ${stack_name} removal FAILED"
          else
              echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"

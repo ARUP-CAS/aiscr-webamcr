@@ -1926,7 +1926,7 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
 
 class PrometheusMetricsView(IPWhitelistMixin, View):
     """
-    Třída pohledu pro zobrazení prometheus metrík doplňena o mixin pro filtrování IP adres.
+    Třída pohledu pro zobrazení prometheus metrik doplněna o mixin pro filtrování IP adres.
     """
 
     def get(self, request, *args, **kwargs):

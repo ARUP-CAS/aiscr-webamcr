@@ -500,7 +500,7 @@ Třídy
 
 .. py:class:: PrometheusMetricsView
 
-   Třída pohledu pro zobrazení prometheus metrík doplňena o mixin pro filtrování IP adres.
+   Třída pohledu pro zobrazení prometheus metrik doplněna o mixin pro filtrování IP adres.
 
    **Metody:**
 
