@@ -6,6 +6,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
+    """Třída `Migration` v modulu `webclient.pas.migrations.0010_alter_samostatnynalez_igsn_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("pas", "0009_merge_20250112_1542"),
     ]

@@ -71,6 +71,10 @@ class LokalitaTable(SearchTable):
     first_columns = None
 
     class Meta:
+        """Třída `LokalitaTable.Meta` v modulu `webclient.lokalita.tables`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Lokalita
         fields = (
             "druh",

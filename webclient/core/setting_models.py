@@ -8,10 +8,18 @@ logger = logging.getLogger(__name__)
 
 
 class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), models.Model):
+    """Třída `CustomAdminSettings` v modulu `webclient.core.setting_models`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     item_group = models.CharField(max_length=100)
     item_id = models.CharField(max_length=100)
     value = models.TextField()
 
     class Meta:
+        """Třída `CustomAdminSettings.Meta` v modulu `webclient.core.setting_models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         verbose_name = _("core.model.CustomAdminSettings.modelTitle.label")
         verbose_name_plural = _("core.model.CustomAdminSettings.modelTitles.label")

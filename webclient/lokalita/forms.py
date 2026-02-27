@@ -24,6 +24,10 @@ class LokalitaForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `LokalitaForm.Meta` v modulu `webclient.lokalita.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Lokalita
         fields = (
             "druh",
@@ -65,6 +69,18 @@ class LokalitaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, detail=False, **kwargs):
+        """Funkce `LokalitaForm.__init__` v modulu `webclient.lokalita.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param required: Vstupní hodnota používaná při zpracování.
+        :param required_next: Vstupní hodnota používaná při zpracování.
+        :param readonly: Vstupní hodnota používaná při zpracování.
+        :param detail: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(LokalitaForm, self).__init__(*args, **kwargs)
         if self.instance.pk is not None:
             nadrazene = HeslarHierarchie.objects.filter(

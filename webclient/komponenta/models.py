@@ -26,14 +26,31 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
     typ_vazby = models.TextField(max_length=24, choices=CHOICES)
 
     class Meta:
+        """Třída `KomponentaVazby.Meta` v modulu `webclient.komponenta.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "komponenta_vazby"
 
     def __init__(self, *args, **kwargs):
+        """Funkce `KomponentaVazby.__init__` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.suppress_komponenta_signal = False
 
     @property
     def navazany_objekt(self):
+        """Funkce `KomponentaVazby.navazany_objekt` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if hasattr(self, "casti_dokumentu") and self.casti_dokumentu:
             return self.casti_dokumentu
         elif hasattr(self, "dokumentacni_jednotka") and self.dokumentacni_jednotka:
@@ -77,6 +94,14 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")
 
     def __init__(self, *args, **kwargs):
+        """Funkce `Komponenta.__init__` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
@@ -84,17 +109,36 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     @property
     def ident_cely_safe(self):
+        """Funkce `Komponenta.ident_cely_safe` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self.ident_cely.replace("-", "_")
 
     @property
     def pocet_nalezu(self):
+        """Funkce `Komponenta.pocet_nalezu` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self.objekty.all().count() + self.predmety.all().count()
 
     class Meta:
+        """Třída `Komponenta.Meta` v modulu `webclient.komponenta.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "komponenta"
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
+        """Funkce `Komponenta.get_absolute_url` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             from arch_z.models import ArcheologickyZaznam
 
@@ -128,18 +172,35 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
             )
 
     def get_permission_object(self):
+        """Funkce `Komponenta.get_permission_object` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
         else:
             return self.komponenta_vazby.casti_dokumentu.get_permission_object()
 
     def create_transaction(self, transaction_user):
+        """Funkce `Komponenta.create_transaction` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param transaction_user: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from core.repository_connector import FedoraTransaction
 
         self.active_transaction = FedoraTransaction(transaction_user=transaction_user)
         return self.active_transaction
 
     def set_transaction_main_record(self):
+        """Funkce `Komponenta.set_transaction_main_record` v modulu `webclient.komponenta.models`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             related_model = self.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam
             self.active_transaction.main_record = related_model
@@ -161,5 +222,9 @@ class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), mode
     )
 
     class Meta:
+        """Třída `KomponentaAktivita.Meta` v modulu `webclient.komponenta.models`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         db_table = "komponenta_aktivita"
         unique_together = (("komponenta", "aktivita"),)

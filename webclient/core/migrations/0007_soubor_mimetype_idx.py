@@ -4,6 +4,10 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+    """Třída `Migration` v modulu `webclient.core.migrations.0007_soubor_mimetype_idx`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("core", "0006_permissions"),
     ]

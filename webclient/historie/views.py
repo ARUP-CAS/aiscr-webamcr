@@ -57,6 +57,11 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         pass
 
     def get_queryset(self):
+        """Funkce `HistorieListView.get_queryset` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not self.use_history_table:
             return self.model.objects.none()
         if not self.queryset_filter:
@@ -100,11 +105,25 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         context["fedora_table"] = fedora_table
 
     def get_table(self, **kwargs):
+        """Funkce `HistorieListView.get_table` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not self.use_history_table:
             return None
         return super().get_table(**kwargs)
 
     def get_context_data(self, **kwargs):
+        """Funkce `HistorieListView.get_context_data` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not self.use_history_table:
             self.table_class = None
         context = super().get_context_data(**kwargs)
@@ -125,6 +144,14 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         return context
 
     def render_to_response(self, context, **response_kwargs):
+        """Funkce `HistorieListView.render_to_response` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :param response_kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         export_format = self.request.GET.get("_export")
         export_table = self.request.GET.get("export_table")
         if export_format and export_table == "fedora":
@@ -147,6 +174,13 @@ class ProjektHistorieListView(HistorieListView):
     fedora_model = Projekt
 
     def get_header_config(self, context):
+        """Funkce `ProjektHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse("projekt:detail", args=[context["ident_cely"]]),
             "icon": "dynamic_feed",
@@ -164,6 +198,13 @@ class AkceHistorieListView(HistorieListView):
     fedora_model = ArcheologickyZaznam
 
     def get_header_config(self, context):
+        """Funkce `AkceHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse("arch_z:detail", args=[context["ident_cely"]]),
             "icon": "brush",
@@ -180,6 +221,13 @@ class DokumentHistorieListView(HistorieListView):
     fedora_model = Dokument
 
     def get_header_config(self, context):
+        """Funkce `DokumentHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident = context["ident_cely"]
         if "3D" in ident:
             return {
@@ -194,6 +242,13 @@ class DokumentHistorieListView(HistorieListView):
         }
 
     def add_extra_context(self, context):
+        """Funkce `DokumentHistorieListView.add_extra_context` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         ident = self.get_lookup_value()
         typ = "knihovna_3d" if "3D" in ident else "dokument"
         context["typ"] = typ
@@ -210,6 +265,13 @@ class SamostatnyNalezHistorieListView(HistorieListView):
     fedora_model = SamostatnyNalez
 
     def get_header_config(self, context):
+        """Funkce `SamostatnyNalezHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse("pas:detail", args=[context["ident_cely"]]),
             "icon": "location_on",
@@ -228,6 +290,13 @@ class SpolupraceHistorieListView(HistorieListView):
     queryset_filter = "vazba__spoluprace_historie__pk"
 
     def get_header_config(self, context):
+        """Funkce `SpolupraceHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse("pas:spoluprace_list"),
             "icon": "location_on",
@@ -247,9 +316,23 @@ class SouborHistorieListView(HistorieListView):
     fedora_lookup = "pk"
 
     def prepare_queryset(self, qs):
+        """Funkce `SouborHistorieListView.prepare_queryset` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param qs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return qs.order_by("-datum_zmeny")
 
     def add_extra_context(self, context):
+        """Funkce `SouborHistorieListView.add_extra_context` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         soubor_id = self.get_lookup_value()
         soubor = get_object_or_404(Soubor, pk=soubor_id)
         context["projekt"] = getattr(soubor.vazba, "projekt_souboru", None)
@@ -264,6 +347,13 @@ class SouborHistorieListView(HistorieListView):
                 context["back_model"] = "SamostatnyNalez"
 
     def get_header_config(self, context):
+        """Funkce `SouborHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         nav = context["back_model"]
         if nav == "Projekt":
             return {
@@ -303,6 +393,13 @@ class LokalitaHistorieListView(HistorieListView):
     fedora_model = ArcheologickyZaznam
 
     def get_header_config(self, context):
+        """Funkce `LokalitaHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse("lokalita:detail", args=[context["ident_cely"]]),
             "icon": "tour",
@@ -320,6 +417,13 @@ class UzivatelHistorieListView(HistorieListView):
     fedora_model = User
 
     def get_header_config(self, context):
+        """Funkce `UzivatelHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         next_url = self.request.GET.get("next", reverse("uzivatel:update-uzivatel"))
         return {
             "url": next_url,
@@ -338,6 +442,13 @@ class ExterniZdrojHistorieListView(HistorieListView):
     fedora_model = ExterniZdroj
 
     def get_header_config(self, context):
+        """Funkce `ExterniZdrojHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse("ez:detail", args=[context["ident_cely"]]),
             "icon": "menu_book",
@@ -355,6 +466,13 @@ class PianHistorieListView(HistorieListView):
     context_typ = "akce"
 
     def get_header_config(self, context):
+        """Funkce `PianHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
             "icon": "brush",
@@ -372,6 +490,13 @@ class PianLokalitaHistorieListView(HistorieListView):
     context_typ = "lokalita"
 
     def get_header_config(self, context):
+        """Funkce `PianLokalitaHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse(
                 "lokalita:detail-dj", args=[self.kwargs["lokalita_ident_cely"], self.kwargs["dj_ident_cely"]]
@@ -391,6 +516,13 @@ class AdbHistorieListView(HistorieListView):
     context_typ = "akce"
 
     def get_header_config(self, context):
+        """Funkce `AdbHistorieListView.get_header_config` v modulu `webclient.historie.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param context: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return {
             "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
             "icon": "brush",

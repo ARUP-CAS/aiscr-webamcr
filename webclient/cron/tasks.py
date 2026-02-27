@@ -324,6 +324,11 @@ def cancel_old_projects():
 
 @shared_task
 def update_snapshot_fields():
+    """Funkce `update_snapshot_fields` v modulu `webclient.cron.tasks`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    :return: Výsledek odpovídající účelu volání.
+    """
     try:
         logger.debug("core.cron.update_snapshot_fields.do.start")
         for item in ExterniZdroj.objects.filter(
@@ -360,6 +365,13 @@ def update_snapshot_fields():
 
 @shared_task
 def update_all_redis_snapshots(rewrite_existing=False):
+    """Funkce `update_all_redis_snapshots` v modulu `webclient.cron.tasks`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param rewrite_existing: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("cron.tasks.update_all_redis_snapshots.start")
     r = RedisConnector.get_connection()
     classes_list = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
@@ -396,6 +408,14 @@ def update_all_redis_snapshots(rewrite_existing=False):
 
 @shared_task
 def update_single_redis_snapshot(class_name: str, record_pk):
+    """Funkce `update_single_redis_snapshot` v modulu `webclient.cron.tasks`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param class_name: Vstupní hodnota používaná při zpracování.
+    :param record_pk: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     r = RedisConnector.get_connection()
     if class_name == "Akce":
         item = Akce.objects.get(pk=record_pk)
@@ -421,6 +441,11 @@ def update_single_redis_snapshot(class_name: str, record_pk):
 
 @shared_task
 def update_materialized_views():
+    """Funkce `update_materialized_views` v modulu `webclient.cron.tasks`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("cron.tasks.update_materialized_views.start")
 
     query = (
@@ -444,6 +469,14 @@ def update_materialized_views():
 
 @shared_task
 def write_value_to_redis(key, value):
+    """Funkce `write_value_to_redis` v modulu `webclient.cron.tasks`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param key: Vstupní hodnota používaná při zpracování.
+    :param value: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     redis_connection = RedisConnector.get_connection()
     redis_connection.set(key, value)
     return key, value
@@ -451,6 +484,11 @@ def write_value_to_redis(key, value):
 
 @shared_task
 def call_digiarchiv_update_task():
+    """Funkce `call_digiarchiv_update_task` v modulu `webclient.cron.tasks`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")
     url = settings.DIGIARCHIV_URL
     requests.get(url)
@@ -459,6 +497,14 @@ def call_digiarchiv_update_task():
 
 @shared_task
 def run_data_import(job_id, user_id):
+    """Funkce `run_data_import` v modulu `webclient.cron.tasks`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param job_id: Vstupní hodnota používaná při zpracování.
+    :param user_id: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("cron.tasks.run_data_import.start", extra={"job_id": job_id})
 
     redis_connector = RedisConnector().get_connection()

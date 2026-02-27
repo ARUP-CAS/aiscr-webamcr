@@ -39,6 +39,10 @@ class CreateProjektForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `CreateProjektForm.Meta` v modulu `webclient.projekt.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Projekt
         fields = (
             "typ_projektu",
@@ -87,6 +91,16 @@ class CreateProjektForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
+        """Funkce `CreateProjektForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param required: Vstupní hodnota používaná při zpracování.
+        :param required_next: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["katastry"].readonly = True
@@ -149,6 +163,11 @@ class CreateProjektForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean(self):
+        """Funkce `CreateProjektForm.clean` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cleaned_data = super().clean()
 
         coordinate_x1 = cleaned_data.get("coordinate_x1")
@@ -187,6 +206,10 @@ class EditProjektForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `EditProjektForm.Meta` v modulu `webclient.projekt.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Projekt
         fields = (
             "typ_projektu",
@@ -271,6 +294,17 @@ class EditProjektForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, edit_fields=None, **kwargs):
+        """Funkce `EditProjektForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param required: Vstupní hodnota používaná při zpracování.
+        :param required_next: Vstupní hodnota používaná při zpracování.
+        :param edit_fields: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.helper = FormHelper(self)
@@ -420,6 +454,14 @@ class NavrhnoutZruseniProjektForm(forms.Form):
     enable_submit = True
 
     def __init__(self, *args, **kwargs):
+        """Funkce `NavrhnoutZruseniProjektForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -458,6 +500,10 @@ class PrihlaseniProjektForm(forms.ModelForm):
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     class Meta:
+        """Třída `PrihlaseniProjektForm.Meta` v modulu `webclient.projekt.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Projekt
         fields = (
             "vedouci_projektu",
@@ -495,6 +541,14 @@ class PrihlaseniProjektForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """Funkce `PrihlaseniProjektForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         archivar = kwargs.pop("archivar", False)
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.fields["vedouci_projektu"].required = True
@@ -563,6 +617,10 @@ class ZahajitVTerenuForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `ZahajitVTerenuForm.Meta` v modulu `webclient.projekt.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Projekt
         fields = ("datum_zahajeni",)
         labels = {
@@ -571,6 +629,14 @@ class ZahajitVTerenuForm(forms.ModelForm):
         help_texts = {"datum_zahajeni": _("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip")}
 
     def __init__(self, *args, **kwargs):
+        """Funkce `ZahajitVTerenuForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(ZahajitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_zahajeni"].required = True
         kraje_s_emailem = self.instance.get_kraje_s_emailem()
@@ -590,6 +656,11 @@ class ZahajitVTerenuForm(forms.ModelForm):
         )
 
     def clean(self):
+        """Funkce `ZahajitVTerenuForm.clean` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cleaned_data = super().clean()
         poslat_email_kraj = cleaned_data.get("poslat_email_kraj")
         if poslat_email_kraj == "False":
@@ -627,6 +698,10 @@ class UkoncitVTerenuForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `UkoncitVTerenuForm.Meta` v modulu `webclient.projekt.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Projekt
         fields = ("datum_ukonceni",)
         labels = {
@@ -637,6 +712,14 @@ class UkoncitVTerenuForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """Funkce `UkoncitVTerenuForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(UkoncitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_ukonceni"].required = True
         kraje_s_emailem = self.instance.get_kraje_s_emailem()
@@ -685,6 +768,14 @@ class ZruseniProjektForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `ZruseniProjektForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -710,6 +801,14 @@ class GenerovatNovePotvrzeniForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `GenerovatNovePotvrzeniForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -768,6 +867,14 @@ class GenerovatExpertniListForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `GenerovatExpertniListForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -803,6 +910,15 @@ class PripojitProjektForm(forms.Form):
     """
 
     def __init__(self, dok=False, *args, **kwargs):
+        """Funkce `PripojitProjektForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param dok: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(PripojitProjektForm, self).__init__(*args, **kwargs)
         if dok:
             new_choices = list(
@@ -841,6 +957,10 @@ class PripojitProjektForm(forms.Form):
 
 
 class ProjektFilterForm(BaseFilterForm):
+    """Třída `ProjektFilterForm` v modulu `webclient.projekt.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     list_to_check = [
         "historie_datum_zmeny_od",
         "planovane_zahajeni",
@@ -853,7 +973,21 @@ class ProjektFilterForm(BaseFilterForm):
 
 
 class ZadostProjektForm(forms.Form):
+    """Třída `ZadostProjektForm` v modulu `webclient.projekt.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def __init__(self, label="", help_text="", *args, **kwargs):
+        """Funkce `ZadostProjektForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param label: Vstupní hodnota používaná při zpracování.
+        :param help_text: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(ZadostProjektForm, self).__init__(*args, **kwargs)
         self.fields["reason"] = forms.CharField(
             label=label,
@@ -866,6 +1000,10 @@ class ZadostProjektForm(forms.Form):
 
 
 class UpravitDatumOznameniForm(forms.ModelForm):
+    """Třída `UpravitDatumOznameniForm` v modulu `webclient.projekt.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     datum_oznameni = forms.DateField(
         label=_("projekt.forms.upravitDatumOznameni.datumOznameni.label"),
         widget=forms.DateInput(attrs={"data-provide": "datepicker", "autocomplete": "off"}),
@@ -884,6 +1022,10 @@ class UpravitDatumOznameniForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `UpravitDatumOznameniForm.Meta` v modulu `webclient.projekt.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Historie
         fields = ("datum_oznameni", "cas_oznameni", "poznamka")
         help_texts = {
@@ -894,6 +1036,14 @@ class UpravitDatumOznameniForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """Funkce `UpravitDatumOznameniForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(UpravitDatumOznameniForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
@@ -926,6 +1076,14 @@ class NeodeslatMailForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `NeodeslatMailForm.__init__` v modulu `webclient.projekt.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

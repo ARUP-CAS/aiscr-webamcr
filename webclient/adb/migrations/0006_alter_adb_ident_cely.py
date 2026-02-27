@@ -5,6 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
+    """Třída `Migration` v modulu `webclient.adb.migrations.0006_alter_adb_ident_cely`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ('adb', '0005_alter_adb_ident_cely_alter_adb_rok_popisu_and_more'),
     ]

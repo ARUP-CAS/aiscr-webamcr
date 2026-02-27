@@ -5,6 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
+    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0019_alter_osoba_orcid`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("uzivatel", "0018_organizace_ror"),
     ]

@@ -3,6 +3,10 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
+    """Třída `Migration` v modulu `webclient.uzivatel.migrations.0005_alter_auth_user_groups_id`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ('uzivatel', '0004_alter_osoba_vypis_cely'),
     ]

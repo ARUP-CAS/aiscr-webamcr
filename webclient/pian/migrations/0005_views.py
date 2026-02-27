@@ -3,6 +3,10 @@ from django.db import migrations,models
 
 class Migration(migrations.Migration):
 
+    """Třída `Migration` v modulu `webclient.pian.migrations.0005_views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     initial = True
 
     dependencies = [

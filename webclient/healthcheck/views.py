@@ -11,6 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 def check_status():
+    """Funkce `check_status` v modulu `webclient.healthcheck.views`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    :return: Výsledek odpovídající účelu volání.
+    """
     io_out = StringIO()
     io_out_db = StringIO()
     try:
@@ -24,7 +29,18 @@ def check_status():
 
 
 class HealthCheckView(IPWhitelistMixin, View):
+    """Třída `HealthCheckView` v modulu `webclient.healthcheck.views`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def get(self, request):
+        """Funkce `HealthCheckView.get` v modulu `webclient.healthcheck.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         status = "healthy"
         r_code, msg, msg_db = check_status()
         status = ("healthy", 200) if r_code == 0 else ("unhealthy", 500)

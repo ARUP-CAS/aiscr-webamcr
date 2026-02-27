@@ -86,6 +86,10 @@ class CreateDJForm(forms.ModelForm):
         return queryset
 
     class Meta:
+        """Třída `CreateDJForm.Meta` v modulu `webclient.dj.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = DokumentacniJednotka
         fields = ("typ", "negativni_jednotka", "nazev", "pian")
 
@@ -135,6 +139,17 @@ class CreateDJForm(forms.ModelForm):
         typ_akce=None,
         **kwargs,
     ):
+        """Funkce `CreateDJForm.__init__` v modulu `webclient.dj.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param not_readonly: Vstupní hodnota používaná při zpracování.
+        :param typ_arch_z: Vstupní hodnota používaná při zpracování.
+        :param typ_akce: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
         if self.instance.ident_cely and typ_akce is None:
@@ -207,6 +222,14 @@ class ChangeKatastrForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `ChangeKatastrForm.__init__` v modulu `webclient.dj.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(ChangeKatastrForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

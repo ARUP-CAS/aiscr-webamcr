@@ -22,6 +22,15 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Organizace, weak=False)
 def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
+    """Funkce `orgnaizace_save_metadata` v modulu `webclient.uzivatel.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         fedora_transaction = get_or_create_transaction(instance)
@@ -34,6 +43,15 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
 
 @receiver(post_save, sender=Osoba, weak=False)
 def osoba_save_metadata(sender, instance: Osoba, **kwargs):
+    """Funkce `osoba_save_metadata` v modulu `webclient.uzivatel.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         fedora_transaction = get_or_create_transaction(instance)
@@ -78,6 +96,16 @@ def create_ident_cely(sender, instance: User, **kwargs):
 
 @receiver(post_save, sender=User, weak=False)
 def user_post_save_method(sender, instance: User, created: bool, **kwargs):
+    """Funkce `user_post_save_method` v modulu `webclient.uzivatel.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param created: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     fedora_transaction = instance.active_transaction
     logger.debug(
         "uzivatel.signals.user_post_save_method.start",
@@ -93,6 +121,11 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
     if not instance.suppress_signal:
 
         def check_password_change():
+            """Funkce `check_password_change` v modulu `webclient.uzivatel.signals`.
+            
+            Zajišťuje dílčí aplikační logiku pro tento modul.
+            :return: Výsledek odpovídající účelu volání.
+            """
             if created:
                 return False
             try:
@@ -158,6 +191,16 @@ def send_account_confirmed_email(sender, instance: User, created):
 
 @receiver(pre_delete, sender=User, weak=False)
 def delete_user_connections(sender, instance, *args, **kwargs):
+    """Funkce `delete_user_connections` v modulu `webclient.uzivatel.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param args: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("uzivatel.signals.delete_user_connections.start", extra={"ident_cely": instance.ident_cely})
     Historie.save_record_deletion_record(record=instance)
     if instance.active_transaction:
@@ -190,6 +233,15 @@ def delete_profile(sender, instance: User, *args, **kwargs):
 
 @receiver(pre_delete, sender=Osoba, weak=False)
 def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
+    """Funkce `osoba_delete_repository_container` v modulu `webclient.uzivatel.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug("uzivatel.signals.osoba_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = get_or_create_transaction(instance)
     instance.record_deletion(fedora_transaction, close_transaction=True)
@@ -201,6 +253,15 @@ def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
 
 @receiver(pre_delete, sender=Organizace, weak=False)
 def organizace_delete_repository_container(sender, instance: Organizace, **kwargs):
+    """Funkce `organizace_delete_repository_container` v modulu `webclient.uzivatel.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param instance: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     logger.debug(
         "uzivatel.signals.organizace_delete_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )
@@ -215,6 +276,16 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
 @receiver(user_logged_in, weak=False)
 def log_user_signin(sender, user, request, **kwargs):
     # Získá IP adresu z objektu request.
+    """Funkce `log_user_signin` v modulu `webclient.uzivatel.signals`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sender: Vstupní hodnota používaná při zpracování.
+    :param user: Vstupní hodnota používaná při zpracování.
+    :param request: Vstupní hodnota používaná při zpracování.
+    :param kwargs: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
         ip_address = x_forwarded_for.split(",")[0]

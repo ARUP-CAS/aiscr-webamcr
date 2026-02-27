@@ -56,6 +56,13 @@ class PesListView(LoginRequiredMixin, TemplateView):
     template_name = "notifikace_projekty/pes_list.html"
 
     def get_context_data(self, **kwargs):
+        """Funkce `PesListView.get_context_data` v modulu `webclient.notifikace_projekty.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = super().get_context_data(**kwargs)
         old_pes_post = self.request.session.pop("_old_pes_post", None)
         PesFormset = {}
@@ -128,6 +135,15 @@ class PesCreateView(LoginRequiredMixin, View):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """Funkce `PesCreateView.post` v modulu `webclient.notifikace_projekty.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         formsets = []
         valid = True
         pes_form_valid = False
@@ -194,6 +210,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
     button = _("notifikaceProjekty.views.pesSmazatView.submitButton")
 
     def get_zaznam(self) -> Pes:
+        """Funkce `PesSmazatView.get_zaznam` v modulu `webclient.notifikace_projekty.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         id = self.kwargs.get("pk")
         return get_object_or_404(
             Pes,
@@ -201,6 +222,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         )
 
     def get_object_identification(self) -> str:
+        """Funkce `PesSmazatView.get_object_identification` v modulu `webclient.notifikace_projekty.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pes: Pes = self.get_zaznam()
         object = pes.content_object
         if isinstance(object, RuianKatastr) or isinstance(object, RuianOkres) or isinstance(object, RuianKraj):
@@ -210,6 +236,13 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         return ""
 
     def get_context_data(self, **kwargs):
+        """Funkce `PesSmazatView.get_context_data` v modulu `webclient.notifikace_projekty.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
@@ -222,10 +255,28 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """Funkce `PesSmazatView.get` v modulu `webclient.notifikace_projekty.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """Funkce `PesSmazatView.post` v modulu `webclient.notifikace_projekty.views`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         try:
             zaznam = self.get_zaznam()
             zaznam.delete()

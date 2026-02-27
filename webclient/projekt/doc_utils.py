@@ -52,6 +52,15 @@ pageinfo = "platypus example"
 
 
 def draw_image(filename, canvas, counter):
+    """Funkce `draw_image` v modulu `webclient.projekt.doc_utils`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param filename: Vstupní hodnota používaná při zpracování.
+    :param canvas: Vstupní hodnota používaná při zpracování.
+    :param counter: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     img = utils.ImageReader(filename)
     iw, ih = img.getSize()
     target_height = HEADER_HEIGHT
@@ -75,6 +84,14 @@ def draw_image(filename, canvas, counter):
 
 
 def add_page_number(canvas, doc):
+    """Funkce `add_page_number` v modulu `webclient.projekt.doc_utils`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param canvas: Vstupní hodnota používaná při zpracování.
+    :param doc: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     canvas.saveState()
     canvas.setFont("OpenSans", 10)
     page_number_text = "%d" % (doc.page)
@@ -83,6 +100,14 @@ def add_page_number(canvas, doc):
 
 
 def draw_header(canvas, doc):
+    """Funkce `draw_header` v modulu `webclient.projekt.doc_utils`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param canvas: Vstupní hodnota používaná při zpracování.
+    :param doc: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     counter = 0
     for filename in HEADER_IMAGES:
         draw_image(f"static/img/{filename}", canvas, counter)
@@ -91,9 +116,23 @@ def draw_header(canvas, doc):
 
 
 class DocumentCreator(ABC):
+    """Třída `DocumentCreator` v modulu `webclient.projekt.doc_utils`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     FILENAME_PREFIX = ""
 
     def __init__(self, oznamovatel, projekt, fedora_transaction, additional=False):
+        """Funkce `DocumentCreator.__init__` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param oznamovatel: Vstupní hodnota používaná při zpracování.
+        :param projekt: Vstupní hodnota používaná při zpracování.
+        :param fedora_transaction: Vstupní hodnota používaná při zpracování.
+        :param additional: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         from oznameni.models import Oznamovatel
 
         self.oznamovatel: Oznamovatel = oznamovatel
@@ -111,6 +150,13 @@ class DocumentCreator(ABC):
 
     @classmethod
     def format_date(cls, date_obj: datetime.datetime | None) -> str:
+        """Funkce `DocumentCreator.format_date` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param date_obj: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if date_obj is None:
             return ""
         if os.name == "nt":
@@ -119,6 +165,11 @@ class DocumentCreator(ABC):
             return date_obj.strftime("%-d. %-m. %Y")
 
     def _create_style_dict(self):
+        """Funkce `DocumentCreator._create_style_dict` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.styles.add(
             ParagraphStyle(
                 "amBodyText",
@@ -190,6 +241,11 @@ class DocumentCreator(ABC):
         )
 
     def _create_header_oznamovatel(self):
+        """Funkce `DocumentCreator._create_header_oznamovatel` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.texts["header_line_1"] = self.projekt.oznamovatel.oznamovatel
         self.texts["header_line_2"] = f"Zast.: {self.projekt.oznamovatel.odpovedna_osoba}"
         self.texts["header_line_3"] = self.projekt.oznamovatel.adresa
@@ -197,6 +253,11 @@ class DocumentCreator(ABC):
         self.texts["header_line_5"] = f"Tel.: {self.projekt.oznamovatel.telefon}"
 
     def _create_header_oznamovatel_doc(self) -> List[Paragraph]:
+        """Funkce `DocumentCreator._create_header_oznamovatel_doc` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return [
             Paragraph(self.texts.get("header_line_1"), self.styles.get("amBodyTextSmallerSpaceAfter")),
             Paragraph(self.texts.get("header_line_2"), self.styles.get("amBodyTextSmallerSpaceAfter")),
@@ -206,6 +267,11 @@ class DocumentCreator(ABC):
         ]
 
     def _create_header_tab_dates(self):
+        """Funkce `DocumentCreator._create_header_tab_dates` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.texts["header_tab_1_1"] = "<strong>Oznámení ze dne</strong>"
         self.texts["header_tab_1_2"] = "<strong>Evidenční číslo</strong>"
         self.texts["header_tab_1_3"] = f"<strong>{DOK_VE_MESTE[self.dok_index]} dne</strong>"
@@ -214,6 +280,11 @@ class DocumentCreator(ABC):
         self.texts["header_tab_2_3"] = self.format_date(datetime.datetime.now())
 
     def _create_header_tab_dates_doc(self) -> Table:
+        """Funkce `DocumentCreator._create_header_tab_dates_doc` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         tbl_data = [
             [
                 Paragraph(self.texts.get("header_tab_1_1"), self.styles.get("amBodyTextSmallerSpaceAfter")),
@@ -230,6 +301,11 @@ class DocumentCreator(ABC):
         return tbl
 
     def _create_data_document_part(self):
+        """Funkce `DocumentCreator._create_data_document_part` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.texts["data_part_1"] = f"<strong>Podnět oznámení</strong>: {self.projekt.podnet}"
         self.texts["data_part_2"] = f"<strong>Katastrální území</strong>: {self.projekt.hlavni_katastr}"
         self.texts["data_part_3"] = f"<strong>Lokalizace</strong>: {self.projekt.lokalizace}"
@@ -240,6 +316,11 @@ class DocumentCreator(ABC):
         )
 
     def _create_signature(self):
+        """Funkce `DocumentCreator._create_signature` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.texts["doc_sign_1"] = "S pozdravem"
         self.texts["doc_sign_2"] = DOC_REDITEL[self.dok_index]
         self.texts["doc_sign_3"] = (
@@ -247,6 +328,11 @@ class DocumentCreator(ABC):
         )
 
     def _create_signature_doc(self):
+        """Funkce `DocumentCreator._create_signature_doc` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return [
             Paragraph("", self.body_style),
             Paragraph(self.texts.get("doc_sign_1"), self.styles.get("amSignature")),
@@ -255,6 +341,11 @@ class DocumentCreator(ABC):
         ]
 
     def _initiate_document(self):
+        """Funkce `DocumentCreator._initiate_document` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pdf_buffer = BytesIO()
         my_doc = SimpleDocTemplate(
             pdf_buffer,
@@ -267,6 +358,15 @@ class DocumentCreator(ABC):
         return pdf_buffer, my_doc
 
     def _generate_repository_file(self, my_doc, document_content, pdf_buffer):
+        """Funkce `DocumentCreator._generate_repository_file` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param my_doc: Vstupní hodnota používaná při zpracování.
+        :param document_content: Vstupní hodnota používaná při zpracování.
+        :param pdf_buffer: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         my_doc.build(document_content, onFirstPage=draw_header, onLaterPages=draw_header)
         pdf_value = pdf_buffer.getvalue()
         pdf_buffer.close()
@@ -284,21 +384,45 @@ class DocumentCreator(ABC):
 
     @property
     def body_style(self):
+        """Funkce `DocumentCreator.body_style` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return self.styles["amBodyText"]
 
     @abstractmethod
     def _generate_text(self):
+        """Funkce `DocumentCreator._generate_text` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pass
 
     @abstractmethod
     def build_document(self):
+        """Funkce `DocumentCreator.build_document` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pass
 
 
 class OznameniPDFCreator(DocumentCreator):
+    """Třída `OznameniPDFCreator` v modulu `webclient.projekt.doc_utils`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     FILENAME_PREFIX = "oznameni"
 
     def _generate_text(self):
+        """Funkce `OznameniPDFCreator._generate_text` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
         self.texts["doc_vec"] = """
@@ -577,6 +701,11 @@ class OznameniPDFCreator(DocumentCreator):
                """
 
     def build_document(self) -> RepositoryBinaryFile:
+        """Funkce `OznameniPDFCreator.build_document` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pdf_buffer, my_doc = self._initiate_document()
         styles = self.styles
         body_style = self.body_style
@@ -640,9 +769,18 @@ class OznameniPDFCreator(DocumentCreator):
 
 
 class ZruseniPDFCreator(DocumentCreator):
+    """Třída `ZruseniPDFCreator` v modulu `webclient.projekt.doc_utils`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     FILENAME_PREFIX = "zruseni"
 
     def _generate_text(self):
+        """Funkce `ZruseniPDFCreator._generate_text` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
         self.texts["doc_vec"] = (
@@ -732,6 +870,11 @@ class ZruseniPDFCreator(DocumentCreator):
         self._create_signature()
 
     def build_document(self) -> RepositoryBinaryFile:
+        """Funkce `ZruseniPDFCreator.build_document` v modulu `webclient.projekt.doc_utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         pdf_buffer, my_doc = self._initiate_document()
         styles = self.styles
         body_style = self.body_style

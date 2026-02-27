@@ -52,6 +52,10 @@ class ExterniZdrojTable(SearchTable):
     first_columns = None
 
     class Meta:
+        """Třída `ExterniZdrojTable.Meta` v modulu `webclient.ez.tables`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = ExterniZdroj
         fields = (
             "stav",

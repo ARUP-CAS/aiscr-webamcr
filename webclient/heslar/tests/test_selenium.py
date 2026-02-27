@@ -10,6 +10,10 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceHeslar(BaseSeleniumTestClass):
+    """Třída `AkceHeslar` v modulu `webclient.heslar.tests.test_selenium`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def test_151_test_Fedora_heslar_001(self):
         """Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
 

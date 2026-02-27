@@ -32,6 +32,13 @@ logger = logging.getLogger(__name__)
 
 
 def get_next_sequence(sequence_name: str) -> str:
+    """Funkce `get_next_sequence` v modulu `webclient.core.ident_cely`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param sequence_name: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     query = "select nextval(%s)"
     cursor = connections["urgent"].cursor()
     cursor.execute(query, [sequence_name])
@@ -332,6 +339,13 @@ def get_temp_ez_ident():
 
 
 def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Type[User]) -> str:
+    """Funkce `get_next_sequence_integrity_check` v modulu `webclient.core.ident_cely`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param object_class: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     while True:
         current_value = f"{object_class.IDENT_PREFIX}-{get_next_sequence(object_class.SEQUENCE_NAME):06}"
         if not object_class.objects.filter(ident_cely=current_value).exists():

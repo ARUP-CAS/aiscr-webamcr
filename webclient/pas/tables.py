@@ -79,6 +79,10 @@ class SamostatnyNalezTable(SearchTable):
     )
 
     class Meta:
+        """Třída `SamostatnyNalezTable.Meta` v modulu `webclient.pas.tables`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = SamostatnyNalez
         fields = (
             "nahled",
@@ -160,11 +164,34 @@ class SamostatnyNalezTable(SearchTable):
         return ""
 
     def __init__(self, *args, **kwargs):
+        """Funkce `SamostatnyNalezTable.__init__` v modulu `webclient.pas.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(SamostatnyNalezTable, self).__init__(*args, **kwargs)
 
 
 class AktivaceDeaktivaceColumn(tables.TemplateColumn):
+    """Třída `AktivaceDeaktivaceColumn` v modulu `webclient.pas.tables`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def render(self, record, table, value, bound_column, **kwargs):
+        """Funkce `AktivaceDeaktivaceColumn.render` v modulu `webclient.pas.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param record: Vstupní hodnota používaná při zpracování.
+        :param table: Vstupní hodnota používaná při zpracování.
+        :param value: Vstupní hodnota používaná při zpracování.
+        :param bound_column: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not hasattr(table, "request"):
             return ""
         if record.aktivni:
@@ -178,7 +205,22 @@ class AktivaceDeaktivaceColumn(tables.TemplateColumn):
 
 
 class smazatColumn(tables.TemplateColumn):
+    """Třída `smazatColumn` v modulu `webclient.pas.tables`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def render(self, record, table, value, bound_column, **kwargs):
+        """Funkce `smazatColumn.render` v modulu `webclient.pas.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param record: Vstupní hodnota používaná při zpracování.
+        :param table: Vstupní hodnota používaná při zpracování.
+        :param value: Vstupní hodnota používaná při zpracování.
+        :param bound_column: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if not hasattr(table, "request"):
             return ""
         if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user, record.id):
@@ -246,6 +288,10 @@ class UzivatelSpolupraceTable(SearchTable):
     app = "spoluprace"
 
     class Meta:
+        """Třída `UzivatelSpolupraceTable.Meta` v modulu `webclient.pas.tables`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = UzivatelSpoluprace
         fields = (
             "stav",
@@ -266,6 +312,14 @@ class UzivatelSpolupraceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `UzivatelSpolupraceTable.__init__` v modulu `webclient.pas.tables`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):

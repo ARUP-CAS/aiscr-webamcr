@@ -5,6 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
+    """Třída `Migration` v modulu `webclient.arch_z.migrations.0016_alter_akce_je_nz_alter_akce_odlozena_nz_and_more`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("arch_z", "0015_alter_archeologickyzaznam_unique_together"),
     ]

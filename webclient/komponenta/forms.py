@@ -18,6 +18,10 @@ class CreateKomponentaForm(forms.ModelForm):
     """
 
     class Meta:
+        """Třída `CreateKomponentaForm.Meta` v modulu `webclient.komponenta.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Komponenta
         fields = ("presna_datace", "poznamka", "jistota", "aktivity", "obdobi", "areal")
 
@@ -52,6 +56,19 @@ class CreateKomponentaForm(forms.ModelForm):
     def __init__(
         self, obdobi_choices, areal_choices, *args, readonly=False, required=None, required_next=None, **kwargs
     ):
+        """Funkce `CreateKomponentaForm.__init__` v modulu `webclient.komponenta.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param obdobi_choices: Vstupní hodnota používaná při zpracování.
+        :param areal_choices: Vstupní hodnota používaná při zpracování.
+        :param readonly: Vstupní hodnota používaná při zpracování.
+        :param required: Vstupní hodnota používaná při zpracování.
+        :param required_next: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
         self.fields["obdobi"] = TwoLevelSelectField(
             label=_("komponenta.form.createKomponentaForm.obdobi.label"),

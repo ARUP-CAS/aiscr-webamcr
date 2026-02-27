@@ -35,6 +35,10 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
     """
 
     class Meta(RegistrationForm):
+        """Třída `AuthUserCreationForm.Meta` v modulu `webclient.uzivatel.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = User
         fields = (
             "first_name",
@@ -72,6 +76,14 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
         }
 
     def __init__(self, *args, **kwargs):
+        """Funkce `AuthUserCreationForm.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.fields["telefon"].validators = [validate_phone_number]
@@ -108,9 +120,17 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
 
 
 class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
+    """Třída `AuthUserCreationFormWithRecaptcha` v modulu `webclient.uzivatel.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)
 
     class Meta(AuthUserCreationForm):
+        """Třída `AuthUserCreationFormWithRecaptcha.Meta` v modulu `webclient.uzivatel.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = User
         fields = (
             "first_name",
@@ -125,6 +145,14 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
         )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `AuthUserCreationFormWithRecaptcha.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(AuthUserCreationFormWithRecaptcha, self).__init__(*args, **kwargs)
         if settings.SKIP_RECAPTCHA:
             self.fields.pop("captcha")
@@ -136,6 +164,10 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
     """
 
     class Meta:
+        """Třída `AuthUserChangeForm.Meta` v modulu `webclient.uzivatel.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = User
         fields = ("telefon", "orcid")
         labels = {
@@ -150,6 +182,14 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
         }
 
     def __init__(self, *args, **kwargs):
+        """Funkce `AuthUserChangeForm.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -182,6 +222,10 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `AuthReadOnlyUserChangeForm.Meta` v modulu `webclient.uzivatel.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = User
         fields = ("first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "groups")
         labels = {
@@ -214,6 +258,14 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """Funkce `AuthReadOnlyUserChangeForm.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.fields["organizace"].widget.value = self.instance.organizace
         self.fields["hlavni_role"].widget.value = self.instance.hlavni_role
@@ -237,11 +289,27 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
 
 
 class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
+    """Třída `AuthUserChangeAdminForm` v modulu `webclient.uzivatel.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     class Meta:
+        """Třída `AuthUserChangeAdminForm.Meta` v modulu `webclient.uzivatel.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = User
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
+        """Funkce `AuthUserChangeAdminForm.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
             widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
@@ -270,6 +338,10 @@ class NotificationsForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `NotificationsForm.Meta` v modulu `webclient.uzivatel.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = User
         fields = ("notification_types",)
 
@@ -299,6 +371,11 @@ class UpdatePasswordSettings(forms.ModelForm):
     )
 
     def clean(self):
+        """Funkce `UpdatePasswordSettings.clean` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cleaned_data = super().clean()
         old_password = cleaned_data.get("old_password")[2:-2]
         password1 = cleaned_data.get("password1")[2:-2]
@@ -319,10 +396,22 @@ class UpdatePasswordSettings(forms.ModelForm):
         validate_password(password1)
 
     class Meta:
+        """Třída `UpdatePasswordSettings.Meta` v modulu `webclient.uzivatel.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = User
         fields = ("password1", "password2")
 
     def __init__(self, *args, **kwargs):
+        """Funkce `UpdatePasswordSettings.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -342,6 +431,14 @@ class AuthUserLoginForm(AuthenticationForm):
     """
 
     def __init__(self, *args, **kwargs):
+        """Funkce `AuthUserLoginForm.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(AuthUserLoginForm, self).__init__(*args, **kwargs)
         self.fields["username"].help_text = _("uzivatel.forms.login.username.tooltip")
         self.fields["password"].help_text = _("uzivatel.forms.login.password.tooltip")
@@ -357,6 +454,11 @@ class AuthUserLoginForm(AuthenticationForm):
         )
 
     def get_invalid_login_error(self):
+        """Funkce `AuthUserLoginForm.get_invalid_login_error` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return ValidationError(
             _("uzivatel.forms.login.error"),
             code="invalid_login",
@@ -364,7 +466,19 @@ class AuthUserLoginForm(AuthenticationForm):
 
 
 class UserPasswordResetForm(PasswordResetForm):
+    """Třída `UserPasswordResetForm` v modulu `webclient.uzivatel.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def __init__(self, *args, **kwargs):
+        """Funkce `UserPasswordResetForm.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)
         self.fields["email"].label = _("uzivatel.forms.passwordReset.email.label")
         self.fields["email"].help_text = _("uzivatel.forms.passwordReset.email.tooltip")
@@ -419,6 +533,10 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
     """
 
     class Meta:
+        """Třída `OsobaForm.Meta` v modulu `webclient.uzivatel.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Osoba
         fields = (
             "jmeno",
@@ -456,6 +574,14 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
         }
 
     def __init__(self, *args, **kwargs):
+        """Funkce `OsobaForm.__init__` v modulu `webclient.uzivatel.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         kwargs.pop("create", False)
         super(OsobaForm, self).__init__(*args, **kwargs)
         # Pokud jde o vytvoření:
@@ -488,4 +614,8 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
 
 
 class AuthActivationForm(ActivationForm):
+    """Třída `AuthActivationForm` v modulu `webclient.uzivatel.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     activation_key = forms.CharField(label=_("templates.djangoRegistration.activationKey.label"))

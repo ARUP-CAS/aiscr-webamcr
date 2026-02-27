@@ -4,6 +4,10 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+    """Třída `Migration` v modulu `webclient.projekt.migrations.0006_alter_projekt_stav`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     dependencies = [
         ("projekt", "0005_views"),
     ]

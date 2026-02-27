@@ -32,6 +32,14 @@ class SelectMultipleSeparator(forms.SelectMultiple):
         },
         choices=(),
     ):
+        """Funkce `SelectMultipleSeparator.__init__` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param attrs: Vstupní hodnota používaná při zpracování.
+        :param choices: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(attrs, choices)
 
 
@@ -41,12 +49,27 @@ class TwoLevelSelectField(forms.CharField):
     """
 
     def to_python(self, selected_value):
+        """Funkce `TwoLevelSelectField.to_python` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param selected_value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if selected_value:
             return Heslar.objects.get(pk=int(selected_value))
         else:
             return None
 
     def has_changed(self, initial, data) -> bool:
+        """Funkce `TwoLevelSelectField.has_changed` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param initial: Vstupní hodnota používaná při zpracování.
+        :param data: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if initial is not None:
             initial = Heslar.objects.get(pk=int(initial))
         return super().has_changed(initial, data)
@@ -58,18 +81,40 @@ class HeslarChoiceFieldField(forms.ChoiceField):
     """
 
     def clean(self, selected_value):
+        """Funkce `HeslarChoiceFieldField.clean` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param selected_value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if selected_value:
             return Heslar.objects.get(pk=int(selected_value))
         else:
             return super().clean(selected_value)
 
     def to_python(self, selected_value):
+        """Funkce `HeslarChoiceFieldField.to_python` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param selected_value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if selected_value:
             return Heslar.objects.get(pk=int(selected_value))
         else:
             return None
 
     def has_changed(self, initial, data) -> bool:
+        """Funkce `HeslarChoiceFieldField.has_changed` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param initial: Vstupní hodnota používaná při zpracování.
+        :param data: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if initial is not None:
             initial = Heslar.objects.get(pk=int(initial))
         return super().has_changed(initial, data)
@@ -84,6 +129,17 @@ class CheckStavNotChangedForm(forms.Form):
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, db_stav=None, require_confirmation=False, dokument_warnings=None, *args, **kwargs):
+        """Funkce `CheckStavNotChangedForm.__init__` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param db_stav: Vstupní hodnota používaná při zpracování.
+        :param require_confirmation: Vstupní hodnota používaná při zpracování.
+        :param dokument_warnings: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.db_stav = db_stav
         super(CheckStavNotChangedForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -116,6 +172,11 @@ class CheckStavNotChangedForm(forms.Form):
         self.helper.form_tag = False
 
     def clean(self):
+        """Funkce `CheckStavNotChangedForm.clean` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cleaned_data = super().clean()
         old_stav = self.cleaned_data.get("old_stav")
         if str(self.db_stav) != str(old_stav):
@@ -144,6 +205,14 @@ class VratitForm(forms.Form):
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
+        """Funkce `VratitForm.__init__` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(VratitForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -151,9 +220,21 @@ class VratitForm(forms.Form):
 
 
 class VratitFormDokument(VratitForm):
+    """Třída `VratitFormDokument` v modulu `webclient.core.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     ident_cely = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
+        """Funkce `VratitFormDokument.__init__` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         self.fields["reason"].widget = forms.Textarea(
             attrs={"rows": 3, "cols": 150, "required": "required", "class": "textinput form-control"}
@@ -174,6 +255,15 @@ class VratitFormAZ(VratitForm):
     )
 
     def __init__(self, *args, az, **kwargs):
+        """Funkce `VratitFormAZ.__init__` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param az: Vstupní hodnota používaná při zpracování.
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super().__init__(*args, **kwargs)
         if az.stav != AZ_STAV_ODESLANY:
             self.fields.pop("dokument", None)
@@ -190,6 +280,13 @@ class DecimalTextWideget(forms.widgets.TextInput):
     """
 
     def format_value(self, value):
+        """Funkce `DecimalTextWideget.format_value` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param value: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if value == "" or value is None:
             return None
         if self.is_localized:
@@ -229,6 +326,10 @@ class OdstavkaSystemuForm(forms.ModelForm):
     )
 
     class Meta:
+        """Třída `OdstavkaSystemuForm.Meta` v modulu `webclient.core.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = OdstavkaSystemu
         fields = (
             "info_od",
@@ -238,6 +339,14 @@ class OdstavkaSystemuForm(forms.ModelForm):
         )
 
     def __init__(self, *args, **kwargs):
+        """Funkce `OdstavkaSystemuForm.__init__` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(OdstavkaSystemuForm, self).__init__(*args, **kwargs)
         with open("/vol/web/nginx/data/cs/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
@@ -262,6 +371,10 @@ class OdstavkaSystemuForm(forms.ModelForm):
 
 
 class PermissionImportForm(forms.Form):
+    """Třída `PermissionImportForm` v modulu `webclient.core.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     file = forms.FileField(
         required=True,
         label=_("core.forms.permissionImport.file.label"),
@@ -280,6 +393,10 @@ class PermissionImportForm(forms.Form):
 
 
 class PermissionSkipImportForm(forms.Form):
+    """Třída `PermissionSkipImportForm` v modulu `webclient.core.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     file = forms.FileField(
         required=True,
         label=_("core.forms.permissionSkipImport.file.label"),
@@ -288,9 +405,18 @@ class PermissionSkipImportForm(forms.Form):
 
 
 class BaseFilterForm(forms.Form):
+    """Třída `BaseFilterForm` v modulu `webclient.core.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     list_to_check = ["historie_datum_zmeny_od"]
 
     def clean(self):
+        """Funkce `BaseFilterForm.clean` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cleaned_data = super(BaseFilterForm, self).clean()
         error_list = []
         ERRORS = {
@@ -319,6 +445,10 @@ class BaseFilterForm(forms.Form):
 
 
 class TransaltionImportForm(forms.Form):
+    """Třída `TransaltionImportForm` v modulu `webclient.core.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     file = forms.FileField(
         required=True,
         label=_("core.forms.TransaltionImportForm.file.label"),
@@ -326,6 +456,11 @@ class TransaltionImportForm(forms.Form):
     )
 
     def clean(self):
+        """Funkce `TransaltionImportForm.clean` v modulu `webclient.core.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cleaned_data = super().clean()
         file = cleaned_data.get("file")
         if file.size < 1000:
@@ -336,6 +471,10 @@ class TransaltionImportForm(forms.Form):
 
 
 class ImportDataAdminForm(forms.Form):
+    """Třída `ImportDataAdminForm` v modulu `webclient.core.forms`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     PERFORMED_ACTION_INSERT = "insert"
     PERFORMED_ACTION_UPDATE = "update"
     PERFORMED_ACTION_DELETE = "delete"

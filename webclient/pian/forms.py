@@ -27,6 +27,10 @@ class PianCreateForm(forms.ModelForm):
     """
 
     class Meta:
+        """Třída `PianCreateForm.Meta` v modulu `webclient.pian.forms`.
+        
+        Zapouzdřuje související data a chování v rámci dané části aplikace.
+        """
         model = Pian
         fields = ("presnost", "geom", "geom_sjtsk", "geom_system")
         labels = {"presnost": _("pian.forms.pianCreateForm.presnost.label")}
@@ -43,6 +47,14 @@ class PianCreateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """Funkce `PianCreateForm.__init__` v modulu `webclient.pian.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param args: Vstupní hodnota používaná při zpracování.
+        :param kwargs: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         super(PianCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -60,6 +72,13 @@ class PianCreateForm(forms.ModelForm):
         )
 
     def _instance_geom_wkt(self, field_name):
+        """Funkce `PianCreateForm._instance_geom_wkt` v modulu `webclient.pian.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param field_name: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         g = getattr(self.instance, field_name, None)
         if not g:
             return None
@@ -86,6 +105,11 @@ class PianCreateForm(forms.ModelForm):
         return not bool(self.errors)
 
     def clean(self):
+        """Funkce `PianCreateForm.clean` v modulu `webclient.pian.forms`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         validation_geom = self.data.get("geom")
         self.validate_geom(validation_geom, "4326")
         validation_geom_jtsk = self.data.get("geom_sjtsk")

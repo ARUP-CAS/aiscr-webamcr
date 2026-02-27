@@ -32,10 +32,21 @@ cache = caches[rosetta_settings.ROSETTA_CACHE_NAME]
 
 
 class CannotFindCadasterCentre(Exception):
+    """Třída `CannotFindCadasterCentre` v modulu `webclient.core.utils`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     pass
 
 
 def file_validate_epsg(epsg):
+    """Funkce `file_validate_epsg` v modulu `webclient.core.utils`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param epsg: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     if epsg == "4326":
         return True
     elif epsg == "5514":
@@ -45,6 +56,13 @@ def file_validate_epsg(epsg):
 
 
 def balanced_parentheses(expression):
+    """Funkce `balanced_parentheses` v modulu `webclient.core.utils`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param expression: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     stack = 0
     for char in expression:
         if char == "(":
@@ -59,6 +77,11 @@ def balanced_parentheses(expression):
 
 
 def load_database_translation_strings():
+    """Funkce `load_database_translation_strings` v modulu `webclient.core.utils`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    :return: Výsledek odpovídající účelu volání.
+    """
     return [
         _("pian.posgtres.importovatPian.check.unsupportedEPSG"),
         _("pian.posgtres.importovatPian.check.wrongGeometry"),
@@ -543,7 +566,6 @@ def get_projects_from_envelope(left, bottom, right, top, stavy, request):
 def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pas projekt ze čtverce.
-    @janhnat zohlednit pristupnost - zohledneno v ProjectPasFromEnvelopeView
     """
     from django.db.models import Q
     from pas.models import SamostatnyNalez
@@ -564,8 +586,8 @@ def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
 
 def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
     """
+    @janhnat zohlednit pristupnost - zohledneno v ProjectPasFromEnvelopeView
     Funkce pro získaní pianů projektu ze čtverce.
-    @janhnat zohlednit pristupnost - zohledneno v ProjectPianFromEnvelopeView
     """
     from arch_z.models import Akce
     from dj.models import DokumentacniJednotka
@@ -598,6 +620,7 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
 
 def get_3d_from_envelope(left, bottom, right, top, request):
     """
+    @janhnat zohlednit pristupnost - zohledneno v ProjectPianFromEnvelopeView
     Funkce pro získaní 3d ze čtverce.
     Bez pristupnosti
     """
@@ -871,6 +894,11 @@ class SearchTable(ColumnShiftTableBootstrap4):
     column_excluded = ["ident_cely"]
 
     def get_column_default_show(self):
+        """Funkce `SearchTable.get_column_default_show` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))
         return super(SearchTable, self).get_column_default_show()
 
@@ -1023,6 +1051,15 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
 
 def replace_last(source_string, old, new):
+    """Funkce `replace_last` v modulu `webclient.core.utils`.
+    
+    Zajišťuje dílčí aplikační logiku pro tento modul.
+    
+    :param source_string: Vstupní hodnota používaná při zpracování.
+    :param old: Vstupní hodnota používaná při zpracování.
+    :param new: Vstupní hodnota používaná při zpracování.
+    :return: Výsledek odpovídající účelu volání.
+    """
     index = source_string.rfind(old)
     if index != -1:
         start_part = source_string[:index]
@@ -1033,45 +1070,108 @@ def replace_last(source_string, old, new):
 
 
 class SessionIdentifier:
+    """Třída `SessionIdentifier` v modulu `webclient.core.utils`.
+    
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
     def __init__(self, request):
+        """Funkce `SessionIdentifier.__init__` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         self.cache_key = self._generate_session_key(request)
 
     def _generate_session_key(self, request):
+        """Funkce `SessionIdentifier._generate_session_key` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param request: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         if "session_uuid" not in request.session:
             request.session["session_uuid"] = str(uuid.uuid4())  # Vytvoří unikátní ID
             request.session.modified = True
         return f"session_{request.session['session_uuid']}_key"
 
     def clear_cached_files(self):
+        """Funkce `SessionIdentifier.clear_cached_files` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         cache.delete(f"{self.cache_key}_files")
 
     def set_ident(self, ident_cely, timeout=3600):
+        """Funkce `SessionIdentifier.set_ident` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ident_cely: Vstupní hodnota používaná při zpracování.
+        :param timeout: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         old_ident_cely = self.get_ident()
         if old_ident_cely != ident_cely:
             self.clear_cached_files()
         cache.set(self.cache_key, ident_cely, timeout)
 
     def get_ident(self):
+        """Funkce `SessionIdentifier.get_ident` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         return cache.get(self.cache_key, None)
 
     def add_file_reference(self, ident, timeout=3600):
+        """Funkce `SessionIdentifier.add_file_reference` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ident: Vstupní hodnota používaná při zpracování.
+        :param timeout: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         files.add(ident)
         cache.set(f"{self.cache_key}_files", files, timeout)
 
     def file_exists(self, ident):
+        """Funkce `SessionIdentifier.file_exists` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ident: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
             return True
         return False
 
     def remove_file_reference(self, ident):
+        """Funkce `SessionIdentifier.remove_file_reference` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        
+        :param ident: Vstupní hodnota používaná při zpracování.
+        :return: Výsledek odpovídající účelu volání.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
             files.remove(ident)
             cache.set(f"{self.cache_key}_files", files)
 
     def get_cached_files(self):
+        """Funkce `SessionIdentifier.get_cached_files` v modulu `webclient.core.utils`.
+        
+        Zajišťuje dílčí aplikační logiku objektu v rámci tohoto modulu.
+        :return: Výsledek odpovídající účelu volání.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         return files
 
