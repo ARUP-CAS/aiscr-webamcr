@@ -1,6 +1,7 @@
-from .dev import *
+from .base import *
 
 DEBUG = False
+ALLOWED_HOSTS += ["web"]
 LOGGING["handlers"]["logstash"]["tags"] = "dev_test"
 
 if "debug_toolbar" in INSTALLED_APPS:
@@ -8,6 +9,10 @@ if "debug_toolbar" in INSTALLED_APPS:
 if "debug_toolbar.middleware.DebugToolbarMiddleware" in MIDDLEWARE:
     MIDDLEWARE.remove("debug_toolbar.middleware.DebugToolbarMiddleware")
 DEBUG_TOOLBAR_PANELS = []
+SITE_URL = "http://localhost:8000"
+
+CLAMD_HOST = get_secret("CLAMD_HOST")
+CLAMD_PORT = 3310
 
 
 def get_test_secret(setting, default_value=None):
@@ -28,6 +33,8 @@ def get_test_secret(setting, default_value=None):
     else:
         return secrets_test.get(setting, default_value)
 
+
+TEST_RUNNER = "core.tests.runner.AMCRSeleniumTestRunner"
 
 SELENIMUM_ADDRESS = get_test_secret("TEST_SELENIMUM_ADDRESS")
 SELENIUM_PORT = get_test_secret("TEST_SELENIUM_PORT")

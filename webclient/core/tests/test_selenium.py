@@ -510,6 +510,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
         # Pokud test zatím OK a máme JS chyby => přidej FAILURE
         if not has_issue() and getattr(self, "_js_errors", None):
+            if getattr(self, "_outcome", None) is not None:
+                self._outcome.success = False
             result.addFailure(
                 self,
                 (
