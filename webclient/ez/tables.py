@@ -53,6 +53,7 @@ class ExterniZdrojTable(SearchTable):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = ExterniZdroj
         fields = (
             "stav",

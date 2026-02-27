@@ -12,7 +12,7 @@ logger = logging.getLogger("request.timer")
 
 def get_slow_request_settings():
     """Vrací slow request settings.
-    
+
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     try:
         settings_query = CustomAdminSettings.objects.filter(item_group="settings", item_id="variables")
@@ -56,14 +56,14 @@ class LogMiddleware:
 
     def __init__(self, get_response):
         """Inicializuje instanci třídy.
-        
+
         :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.get_response = get_response
 
     def __call__(self, request):
         """Provádí operaci call.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         start = time.monotonic()
@@ -109,13 +109,13 @@ class LogMiddleware:
     @staticmethod
     def get_request_url():
         """Vrací request url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return getattr(log_request_data, "url", None)
 
     @staticmethod
     def get_user_id():
         """Vrací user id.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return getattr(log_request_data, "user_id", "anonymous")

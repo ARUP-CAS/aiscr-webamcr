@@ -8,350 +8,661 @@ Třídy
 
 .. py:class:: SimpleSectionTemplateName
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SimpleSectionTemplateName`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Vstupní hodnota ``name`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: __str__()
+
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_name()
 
+      Vrací name.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_permission()
+
+      Vrací permission.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Vstupní hodnota ``name`` pro danou operaci.
+      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: get_name()
+
+      Vrací name.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: PianSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PianSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_name()
 
+      Vrací name.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: OznamovatelSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``OznamovatelSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_permission()
 
+      Vrací permission.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: Field
 
-   Popis není k dispozici.
+   Implementuje komponentu ``Field`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param label: Vstupní hodnota ``label`` pro danou operaci.
+      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: __repr__()
+
+      Vrací reprezentaci objektu pro ladění.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __str__()
 
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_value()
 
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_label()
+
+      Vrací label.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SouborField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SouborField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param label: Vstupní hodnota ``label`` pro danou operaci.
+      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+      :param key_name: Vstupní hodnota ``key_name`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SouborDownloadField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SouborDownloadField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: Model3dKomponentaField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``Model3dKomponentaField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: Model3dKomponentaAktivityField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``Model3dKomponentaAktivityField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ChooseField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ChooseField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: StatusField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``StatusField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ZjisteniField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ZjisteniField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Vstupní hodnota ``name`` pro danou operaci.
+      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: GeomGmlField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``GeomGmlField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: GeomWktField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``GeomWktField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignGeomGmlField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignGeomGmlField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignGeomWktField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignGeomWktField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ManyToManyField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ManyToManyField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignManyToManyField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignManyToManyField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DoubleField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DoubleField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DoubleFieldNum
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DoubleFieldNum`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignDoubleField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignDoubleField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignDoubleFieldNum
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignDoubleFieldNum`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
 
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: RepeatableField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``RepeatableField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Vstupní hodnota ``name`` pro danou operaci.
+      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :param template_name: Vstupní hodnota ``template_name`` pro danou operaci.
+      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: get_related_manager()
 
+      Vrací related manager.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: VbRepeatableField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``VbRepeatableField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
 
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: HistorieRepeatableField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``HistorieRepeatableField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_related_manager()
 
+      Vrací related manager.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: RepeatableSectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``RepeatableSectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_label()
 
+      Vrací label.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_sections()
 
+      Vrací sections.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_value()
+
+      Vrací value.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param name: Vstupní hodnota ``name`` pro danou operaci.
+      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: RepeatableSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``RepeatableSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Vstupní hodnota ``name`` pro danou operaci.
+      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: get_sections()
 
+      Vrací sections.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_name()
+
+      Vrací name.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SouboryRepeatableSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SouboryRepeatableSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_sections()
 
+      Vrací sections.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_name()
+
+      Vrací name.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: KomponentaRepeatableSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``KomponentaRepeatableSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_name()
 
+      Vrací name.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: SubSectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SubSectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param config: Vstupní hodnota ``config`` pro danou operaci.
+      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: get_config()
 
+      Vrací config.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_instance()
+
+      Vrací instance.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: NeidentAkceSubSectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NeidentAkceSubSectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_instance()
 
+      Vrací instance.
+
+      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: HistorieSubSectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``HistorieSubSectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: get_config()
+
+      Vrací config.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -359,16 +670,28 @@ Funkce
 
 .. py:function:: get_model(name)
 
-   Popis není k dispozici.
+   Vrací model.
+
+   :param name: Vstupní hodnota ``name`` pro danou operaci.
+   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: get_gml(geom)
 
-   Popis není k dispozici.
+   Vrací gml.
+
+   :param geom: Vstupní hodnota ``geom`` pro danou operaci.
+   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: get_wkt(geom)
 
-   Popis není k dispozici.
+   Vrací wkt.
+
+   :param geom: Vstupní hodnota ``geom`` pro danou operaci.
+   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: get_historie_config(label_key)
 
-   Popis není k dispozici.
+   Vrací historie config.
+
+   :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
+   :return: Vrací načtená data odpovídající vstupním parametrům.

@@ -45,28 +45,49 @@ Funkce
 
 .. py:function:: update_snapshot_fields()
 
-   Popis není k dispozici.
+   Aktualizuje snapshot fields.
+
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: update_all_redis_snapshots(rewrite_existing)
 
-   Popis není k dispozici.
+   Aktualizuje all redis snapshots.
+
+   :param rewrite_existing: Vstupní hodnota ``rewrite_existing`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: update_single_redis_snapshot(class_name, record_pk)
 
-   Popis není k dispozici.
+   Aktualizuje single redis snapshot.
+
+   :param class_name: Vstupní hodnota ``class_name`` pro danou operaci.
+   :param record_pk: Vstupní hodnota ``record_pk`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: update_materialized_views()
 
-   Popis není k dispozici.
+   Aktualizuje materialized views.
+
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: write_value_to_redis(key, value)
 
-   Popis není k dispozici.
+   Zapíše value to redis.
+
+   :param key: Vstupní hodnota ``key`` pro danou operaci.
+   :param value: Vstupní hodnota ``value`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: call_digiarchiv_update_task()
 
-   Popis není k dispozici.
+   Provádí operaci call digiarchiv update task.
+
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: run_data_import(job_id, user_id)
 
-   Popis není k dispozici.
+   Spustí data import.
+
+   :param job_id: Identifikátor objektu ``job``.
+   :param user_id: Identifikátor objektu ``user``.
+   :return: Vrací výsledek provedené operace.

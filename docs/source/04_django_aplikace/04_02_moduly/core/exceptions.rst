@@ -8,108 +8,172 @@ Třídy
 
 .. py:class:: PianNotInKladysm5Error
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PianNotInKladysm5Error`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param pian: Vstupní hodnota ``pian`` pro danou operaci.
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: MaximalIdentNumberError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``MaximalIdentNumberError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param number: Vstupní hodnota ``number`` pro danou operaci.
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: DJNemaPianError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DJNemaPianError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param dj: Vstupní hodnota ``dj`` pro danou operaci.
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NelzeZjistitRaduError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NelzeZjistitRaduError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NeocekavanaRadaError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NeocekavanaRadaError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: WrongSheetError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``WrongSheetError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NeznamaGeometrieError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NeznamaGeometrieError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: UnexpectedDataRelations
 
-   Popis není k dispozici.
+   Implementuje komponentu ``UnexpectedDataRelations`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: MaximalEventCount
 
-   Popis není k dispozici.
+   Implementuje komponentu ``MaximalEventCount`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param number: Vstupní hodnota ``number`` pro danou operaci.
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: WrongCSVError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``WrongCSVError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ZaznamSouborNotmatching
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ZaznamSouborNotmatching`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: StateChangedError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``StateChangedError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 

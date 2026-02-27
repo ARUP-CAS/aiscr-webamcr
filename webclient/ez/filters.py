@@ -122,7 +122,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
     def filter_queryset(self, queryset):
         """Filtruje queryset.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.start")
@@ -179,6 +179,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = ExterniZdroj
         exclude = (
             "nazev",
@@ -198,7 +199,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -217,7 +218,7 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
 
     def __init__(self, form=None):
         """Inicializuje instanci třídy.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {

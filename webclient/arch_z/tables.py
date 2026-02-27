@@ -8,9 +8,10 @@ from .models import Akce
 
 class BooleanValueColumn(tables.columns.Column):
     """Implementuje komponentu ``BooleanValueColumn`` v rámci aplikace."""
+
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -19,7 +20,7 @@ class BooleanValueColumn(tables.columns.Column):
 
     def render(self, value):
         """Vyrenderuje hodnotu.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         value = [x for x in self.value_labels if x[0] == bool(value)]
@@ -140,7 +141,7 @@ class AkceTable(SearchTable):
 
     def order_vedouci_organizace(self, queryset, is_descending):
         """Provádí operaci order vedouci organizace.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :param is_descending: Vstupní hodnota ``is_descending`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -172,6 +173,7 @@ class AkceTable(SearchTable):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Akce
         fields = (
             "pristupnost",
@@ -215,7 +217,7 @@ class AkceTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

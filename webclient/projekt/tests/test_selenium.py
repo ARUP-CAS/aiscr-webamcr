@@ -30,9 +30,10 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektSeleniumTest`` v rámci aplikace."""
+
     def _get_table_columns(self, table):
         """Vrací table columns.
-        
+
         :param table: Vstupní hodnota ``table`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         elements = table.find_elements(By.TAG_NAME, "th")
@@ -40,7 +41,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
 
     def _check_column_hiding(self, element_id_initial, column_header_text, initial=True):
         """Ověří column hiding.
-        
+
         :param element_id_initial: Vstupní hodnota ``element_id_initial`` pro danou operaci.
         :param column_header_text: Vstupní hodnota ``column_header_text`` pro danou operaci.
         :param initial: Vstupní hodnota ``initial`` pro danou operaci.
@@ -511,11 +512,12 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektZapsatSeleniumTest`` v rámci aplikace."""
+
     def ProjektZapsat(
         self, *, date_from=2, date_to=5, telefon="+420556123654", css_selector=".step:nth-child(3) .bs-stepper-circle"
     ):
         """Provádí operaci ProjektZapsat.
-        
+
         :param date_from: Vstupní hodnota ``date_from`` pro danou operaci.
         :param date_to: Vstupní hodnota ``date_to`` pro danou operaci.
         :param telefon: Vstupní hodnota ``telefon`` pro danou operaci.
@@ -557,7 +559,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
 
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/zapsat")
 
@@ -668,9 +670,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektZahajitVyzkumSeleniumTest`` v rámci aplikace."""
+
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/vyber?stav=2&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
@@ -729,9 +732,10 @@ class ProjektZahajitVyzkumSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektUkoncitVyzkumSeleniumTest`` v rámci aplikace."""
+
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/vyber?stav=3&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
@@ -834,9 +838,10 @@ class ProjektUkoncitVyzkumSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektUzavritSeleniumTest`` v rámci aplikace."""
+
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/vyber?stav=4&organizace=315755&sort=hlavni_katastr&sort=ident_cely")
 
@@ -915,12 +920,13 @@ class ProjektUzavritSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektArchivovatSeleniumTest`` v rámci aplikace."""
+
     stav_projektu = PROJEKT_STAV_UZAVRENY
     next_stav_projektu = PROJEKT_STAV_ARCHIVOVANY
 
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/vyber?stav=5&sort=datum_ukonceni&sort=ident_cely")
 
@@ -1004,9 +1010,10 @@ class ProjektArchivovatSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektVratitSeleniumTest`` v rámci aplikace."""
+
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
@@ -1215,9 +1222,10 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektNavrhnoutZrusitSeleniumTest`` v rámci aplikace."""
+
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
@@ -1358,8 +1366,8 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
-
     """Implementuje komponentu ``ProjektZrusitSeleniumTest`` v rámci aplikace."""
+
     def test_022_projekt_zrusit_p_001(self):
         """Test 022 Zrušení projektu (pozitivní scénář 1)
 
@@ -1447,9 +1455,10 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
     """Implementuje komponentu ``ProjektVytvoreniProjektoveAkce`` v rámci aplikace."""
+
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 

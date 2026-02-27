@@ -22,14 +22,14 @@ class PermissionMiddleware:
 
     def __init__(self, get_response):
         """Inicializuje instanci třídy.
-        
+
         :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.get_response = get_response
 
     def __call__(self, request):
         """Provádí operaci call.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         response = self.get_response(request)
@@ -78,16 +78,17 @@ class PermissionMiddleware:
 
 class ErrorMiddleware:
     """Implementuje komponentu ``ErrorMiddleware`` v rámci aplikace."""
+
     def __init__(self, get_response):
         """Inicializuje instanci třídy.
-        
+
         :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.get_response = get_response
 
     def __call__(self, request):
         """Provádí operaci call.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         response = self.get_response(request)
@@ -95,7 +96,7 @@ class ErrorMiddleware:
 
     def process_exception(self, request, exception):
         """Provádí operaci process exception.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param exception: Vstupní hodnota ``exception`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -110,11 +111,12 @@ class ErrorMiddleware:
 
 class StatusMessageMiddleware:
     """Implementuje komponentu ``StatusMessageMiddleware`` v rámci aplikace."""
+
     pattern = re.compile(r"[\w-]+\d+[A-Z]?")
 
     def __init__(self, get_response):
         """Inicializuje instanci třídy.
-        
+
         :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.get_response = get_response
@@ -123,7 +125,7 @@ class StatusMessageMiddleware:
 
     def __call__(self, request):
         """Provádí operaci call.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         response = self.get_response(request)
@@ -131,7 +133,7 @@ class StatusMessageMiddleware:
 
     def _show_message(self, value, request, redis_key):
         """Provádí operaci show message.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param request: Django HTTP požadavek použitý při zpracování.
         :param redis_key: Vstupní hodnota ``redis_key`` pro danou operaci.
@@ -163,7 +165,7 @@ class StatusMessageMiddleware:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """Provádí operaci process view.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
         :param view_args: Vstupní hodnota ``view_args`` pro danou operaci.

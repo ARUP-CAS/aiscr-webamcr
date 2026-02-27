@@ -136,7 +136,7 @@ class ImportDataIncorrectStructureError(ImportDataError):
 
     def __init__(self, missing_columns, excess_columns):
         """Inicializuje instanci třídy.
-        
+
         :param missing_columns: Vstupní hodnota ``missing_columns`` pro danou operaci.
         :param excess_columns: Vstupní hodnota ``excess_columns`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -169,7 +169,7 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
 
     def __init__(self, columns, *expected_colummns_options):
         """Inicializuje instanci třídy.
-        
+
         :param columns: Vstupní hodnota ``columns`` pro danou operaci.
         :param expected_colummns_options: Dodatečné poziční argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -191,7 +191,7 @@ class ImportDataMissingReferencedValueError(ImportDataError):
 
     def __init__(self, missing_value_id, missing_model_name=None):
         """Inicializuje instanci třídy.
-        
+
         :param missing_value_id: Identifikátor objektu ``missing_value``.
         :param missing_model_name: Vstupní hodnota ``missing_model_name`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -217,7 +217,7 @@ class ImportDataIntegrityError(ImportDataError):
 
     def __init__(self, record_id, model_name, performed_action):
         """Inicializuje instanci třídy.
-        
+
         :param record_id: Identifikátor objektu ``record``.
         :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
@@ -243,7 +243,7 @@ class ImportDataLimitChoicesError(ImportDataError):
 
     def __init__(self, record_id, limit_choices_to: dict):
         """Inicializuje instanci třídy.
-        
+
         :param record_id: Identifikátor objektu ``record``.
         :param limit_choices_to: Vstupní hodnota ``limit_choices_to`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -265,7 +265,7 @@ class ImportDataHeslarPresnostLimitChoicesError(ImportDataError):
 
     def __init__(self, record_id):
         """Inicializuje instanci třídy.
-        
+
         :param record_id: Identifikátor objektu ``record``.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.record_id = record_id
@@ -282,7 +282,7 @@ class ImportDataUnsupportedFileError(ImportDataError):
 
     def __init__(self, file_name):
         """Inicializuje instanci třídy.
-        
+
         :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.file_name = file_name
@@ -302,7 +302,7 @@ class ImportDataUnsupportedFilesError(ImportDataError):
 
     def __init__(self, file_names):
         """Inicializuje instanci třídy.
-        
+
         :param file_names: Vstupní hodnota ``file_names`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.file_names = file_names
@@ -322,7 +322,7 @@ class ImportDataIncorrectPrimaryKeyFormatError(ImportDataError):
 
     def __init__(self, primary_key_value):
         """Inicializuje instanci třídy.
-        
+
         :param primary_key_value: Vstupní hodnota ``primary_key_value`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.primary_key_value = primary_key_value
@@ -342,21 +342,21 @@ class BaseImportField:
 
     def __init__(self):
         """Inicializuje instanci třídy.
-        
+
         :return: Funkce nevrací hodnotu (``None``)."""
         self._value = None
 
     @property
     def value(self):
         """Provádí operaci value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._value
 
     @value.setter
     def value(self, value):
         """Provádí operaci value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if str(value).lower() == "nan":
@@ -366,27 +366,27 @@ class BaseImportField:
     @property
     def is_null(self):
         """Určí, zda null.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         return self._value is None or str(self._value).lower() == "nan"
 
     @property
     def instance_value(self):
         """Provádí operaci instance value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._value
 
     @property
     def serialized_value(self):
         """Provádí operaci serialized value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._value
 
     def _process_value(self, value):
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return value
@@ -401,7 +401,7 @@ class IntegerImportField(BaseImportField):
 
     def _process_value(self, value) -> int | None:
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
 
@@ -423,7 +423,7 @@ class PositiveIntegerImportField(BaseImportField):
 
     def _process_value(self, value) -> int | None:
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         value = super()._process_value(value)
@@ -439,7 +439,7 @@ class DecimalImportField(BaseImportField):
 
     def _process_value(self, value) -> float | None:
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if not value:
@@ -462,7 +462,7 @@ class BooleanImportField(BaseImportField):
 
     def _process_value(self, value) -> bool | None:
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
 
@@ -487,14 +487,14 @@ class DateImportField(BaseImportField):
     @property
     def value(self):
         """Provádí operaci value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._value.isoformat() if self._value else None
 
     @value.setter
     def value(self, value):
         """Provádí operaci value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self._value = self._process_value(value)
@@ -502,13 +502,13 @@ class DateImportField(BaseImportField):
     @property
     def serialized_value(self):
         """Provádí operaci serialized value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._value.strftime("%Y-%m-%d") if self._value else None
 
     def _process_value(self, value) -> datetime.date | None:
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
 
@@ -535,14 +535,14 @@ class DateTimeImportField(BaseImportField):
     @property
     def value(self):
         """Provádí operaci value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._value.strftime("%Y-%m-%d %H:%M:%S") if self._value else None
 
     @value.setter
     def value(self, value):
         """Provádí operaci value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self._value = self._process_value(value)
@@ -550,13 +550,13 @@ class DateTimeImportField(BaseImportField):
     @property
     def serialized_value(self):
         """Provádí operaci serialized value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._value.strftime("%Y-%m-%d %H:%M:%S") if self._value else None
 
     def _process_value(self, value) -> datetime.datetime | None:
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if not value or str(value).lower() == "nan":
@@ -580,13 +580,13 @@ class DateRangeImportField(BaseImportField):
     @property
     def serialized_value(self):
         """Provádí operaci serialized value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return f"[{self.value.lower.strftime('%Y-%m-%d')},{self.value.upper.strftime('%Y-%m-%d')})"
 
     def _process_value(self, value) -> DateRange | None:
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
 
@@ -612,7 +612,7 @@ class LookupImportField(BaseImportField):
         self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", limit_choices_to: dict | None = None
     ):
         """Inicializuje instanci třídy.
-        
+
         :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
         :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
         :param limit_choices_to: Vstupní hodnota ``limit_choices_to`` pro danou operaci.
@@ -635,13 +635,13 @@ class LookupImportField(BaseImportField):
     @property
     def instance_value(self):
         """Provádí operaci instance value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._instance_value
 
     def _check_limit_choices_to(self, record):
         """Ověří limit choices to.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         if self.limit_choices_to:
@@ -650,7 +650,7 @@ class LookupImportField(BaseImportField):
 
     def _process_value(self, value):
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
 
@@ -684,7 +684,7 @@ class RuianLookupImportField(LookupImportField):
     @LookupImportField.value.setter
     def value(self, value):
         """Provádí operaci value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if isinstance(value, str):
@@ -700,7 +700,7 @@ class VazbaLookupImportField(LookupImportField):
 
     def __init__(self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", read_field_name: str = None):
         """Inicializuje instanci třídy.
-        
+
         :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
         :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
         :param read_field_name: Vstupní hodnota ``read_field_name`` pro danou operaci.
@@ -710,7 +710,7 @@ class VazbaLookupImportField(LookupImportField):
 
     def _process_value(self, value):
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         try:
@@ -749,7 +749,7 @@ class GeomImportField(BaseImportField):
 
     def __init__(self, srid):
         """Inicializuje instanci třídy.
-        
+
         :param srid: Vstupní hodnota ``srid`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__()
@@ -758,13 +758,13 @@ class GeomImportField(BaseImportField):
     @property
     def serialized_value(self):
         """Provádí operaci serialized value.
-        
+
         :return: Vrací výsledek provedené operace."""
         return getattr(self._value, "wkt", None)
 
     def _process_value(self, value) -> GEOSGeometry | None:
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if not value:
@@ -785,7 +785,7 @@ class GenericForeignKeyImportField(LookupImportField):
         self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", serialized_attribute: str = None
     ):
         """Inicializuje instanci třídy.
-        
+
         :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
         :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
         :param serialized_attribute: Vstupní hodnota ``serialized_attribute`` pro danou operaci.
@@ -796,7 +796,7 @@ class GenericForeignKeyImportField(LookupImportField):
     @property
     def serialized_value(self):
         """Provádí operaci serialized value.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.serialized_attribute:
             return getattr(self._value, self.serialized_attribute)
@@ -805,7 +805,7 @@ class GenericForeignKeyImportField(LookupImportField):
 
     def _process_value(self, value: str | int):
         """Provádí operaci process value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if isinstance(value, str) and (match := re.match(r"(?:\w+-)?(\d+)", value)):
@@ -839,7 +839,7 @@ class ImportModelMapper(ABC):
 
     def __init__(self, value_dict):
         """Inicializuje instanci třídy.
-        
+
         :param value_dict: Vstupní hodnota ``value_dict`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.value_dict = value_dict
@@ -932,7 +932,7 @@ class ImportModelMapper(ABC):
 
         def value_dict_name(value):
             """Provádí operaci value dict name.
-            
+
             :param value: Vstupní hodnota ``value`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             return value.split("__")[0] if "__" in value else value
@@ -968,7 +968,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def _parse_primary_key(cls, value):
         """Zpracuje primary key.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if isinstance(value, str) and cls.primary_key_prefix:
@@ -982,7 +982,7 @@ class ImportModelMapper(ABC):
     @staticmethod
     def _parse_primary_key_custom_prefix(value, prefix):
         """Zpracuje primary key custom prefix.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param prefix: Vstupní hodnota ``prefix`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1028,7 +1028,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def is_field_required(cls, field_name) -> bool:
         """Určí, zda field required.
-        
+
         :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         try:
@@ -1039,7 +1039,7 @@ class ImportModelMapper(ABC):
 
     def create_records(self, performed_action) -> list:
         """Vytvoří records.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
 
@@ -1098,7 +1098,7 @@ class ImportModelMapper(ABC):
 
     def _check_column_structure(self, performed_action, include_primary_key=False):
         """Ověří column structure.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -1156,7 +1156,7 @@ class ImportModelMapper(ABC):
 
     def check_required_fields(self, performed_action):
         """Ověří required fields.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         for key, value in self.value_dict.items():
@@ -1166,7 +1166,7 @@ class ImportModelMapper(ABC):
 
     def map_column_name_to_field_name(self, column_name):
         """Provádí operaci map column name to field name.
-        
+
         :param column_name: Vstupní hodnota ``column_name`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
 
@@ -1175,7 +1175,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def create_relations(cls, instance):
         """Vytvoří relations.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
 
@@ -1195,7 +1195,7 @@ class ImportModelMapper(ABC):
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
         """Provádí operaci record postprocessing.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
@@ -1211,7 +1211,7 @@ class GeometryTransformMixin:
 
     def transform_geometries(self, mapping_dict, performed_action):
         """Transformuje geometries.
-        
+
         :param mapping_dict: Vstupní hodnota ``mapping_dict`` pro danou operaci.
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1231,7 +1231,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
 
     def import_validation(self, performed_action):
         """Načte validation.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if (
@@ -1254,13 +1254,13 @@ class MultipleClassImportModelMapper(ImportModelMapper):
 
     def _get_filter_kwargs_primary_key(self):
         """Vrací filter kwargs primary key.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {"ident_cely": self.value_dict.get("ident_cely")}
 
     def create_records(self, performed_action) -> list:
         """Vytvoří records.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         class_0_fields = [item for model, item in self.fields + self.foreign_key_fields if model == self.classes[0][0]]
@@ -1292,7 +1292,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
     @classmethod
     def is_field_required(cls, field_name) -> bool:
         """Určí, zda field required.
-        
+
         :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         for mapper_class_tuple in cls.classes:
@@ -1323,7 +1323,7 @@ class HeslarMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1348,7 +1348,7 @@ class HeslarDataceMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1366,7 +1366,7 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1393,7 +1393,7 @@ class HeslarHierarchieMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1420,7 +1420,7 @@ class HeslarOdkazMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1454,7 +1454,7 @@ class OrganizaceMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1515,7 +1515,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1532,7 +1532,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
         """Provádí operaci map.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
         :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
@@ -1554,7 +1554,7 @@ class ProjektKatastrMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1574,7 +1574,7 @@ class ProjektOznamovatelMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1607,7 +1607,7 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1630,7 +1630,7 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
         """Provádí operaci map.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
         :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
@@ -1695,7 +1695,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = {}
@@ -1707,7 +1707,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
     @classmethod
     def map_field(cls, field_name):
         """Provádí operaci map field.
-        
+
         :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         mapping_dict = {
@@ -1719,7 +1719,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
         """Provádí operaci record postprocessing.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
@@ -1773,7 +1773,7 @@ class LokalitaMapper(MultipleClassImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = {}
@@ -1785,7 +1785,7 @@ class LokalitaMapper(MultipleClassImportModelMapper):
     @classmethod
     def map_field(cls, field_name):
         """Provádí operaci map field.
-        
+
         :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         mapping_dict = {
@@ -1805,7 +1805,7 @@ class AkceVedouciMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1827,7 +1827,7 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1846,7 +1846,7 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1858,7 +1858,7 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
         """Provádí operaci map.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
         :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
@@ -1879,7 +1879,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1891,7 +1891,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
     @classmethod
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
         """Provádí operaci record postprocessing.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
@@ -1924,7 +1924,7 @@ class AdbMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1947,7 +1947,7 @@ class AdbVyskovyBod(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -1975,7 +1975,7 @@ class DokumentLetMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2059,7 +2059,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = {}
@@ -2071,7 +2071,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
     @classmethod
     def map_field(cls, field_name):
         """Provádí operaci map field.
-        
+
         :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         mapping_dict = cls.lookup_fields_mapping
@@ -2079,7 +2079,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
 
     def create_records(self, performed_action) -> list:
         """Vytvoří records.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
 
@@ -2125,7 +2125,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
         """Provádí operaci map.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
         :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
@@ -2147,7 +2147,7 @@ class DokumentAutorMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2167,7 +2167,7 @@ class DokumentJazykMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2187,7 +2187,7 @@ class DokumentOsobaMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2207,7 +2207,7 @@ class DokumentPosudekMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2227,7 +2227,7 @@ class TvarMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2247,7 +2247,7 @@ class DokumentCastMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2268,7 +2268,7 @@ class NeidentAkceMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2288,7 +2288,7 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2307,7 +2307,7 @@ class KomponentaMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2330,7 +2330,7 @@ class KomponentaAktivitaMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2355,7 +2355,7 @@ class NalezObjektMapper(NalezMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2376,7 +2376,7 @@ class NalezPredmetMapper(NalezMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2417,7 +2417,7 @@ class ExterniZdrojMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2440,7 +2440,7 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2461,7 +2461,7 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2481,7 +2481,7 @@ class ExterniOdkazMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2513,7 +2513,7 @@ class UzivatelMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2534,7 +2534,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(False)
@@ -2544,7 +2544,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
         """Vrací filter kwargs primary key.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
         content_object = primary_key_import_field._process_value(self.value_dict["ruian"])
@@ -2557,7 +2557,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
     @classmethod
     def map_field(cls, field_name):
         """Provádí operaci map field.
-        
+
         :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if field_name == "uzivatel":
@@ -2566,7 +2566,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     def create_records(self, performed_action) -> list:
         """Vytvoří records.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         mapping_dict = self.map(performed_action, True)
@@ -2586,7 +2586,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     def _check_column_structure(self, performed_action, include_primary_key=False):
         """Ověří column structure.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -2600,7 +2600,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
         """Provádí operaci map.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
         :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
@@ -2630,7 +2630,7 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2649,7 +2649,7 @@ class UzivatelOpravneniMapper(ImportModelMapper):
 
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = {"uzivatel": LookupImportField(User), "skupina": LookupImportField(Group, "name")}
@@ -2657,20 +2657,20 @@ class UzivatelOpravneniMapper(ImportModelMapper):
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
         """Vrací filter kwargs primary key.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {"ident_cely": self.value_dict["uzivatel"]}
 
     def create_records(self, performed_action):
         """Vytvoří records.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
     def import_validation(self, performed_action):
         """Načte validation.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return self._get_filter_kwargs_primary_key()
@@ -2687,7 +2687,7 @@ class SouborMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)
@@ -2705,7 +2705,7 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
 
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = {"uzivatel": LookupImportField(User), "notifikace": LookupImportField(UserNotificationType)}
@@ -2713,20 +2713,20 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
         """Vrací filter kwargs primary key.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {"ident_cely": self.value_dict["uzivatel"]}
 
     def create_records(self, performed_action):
         """Vytvoří records.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
     def import_validation(self, performed_action):
         """Načte validation.
-        
+
         :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return self._get_filter_kwargs_primary_key()
@@ -2747,7 +2747,7 @@ class HistorieMapper(ImportModelMapper):
     @classmethod
     def get_mapping(cls, include_primary_key=False):
         """Vrací mapping.
-        
+
         :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         field_mapping = super().get_mapping(include_primary_key)

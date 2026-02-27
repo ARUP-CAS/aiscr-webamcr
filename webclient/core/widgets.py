@@ -11,7 +11,7 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
 
     def __init__(self, value=None, attrs=None):
         """Inicializuje instanci třídy.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -23,7 +23,7 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
 
     def format_value(self, value):
         """Provádí operaci format value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return str(self.value)
@@ -31,6 +31,7 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
 
 class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
     """Implementuje komponentu ``AutocompleteSelect2WidgetMixin`` v rámci aplikace."""
+
     def build_attrs(self, *args, **kwargs):
         """Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy."""
         attrs = super(AutocompleteSelect2WidgetMixin, self).build_attrs(*args, **kwargs)
@@ -53,19 +54,23 @@ class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
 
 class AutocompleteListSelect2(AutocompleteSelect2WidgetMixin, ListSelect2):
     """Implementuje komponentu ``AutocompleteListSelect2`` v rámci aplikace."""
+
     pass
 
 
 class AutocompleteSelect2Multiple(AutocompleteSelect2WidgetMixin, Select2Multiple):
     """Implementuje komponentu ``AutocompleteSelect2Multiple`` v rámci aplikace."""
+
     pass
 
 
 class AutocompleteModelSelect2(AutocompleteSelect2WidgetMixin, ModelSelect2):
     """Implementuje komponentu ``AutocompleteModelSelect2`` v rámci aplikace."""
+
     pass
 
 
 class AutocompleteModelSelect2Multiple(AutocompleteSelect2WidgetMixin, ModelSelect2Multiple):
     """Implementuje komponentu ``AutocompleteModelSelect2Multiple`` v rámci aplikace."""
+
     pass

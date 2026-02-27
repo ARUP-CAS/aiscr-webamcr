@@ -25,6 +25,7 @@ class LokalitaForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Lokalita
         fields = (
             "druh",
@@ -67,7 +68,7 @@ class LokalitaForm(forms.ModelForm):
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, detail=False, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.

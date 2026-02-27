@@ -28,6 +28,7 @@ class PianCreateForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Pian
         fields = ("presnost", "geom", "geom_sjtsk", "geom_system")
         labels = {"presnost": _("pian.forms.pianCreateForm.presnost.label")}
@@ -45,7 +46,7 @@ class PianCreateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -67,7 +68,7 @@ class PianCreateForm(forms.ModelForm):
 
     def _instance_geom_wkt(self, field_name):
         """Provádí operaci instance geom wkt.
-        
+
         :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         g = getattr(self.instance, field_name, None)
@@ -97,7 +98,7 @@ class PianCreateForm(forms.ModelForm):
 
     def clean(self):
         """Provádí operaci clean.
-        
+
         :return: Vrací výsledek provedené operace."""
         validation_geom = self.data.get("geom")
         self.validate_geom(validation_geom, "4326")

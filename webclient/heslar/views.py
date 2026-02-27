@@ -22,7 +22,7 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = RuianKatastr.objects.all()
         if self.q:
@@ -143,7 +143,7 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
@@ -158,7 +158,7 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(id__in=MODEL_3D_DOKUMENT_FORMATS)
         if self.q:
@@ -173,7 +173,7 @@ class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)
         if self.q:
@@ -188,7 +188,7 @@ class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetVie
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Heslar.objects.all()
         heslar_nazev = self.forwarded.get("heslar_nazev", None)
@@ -206,7 +206,7 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = HeslarNazev.objects.all()
         if self.q:
@@ -216,7 +216,7 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
 
 def heslar_list(heslo_nazev, filter={}, use_exclude=False):
     """Provádí operaci heslar list.
-    
+
     :param heslo_nazev: Vstupní hodnota ``heslo_nazev`` pro danou operaci.
     :param filter: Vstupní hodnota ``filter`` pro danou operaci.
     :param use_exclude: Vstupní hodnota ``use_exclude`` pro danou operaci.

@@ -30,6 +30,7 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "kladysm5"
 
 
@@ -92,23 +93,24 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "adb"
 
     def get_absolute_url(self):
         """Vrací absolute url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.dokumentacni_jednotka.get_permission_object()
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -123,7 +125,7 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None, main_record=None):
         """Vytvoří transaction.
-        
+
         :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
         :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
         :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
@@ -236,6 +238,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "vyskovy_bod"
         ordering = [
             "ident_cely",
@@ -243,13 +246,13 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
 
     def get_absolute_url(self):
         """Vrací absolute url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.adb.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.adb.get_permission_object()
 
@@ -269,4 +272,5 @@ class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "adb_sekvence"

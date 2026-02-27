@@ -8,23 +8,33 @@ Třídy
 
 .. py:class:: NumberRangeWidget
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NumberRangeWidget`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: decompress()
+
+      Provádí operaci decompress.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: NumberRangeField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NumberRangeField`` v rámci aplikace.
 
 
 .. py:class:: NumberRangeFilter
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NumberRangeFilter`` v rámci aplikace.
 
 
 .. py:class:: ArchZaznamFilter
@@ -58,6 +68,12 @@ Třídy
       Metoda pro filtrování podle poznámky a počtu objektu.
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AkceFilter
@@ -100,9 +116,27 @@ Třídy
 
    .. py:method:: filter_by_z_range()
 
+      Filtruje by z range.
+
+      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :param name: Vstupní hodnota ``name`` pro danou operaci.
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: filter_queryset()
 
+      Filtruje queryset.
+
+      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AkceFilterFormHelper
@@ -112,4 +146,9 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 

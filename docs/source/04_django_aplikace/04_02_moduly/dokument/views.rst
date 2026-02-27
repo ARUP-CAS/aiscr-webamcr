@@ -14,11 +14,29 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: rename_field_for_ordering()
+
+      Provádí operaci rename field for ordering.
+
+      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentIndexView
@@ -34,11 +52,29 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: rename_field_for_ordering()
 
+      Provádí operaci rename field for ordering.
+
+      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: RelatedContext
@@ -68,6 +104,13 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: DokumentCastDetailView
 
@@ -77,7 +120,19 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentCastEditView
@@ -88,13 +143,39 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_success_url()
+
+      Vrací success url.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_object()
 
+      Vrací object.
+
+      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: form_invalid()
+
+      Provádí operaci form invalid.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: KomponentaDokumentDetailView
@@ -105,7 +186,19 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: KomponentaDokumentCreateView
@@ -116,9 +209,28 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: TvarEditView
@@ -129,6 +241,13 @@ Třídy
 
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: TvarSmazatView
 
@@ -138,13 +257,43 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_zaznam()
+
+      Vrací zaznam.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: VytvoritCastView
@@ -155,11 +304,34 @@ Třídy
 
    .. py:method:: get_zaznam()
 
+      Vrací zaznam.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: TransakceView
@@ -170,15 +342,49 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_zaznam()
+
+      Vrací zaznam.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: dispatch()
+
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentCastPripojitAkciView
@@ -189,9 +395,25 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentCastPripojitProjektView
@@ -202,9 +424,25 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentCastOdpojitView
@@ -215,9 +453,25 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentCastSmazatView
@@ -228,7 +482,18 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentNeidentAkceSmazatView
@@ -239,9 +504,25 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentAutocomplete
@@ -252,7 +533,16 @@ Třídy
 
    .. py:method:: get_result_label()
 
+      Vrací result label.
+
+      :param result: Vstupní hodnota ``result`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentyAzTableView
@@ -262,6 +552,13 @@ Třídy
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
+      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce

@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class HeslarHierarchieForm(forms.ModelForm):
     """Implementuje komponentu ``HeslarHierarchieForm`` v rámci aplikace."""
+
     heslar_nazev_podrazene = forms.ModelChoiceField(
         empty_label=None,
         label=_("heslar.forms.heslarOdkazForm.heslar_nazev_podrazene.label"),
@@ -34,6 +35,7 @@ class HeslarHierarchieForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = HeslarHierarchie
         fields = (
             "heslo_podrazene",
@@ -51,7 +53,7 @@ class HeslarHierarchieForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -64,6 +66,7 @@ class HeslarHierarchieForm(forms.ModelForm):
 
 class HeslarOdkazForm(forms.ModelForm):
     """Implementuje komponentu ``HeslarOdkazForm`` v rámci aplikace."""
+
     heslar_nazev = forms.ModelChoiceField(
         empty_label=None,
         label=_("heslar.forms.heslarOdkazForm.heslar_nazev.label"),
@@ -75,13 +78,14 @@ class HeslarOdkazForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = HeslarOdkaz
         fields = "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation"
         widgets = {"heslo": AutocompleteModelSelect2(url="heslar:heslar-autocomplete", forward=["heslar_nazev"])}
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -93,14 +97,16 @@ class HeslarOdkazForm(forms.ModelForm):
 
 class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
     """Implementuje komponentu ``OsobaAdminForm`` v rámci aplikace."""
+
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Osoba
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -127,14 +133,16 @@ class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
 
 class OrganizaceAdminForm(forms.ModelForm):
     """Implementuje komponentu ``OrganizaceAdminForm`` v rámci aplikace."""
+
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Organizace
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

@@ -214,7 +214,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
     def check_locality_arch_z_conflict(self):
         """Ověří locality arch z conflict.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         try:
             if self.get_archeologicky_zaznam().lokalita:
@@ -296,7 +296,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -335,7 +335,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -380,7 +380,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -436,7 +436,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -465,7 +465,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def get_dokumentacni_jednotka(self):
         """Vrací dokumentacni jednotka.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"ident_cely": dj_ident_cely})
@@ -508,7 +508,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -548,7 +548,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -578,7 +578,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1531,6 +1531,7 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
 
 class GetAkceOtherKatastrView(LoginRequiredMixin, View, PermissionFilterMixin):
     """Implementuje komponentu ``GetAkceOtherKatastrView`` v rámci aplikace."""
+
     typ_zmeny_lookup = ZAPSANI_AZ
 
     def post(self, request):
@@ -1594,7 +1595,7 @@ class AkceListView(SearchListView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         super().init_translations()
         self.page_title = _("arch_z.views.AkceListView.page_title.text")
@@ -1610,7 +1611,7 @@ class AkceListView(SearchListView):
     @staticmethod
     def rename_field_for_ordering(field: str):
         """Provádí operaci rename field for ordering.
-        
+
         :param field: Vstupní hodnota ``field`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         field = field.replace("-", "")
@@ -1634,7 +1635,7 @@ class AkceListView(SearchListView):
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
@@ -1840,7 +1841,7 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
 
     def get_result_label(self, result):
         """Vrací result label.
-        
+
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.lookup_type == "akce":
@@ -1850,7 +1851,7 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not self.request.user.is_authenticated:
             return ArcheologickyZaznam.objects.none()
@@ -1885,7 +1886,7 @@ class ArchZTableRowView(LoginRequiredMixin, View):
 
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         zaznam = ArcheologickyZaznam.objects.get(id=request.GET.get("id", ""))

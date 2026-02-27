@@ -48,7 +48,7 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -64,11 +64,12 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
 
 class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     """Implementuje komponentu ``UserNotificationTypeInlineFormset`` v rámci aplikace."""
+
     model = UserNotificationType.user.through
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -102,7 +103,7 @@ class UserNotificationTypeInline(admin.TabularInline):
 
     def get_queryset(self, request):
         """Vrací queryset.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         logger.debug(self.model._default_manager)
@@ -118,7 +119,7 @@ class UserNotificationTypeInline(admin.TabularInline):
 
     def get_extra(self, request, obj=None, **kwargs):
         """Vrací extra.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -135,7 +136,7 @@ class UserNotificationTypeInline(admin.TabularInline):
 
     def __init__(self, parent_model, admin_site):
         """Inicializuje instanci třídy.
-        
+
         :param parent_model: Vstupní hodnota ``parent_model`` pro danou operaci.
         :param admin_site: Vstupní hodnota ``admin_site`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -154,7 +155,7 @@ class PesNotificationTypeInline(admin.TabularInline):
 
     def get_queryset(self, request):
         """Vrací queryset.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         queryset = super(PesNotificationTypeInline, self).get_queryset(request)
@@ -205,7 +206,7 @@ class PesUserNotificationTypeInlineForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -217,11 +218,12 @@ class PesUserNotificationTypeInlineForm(forms.ModelForm):
 
 class PesUserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     """Implementuje komponentu ``PesUserNotificationTypeInlineFormset`` v rámci aplikace."""
+
     model = UserNotificationType.user.through
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -252,7 +254,7 @@ class PesUserNotificationTypeInline(admin.TabularInline):
 
     def get_queryset(self, request):
         """Vrací queryset.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         logger.debug(self.model._default_manager)
@@ -262,7 +264,7 @@ class PesUserNotificationTypeInline(admin.TabularInline):
 
     def get_extra(self, request, obj=None, **kwargs):
         """Vrací extra.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -359,7 +361,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def has_delete_permission(self, request, obj=None):
         """Určí, zda delete permission.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -370,7 +372,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def save_model(self, request, obj: User, form, change):
         """Uloží model.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :param form: Vstupní hodnota ``form`` pro danou operaci.
@@ -510,7 +512,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def user_change_password(self, request, id, form_url=""):
         """Provádí operaci user change password.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param id: Identifikátor zpracovávaného záznamu.
         :param form_url: Vstupní hodnota ``form_url`` pro danou operaci.
@@ -528,7 +530,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def log_deletion(self, request, object, object_repr):
         """Provádí operaci log deletion.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param object: Vstupní hodnota ``object`` pro danou operaci.
         :param object_repr: Vstupní hodnota ``object_repr`` pro danou operaci.
@@ -538,7 +540,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         """Vrací readonly fields.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -550,7 +552,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def render_change_form(self, request, context, **kwargs):
         """Vyrenderuje change form.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -571,7 +573,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def get_urls(self):
         """Vrací urls.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         urls = super().get_urls()
         custom_urls = [
@@ -585,7 +587,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def get_histore_related_records(self, object_id):
         """Vrací histore related records.
-        
+
         :param object_id: Identifikátor objektu ``object``.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if User.objects.filter(pk=object_id).exists():
@@ -599,7 +601,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def delete_history_records(self, request, object_id, *args, **kwargs):
         """Odstraní history records.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param object_id: Identifikátor objektu ``object``.
         :param args: Dodatečné poziční argumenty předané voláním.
@@ -637,7 +639,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def delete_model(self, request, obj):
         """Odstraní model.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :return: Vrací výsledek operace odstranění."""
@@ -657,7 +659,7 @@ class CustomGroupAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         """Určí, zda delete permission.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""

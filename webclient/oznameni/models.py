@@ -24,11 +24,12 @@ class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.odpovedna_osoba + " (" + self.email + ")"
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "oznamovatel"
         verbose_name = "oznamovatele"

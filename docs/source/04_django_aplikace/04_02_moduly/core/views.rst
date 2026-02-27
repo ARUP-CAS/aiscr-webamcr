@@ -8,23 +8,38 @@ Třídy
 
 .. py:class:: DownloadFile
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DownloadFile`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: _preprocess_image()
 
+      Provádí operaci preprocess image.
+
+      :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
+      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param pk: Primární klíč zpracovávaného záznamu.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DownloadThumbnailSmall
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DownloadThumbnailSmall`` v rámci aplikace.
 
 
 .. py:class:: DownloadThumbnailLarge
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DownloadThumbnailLarge`` v rámci aplikace.
 
 
 .. py:class:: UpdateFileView
@@ -35,9 +50,28 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UploadFileView
@@ -48,11 +82,34 @@ Třídy
 
    .. py:method:: get_zaznam()
 
+      Vrací zaznam.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: BasePostUploadView
@@ -83,30 +140,12 @@ Třídy
 
    .. py:method:: post()
 
-      Zpracuje POST request s nahrávaným souborem.
+      Obsluhuje HTTP metodu POST.
 
-      Metoda provádí kompletní validaci nahrávaného souboru před jeho uložením:
-      - Kontroluje přítomnost souboru v requestu
-      - Validuje MIME typ a detekuje šifrované soubory
-      - Provádí antivirovou kontrolu obsahu
-      - Deleguje finální zpracování na potomky prostřednictvím handle_upload()
-
-
-      **Argumenty:**
-
-      - ``request`` (*HttpRequest*): Django HTTP request objekt obsahující nahrávaný soubor
-      - ``*args``: Poziční argumenty předané z URL dispatcheru
-      - ``**kwargs``: Klíčové argumenty z URL patternu (např. ident_cely, typ_vazby)
-
-      **Návratová hodnota:**
-
-      *JsonResponse*: JSON odpověď s výsledkem operace
-
-      **Stavové kódy odpovědi:**
-
-      - ``200``: Soubor byl úspěšně validován a zpracován
-      - ``400``: Validační chyba (chybějící soubor, šifrovaný, virus, neplatný MIME typ)
-      - ``500``: Neznámá chyba při zpracování
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: handle_upload()
 
@@ -351,22 +390,57 @@ Třídy
 
    .. py:method:: get_export_filename()
 
+      Vrací export filename.
+
+      :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
+      :param export_name: Vstupní hodnota ``export_name`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: PermissionFilterMixin
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PermissionFilterMixin`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: check_filter_permission()
 
+      Ověří filter permission.
+
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param action: Vstupní hodnota ``action`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: filter_by_permission()
+
+      Filtruje by permission.
+
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_status_lookup()
 
+      Provádí operaci add status lookup.
+
+      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: add_ownership_lookup()
 
+      Provádí operaci add ownership lookup.
+
+      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: add_accessibility_lookup()
+
+      Provádí operaci add accessibility lookup.
+
+      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: SearchListView
@@ -377,15 +451,44 @@ Třídy
 
    .. py:method:: create_export()
 
+      Vytvoří export.
+
+      :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: init_translations()
+
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _get_sort_params()
 
+      Vrací sort params.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: StahnoutDataHistorickaView
@@ -396,41 +499,71 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: CheckUserAuthentication
 
-   Popis není k dispozici.
+   Implementuje komponentu ``CheckUserAuthentication`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ReadTempValueView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ReadTempValueView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DeleteTempValueView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DeleteTempValueView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AbortDownloadUpdateTempValueView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AbortDownloadUpdateTempValueView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: RosettaFileLevelMixinWithBackup
@@ -441,23 +574,38 @@ Třídy
 
    .. py:method:: po_file_path()
 
-      Based on the url kwargs, infer and return the path to the .po file to
-      be shown/updated.
+      Podle URL parametrů `kwargs` odvodí a vrátí cestu k `.po` souboru,
+      který se má zobrazit nebo upravit.
 
-      Throw a 404 if a file isn't found.
+      Pokud soubor neexistuje, vyvolá chybu 404.
 
 
 .. py:class:: TranslationImportView
 
-   Třída pohledu pro import prekladových souboru.
+   Třída pohledu pro import překladových souborů.
 
    **Metody:**
 
    .. py:method:: form_valid()
 
+      Provádí operaci form valid.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: handle_uploaded_file()
+
+      Zpracuje uploaded file.
+
+      :param f: Vstupní hodnota ``f`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: TranslationFileListWithBackupView
@@ -468,6 +616,11 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: TranslationFormWithBackupView
 
@@ -476,6 +629,11 @@ Třídy
    **Metody:**
 
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: TranslationFileDownloadBackup
@@ -486,6 +644,13 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: TranslationFileSmazatBackup
 
@@ -495,7 +660,21 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: PrometheusMetricsView
@@ -506,6 +685,13 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: ApplicationRestartView
 
@@ -515,32 +701,57 @@ Třídy
 
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: DataImportProgress
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DataImportProgress`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DataImportStop
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DataImportStop`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DataImportStart
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DataImportStart`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -568,7 +779,7 @@ Funkce
 
 .. py:function:: check_stav_changed(request, zaznam)
 
-   Funkce pro oveření jestli se zmenil stav záznamu pri uložení formuláře oproti jeho načtení.
+   Funkce pro ověření, jestli se změnil stav záznamu při uložení formuláře oproti jeho načtení.
 
 .. py:function:: redirect_ident_view(request, ident_cely)
 
@@ -584,4 +795,9 @@ Funkce
 
 .. py:function:: check_soubor_vazba(typ_vazby, ident, id_zaznamu)
 
-   Popis není k dispozici.
+   Ověří soubor vazba.
+
+   :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
+   :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+   :param id_zaznamu: Vstupní hodnota ``id_zaznamu`` pro danou operaci.
+   :return: Vrací výsledek ověření nebo validačního pravidla.

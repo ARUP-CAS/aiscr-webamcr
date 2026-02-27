@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 def get_or_create_transaction(instance):
     """Vrací or create transaction.
-    
+
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     if instance.active_transaction:
@@ -91,7 +91,7 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
 @receiver(post_save, sender=RuianOkres, weak=False)
 def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
     """Uloží metadata okres.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -116,7 +116,7 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
 
         def save_metadata():
             """Uloží metadata.
-            
+
             :return: Vrací výsledek provedené operace."""
             fedora_transaction = FedoraTransaction()
             if instance.heslo_podrazene:
@@ -147,7 +147,7 @@ def save_metadata_heslar_datace(sender, instance: HeslarDatace, created, **kwarg
 
         def save_metadata():
             """Uloží metadata.
-            
+
             :return: Vrací výsledek provedené operace."""
             if instance.initial_obdobi and instance.initial_obdobi != instance.obdobi:
                 instance.initial_obdobi.save_metadata(fedora_transaction)
@@ -175,7 +175,7 @@ def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDoku
 
             def save_metadata():
                 """Uloží metadata.
-                
+
                 :return: Vrací výsledek provedené operace."""
                 fedora_transaction = FedoraTransaction()
                 instance.dokument_typ.save_metadata(fedora_transaction)
@@ -200,7 +200,7 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
 
         def save_metadata():
             """Uloží metadata.
-            
+
             :return: Vrací výsledek provedené operace."""
             fedora_transaction = FedoraTransaction()
             if instance.initial_heslo and instance.initial_heslo != instance.heslo:
@@ -225,7 +225,7 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
 @receiver(pre_delete, sender=Heslar, weak=False)
 def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
     """Provádí operaci heslar delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -242,7 +242,7 @@ def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
 @receiver(pre_delete, sender=RuianKatastr, weak=False)
 def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
     """Provádí operaci ruian katastr delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -259,7 +259,7 @@ def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **
 @receiver(pre_delete, sender=RuianKraj, weak=False)
 def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
     """Provádí operaci ruian kraj delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -276,7 +276,7 @@ def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs
 @receiver(pre_delete, sender=RuianOkres, weak=False)
 def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
     """Provádí operaci ruian okres delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -285,7 +285,7 @@ def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwar
 
     def save_metadata():
         """Uloží metadata.
-        
+
         :return: Vrací výsledek provedené operace."""
         fedora_transaction = get_or_create_transaction(instance)
         instance.record_deletion(fedora_transaction, close_transaction=True)
@@ -307,7 +307,7 @@ def delete_uppdate_related_heslar_hierarchie(sender, instance: HeslarHierarchie,
 
     def save_metadata():
         """Uloží metadata.
-        
+
         :return: Vrací výsledek provedené operace."""
         instance.heslo_podrazene.save_metadata(fedora_transaction)
         instance.heslo_nadrazene.save_metadata(fedora_transaction, close_transaction=True)
@@ -329,7 +329,7 @@ def delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance: H
 
     def save_metadata():
         """Uloží metadata.
-        
+
         :return: Vrací výsledek provedené operace."""
         instance.dokument_rada.save_metadata(fedora_transaction)
         instance.dokument_typ.save_metadata(fedora_transaction)
@@ -367,7 +367,7 @@ def delete_uppdate_related_heslar_datace(sender, instance: HeslarDatace, **kwarg
 
     def save_metadata():
         """Uloží metadata.
-        
+
         :return: Vrací výsledek provedené operace."""
         heslo_obdobi.datace_obdobi = None
         heslo_obdobi.save_metadata(fedora_transaction, close_transaction=True)

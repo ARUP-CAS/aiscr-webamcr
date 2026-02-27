@@ -8,9 +8,13 @@ Třídy
 
 .. py:class:: Oznamovatel
 
-   Class pro db model oznamovatel.
+   Databázový model oznamovatele.
 
    **Metody:**
 
    .. py:method:: __str__()
+
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
 

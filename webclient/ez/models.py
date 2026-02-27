@@ -88,6 +88,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "externi_zdroj"
 
     def get_absolute_url(self):
@@ -101,7 +102,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.ident_cely:
             return self.ident_cely
@@ -179,13 +180,13 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
         """Vrací create user.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_EXT_ZD)[0].uzivatel,)
@@ -195,7 +196,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def get_create_org(self):
         """Vrací create org.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.get_create_user()[0].organizace,)
@@ -205,7 +206,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def set_snapshots(self):
         """Nastaví snapshots.
-        
+
         :return: Vrací výsledek provedené operace."""
         if not self.externizdrojautor_set.all():
             self.autori_snapshot = None
@@ -223,7 +224,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     @property
     def redis_snapshot_id(self):
         """Provádí operaci redis snapshot id.
-        
+
         :return: Vrací výsledek provedené operace."""
         from ez.views import ExterniZdrojListView
 
@@ -231,7 +232,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def generate_redis_snapshot(self):
         """Vygeneruje redis snapshot.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         from ez.tables import ExterniZdrojTable
 
@@ -242,7 +243,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def check_set_permanent_ident(self):
         """Ověří set permanent ident.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         historie_poznamka = None
         if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -298,12 +299,13 @@ class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), model
 
     def get_osoba(self):
         """Vrací osoba.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.autor.vypis_cely
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "externi_zdroj_autor"
         unique_together = (("externi_zdroj", "autor"), ("externi_zdroj", "poradi"))
 
@@ -319,12 +321,13 @@ class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), mod
 
     def get_osoba(self):
         """Vrací osoba.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.editor.vypis_cely
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "externi_zdroj_editor"
         unique_together = (
             ("externi_zdroj", "editor"),
@@ -342,5 +345,6 @@ class ExterniZdrojSekvence(models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "externi_zdroj_sekvence"
         constraints = [models.CheckConstraint(name="constraint_only_one_sekvence", condition=models.Q(id=1))]

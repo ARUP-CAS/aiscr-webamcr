@@ -16,7 +16,7 @@ class ManyToManyRestrictedClassMixin:
     @property
     def has_connections(self):
         """Určí, zda connections.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         attr_list = []
         for attr in dir(self):
@@ -35,9 +35,10 @@ class ManyToManyRestrictedClassMixin:
 
 class IPWhitelistMixin:
     """Implementuje komponentu ``IPWhitelistMixin`` v rámci aplikace."""
+
     def dispatch(self, request, *args, **kwargs):
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

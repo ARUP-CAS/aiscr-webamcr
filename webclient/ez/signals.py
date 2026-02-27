@@ -35,7 +35,7 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 @receiver(post_save, sender=ExterniZdroj, weak=False)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     """Provádí operaci externi zdroj save metadata.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -58,7 +58,7 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
 @receiver(pre_delete, sender=ExterniZdroj, weak=False)
 def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
     """Odstraní externi zdroj repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.

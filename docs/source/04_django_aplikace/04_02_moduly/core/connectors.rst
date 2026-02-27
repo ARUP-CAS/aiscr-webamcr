@@ -8,19 +8,40 @@ Třídy
 
 .. py:class:: RedisConnector
 
-   Popis není k dispozici.
+   Implementuje komponentu ``RedisConnector`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: _create_connection()
 
+      Vytvoří connection.
+
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: _create_connection_decode()
+
+      Vytvoří connection decode.
+
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: get_connection()
 
+      Vrací connection.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_connection_decode()
 
+      Vrací connection decode.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: prepare_model_for_redis()
+
+      Provádí operaci prepare model for redis.
+
+      :param table: Vstupní hodnota ``table`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ClamdError
@@ -78,21 +99,10 @@ Třídy
 
    .. py:method:: _basic_command()
 
-      Odešle příkaz na clamav server a vrátí odpověď.
+      Provádí operaci basic command.
 
-
-      **Argumenty:**
-
-      - ``command`` (*str*): příkaz k odeslání
-
-      **Návratová hodnota:**
-
-      *str*: odpověď od clamd
-
-      **Výjimky:**
-
-      *ClamdConnectionError*: při problému s komunikací
-      *ClamdResponseError*: pokud clamd vrátí chybu
+      :param command: Vstupní hodnota ``command`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _init_socket()
 
@@ -120,15 +130,11 @@ Třídy
 
    .. py:method:: _send_command()
 
-      Odešle příkaz do clamd.
+      Odešle command.
 
-      Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
-
-
-      **Argumenty:**
-
-      - ``cmd`` (*str*): příkaz k odeslání
-      - ``*args``: dodatečné argumenty pro příkaz
+      :param cmd: Vstupní hodnota ``cmd`` pro danou operaci.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _recv_response()
 

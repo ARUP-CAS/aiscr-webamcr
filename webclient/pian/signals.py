@@ -59,7 +59,7 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
 @receiver(pre_delete, sender=Pian, weak=False)
 def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, **kwargs):
     """Provádí operaci samostatny nalez okres delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.

@@ -8,11 +8,16 @@ Třídy
 
 .. py:class:: HealthCheckView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``HealthCheckView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -20,4 +25,6 @@ Funkce
 
 .. py:function:: check_status()
 
-   Popis není k dispozici.
+   Ověří status.
+
+   :return: Vrací výsledek ověření nebo validačního pravidla.

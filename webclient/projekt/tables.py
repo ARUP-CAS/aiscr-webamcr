@@ -73,6 +73,7 @@ class ProjektTable(SearchTable):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = (
             "ident_cely",
@@ -126,7 +127,7 @@ class ProjektTable(SearchTable):
 
     def render_planovane_zahajeni(self, value):
         """Vyrenderuje planovane zahajeni.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if value == "" or value is None:
@@ -139,7 +140,7 @@ class ProjektTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

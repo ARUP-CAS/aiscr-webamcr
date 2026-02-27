@@ -173,7 +173,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
         """Provádí operaci changelist view.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -352,7 +352,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
         """Provádí operaci changelist view.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -442,7 +442,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def check_save_row(self, row):
         """Ověří save row.
-        
+
         :param row: Vstupní hodnota ``row`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         try:
@@ -489,7 +489,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def export_as_csv(self, request, queryset):
         """Exportuje as csv.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -506,12 +506,13 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
 class FedoraCustomAdminSite(admin.AdminSite):
     """Implementuje komponentu ``FedoraCustomAdminSite`` v rámci aplikace."""
+
     redis_connector = RedisConnector().get_connection_decode()
 
     @staticmethod
     def _read_file(uploaded_file, context):
         """Načte file.
-        
+
         :param uploaded_file: Vstupní hodnota ``uploaded_file`` pro danou operaci.
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -547,7 +548,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
     def update_doi(self, request):
         """Aktualizuje doi.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         context = {
@@ -573,7 +574,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
     def update_metadata_file_upload(self, request):
         """Aktualizuje metadata file upload.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         context = {
@@ -602,7 +603,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
         def normalize_file_name(name: str) -> str:
             """Provádí operaci normalize file name.
-            
+
             :param name: Vstupní hodnota ``name`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             if "/" in name:
@@ -661,7 +662,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
                             def format_primary_key(pk):
                                 """Provádí operaci format primary key.
-                                
+
                                 :param pk: Primární klíč zpracovávaného záznamu.
                                 :return: Vrací výsledek provedené operace."""
                                 if isinstance(pk, dict):
@@ -759,7 +760,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
         self,
     ):
         """Vrací urls.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return [
             path(

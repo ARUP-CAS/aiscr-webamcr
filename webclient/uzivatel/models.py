@@ -49,14 +49,14 @@ logger = logging.getLogger(__name__)
 
 def only_notification_groups():
     """Provádí operaci only notification groups.
-    
+
     :return: Vrací výsledek provedené operace."""
     return UserNotificationType.objects.filter(ident_cely__icontains="S-E-").all()
 
 
 def get_default_licence():
     """Vrací default licence.
-    
+
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     from heslar.hesla_dynamicka import DOKUMENT_LICENCE_NEZNAMA
 
@@ -137,7 +137,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -151,7 +151,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @cached_property
     def hlavni_role(self) -> Union[Group, None]:
         """Provádí operaci hlavni role.
-        
+
         :return: Vrací výsledek provedené operace."""
         roles = self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
         if roles.count() == 0:
@@ -164,7 +164,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @cached_property
     def user_str(self):
         """Provádí operaci user str.
-        
+
         :return: Vrací výsledek provedené operace."""
         retezec = f"{self.last_name}, {self.first_name} ({self.ident_cely}, "
         if self.organizace:
@@ -174,7 +174,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @cached_property
     def user_str_en(self):
         """Provádí operaci user str en.
-        
+
         :return: Vrací výsledek provedené operace."""
         retezec = f"{self.last_name}, {self.first_name} ({self.ident_cely}, "
         if self.organizace:
@@ -183,7 +183,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         if get_language() == "en":
             return self.user_str_en
@@ -209,7 +209,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def moje_spolupracujici_organizace(self):
         """Provádí operaci moje spolupracujici organizace.
-        
+
         :return: Vrací výsledek provedené operace."""
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
         archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
@@ -231,7 +231,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def moje_stavy_pruzkumnych_projektu(self):
         """Provádí operaci moje stavy pruzkumnych projektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
         archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
@@ -255,7 +255,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def email_user(self, *args, **kwargs):
         """Provádí operaci email user.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -277,20 +277,20 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @property
     def is_archiver_or_more(self):
         """Určí, zda archiver or more.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     @property
     def is_archeolog_or_more(self):
         """Určí, zda archeolog or more.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         return self.hlavni_role.pk in (ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -332,7 +332,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @property
     def metadata(self):
         """Provádí operaci metadata.
-        
+
         :return: Vrací výsledek provedené operace."""
         from core.repository_connector import FedoraRepositoryConnector
 
@@ -341,7 +341,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def save_metadata(self, fedora_transaction=None, close_transaction=False, **kwargs):
         """Uloží metadata.
-        
+
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -405,33 +405,34 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @property
     def can_see_users_details(self):
         """Provádí operaci can see users details.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
 
     @property
     def full_details(self):
         """Provádí operaci full details.
-        
+
         :return: Vrací výsledek provedené operace."""
         return f"{self.last_name}, {self.first_name} ({self.ident_cely}, {self.organizace})"
 
     @property
     def anonymous_details(self):
         """Provádí operaci anonymous details.
-        
+
         :return: Vrací výsledek provedené operace."""
         return f"{self.ident_cely} ({self.organizace})"
 
     @property
     def can_see_ours_item(self):
         """Provádí operaci can see ours item.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "auth_user"
         verbose_name = "Uživatel"
         verbose_name_plural = "Uživatelé"
@@ -444,25 +445,26 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
         """Vrací create user.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return (self,)
 
     def get_create_org(self):
         """Vrací create org.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return ()
 
 
 class UzivatelPrihlaseniLog(models.Model):
     """Implementuje komponentu ``UzivatelPrihlaseniLog`` v rámci aplikace."""
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     prihlaseni_datum_cas = models.DateTimeField(auto_now_add=True)
     ip_adresa = models.CharField(max_length=45)
@@ -541,7 +543,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -563,7 +565,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         if get_language() == "en":
             if self.nazev_zkraceny_en:
@@ -580,7 +582,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     def get_nazev(self):
         """Vrací nazev.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if get_language() == "en":
             if self.nazev_en:
@@ -597,6 +599,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "organizace"
         ordering = [Collate("nazev_zkraceny", "cs-CZ-x-icu")]
         verbose_name = "Organizace"
@@ -632,7 +635,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -653,6 +656,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "osoba"
         ordering = ["vypis_cely"]
         constraints = [models.UniqueConstraint(fields=["jmeno", "prijmeni"], name="osoba_jmeno_prijmeni_key")]
@@ -661,7 +665,7 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.vypis_cely
 
@@ -688,7 +692,7 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
 
     def _get_settings_dict(self) -> Optional[dict]:
         """Vrací settings dict.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.ident_cely in notification_settings:
             return notification_settings[self.ident_cely]
@@ -697,7 +701,7 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     @property
     def zasilat_neaktivnim(self) -> Optional[str]:
         """Provádí operaci zasilat neaktivnim.
-        
+
         :return: Vrací výsledek provedené operace."""
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
@@ -706,7 +710,7 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     @property
     def predmet(self) -> Optional[str]:
         """Provádí operaci predmet.
-        
+
         :return: Vrací výsledek provedené operace."""
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
@@ -715,7 +719,7 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     @property
     def cesta_sablony(self) -> Optional[str]:
         """Provádí operaci cesta sablony.
-        
+
         :return: Vrací výsledek provedené operace."""
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
@@ -724,7 +728,7 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     @property
     def is_groups(self) -> bool:
         """Určí, zda groups.
-        
+
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         from services.mailer import NOTIFICATION_GROUPS
 
@@ -732,13 +736,14 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "notifikace_typ"
         verbose_name = _("uzivatel.models.UserNotificationType.name")
         verbose_name_plural = _("uzivatel.models.UserNotificationType.namePlural")
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         try:
             return str(self.NOTIFICATION_GROUPS_NAMES[self.ident_cely])
@@ -760,4 +765,5 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "notifikace_log"

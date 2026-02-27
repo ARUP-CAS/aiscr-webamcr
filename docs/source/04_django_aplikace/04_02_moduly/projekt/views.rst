@@ -9,32 +9,53 @@ Třídy
 .. py:class:: ProjectPasFromEnvelopeView
 
    Trida pohledu pro získaní heatmapy pas.
-   @jiri-bartos presunuto z post_ajax_get_project_pas_limit
 
    **Metody:**
 
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjectPianFromEnvelopeView
 
+   @jiri-bartos presunuto z post_ajax_get_project_pas_limit
    Trida pohledu pro získaní heatmapy pianu.
-   @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
 
    **Metody:**
 
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: ProjektPermissionFilterMixin
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ProjektPermissionFilterMixin`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: add_ownership_lookup()
 
+      Provádí operaci add ownership lookup.
+
+      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: add_accessibility_lookup()
+
+      Provádí operaci add accessibility lookup.
+
+      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjektListView
@@ -45,18 +66,37 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: GenerovatOznameniView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``GenerovatOznameniView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_redirect_url()
+
+      Vrací redirect url.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ProjektAutocompleteBezZrusenych
@@ -67,9 +107,23 @@ Třídy
 
    .. py:method:: get_result_label()
 
+      Vrací result label.
+
+      :param result: Vstupní hodnota ``result`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: check_filter_permission()
+
+      Ověří filter permission.
+
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: ProjectTableRowView
@@ -80,20 +134,49 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: UpravitDatumOznameniView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``UpravitDatumOznameniView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: _get_existing_record()
 
+      Vrací existing record.
+
+      :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ZadostUdajeOznamovatelView
@@ -104,9 +187,27 @@ Třídy
 
    .. py:method:: get_zaznam()
 
+      Vrací zaznam.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ZadostOdhlaseniProjektuView
@@ -117,9 +218,27 @@ Třídy
 
    .. py:method:: get_zaznam()
 
+      Vrací zaznam.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ZadostZruseniProjektuView
@@ -130,9 +249,27 @@ Třídy
 
    .. py:method:: get_zaznam()
 
+      Vrací zaznam.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 Funkce
@@ -156,6 +293,7 @@ Funkce
 
 .. py:function:: create(request)
 
+   @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
    Funkce pohledu pro vytvoření projektu.
 
 .. py:function:: edit(request, ident_cely)
@@ -251,7 +389,11 @@ Funkce
 
 .. py:function:: get_show_oznamovatel(projekt, user)
 
-   Popis není k dispozici.
+   Vrací show oznamovatel.
+
+   :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
+   :param user: Vstupní hodnota ``user`` pro danou operaci.
+   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: get_required_fields(zaznam, next)
 

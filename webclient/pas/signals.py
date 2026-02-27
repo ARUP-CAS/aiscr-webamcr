@@ -35,7 +35,7 @@ def create_dokument_vazby(sender, instance, **kwargs):
 @receiver(post_save, sender=SamostatnyNalez, weak=False)
 def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, **kwargs):
     """Uloží metadata samostatny nalez.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param created: Vstupní hodnota ``created`` pro danou operaci.
@@ -50,7 +50,7 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
 
         def save_metadata(close_transaction=False):
             """Uloží metadata.
-            
+
             :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
@@ -74,7 +74,7 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
 @receiver(pre_delete, sender=SamostatnyNalez, weak=False)
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
     """Provádí operaci dokument delete container soubor vazby.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -86,7 +86,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 
     def save_metadata(close_transaction=False):
         """Uloží metadata.
-        
+
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if instance.projekt:
@@ -113,7 +113,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 @receiver(post_save, sender=UzivatelSpoluprace, weak=False)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     """Uloží uzivatel spoluprce.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -124,7 +124,7 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
 
         def save_metadata(close_transaction=False):
             """Uloží metadata.
-            
+
             :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             instance.vedouci.save_metadata(fedora_transaction)
@@ -140,7 +140,7 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
 @receiver(post_delete, sender=UzivatelSpoluprace, weak=False)
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
     """Odstraní uzivatel spoluprce connections.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -150,7 +150,7 @@ def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, 
 
     def save_metadata(close_transaction=False):
         """Uloží metadata.
-        
+
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         Historie.save_record_deletion_record(record=instance)

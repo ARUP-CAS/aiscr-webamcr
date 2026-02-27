@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Adb, weak=False)
 def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     """Provádí operaci adb save metadata.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param created: Vstupní hodnota ``created`` pro danou operaci.
@@ -42,7 +42,7 @@ def adb_save_metadata(sender, instance: Adb, created, **kwargs):
 @receiver(post_save, sender=VyskovyBod, weak=False)
 def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
     """Provádí operaci vyskovy bod save metadata.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -68,7 +68,7 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
 @receiver(post_delete, sender=Adb, weak=False)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     """Provádí operaci adb delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -95,7 +95,7 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
 @receiver(post_delete, sender=VyskovyBod, weak=False)
 def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwargs):
     """Provádí operaci vyskovy bod delete repository container.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.

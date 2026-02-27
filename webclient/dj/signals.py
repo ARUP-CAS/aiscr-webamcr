@@ -96,7 +96,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
 
     def arch_z_save_metadata(inner_close_transaction=False):
         """Provádí operaci arch z save metadata.
-        
+
         :param inner_close_transaction: Vstupní hodnota ``inner_close_transaction`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         instance.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -122,7 +122,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
 @receiver(pre_delete, sender=DokumentacniJednotka, weak=False)
 def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     """Provádí operaci pre delete dokumentacni jednotka.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -165,7 +165,7 @@ def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **k
 @receiver(post_delete, sender=DokumentacniJednotka, weak=False)
 def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
     """Odstraní dokumentacni jednotka.
-    
+
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -196,7 +196,7 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
 
             def save_metadata():
                 """Uloží metadata.
-                
+
                 :return: Vrací výsledek provedené operace."""
                 if not instance.suppress_signal_arch_z:
                     instance.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)

@@ -17,15 +17,16 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceSamostatneNalezy(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceSamostatneNalezy`` v rámci aplikace."""
+
     def go_to_form(self):
         """Provádí operaci go to form.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/pas/zapsat")
 
     def create_PAS(self):
         """Vytvoří PAS.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         self.go_to_form()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner")

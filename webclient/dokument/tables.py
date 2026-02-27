@@ -61,6 +61,7 @@ class Model3DTable(SearchTable):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         fields = (
             "ident_cely",
@@ -97,7 +98,7 @@ class Model3DTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -288,6 +289,7 @@ class DokumentTable(SearchTable):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         fields = (
             "nahled",
@@ -367,7 +369,7 @@ class DokumentTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

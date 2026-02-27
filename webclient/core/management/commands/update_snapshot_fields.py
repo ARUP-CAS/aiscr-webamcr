@@ -27,7 +27,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Zpracuje hodnotu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""

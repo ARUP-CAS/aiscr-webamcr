@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 @register.filter
 def url_to_classes(value):
     """Provádí operaci url to classes.
-    
+
     :param value: Vstupní hodnota ``value`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
     if value == "/":
@@ -109,7 +109,7 @@ def check_if_none(value):
 @register.filter
 def get_katastr_name(value):
     """Vrací katastr name.
-    
+
     :param value: Vstupní hodnota ``value`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     if isinstance(value, list):
@@ -174,7 +174,7 @@ def get_osoby_name(widget):
 @register.simple_tag
 def get_value_from_heslar(nazev_heslare, hodnota):
     """Vrací value from heslar.
-    
+
     :param nazev_heslare: Vstupní hodnota ``nazev_heslare`` pro danou operaci.
     :param hodnota: Vstupní hodnota ``hodnota`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""

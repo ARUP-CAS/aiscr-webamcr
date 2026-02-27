@@ -22,13 +22,14 @@ from SPARQLWrapper import JSON, SPARQLWrapper
 
 class ApiView(autocomplete.Select2ListView):
     """Implementuje komponentu ``ApiView`` v rámci aplikace."""
+
     API_URL = None
     CACHE_PREFIX = None
     r = RedisConnector().get_connection()
 
     def __init__(self, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
         super().__init__(**kwargs)
@@ -36,7 +37,7 @@ class ApiView(autocomplete.Select2ListView):
     @classmethod
     def _get_value_from_cache(cls, key):
         """Vrací value from cache.
-        
+
         :param key: Vstupní hodnota ``key`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         cached_value = cls.r.get(f"{cls.CACHE_PREFIX}_{key}")
@@ -46,7 +47,7 @@ class ApiView(autocomplete.Select2ListView):
     @classmethod
     def _save_value_to_cache(cls, key, value):
         """Uloží value to cache.
-        
+
         :param key: Vstupní hodnota ``key`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -55,7 +56,7 @@ class ApiView(autocomplete.Select2ListView):
     @classmethod
     def api_call(cls, q, use_cache=False):
         """Provádí operaci api call.
-        
+
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -63,7 +64,7 @@ class ApiView(autocomplete.Select2ListView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -77,27 +78,28 @@ class ApiView(autocomplete.Select2ListView):
 
     def autocomplete_results(self, results):
         """Provádí operaci autocomplete results.
-        
+
         :param results: Vstupní hodnota ``results`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return [dict(id=x, text=y) for x, y in results]
 
     def get_list(self):
         """Vrací list.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.api_call(self.q)
 
 
 class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     """Implementuje komponentu ``DoiAutocompleteView`` v rámci aplikace."""
+
     API_URL = settings.DATACITE_URL
     CACHE_PREFIX = "DOI"
 
     @classmethod
     def _api_call_data_cite(cls, q):
         """Provádí operaci api call data cite.
-        
+
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         params = {
@@ -117,7 +119,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def _api_call_cross_ref_doi(cls, q):
         """Provádí operaci api call cross ref doi.
-        
+
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         base_url = f"https://api.crossref.org/works/{q}"
@@ -148,7 +150,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def _api_call_cross_ref_title(cls, q):
         """Provádí operaci api call cross ref title.
-        
+
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         base_url = f"https://api.crossref.org/works"
@@ -166,7 +168,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def _doi_item_exists(cls, doi: str) -> list:
         """Provádí operaci doi item exists.
-        
+
         :param doi: Vstupní hodnota ``doi`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         url = f"https://doi.org/{doi}"
@@ -179,7 +181,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def api_call(cls, q, use_cache=False):
         """Provádí operaci api call.
-        
+
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -193,6 +195,7 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
 class OrcidAutocompleteView(ApiView):
     """Implementuje komponentu ``OrcidAutocompleteView`` v rámci aplikace."""
+
     API_URL = "https://pub.orcid.org/v3.0/expanded-search"
     HEADERS = {"Accept": "application/json", "User-Agent": "Python-Requests"}
     CACHE_PREFIX = "ORCID"
@@ -200,7 +203,7 @@ class OrcidAutocompleteView(ApiView):
     @classmethod
     def api_call(cls, q, use_cache=True):
         """Provádí operaci api call.
-        
+
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -234,13 +237,14 @@ class OrcidAutocompleteView(ApiView):
 
 class RorAutocompleteView(LoginRequiredMixin, ApiView):
     """Implementuje komponentu ``RorAutocompleteView`` v rámci aplikace."""
+
     API_URL = "https://api.ror.org/organizations"
     HEADERS = {"Accept": "application/json", "User-Agent": "Python-Requests"}
 
     @classmethod
     def api_call(cls, q, use_cache=False):
         """Provádí operaci api call.
-        
+
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -271,6 +275,7 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
 
 class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
     """Implementuje komponentu ``WikiDataAutocompleteView`` v rámci aplikace."""
+
     API_URL = "https://query.wikidata.org/sparql"
     CACHE_PREFIX = "WIKIDATA"
     ID_REGEX = re.compile(r".*Q\d+")
@@ -278,7 +283,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
     @classmethod
     def api_call(cls, q, use_cache=False):
         """Provádí operaci api call.
-        
+
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -337,10 +342,11 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 
 class ContinuePidProcessing(AdminRecordProcessingView):
     """Implementuje komponentu ``ContinuePidProcessing`` v rámci aplikace."""
+
     @staticmethod
     def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
         """Provádí operaci perform client action.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param attribute_name: Vstupní hodnota ``attribute_name`` pro danou operaci.
         :param publish_callable_method: Vstupní hodnota ``publish_callable_method`` pro danou operaci.
@@ -363,7 +369,7 @@ class ContinuePidProcessing(AdminRecordProcessingView):
 
     def process_record(self, record, result, **kwargs):
         """Provádí operaci process record.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

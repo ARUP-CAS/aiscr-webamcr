@@ -14,15 +14,16 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: run()
 
-      Zpracuje nahraný soubor s oprávněními, provede validaci, import oprávnění
-      a vrátí upravený list a seznam chybějících URL.
+      Spustí hodnotu.
 
-      :param docfile: Nahraný CSV nebo Excel soubor s definicí oprávnění.
-      :type docfile: InMemoryUploadedFile
-      :return: Dvojice obsahující zpracovaný DataFrame a seznam chybějících URL.
-      :rtype: tuple[pandas.DataFrame, list[str]]
+      :param docfile: Vstupní hodnota ``docfile`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: validate_and_prepare_csv()
 

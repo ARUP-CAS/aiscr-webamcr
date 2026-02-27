@@ -57,7 +57,7 @@ class PesListView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -133,7 +133,7 @@ class PesCreateView(LoginRequiredMixin, View):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -205,7 +205,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self) -> Pes:
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         id = self.kwargs.get("pk")
         return get_object_or_404(
@@ -215,7 +215,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
 
     def get_object_identification(self) -> str:
         """Vrací object identification.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         pes: Pes = self.get_zaznam()
         object = pes.content_object
@@ -227,7 +227,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         zaznam = self.get_zaznam()
@@ -243,7 +243,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -253,7 +253,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

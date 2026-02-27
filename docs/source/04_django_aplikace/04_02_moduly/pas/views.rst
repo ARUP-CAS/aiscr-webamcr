@@ -8,42 +8,87 @@ Třídy
 
 .. py:class:: SamostatnyNalezCreateView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SamostatnyNalezCreateView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: dispatch()
+
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _set_copy_source()
 
+      Nastaví copy source.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_form_kwargs()
+
+      Vrací form kwargs.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: form_valid()
+
+      Provádí operaci form valid.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: form_invalid()
 
-      Log form invalid errors and display a message to the user.
+      Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu.
 
    .. py:method:: handle_geometry()
 
-      Handle coordinate data parsing and return geometry objects.
+      Zpracuje geometry.
+
+      :param form_coor: Vstupní hodnota ``form_coor`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get()
 
-      Handle GET request and check project type.
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: PasPermissionFilterMixin
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PasPermissionFilterMixin`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: add_ownership_lookup()
+
+      Provádí operaci add ownership lookup.
+
+      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: SamostatnyNalezListView
@@ -54,9 +99,22 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: rename_field_for_ordering()
 
+      Provádí operaci rename field for ordering.
+
+      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UzivatelSpolupraceListView
@@ -67,41 +125,106 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: rename_field_for_ordering()
+
+      Provádí operaci rename field for ordering.
+
+      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: add_ownership_lookup()
+
+      Provádí operaci add ownership lookup.
+
+      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_accessibility_lookup()
 
+      Provádí operaci add accessibility lookup.
+
+      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_table_kwargs()
+
+      Vrací table kwargs.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AktivaceEmailView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AktivaceEmailView`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: DeaktivaceSpolupraceView
 
-   class pohledu pro deaktivaci spolupráce pomocí modalu.
+   Definuje pohled pro deaktivaci spolupráce v modálním dialogu.
 
    **Metody:**
 
    .. py:method:: get_object()
 
+      Vrací object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjektPasTableView
@@ -111,6 +234,12 @@ Třídy
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce

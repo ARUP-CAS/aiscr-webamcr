@@ -100,7 +100,7 @@ class ExterniZdrojListView(SearchListView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         super().init_translations()
         self.page_title = _("ez.templates.ExterniZdrojListView.pageTitle.text")
@@ -116,7 +116,7 @@ class ExterniZdrojListView(SearchListView):
     @staticmethod
     def rename_field_for_ordering(field: str):
         """Provádí operaci rename field for ordering.
-        
+
         :param field: Vstupní hodnota ``field`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         field = field.replace("-", "")
@@ -129,7 +129,7 @@ class ExterniZdrojListView(SearchListView):
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
@@ -156,7 +156,7 @@ class ExterniZdrojListView(SearchListView):
 
     def add_accessibility_lookup(self, permission, qs):
         """Provádí operaci add accessibility lookup.
-        
+
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -174,7 +174,7 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = {}
@@ -213,7 +213,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def get_form_kwargs(self):
         """Vrací form kwargs.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         kwargs = super().get_form_kwargs()
         required_fields = get_required_fields()
@@ -222,7 +222,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -235,7 +235,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         """Provádí operaci form valid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         ez = form.save(commit=False)
@@ -266,7 +266,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         """Provádí operaci form invalid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
@@ -276,7 +276,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -296,7 +296,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     def get_form_kwargs(self):
         """Vrací form kwargs.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         kwargs = super().get_form_kwargs()
         required_fields = get_required_fields()
@@ -305,7 +305,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -319,7 +319,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(handle_fedora_error)
     def form_valid(self, form):
         """Provádí operaci form valid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self.object: ExterniZdroj = form.save(commit=False)
@@ -335,7 +335,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """Provádí operaci form invalid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
@@ -345,7 +345,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -354,7 +354,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -376,14 +376,14 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def init_translation(self):
         """Provádí operaci init translation.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = "title"
         self.button = "button"
 
     def get_zaznam(self) -> ExterniZdroj:
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("ez.views.TransakceView.get_zaznam.start", extra={"ident_cely": ident_cely})
@@ -397,7 +397,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.init_translation()
@@ -414,7 +414,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -436,7 +436,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -447,7 +447,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -473,7 +473,7 @@ class ExterniZdrojOdeslatView(TransakceView):
 
     def init_translation(self):
         """Provádí operaci init translation.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("ez.templates.ExterniZdrojOdeslatView.title.text")
         self.button = _("ez.templates.ExterniZdrojOdeslatView.submitButton.text")
@@ -491,7 +491,7 @@ class ExterniZdrojPotvrditView(TransakceView):
 
     def init_translation(self):
         """Provádí operaci init translation.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("ez.templates.ExterniZdrojPotvrditView.title.text")
         self.button = _("ez.templates.ExterniZdrojPotvrditView.submitButton.text")
@@ -499,7 +499,7 @@ class ExterniZdrojPotvrditView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -541,7 +541,7 @@ class ExterniZdrojSmazatView(TransakceView):
 
     def init_translation(self):
         """Provádí operaci init translation.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("ez.templates.ExterniZdrojSmazatView.title.text")
         self.button = _("ez.templates.ExterniZdrojSmazatView.submitButton.text")
@@ -550,7 +550,7 @@ class ExterniZdrojSmazatView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -587,7 +587,7 @@ class ExterniZdrojVratitView(TransakceView):
 
     def init_translation(self):
         """Provádí operaci init translation.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("ez.templates.ExterniZdrojVratitView.title.text")
         self.button = _("ez.templates.ExterniZdrojVratitView.submitButton.text")
@@ -595,7 +595,7 @@ class ExterniZdrojVratitView(TransakceView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -608,7 +608,7 @@ class ExterniZdrojVratitView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -637,7 +637,7 @@ class ExterniOdkazOdpojitView(TransakceView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -654,7 +654,7 @@ class ExterniOdkazOdpojitView(TransakceView):
 
     def init_translation(self):
         """Provádí operaci init translation.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("ez.templates.ExterniOdkazOdpojitView.title.text")
         self.button = _("ez.templates.ExterniOdkazOdpojitView.submitButton.text")
@@ -662,7 +662,7 @@ class ExterniOdkazOdpojitView(TransakceView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -675,7 +675,7 @@ class ExterniOdkazOdpojitView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -719,14 +719,14 @@ class ExterniOdkazPripojitView(TransakceView):
 
     def init_translation(self):
         """Provádí operaci init translation.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("ez.templates.ExterniOdkazPripojitView.title.text")
         self.button = _("ez.templates.ExterniOdkazPripojitView.submitButton.text")
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -741,7 +741,7 @@ class ExterniOdkazPripojitView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -785,7 +785,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -804,7 +804,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -821,7 +821,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         """Vrací success url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         next_url = self.request.GET.get("next_url")
         if next_url:
@@ -833,7 +833,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         """Vrací object.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         object = super().get_object()
@@ -846,7 +846,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -858,7 +858,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         """Provádí operaci form valid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
@@ -866,7 +866,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """Provádí operaci form invalid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
@@ -884,14 +884,14 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def init_translation(self):
         """Provádí operaci init translation.
-        
+
         :return: Vrací výsledek provedené operace."""
         super().init_translation()
         self.success_message = EO_USPESNE_ODPOJEN
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -908,7 +908,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def get_zaznam(self):
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("ez.views.TransakceView.ExterniOdkazOdpojitAZView.start", extra={"ident_cely": ident_cely})
@@ -919,7 +919,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -939,7 +939,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -980,14 +980,14 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
 
     def get_result_label(self, result):
         """Vrací result label.
-        
+
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vydani_vzniku}: {result.nazev})"
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not self.request.user.is_authenticated:
             return ExterniZdroj.objects.none()
@@ -1004,7 +1004,7 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
 
     def add_accessibility_lookup(self, permission, qs):
         """Provádí operaci add accessibility lookup.
-        
+
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1018,7 +1018,7 @@ class ExterniZdrojTableRowView(LoginRequiredMixin, View):
 
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         zaznam = ExterniZdroj.objects.get(id=request.GET.get("id", ""))
@@ -1038,7 +1038,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
 
     def get_zaznam(self):
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
@@ -1052,7 +1052,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -1071,7 +1071,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1185,7 +1185,7 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
 
     def get(self, request, ident_cely):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""

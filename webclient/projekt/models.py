@@ -179,28 +179,28 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     @property
     def datum_oznameni(self):
         """Provádí operaci datum oznameni.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.historie.historie_set.order_by("datum_zmeny").first().datum_zmeny
 
     @property
     def pristupnost(self):
         """Provádí operaci pristupnost.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.pristupnost_snapshot
 
     @property
     def get_ident_cely_link(self):
         """Vrací ident cely link.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
             return f"<a href='{self.get_absolute_url()}' target='_blank' class='link-projekt'>{self.ident_cely}</a>"
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -210,7 +210,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -219,7 +219,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.ident_cely:
             return self.ident_cely
@@ -228,12 +228,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "projekt"
         verbose_name = "projekty"
 
     def send_ep01(self, rep_bin_file=None):
         """Odešle ep01.
-        
+
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         logger.debug("projekt.models.Projekt.send_ep01", extra={"file": rep_bin_file, "ident_cely": self.ident_cely})
@@ -356,7 +357,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def archive_project_documentation(self):
         # Vytvoří textový soubor se seznamem smazaných souborů.
         """Provádí operaci archive project documentation.
-        
+
         :return: Vrací výsledek provedené operace."""
         soubory = self.soubory.soubory.all()
         if soubory.count() > 0:
@@ -646,7 +647,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         self, creator: DocumentCreator, fedora_transaction: FedoraTransaction, user=None, check_duplicate=True
     ) -> RepositoryBinaryFile:
         """Uloží document.
-        
+
         :param creator: Vstupní hodnota ``creator`` pro danou operaci.
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
@@ -723,7 +724,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     @property
     def expert_list_can_be_created(self):
         """Provádí operaci expert list can be created.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.typ_projektu.pk != TYP_PROJEKTU_ZACHRANNY_ID:
             return False
@@ -731,7 +732,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def create_expert_list(self, popup_parametry=None):
         """Vytvoří expert list.
-        
+
         :param popup_parametry: Vstupní hodnota ``popup_parametry`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         elc = ExpertniListCreator(self, popup_parametry)
@@ -741,7 +742,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     @property
     def should_generate_confirmation_document(self):
         """Provádí operaci should generate confirmation document.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.stav == PROJEKT_STAV_ZAPSANY and self.has_oznamovatel():
             return True
@@ -749,13 +750,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def get_absolute_url(self):
         """Vrací absolute url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_pristupnost(self, fixes: Union[Dict, None] = None):
         """Nastaví pristupnost.
-        
+
         :param fixes: Vstupní hodnota ``fixes`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if self.pk is None:
@@ -786,7 +787,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     @property
     def planovane_zahajeni_str(self):
         """Provádí operaci planovane zahajeni str.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.planovane_zahajeni:
             return f"[{self.planovane_zahajeni.lower}, {self.planovane_zahajeni.upper + datetime.timedelta(days=-1)}]"
@@ -796,7 +797,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     @property
     def planovane_zahajeni_vypis(self):
         """Provádí operaci planovane zahajeni vypis.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.planovane_zahajeni:
             return f"{self.planovane_zahajeni.lower.strftime('%-d.%-m.%Y')} - {(self.planovane_zahajeni.upper + datetime.timedelta(days=-1)).strftime('%-d.%-m.%Y')}"
@@ -805,13 +806,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
         """Vrací create user.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel,)
@@ -821,14 +822,14 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def get_create_org(self):
         """Vrací create org.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return (self.organizace,)
 
     @property
     def redis_snapshot_id(self):
         """Provádí operaci redis snapshot id.
-        
+
         :return: Vrací výsledek provedené operace."""
         from projekt.views import ProjektListView
 
@@ -836,7 +837,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def generate_redis_snapshot(self):
         """Vygeneruje redis snapshot.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         from projekt.tables import ProjektTable
 
@@ -847,7 +848,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def get_kraje_s_emailem(self):
         """Vrací kraje s emailem.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         all_katastre = RuianKatastr.objects.filter(
             Q(pk=self.hlavni_katastr.id) | Q(pk__in=self.katastry.values_list("id"))
@@ -866,11 +867,12 @@ class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return "P: " + str(self.projekt) + " - K: " + str(self.katastr)
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         unique_together = (("projekt", "katastr"),)
         db_table = "projekt_katastr"

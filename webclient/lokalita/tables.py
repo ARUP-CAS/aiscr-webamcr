@@ -72,6 +72,7 @@ class LokalitaTable(SearchTable):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Lokalita
         fields = (
             "druh",

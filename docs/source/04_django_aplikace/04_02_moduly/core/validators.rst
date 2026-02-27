@@ -12,4 +12,7 @@ Funkce
 
 .. py:function:: validate_date_min_1600(value)
 
-   Popis není k dispozici.
+   Validuje date min 1600.
+
+   :param value: Vstupní hodnota ``value`` pro danou operaci.
+   :return: Vrací výsledek ověření nebo validačního pravidla.

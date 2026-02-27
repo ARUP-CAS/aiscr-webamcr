@@ -33,7 +33,7 @@ class SelectMultipleSeparator(forms.SelectMultiple):
         choices=(),
     ):
         """Inicializuje instanci třídy.
-        
+
         :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
         :param choices: Vstupní hodnota ``choices`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -47,7 +47,7 @@ class TwoLevelSelectField(forms.CharField):
 
     def to_python(self, selected_value):
         """Provádí operaci to python.
-        
+
         :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if selected_value:
@@ -57,7 +57,7 @@ class TwoLevelSelectField(forms.CharField):
 
     def has_changed(self, initial, data) -> bool:
         """Určí, zda changed.
-        
+
         :param initial: Vstupní hodnota ``initial`` pro danou operaci.
         :param data: Vstupní hodnota ``data`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -73,7 +73,7 @@ class HeslarChoiceFieldField(forms.ChoiceField):
 
     def clean(self, selected_value):
         """Provádí operaci clean.
-        
+
         :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if selected_value:
@@ -83,7 +83,7 @@ class HeslarChoiceFieldField(forms.ChoiceField):
 
     def to_python(self, selected_value):
         """Provádí operaci to python.
-        
+
         :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if selected_value:
@@ -93,7 +93,7 @@ class HeslarChoiceFieldField(forms.ChoiceField):
 
     def has_changed(self, initial, data) -> bool:
         """Určí, zda changed.
-        
+
         :param initial: Vstupní hodnota ``initial`` pro danou operaci.
         :param data: Vstupní hodnota ``data`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -112,7 +112,7 @@ class CheckStavNotChangedForm(forms.Form):
 
     def __init__(self, db_stav=None, require_confirmation=False, dokument_warnings=None, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param db_stav: Vstupní hodnota ``db_stav`` pro danou operaci.
         :param require_confirmation: Vstupní hodnota ``require_confirmation`` pro danou operaci.
         :param dokument_warnings: Vstupní hodnota ``dokument_warnings`` pro danou operaci.
@@ -152,7 +152,7 @@ class CheckStavNotChangedForm(forms.Form):
 
     def clean(self):
         """Provádí operaci clean.
-        
+
         :return: Vrací výsledek provedené operace."""
         cleaned_data = super().clean()
         old_stav = self.cleaned_data.get("old_stav")
@@ -183,7 +183,7 @@ class VratitForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -195,11 +195,12 @@ class VratitForm(forms.Form):
 
 class VratitFormDokument(VratitForm):
     """Implementuje komponentu ``VratitFormDokument`` v rámci aplikace."""
+
     ident_cely = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -224,7 +225,7 @@ class VratitFormAZ(VratitForm):
 
     def __init__(self, *args, az, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param az: Vstupní hodnota ``az`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -246,7 +247,7 @@ class DecimalTextWideget(forms.widgets.TextInput):
 
     def format_value(self, value):
         """Provádí operaci format value.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if value == "" or value is None:
@@ -289,6 +290,7 @@ class OdstavkaSystemuForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = OdstavkaSystemu
         fields = (
             "info_od",
@@ -299,7 +301,7 @@ class OdstavkaSystemuForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -328,6 +330,7 @@ class OdstavkaSystemuForm(forms.ModelForm):
 
 class PermissionImportForm(forms.Form):
     """Implementuje komponentu ``PermissionImportForm`` v rámci aplikace."""
+
     file = forms.FileField(
         required=True,
         label=_("core.forms.permissionImport.file.label"),
@@ -347,6 +350,7 @@ class PermissionImportForm(forms.Form):
 
 class PermissionSkipImportForm(forms.Form):
     """Implementuje komponentu ``PermissionSkipImportForm`` v rámci aplikace."""
+
     file = forms.FileField(
         required=True,
         label=_("core.forms.permissionSkipImport.file.label"),
@@ -356,11 +360,12 @@ class PermissionSkipImportForm(forms.Form):
 
 class BaseFilterForm(forms.Form):
     """Implementuje komponentu ``BaseFilterForm`` v rámci aplikace."""
+
     list_to_check = ["historie_datum_zmeny_od"]
 
     def clean(self):
         """Provádí operaci clean.
-        
+
         :return: Vrací výsledek provedené operace."""
         cleaned_data = super(BaseFilterForm, self).clean()
         error_list = []
@@ -391,6 +396,7 @@ class BaseFilterForm(forms.Form):
 
 class TransaltionImportForm(forms.Form):
     """Implementuje komponentu ``TransaltionImportForm`` v rámci aplikace."""
+
     file = forms.FileField(
         required=True,
         label=_("core.forms.TransaltionImportForm.file.label"),
@@ -399,7 +405,7 @@ class TransaltionImportForm(forms.Form):
 
     def clean(self):
         """Provádí operaci clean.
-        
+
         :return: Vrací výsledek provedené operace."""
         cleaned_data = super().clean()
         file = cleaned_data.get("file")
@@ -412,6 +418,7 @@ class TransaltionImportForm(forms.Form):
 
 class ImportDataAdminForm(forms.Form):
     """Implementuje komponentu ``ImportDataAdminForm`` v rámci aplikace."""
+
     PERFORMED_ACTION_INSERT = "insert"
     PERFORMED_ACTION_UPDATE = "update"
     PERFORMED_ACTION_DELETE = "delete"

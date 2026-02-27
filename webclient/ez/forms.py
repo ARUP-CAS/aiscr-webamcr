@@ -42,6 +42,7 @@ class ExterniZdrojForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = ExterniZdroj
         fields = (
             "typ",
@@ -141,7 +142,7 @@ class ExterniZdrojForm(forms.ModelForm):
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
@@ -259,6 +260,7 @@ class ExterniOdkazForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = ExterniOdkaz
         fields = ("paginace",)
         labels = {
@@ -273,7 +275,7 @@ class ExterniOdkazForm(forms.ModelForm):
 
     def __init__(self, type_arch=None, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param type_arch: Vstupní hodnota ``type_arch`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -290,7 +292,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
 
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param type_arch: Vstupní hodnota ``type_arch`` pro danou operaci.
         :param dok: Vstupní hodnota ``dok`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
@@ -345,7 +347,7 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""

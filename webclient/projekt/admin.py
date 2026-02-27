@@ -3,6 +3,7 @@ from django.contrib import admin
 
 class ProjektAdmin(admin.ModelAdmin):
     """Implementuje komponentu ``ProjektAdmin`` v rámci aplikace."""
+
     list_display = (
         "ident_cely",
         "typ_projektu",

@@ -53,6 +53,12 @@ Třídy
 
    .. py:method:: changelist_view()
 
+      Provádí operaci changelist view.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_urls()
 
       Metoda pri definici dodatečných url.
@@ -78,6 +84,12 @@ Třídy
 
    .. py:method:: changelist_view()
 
+      Provádí operaci changelist view.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_urls()
 
       Metoda pri definici dodatečných url.
@@ -92,28 +104,59 @@ Třídy
 
    .. py:method:: check_save_row()
 
+      Ověří save row.
+
+      :param row: Vstupní hodnota ``row`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: import_skip_success()
 
       Metoda view pro zobrazení tabulky s výsledkom importu.
 
    .. py:method:: export_as_csv()
 
+      Exportuje as csv.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: FedoraCustomAdminSite
 
-   Popis není k dispozici.
+   Implementuje komponentu ``FedoraCustomAdminSite`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: _read_file()
 
+      Načte file.
+
+      :param uploaded_file: Vstupní hodnota ``uploaded_file`` pro danou operaci.
+      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: update_doi()
 
+      Aktualizuje doi.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: update_metadata_file_upload()
+
+      Aktualizuje metadata file upload.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: import_data()
 
       Creates a view for importing data from a zip file.
 
    .. py:method:: get_urls()
+
+      Vrací urls.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 

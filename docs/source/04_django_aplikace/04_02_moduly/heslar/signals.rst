@@ -8,7 +8,10 @@ Funkce
 
 .. py:function:: get_or_create_transaction(instance)
 
-   Popis není k dispozici.
+   Vrací or create transaction.
+
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: save_ident_cely(sender, instance)
 
@@ -28,7 +31,12 @@ Funkce
 
 .. py:function:: save_metadata_okres(sender, instance)
 
-   Popis není k dispozici.
+   Uloží metadata okres.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: save_metadata_heslar_hierarchie(sender, instance, created)
 
@@ -48,19 +56,39 @@ Funkce
 
 .. py:function:: heslar_delete_repository_container(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci heslar delete repository container.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: ruian_katastr_delete_repository_container(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci ruian katastr delete repository container.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: ruian_kraj_delete_repository_container(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci ruian kraj delete repository container.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: ruian_okres_delete_repository_container(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci ruian okres delete repository container.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: delete_uppdate_related_heslar_hierarchie(sender, instance)
 

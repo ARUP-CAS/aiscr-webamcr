@@ -304,20 +304,21 @@ def delete_file(request, typ_vazby, ident_cely, pk):
 
 class DownloadFile(LoginRequiredMixin, View):
     """Implementuje komponentu ``DownloadFile`` v rámci aplikace."""
+
     thumb_small = False
     thumb_large = False
 
     @staticmethod
     def _preprocess_image(file_content: BytesIO) -> BytesIO:
         """Provádí operaci preprocess image.
-        
+
         :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return file_content
 
     def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
@@ -350,11 +351,13 @@ class DownloadFile(LoginRequiredMixin, View):
 
 class DownloadThumbnailSmall(DownloadFile):
     """Implementuje komponentu ``DownloadThumbnailSmall`` v rámci aplikace."""
+
     thumb_small = True
 
 
 class DownloadThumbnailLarge(DownloadFile):
     """Implementuje komponentu ``DownloadThumbnailLarge`` v rámci aplikace."""
+
     thumb_large = True
 
 
@@ -367,7 +370,7 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -395,7 +398,7 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -409,7 +412,7 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -431,7 +434,7 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self):
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.typ_vazby = self.kwargs.get("typ_vazby")
         self.ident = self.kwargs.get("ident_cely")
@@ -453,7 +456,7 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.zaznam = self.get_zaznam()
@@ -477,7 +480,7 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -489,7 +492,7 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -525,7 +528,7 @@ class BasePostUploadView(View):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1271,7 +1274,7 @@ class ExportMixinDate(ExportMixin):
 
     def get_export_filename(self, export_format, export_name=None):
         """Vrací export filename.
-        
+
         :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
         :param export_name: Vstupní hodnota ``export_name`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -1283,6 +1286,7 @@ class ExportMixinDate(ExportMixin):
 
 class PermissionFilterMixin:
     """Implementuje komponentu ``PermissionFilterMixin`` v rámci aplikace."""
+
     permission_model_lookup = ""
     typ_zmeny_lookup = ""
     group_to_accessibility = {
@@ -1304,7 +1308,7 @@ class PermissionFilterMixin:
 
     def check_filter_permission(self, qs, action=None):
         """Ověří filter permission.
-        
+
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :param action: Vstupní hodnota ``action`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -1344,7 +1348,7 @@ class PermissionFilterMixin:
 
     def filter_by_permission(self, qs, permission):
         """Filtruje by permission.
-        
+
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1368,7 +1372,7 @@ class PermissionFilterMixin:
 
     def add_status_lookup(self, permission):
         """Provádí operaci add status lookup.
-        
+
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         filterdoc = {}
@@ -1397,7 +1401,7 @@ class PermissionFilterMixin:
 
     def add_ownership_lookup(self, ownership, qs=None):
         """Provádí operaci add ownership lookup.
-        
+
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1412,7 +1416,7 @@ class PermissionFilterMixin:
 
     def add_accessibility_lookup(self, permission, qs):
         """Provádí operaci add accessibility lookup.
-        
+
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -1442,14 +1446,14 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def create_export(self, export_format):
         """Vytvoří export.
-        
+
         :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         from redis import Redis
 
         def check_if_aborted(r_inner: Redis, key_inner: str):
             """Ověří if aborted.
-            
+
             :param r_inner: Vstupní hodnota ``r_inner`` pro danou operaci.
             :param key_inner: Vstupní hodnota ``key_inner`` pro danou operaci.
             :return: Vrací výsledek ověření nebo validačního pravidla."""
@@ -1460,7 +1464,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
         def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int, message: str):
             """Aktualizuje progress bar.
-            
+
             :param r_inner: Vstupní hodnota ``r_inner`` pro danou operaci.
             :param key_inner: Vstupní hodnota ``key_inner`` pro danou operaci.
             :param new_value: Vstupní hodnota ``new_value`` pro danou operaci.
@@ -1471,7 +1475,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
         def file_iterator(content, r, redis_variable_name, chunk_size=8192):
             """Provádí operaci file iterator.
-            
+
             :param content: Vstupní hodnota ``content`` pro danou operaci.
             :param r: Vstupní hodnota ``r`` pro danou operaci.
             :param redis_variable_name: Vstupní hodnota ``redis_variable_name`` pro danou operaci.
@@ -1591,7 +1595,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.page_title = ""
         self.search_sum = ""
@@ -1607,14 +1611,14 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def _get_sort_params(self):
         """Vrací sort params.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         sort_params = self.request.GET.getlist("sort")
         return sort_params
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -1640,7 +1644,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = super().get_queryset()
         qs.cache()
@@ -1649,7 +1653,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1676,7 +1680,7 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
 
     def get(self, request, model_name, ident_cely, timestamp):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
@@ -1688,7 +1692,7 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
 
         def context_processor(content):
             """Provádí operaci context processor.
-            
+
             :param content: Vstupní hodnota ``content`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             yield content
@@ -1707,9 +1711,10 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
 
 class CheckUserAuthentication(View):
     """Implementuje komponentu ``CheckUserAuthentication`` v rámci aplikace."""
+
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1786,7 +1791,7 @@ def post_ajax_get_pas_and_pian_limit(request):
 
 def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
     """Ověří soubor vazba.
-    
+
     :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
     :param ident: Vstupní hodnota ``ident`` pro danou operaci.
     :param id_zaznamu: Vstupní hodnota ``id_zaznamu`` pro danou operaci.
@@ -1805,9 +1810,10 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
 
 class ReadTempValueView(View):
     """Implementuje komponentu ``ReadTempValueView`` v rámci aplikace."""
+
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         r = RedisConnector.get_connection_decode()
@@ -1826,9 +1832,10 @@ class ReadTempValueView(View):
 
 class DeleteTempValueView(View):
     """Implementuje komponentu ``DeleteTempValueView`` v rámci aplikace."""
+
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         r = RedisConnector.get_connection()
@@ -1844,9 +1851,10 @@ class DeleteTempValueView(View):
 
 class AbortDownloadUpdateTempValueView(View):
     """Implementuje komponentu ``AbortDownloadUpdateTempValueView`` v rámci aplikace."""
+
     def get(self, request):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         r = RedisConnector.get_connection()
@@ -1905,7 +1913,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
 
     def form_valid(self, form):
         """Provádí operaci form valid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         new_pofile = form.cleaned_data["file"]
@@ -1945,7 +1953,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super(TranslationImportView, self).get_context_data(**kwargs)
@@ -1964,7 +1972,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
 
     def handle_uploaded_file(self, f):
         """Zpracuje uploaded file.
-        
+
         :param f: Vstupní hodnota ``f`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         with open(self.po_file_path, "wb+") as destination:
@@ -1979,7 +1987,7 @@ class TranslationFileListWithBackupView(TranslationFileListView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super(TranslationFileListView, self).get_context_data(**kwargs)
@@ -2019,7 +2027,7 @@ class TranslationFormWithBackupView(RosettaFileLevelMixinWithBackup, LoginRequir
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super(TranslationFormWithBackupView, self).get_context_data(**kwargs)
@@ -2036,7 +2044,7 @@ class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequir
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -2075,7 +2083,7 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -2090,7 +2098,7 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -2114,7 +2122,7 @@ class PrometheusMetricsView(IPWhitelistMixin, View):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -2132,7 +2140,7 @@ class ApplicationRestartView(LoginRequiredMixin, View):
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -2164,9 +2172,10 @@ class ApplicationRestartView(LoginRequiredMixin, View):
 
 class DataImportProgress(LoginRequiredMixin, View):
     """Implementuje komponentu ``DataImportProgress`` v rámci aplikace."""
+
     def get(self, request, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -2213,9 +2222,10 @@ class DataImportProgress(LoginRequiredMixin, View):
 
 class DataImportStop(LoginRequiredMixin, View):
     """Implementuje komponentu ``DataImportStop`` v rámci aplikace."""
+
     def get(self, request, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -2229,9 +2239,10 @@ class DataImportStop(LoginRequiredMixin, View):
 
 class DataImportStart(LoginRequiredMixin, View):
     """Implementuje komponentu ``DataImportStart`` v rámci aplikace."""
+
     def get(self, request, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""

@@ -325,7 +325,7 @@ def cancel_old_projects():
 @shared_task
 def update_snapshot_fields():
     """Aktualizuje snapshot fields.
-    
+
     :return: Vrací výsledek provedené operace."""
     try:
         logger.debug("core.cron.update_snapshot_fields.do.start")
@@ -364,7 +364,7 @@ def update_snapshot_fields():
 @shared_task
 def update_all_redis_snapshots(rewrite_existing=False):
     """Aktualizuje all redis snapshots.
-    
+
     :param rewrite_existing: Vstupní hodnota ``rewrite_existing`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
     logger.debug("cron.tasks.update_all_redis_snapshots.start")
@@ -404,7 +404,7 @@ def update_all_redis_snapshots(rewrite_existing=False):
 @shared_task
 def update_single_redis_snapshot(class_name: str, record_pk):
     """Aktualizuje single redis snapshot.
-    
+
     :param class_name: Vstupní hodnota ``class_name`` pro danou operaci.
     :param record_pk: Vstupní hodnota ``record_pk`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
@@ -434,7 +434,7 @@ def update_single_redis_snapshot(class_name: str, record_pk):
 @shared_task
 def update_materialized_views():
     """Aktualizuje materialized views.
-    
+
     :return: Vrací výsledek provedené operace."""
     logger.debug("cron.tasks.update_materialized_views.start")
 
@@ -460,7 +460,7 @@ def update_materialized_views():
 @shared_task
 def write_value_to_redis(key, value):
     """Zapíše value to redis.
-    
+
     :param key: Vstupní hodnota ``key`` pro danou operaci.
     :param value: Vstupní hodnota ``value`` pro danou operaci.
     :return: Vrací výsledek provedené operace."""
@@ -472,7 +472,7 @@ def write_value_to_redis(key, value):
 @shared_task
 def call_digiarchiv_update_task():
     """Provádí operaci call digiarchiv update task.
-    
+
     :return: Vrací výsledek provedené operace."""
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")
     url = settings.DIGIARCHIV_URL
@@ -483,7 +483,7 @@ def call_digiarchiv_update_task():
 @shared_task
 def run_data_import(job_id, user_id):
     """Spustí data import.
-    
+
     :param job_id: Identifikátor objektu ``job``.
     :param user_id: Identifikátor objektu ``user``.
     :return: Vrací výsledek provedené operace."""

@@ -313,7 +313,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self) -> DokumentacniJednotka:
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
@@ -323,7 +323,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         zaznam = self.get_zaznam()
@@ -339,7 +339,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -350,7 +350,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

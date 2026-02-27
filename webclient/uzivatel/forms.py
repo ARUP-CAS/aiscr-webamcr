@@ -36,6 +36,7 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
 
     class Meta(RegistrationForm):
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = (
             "first_name",
@@ -74,7 +75,7 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -115,10 +116,12 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
 
 class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
     """Implementuje komponentu ``AuthUserCreationFormWithRecaptcha`` v rámci aplikace."""
+
     captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)
 
     class Meta(AuthUserCreationForm):
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = (
             "first_name",
@@ -134,7 +137,7 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -150,6 +153,7 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = ("telefon", "orcid")
         labels = {
@@ -165,7 +169,7 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -202,6 +206,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = ("first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "groups")
         labels = {
@@ -235,7 +240,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -263,14 +268,16 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
 
 class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
     """Implementuje komponentu ``AuthUserChangeAdminForm`` v rámci aplikace."""
+
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -303,6 +310,7 @@ class NotificationsForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = ("notification_types",)
 
@@ -333,7 +341,7 @@ class UpdatePasswordSettings(forms.ModelForm):
 
     def clean(self):
         """Provádí operaci clean.
-        
+
         :return: Vrací výsledek provedené operace."""
         cleaned_data = super().clean()
         old_password = cleaned_data.get("old_password")[2:-2]
@@ -356,12 +364,13 @@ class UpdatePasswordSettings(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = ("password1", "password2")
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -385,7 +394,7 @@ class AuthUserLoginForm(AuthenticationForm):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -405,7 +414,7 @@ class AuthUserLoginForm(AuthenticationForm):
 
     def get_invalid_login_error(self):
         """Vrací invalid login error.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return ValidationError(
             _("uzivatel.forms.login.error"),
@@ -415,9 +424,10 @@ class AuthUserLoginForm(AuthenticationForm):
 
 class UserPasswordResetForm(PasswordResetForm):
     """Implementuje komponentu ``UserPasswordResetForm`` v rámci aplikace."""
+
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -476,6 +486,7 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Osoba
         fields = (
             "jmeno",
@@ -514,7 +525,7 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -551,4 +562,5 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
 
 class AuthActivationForm(ActivationForm):
     """Implementuje komponentu ``AuthActivationForm`` v rámci aplikace."""
+
     activation_key = forms.CharField(label=_("templates.djangoRegistration.activationKey.label"))

@@ -8,15 +8,30 @@ Třídy
 
 .. py:class:: SamostatnyNalez
 
-   Class pro db model samostantý nález.
+   Databázový model samostatného nálezu.
 
    **Metody:**
 
    .. py:method:: initial_pristupnost()
 
+      Provádí operaci initial pristupnost.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: initial_pristupnost()
 
+      Provádí operaci initial pristupnost.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: save()
+
+      Uloží změny objektu.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: set_zapsany()
 
@@ -44,7 +59,15 @@ Třídy
 
    .. py:method:: check_pred_archivaci()
 
+      Ověří pred archivaci.
+
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: check_pred_potvrzenim()
+
+      Ověří pred potvrzenim.
+
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: check_pred_odeslanim()
 
@@ -56,50 +79,137 @@ Třídy
 
    .. py:method:: nahled_soubor()
 
+      Provádí operaci nahled soubor.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: large_thumbnail()
+
+      Provádí operaci large thumbnail.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: small_thumbnail()
 
+      Provádí operaci small thumbnail.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: generate_coord_forms_initial()
+
+      Vygeneruje coord forms initial.
+
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: __str__()
 
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_permission_object()
+
+      Vrací permission object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_user()
 
+      Vrací create user.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_create_org()
+
+      Vrací create org.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: redis_snapshot_id()
 
+      Provádí operaci redis snapshot id.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: generate_redis_snapshot()
+
+      Vygeneruje redis snapshot.
+
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: set_igsn()
 
+      Nastaví igsn.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _get_igsn_client()
+
+      Vrací igsn client.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: igsn_exists()
 
+      Provádí operaci igsn exists.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: igsn_delete()
+
+      Provádí operaci igsn delete.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: igsn_hide()
 
+      Provádí operaci igsn hide.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: igsn_publish()
+
+      Provádí operaci igsn publish.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: igsn_update()
 
+      Provádí operaci igsn update.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: igsn_url()
+
+      Provádí operaci igsn url.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UzivatelSpoluprace
 
-   Class pro db model spolupráce.
+   Databázový model spolupráce.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: aktivni()
+
+      Provádí operaci aktivni.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: set_aktivni()
 
@@ -121,13 +231,38 @@ Třídy
 
    .. py:method:: __str__()
 
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_create_user()
+
+      Vrací create user.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_org()
 
+      Vrací create org.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: redis_snapshot_id()
+
+      Provádí operaci redis snapshot id.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: generate_redis_snapshot()
 
+      Vygeneruje redis snapshot.
+
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: get_by_ident_cely()
+
+      Vrací by ident cely.
+
+      :param pk: Primární klíč zpracovávaného záznamu.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 

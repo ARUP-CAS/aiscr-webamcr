@@ -8,5 +8,5 @@ Třídy
 
 .. py:class:: ExterniZdrojTable
 
-   Class pro definování tabulky pro externí zdroj použitých pro zobrazení přehledu zdrojů a exportu.
+   Definuje tabulku externích zdrojů pro přehled i export.
 

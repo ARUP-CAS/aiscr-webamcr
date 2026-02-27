@@ -8,15 +8,33 @@ Třídy
 
 .. py:class:: PianPermissionFilterMixin
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PianPermissionFilterMixin`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: filter_by_permission()
 
+      Filtruje by permission.
+
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: add_ownership_lookup()
 
+      Provádí operaci add ownership lookup.
+
+      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: add_accessibility_lookup()
+
+      Provádí operaci add accessibility lookup.
+
+      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: PianAutocomplete
@@ -27,6 +45,10 @@ Třídy
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: ImportovatPianView
 
@@ -36,7 +58,17 @@ Třídy
 
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: check_epsg()
+
+      Ověří epsg.
+
+      :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 Funkce

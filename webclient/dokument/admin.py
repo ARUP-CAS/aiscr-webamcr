@@ -5,6 +5,7 @@ from heslar.admin import ObjectWithMetadataAdmin
 
 class DokumentWithMetadataAdmin(ObjectWithMetadataAdmin):
     """Implementuje komponentu ``DokumentWithMetadataAdmin`` v rámci aplikace."""
+
     pass
 
 
@@ -46,7 +47,7 @@ class LetAdmin(DokumentWithMetadataAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         """Vrací readonly fields.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""

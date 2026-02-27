@@ -25,11 +25,29 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: rename_field_for_ordering()
+
+      Provádí operaci rename field for ordering.
+
+      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_queryset()
 
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: LokalitaDetailView
@@ -40,17 +58,32 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_archeologicky_zaznam()
 
       Metoda pro získaní akce z db.
 
    .. py:method:: check_locality_arch_z_conflict()
 
+      Ověří locality arch z conflict.
+
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: get_context_data()
 
       Metoda pro získaní contextu akci pro template.
 
    .. py:method:: get_shows()
+
+      Vrací shows.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: LokalitaCreateView
@@ -61,13 +94,42 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: form_valid()
+
+      Provádí operaci form valid.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: form_invalid()
 
+      Provádí operaci form invalid.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: LokalitaEditView
@@ -78,13 +140,42 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: form_valid()
+
+      Provádí operaci form valid.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: form_invalid()
 
+      Provádí operaci form invalid.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: LokalitaRelatedView
@@ -100,6 +191,11 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: LokalitaDokumentacniJednotkaRelatedView
 
@@ -109,9 +205,25 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_dokumentacni_jednotka()
 
+      Vrací dokumentacni jednotka.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: LokalitaDokumentacniJednotkaUpdateView
@@ -122,6 +234,11 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: LokalitaKomponentaCreateView
 
@@ -131,7 +248,19 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: LokalitaKomponentaUpdateView
@@ -142,9 +271,25 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_komponenta()
 
+      Vrací komponenta.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: LokalitaPianCreateView
@@ -155,7 +300,19 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: LokalitaPianUpdateView
@@ -166,11 +323,34 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_pian()
+
+      Vrací pian.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce

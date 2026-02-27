@@ -77,9 +77,10 @@ REQUIRED_SECTIONS = ("steps", "expected")
 @dataclass(frozen=True)
 class TestDoc:
     """Třída `TestDoc` v modulu `docs.generate_selenium_test_docs`.
-    
+
     Zapouzdřuje související data a chování v rámci dané části aplikace.
     """
+
     app: str
     test_no: Optional[int]
     summary: str
@@ -503,9 +504,9 @@ def _render(all_docs: List[TestDoc]) -> str:
 
     def sort_key(t: TestDoc):
         """Funkce `sort_key` v modulu `docs.generate_selenium_test_docs`.
-        
+
         Zajišťuje dílčí aplikační logiku pro tento modul.
-        
+
         :param t: Vstupní hodnota používaná při zpracování.
         :return: Výsledek odpovídající účelu volání.
         """

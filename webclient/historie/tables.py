@@ -24,7 +24,7 @@ class HistorieTable(ColumnShiftTableBootstrap4):
 
     def render_uzivatel_custom(self, record):
         """Vyrenderuje uzivatel custom.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if not record.uzivatel:
@@ -33,6 +33,7 @@ class HistorieTable(ColumnShiftTableBootstrap4):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Historie
         fields = (
             "typ_zmeny",
@@ -44,10 +45,12 @@ class HistorieTable(ColumnShiftTableBootstrap4):
 
 class SimpleHistoryTable(ColumnShiftTableBootstrap4):
     """Implementuje komponentu ``SimpleHistoryTable`` v rámci aplikace."""
+
     history_date = columns.DateTimeColumn(format="Y-m-d, H:i", default="")
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         fields = ("history_date",)
 
 
@@ -81,7 +84,7 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
 
     def render_uzivatel(self, record):
         """Vyrenderuje uzivatel.
-        
+
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         uzivatel = User.objects.filter(ident_cely=record["uzivatel"]).first()
@@ -91,7 +94,7 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
 
     def render_url(self, value, record):
         """Vyrenderuje url.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -104,7 +107,7 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
 
     def value_url(self, value, record):
         """Provádí operaci value url.
-        
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -112,6 +115,7 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         attrs = {"class": "table-shifter table fedora-table"}
         fields = ("url", "datum", "uzivatel")
         order_by = ("-datum",)

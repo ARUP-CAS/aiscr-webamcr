@@ -8,5 +8,5 @@ Třídy
 
 .. py:class:: ProjektAdmin
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ProjektAdmin`` v rámci aplikace.
 

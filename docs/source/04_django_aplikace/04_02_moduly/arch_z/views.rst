@@ -38,6 +38,10 @@ Třídy
 
    .. py:method:: check_locality_arch_z_conflict()
 
+      Ověří locality arch z conflict.
+
+      :return: Vrací výsledek ověření nebo validačního pravidla.
+
    .. py:method:: get_context_data()
 
       Metoda pro získaní contextu akci pro template.
@@ -66,6 +70,13 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_dokumentacni_jednotka()
 
       Metoda pro získani záznamu DJ z db podle ident_cely.
@@ -75,6 +86,13 @@ Třídy
       Metoda pro získaní context dat DJ navíc oproti přepisované metóde, záznam DJ.
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentacniJednotkaCreateView
@@ -88,6 +106,13 @@ Třídy
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření DJ.
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentacniJednotkaUpdateView
@@ -120,11 +145,22 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_komponenta()
 
       Metoda pro získani záznamu komponenty z db podle ident_cely.
 
    .. py:method:: get_dokumentacni_jednotka()
+
+      Vrací dokumentacni jednotka.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_context_data()
 
@@ -144,6 +180,13 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
 
 .. py:class:: PianUpdateView
 
@@ -153,11 +196,25 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_context_data()
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro editaci PIANu.
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AdbCreateView
@@ -173,7 +230,7 @@ Třídy
 
 .. py:class:: GetAkceOtherKatastrView
 
-   Popis není k dispozici.
+   Implementuje komponentu ``GetAkceOtherKatastrView`` v rámci aplikace.
 
    **Metody:**
 
@@ -201,9 +258,22 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: rename_field_for_ordering()
 
+      Provádí operaci rename field for ordering.
+
+      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ProjektAkceChange
@@ -218,7 +288,7 @@ Třídy
 
    .. py:method:: get()
 
-      Metoda pro vrácení stránky pri voláni GET.
+      Metoda pro vrácení stránky při volání GET.
 
    .. py:method:: post()
 
@@ -241,7 +311,7 @@ Třídy
 
    .. py:method:: get()
 
-      Metoda pro vrácení stránky pri voláni GET s formulářem pro výber projektu.
+      Metoda pro vrácení stránky při volání GET s formulářem pro výběr projektu.
 
    .. py:method:: post()
 
@@ -260,7 +330,16 @@ Třídy
 
    .. py:method:: get_result_label()
 
+      Vrací result label.
+
+      :param result: Vstupní hodnota ``result`` pro danou operaci.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_queryset()
+
+      Vrací queryset.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ArchZTableRowView
@@ -270,6 +349,11 @@ Třídy
    **Metody:**
 
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -285,43 +369,43 @@ Funkce
 
 .. py:function:: edit(request, ident_cely)
 
-   Funkce pohledu pro zobrazení a spracováni editace akce.
-   Na začátku se kontroluje jestli stav není archivovaný.
-   Zobrazení pozostáva ze 3 formulářů: CreateArchZForm, CreateAkceForm, formset na další vedoucí.
+   Funkce pohledu pro zobrazení a zpracování editace akce.
+   Na začátku se kontroluje, jestli stav není archivovaný.
+   Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
 
 .. py:function:: odeslat(request, ident_cely)
 
-   Funkce pohledu pro zobrazení a spracováni odeslání akce.
-   Na začátku se kontroluje jestli stav není jiný než zapsaný nebo nekdo nezmenil stav akce během odesílaní.
-   Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metody na modelu.
-   Po post volání se volá metoda na modelu pro posun stavu do odeslaná.
+   Funkce pohledu pro zobrazení a zpracování odeslání akce.
+   Na začátku se kontroluje, jestli stav není jiný než zapsaný nebo někdo nezměnil stav akce během odesílání.
+   Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
+   Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
 
 .. py:function:: archivovat(request, ident_cely)
 
-   Funkce pohledu pro zobrazení a spracováni archivace akce.
-   Na začátku se kontroluje jestli stav není jiný než odeslaný nebo nekdo nezmenil stav akce během archivace.
-   Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metody na modelu.
-   Po post volání se volá metoda na modelu pro posun stavu do odeslaná.
+   Funkce pohledu pro zobrazení a zpracování archivace akce.
+   Na začátku se kontroluje, jestli stav není jiný než odeslaný nebo někdo nezměnil stav akce během archivace.
+   Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
+   Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
 
 .. py:function:: vratit(request, ident_cely)
 
-   Funkce pohledu pro zobrazení a spracováni vrácení stacu akce o jedno naspátek.
-   Na začátku se kontroluje jestli nekdo nezmenil stav akce během vrácení.
-   Pro vrácení se používa formulář pro vrácení, který je jednotný napríč aplikací.
-   Po post volání se volá metoda na modelu pro posun stavu naspátek.
+   Funkce pohledu pro zobrazení a zpracování vrácení stavu akce o jeden krok zpět.
+   Na začátku se kontroluje, jestli někdo nezměnil stav akce během vrácení.
+   Pro vrácení se používá formulář pro vrácení, který je jednotný napříč aplikací.
+   Po POST volání se volá metoda na modelu pro posun stavu zpět.
    Pokud se jedná o projektovou akci, tak se vrací i stav projektu ze stavu uzavřený nebo archivovaný.
 
 .. py:function:: zapsat(request, projekt_ident_cely)
 
    Funkce pohledu pro vytvoření akce.
-   Na začátku se kontroluje jestli jde o vytvoření projektové nebo samostatné akce a případně zda je možné vytvořit projektovou akci.
-   Zobrazení pozostáva ze 3 formulářů: CreateArchZForm, CreateAkceForm, formset na další vedoucí.
+   Na začátku se kontroluje, jestli jde o vytvoření projektové nebo samostatné akce a zda je možné projektovou akci vytvořit.
+   Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
 
 .. py:function:: smazat(request, ident_cely)
 
-   Funkce pohledu pro zobrazení a spracováni smazání akce.
-   Na začátku se kontroluje jestli nekdo nezmenil stav akce během smazání.
-   Po post volání se volá metoda na modelu pro smazání akce.
+   Funkce pohledu pro zobrazení a zpracování smazání akce.
+   Na začátku se kontroluje, jestli někdo nezměnil stav akce během smazání.
+   Po POST volání se volá metoda na modelu pro smazání akce.
 
 .. py:function:: pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely)
 

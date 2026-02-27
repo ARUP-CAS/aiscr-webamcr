@@ -8,11 +8,15 @@ Třídy
 
 .. py:class:: SouborTypFilter
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SouborTypFilter`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: field()
+
+      Provádí operaci field.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: HistorieFilter
@@ -23,7 +27,16 @@ Třídy
 
    .. py:method:: set_filter_fields()
 
+      Nastaví filter fields.
+
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: _get_history_subquery()
+
+      Vrací history subquery.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: Model3DFilter
@@ -33,6 +46,11 @@ Třídy
    **Metody:**
 
    .. py:method:: filter_queryset()
+
+      Filtruje queryset.
+
+      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: filter_popisne_udaje()
 
@@ -48,6 +66,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: Model3DFilterFormHelper
 
@@ -56,6 +80,11 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: DokumentFilter
@@ -122,6 +151,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: DokumentFilterFormHelper
 
@@ -130,4 +165,9 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 

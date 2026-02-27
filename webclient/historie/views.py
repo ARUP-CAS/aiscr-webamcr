@@ -58,7 +58,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not self.use_history_table:
             return self.model.objects.none()
@@ -104,7 +104,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
 
     def get_table(self, **kwargs):
         """Vrací table.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not self.use_history_table:
@@ -113,7 +113,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not self.use_history_table:
@@ -137,7 +137,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
 
     def render_to_response(self, context, **response_kwargs):
         """Vyrenderuje to response.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :param response_kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -164,7 +164,7 @@ class ProjektHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
@@ -185,7 +185,7 @@ class AkceHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
@@ -205,7 +205,7 @@ class DokumentHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident = context["ident_cely"]
@@ -223,7 +223,7 @@ class DokumentHistorieListView(HistorieListView):
 
     def add_extra_context(self, context):
         """Provádí operaci add extra context.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         ident = self.get_lookup_value()
@@ -243,7 +243,7 @@ class SamostatnyNalezHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
@@ -265,7 +265,7 @@ class SpolupraceHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
@@ -288,14 +288,14 @@ class SouborHistorieListView(HistorieListView):
 
     def prepare_queryset(self, qs):
         """Provádí operaci prepare queryset.
-        
+
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return qs.order_by("-datum_zmeny")
 
     def add_extra_context(self, context):
         """Provádí operaci add extra context.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         soubor_id = self.get_lookup_value()
@@ -313,7 +313,7 @@ class SouborHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         nav = context["back_model"]
@@ -356,7 +356,7 @@ class LokalitaHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
@@ -377,7 +377,7 @@ class UzivatelHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         next_url = self.request.GET.get("next", reverse("uzivatel:update-uzivatel"))
@@ -399,7 +399,7 @@ class ExterniZdrojHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
@@ -420,7 +420,7 @@ class PianHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
@@ -441,7 +441,7 @@ class PianLokalitaHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {
@@ -464,7 +464,7 @@ class AdbHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """Vrací header config.
-        
+
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return {

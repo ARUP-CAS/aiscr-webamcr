@@ -17,7 +17,7 @@ CLAMD_PORT = 3310
 
 def get_test_secret(setting, default_value=None):
     """Vrací test secret.
-    
+
     :param setting: Vstupní hodnota ``setting`` pro danou operaci.
     :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""

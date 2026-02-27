@@ -19,6 +19,7 @@ class CreateKomponentaForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Komponenta
         fields = ("presna_datace", "poznamka", "jistota", "aktivity", "obdobi", "areal")
 
@@ -54,7 +55,7 @@ class CreateKomponentaForm(forms.ModelForm):
         self, obdobi_choices, areal_choices, *args, readonly=False, required=None, required_next=None, **kwargs
     ):
         """Inicializuje instanci třídy.
-        
+
         :param obdobi_choices: Vstupní hodnota ``obdobi_choices`` pro danou operaci.
         :param areal_choices: Vstupní hodnota ``areal_choices`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.

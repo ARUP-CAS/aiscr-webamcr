@@ -33,7 +33,7 @@ def validate_phone_number(number):
 
 def validate_date_min_1600(value):
     """Validuje date min 1600.
-    
+
     :param value: Vstupní hodnota ``value`` pro danou operaci.
     :return: Vrací výsledek ověření nebo validačního pravidla."""
     min_date = datetime(1600, 1, 1).date()

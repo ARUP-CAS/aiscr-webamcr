@@ -14,7 +14,18 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: filter_queryset()
+
+      Filtruje queryset.
+
+      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: filter_obdobi()
 
@@ -41,7 +52,18 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: filter_queryset()
+
+      Filtruje queryset.
+
+      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: SamostatnyNalezFilterFormHelper
@@ -52,6 +74,11 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: UzivatelSpolupraceFilterFormHelper
 
@@ -60,4 +87,9 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 

@@ -27,11 +27,12 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "komponenta_vazby"
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -41,7 +42,7 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
     @property
     def navazany_objekt(self):
         """Provádí operaci navazany objekt.
-        
+
         :return: Vrací výsledek provedené operace."""
         if hasattr(self, "casti_dokumentu") and self.casti_dokumentu:
             return self.casti_dokumentu
@@ -87,7 +88,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -99,25 +100,26 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
     @property
     def ident_cely_safe(self):
         """Provádí operaci ident cely safe.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.ident_cely.replace("-", "_")
 
     @property
     def pocet_nalezu(self):
         """Provádí operaci pocet nalezu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.objekty.all().count() + self.predmety.all().count()
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "komponenta"
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
         """Vrací absolute url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             from arch_z.models import ArcheologickyZaznam
@@ -153,7 +155,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
@@ -162,7 +164,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     def create_transaction(self, transaction_user):
         """Vytvoří transaction.
-        
+
         :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
         from core.repository_connector import FedoraTransaction
@@ -172,7 +174,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     def set_transaction_main_record(self):
         """Nastaví transaction main record.
-        
+
         :return: Vrací výsledek provedené operace."""
         try:
             related_model = self.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam
@@ -196,5 +198,6 @@ class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), mode
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "komponenta_aktivita"
         unique_together = (("komponenta", "aktivita"),)

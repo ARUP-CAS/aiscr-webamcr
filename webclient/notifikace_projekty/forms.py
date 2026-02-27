@@ -32,16 +32,18 @@ def create_pes_form(not_readonly=True, model_typ=None):
 
     class PesForm(forms.ModelForm):
         """Implementuje komponentu ``PesForm`` v rámci aplikace."""
+
         admin_app = False
 
         class Meta:
             """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = Pes
             fields = ["object_id"]
 
         def __init__(self, *args, **kwargs):
             """Inicializuje instanci třídy.
-            
+
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
             :return: Funkce nevrací hodnotu (``None``)."""
@@ -117,7 +119,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
 
         def save(self, commit=True):
             """Uloží změny objektu.
-            
+
             :param commit: Vstupní hodnota ``commit`` pro danou operaci.
             :return: Vrací výsledek provedené operace."""
             instance = super(PesForm, self).save(commit=False)
@@ -133,7 +135,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
 
         def clean(self, *args, **kwargs):
             """Provádí operaci clean.
-            
+
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
             :return: Vrací výsledek provedené operace."""
@@ -146,9 +148,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
                 content_type=ContentType.objects.get(model=self.model_typ),
                 user=self.instance.user,
             )
-            if (
-                self.instance.pk
-            ):  # pokud je instance už v databázi, je potřeba vyloučit sama sebe ze seznamu duplicit
+            if self.instance.pk:  # pokud je instance už v databázi, je potřeba vyloučit sama sebe ze seznamu duplicit
                 duplicates = duplicates.exclude(pk=self.instance.pk)
             if duplicates.exists():
                 raise forms.ValidationError(_("notifikaceProjekty.forms.pesForm.stejnaJendotka.error"))
@@ -158,9 +158,10 @@ def create_pes_form(not_readonly=True, model_typ=None):
 
 class PesFormSetHelper(FormHelper):
     """Implementuje komponentu ``PesFormSetHelper`` v rámci aplikace."""
+
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -185,12 +186,13 @@ class PesNotificationsForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = User
         fields = ("notification_types",)
 
     def __init__(self, pes_object_count=0, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param pes_object_count: Vstupní hodnota ``pes_object_count`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -202,7 +204,7 @@ class PesNotificationsForm(forms.ModelForm):
 
     def clean(self):
         """Provádí operaci clean.
-        
+
         :return: Vrací výsledek provedené operace."""
         cleaned_data = super().clean()
         if self.pes_object_count == 0 or not cleaned_data.get("notification_types"):
@@ -214,9 +216,10 @@ class PesNotificationsForm(forms.ModelForm):
 
 class PesInlineFormSet(forms.BaseInlineFormSet):
     """Implementuje komponentu ``PesInlineFormSet`` v rámci aplikace."""
+
     def count_non_empty_forms(self):
         """Provádí operaci count non empty forms.
-        
+
         :return: Vrací výsledek provedené operace."""
         non_empty_count = 0
         for form in self.forms:

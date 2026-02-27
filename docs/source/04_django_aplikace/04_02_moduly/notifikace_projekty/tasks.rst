@@ -8,7 +8,10 @@ Funkce
 
 .. py:function:: get_project_type_notification(projekt_type)
 
-   Vrací typ notifikace pro projekt podle typu.
+   Vrací project type notification.
+
+   :param projekt_type: Vstupní hodnota ``projekt_type`` pro danou operaci.
+   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: check_hlidaci_pes(projekt_id)
 

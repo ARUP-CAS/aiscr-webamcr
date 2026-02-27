@@ -22,15 +22,16 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceLokality(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceLokality`` v rámci aplikace."""
+
     def go_to_form_zapsat(self):
         """Provádí operaci go to form zapsat.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/arch-z/lokalita/zapsat")
 
     def go_to_form_vybrat(self):
         """Provádí operaci go to form vybrat.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.goToAddress("/arch-z/lokalita/vyber?sort=nazev")
 

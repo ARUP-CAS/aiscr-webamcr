@@ -18,6 +18,7 @@ class NeidentAkceForm(forms.ModelForm):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = NeidentAkce
         fields = (
             "katastr",
@@ -74,11 +75,12 @@ class NeidentAkceForm(forms.ModelForm):
 
     class Media:
         """Implementuje komponentu ``Media`` v rámci aplikace."""
+
         js = ["js/create_osoba_modal.js"]
 
     def __init__(self, *args, readonly=False, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.

@@ -14,6 +14,11 @@ Třídy
 
    .. py:method:: clean()
 
+      Provádí operaci clean.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: CoordinatesDokumentForm
 
@@ -28,6 +33,15 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+      :param required: Vstupní hodnota ``required`` pro danou operaci.
+      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: EditDokumentForm
 
@@ -36,6 +50,16 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+      :param required: Vstupní hodnota ``required`` pro danou operaci.
+      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param can_edit_datum_zverejneni: Vstupní hodnota ``can_edit_datum_zverejneni`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: CreateModelDokumentForm
@@ -46,6 +70,15 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+      :param required: Vstupní hodnota ``required`` pro danou operaci.
+      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: CreateModelExtraDataForm
 
@@ -54,6 +87,15 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+      :param required: Vstupní hodnota ``required`` pro danou operaci.
+      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: PripojitDokumentForm
@@ -64,6 +106,13 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param ident_zaznam: Vstupní hodnota ``ident_zaznam`` pro danou operaci.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: DokumentCastForm
 
@@ -72,6 +121,13 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: DokumentCastCreateForm
@@ -82,6 +138,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: TvarFormSetHelper
 
@@ -91,10 +153,16 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: DokumentFilterForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DokumentFilterForm`` v rámci aplikace.
 
 
 Funkce

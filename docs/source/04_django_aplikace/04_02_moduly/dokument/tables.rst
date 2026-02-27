@@ -8,11 +8,17 @@ Třídy
 
 .. py:class:: Model3DTable
 
-   Class pro definování tabulky pro modelu 3D použitých pro zobrazení přehledu modelu 3D a exportu.
+   Definuje tabulku 3D modelů pro přehled i export.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: render_nahled()
 
@@ -21,7 +27,7 @@ Třídy
 
 .. py:class:: DokumentTable
 
-   Class pro definování tabulky pro dokumenty použitých pro zobrazení přehledu dokumentů a exportu.
+   Definuje tabulku dokumentů pro přehled i export.
 
    **Metody:**
 
@@ -30,4 +36,10 @@ Třídy
       Metoda pro správně zobrazení náhledu souboru.
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 

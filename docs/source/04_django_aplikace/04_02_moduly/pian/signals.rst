@@ -18,4 +18,9 @@ Funkce
 
 .. py:function:: samostatny_nalez_okres_delete_repository_container(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci samostatny nalez okres delete repository container.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.

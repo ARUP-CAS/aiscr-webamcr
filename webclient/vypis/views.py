@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def add_section_data(instance, section, fields, sections_data, iterator=False, user=None):
     """Provádí operaci add section data.
-    
+
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param section: Vstupní hodnota ``section`` pro danou operaci.
     :param fields: Vstupní hodnota ``fields`` pro danou operaci.
@@ -85,11 +85,12 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
 
 class VypisView(LoginRequiredMixin, TemplateView):
     """Implementuje komponentu ``VypisView`` v rámci aplikace."""
+
     template_name = "vypis/vypis.html"
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -129,16 +130,18 @@ class VypisView(LoginRequiredMixin, TemplateView):
 
 class VypisOnlyView(VypisView):
     """Implementuje komponentu ``VypisOnlyView`` v rámci aplikace."""
+
     template_name = "vypis/vypis_only.html"
 
 
 class VypisListView(LoginRequiredMixin, TemplateView):
     """Implementuje komponentu ``VypisListView`` v rámci aplikace."""
+
     template_name = "vypis/vypis_list.html"
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)

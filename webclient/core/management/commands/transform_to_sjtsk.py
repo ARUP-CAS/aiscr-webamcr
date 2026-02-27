@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Provádí operaci add arguments.
-        
+
         :param parser: Vstupní hodnota ``parser`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         parser.add_argument(
@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Zpracuje hodnotu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -72,7 +72,7 @@ class Command(BaseCommand):
 
     def _transform_pian(self):
         """Transformuje pian.
-        
+
         :return: Vrací výsledek provedené operace."""
         from pian.models import Pian
 
@@ -150,7 +150,7 @@ class Command(BaseCommand):
 
     def _transform_nalez(self):
         """Transformuje nalez.
-        
+
         :return: Vrací výsledek provedené operace."""
         from pas.models import SamostatnyNalez
 
@@ -228,7 +228,7 @@ class Command(BaseCommand):
 
     def _transform_projekt(self):
         """Transformuje projekt.
-        
+
         :return: Vrací výsledek provedené operace."""
         from projekt.models import Projekt
 
@@ -306,7 +306,7 @@ class Command(BaseCommand):
 
     def _transform_dokument(self):
         """Transformuje dokument.
-        
+
         :return: Vrací výsledek provedené operace."""
         from dokument.models import DokumentExtraData
 

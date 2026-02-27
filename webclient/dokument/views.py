@@ -250,7 +250,7 @@ class Model3DListView(SearchListView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         super().init_translations()
         self.page_title = _("dokument.views.Model3DListView.pageTitle.text")
@@ -265,7 +265,7 @@ class Model3DListView(SearchListView):
     @staticmethod
     def rename_field_for_ordering(field: str):
         """Provádí operaci rename field for ordering.
-        
+
         :param field: Vstupní hodnota ``field`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         field = field.replace("-", "")
@@ -278,7 +278,7 @@ class Model3DListView(SearchListView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -287,7 +287,7 @@ class Model3DListView(SearchListView):
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
@@ -333,7 +333,7 @@ class DokumentListView(SearchListView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         super().init_translations()
         self.page_title = _("dokument.views.DokumentListView.pageTitle.text")
@@ -347,7 +347,7 @@ class DokumentListView(SearchListView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -357,7 +357,7 @@ class DokumentListView(SearchListView):
     @staticmethod
     def rename_field_for_ordering(field: str):
         """Provádí operaci rename field for ordering.
-        
+
         :param field: Vstupní hodnota ``field`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         field = field.replace("-", "")
@@ -380,7 +380,7 @@ class DokumentListView(SearchListView):
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
@@ -587,7 +587,7 @@ class DokumentDetailView(RelatedContext):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -604,7 +604,7 @@ class DokumentCastDetailView(RelatedContext):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -624,7 +624,7 @@ class DokumentCastDetailView(RelatedContext):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -651,7 +651,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -669,7 +669,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         """Vrací success url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = self.get_context_data()
         dc = context["object"]
@@ -677,7 +677,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         """Vrací object.
-        
+
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if hasattr(self, "object"):
@@ -691,7 +691,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -704,7 +704,7 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """Provádí operaci form invalid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
@@ -721,7 +721,7 @@ class KomponentaDokumentDetailView(RelatedContext):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -741,7 +741,7 @@ class KomponentaDokumentDetailView(RelatedContext):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -773,7 +773,7 @@ class KomponentaDokumentCreateView(RelatedContext):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -793,7 +793,7 @@ class KomponentaDokumentCreateView(RelatedContext):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -808,7 +808,7 @@ class KomponentaDokumentCreateView(RelatedContext):
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -824,7 +824,7 @@ class TvarEditView(LoginRequiredMixin, View):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -866,7 +866,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args: Any, **kwargs: Any) -> HttpResponse:
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -880,7 +880,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self):
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         id = self.kwargs.get("pk")
         return get_object_or_404(
@@ -890,7 +890,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         zaznam = self.get_zaznam()
@@ -905,7 +905,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -916,7 +916,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -940,7 +940,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self) -> Dokument:
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
@@ -950,7 +950,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         zaznam = self.get_zaznam()
@@ -966,7 +966,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -977,7 +977,7 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1028,14 +1028,14 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = "title"
         self.button = "button"
 
     def get_zaznam(self) -> DokumentCast:
         """Vrací zaznam.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("dokument.views.TransakceView.get_zaznam", extra={"ident_cely": ident_cely})
@@ -1046,7 +1046,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         self.init_translations()
@@ -1063,7 +1063,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         """Provádí operaci dispatch.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1085,7 +1085,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1095,7 +1095,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1117,7 +1117,7 @@ class DokumentCastPripojitAkciView(TransakceView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
@@ -1125,7 +1125,7 @@ class DokumentCastPripojitAkciView(TransakceView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -1140,7 +1140,7 @@ class DokumentCastPripojitAkciView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1175,7 +1175,7 @@ class DokumentCastPripojitProjektView(TransakceView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
@@ -1183,7 +1183,7 @@ class DokumentCastPripojitProjektView(TransakceView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -1195,7 +1195,7 @@ class DokumentCastPripojitProjektView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1226,7 +1226,7 @@ class DokumentCastOdpojitView(TransakceView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("dokument.views.DokumentCastOdpojitView.title.text")
         self.button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
@@ -1234,7 +1234,7 @@ class DokumentCastOdpojitView(TransakceView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -1254,7 +1254,7 @@ class DokumentCastOdpojitView(TransakceView):
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1308,7 +1308,7 @@ class DokumentCastSmazatView(TransakceView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("dokument.views.DokumentCastSmazatView.title.text")
         self.button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
@@ -1316,7 +1316,7 @@ class DokumentCastSmazatView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -1377,7 +1377,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
 
     def init_translations(self):
         """Provádí operaci init translations.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
         self.button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
@@ -1385,7 +1385,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -1394,7 +1394,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -2075,14 +2075,14 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
     def get_result_label(self, result):
         """Vrací result label.
-        
+
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})"
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
@@ -2701,7 +2701,7 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
 
     def get(self, request, typ_vazby, ident_cely):
         """Vrací výsledek operace.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.

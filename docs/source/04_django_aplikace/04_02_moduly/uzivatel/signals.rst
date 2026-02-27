@@ -8,11 +8,21 @@ Funkce
 
 .. py:function:: orgnaizace_save_metadata(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci orgnaizace save metadata.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: osoba_save_metadata(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci osoba save metadata.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: create_ident_cely(sender, instance)
 
@@ -20,7 +30,13 @@ Funkce
 
 .. py:function:: user_post_save_method(sender, instance, created)
 
-   Popis není k dispozici.
+   Provádí operaci user post save method.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param created: Vstupní hodnota ``created`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: send_deactivation_email(sender, instance)
 
@@ -32,7 +48,13 @@ Funkce
 
 .. py:function:: delete_user_connections(sender, instance)
 
-   Popis není k dispozici.
+   Odstraní user connections.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param args: Dodatečné poziční argumenty předané voláním.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek operace odstranění.
 
 .. py:function:: delete_profile(sender, instance)
 
@@ -40,12 +62,28 @@ Funkce
 
 .. py:function:: osoba_delete_repository_container(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci osoba delete repository container.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: organizace_delete_repository_container(sender, instance)
 
-   Popis není k dispozici.
+   Provádí operaci organizace delete repository container.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: log_user_signin(sender, user, request)
 
-   Popis není k dispozici.
+   Provádí operaci log user signin.
+
+   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
+   :param user: Vstupní hodnota ``user`` pro danou operaci.
+   :param request: Django HTTP požadavek použitý při zpracování.
+   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :return: Vrací výsledek provedené operace.

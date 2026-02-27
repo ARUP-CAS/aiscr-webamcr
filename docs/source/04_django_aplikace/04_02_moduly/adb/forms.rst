@@ -8,11 +8,16 @@ Třídy
 
 .. py:class:: AdbReadOnlyTextInput
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AdbReadOnlyTextInput`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: format_value()
+
+      Provádí operaci format value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: CreateADBForm
@@ -38,6 +43,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 Funkce
 ------
@@ -49,7 +60,7 @@ Funkce
 
    **Argumenty:**
 
-   - ``pian`` (*pian*): pian objeckt.
+   - ``pian`` (*pian*): objekt PIAN.
    - ``niveleta`` (*niveleta*): niveleta objekt.
    - ``not_readonly`` (*boolean*): nastavuje formulář na readonly.
 

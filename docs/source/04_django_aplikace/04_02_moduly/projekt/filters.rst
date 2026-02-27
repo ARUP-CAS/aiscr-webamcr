@@ -8,11 +8,15 @@ Třídy
 
 .. py:class:: Users
 
-   Popis není k dispozici.
+   Implementuje komponentu ``Users`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: active_processes()
+
+      Provádí operaci active processes.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: KatastrFilterMixin
@@ -46,6 +50,11 @@ Třídy
    **Metody:**
 
    .. py:method:: filter_queryset()
+
+      Filtruje queryset.
+
+      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: filter_planovane_zahajeni()
 
@@ -109,6 +118,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: ProjektFilterFormHelper
 
@@ -117,4 +132,9 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
 

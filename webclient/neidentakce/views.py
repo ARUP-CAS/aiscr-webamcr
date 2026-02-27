@@ -30,7 +30,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def get_form_kwargs(self):
         """Vrací form kwargs.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         kwargs = super().get_form_kwargs()
         kwargs["prefix"] = self.prefix
@@ -38,7 +38,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         """Vrací context data.
-        
+
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = super().get_context_data(**kwargs)
@@ -54,7 +54,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         """Vrací success url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         context = self.get_context_data()
         dc = context["object"].dokument_cast
@@ -68,7 +68,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -78,7 +78,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         """Provádí operaci form valid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
@@ -86,7 +86,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """Provádí operaci form invalid.
-        
+
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)

@@ -8,23 +8,56 @@ Třídy
 
 .. py:class:: Projekt
 
-   Class pro db model projekt.
+   Databázový model projektu.
 
    **Metody:**
 
    .. py:method:: datum_oznameni()
 
+      Provádí operaci datum oznameni.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: pristupnost()
+
+      Provádí operaci pristupnost.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_ident_cely_link()
 
+      Vrací ident cely link.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: save()
+
+      Uloží změny objektu.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: __str__()
 
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: send_ep01()
+
+      Odešle ep01.
+
+      :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: set_vytvoreny()
 
@@ -60,6 +93,10 @@ Třídy
 
    .. py:method:: archive_project_documentation()
 
+      Provádí operaci archive project documentation.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: set_archivovany()
 
       Metoda pro nastavení stavu archivovaný a uložení změny do historie.
@@ -83,7 +120,7 @@ Třídy
 
    .. py:method:: check_pred_archivaci()
 
-      Metoda na kontrolu prerekvizit pred posunem do stavu archivovaný:
+      Metoda pro kontrolu prerekvizit před posunem do stavu archivovaný:
 
       kontrola jako před uzavřením a navíc
 
@@ -91,41 +128,49 @@ Třídy
 
    .. py:method:: check_pred_navrzeni_k_zruseni()
 
-      Metoda na kontrolu prerekvizit pred posunem do stavu navržen ke zrušení:
+      Metoda pro kontrolu prerekvizit před posunem do stavu navržen ke zrušení:
 
-      Projekt nesmí mít pripojené akce.
+      Projekt nesmí mít připojené akce.
 
    .. py:method:: check_pred_smazanim()
 
-      Metoda na kontrolu prerekvizit pred smazaním projektu:
+      Metoda pro kontrolu prerekvizit před smazáním projektu:
 
       Projekt nesmí mít žádnou akci, soubor ani samostatný nález.
 
    .. py:method:: check_pred_uzavrenim()
 
-      Metoda na kontrolu prerekvizit pred posunem do stavu uzavřený:
+      Metoda pro kontrolu prerekvizit před posunem do stavu uzavřený:
 
-      Projekt musí mít alespoň jednou akci která projde svou kontrolou před odesláním.
+      Projekt musí mít alespoň jednu akci, která projde svou kontrolou před odesláním.
 
    .. py:method:: check_pred_zahajenim_v_terenu()
 
-      Metoda na kontrolu prerekvizit pred posunem do stavu zahájen v terénu:
+      Metoda pro kontrolu prerekvizit před posunem do stavu „zahájen v terénu“:
 
-      Projektu musí mít lokalizaci
+      Projekt musí mít lokalizaci.
 
    .. py:method:: parse_ident_cely()
 
-      Metoda pro rozdelení identu na region, rok, pořadové číslo a jestli je permanentí.
+      Metoda pro rozdělení identu na region, rok, pořadové číslo a informaci, zda je permanentní.
 
    .. py:method:: has_oznamovatel()
 
-      Metoda na kontrolu jestli má projekt oznamovatele.
+      Metoda pro kontrolu, jestli má projekt oznamovatele.
 
    .. py:method:: set_permanent_ident_cely()
 
       Metoda na nastavení permanentního identu akce z projektu sekvence.
 
    .. py:method:: _save_document()
+
+      Uloží document.
+
+      :param creator: Vstupní hodnota ``creator`` pro danou operaci.
+      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param check_duplicate: Vstupní hodnota ``check_duplicate`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: create_cancel_confirmation_document()
 
@@ -137,36 +182,94 @@ Třídy
 
    .. py:method:: expert_list_can_be_created()
 
+      Provádí operaci expert list can be created.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: create_expert_list()
+
+      Vytvoří expert list.
+
+      :param popup_parametry: Vstupní hodnota ``popup_parametry`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: should_generate_confirmation_document()
 
+      Provádí operaci should generate confirmation document.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_absolute_url()
+
+      Vrací absolute url.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: set_pristupnost()
 
+      Nastaví pristupnost.
+
+      :param fixes: Vstupní hodnota ``fixes`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: planovane_zahajeni_str()
+
+      Provádí operaci planovane zahajeni str.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: planovane_zahajeni_vypis()
 
+      Provádí operaci planovane zahajeni vypis.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_permission_object()
+
+      Vrací permission object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_user()
 
+      Vrací create user.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_create_org()
+
+      Vrací create org.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: redis_snapshot_id()
 
+      Provádí operaci redis snapshot id.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: generate_redis_snapshot()
 
+      Vygeneruje redis snapshot.
+
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: get_kraje_s_emailem()
+
+      Vrací kraje s emailem.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ProjektKatastr
 
-   Class pro db model dalších katastru proketu.
+   Databázový model dalších katastrů projektu.
 
    **Metody:**
 
    .. py:method:: __str__()
+
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
 

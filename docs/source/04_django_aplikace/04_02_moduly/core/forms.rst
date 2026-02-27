@@ -14,6 +14,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
+      :param choices: Vstupní hodnota ``choices`` pro danou operaci.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: TwoLevelSelectField
 
@@ -23,7 +29,18 @@ Třídy
 
    .. py:method:: to_python()
 
+      Provádí operaci to python.
+
+      :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: has_changed()
+
+      Určí, zda changed.
+
+      :param initial: Vstupní hodnota ``initial`` pro danou operaci.
+      :param data: Vstupní hodnota ``data`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: HeslarChoiceFieldField
@@ -34,9 +51,25 @@ Třídy
 
    .. py:method:: clean()
 
+      Provádí operaci clean.
+
+      :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: to_python()
 
+      Provádí operaci to python.
+
+      :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: has_changed()
+
+      Určí, zda changed.
+
+      :param initial: Vstupní hodnota ``initial`` pro danou operaci.
+      :param data: Vstupní hodnota ``data`` pro danou operaci.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: CheckStavNotChangedForm
@@ -48,7 +81,20 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param db_stav: Vstupní hodnota ``db_stav`` pro danou operaci.
+      :param require_confirmation: Vstupní hodnota ``require_confirmation`` pro danou operaci.
+      :param dokument_warnings: Vstupní hodnota ``dokument_warnings`` pro danou operaci.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: clean()
+
+      Provádí operaci clean.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: VratitForm
@@ -59,14 +105,26 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: VratitFormDokument
 
-   Popis není k dispozici.
+   Implementuje komponentu ``VratitFormDokument`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: VratitFormAZ
@@ -77,6 +135,13 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param az: Vstupní hodnota ``az`` pro danou operaci.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: DecimalTextWideget
 
@@ -85,6 +150,11 @@ Třídy
    **Metody:**
 
    .. py:method:: format_value()
+
+      Provádí operaci format value.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: OdstavkaSystemuForm
@@ -96,36 +166,50 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
 
 .. py:class:: PermissionImportForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PermissionImportForm`` v rámci aplikace.
 
 
 .. py:class:: PermissionSkipImportForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PermissionSkipImportForm`` v rámci aplikace.
 
 
 .. py:class:: BaseFilterForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``BaseFilterForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: clean()
+
+      Provádí operaci clean.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: TransaltionImportForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``TransaltionImportForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: clean()
 
+      Provádí operaci clean.
+
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: ImportDataAdminForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ImportDataAdminForm`` v rámci aplikace.
 

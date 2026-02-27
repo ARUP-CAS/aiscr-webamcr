@@ -8,5 +8,5 @@ Třídy
 
 .. py:class:: CustomAdminSettings
 
-   Popis není k dispozici.
+   Implementuje komponentu ``CustomAdminSettings`` v rámci aplikace.
 

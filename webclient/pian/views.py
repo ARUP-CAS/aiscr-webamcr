@@ -290,9 +290,10 @@ def mapa_dj(request, ident_cely):
 
 class PianPermissionFilterMixin(PermissionFilterMixin):
     """Implementuje komponentu ``PianPermissionFilterMixin`` v rámci aplikace."""
+
     def filter_by_permission(self, qs, permission):
         """Filtruje by permission.
-        
+
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -322,7 +323,7 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
 
     def add_ownership_lookup(self, ownership, qs=None):
         """Provádí operaci add ownership lookup.
-        
+
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -351,7 +352,7 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
 
     def add_accessibility_lookup(self, permission, qs):
         """Provádí operaci add accessibility lookup.
-        
+
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -380,7 +381,7 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pia
 
     def get_queryset(self):
         """Vrací queryset.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         qs = Pian.objects.all().order_by("ident_cely")
         if self.q:
@@ -402,7 +403,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
 
     def post(self, request):
         """Obsluhuje HTTP metodu POST.
-        
+
         :param request: Django HTTP požadavek použitý při zpracování.
         :return: Vrací výsledek provedené operace."""
         docfile = request.FILES["file"]
@@ -492,7 +493,7 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
     def check_epsg(self, epsg):
         # @jiribartos kontrola geometrie
         """Ověří epsg.
-        
+
         :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
         :return: Vrací výsledek ověření nebo validačního pravidla."""
         return file_validate_epsg(epsg)

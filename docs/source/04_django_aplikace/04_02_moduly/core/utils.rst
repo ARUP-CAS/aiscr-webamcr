@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: CannotFindCadasterCentre
 
-   Popis není k dispozici.
+   Implementuje komponentu ``CannotFindCadasterCentre`` v rámci aplikace.
 
 
 .. py:class:: SearchTable
@@ -19,6 +19,10 @@ Třídy
    **Metody:**
 
    .. py:method:: get_column_default_show()
+
+      Vrací column default show.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: render_nahled()
 
@@ -31,38 +35,79 @@ Třídy
 
 .. py:class:: SessionIdentifier
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SessionIdentifier`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: _generate_session_key()
+
+      Vygeneruje session key.
+
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: clear_cached_files()
 
+      Provádí operaci clear cached files.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: set_ident()
+
+      Nastaví ident.
+
+      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_ident()
 
+      Vrací ident.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: add_file_reference()
+
+      Provádí operaci add file reference.
+
+      :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+      :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: file_exists()
 
+      Provádí operaci file exists.
+
+      :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: remove_file_reference()
+
+      Provádí operaci remove file reference.
+
+      :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+      :return: Vrací výsledek operace odstranění.
 
    .. py:method:: get_cached_files()
 
+      Vrací cached files.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: set_project_ownership()
 
-      Uloží vlastnictví projektu pro anonymního uživatele do Redis.
-      Používá se pro ověření, že anonymní uživatel může nahrávat soubory pouze k projektu, který sám vytvořil.
+      Nastaví project ownership.
 
-
-      **Argumenty:**
-
-      - ``ident_cely``: identifikátor projektu
-      - ``timeout``: timeout v sekundách (defaultně 2 hodiny)
+      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: verify_project_ownership()
 
@@ -83,15 +128,23 @@ Funkce
 
 .. py:function:: file_validate_epsg(epsg)
 
-   Popis není k dispozici.
+   Provádí operaci file validate epsg.
+
+   :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: balanced_parentheses(expression)
 
-   Popis není k dispozici.
+   Provádí operaci balanced parentheses.
+
+   :param expression: Vstupní hodnota ``expression`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: load_database_translation_strings()
 
-   Popis není k dispozici.
+   Načte database translation strings.
+
+   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: validate_and_split_geometry(geom)
 
@@ -155,15 +208,15 @@ Funkce
 .. py:function:: get_project_pas_from_envelope(left, bottom, right, top, ident_cely)
 
    Funkce pro získaní pas projekt ze čtverce.
-   @janhnat zohlednit pristupnost - zohledneno v ProjectPasFromEnvelopeView
 
 .. py:function:: get_project_pian_from_envelope(left, bottom, right, top, ident_cely)
 
+   @janhnat zohlednit pristupnost - zohledneno v ProjectPasFromEnvelopeView
    Funkce pro získaní pianů projektu ze čtverce.
-   @janhnat zohlednit pristupnost - zohledneno v ProjectPianFromEnvelopeView
 
 .. py:function:: get_3d_from_envelope(left, bottom, right, top, request)
 
+   @janhnat zohlednit pristupnost - zohledneno v ProjectPianFromEnvelopeView
    Funkce pro získaní 3d ze čtverce.
    Bez pristupnosti
 
@@ -216,7 +269,12 @@ Funkce
 
 .. py:function:: replace_last(source_string, old, new)
 
-   Popis není k dispozici.
+   Provádí operaci replace last.
+
+   :param source_string: Vstupní hodnota ``source_string`` pro danou operaci.
+   :param old: Vstupní hodnota ``old`` pro danou operaci.
+   :param new: Vstupní hodnota ``new`` pro danou operaci.
+   :return: Vrací výsledek provedené operace.
 
 .. py:function:: get_set_maintenance_in_cache()
 

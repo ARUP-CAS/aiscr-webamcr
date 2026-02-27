@@ -14,10 +14,11 @@ logger = logging.getLogger("tests")
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class OznameniSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``OznameniSeleniumTest`` v rámci aplikace."""
+
     @staticmethod
     def oznameni_projektu(self):
         """Provádí operaci oznameni projektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")

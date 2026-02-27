@@ -181,6 +181,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument"
         indexes = [
             models.Index(fields=["stav", "ident_cely"]),
@@ -192,7 +193,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -201,7 +202,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.ident_cely
 
@@ -215,7 +216,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_doi(self):
         """Nastaví doi.
-        
+
         :return: Vrací výsledek provedené operace."""
         self.doi = f"{settings.DOI_PREFIX}/{self.ident_cely}"
 
@@ -234,7 +235,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @staticmethod
     def set_permanent_identificator(dokument, request, messages, fedora_transaction) -> Optional[JsonResponse]:
         """Nastaví permanent identificator.
-        
+
         :param dokument: Vstupní hodnota ``dokument`` pro danou operaci.
         :param request: Django HTTP požadavek použitý při zpracování.
         :param messages: Vstupní hodnota ``messages`` pro danou operaci.
@@ -465,13 +466,13 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self
 
     def get_create_user(self):
         """Vrací create user.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel,)
@@ -481,7 +482,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def get_create_org(self):
         """Vrací create org.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
             return (self.get_create_user()[0].organizace,)
@@ -492,7 +493,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def thumbnail_image(self):
         """Provádí operaci thumbnail image.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.thumbnail_image_file:
             return self.thumbnail_image_file.pk
@@ -500,7 +501,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def thumbnail_image_file(self) -> Soubor | None:
         """Provádí operaci thumbnail image file.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.soubory.soubory.count() > 0:
             soubory = [x for x in self.soubory.soubory.all()]
@@ -510,7 +511,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @cached_property
     def large_thumbnail(self):
         """Provádí operaci large thumbnail.
-        
+
         :return: Vrací výsledek provedené operace."""
         soubor = self.thumbnail_image_file
         if soubor:
@@ -520,7 +521,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @cached_property
     def small_thumbnail(self):
         """Provádí operaci small thumbnail.
-        
+
         :return: Vrací výsledek provedené operace."""
         soubor = self.thumbnail_image_file
         if soubor:
@@ -529,7 +530,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def set_snapshots(self):
         """Nastaví snapshots.
-        
+
         :return: Vrací výsledek provedené operace."""
         if not self.dokumentautor_set.all():
             self.autori_snapshot = None
@@ -547,7 +548,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def redis_snapshot_id(self):
         """Provádí operaci redis snapshot id.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.ident_cely.startswith("3D"):
             from dokument.views import Model3DListView
@@ -560,7 +561,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def generate_redis_snapshot(self):
         """Vygeneruje redis snapshot.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         from dokument.tables import DokumentTable, Model3DTable
 
@@ -577,7 +578,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def _get_doi_client(self):
         """Vrací doi client.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         from pid.client import DigitalObjectIdentifierClient
 
@@ -586,13 +587,13 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def doi_exists(self):
         """Provádí operaci doi exists.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._get_doi_client().check_record_exists()
 
     def doi_delete(self, check_status=True):
         """Provádí operaci doi delete.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if self.doi:
@@ -600,7 +601,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def doi_hide(self, check_status=True):
         """Provádí operaci doi hide.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         if self.doi:
@@ -608,14 +609,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def doi_publish(self, check_status=True):
         """Provádí operaci doi publish.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         return self._get_doi_client().publish_record(check_status)
 
     def doi_update(self, check_status=True, reload_record=False):
         """Provádí operaci doi update.
-        
+
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
@@ -625,7 +626,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def doi_url(self):
         """Provádí operaci doi url.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self._get_doi_client().get_record_url()
 
@@ -665,6 +666,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_cast"
         constraints = [
             CheckConstraint(
@@ -697,13 +699,13 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     def get_permission_object(self):
         """Vrací permission object.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.dokument.get_permission_object()
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -726,7 +728,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
     @property
     def initial_projekt(self) -> Projekt | None:
         """Provádí operaci initial projekt.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.initial_projekt_id is not None:
             return Projekt.objects.get(pk=self.initial_projekt_id)
@@ -734,7 +736,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
         """Vytvoří transaction.
-        
+
         :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
         :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
         :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
@@ -749,7 +751,7 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
     @property
     def dokument_doi(self):
         """Provádí operaci dokument doi.
-        
+
         :return: Vrací výsledek provedené operace."""
         if self.dokument:
             return self.dokument.doi
@@ -830,6 +832,7 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_extra_data"
         constraints = [
             CheckConstraint(
@@ -850,6 +853,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = ("poradi",)
@@ -874,12 +878,13 @@ class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_jazyk"
         unique_together = (("dokument", "jazyk"),)
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return "D: " + str(self.dokument) + " - J: " + str(self.jazyk)
 
@@ -894,6 +899,7 @@ class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_osoba"
         unique_together = (("dokument", "osoba"),)
 
@@ -917,12 +923,13 @@ class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Mod
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_posudek"
         unique_together = (("dokument", "posudek"),)
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return "D: " + str(self.dokument) + " - P: " + str(self.posudek)
 
@@ -940,13 +947,14 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "tvar"
         unique_together = (("dokument", "tvar", "poznamka"),)
         ordering = ["tvar__razeni"]
 
     def __init__(self, *args, **kwargs):
         """Inicializuje instanci třídy.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -957,7 +965,7 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
         """Vytvoří transaction.
-        
+
         :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
         :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
         :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
@@ -986,6 +994,7 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["rada", "region", "rok"], name="unique_sekvence_dokument"),
@@ -1048,19 +1057,20 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "let"
         ordering = ["ident_cely"]
         verbose_name_plural = "Lety"
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.ident_cely
 
     def save(self, *args, **kwargs):
         """Uloží změny objektu.
-        
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
@@ -1075,7 +1085,7 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
 
     def get_absolute_url(self):
         """Vrací absolute url.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return reverse("admin:dokument_let_change", args=[self.pk])
 

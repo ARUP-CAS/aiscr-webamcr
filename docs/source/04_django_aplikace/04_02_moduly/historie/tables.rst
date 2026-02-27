@@ -8,27 +8,49 @@ Třídy
 
 .. py:class:: HistorieTable
 
-   Class pro definování tabulky pro zobrazení historie.
+   Definuje tabulku pro zobrazení historie změn.
 
    **Metody:**
 
    .. py:method:: render_uzivatel_custom()
 
+      Vyrenderuje uzivatel custom.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: SimpleHistoryTable
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SimpleHistoryTable`` v rámci aplikace.
 
 
 .. py:class:: FedoraHistorieTable
 
-   Class pro definování tabulky pro zobrazení fedora verzí metadat nebo souborů na stránce pod historií.
+   Definuje tabulku verzí metadat a souborů z Fedory na stránce historie.
 
    **Metody:**
 
    .. py:method:: render_uzivatel()
 
+      Vyrenderuje uzivatel.
+
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: render_url()
 
+      Vyrenderuje url.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: value_url()
+
+      Provádí operaci value url.
+
+      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 

@@ -23,7 +23,7 @@ from projekt.views import get_show_oznamovatel
 
 def get_model(name):
     """Vrací model.
-    
+
     :param name: Vstupní hodnota ``name`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     models = {
@@ -52,7 +52,7 @@ def get_model(name):
 
 def get_gml(geom):
     """Vrací gml.
-    
+
     :param geom: Vstupní hodnota ``geom`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     try:
@@ -66,7 +66,7 @@ def get_gml(geom):
 
 def get_wkt(geom):
     """Vrací wkt.
-    
+
     :param geom: Vstupní hodnota ``geom`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     with connection.cursor() as cursor:
@@ -78,29 +78,30 @@ def get_wkt(geom):
 
 class SimpleSectionTemplateName:
     """Implementuje komponentu ``SimpleSectionTemplateName`` v rámci aplikace."""
+
     def __init__(self, name):
         """Inicializuje instanci třídy.
-        
+
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
         self.name = name
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.name
 
     def get_name(self, instance):
         """Vrací name.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.name
 
     def get_permission(self, instance, user=None):
         """Vrací permission.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -109,9 +110,10 @@ class SimpleSectionTemplateName:
 
 class SectionNameWithAccessor(SimpleSectionTemplateName):
     """Implementuje komponentu ``SectionNameWithAccessor`` v rámci aplikace."""
+
     def __init__(self, name, accessor, foreign_key=None):
         """Inicializuje instanci třídy.
-        
+
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
         :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
@@ -122,7 +124,7 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
 
     def get_name(self, instance):
         """Vrací name.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.foreign_key:
@@ -135,9 +137,10 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
 
 class PianSectionNameWithAccessor(SectionNameWithAccessor):
     """Implementuje komponentu ``PianSectionNameWithAccessor`` v rámci aplikace."""
+
     def get_name(self, instance):
         """Vrací name.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if getattr(instance, self.foreign_key):
@@ -150,9 +153,10 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
 
 class OznamovatelSectionNameWithAccessor(SectionNameWithAccessor):
     """Implementuje komponentu ``OznamovatelSectionNameWithAccessor`` v rámci aplikace."""
+
     def get_permission(self, instance, user=None):
         """Vrací permission.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -161,9 +165,10 @@ class OznamovatelSectionNameWithAccessor(SectionNameWithAccessor):
 
 class Field:
     """Implementuje komponentu ``Field`` v rámci aplikace."""
+
     def __init__(self, label, accessor):
         """Inicializuje instanci třídy.
-        
+
         :param label: Vstupní hodnota ``label`` pro danou operaci.
         :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -172,19 +177,19 @@ class Field:
 
     def __repr__(self):
         """Vrací reprezentaci objektu pro ladění.
-        
+
         :return: Vrací výsledek provedené operace."""
         return f"Field(label={self.label}, accessor={self.accessor})"
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return self.label
 
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -197,16 +202,17 @@ class Field:
 
     def get_label(self):
         """Vrací label.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.label
 
 
 class SouborField(Field):
     """Implementuje komponentu ``SouborField`` v rámci aplikace."""
+
     def __init__(self, label, accessor, key_name):
         """Inicializuje instanci třídy.
-        
+
         :param label: Vstupní hodnota ``label`` pro danou operaci.
         :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
         :param key_name: Vstupní hodnota ``key_name`` pro danou operaci.
@@ -216,7 +222,7 @@ class SouborField(Field):
 
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -235,9 +241,10 @@ class SouborField(Field):
 
 class SouborDownloadField(SouborField):
     """Implementuje komponentu ``SouborDownloadField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -259,9 +266,10 @@ class SouborDownloadField(SouborField):
 
 class Model3dKomponentaField(Field):
     """Implementuje komponentu ``Model3dKomponentaField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -270,9 +278,10 @@ class Model3dKomponentaField(Field):
 
 class Model3dKomponentaAktivityField(Model3dKomponentaField):
     """Implementuje komponentu ``Model3dKomponentaAktivityField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -282,9 +291,10 @@ class Model3dKomponentaAktivityField(Model3dKomponentaField):
 
 class ChooseField(Field):
     """Implementuje komponentu ``ChooseField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -297,9 +307,10 @@ class ChooseField(Field):
 
 class StatusField(Field):
     """Implementuje komponentu ``StatusField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -308,9 +319,10 @@ class StatusField(Field):
 
 class ZjisteniField(Field):
     """Implementuje komponentu ``ZjisteniField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -324,9 +336,10 @@ class ZjisteniField(Field):
 
 class ForeignField(Field):
     """Implementuje komponentu ``ForeignField`` v rámci aplikace."""
+
     def __init__(self, name, accessor, foreign_key):
         """Inicializuje instanci třídy.
-        
+
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
         :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
@@ -336,7 +349,7 @@ class ForeignField(Field):
 
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -358,9 +371,10 @@ class ForeignField(Field):
 
 class GeomGmlField(Field):
     """Implementuje komponentu ``GeomGmlField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -372,9 +386,10 @@ class GeomGmlField(Field):
 
 class GeomWktField(Field):
     """Implementuje komponentu ``GeomWktField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -386,9 +401,10 @@ class GeomWktField(Field):
 
 class ForeignGeomGmlField(ForeignField):
     """Implementuje komponentu ``ForeignGeomGmlField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -403,9 +419,10 @@ class ForeignGeomGmlField(ForeignField):
 
 class ForeignGeomWktField(ForeignField):
     """Implementuje komponentu ``ForeignGeomWktField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -420,9 +437,10 @@ class ForeignGeomWktField(ForeignField):
 
 class ManyToManyField(Field):
     """Implementuje komponentu ``ManyToManyField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -432,9 +450,10 @@ class ManyToManyField(Field):
 
 class ForeignManyToManyField(ForeignField):
     """Implementuje komponentu ``ForeignManyToManyField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -446,9 +465,10 @@ class ForeignManyToManyField(ForeignField):
 
 class DoubleField(Field):
     """Implementuje komponentu ``DoubleField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -467,9 +487,10 @@ class DoubleField(Field):
 
 class DoubleFieldNum(Field):
     """Implementuje komponentu ``DoubleFieldNum`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -485,9 +506,10 @@ class DoubleFieldNum(Field):
 
 class ForeignDoubleField(ForeignField):
     """Implementuje komponentu ``ForeignDoubleField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -504,9 +526,10 @@ class ForeignDoubleField(ForeignField):
 
 class ForeignDoubleFieldNum(ForeignField):
     """Implementuje komponentu ``ForeignDoubleFieldNum`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -523,9 +546,10 @@ class ForeignDoubleFieldNum(ForeignField):
 
 class RepeatableField(ForeignField):
     """Implementuje komponentu ``RepeatableField`` v rámci aplikace."""
+
     def __init__(self, name, accessor, foreign_key, template_name=None, model_name=None):
         """Inicializuje instanci třídy.
-        
+
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
         :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
@@ -538,7 +562,7 @@ class RepeatableField(ForeignField):
 
     def get_related_manager(self, instance):
         """Vrací related manager.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.model_name:
@@ -547,7 +571,7 @@ class RepeatableField(ForeignField):
 
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -572,9 +596,10 @@ class RepeatableField(ForeignField):
 
 class VbRepeatableField(RepeatableField):
     """Implementuje komponentu ``VbRepeatableField`` v rámci aplikace."""
+
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -600,16 +625,17 @@ class VbRepeatableField(RepeatableField):
 
 class HistorieRepeatableField(RepeatableField):
     """Implementuje komponentu ``HistorieRepeatableField`` v rámci aplikace."""
+
     def get_related_manager(self, instance):
         """Vrací related manager.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return Historie.objects.filter(**{"vazba": instance.historie})
 
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -637,15 +663,16 @@ class HistorieRepeatableField(RepeatableField):
 
 class RepeatableSectionField(RepeatableField):
     """Implementuje komponentu ``RepeatableSectionField`` v rámci aplikace."""
+
     def get_label(self):
         """Vrací label.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return super().get_label()
 
     def get_sections(self, instance):
         """Vrací sections.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         related_manager = (
@@ -657,7 +684,7 @@ class RepeatableSectionField(RepeatableField):
 
     def get_value(self, instance, user=None):
         """Vrací value.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
@@ -678,9 +705,10 @@ class RepeatableSectionField(RepeatableField):
 
 class SectionField(Field):
     """Implementuje komponentu ``SectionField`` v rámci aplikace."""
+
     def __init__(self, name, accessor, foreign_key):
         """Inicializuje instanci třídy.
-        
+
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
         :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
@@ -691,9 +719,10 @@ class SectionField(Field):
 
 class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
     """Implementuje komponentu ``RepeatableSectionNameWithAccessor`` v rámci aplikace."""
+
     def __init__(self, name, accessor, foreign_key, model_name=None):
         """Inicializuje instanci třídy.
-        
+
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
         :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
@@ -704,7 +733,7 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
 
     def get_sections(self, instance):
         """Vrací sections.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         related_manager = (
@@ -716,7 +745,7 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
 
     def get_name(self, instance):
         """Vrací name.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if len(self.accessor) > 2:
@@ -730,9 +759,10 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
 
 class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor):
     """Implementuje komponentu ``SouboryRepeatableSectionNameWithAccessor`` v rámci aplikace."""
+
     def get_sections(self, instance):
         """Vrací sections.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         related_manager = get_model(self.foreign_key).objects.filter(**{"vazba": instance.soubory}).order_by("pk")
@@ -742,7 +772,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
     def get_name(self, instance):
         """Vrací name.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
@@ -753,9 +783,10 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
 
 class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor):
     """Implementuje komponentu ``KomponentaRepeatableSectionNameWithAccessor`` v rámci aplikace."""
+
     def get_name(self, instance):
         """Vrací name.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         obdobi = getattr(instance, self.accessor[1])
@@ -785,9 +816,10 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
 
 class SubSectionField:
     """Implementuje komponentu ``SubSectionField`` v rámci aplikace."""
+
     def __init__(self, config, foreign_key=None):
         """Inicializuje instanci třídy.
-        
+
         :param config: Vstupní hodnota ``config`` pro danou operaci.
         :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -796,13 +828,13 @@ class SubSectionField:
 
     def get_config(self):
         """Vrací config.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return self.config
 
     def get_instance(self, instance):
         """Vrací instance.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if self.foreign_key:
@@ -815,9 +847,10 @@ class SubSectionField:
 
 class NeidentAkceSubSectionField(SubSectionField):
     """Implementuje komponentu ``NeidentAkceSubSectionField`` v rámci aplikace."""
+
     def get_instance(self, instance):
         """Vrací instance.
-        
+
         :param instance: Vstupní hodnota ``instance`` pro danou operaci.
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         try:
@@ -829,7 +862,7 @@ class NeidentAkceSubSectionField(SubSectionField):
 
 def get_historie_config(label_key):
     """Vrací historie config.
-    
+
     :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
     :return: Vrací načtená data odpovídající vstupním parametrům."""
     return {
@@ -846,9 +879,10 @@ def get_historie_config(label_key):
 
 class HistorieSubSectionField(SubSectionField):
     """Implementuje komponentu ``HistorieSubSectionField`` v rámci aplikace."""
+
     def __init__(self, foreign_key=None, label_key="vypis.historie.section_name"):
         """Inicializuje instanci třídy.
-        
+
         :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
         :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
         :return: Funkce nevrací hodnotu (``None``)."""
@@ -857,6 +891,6 @@ class HistorieSubSectionField(SubSectionField):
 
     def get_config(self):
         """Vrací config.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return get_historie_config(self.label_key)

@@ -19,18 +19,19 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
     @property
     def ident_cely(self):
         """Provádí operaci ident cely.
-        
+
         :return: Vrací výsledek provedené operace."""
         return getattr(self.content_object, "ident_cely", None)
 
     def __str__(self):
         """Vrací textovou reprezentaci objektu.
-        
+
         :return: Vrací výsledek provedené operace."""
         return str(self.content_object)
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
@@ -41,6 +42,6 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
 
     def get_create_user(self):
         """Vrací create user.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         return (self.user,)

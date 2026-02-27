@@ -8,13 +8,23 @@ Třídy
 
 .. py:class:: Dokument
 
-   Class pro db model dokument.
+   Databázový model dokumentu.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: __str__()
+
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_absolute_url()
 
@@ -22,11 +32,23 @@ Třídy
 
    .. py:method:: set_doi()
 
+      Nastaví doi.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: set_zapsany()
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie.
 
    .. py:method:: set_permanent_identificator()
+
+      Nastaví permanent identificator.
+
+      :param dokument: Vstupní hodnota ``dokument`` pro danou operaci.
+      :param request: Django HTTP požadavek použitý při zpracování.
+      :param messages: Vstupní hodnota ``messages`` pro danou operaci.
+      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: set_odeslany()
 
@@ -76,42 +98,115 @@ Třídy
 
    .. py:method:: get_permission_object()
 
+      Vrací permission object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: get_create_user()
+
+      Vrací create user.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_org()
 
+      Vrací create org.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: thumbnail_image()
+
+      Provádí operaci thumbnail image.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: thumbnail_image_file()
 
+      Provádí operaci thumbnail image file.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: large_thumbnail()
+
+      Provádí operaci large thumbnail.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: small_thumbnail()
 
+      Provádí operaci small thumbnail.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: set_snapshots()
+
+      Nastaví snapshots.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: redis_snapshot_id()
 
+      Provádí operaci redis snapshot id.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: generate_redis_snapshot()
+
+      Vygeneruje redis snapshot.
+
+      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: _get_doi_client()
 
+      Vrací doi client.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: doi_exists()
+
+      Provádí operaci doi exists.
+
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: doi_delete()
 
+      Provádí operaci doi delete.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: doi_hide()
+
+      Provádí operaci doi hide.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
 
    .. py:method:: doi_publish()
 
+      Provádí operaci doi publish.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: doi_update()
 
+      Provádí operaci doi update.
+
+      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: doi_url()
+
+      Provádí operaci doi url.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentCast
 
-   Class pro db model dokument část.
+   Databázový model části dokumentu.
 
    **Metody:**
 
@@ -121,79 +216,139 @@ Třídy
 
    .. py:method:: get_permission_object()
 
+      Vrací permission object.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
+
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: initial_archeologicky_zaznam()
 
-      Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (lazy-load).
+      Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (líné načtení).
 
    .. py:method:: initial_projekt()
 
+      Provádí operaci initial projekt.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: create_transaction()
 
+      Vytvoří transaction.
+
+      :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
+      :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
+      :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
+
    .. py:method:: dokument_doi()
+
+      Provádí operaci dokument doi.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentExtraData
 
-   Class pro db model dokument extra data.
+   Databázový model doplňkových dat dokumentu.
 
 
 .. py:class:: DokumentAutor
 
-   Class pro db model dokument autori. Obsahuje pořadí.
+   Databázový model autorů dokumentu (včetně pořadí).
 
 
 .. py:class:: DokumentJazyk
 
-   Class pro db model dokument jazyky.
+   Databázový model jazyků dokumentu.
 
    **Metody:**
 
    .. py:method:: __str__()
+
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentOsoba
 
-   Class pro db model dokument osoby.
+   Databázový model osob dokumentu.
 
 
 .. py:class:: DokumentPosudek
 
-   Class pro db model dokument posudky.
+   Databázový model posudků dokumentu.
 
    **Metody:**
 
    .. py:method:: __str__()
 
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
+
 
 .. py:class:: Tvar
 
-   Class pro db model tvary.
+   Databázový model tvarů.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Funkce nevrací hodnotu (``None``).
+
    .. py:method:: create_transaction()
+
+      Vytvoří transaction.
+
+      :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
+      :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
+      :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+      :return: Vrací nově vytvořený výsledek operace.
 
 
 .. py:class:: DokumentSekvence
 
-   Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
+   Databázový model sekvence dokumentu podle roku a řady.
 
 
 .. py:class:: Let
 
-   Class pro db model let.
+   Databázový model letu.
 
    **Metody:**
 
    .. py:method:: __str__()
 
+      Vrací textovou reprezentaci objektu.
+
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: save()
 
+      Uloží změny objektu.
+
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vrací výsledek provedené operace.
+
    .. py:method:: get_absolute_url()
+
+      Vrací absolute url.
+
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce

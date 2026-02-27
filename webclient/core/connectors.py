@@ -17,13 +17,14 @@ scan_response = re.compile(r"^(?P<path>.*): ((?P<virus>.+) )?(?P<status>(FOUND|O
 
 class RedisConnector:
     """Implementuje komponentu ``RedisConnector`` v rámci aplikace."""
+
     r = None
     r_decode = None
 
     @classmethod
     def _create_connection(cls):
         """Vytvoří connection.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         cls.r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass())
 
@@ -31,7 +32,7 @@ class RedisConnector:
     @classmethod
     def _create_connection_decode(cls):
         """Vytvoří connection decode.
-        
+
         :return: Vrací nově vytvořený výsledek operace."""
         cls.r_decode = redis.Redis(
             host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass(), decode_responses=True
@@ -40,7 +41,7 @@ class RedisConnector:
     @classmethod
     def get_connection(cls) -> redis.Redis:
         """Vrací connection.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not cls.r:
             cls._create_connection()
@@ -49,7 +50,7 @@ class RedisConnector:
     @classmethod
     def get_connection_decode(cls) -> redis.Redis:
         """Vrací connection decode.
-        
+
         :return: Vrací načtená data odpovídající vstupním parametrům."""
         if not cls.r_decode:
             cls._create_connection_decode()
@@ -58,7 +59,7 @@ class RedisConnector:
     @staticmethod
     def prepare_model_for_redis(table):
         """Provádí operaci prepare model for redis.
-        
+
         :param table: Vstupní hodnota ``table`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         columns = table.columns.iterall()
@@ -156,7 +157,7 @@ class ClamdNetworkSocket:
 
     def _basic_command(self, command):
         """Provádí operaci basic command.
-        
+
         :param command: Vstupní hodnota ``command`` pro danou operaci.
         :return: Vrací výsledek provedené operace."""
         self._init_socket()
@@ -210,7 +211,7 @@ class ClamdNetworkSocket:
 
     def _send_command(self, cmd, *args):
         """Odešle command.
-        
+
         :param cmd: Vstupní hodnota ``cmd`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :return: Vrací výsledek provedené operace."""
