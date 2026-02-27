@@ -107,11 +107,15 @@ class MethodDocstringChecker(ast.NodeVisitor):
             return
 
         if len(lines[0].split()) < 3:
-            self.warnings.append(f"{location}: WARNING DOC003 Shrnutí je příliš krátké u {element_type} '{qualified_name}'.")
+            self.warnings.append(
+                f"{location}: WARNING DOC003 Shrnutí je příliš krátké u {element_type} '{qualified_name}'."
+            )
 
         for arg in args:
             if f":param {arg}:" not in docstring:
-                self.warnings.append(f"{location}: WARNING DOC004 Chybí ':param {arg}:' u {element_type} '{qualified_name}'.")
+                self.warnings.append(
+                    f"{location}: WARNING DOC004 Chybí ':param {arg}:' u {element_type} '{qualified_name}'."
+                )
 
         has_return_annotation = getattr(node, "returns", None) is not None
         if has_return_annotation and ":return:" not in docstring and ":returns:" not in docstring:
@@ -121,7 +125,9 @@ class MethodDocstringChecker(ast.NodeVisitor):
 def iter_python_files(paths: list[str]) -> list[Path]:
     candidates = [Path(path) for path in paths if path.endswith(".py")]
     bypass_exclusions = should_bypass_exclusions()
-    return [path for path in candidates if path.exists() and path.is_file() and should_check_file(path, bypass_exclusions)]
+    return [
+        path for path in candidates if path.exists() and path.is_file() and should_check_file(path, bypass_exclusions)
+    ]
 
 
 def main() -> int:
