@@ -1,17 +1,20 @@
 Moduly aplikace
 ==================
 
-Zde nalezneme dokumentaci kódu seřazenou podle struktury modulů projektu. Každá aplikace je definována pro správu určité funkce v projektu. 
+Tato sekce popisuje moduly Django aplikace v širším kontextu běhu systému.
+Seznam je členěn na doménové a systémové moduly podle aktuálního kódu aplikace.
+
+Doménové moduly
+---------------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Moduly:
+   :caption: Obsah:
 
    adb/index
    arch_z/index
-   core/index
    dj/index
-   dokumenty/index
+   dokument/index
    ez/index
    heslar/index
    historie/index
@@ -24,6 +27,20 @@ Zde nalezneme dokumentaci kódu seřazenou podle struktury modulů projektu. Ka�
    pas/index
    pian/index
    projekt/index
+
+Systémové a integrační moduly
+-----------------------------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Obsah:
+
+   core/index
+   cron/index
+   fedora_management/index
+   healthcheck/index
+   pid/index
    uzivatel/index
-
-
+   vypis/index
+   webclient/index
+   xml_generator/index

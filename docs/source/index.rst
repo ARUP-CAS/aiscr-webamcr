@@ -3,11 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Technická dokumenetace Archeologické mapy České republiky (AMČR)
+Technická dokumentace Archeologické mapy České republiky (AMČR)
 ========================================
 
 Repozitář obsahuje webovou aplikaci Archeologická mapa České republiky.
-Aplikace je psaná pomocí frameworku Django a je rozdelená do funkčních modulů.
+Aplikace je psaná pomocí frameworku Django a je rozdělená do funkčních modulů.
 
 Dokumentace je rozdělena do logických sekcí pokrývajících všechny aspekty aplikace od instalace přes vývoj až po nasazení a údržbu.
 

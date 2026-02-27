@@ -5,10 +5,11 @@ Dokumentace modulu core.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Obsah:
 
    models
    forms
+   helpers
    views
    signals
    admin
