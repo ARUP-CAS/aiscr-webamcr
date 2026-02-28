@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """
-    Serializer pro info o uživately.
-    """
+    """Serializer pro info o uživately."""
 
     ident_cely = serializers.CharField(label="amcr:ident_cely")
     jmeno = serializers.CharField(source="first_name", label="amcr:jmeno")
@@ -30,12 +28,16 @@ class UserSerializer(serializers.ModelSerializer):
     def get_osoba(self, obj):
         """
         Metoda pro správně vrácení hodnot o osobe.
+
+        :param obj: Popis parametru ``obj``.
         """
         return {"value": str(obj.osoba) if obj.osoba else None, "idRef": obj.osoba.ident_cely if obj.osoba else ""}
 
     def to_representation(self, instance):
         """
         Override reprezentace do dict pro správně zobrazení label.
+
+        :param instance: Popis parametru ``instance``.
         """
         ret = OrderedDict()
         fields = self._readable_fields

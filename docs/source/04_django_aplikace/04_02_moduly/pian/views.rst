@@ -18,7 +18,6 @@ Třídy
 
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
       :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_ownership_lookup()
 
@@ -26,7 +25,6 @@ Třídy
 
       :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_accessibility_lookup()
 
@@ -34,7 +32,6 @@ Třídy
 
       :param permission: Vstupní hodnota ``permission`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: PianAutocomplete
@@ -45,9 +42,7 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: ImportovatPianView
@@ -61,14 +56,12 @@ Třídy
       Obsluhuje HTTP metodu POST.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: check_epsg()
 
-      Ověří epsg.
+      Ověří epsg. v aplikaci.
 
       :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 Funkce
@@ -78,18 +71,33 @@ Funkce
 
    Funkce pohledu pro zapsání změny pianu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: odpojit(request, dj_ident_cely)
 
    Funkce pohledu pro odpojení pianu pomocí modalu.
+
+   :param request: Popis parametru ``request``.
+   :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
 
 .. py:function:: potvrdit(request, dj_ident_cely)
 
    Funkce pohledu pro potvrzení pianu pomocí modalu.
 
+   :param request: Popis parametru ``request``.
+   :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+
 .. py:function:: create(request, dj_ident_cely)
 
    Funkce pohledu pro vytvoření pianu.
 
+   :param request: Popis parametru ``request``.
+   :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+
 .. py:function:: mapa_dj(request, ident_cely)
 
    Funkce ziskej Dj pro Pian
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.

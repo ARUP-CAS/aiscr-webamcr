@@ -18,14 +18,12 @@ Třídy
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
       :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: format_value()
 
       Provádí operaci format value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: AutocompleteSelect2WidgetMixin
@@ -37,6 +35,9 @@ Třídy
    .. py:method:: build_attrs()
 
       Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy.
+
+      :param args: Popis parametru ``args``.
+      :param kwargs: Popis parametru ``kwargs``.
 
 
 .. py:class:: AutocompleteListSelect2

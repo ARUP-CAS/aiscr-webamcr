@@ -19,23 +19,25 @@ logger = logging.getLogger(__name__)
 def save_single_file_from_storage_impl(
     record_par: int | Soubor, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False
 ) -> None:
-    """Společná implementace pro ukládání jednotlivého souboru ze storage do Fedora repozitáře.
+    """
+    Společná implementace pro ukládání jednotlivého souboru ze storage do Fedora repozitáře.
+
     Tato funkce načte soubor z lokálního úložiště, provede kontroly (MIME type, antivirus),
     a uloží jej do Fedora repozitáře včetně aktualizace metadat v databázi.
-    
+
     Args:
-        record: Instance modelu Soubor nebo jeho primární klíč
-        storage_path: Cesta k adresáři se soubory
-        save_thumbs: Zda generovat náhledy pro obrazové soubory
-        disable_antivirus: Zda přeskočit antivirovou kontrolu
-    
+    record: Instance modelu Soubor nebo jeho primární klíč
+    storage_path: Cesta k adresáři se soubory
+    save_thumbs: Zda generovat náhledy pro obrazové soubory
+    disable_antivirus: Zda přeskočit antivirovou kontrolu
+
     Raises:
-        core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje
-    
+    core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje
+
     Příklad:
-        >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
-        >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
-    
+    >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
+    >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
+
     :param record_par: Hodnota parametru ``record_par`` použitého touto operací.
     :param storage_path: Hodnota parametru ``storage_path`` použitého touto operací.
     :param save_thumbs: Hodnota parametru ``save_thumbs`` použitého touto operací.
@@ -59,7 +61,12 @@ def save_single_file_from_storage_impl(
     conn = FedoraRepositoryConnector(related_record, fedora_transaction)
 
     def find_matching_file(directory, number):
-        """Najde soubor v adresáři podle čísla v názvu."""
+        """
+        Najde soubor v adresáři podle čísla v názvu.
+
+        :param directory: Popis parametru ``directory``.
+        :param number: Popis parametru ``number``.
+        """
         for inner_file in os.listdir(directory):
             filename, _ = os.path.splitext(inner_file)
             if filename.isdigit() and int(filename) == number:

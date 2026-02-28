@@ -15,21 +15,22 @@ class Command(BaseCommand):
     provede zápis do Redis (asynchronně s nízkou prioritou).
 
     Parametry:
-        - key: Redis klíč
-        - value: Hodnota, která se pod klíčem uloží
+    - key: Redis klíč
+    - value: Hodnota, která se pod klíčem uloží
 
     Příklady použití::
 
-        python manage.py write_value_to_redis foo bar
+    python manage.py write_value_to_redis foo bar
     """
 
     help = _("core.management.commands.write_value_to_redis.Command.help")
 
     def add_arguments(self, parser):
-        """Provádí operaci add arguments.
+        """
+        Provádí operaci add arguments.
 
         :param parser: Vstupní hodnota ``parser`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         parser.add_argument(
             "key",
             type=str,
@@ -42,11 +43,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
-        """Zpracuje hodnotu.
+        """
+        Zpracuje hodnotu. v aplikaci.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug("core.management.commands.write_value_to_redis.start")
         key = kwargs["key"]
         value = kwargs["value"]

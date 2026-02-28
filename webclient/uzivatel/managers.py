@@ -5,12 +5,15 @@ from django.utils.translation import gettext_lazy as _
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager where email is the unique identifiers
+
     for authentication instead of usernames.
     https://testdriven.io/blog/django-custom-user-model/
     """
 
     def create_user(self, email, password, **extra_fields):
-        """Create and save a User with the given email and password.
+        """
+        Create and save a User with the given email and password.
+
         :param email: Hodnota parametru ``email`` použitého touto operací.
         :param password: Hodnota parametru ``password`` použitého touto operací.
         :param extra_fields: Hodnota parametru ``extra_fields`` použitého touto operací.
@@ -24,7 +27,9 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password, **extra_fields):
-        """Create and save a SuperUser with the given email and password.
+        """
+        Create and save a SuperUser with the given email and password.
+
         :param email: Hodnota parametru ``email`` použitého touto operací.
         :param password: Hodnota parametru ``password`` použitého touto operací.
         :param extra_fields: Hodnota parametru ``extra_fields`` použitého touto operací.

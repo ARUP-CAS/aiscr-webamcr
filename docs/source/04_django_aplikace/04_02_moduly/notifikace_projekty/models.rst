@@ -16,8 +16,6 @@ Třídy
 
       Provádí operaci ident cely.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
@@ -27,6 +25,4 @@ Třídy
    .. py:method:: get_create_user()
 
       Vrací create user.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 

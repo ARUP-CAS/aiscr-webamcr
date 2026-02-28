@@ -19,35 +19,36 @@ class Command(BaseCommand):
     CSV soubor musí obsahovat sloupec "record" s cestami k souborům.
 
     Argumenty:
-        - csv_file: Cesta k CSV souboru se seznamem souborů
+    - csv_file: Cesta k CSV souboru se seznamem souborů
 
     Formát CSV souboru::
 
-        record
-        /path/to/image1.jpg
-        /path/to/image2.jpg
-        /path/to/image3.jpg
+    record
+    /path/to/image1.jpg
+    /path/to/image2.jpg
+    /path/to/image3.jpg
 
     Poznámka:
-        - Pouze soubory, které mají GPS data, budou aktualizovány
-        - Pro každou aktualizaci se zaznamená nová verze souboru
+    - Pouze soubory, které mají GPS data, budou aktualizovány
+    - Pro každou aktualizaci se zaznamená nová verze souboru
 
     Příklady použití:
 
-        Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
-        proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
+    Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
+    proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
 
-            python manage.py remove_gps_data /vol/data-migrace/files_with_gps.csv
-            python manage.py remove_gps_data /vol/data-migrace/images.csv
+    python manage.py remove_gps_data /vol/data-migrace/files_with_gps.csv
+    python manage.py remove_gps_data /vol/data-migrace/images.csv
     """
 
     help = _("core.management.commands.remove_gps_data.Command.help")
 
     def add_arguments(self, parser):
-        """Provádí operaci add arguments.
+        """
+        Provádí operaci add arguments.
 
         :param parser: Vstupní hodnota ``parser`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         parser.add_argument(
             "csv_file",
             type=str,
@@ -55,11 +56,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Zpracuje hodnotu.
+        """
+        Zpracuje hodnotu. v aplikaci.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         csv_file = options["csv_file"]
 
         logger.debug(

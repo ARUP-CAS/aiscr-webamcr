@@ -68,7 +68,7 @@ Třídy
 
    .. py:method:: build_document()
 
-      Sestaví document.
+      Sestaví document. v aplikaci.
 
       :return: Vrací nově vytvořený výsledek operace.
 
@@ -78,5 +78,4 @@ Třídy
 
       :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
       :param popup_parametry: Vstupní hodnota ``popup_parametry`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 

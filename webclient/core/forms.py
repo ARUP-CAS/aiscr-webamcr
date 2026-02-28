@@ -19,9 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class SelectMultipleSeparator(forms.SelectMultiple):
-    """
-    Override nad widgetom na zobrazení multi selectu stejně v každém formuláři.
-    """
+    """Override nad widgetom na zobrazení multi selectu stejně v každém formuláři."""
 
     def __init__(
         self,
@@ -32,11 +30,12 @@ class SelectMultipleSeparator(forms.SelectMultiple):
         },
         choices=(),
     ):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
         :param choices: Vstupní hodnota ``choices`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(attrs, choices)
 
 
@@ -46,21 +45,24 @@ class TwoLevelSelectField(forms.CharField):
     """
 
     def to_python(self, selected_value):
-        """Provádí operaci to python.
+        """
+        Provádí operaci to python.
 
         :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if selected_value:
             return Heslar.objects.get(pk=int(selected_value))
         else:
             return None
 
     def has_changed(self, initial, data) -> bool:
-        """Určí, zda changed.
+        """
+        Určí, zda changed.
 
         :param initial: Vstupní hodnota ``initial`` pro danou operaci.
         :param data: Vstupní hodnota ``data`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        :return: Vrací výsledek ověření nebo validačního pravidla.
+        """
         if initial is not None:
             initial = Heslar.objects.get(pk=int(initial))
         return super().has_changed(initial, data)
@@ -72,31 +74,35 @@ class HeslarChoiceFieldField(forms.ChoiceField):
     """
 
     def clean(self, selected_value):
-        """Provádí operaci clean.
+        """
+        Provádí operaci clean.
 
         :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if selected_value:
             return Heslar.objects.get(pk=int(selected_value))
         else:
             return super().clean(selected_value)
 
     def to_python(self, selected_value):
-        """Provádí operaci to python.
+        """
+        Provádí operaci to python.
 
         :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if selected_value:
             return Heslar.objects.get(pk=int(selected_value))
         else:
             return None
 
     def has_changed(self, initial, data) -> bool:
-        """Určí, zda changed.
+        """
+        Určí, zda changed.
 
         :param initial: Vstupní hodnota ``initial`` pro danou operaci.
         :param data: Vstupní hodnota ``data`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        :return: Vrací výsledek ověření nebo validačního pravidla.
+        """
         if initial is not None:
             initial = Heslar.objects.get(pk=int(initial))
         return super().has_changed(initial, data)
@@ -105,20 +111,22 @@ class HeslarChoiceFieldField(forms.ChoiceField):
 class CheckStavNotChangedForm(forms.Form):
     """
     Formulář pro kontrolu jestli se stav záznamu nezmenil mezi jeho načtením a odeslánim zmeny.
+
     Celá logika je v clean metóde.
     """
 
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, db_stav=None, require_confirmation=False, dokument_warnings=None, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param db_stav: Vstupní hodnota ``db_stav`` pro danou operaci.
         :param require_confirmation: Vstupní hodnota ``require_confirmation`` pro danou operaci.
         :param dokument_warnings: Vstupní hodnota ``dokument_warnings`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.db_stav = db_stav
         super(CheckStavNotChangedForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -151,9 +159,7 @@ class CheckStavNotChangedForm(forms.Form):
         self.helper.form_tag = False
 
     def clean(self):
-        """Provádí operaci clean.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci clean."""
         cleaned_data = super().clean()
         old_stav = self.cleaned_data.get("old_stav")
         if str(self.db_stav) != str(old_stav):
@@ -170,9 +176,7 @@ class CheckStavNotChangedForm(forms.Form):
 
 
 class VratitForm(forms.Form):
-    """
-    Formulář pro vrácení záznamu. Obsahuje jen text pole pro zdůvodnění vrácení.
-    """
+    """Formulář pro vrácení záznamu. Obsahuje jen text pole pro zdůvodnění vrácení."""
 
     reason = forms.CharField(
         label=_("core.forms.VratitForm.reason.label"),
@@ -182,11 +186,12 @@ class VratitForm(forms.Form):
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(VratitForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -199,11 +204,12 @@ class VratitFormDokument(VratitForm):
     ident_cely = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.fields["reason"].widget = forms.Textarea(
             attrs={"rows": 3, "cols": 150, "required": "required", "class": "textinput form-control"}
@@ -224,12 +230,13 @@ class VratitFormAZ(VratitForm):
     )
 
     def __init__(self, *args, az, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param az: Vstupní hodnota ``az`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         if az.stav != AZ_STAV_ODESLANY:
             self.fields.pop("dokument", None)
@@ -241,15 +248,14 @@ class VratitFormAZ(VratitForm):
 
 
 class DecimalTextWideget(forms.widgets.TextInput):
-    """
-    Třida pro formátování hodnoty velikosti souboru na 3 desetiná místa.
-    """
+    """Třida pro formátování hodnoty velikosti souboru na 3 desetiná místa."""
 
     def format_value(self, value):
-        """Provádí operaci format value.
+        """
+        Provádí operaci format value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if value == "" or value is None:
             return None
         if self.is_localized:
@@ -260,6 +266,7 @@ class DecimalTextWideget(forms.widgets.TextInput):
 class OdstavkaSystemuForm(forms.ModelForm):
     """
     Formulář pro nastavení a úpravu odstávky.
+
     Vrámci načítáni formuláře se doplní načítají hodnoty z template odstávky.
     """
 
@@ -300,11 +307,12 @@ class OdstavkaSystemuForm(forms.ModelForm):
         )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(OdstavkaSystemuForm, self).__init__(*args, **kwargs)
         with open("/vol/web/nginx/data/cs/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
@@ -364,9 +372,7 @@ class BaseFilterForm(forms.Form):
     list_to_check = ["historie_datum_zmeny_od"]
 
     def clean(self):
-        """Provádí operaci clean.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci clean."""
         cleaned_data = super(BaseFilterForm, self).clean()
         error_list = []
         ERRORS = {
@@ -404,9 +410,7 @@ class TransaltionImportForm(forms.Form):
     )
 
     def clean(self):
-        """Provádí operaci clean.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci clean."""
         cleaned_data = super().clean()
         file = cleaned_data.get("file")
         if file.size < 1000:

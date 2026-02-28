@@ -16,26 +16,27 @@ class Command(BaseCommand):
     pro různé typy záznamů (PIAN, nález, projekt, dokument).
 
     Parametry:
-        - model: Typ modelu pro transformaci (pian, nalez, projekt, dokument)
+    - model: Typ modelu pro transformaci (pian, nalez, projekt, dokument)
 
     Poznámka:
-        - Transformuje pouze záznamy, které mají vyplněnou geometrii (geom) ale nemají vyplněnou S-JTSK geometrii (geom_sjtsk)
+    - Transformuje pouze záznamy, které mají vyplněnou geometrii (geom) ale nemají vyplněnou S-JTSK geometrii (geom_sjtsk)
 
     Příklady použití::
 
-        python manage.py transform_to_sjtsk pian
-        python manage.py transform_to_sjtsk nalez
-        python manage.py transform_to_sjtsk projekt
-        python manage.py transform_to_sjtsk dokument
+    python manage.py transform_to_sjtsk pian
+    python manage.py transform_to_sjtsk nalez
+    python manage.py transform_to_sjtsk projekt
+    python manage.py transform_to_sjtsk dokument
     """
 
     help = _("core.management.commands.transform_to_sjtsk.Command.help")
 
     def add_arguments(self, parser):
-        """Provádí operaci add arguments.
+        """
+        Provádí operaci add arguments.
 
         :param parser: Vstupní hodnota ``parser`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         parser.add_argument(
             "model",
             type=str,
@@ -44,11 +45,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Zpracuje hodnotu.
+        """
+        Zpracuje hodnotu. v aplikaci.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         model_type = options["model"]
 
         logger.debug(
@@ -71,9 +73,11 @@ class Command(BaseCommand):
         )
 
     def _transform_pian(self):
-        """Transformuje pian.
+        """
+        Transformuje pian.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         from pian.models import Pian
 
         self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_pian.processing"))
@@ -149,9 +153,11 @@ class Command(BaseCommand):
         )
 
     def _transform_nalez(self):
-        """Transformuje nalez.
+        """
+        Transformuje nalez.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         from pas.models import SamostatnyNalez
 
         self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_nalez.processing"))
@@ -227,9 +233,11 @@ class Command(BaseCommand):
         )
 
     def _transform_projekt(self):
-        """Transformuje projekt.
+        """
+        Transformuje projekt.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         from projekt.models import Projekt
 
         self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_projekt.processing"))
@@ -305,9 +313,11 @@ class Command(BaseCommand):
         )
 
     def _transform_dokument(self):
-        """Transformuje dokument.
+        """
+        Transformuje dokument.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         from dokument.models import DokumentExtraData
 
         self.stdout.write(_("core.management.commands.transform_to_sjtsk.Command._transform_dokument.processing"))

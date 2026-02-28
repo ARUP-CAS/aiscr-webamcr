@@ -17,7 +17,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: VypisOnlyView
@@ -36,7 +35,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -52,4 +50,3 @@ Funkce
    :param sections_data: Vstupní hodnota ``sections_data`` pro danou operaci.
    :param iterator: Vstupní hodnota ``iterator`` pro danou operaci.
    :param user: Vstupní hodnota ``user`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.

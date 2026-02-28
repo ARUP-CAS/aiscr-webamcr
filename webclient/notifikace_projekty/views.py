@@ -48,18 +48,17 @@ CARD_NAME_TRANS = {
 
 
 class PesListView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro zobrazení listu hlídacích psů.
-    """
+    """Třída pohledu pro zobrazení listu hlídacích psů."""
 
     http_method_names = ["get"]
     template_name = "notifikace_projekty/pes_list.html"
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         old_pes_post = self.request.session.pop("_old_pes_post", None)
         PesFormset = {}
@@ -124,20 +123,19 @@ class PesListView(LoginRequiredMixin, TemplateView):
 
 
 class PesCreateView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro vytvořené hlídacího psa.
-    """
+    """Třída pohledu pro vytvořené hlídacího psa."""
 
     http_method_names = ["post"]
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         formsets = []
         valid = True
         pes_form_valid = False
@@ -194,9 +192,7 @@ class PesCreateView(LoginRequiredMixin, View):
 
 
 class PesSmazatView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro smazání hlídacího psa pomocí modalu.
-    """
+    """Třída pohledu pro smazání hlídacího psa pomocí modalu."""
 
     template_name = "core/transakce_modal.html"
     title = _("notifikaceProjekty.views.pesSmazatView.title.text")
@@ -204,9 +200,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
     button = _("notifikaceProjekty.views.pesSmazatView.submitButton")
 
     def get_zaznam(self) -> Pes:
-        """Vrací zaznam.
+        """
+        Vrací zaznam. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         id = self.kwargs.get("pk")
         return get_object_or_404(
             Pes,
@@ -214,9 +212,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         )
 
     def get_object_identification(self) -> str:
-        """Vrací object identification.
+        """
+        Vrací object identification.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         pes: Pes = self.get_zaznam()
         object = pes.content_object
         if isinstance(object, RuianKatastr) or isinstance(object, RuianOkres) or isinstance(object, RuianKraj):
@@ -226,10 +226,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         return ""
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
@@ -242,22 +243,24 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         try:
             zaznam = self.get_zaznam()
             zaznam.delete()

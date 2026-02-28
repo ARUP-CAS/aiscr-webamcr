@@ -52,16 +52,18 @@ logger = logging.getLogger(__name__)
 class LocalResolver(etree.Resolver):
     """
     Resolver, který nahradí vzdálené XSD URL lokálním souborem.
+
     Hodí se, když libxml neumí stahovat přes HTTP a nechcete upravovat XSD.
     """
 
     def resolve(self, url, id, context):
-        """Provádí operaci resolve.
+        """
+        Provádí operaci resolve.
 
         :param url: Vstupní hodnota ``url`` pro danou operaci.
         :param id: Identifikátor zpracovávaného záznamu.
         :param context: Vstupní hodnota ``context`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if url == "http://www.w3.org/2001/03/xml.xsd":
             local_path = "xml_generator/definitions/xml.xsd"
             return self.resolve_filename(local_path, context)
@@ -72,47 +74,44 @@ class WaitForPageLoad:
     """Implementuje komponentu ``WaitForPageLoad`` v rámci aplikace."""
 
     def __init__(self, browser, wait_time=20):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param browser: Vstupní hodnota ``browser`` pro danou operaci.
         :param wait_time: Vstupní hodnota ``wait_time`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.browser = browser
         self.wait_time = wait_time
 
     def __enter__(self):
-        """Připraví objekt pro použití v kontextovém manageru.
-
-        :return: Vrací výsledek provedené operace."""
+        """Připraví objekt pro použití v kontextovém manageru."""
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
 
     def page_has_loaded(self):
-        """Provádí operaci page has loaded.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci page has loaded."""
         new_page = self.browser.find_element(By.TAG_NAME, "html")
         return new_page.id != self.old_page.id
 
     def page_is_ready(self):
-        """Provádí operaci page is ready.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci page is ready."""
         page_state = self.browser.execute_script("return document.readyState;")
         return page_state == "complete"
 
     def __exit__(self, *_):
-        """Ukončí kontextový manager a provede úklid.
+        """
+        Ukončí kontextový manager a provede úklid.
 
         :param _: Dodatečné poziční argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         self.wait_for(self.page_has_loaded)
         self.wait_for(self.page_is_ready)
 
     def wait_for(self, condition_function):
-        """Provádí operaci wait for.
+        """
+        Provádí operaci wait for.
 
         :param condition_function: Vstupní hodnota ``condition_function`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         start_time = time.time()
         while time.time() < start_time + self.wait_time:
             if condition_function():
@@ -151,9 +150,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Provádí operaci setUpClass.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci setUpClass."""
         super().setUpClass()
         cls.server_thread.is_ready.wait()
         if cls.server_thread.error:
@@ -161,9 +158,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Provádí operaci tearDownClass.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci tearDownClass."""
         cls.server_thread.terminate()
         super().tearDownClass()
 
@@ -174,28 +169,24 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def _terminate_thread(cls):
-        """Provádí operaci terminate thread.
+        """
+        Provádí operaci terminate thread.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         pass
 
     @classmethod
     def get_base_test_data(cls):
-        """Vrací base test data.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací base test data."""
         pass
 
     def go_to_form(self):
-        """Provádí operaci go to form.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci go to form."""
         pass
 
     def setUp(self):
-        """Provádí operaci setUp.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci setUp."""
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.start")
         self.wipe_Fedora()
         self.clone_Database()
@@ -225,10 +216,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.setup.end")
 
     def get_container_content(self, container_path):
-        """Vrací container content.
+        """
+        Vrací container content.
 
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -244,11 +236,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return members
 
     def save_container_content(self, container_path, path):
-        """Uloží container content.
+        """
+        Uloží container content.
 
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
         :param path: Vstupní hodnota ``path`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -296,11 +289,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return members
 
     def porovnej_png_obsah(self, bin1, bin2):
-        """Provádí operaci porovnej png obsah.
+        """
+        Provádí operaci porovnej png obsah.
 
         :param bin1: Vstupní hodnota ``bin1`` pro danou operaci.
         :param bin2: Vstupní hodnota ``bin2`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         try:
             img1 = Image.open(BytesIO(bin1)).convert("RGBA")
             img2 = Image.open(BytesIO(bin2)).convert("RGBA")
@@ -314,11 +308,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return not rozdil.getbbox()
 
     def check_container_content(self, container_path, path):
-        """Ověří container content.
+        """
+        Ověří container content.
 
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
         :param path: Vstupní hodnota ``path`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
         members = []
@@ -380,10 +375,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
     auth = requests.auth.HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
 
     def purge_container(self, container_path):
-        """Provádí operaci purge container.
+        """
+        Provádí operaci purge container.
 
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         response = requests.delete(container_path + "/fcr:tombstone", auth=self.auth)
         if not str(response.status_code).startswith("2"):
             logger.error(
@@ -392,9 +388,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
     def delete_container(self, container_path):
-        """Odstraní zadaný kontejner ve Fedora repozitáři pro účely testu.
+        """
+        Odstraní zadaný kontejner ve Fedora repozitáři pro účely testu.
+
         :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění.
         """
         response = requests.delete(container_path, auth=self.auth)
         if not str(response.status_code).startswith("2"):
@@ -404,11 +401,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
     def wipe_Fedora_dir(self, name, deep):
-        """Provádí operaci wipe Fedora dir.
+        """
+        Provádí operaci wipe Fedora dir.
 
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param deep: Vstupní hodnota ``deep`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         mem = self.get_container_content(name)
         for item in mem:
             self.wipe_Fedora_dir(item, deep + 1)
@@ -416,11 +414,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.delete_container(item)
 
     def find_files(self, directory, filename):
-        """Provádí operaci find files.
+        """
+        Provádí operaci find files.
 
         :param directory: Vstupní hodnota ``directory`` pro danou operaci.
         :param filename: Vstupní hodnota ``filename`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         matches = []
         for root, _, files in os.walk(directory):
             if filename in files:
@@ -428,11 +427,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return matches
 
     def delete_tombstones(self, url, name, dir):
-        """Odstraní tombstone záznamy vytvořené během testovacího běhu.
+        """
+        Odstraní tombstone záznamy vytvořené během testovacího běhu.
+
         :param url: Vstupní hodnota ``url`` pro danou operaci.
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param dir: Vstupní hodnota ``dir`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění.
         """
         results = self.find_files(dir, "fcr-root.json")
         for res in results:
@@ -444,11 +444,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                     self.purge_container(f"{url}{matches}")
 
     def save_fedora_change(self, time, path):
-        """Uloží fedora change.
+        """
+        Uloží fedora change.
 
         :param time: Vstupní hodnota ``time`` pro danou operaci.
         :param path: Vstupní hodnota ``path`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         headers = {}
         response = requests.get(
             f"{self.api_url}fcr:search?condition=fedora_id={self.api_url}{settings.FEDORA_SERVER_NAME}/*&condition=modified>{time}&offset=0&max_results=100&format=json",
@@ -471,11 +472,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     def check_fedora_change(self, time, path):
         # Pomocný debug výpis změny ve Fedoře je zde záměrně vypnutý.
-        """Ověří fedora change.
+        """
+        Ověří fedora change.
 
         :param time: Vstupní hodnota ``time`` pro danou operaci.
         :param path: Vstupní hodnota ``path`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         if os.name == "nt":
             self.wait(1.5)
             self.save_fedora_change(
@@ -506,10 +508,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.check_container_content(n["fedora_id"], path)
 
     def check_fedora_delete(self, records):
-        """Ověří fedora delete.
+        """
+        Ověří fedora delete.
 
         :param records: Vstupní hodnota ``records`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         headers = {}
         for item in records:
             response = requests.get(
@@ -518,18 +521,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.assertIn(response.status_code, [410, 404])
 
     def wipe_Fedora(self):
-        """Provádí operaci wipe Fedora.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci wipe Fedora."""
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/model", 0)
         self.wipe_Fedora_dir(f"{self.api_url}{settings.FEDORA_SERVER_NAME}/record", 2)
         self.delete_tombstones(self.api_url, settings.FEDORA_SERVER_NAME, settings.FEDORA_PATH)
 
     @staticmethod
     def clone_Database():
-        """Provádí operaci clone Database.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci clone Database."""
         logger.debug("core.tests.test_selenium.BaseSeleniumTestClass.clone_Database")
         prod_conn = None
         prod_cursor = None
@@ -567,13 +566,14 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         connection.connect()
 
     def assertIn2(self, member1, member2, container, msg=None):
-        """Provádí operaci assertIn2.
+        """
+        Provádí operaci assertIn2.
 
         :param member1: Vstupní hodnota ``member1`` pro danou operaci.
         :param member2: Vstupní hodnota ``member2`` pro danou operaci.
         :param container: Vstupní hodnota ``container`` pro danou operaci.
         :param msg: Vstupní hodnota ``msg`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         container_result = container.current_url
         repeat = 0
         while (member1 not in container_result and member2 not in container_result) and repeat < 10:
@@ -590,10 +590,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self.fail(self._formatMessage(msg, standardMsg))
 
     def _is_ignored_browser_error(self, entry: dict) -> bool:
-        """Určí, zda ignored browser error.
+        """
+        Určí, zda ignored browser error.
 
         :param entry: Vstupní hodnota ``entry`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        :return: Vrací výsledek ověření nebo validačního pravidla.
+        """
         msg = entry.get("message", "") or ""
         for path, err in self.IGNORED_BROWSER_ERRORS:
             if path and path not in msg:
@@ -620,17 +622,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             self._js_errors = []
 
     def tearDown(self):
-        """Provádí operaci tearDown.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci tearDown."""
         self._collect_js_errors_at_end()
 
         result = self._outcome.result
 
         def has_issue():
-            """Určí, zda issue.
-
-            :return: Vrací výsledek ověření nebo validačního pravidla."""
+            """Určí, zda issue."""
             return any(t is self and exc for t, exc in (result.errors + result.failures))
 
         # Pokud test zatím OK a máme JS chyby => přidej FAILURE
@@ -691,27 +689,31 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         super().tearDown()
 
     def _fixture_teardown(self):
-        """Provádí operaci fixture teardown.
+        """
+        Provádí operaci fixture teardown.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         pass
 
     def wait(self, interval):
-        """Provádí operaci wait.
+        """
+        Provádí operaci wait.
 
         :param interval: Vstupní hodnota ``interval`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         time.sleep(interval)
 
     def wait_for(self, condition_function, by, value, timeout=12, poll=0.5):
-        """Provádí operaci wait for.
+        """
+        Provádí operaci wait for.
 
         :param condition_function: Vstupní hodnota ``condition_function`` pro danou operaci.
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
         :param poll: Vstupní hodnota ``poll`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         end = time.time() + timeout
         while time.time() < end:
             try:
@@ -724,22 +726,24 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return False
 
     def findElement(self, by, value):
-        """Provádí operaci findElement.
+        """
+        Provádí operaci findElement.
 
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         try:
             return len(self.driver.find_elements(by, value)) > 0
         except StaleElementReferenceException:
             return False
 
     def ElementIsClickable(self, by, value):
-        """Provádí operaci ElementIsClickable.
+        """
+        Provádí operaci ElementIsClickable.
 
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         try:
             element = self.driver.find_element(by, value)
             return element.is_displayed() and element.is_enabled()
@@ -747,11 +751,12 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             return False
 
     def ElementClick(self, by=By.ID, value: Optional[str] = None):
-        """Provádí operaci ElementClick.
+        """
+        Provádí operaci ElementClick.
 
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if not self.wait_for(self.findElement, by, value):
             logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "value": value})
             raise Exception("ElementClickError")
@@ -775,12 +780,13 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         raise Exception("ElementClickError")
 
     def ElementSendKeys(self, by, value, keys):
-        """Provádí operaci ElementSendKeys.
+        """
+        Provádí operaci ElementSendKeys.
 
         :param by: Vstupní hodnota ``by`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param keys: Vstupní hodnota ``keys`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         res = self.wait_for(self.findElement, by, value)
         if res is False:
             logger.warning(
@@ -810,23 +816,25 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             raise Exception("ElementSendKeysError")
 
     def clickAt(self, el, position_x, position_y):
-        """Provádí operaci clickAt.
+        """
+        Provádí operaci clickAt.
 
         :param el: Vstupní hodnota ``el`` pro danou operaci.
         :param position_x: Vstupní hodnota ``position_x`` pro danou operaci.
         :param position_y: Vstupní hodnota ``position_y`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(el, position_x, position_y)
         action.click()
         action.perform()
 
     def clickAtMapCoord(self, lon, lat):
-        """Provádí operaci clickAtMapCoord.
+        """
+        Provádí operaci clickAtMapCoord.
 
         :param lon: Vstupní hodnota ``lon`` pro danou operaci.
         :param lat: Vstupní hodnota ``lat`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         self.driver.execute_script(f"""
  window.getToday = function() {{
 return new Date('2025-06-28T12:00:00Z');}};
@@ -848,62 +856,76 @@ return new Date('2025-06-28T12:00:00Z');}};
 }});""")
 
     def _username(self, type="archeolog"):
-        """Provádí operaci username.
+        """
+        Provádí operaci username.
 
         :param type: Vstupní hodnota ``type`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return USERS[type]["USERNAME"]
 
     def _password(sel, type="archeolog"):
-        """Provádí operaci password.
+        """
+        Provádí operaci password.
 
         :param sel: Vstupní hodnota ``sel`` pro danou operaci.
         :param type: Vstupní hodnota ``type`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return USERS[type]["PASSWORD"]
 
     def _select_value_select_picker(self, field_id, selected_value):
-        """Provádí operaci select value select picker.
+        """
+        Provádí operaci select value select picker.
 
         :param field_id: Identifikátor objektu ``field``.
         :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         dropdown = self.driver.find_element(By.ID, field_id)
         dropdown.find_element(By.XPATH, f"//option[. = '{selected_value}']").click()
 
     def _fill_text_field(self, field_id, field_value):
-        """Provádí operaci fill text field.
+        """
+        Provádí operaci fill text field.
 
         :param field_id: Identifikátor objektu ``field``.
         :param field_value: Vstupní hodnota ``field_value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         self.driver.find_element(By.ID, field_id).click()
         self.driver.find_element(By.ID, field_id).send_keys(field_value)
 
     def _select_map_point(self, field_id, click_count):
-        """Provádí operaci select map point.
+        """
+        Provádí operaci select map point.
 
         :param field_id: Identifikátor objektu ``field``.
         :param click_count: Vstupní hodnota ``click_count`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         for _ in range(click_count):
             self.driver.find_element(By.ID, field_id).click()
             time.sleep(1)
 
     def _select_radion_group_item(self, item_order=1):
-        """Provádí operaci select radion group item.
+        """
+        Provádí operaci select radion group item.
 
         :param item_order: Vstupní hodnota ``item_order`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         self.driver.find_element(
             By.CSS_SELECTOR, f".custom-radio:nth-child({item_order}) > .custom-control-label"
         ).click()
 
     def _fill_form_fields(self, test_data):
-        """Provádí operaci fill form fields.
+        """
+        Provádí operaci fill form fields.
 
         :param test_data: Vstupní hodnota ``test_data`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         for item, value in test_data.items():
             field_type = value["field_type"]
             logger.info(
@@ -925,10 +947,11 @@ return new Date('2025-06-28T12:00:00Z');}};
                 )
 
     def login(self, type="archeolog"):
-        """Provádí operaci login.
+        """
+        Provádí operaci login.
 
         :param type: Vstupní hodnota ``type`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         self.goToAddress()
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "czech")
@@ -939,21 +962,22 @@ return new Date('2025-06-28T12:00:00Z');}};
             self.ElementClick(By.CSS_SELECTOR, ".btn")
 
     def logout(self):
-        """Provádí operaci logout.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci logout."""
         self.ElementClick(By.ID, "buttonLogout")
 
     def goToAddress(self, rel_address="/"):
-        """Provádí operaci goToAddress.
+        """
+        Provádí operaci goToAddress.
 
         :param rel_address: Vstupní hodnota ``rel_address`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
     def upload_file(self, file_path, file_name, mime="image/jpeg"):
-        """Metoda nahraje soubor do Dropzone.
+        """
+        Metoda nahraje soubor do Dropzone.
+
         :param file_path: Hodnota parametru ``file_path`` použitého touto operací.
         :param file_name: Hodnota parametru ``file_name`` použitého touto operací.
         :param mime: Hodnota parametru ``mime`` použitého touto operací.
@@ -1063,11 +1087,12 @@ return new Date('2025-06-28T12:00:00Z');}};
             raise AssertionError(f"Upload failed: {result}")
 
     def createFedoraRecord(self, ident_cely, user_name="archeolog"):
-        """Provádí operaci createFedoraRecord.
+        """
+        Provádí operaci createFedoraRecord.
 
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :param user_name: Vstupní hodnota ``user_name`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         try:
             record = get_record_from_ident(ident_cely)
             user = User.objects.get(email=self._username(user_name))
@@ -1089,7 +1114,9 @@ return new Date('2025-06-28T12:00:00Z');}};
                 )
 
     def uploadFileToFedora(self, record, filename, user_name="archeolog"):
-        """Nahraje do Fedory testovací soubor
+        """
+        Nahraje do Fedory testovací soubor
+
         :param record: Hodnota parametru ``record`` použitého touto operací.
         :param filename: Hodnota parametru ``filename`` použitého touto operací.
         :param user_name: Hodnota parametru ``user_name`` použitého touto operací.
@@ -1116,7 +1143,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         fedora_transaction.mark_transaction_as_closed()
 
     def odstran_elementy(self, root, ignorovane_tagy):
-        """Rekurzivně odstraní ignorované tagy z XML stromu.
+        """
+        Rekurzivně odstraní ignorované tagy z XML stromu.
+
         :param root: Hodnota parametru ``root`` použitého touto operací.
         :param ignorovane_tagy: Hodnota parametru ``ignorovane_tagy`` použitého touto operací.
         """
@@ -1131,7 +1160,9 @@ return new Date('2025-06-28T12:00:00Z');}};
                 self.odstran_elementy(elem, ignorovane_tagy)
 
     def odstran_uuid_z_xml(self, element):
-        """Rekurzivně odstraní UUID z textů a atributů XML elementu.
+        """
+        Rekurzivně odstraní UUID z textů a atributů XML elementu.
+
         :param element: Hodnota parametru ``element`` použitého touto operací.
         """
         # Nahraď v textu
@@ -1149,10 +1180,12 @@ return new Date('2025-06-28T12:00:00Z');}};
             self.odstran_uuid_z_xml(child)
 
     def serad_xml_podle_tagu_a_obsahu(self, element):
-        """Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
+        """
+        Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
+
         podle obsahu (pomocí _element_klic).
         Nezasahuje do pořadí různých typů elementů, čímž zachovává validitu vůči XSD.
-        
+
         :param element: Hodnota parametru ``element`` použitého touto operací.
         """
         # Nejprve rekurze
@@ -1180,10 +1213,12 @@ return new Date('2025-06-28T12:00:00Z');}};
         element[:] = nove_deti
 
     def _element_klic(self, elem):
-        """Provádí operaci element klic.
+        """
+        Provádí operaci element klic.
 
         :param elem: Vstupní hodnota ``elem`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         hodnoty = [elem.tag]
         if elem.text:
             hodnoty.append(elem.text.strip())
@@ -1195,9 +1230,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         return "|".join(hodnoty)
 
     def nahrad_element_id_rekurzivne(self, element, element_name):
-        """Rekurzivně upraví všechny elementy <amcr:id> s textem 'element_name-XXX' na 'element_name-0000001'.
+        """
+        Rekurzivně upraví všechny elementy <amcr:id> s textem 'element_name-XXX' na 'element_name-0000001'.
+
         Nezávislé na konkrétní verzi namespace.
-        
+
         :param element: Hodnota parametru ``element`` použitého touto operací.
         :param element_name: Hodnota parametru ``element_name`` použitého touto operací.
         """
@@ -1212,12 +1249,13 @@ return new Date('2025-06-28T12:00:00Z');}};
             self.nahrad_element_id_rekurzivne(child, element_name)
 
     def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy, filename):
-        """Provádí operaci xml to string bez ignorovanych z textu.
+        """
+        Provádí operaci xml to string bez ignorovanych z textu.
 
         :param xml_text: Vstupní hodnota ``xml_text`` pro danou operaci.
         :param ignorovane_tagy: Vstupní hodnota ``ignorovane_tagy`` pro danou operaci.
         :param filename: Vstupní hodnota ``filename`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         parser = etree.XMLParser(remove_blank_text=True)
         root = etree.fromstring(xml_text, parser)
         ignorovane_tagy_trans = {}
@@ -1248,7 +1286,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         return text
 
     def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy, filename):
-        """Porovná dva XML soubory po odstranění ignorovaných tagů.
+        """
+        Porovná dva XML soubory po odstranění ignorovaných tagů.
+
         :param vzorovy_soubor: Hodnota parametru ``vzorovy_soubor`` použitého touto operací.
         :param vystupni_soubor: Hodnota parametru ``vystupni_soubor`` použitého touto operací.
         :param ignorovane_tagy: Hodnota parametru ``ignorovane_tagy`` použitého touto operací.
@@ -1265,7 +1305,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def nahrad_base_uri_auto(self, graf, nova_base_uri="info:test-base/"):
-        """Najde nejběžnější základní URI (hostname + prefix) v grafu a nahradí ho za `nova_base_uri`.
+        """
+        Najde nejběžnější základní URI (hostname + prefix) v grafu a nahradí ho za `nova_base_uri`.
+
         :param graf: Hodnota parametru ``graf`` použitého touto operací.
         :param nova_base_uri: Hodnota parametru ``nova_base_uri`` použitého touto operací.
         """
@@ -1315,11 +1357,12 @@ return new Date('2025-06-28T12:00:00Z');}};
             graf.add(t)
 
     def odstran_predikaty(self, graf, predikaty_k_ignoru):
-        """Provádí operaci odstran predikaty.
+        """
+        Provádí operaci odstran predikaty.
 
         :param graf: Vstupní hodnota ``graf`` pro danou operaci.
         :param predikaty_k_ignoru: Vstupní hodnota ``predikaty_k_ignoru`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         for pred, typ in predikaty_k_ignoru.items():
             # Pokud je to string s dvojtečkou, pokusíme se ho expandovat jako CURIE (prefix:name)
             if ":" in pred and not pred.startswith("http"):
@@ -1343,7 +1386,9 @@ return new Date('2025-06-28T12:00:00Z');}};
                 graf.add((s, p, new_obj))
 
     def odstran_uuid_z_rdf(self, graf):
-        """Projde RDF graf a nahradí výskyty UUID v URIRef i Literal hodnotách.
+        """
+        Projde RDF graf a nahradí výskyty UUID v URIRef i Literal hodnotách.
+
         :param graf: Hodnota parametru ``graf`` použitého touto operací.
         """
         nove_triples = []
@@ -1367,12 +1412,13 @@ return new Date('2025-06-28T12:00:00Z');}};
             graf.add(triple)
 
     def porovnej_rdf_obsah(self, aktualni_rdf, ocekavany_rdf, ignorovat_predikaty=None):
-        """Provádí operaci porovnej rdf obsah.
+        """
+        Provádí operaci porovnej rdf obsah.
 
         :param aktualni_rdf: Vstupní hodnota ``aktualni_rdf`` pro danou operaci.
         :param ocekavany_rdf: Vstupní hodnota ``ocekavany_rdf`` pro danou operaci.
         :param ignorovat_predikaty: Vstupní hodnota ``ignorovat_predikaty`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         g1 = Graph()
         g1.parse(data=aktualni_rdf, format="turtle")
 
@@ -1401,11 +1447,12 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def uprav_rdf_pred_ulozenim(self, rdf_input, ignorovat_predikaty=None):
-        """Provádí operaci uprav rdf pred ulozenim.
+        """
+        Provádí operaci uprav rdf pred ulozenim.
 
         :param rdf_input: Vstupní hodnota ``rdf_input`` pro danou operaci.
         :param ignorovat_predikaty: Vstupní hodnota ``ignorovat_predikaty`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         g = Graph()
         g.parse(data=rdf_input, format="turtle")
 
@@ -1425,7 +1472,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         return nt_stabilni.encode("utf-8")
 
     def najdi_base_uri(self, vsechny_retezce):
-        """Najde nejčastější base URI ve všech string hodnotách (např. http://.../rest/)
+        """
+        Najde nejčastější base URI ve všech string hodnotách (např. http://.../rest/)
+
         :param vsechny_retezce: Hodnota parametru ``vsechny_retezce`` použitého touto operací.
         """
         prefixy = []
@@ -1441,7 +1490,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         return Counter(prefixy).most_common(1)[0][0]
 
     def sesbiraj_retezce(self, data):
-        """Rekurzivně sesbírá všechny stringy z JSON dat.
+        """
+        Rekurzivně sesbírá všechny stringy z JSON dat.
+
         :param data: Hodnota parametru ``data`` použitého touto operací.
         """
         hodnoty = []
@@ -1456,12 +1507,12 @@ return new Date('2025-06-28T12:00:00Z');}};
         return hodnoty
 
     def nahrad_base_uri_v_json(self, data, puvodni_base, nova_base):
-        """Rekurzivně nahradí base URI ve všech stringových hodnotách JSON objektu.
+        """
+        Rekurzivně nahradí base URI ve všech stringových hodnotách JSON objektu.
 
         :param data: JSON struktura (slovník, seznam nebo skalární hodnota) určená k úpravě.
         :param puvodni_base: Původní prefix URI, který se má ve stringových hodnotách nahradit.
         :param nova_base: Nový prefix URI, kterým se původní hodnota nahradí.
-        :return: Upravená JSON struktura se zaměněnými URI prefixy.
         """
         if isinstance(data, dict):
             return {k: self.nahrad_base_uri_v_json(v, puvodni_base, nova_base) for k, v in data.items()}
@@ -1473,11 +1524,11 @@ return new Date('2025-06-28T12:00:00Z');}};
             return data
 
     def nahrad_base_uri_auto_json(self, data, nova_base="info:test-base/"):
-        """Najde a nahradí nejčastější base URI v JSON string hodnotách.
+        """
+        Najde a nahradí nejčastější base URI v JSON string hodnotách.
 
         :param data: JSON struktura, ve které se má automaticky detekovat base URI.
         :param nova_base: Náhradní base URI použitá při přepisu nalezeného prefixu.
-        :return: Upravená JSON struktura; pokud base URI nelze určit, vrací původní data.
         """
         vsechny_str = self.sesbiraj_retezce(data)
         puvodni_base = self.najdi_base_uri(vsechny_str)
@@ -1486,11 +1537,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         return data  # žádná změna
 
     def odstran_klice(self, data, klice_k_ignoraci):
-        """Rekurzivně odstraní z JSON objektu všechny klíče uvedené v seznamu.
+        """
+        Rekurzivně odstraní z JSON objektu všechny klíče uvedené v seznamu.
 
         :param data: JSON struktura, ve které se mají odstranit vybrané klíče.
         :param klice_k_ignoraci: Seznam klíčů, které mají být z výsledku odstraněny.
-        :return: JSON struktura bez ignorovaných klíčů.
         """
         if isinstance(data, dict):
             return {k: self.odstran_klice(v, klice_k_ignoraci) for k, v in data.items() if k not in klice_k_ignoraci}
@@ -1500,10 +1551,10 @@ return new Date('2025-06-28T12:00:00Z');}};
             return data
 
     def normalizuj_json(self, data):
-        """Rekurzivně seřadí seznamy (pokud to jde) a klíče ve slovnících.
+        """
+        Rekurzivně seřadí seznamy (pokud to jde) a klíče ve slovnících.
 
         :param data: JSON struktura určená k normalizaci před porovnáním.
-        :return: Deterministicky uspořádaná JSON struktura pro stabilní porovnání.
         """
         if isinstance(data, dict):
             return {k: self.normalizuj_json(v) for k, v in sorted(data.items())}
@@ -1520,10 +1571,10 @@ return new Date('2025-06-28T12:00:00Z');}};
     UUID_REGEX = re.compile(r"[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}", re.IGNORECASE)
 
     def odstran_uuid(self, data):
-        """Rekurzivně nahradí UUID ve stringových hodnotách JSON objektu za placeholder.
+        """
+        Rekurzivně nahradí UUID ve stringových hodnotách JSON objektu za placeholder.
 
         :param data: JSON struktura obsahující hodnoty s UUID identifikátory.
-        :return: JSON struktura, kde jsou UUID nahrazené placeholderem ``UUID-REMOVED``.
         """
         if isinstance(data, dict):
             return {k: self.odstran_uuid(v) for k, v in data.items()}
@@ -1535,11 +1586,12 @@ return new Date('2025-06-28T12:00:00Z');}};
             return data
 
     def json_uprav_pro_porovnani(self, json_text, klice_k_ignoraci=None):
-        """Provádí operaci json uprav pro porovnani.
+        """
+        Provádí operaci json uprav pro porovnani.
 
         :param json_text: Vstupní hodnota ``json_text`` pro danou operaci.
         :param klice_k_ignoraci: Vstupní hodnota ``klice_k_ignoraci`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         json_obj = json.loads(json_text)
         if klice_k_ignoraci:
             json_obj = self.odstran_klice(json_obj, klice_k_ignoraci)
@@ -1549,12 +1601,13 @@ return new Date('2025-06-28T12:00:00Z');}};
         return json_obj
 
     def porovnej_json_rovnost(self, vzor_json_text, vystup_json_text, klice_k_ignoraci=None):
-        """Provádí operaci porovnej json rovnost.
+        """
+        Provádí operaci porovnej json rovnost.
 
         :param vzor_json_text: Vstupní hodnota ``vzor_json_text`` pro danou operaci.
         :param vystup_json_text: Vstupní hodnota ``vystup_json_text`` pro danou operaci.
         :param klice_k_ignoraci: Vstupní hodnota ``klice_k_ignoraci`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         json_vzor = self.json_uprav_pro_porovnani(vzor_json_text, klice_k_ignoraci)
         json_vystup = self.json_uprav_pro_porovnani(vystup_json_text, klice_k_ignoraci)
 
@@ -1567,9 +1620,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def getTime(self):
-        """Provádí operaci getTime.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci getTime."""
         if os.name == "nt":
             self.wait(1.5)
         t = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -1578,9 +1629,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         return t
 
     def wait_for_select2_results(self):
-        """Provádí operaci wait for select2 results.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci wait for select2 results."""
         self.driver.set_script_timeout(6)
         try:
             self.driver.find_element(By.CSS_SELECTOR, ".loading-results")
@@ -1603,21 +1652,22 @@ class CoreSeleniumTest(BaseSeleniumTestClass):
     """Implementuje komponentu ``CoreSeleniumTest`` v rámci aplikace."""
 
     def test_001_core_001(self):
-        """Test 001 Přihlášení do AMČR
+        """
+        Test 001 Přihlášení do AMČR
 
         Testuje přihlášení uživatele.
 
         Role:
-            Archeolog
+        Archeolog
 
         TestData:
-            uživatelské jméno a heslo
+        uživatelské jméno a heslo
 
         Steps:
-            1. Vyplnění formuláře na titulní stránce
+        1. Vyplnění formuláře na titulní stránce
 
         Expected:
-            1. Uživatel je přesměrován na stránku s titulkem AMČR Homepage
+        1. Uživatel je přesměrován na stránku s titulkem AMČR Homepage
         """
         logger.info("CoreSeleniumTest.test_core_001.start")
         self.login()

@@ -19,10 +19,11 @@ logger = logging.getLogger(__name__)
 
 @register.filter
 def url_to_classes(value):
-    """Provádí operaci url to classes.
+    """
+    Provádí operaci url to classes.
 
     :param value: Vstupní hodnota ``value`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     if value == "/":
         return "app-home"
     if value.endswith("/"):
@@ -33,7 +34,11 @@ def url_to_classes(value):
 
 @register.filter
 def katastry_to_list(value):
-    """Vrátí seznam katastrů ve formátu odděleném středníkem."""
+    """
+    Vrátí seznam katastrů ve formátu odděleném středníkem.
+
+    :param value: Popis parametru ``value``.
+    """
     value = [str(i) for i in value]
     display = "; ".join(value)
     return display
@@ -41,14 +46,22 @@ def katastry_to_list(value):
 
 @register.filter
 def hesla_to_list(value):
-    """Spojí hodnoty hesel do řetězce odděleného čárkami."""
+    """
+    Spojí hodnoty hesel do řetězce odděleného čárkami.
+
+    :param value: Popis parametru ``value``.
+    """
     list_hesla = ", ".join(value.values_list("heslo", flat=True))
     return list_hesla
 
 
 @register.filter
 def autori_ordered_list(value):
-    """Vrátí autory externího zdroje v definovaném pořadí."""
+    """
+    Vrátí autory externího zdroje v definovaném pořadí.
+
+    :param value: Popis parametru ``value``.
+    """
     return "; ".join(
         Osoba.objects.filter(externizdrojautor__externi_zdroj=value)
         .order_by("externizdrojautor__poradi")
@@ -58,7 +71,11 @@ def autori_ordered_list(value):
 
 @register.filter
 def render_daterange(value):
-    """Naformátuje PostgreSQL DateRange do čitelné textové podoby."""
+    """
+    Naformátuje PostgreSQL DateRange do čitelné textové podoby.
+
+    :param value: Popis parametru ``value``.
+    """
     if value == "" or value is None:
         return None
     if isinstance(value, DateRange):
@@ -76,7 +93,12 @@ def render_daterange(value):
 
 @register.filter
 def last_x_letters(value, x):
-    """Vrátí posledních ``x`` znaků ze vstupního řetězce."""
+    """
+    Vrátí posledních ``x`` znaků ze vstupního řetězce.
+
+    :param value: Popis parametru ``value``.
+    :param x: Popis parametru ``x``.
+    """
     if len(value) > x:
         return value[-x:]
     else:
@@ -85,7 +107,12 @@ def last_x_letters(value, x):
 
 @register.filter(name="ifinlist")
 def ifinlist(widget_optgroups, list):
-    """Vrátí popisky voleb, jejichž hodnota je v předaném seznamu."""
+    """
+    Vrátí popisky voleb, jejichž hodnota je v předaném seznamu.
+
+    :param widget_optgroups: Popis parametru ``widget_optgroups``.
+    :param list: Popis parametru ``list``.
+    """
     string = ""
     for group_name, group_choices, group_index in widget_optgroups:
         for option in group_choices:
@@ -99,7 +126,11 @@ def ifinlist(widget_optgroups, list):
 
 @register.filter
 def check_if_none(value):
-    """Vrátí prázdný řetězec, pokud je hodnota None nebo prázdná."""
+    """
+    Vrátí prázdný řetězec, pokud je hodnota None nebo prázdná.
+
+    :param value: Popis parametru ``value``.
+    """
     if value:
         return value
     else:
@@ -108,10 +139,11 @@ def check_if_none(value):
 
 @register.filter
 def get_katastr_name(value):
-    """Vrací katastr name.
+    """
+    Vrací katastr name.
 
     :param value: Vstupní hodnota ``value`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     if isinstance(value, list):
         katastre = RuianKatastr.objects.filter(pk__in=value)
         katastr_str = []
@@ -126,7 +158,11 @@ def get_katastr_name(value):
 
 @register.filter
 def true_false(value):
-    """Vrátí lokalizovaný text pro hodnotu ano/ne."""
+    """
+    Vrátí lokalizovaný text pro hodnotu ano/ne.
+
+    :param value: Popis parametru ``value``.
+    """
     if value and value is True:
         return _("core.template_filters.true_false.true.label")
     else:
@@ -135,7 +171,11 @@ def true_false(value):
 
 @register.filter
 def get_osoby_name(widget):
-    """Vrátí seznam osob vybraných ve widgetu jako text."""
+    """
+    Vrátí seznam osob vybraných ve widgetu jako text.
+
+    :param widget: Popis parametru ``widget``.
+    """
     list_hesla = ""
     if not widget["value"] or widget["value"] == [""]:
         return list_hesla
@@ -173,11 +213,12 @@ def get_osoby_name(widget):
 
 @register.simple_tag
 def get_value_from_heslar(nazev_heslare, hodnota):
-    """Vrací value from heslar.
+    """
+    Vrací value from heslar.
 
     :param nazev_heslare: Vstupní hodnota ``nazev_heslare`` pro danou operaci.
     :param hodnota: Vstupní hodnota ``hodnota`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     values = {
         ("externi_zdroj_typ", "kniha"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_KNIHA,
         ("externi_zdroj_typ", "cast_knihy"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_CAST_KNIHY,

@@ -14,9 +14,7 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: DokumentTypAutocomplete
@@ -27,9 +25,7 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: DokumentFormatAutocomplete
@@ -40,9 +36,7 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: PristupnostAutocomplete
@@ -53,9 +47,7 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: HeslarAutocompleteView
@@ -66,9 +58,7 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: HeslarNazevAutocompleteView
@@ -79,9 +69,7 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 Funkce
@@ -91,21 +79,34 @@ Funkce
 
    Pomocní funkce pro vytvoření dvoustupňového selectu.
 
+   :param first: Popis parametru ``first``.
+   :param second: Popis parametru ``second``.
+
 .. py:function:: heslar_12(druha, prvni_kat, id)
 
    Funkce pro vytvoření dvoustupňového selectu.
+
+   :param druha: Popis parametru ``druha``.
+   :param prvni_kat: Popis parametru ``prvni_kat``.
+   :param id: Popis parametru ``id``.
 
 .. py:function:: zjisti_katastr_souradnic(request)
 
    Funkce pohledu pro vrácení katastru podle souradnic.
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: zjisti_vychozi_hodnotu(request)
 
    Funkce pohledu pro zjištení výchozí hodnoty z heslaře.
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: zjisti_nadrazenou_hodnotu(request)
 
    Funkce pohledu pro zjištení nadřazené hodnoty z heslaře.
+
+   :param request: Popis parametru ``request``.
 
 .. py:function:: heslar_list(heslo_nazev, filter, use_exclude)
 
@@ -114,4 +115,3 @@ Funkce
    :param heslo_nazev: Vstupní hodnota ``heslo_nazev`` pro danou operaci.
    :param filter: Vstupní hodnota ``filter`` pro danou operaci.
    :param use_exclude: Vstupní hodnota ``use_exclude`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.

@@ -14,12 +14,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_delete, sender=NalezObjekt, weak=False)
 def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
-    """Odstraní nalez objekt.
+    """
+    Odstraní nalez objekt.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek operace odstranění."""
+    """
     logger.debug("nalez.signals.delete_nalez_objekt.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
     if not hasattr(instance, "active_transaction") or not hasattr(instance, "close_active_transaction_when_finished"):
@@ -67,12 +68,13 @@ def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
 
 @receiver(post_delete, sender=NalezPredmet, weak=False)
 def delete_nalez_predmet(sender, instance: NalezObjekt, **kwargs):
-    """Odstraní nalez predmet.
+    """
+    Odstraní nalez predmet.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek operace odstranění."""
+    """
     logger.debug("nalez.signals.delete_nalez_predmet.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
     if not hasattr(instance, "active_transaction") or not hasattr(instance, "close_active_transaction_when_finished"):

@@ -7,9 +7,7 @@ class NeidentakceConfig(AppConfig):
     name = "neidentakce"
 
     def ready(self):
-        """Provádí operaci ready.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ready."""
         super(NeidentakceConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import neidentakce.signals

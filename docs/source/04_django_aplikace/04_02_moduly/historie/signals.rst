@@ -13,4 +13,3 @@ Funkce
    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.

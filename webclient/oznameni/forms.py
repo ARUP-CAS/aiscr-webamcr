@@ -20,15 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class DateRangeField(forms.DateField):
-    """
-    Třída pro správnu práci s date range.
-    """
+    """Třída pro správnu práci s date range."""
 
     def to_python(self, value):
-        """Provádí operaci to python.
+        """
+        Provádí operaci to python.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if isinstance(value, DateRange):
             return value
         values = value.split("-")
@@ -51,15 +50,14 @@ class DateRangeField(forms.DateField):
 
 
 class DateRangeWidget(forms.TextInput):
-    """
-    Třída pro správně zobrazení date range.
-    """
+    """Třída pro správně zobrazení date range."""
 
     def format_value(self, value):
-        """Provádí operaci format value.
+        """
+        Provádí operaci format value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
@@ -77,9 +75,7 @@ class DateRangeWidget(forms.TextInput):
 
 
 class OznamovatelForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření oznámení oznamovatelem.
-    """
+    """Hlavní formulář pro vytvoření oznámení oznamovatelem."""
 
     telefon = forms.CharField(
         validators=[validate_phone_number],
@@ -120,11 +116,12 @@ class OznamovatelForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         required = kwargs.pop("required", True)
         required_next = kwargs.pop("required_next", False)
@@ -184,9 +181,7 @@ class OznamovatelForm(forms.ModelForm):
 
 
 class OznamovatelProjektForm(OznamovatelForm):
-    """
-    Hlavní formulář pro vytvoření oznámení.
-    """
+    """Hlavní formulář pro vytvoření oznámení."""
 
     telefon = forms.CharField(
         help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
@@ -201,9 +196,7 @@ class OznamovatelProjektForm(OznamovatelForm):
 
 
 class OznamovatelProjektCreateForm(OznamovatelProjektForm):
-    """
-    Hlavní formulář pro vytvoření oznámení.
-    """
+    """Hlavní formulář pro vytvoření oznámení."""
 
     send_mail = forms.BooleanField(
         initial=True,
@@ -213,17 +206,16 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
     )
 
     def clean_send_mail(self):
-        """Provádí operaci clean send mail.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci clean send mail."""
         return self.cleaned_data.get("send_mail", False)
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         if "send_mail" in self.data and self.data["send_mail"] == "":
             self.data = self.data.copy()
@@ -247,9 +239,7 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
 
 
 class ProjektOznameniForm(forms.ModelForm):
-    """
-    Hlavní formulář pro editaci a doplňení oznamovatele do projektu.
-    """
+    """Hlavní formulář pro editaci a doplňení oznamovatele do projektu."""
 
     planovane_zahajeni = DateRangeField(
         required=True,
@@ -306,11 +296,12 @@ class ProjektOznameniForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         change = kwargs.pop("change", False)
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
         self.fields["ident_cely"].required = False
@@ -358,8 +349,6 @@ class ProjektOznameniForm(forms.ModelForm):
 
 
 class FormWithCaptcha(forms.Form):
-    """
-    Hlavní formulář pro captchu.
-    """
+    """Hlavní formulář pro captchu."""
 
     captcha = ReCaptchaField(widget=ReCaptchaV2Invisible, label="")

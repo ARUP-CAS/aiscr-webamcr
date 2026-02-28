@@ -26,21 +26,22 @@ class Command(BaseCommand):
     - Pokud se některá hodnota liší, provede aktualizaci
 
     Poznámka:
-        - Aktualizace jsou prováděny včetně Fedora transakcí a metadat
-        - Proces může trvat delší dobu v závislosti na počtu PIANů
+    - Aktualizace jsou prováděny včetně Fedora transakcí a metadat
+    - Proces může trvat delší dobu v závislosti na počtu PIANů
 
     Příklady použití::
 
-        python manage.py check_pian_properties
+    python manage.py check_pian_properties
     """
 
     help = _("core.management.commands.check_pian_properties.Command.help")
 
     def handle(self, *args, **options):
-        """Zpracuje argumenty příkazu a zkontroluje konzistenci vlastností PIAN.
+        """
+        Zpracuje argumenty příkazu a zkontroluje konzistenci vlastností PIAN.
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
         """
         from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
         from heslar.models import Heslar

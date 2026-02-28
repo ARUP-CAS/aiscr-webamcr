@@ -17,21 +17,15 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceExterniZdroj`` v rámci aplikace."""
 
     def go_to_form_zapsat(self):
-        """Provádí operaci go to form zapsat.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci go to form zapsat."""
         self.goToAddress("/ext-zdroj/zapsat")
 
     def go_to_form_vybrat(self):
-        """Provádí operaci go to form vybrat.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci go to form vybrat."""
         self.goToAddress("/ext-zdroj/vyber?sort=autori&sort=rok_vydani_vzniku&sort=nazev")
 
     def zapsat_zaznam(self):
-        """Provádí operaci zapsat zaznam.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci zapsat zaznam."""
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-4 > .text")
@@ -51,24 +45,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         return ident
 
     def test_117_zapsani_externího_zdroje_p_001(self):
-        """Test 117 Zapsání nového externího zdroje typu kniha (pozitivní scénář 1)
+        """
+        Test 117 Zapsání nového externího zdroje typu kniha (pozitivní scénář 1)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Archeolog
+        Archeolog
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_117_zapsani_externího_zdroje_p_001.start")
         self.login("archeolog")
@@ -79,27 +74,28 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_117_zapsani_externího_zdroje_p_001.end")
 
     def test_118_odeslani_externího_zdroje_p_001(self):
-        """Test 118 Odeslání záznamu Externí zdroj (pozitivní scénář 1)
+        """
+        Test 118 Odeslání záznamu Externí zdroj (pozitivní scénář 1)
 
         Test odeslání záznamu Externí zdroj. Scénář končí posunem záznamu ze stavu EZ1 do stavu EZ2.
 
         Role:
-            Archeolog
+        Archeolog
 
         Preconditions:
-            - Uživatel je přihlášen.
-            - záznam Externí zdroj ve stavu EZ1
+        - Uživatel je přihlášen.
+        - záznam Externí zdroj ve stavu EZ1
 
         TestData:
-            X-BIB-000000001
+        X-BIB-000000001
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-000000001“ → Vybrat → otevřít záznam „X-BIB-000000001“
-            - V panelu pro akce klikne uživatel na tlačítko “Odeslat” → v dialogovém okně “Odeslat dokument” klikne uživatel na tlačítko “Odeslat”
+        - Uživatel se přihlásí
+        - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-000000001“ → Vybrat → otevřít záznam „X-BIB-000000001“
+        - V panelu pro akce klikne uživatel na tlačítko “Odeslat” → v dialogovém okně “Odeslat dokument” klikne uživatel na tlačítko “Odeslat”
 
         Expected:
-            - Záznam Externí zdroj se posune ze stavu EZ1 do stavu EZ2.
+        - Záznam Externí zdroj se posune ze stavu EZ1 do stavu EZ2.
         """
         logger.info("AkceExterniZdroj.test_118_odeslani_externího_zdroje_p_001.start")
         self.login("archeolog")
@@ -114,27 +110,28 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_118_odeslani_externího_zdroje_p_001.end")
 
     def test_119_pripojeni_akce_externího_zdroje_p_001(self):
-        """Test 119 Připojení akce k externímu zdroji (pozitivní scénář 1)
+        """
+        Test 119 Připojení akce k externímu zdroji (pozitivní scénář 1)
 
         Test připojení záznamu Akce k záznamu Externí zdroj. Scénář končí vytvořením vazby mezi záznamy.
 
         Role:
-            Archeolog
+        Archeolog
 
         Preconditions:
-            - Uživatel je přihlášen.
-            - záznam Externí zdroj ve stavu EZ1
+        - Uživatel je přihlášen.
+        - záznam Externí zdroj ve stavu EZ1
 
         TestData:
-            X-BIB-000000001
+        X-BIB-000000001
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-000000001“ → Vybrat → otevřít záznam „X-BIB-000000001“
-            - V tabulce Připojené akce kliknout na “Připojit akci” → v dialogovém okně v poli “Připojovaný záznam” vyhledat záznam akce X-M-9000000007A, po vyhledání potvrdit kliknutím na “Připojit”
+        - Uživatel se přihlásí
+        - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-000000001“ → Vybrat → otevřít záznam „X-BIB-000000001“
+        - V tabulce Připojené akce kliknout na “Připojit akci” → v dialogovém okně v poli “Připojovaný záznam” vyhledat záznam akce X-M-9000000007A, po vyhledání potvrdit kliknutím na “Připojit”
 
         Expected:
-            - V tabulce připojených akcí je o jednu připojenou akci více
+        - V tabulce připojených akcí je o jednu připojenou akci více
         """
         logger.info("AkceExterniZdroj.test_119_pripojeni_akce_externího_zdroje_p_001.start")
         self.login("archeolog")
@@ -156,28 +153,29 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_119_pripojeni_akce_externího_zdroje_p_001.end")
 
     def test_120_pripojeni_lokality_externího_zdroje_p_001(self):
-        """Test 120 Připojení lokality k externímu zdroji (pozitivní scénář 1)
+        """
+        Test 120 Připojení lokality k externímu zdroji (pozitivní scénář 1)
 
         Test připojení záznamu Akce k záznamu Externí zdroj. Scénář končí vytvořením vazby mezi záznamy.
 
         Role:
-            Archeolog
+        Archeolog
 
         Preconditions:
-            - Uživatel je přihlášen.
-            - záznam Externí zdroj ve stavu EZ1
+        - Uživatel je přihlášen.
+        - záznam Externí zdroj ve stavu EZ1
 
         TestData:
-            C-K9000001
-            X-BIB-000000001
+        C-K9000001
+        X-BIB-000000001
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-000000001“ → Vybrat → otevřít záznam „X-BIB-000000001“
-            - V tabulce Připojené lokality kliknout na “Připojit lokalitu” → v dialogovém okně v poli “Připojovaný záznam” vyhledat záznam lokality C-K9000001, po vyhledání potvrdit kliknutím na “Připojit”
+        - Uživatel se přihlásí
+        - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-000000001“ → Vybrat → otevřít záznam „X-BIB-000000001“
+        - V tabulce Připojené lokality kliknout na “Připojit lokalitu” → v dialogovém okně v poli “Připojovaný záznam” vyhledat záznam lokality C-K9000001, po vyhledání potvrdit kliknutím na “Připojit”
 
         Expected:
-            - V tabulce připojených lokalit je o jednu připojenou lokalitu více
+        - V tabulce připojených lokalit je o jednu připojenou lokalitu více
         """
         logger.info("AkceExterniZdroj.test_120_pripojeni_lokality_externího_zdroje_p_001.start")
         self.login("archeolog")
@@ -199,27 +197,28 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_120_pripojeni_lokality_externího_zdroje_p_001.end")
 
     def test_121_potvrzení_externího_zdroje_p_001(self):
-        """Test 121 Potvrzení externího zdroje (pozitivní scénář 1)
+        """
+        Test 121 Potvrzení externího zdroje (pozitivní scénář 1)
 
         Test potvrzení záznamu v modulu Externí zdroje. Test končí posunem záznamu ze stavu EZ2 do EZ3.
 
         Role:
-            Archivář
+        Archivář
 
         Preconditions:
-            - Uživatel je přihlášen
-            - Záznam v modulu Externí zdroje ve stavu EZ2, který má vyplněny všechny náležitosti.
+        - Uživatel je přihlášen
+        - Záznam v modulu Externí zdroje ve stavu EZ2, který má vyplněny všechny náležitosti.
 
         TestData:
-            X-BIB-1408662
+        X-BIB-1408662
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-1408662“ → Vybrat → otevřít záznam „X-BIB-1408662“
-            - V panelu pro akce klikne uživatel na tlačítko “Potvrdit” → v dialogovém okně “Potvrdit externí zdroj” klikne uživatel na tlačítko “Potvrdit”
+        - Uživatel se přihlásí
+        - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-1408662“ → Vybrat → otevřít záznam „X-BIB-1408662“
+        - V panelu pro akce klikne uživatel na tlačítko “Potvrdit” → v dialogovém okně “Potvrdit externí zdroj” klikne uživatel na tlačítko “Potvrdit”
 
         Expected:
-            - Záznam Externí zdroj se posune ze stavu EZ2 do stavu EZ3.
+        - Záznam Externí zdroj se posune ze stavu EZ2 do stavu EZ3.
         """
         logger.info("AkceExterniZdroj.test_121_potvrzení_externího_zdroje_p_001.start")
         self.login("archivar")
@@ -234,24 +233,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_121_potvrzení_externího_zdroje_p_001.end")
 
     def test_122_zapsani_externího_zdroje_p_002(self):
-        """Test 122 Zapsání nového externího zdroje (pozitivní scénář 2)
+        """
+        Test 122 Zapsání nového externího zdroje (pozitivní scénář 2)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Badatel
+        Badatel
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_122_zapsani_externího_zdroje_p_002.start")
         self.login("badatel")
@@ -262,27 +262,28 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_122_zapsani_externího_zdroje_p_002.end")
 
     def test_123_odeslani_externího_zdroje_p_001(self):
-        """Test 123 Odeslání záznamu Externí zdroj (pozitivní scénář 1)
+        """
+        Test 123 Odeslání záznamu Externí zdroj (pozitivní scénář 1)
 
         Test odeslání záznamu Externí zdroj. Scénář končí posunem záznamu ze stavu EZ1 do stavu EZ2.
 
         Role:
-            Badatel
+        Badatel
 
         Preconditions:
-            - Uživatel je přihlášen.
-            - záznam Externí zdroj ve stavu EZ1
+        - Uživatel je přihlášen.
+        - záznam Externí zdroj ve stavu EZ1
 
         TestData:
-            X-BIB-000000002
+        X-BIB-000000002
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-000000002“ → Vybrat → otevřít záznam „X-BIB-000000002“
-            - V panelu pro akce klikne uživatel na tlačítko “Odeslat” → v dialogovém okně “Odeslat dokument” klikne uživatel na tlačítko “Odeslat”
+        - Uživatel se přihlásí
+        - Uživatel otevře modul “Externí zdroje”  → Vybrat → Filtr → ID obsahuje „X-BIB-000000002“ → Vybrat → otevřít záznam „X-BIB-000000002“
+        - V panelu pro akce klikne uživatel na tlačítko “Odeslat” → v dialogovém okně “Odeslat dokument” klikne uživatel na tlačítko “Odeslat”
 
         Expected:
-            - Záznam Externí zdroj se posune ze stavu EZ1 do stavu EZ2.
+        - Záznam Externí zdroj se posune ze stavu EZ1 do stavu EZ2.
         """
         logger.info("AkceExterniZdroj.test_123_odeslani_externího_zdroje_p_001.start")
         self.login("badatel")
@@ -297,24 +298,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_123_odeslani_externího_zdroje_p_001.end")
 
     def test_124_zapsani_externího_zdroje_p_003(self):
-        """Test 124 Zapsání nového externího zdroje typu část knihy (pozitivní scénář 3)
+        """
+        Test 124 Zapsání nového externího zdroje typu část knihy (pozitivní scénář 3)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Archeolog
+        Archeolog
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_124_zapsani_externího_zdroje_p_003.start")
         self.login("archeolog")
@@ -347,24 +349,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_124_zapsani_externího_zdroje_p_003.end")
 
     def test_125_zapsani_externího_zdroje_p_004(self):
-        """Test 125 Zapsání nového externího zdroje typu článek v časopise (pozitivní scénář 4)
+        """
+        Test 125 Zapsání nového externího zdroje typu článek v časopise (pozitivní scénář 4)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Archeolog
+        Archeolog
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_125_zapsani_externího_zdroje_p_004.start")
         self.login("archeolog")
@@ -394,24 +397,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_125_zapsani_externího_zdroje_p_004.end")
 
     def test_126_zapsani_externího_zdroje_p_005(self):
-        """Test 126 Zapsání nového externího zdroje typu článek v novinách (pozitivní scénář 5)
+        """
+        Test 126 Zapsání nového externího zdroje typu článek v novinách (pozitivní scénář 5)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Archeolog
+        Archeolog
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_126_zapsani_externího_zdroje_p_005.start")
         self.login("archeolog")
@@ -442,24 +446,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_126_zapsani_externího_zdroje_p_005.end")
 
     def test_127_zapsani_externího_zdroje_p_006(self):
-        """Test 127 Zapsání nového externího zdroje typu jiný zdroj (pozitivní scénář 6)
+        """
+        Test 127 Zapsání nového externího zdroje typu jiný zdroj (pozitivní scénář 6)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Archeolog
+        Archeolog
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_127_zapsani_externího_zdroje_p_006.start")
         self.login("archeolog")
@@ -483,24 +488,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_127_zapsani_externího_zdroje_p_006.end")
 
     def test_128_zapsani_externího_zdroje_p_007(self):
-        """Test 128 Zapsání nového externího zdroje typu část knihy (pozitivní scénář 7)
+        """
+        Test 128 Zapsání nového externího zdroje typu část knihy (pozitivní scénář 7)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Badatel
+        Badatel
 
         Preconditions:
-            Uživatel je přihlášen.
+        Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_128_zapsani_externího_zdroje_p_007.start")
         self.login("badatel")
@@ -533,24 +539,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_128_zapsani_externího_zdroje_p_007.end")
 
     def test_129_zapsani_externího_zdroje_p_008(self):
-        """Test 129 Zapsání nového externího zdroje typu článek v časopise (pozitivní scénář 8)
+        """
+        Test 129 Zapsání nového externího zdroje typu článek v časopise (pozitivní scénář 8)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Badatel
+        Badatel
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_129_zapsani_externího_zdroje_p_008.start")
         self.login("badatel")
@@ -580,24 +587,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_129_zapsani_externího_zdroje_p_008.end")
 
     def test_130_zapsani_externího_zdroje_p_009(self):
-        """Test 130 Zapsání nového externího zdroje typu článek v novinách (pozitivní scénář 9)
+        """
+        Test 130 Zapsání nového externího zdroje typu článek v novinách (pozitivní scénář 9)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Badatel
+        Badatel
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_130_zapsani_externího_zdroje_p_009.start")
         self.login("badatel")
@@ -628,24 +636,25 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_130_zapsani_externího_zdroje_p_009.end")
 
     def test_131_zapsani_externího_zdroje_p_010(self):
-        """Test 131 Zapsání nového externího zdroje typu jiný zdroj (pozitivní scénář 10)
+        """
+        Test 131 Zapsání nového externího zdroje typu jiný zdroj (pozitivní scénář 10)
 
         Test zapsání externího zdroje na stránce /ext-zdroj/zapsat. Končí zapsáním externího zdroje do databáze.
 
         Role:
-            Badatel
+        Badatel
 
         Preconditions:
-            - Uživatel je přihlášen.
+        - Uživatel je přihlášen.
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel klikne na menu Externí zdroje -> Zapsat
-            - Uživatel vyplní data do formuláře
-            - Uživatel klikne na tlačítko Zapsat
+        - Uživatel se přihlásí
+        - Uživatel klikne na menu Externí zdroje -> Zapsat
+        - Uživatel vyplní data do formuláře
+        - Uživatel klikne na tlačítko Zapsat
 
         Expected:
-            - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
+        - Po kliknutí na tlačítko Zapsat je v databázi o jeden externí zdroj více; externí zdroj změní svůj stav na EZ1
         """
         logger.info("AkceExterniZdroj.test_131_zapsani_externího_zdroje_p_010.start")
         self.login("badatel")
@@ -669,26 +678,27 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_131_zapsani_externího_zdroje_p_010.end")
 
     def test_136_test_Fedory_externi_zdroj_p_001(self):
-        """Test 136 Test Fedory pro EZ (pozitivní scénář 1)
+        """
+        Test 136 Test Fedory pro EZ (pozitivní scénář 1)
 
         Test zapsání dat do Fedory v EZ
 
         Role:
-            Archeolog, Archivář
+        Archeolog, Archivář
 
         TestData:
-            X-BIB-1408662
-            X-BIB-0926116
-            X-BIB-0700016
+        X-BIB-1408662
+        X-BIB-0926116
+        X-BIB-0700016
 
         Steps:
-            - Vytvoření EZ
-            - Potvrzení EZ
-            - Editace EZ
-            - Smazání EZ
+        - Vytvoření EZ
+        - Potvrzení EZ
+        - Editace EZ
+        - Smazání EZ
 
         Expected:
-            - zápis dat do Fedory
+        - zápis dat do Fedory
         """
         logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.start")
 
@@ -747,28 +757,29 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_136_test_Fedory_externi_zdroj_p_001.end")
 
     def test_137_test_Fedory_externi_zdroj_p_002(self):
-        """Test 137 Test Fedory pro EZ (pozitivní scénář 2)
+        """
+        Test 137 Test Fedory pro EZ (pozitivní scénář 2)
 
         Test zapsání dat do Fedory v EZ
 
         Role:
-            Archeolog
+        Archeolog
 
         TestData:
-            X-BIB-000000001
-            X-C-9000000001A
-            C-K9000001
+        X-BIB-000000001
+        X-C-9000000001A
+        C-K9000001
 
         Steps:
-            Připojení AZ
-            Připojení Lokalita
-            Editace paginace AZ
-            Editace paginace Lokalita
-            Odpojení AZ
-            Odpojení Lokalita
+        Připojení AZ
+        Připojení Lokalita
+        Editace paginace AZ
+        Editace paginace Lokalita
+        Odpojení AZ
+        Odpojení Lokalita
 
         Expected:
-            - zápis dat do Fedory
+        - zápis dat do Fedory
         """
         logger.info("AkceExterniZdroj.test_137_test_Fedory_externi_zdroj_p_002.start")
         # připojení AZ
@@ -867,29 +878,30 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         logger.info("AkceExterniZdroj.test_137_test_Fedory_externi_zdroj_p_002.end")
 
     def test_161_smazani_externího_zdroje_p_001(self):
-        """Test 161 Smazání záznamu Externí zdroj (pozitivní scénář 1)
+        """
+        Test 161 Smazání záznamu Externí zdroj (pozitivní scénář 1)
 
         Smazání záznamu - test zahrne i to, že se smaže i vše, co je na záznam navázané resp. co se má smazat.
 
         Role:
-            Archivář
+        Archivář
 
         Preconditions:
-            - Uživatel je přihlášen.
-            - záznam Externí zdroj ve stavu EZ2
+        - Uživatel je přihlášen.
+        - záznam Externí zdroj ve stavu EZ2
 
         TestData:
-            X-BIB-1408662
+        X-BIB-1408662
 
         Steps:
-            - Uživatel se přihlásí
-            - Uživatel otevře Externí zdroj ve stavu EZ2
-            - Uživatel smaže vazby na projekty a lokality
-            - V panelu pro akce kliknout na  “Další akce” → “Smazat”
-            - V dalším dialogovém okně “Smazat externí zdroj” kliknout na “Smazat”
+        - Uživatel se přihlásí
+        - Uživatel otevře Externí zdroj ve stavu EZ2
+        - Uživatel smaže vazby na projekty a lokality
+        - V panelu pro akce kliknout na  “Další akce” → “Smazat”
+        - V dalším dialogovém okně “Smazat externí zdroj” kliknout na “Smazat”
 
         Expected:
-            - Externí zdroj se smaže v databázi.
+        - Externí zdroj se smaže v databázi.
         """
         logger.info("AkceExterniZdroj.test_161_smazani_externího_zdroje_p_001.start")
         self.login("archivar")

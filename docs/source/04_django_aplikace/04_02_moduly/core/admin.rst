@@ -9,6 +9,7 @@ Třídy
 .. py:class:: OdstavkaSystemuAdmin
 
    Třída admin panelu pro zobrazení odstávek systému.
+
    Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
 
    **Metody:**
@@ -16,28 +17,50 @@ Třídy
    .. py:method:: save_model()
 
       Metoda na uložení modelu odstávky.
+
       Jednotlivé texty z modelu se ukladají do textú prekladů a template.
       Po uložení se restartuje wsgi pro načítaní nových prekladů.
+
+      :param request: Popis parametru ``request``.
+      :param obj: Popis parametru ``obj``.
+      :param form: Popis parametru ``form``.
+      :param change: Popis parametru ``change``.
 
    .. py:method:: has_module_permission()
 
       Metoda pro určení práv na modul odstávky.
 
+      :param request: Popis parametru ``request``.
+
    .. py:method:: has_view_permission()
 
       Metoda pro určení práv na videní odstávky.
+
+      :param request: Popis parametru ``request``.
+      :param obj: Popis parametru ``obj``.
+      :param args: Popis parametru ``args``.
 
    .. py:method:: has_add_permission()
 
       Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
 
+      :param request: Popis parametru ``request``.
+      :param args: Popis parametru ``args``.
+
    .. py:method:: has_change_permission()
 
       Metoda pro určení práv pro úpravu odstávky.
 
+      :param request: Popis parametru ``request``.
+      :param obj: Popis parametru ``obj``.
+      :param args: Popis parametru ``args``.
+
    .. py:method:: file_handler()
 
       Pomocní metoda pro úpravu template zobrazených během odstávky.
+
+      :param language: Popis parametru ``language``.
+      :param form: Popis parametru ``form``.
 
 
 .. py:class:: CustomAdminSettingsAdmin
@@ -67,13 +90,19 @@ Třídy
 
       Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
 
+      :param request: Popis parametru ``request``.
+
    .. py:method:: import_success()
 
       Metoda view pro zobrazení tabulky s výsledkom importu.
 
+      :param request: Popis parametru ``request``.
+
    .. py:method:: reload_permissions()
 
       Metoda view pro automatický import oprávnění z csv v gitu a zobrazení výsledků importu.
+
+      :param request: Popis parametru ``request``.
 
 
 .. py:class:: PermissionSkipAdmin
@@ -98,20 +127,25 @@ Třídy
 
       Metoda pro validaci importovaného excelu a jeho úpravu.
 
+      :param sheet: Popis parametru ``sheet``.
+
    .. py:method:: import_skip_file()
 
       Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+
+      :param request: Popis parametru ``request``.
 
    .. py:method:: check_save_row()
 
       Ověří save row.
 
       :param row: Vstupní hodnota ``row`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: import_skip_success()
 
       Metoda view pro zobrazení tabulky s výsledkom importu.
+
+      :param request: Popis parametru ``request``.
 
    .. py:method:: export_as_csv()
 
@@ -119,7 +153,6 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: FedoraCustomAdminSite
@@ -138,25 +171,23 @@ Třídy
 
    .. py:method:: update_doi()
 
-      Aktualizuje doi.
+      Aktualizuje doi. v aplikaci.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: update_metadata_file_upload()
 
       Aktualizuje metadata file upload.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: import_data()
 
       Creates a view for importing data from a zip file.
 
+      :param request: Popis parametru ``request``.
+
    .. py:method:: get_urls()
 
-      Vrací urls.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací urls. v aplikaci.
 

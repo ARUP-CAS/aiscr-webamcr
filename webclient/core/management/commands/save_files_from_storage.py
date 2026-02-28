@@ -16,34 +16,35 @@ class Command(BaseCommand):
     do Fedora repozitáře včetně aktualizace metadat v databázi.
 
     Argumenty:
-        - storage_path: Cesta k adresáři obsahujícímu soubory (každý soubor musí mít název rovný PK záznamu v DB včetně přípony, např. 123.jpg)
+    - storage_path: Cesta k adresáři obsahujícímu soubory (každý soubor musí mít název rovný PK záznamu v DB včetně přípony, např. 123.jpg)
 
     Parametry:
-        - --pks: Seznam primárních klíčů souborů (odděleno mezerami)
-        - --range: Rozsah primárních klíčů ve formátu "start end"
-        - --save-thumbs: Generovat náhledy pro obrazové soubory
-        - --disable-antivirus: Přeskočit antivirovou kontrolu
+    - --pks: Seznam primárních klíčů souborů (odděleno mezerami)
+    - --range: Rozsah primárních klíčů ve formátu "start end"
+    - --save-thumbs: Generovat náhledy pro obrazové soubory
+    - --disable-antivirus: Přeskočit antivirovou kontrolu
 
     Poznámka:
-        - Musí být zadán buď --pks nebo --range, ne oba současně
+    - Musí být zadán buď --pks nebo --range, ne oba současně
 
     Příklady použití:
 
-        Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
-        proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
+    Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
+    proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
 
-            python manage.py save_files_from_storage /vol/data-migrace/files --pks 1 2 3
-            python manage.py save_files_from_storage /vol/data-migrace/files --range 100 200
-            python manage.py save_files_from_storage /vol/data-migrace/files --pks 10 20 --save-thumbs
+    python manage.py save_files_from_storage /vol/data-migrace/files --pks 1 2 3
+    python manage.py save_files_from_storage /vol/data-migrace/files --range 100 200
+    python manage.py save_files_from_storage /vol/data-migrace/files --pks 10 20 --save-thumbs
     """
 
     help = _("core.management.commands.save_files_from_storage.Command.help")
 
     def add_arguments(self, parser):
-        """Provádí operaci add arguments.
+        """
+        Provádí operaci add arguments.
 
         :param parser: Vstupní hodnota ``parser`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         parser.add_argument(
             "storage_path",
             type=str,
@@ -74,11 +75,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Zpracuje hodnotu.
+        """
+        Zpracuje hodnotu. v aplikaci.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         storage_path = options["storage_path"]
         pks = options.get("pks")
         pk_range = options.get("range")

@@ -8,9 +8,7 @@ class LokalitaConfig(AppConfig):
     name = "lokalita"
 
     def ready(self):
-        """Provádí operaci ready.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ready."""
         super(LokalitaConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import lokalita.signals

@@ -19,7 +19,6 @@ Třídy
       :param record: Vstupní hodnota ``record`` pro danou operaci.
       :param result: Vstupní hodnota ``result`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get()
 
@@ -27,7 +26,6 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ContinueMedataProcessing
@@ -43,5 +41,4 @@ Třídy
       :param record: Vstupní hodnota ``record`` pro danou operaci.
       :param result: Vstupní hodnota ``result`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 

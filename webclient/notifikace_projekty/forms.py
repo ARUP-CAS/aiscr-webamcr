@@ -28,6 +28,9 @@ PES_NOTIFICATIONS = [
 def create_pes_form(not_readonly=True, model_typ=None):
     """
     Funkce která vrací formulář hlídacího psa pro formset.
+
+    :param not_readonly: Popis parametru ``not_readonly``.
+    :param model_typ: Popis parametru ``model_typ``.
     """
 
     class PesForm(forms.ModelForm):
@@ -42,11 +45,12 @@ def create_pes_form(not_readonly=True, model_typ=None):
             fields = ["object_id"]
 
         def __init__(self, *args, **kwargs):
-            """Inicializuje instanci třídy.
+            """
+            Inicializuje instanci třídy.
 
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-            :return: Funkce nevrací hodnotu (``None``)."""
+            """
             super(PesForm, self).__init__(*args, **kwargs)
             self.model_typ = model_typ
             if model_typ == KRAJ_CONTENT_TYPE:
@@ -118,10 +122,11 @@ def create_pes_form(not_readonly=True, model_typ=None):
                     self.fields[key].help_text = ""
 
         def save(self, commit=True):
-            """Uloží změny objektu.
+            """
+            Uloží změny objektu.
 
             :param commit: Vstupní hodnota ``commit`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            """
             instance = super(PesForm, self).save(commit=False)
             if self.admin_app:
                 instance.suppress_signal = True
@@ -134,11 +139,12 @@ def create_pes_form(not_readonly=True, model_typ=None):
             return instance
 
         def clean(self, *args, **kwargs):
-            """Provádí operaci clean.
+            """
+            Provádí operaci clean.
 
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-            :return: Vrací výsledek provedené operace."""
+            """
             super().clean(*args, **kwargs)
             # Načte hodnoty a zkontroluje duplicity.
 
@@ -160,11 +166,12 @@ class PesFormSetHelper(FormHelper):
     """Implementuje komponentu ``PesFormSetHelper`` v rámci aplikace."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -172,9 +179,7 @@ class PesFormSetHelper(FormHelper):
 
 
 class PesNotificationsForm(forms.ModelForm):
-    """
-    Formulář pro správu typu notifikací.
-    """
+    """Formulář pro správu typu notifikací."""
 
     notification_types = forms.ModelMultipleChoiceField(
         queryset=UserNotificationType.objects.filter(ident_cely__in=PES_NOTIFICATIONS),
@@ -191,21 +196,20 @@ class PesNotificationsForm(forms.ModelForm):
         fields = ("notification_types",)
 
     def __init__(self, pes_object_count=0, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param pes_object_count: Vstupní hodnota ``pes_object_count`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.pes_object_count = pes_object_count
 
     def clean(self):
-        """Provádí operaci clean.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci clean."""
         cleaned_data = super().clean()
         if self.pes_object_count == 0 or not cleaned_data.get("notification_types"):
             self.add_error(
@@ -218,9 +222,7 @@ class PesInlineFormSet(forms.BaseInlineFormSet):
     """Implementuje komponentu ``PesInlineFormSet`` v rámci aplikace."""
 
     def count_non_empty_forms(self):
-        """Provádí operaci count non empty forms.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci count non empty forms."""
         non_empty_count = 0
         for form in self.forms:
             if any(field_value for field_value in form.cleaned_data.values()):

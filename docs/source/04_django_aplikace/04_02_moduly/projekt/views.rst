@@ -17,12 +17,12 @@ Třídy
       Obsluhuje HTTP metodu POST.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjectPianFromEnvelopeView
 
    @jiri-bartos presunuto z post_ajax_get_project_pas_limit
+
    Trida pohledu pro získaní heatmapy pianu.
 
    **Metody:**
@@ -32,7 +32,6 @@ Třídy
       Obsluhuje HTTP metodu POST.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjektPermissionFilterMixin
@@ -47,7 +46,6 @@ Třídy
 
       :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_accessibility_lookup()
 
@@ -55,7 +53,6 @@ Třídy
 
       :param permission: Vstupní hodnota ``permission`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjektListView
@@ -68,20 +65,15 @@ Třídy
 
       Provádí operaci init translations.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: get_context_data()
 
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: GenerovatOznameniView
@@ -96,7 +88,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ProjektAutocompleteBezZrusenych
@@ -110,20 +101,16 @@ Třídy
       Vrací result label.
 
       :param result: Vstupní hodnota ``result`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
    .. py:method:: check_filter_permission()
 
       Ověří filter permission.
 
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: ProjectTableRowView
@@ -137,7 +124,6 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UpravitDatumOznameniView
@@ -158,7 +144,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get()
 
@@ -167,7 +152,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: post()
 
@@ -176,7 +160,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ZadostUdajeOznamovatelView
@@ -187,9 +170,7 @@ Třídy
 
    .. py:method:: get_zaznam()
 
-      Vrací zaznam.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací zaznam. v aplikaci.
 
    .. py:method:: get()
 
@@ -198,7 +179,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: post()
 
@@ -207,7 +187,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ZadostOdhlaseniProjektuView
@@ -218,9 +197,7 @@ Třídy
 
    .. py:method:: get_zaznam()
 
-      Vrací zaznam.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací zaznam. v aplikaci.
 
    .. py:method:: get()
 
@@ -229,7 +206,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: post()
 
@@ -238,7 +214,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ZadostZruseniProjektuView
@@ -249,9 +224,7 @@ Třídy
 
    .. py:method:: get_zaznam()
 
-      Vrací zaznam.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací zaznam. v aplikaci.
 
    .. py:method:: get()
 
@@ -260,7 +233,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: post()
 
@@ -269,7 +241,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 Funkce
@@ -279,86 +250,147 @@ Funkce
 
    Funkce pohledu pro zobrazení indexu s navigací projektu.
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: detail(request, ident_cely)
 
    Funkce pohledu pro zobrazení detailu projektu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: post_ajax_get_projects_limit(request)
 
    Funkce pohledu pro získaní heatmapy projektu.
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: post_ajax_get_project_one(request)
 
    Funkce pohledu pro získaní geometrie projektu.
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: create(request)
 
    @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
+
    Funkce pohledu pro vytvoření projektu.
+
+   :param request: Popis parametru ``request``.
 
 .. py:function:: edit(request, ident_cely)
 
    Funkce pohledu pro editaci projektu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro smazání projektu pomoci modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: schvalit(request, ident_cely)
 
    Funkce pohledu pro schválení projektu pomoci modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: prihlasit(request, ident_cely)
 
    Funkce pohledu pro přihlášení projektu pomoci modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: zahajit_v_terenu(request, ident_cely)
 
    Funkce pohledu pro zahájení v terenu projektu pomoci modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: ukoncit_v_terenu(request, ident_cely)
 
    Funkce pohledu pro ukončení v terenu projektu pomoci modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: uzavrit(request, ident_cely)
 
    Funkce pohledu pro uzavření projektu pomoci modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: archivovat(request, ident_cely)
 
    Funkce pohledu pro archivaci projektu pomoci modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: navrhnout_ke_zruseni(request, ident_cely)
 
    Funkce pohledu pro navržení projektu ke zrušení pomoci modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: zrusit(request, ident_cely)
 
    Funkce pohledu pro zrušení projektu pomoci modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: vratit(request, ident_cely)
 
    Funkce pohledu pro vrácení projektu pomoci modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: vratit_navrh_zruseni(request, ident_cely)
 
    Funkce pohledu pro vrácení návrhu na zrušení projektu pomoci modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: odpojit_dokument(request, ident_cely, proj_ident_cely)
 
    Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+   :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
+
 .. py:function:: pripojit_dokument(request, proj_ident_cely)
 
    Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
+
+   :param request: Popis parametru ``request``.
+   :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
 
 .. py:function:: generovat_oznameni(request, ident_cely)
 
    Funkce pohledu pro generování oznámení projektu pomoci modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: generovat_expertni_list(request, ident_cely)
 
    Funkce pohledu pro generování expertního listu projektu pomoci modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
@@ -393,7 +425,6 @@ Funkce
 
    :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
    :param user: Vstupní hodnota ``user`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: get_required_fields(zaznam, next)
 
@@ -412,3 +443,5 @@ Funkce
 .. py:function:: katastr_text_to_id(request)
 
    Funkce podlehu pro získaní ID katastru podle názvu katastru.
+
+   :param request: Popis parametru ``request``.

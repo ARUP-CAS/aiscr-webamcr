@@ -17,7 +17,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: _get_initial_value_from_instance()
 
@@ -43,14 +42,12 @@ Třídy
       Provádí operaci valid value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: validate()
 
-      Validuje hodnotu.
+      Validuje hodnotu. v aplikaci.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: OrcidAutocompleteField
@@ -70,21 +67,18 @@ Třídy
       Provádí operaci prepare value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: valid_value()
 
       Provádí operaci valid value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: validate()
 
-      Validuje hodnotu.
+      Validuje hodnotu. v aplikaci.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: RorAutocompleteField
@@ -98,14 +92,12 @@ Třídy
       Provádí operaci valid value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: validate()
 
-      Validuje hodnotu.
+      Validuje hodnotu. v aplikaci.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: WikiDataAutocompleteField
@@ -125,19 +117,16 @@ Třídy
       Provádí operaci prepare value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: valid_value()
 
       Provádí operaci valid value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: validate()
 
-      Validuje hodnotu.
+      Validuje hodnotu. v aplikaci.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 

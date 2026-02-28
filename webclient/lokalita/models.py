@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
-    """
-    Databázový model lokality.
-    """
+    """Databázový model lokality."""
 
     druh = models.ForeignKey(
         Heslar,
@@ -67,24 +65,18 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         db_table = "lokalita"
 
     def get_absolute_url(self):
-        """
-        Metoda pro získaní absolut url záznamu podle identu.
-        """
+        """Metoda pro získaní absolut url záznamu podle identu."""
         return reverse(
             "lokalita:detail",
             kwargs={"slug": self.archeologicky_zaznam.ident_cely},
         )
 
     def set_igsn(self):
-        """Nastaví igsn.
-
-        :return: Vrací výsledek provedené operace."""
+        """Nastaví igsn. v aplikaci."""
         self.igsn = f"{settings.IGSN_PREFIX}/{self.archeologicky_zaznam.ident_cely}"
 
     def set_snapshots(self):
-        """Nastaví snapshots.
-
-        :return: Vrací výsledek provedené operace."""
+        """Nastaví snapshots. v aplikaci."""
         if not self.archeologicky_zaznam.katastry.all():
             self.dalsi_katastry_snapshot = None
         else:
@@ -96,17 +88,13 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci redis snapshot id."""
         from lokalita.views import LokalitaListView
 
         return f"{LokalitaListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Vygeneruje redis snapshot."""
         from lokalita.tables import LokalitaTable
 
         data = Lokalita.objects.filter(pk=self.pk)
@@ -115,65 +103,68 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return self.redis_snapshot_id, data
 
     def _get_igsn_client(self):
-        """Vrací igsn client.
+        """
+        Vrací igsn client.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         from pid.client import DigitalObjectIdentifierClient
 
         return DigitalObjectIdentifierClient(self)
 
     @property
     def igsn_exists(self):
-        """Provádí operaci igsn exists.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci igsn exists."""
         return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self, check_status=True):
-        """Provádí operaci igsn delete.
+        """
+        Provádí operaci igsn delete.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.igsn:
             return self._get_igsn_client().delete_record(check_status)
 
     def igsn_hide(self, check_status=True):
-        """Provádí operaci igsn hide.
+        """
+        Provádí operaci igsn hide.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.igsn:
             return self._get_igsn_client().hide_record(check_status)
 
     def igsn_publish(self, check_status=True):
-        """Provádí operaci igsn publish.
+        """
+        Provádí operaci igsn publish.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return self._get_igsn_client().publish_record(check_status)
 
     def igsn_update(self, check_status=True, reload_record=False):
-        """Provádí operaci igsn update.
+        """
+        Provádí operaci igsn update.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
 
     @property
     def igsn_url(self):
-        """Provádí operaci igsn url.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci igsn url."""
         return self._get_igsn_client().get_record_url()
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
-        """Vrací by ident cely.
+        """
+        Vrací by ident cely.
 
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         try:
             return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
         except Exception:

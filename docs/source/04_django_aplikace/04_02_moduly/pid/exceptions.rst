@@ -24,7 +24,6 @@ Třídy
       :param status_code: Vstupní hodnota ``status_code`` pro danou operaci.
       :param response_text: Vstupní hodnota ``response_text`` pro danou operaci.
       :param request_url: Vstupní hodnota ``request_url`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: DoiConnectionError

@@ -7,9 +7,7 @@ class NalezConfig(AppConfig):
     name = "nalez"
 
     def ready(self):
-        """Provádí operaci ready.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ready."""
         super(NalezConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import nalez.signals

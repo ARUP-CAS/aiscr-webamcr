@@ -139,6 +139,8 @@ logger = logging.getLogger(__name__)
 def index_model_3D(request):
     """
     Funkce pohledu pro zobrazení domovské stránky modelu 3D s navigačními možnostmi.
+
+    :param request: Popis parametru ``request``.
     """
     return render(request, "dokument/index_model_3D.html")
 
@@ -148,6 +150,9 @@ def index_model_3D(request):
 def detail_model_3D(request, ident_cely):
     """
     Třida pohledu pro zobrazení detailu modelu 3D.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     context = {"warnings": request.session.pop("temp_data", None)}
     old_nalez_post = request.session.pop("_old_nalez_post", None)
@@ -233,9 +238,7 @@ def detail_model_3D(request, ident_cely):
 
 
 class Model3DListView(SearchListView):
-    """
-    Třida pohledu pro zobrazení listu/tabulky s modelama 3D.
-    """
+    """Třida pohledu pro zobrazení listu/tabulky s modelama 3D."""
 
     table_class = Model3DTable
     model = Dokument
@@ -249,9 +252,7 @@ class Model3DListView(SearchListView):
     vypis_app = "model"
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         super().init_translations()
         self.page_title = _("dokument.views.Model3DListView.pageTitle.text")
         self.search_sum = _("dokument.views.Model3DListView.search_sum.text")
@@ -264,10 +265,11 @@ class Model3DListView(SearchListView):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Provádí operaci rename field for ordering.
+        """
+        Provádí operaci rename field for ordering.
 
         :param field: Vstupní hodnota ``field`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         field = field.replace("-", "")
         return {
             "typ_dokumentu": "typ_dokumentu__razeni",
@@ -277,18 +279,17 @@ class Model3DListView(SearchListView):
         }.get(field, field)
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         context["is_3d"] = True
         return context
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -308,17 +309,13 @@ class Model3DListView(SearchListView):
 
 
 class DokumentIndexView(LoginRequiredMixin, TemplateView):
-    """
-    Třida pohledu pro zobrazení domovské stránky dokumentů s navigačními možnostmi.
-    """
+    """Třida pohledu pro zobrazení domovské stránky dokumentů s navigačními možnostmi."""
 
     template_name = "dokument/index_dokument.html"
 
 
 class DokumentListView(SearchListView):
-    """
-    Třida pohledu pro zobrazení listu/tabulky s dokumentama.
-    """
+    """Třida pohledu pro zobrazení listu/tabulky s dokumentama."""
 
     table_class = DokumentTable
     model = Dokument
@@ -332,9 +329,7 @@ class DokumentListView(SearchListView):
     vypis_app = "dokument"
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         super().init_translations()
         self.page_title = _("dokument.views.DokumentListView.pageTitle.text")
         self.search_sum = _("dokument.views.DokumentListView.search_sum.text")
@@ -346,20 +341,22 @@ class DokumentListView(SearchListView):
         self.default_header = _("dokument.views.DokumentListView.default_header.text")
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         context["is_3d"] = False
         return context
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Provádí operaci rename field for ordering.
+        """
+        Provádí operaci rename field for ordering.
 
         :param field: Vstupní hodnota ``field`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         field = field.replace("-", "")
         return {
             "typ_dokumentu": "typ_dokumentu__razeni",
@@ -379,9 +376,7 @@ class DokumentListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -415,13 +410,15 @@ class DokumentListView(SearchListView):
 
 
 class RelatedContext(LoginRequiredMixin, TemplateView):
-    """
-    Třida, která se dedí a která obsahuje metody pro získaní relací dokumentů.
-    """
+    """Třida, která se dedí a která obsahuje metody pro získaní relací dokumentů."""
 
     def get_cast(self, context, cast, **kwargs):
         """
         Metoda pro získaní informací ohlědně části dokumentu.
+
+        :param context: Popis parametru ``context``.
+        :param cast: Popis parametru ``cast``.
+        :param kwargs: Popis parametru ``kwargs``.
         """
         context["cast"] = cast
         cast_form = DokumentCastForm(
@@ -465,6 +462,8 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         """
         Metoda pro získaní contextu dokumentu pro template.
+
+        :param kwargs: Popis parametru ``kwargs``.
         """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
@@ -526,6 +525,9 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
     def render_to_response(self, context, **response_kwargs):
         """
         Metoda pro render response, kvúli správnemu zobrazení zpět možnosti.
+
+        :param context: Popis parametru ``context``.
+        :param response_kwargs: Popis parametru ``response_kwargs``.
         """
         response = super().render_to_response(context, **response_kwargs)
         referer = urlparse(self.request.META.get("HTTP_REFERER", False)).path
@@ -578,37 +580,36 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
 
 class DokumentDetailView(RelatedContext):
-    """
-    Třida pohledu pro zobrazení detailu dokumentu.
-    """
+    """Třida pohledu pro zobrazení detailu dokumentu."""
 
     template_name = "dokument/dok/detail.html"
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         return super().get(request, *args, **kwargs)
 
 
 class DokumentCastDetailView(RelatedContext):
-    """
-    Třida pohledu pro zobrazení detailu části dokumentu.
-    """
+    """Třida pohledu pro zobrazení detailu části dokumentu."""
 
     template_name = "dokument/dok/detail_cast_dokumentu.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Provádí operaci dispatch.
+        """
+        Provádí operaci dispatch.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         cast = get_object_or_404(DokumentCast, ident_cely=self.kwargs["cast_ident_cely"])
         if cast.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Dokument cast wrong relation")
@@ -623,10 +624,11 @@ class DokumentCastDetailView(RelatedContext):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         cast = get_object_or_404(
             DokumentCast,
@@ -638,9 +640,7 @@ class DokumentCastDetailView(RelatedContext):
 
 
 class DokumentCastEditView(LoginRequiredMixin, UpdateView):
-    """
-    Třida pohledu pro editaci části dokumentu pomocí modalu.
-    """
+    """Třida pohledu pro editaci části dokumentu pomocí modalu."""
 
     model = DokumentCast
     template_name = "core/transakce_modal.html"
@@ -650,10 +650,11 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     active_transaction = None
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         zaznam = self.object
         context = {
@@ -668,18 +669,17 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Vrací success url.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací success url."""
         context = self.get_context_data()
         dc = context["object"]
         return dc.get_absolute_url()
 
     def get_object(self, queryset=None):
-        """Vrací object.
+        """
+        Vrací object. v aplikaci.
 
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if hasattr(self, "object"):
             self.object = self.object
         else:
@@ -690,12 +690,13 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         self.active_transaction = self.get_object().create_transaction(request.user)
         self.active_transaction.redirect_on_error = False
         super().post(request, *args, **kwargs)
@@ -703,29 +704,30 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_invalid(self, form):
-        """Provádí operaci form invalid.
+        """
+        Provádí operaci form invalid.
 
         :param form: Vstupní hodnota ``form`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("dokument.views.DokumentCastEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)
 
 
 class KomponentaDokumentDetailView(RelatedContext):
-    """
-    Třida pohledu pro zobrazení detailu komponenty části dokumentu.
-    """
+    """Třida pohledu pro zobrazení detailu komponenty části dokumentu."""
 
     template_name = "dokument/dok/detail_komponenta.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Provádí operaci dispatch.
+        """
+        Provádí operaci dispatch.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komp_ident_cely"])
         if komponenta.komponenta_vazby.casti_dokumentu.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Komponenta wrong relation")
@@ -740,10 +742,11 @@ class KomponentaDokumentDetailView(RelatedContext):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         komponenta = get_object_or_404(
             Komponenta.objects.select_related(
@@ -765,19 +768,19 @@ class KomponentaDokumentDetailView(RelatedContext):
 
 
 class KomponentaDokumentCreateView(RelatedContext):
-    """
-    Třida pohledu pro vytvoření komponenty části dokumentu.
-    """
+    """Třida pohledu pro vytvoření komponenty části dokumentu."""
 
     template_name = "dokument/dok/create_komponenta.html"
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
-        """Provádí operaci dispatch.
+        """
+        Provádí operaci dispatch.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         cast = get_object_or_404(DokumentCast, ident_cely=self.kwargs["cast_ident_cely"])
         if cast.dokument.ident_cely != self.kwargs["ident_cely"]:
             logger.error("Dokument - Dokument cast wrong relation")
@@ -792,10 +795,11 @@ class KomponentaDokumentCreateView(RelatedContext):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         cast = get_object_or_404(
             DokumentCast,
@@ -807,28 +811,28 @@ class KomponentaDokumentCreateView(RelatedContext):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         return super().get(request, *args, **kwargs)
 
 
 class TvarEditView(LoginRequiredMixin, View):
-    """
-    Třida pohledu pro uložení zmeny tvaru z formuláře.
-    """
+    """Třida pohledu pro uložení zmeny tvaru z formuláře."""
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         dokument: Dokument = get_object_or_404(
             Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES),
             ident_cely=self.kwargs["ident_cely"],
@@ -857,20 +861,20 @@ class TvarEditView(LoginRequiredMixin, View):
 
 
 class TvarSmazatView(LoginRequiredMixin, TemplateView):
-    """
-    Třida pohledu pro smazání tvaru dokumentu pomocí modalu.
-    """
+    """Třida pohledu pro smazání tvaru dokumentu pomocí modalu."""
 
     template_name = "core/transakce_modal.html"
     id_tag = "smazat-tvar-form"
 
     def dispatch(self, request, *args: Any, **kwargs: Any) -> HttpResponse:
-        """Provádí operaci dispatch.
+        """
+        Provádí operaci dispatch.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         tvar = self.get_zaznam()
         if tvar.dokument.ident_cely != self.kwargs.get("ident_cely"):
             logger.debug("Dokument - Tvar wrong relation")
@@ -879,9 +883,7 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
-        """Vrací zaznam.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací zaznam. v aplikaci."""
         id = self.kwargs.get("pk")
         return get_object_or_404(
             Tvar,
@@ -889,10 +891,11 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
@@ -904,23 +907,25 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         zaznam: Tvar = self.get_zaznam()
         zaznam.active_transaction = zaznam.create_transaction(request.user, ZAZNAM_USPESNE_SMAZAN)
         zaznam.close_active_transaction_when_finished = True
@@ -931,17 +936,17 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
 
 
 class VytvoritCastView(LoginRequiredMixin, TemplateView):
-    """
-    Třida pohledu pro vytvoření části dokumentu pomoci modalu.
-    """
+    """Třida pohledu pro vytvoření části dokumentu pomoci modalu."""
 
     template_name = "core/transakce_modal.html"
     id_tag = "vytvor-cast-form"
 
     def get_zaznam(self) -> Dokument:
-        """Vrací zaznam.
+        """
+        Vrací zaznam. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES),
@@ -949,10 +954,11 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         zaznam = self.get_zaznam()
         form = DokumentCastCreateForm()
         context = {
@@ -965,23 +971,25 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         zaznam: Dokument = self.get_zaznam()
         form = DokumentCastCreateForm(data=request.POST)
         if form.is_valid():
@@ -1027,16 +1035,16 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     action = ""
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         self.title = "title"
         self.button = "button"
 
     def get_zaznam(self) -> DokumentCast:
-        """Vrací zaznam.
+        """
+        Vrací zaznam. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("dokument.views.TransakceView.get_zaznam", extra={"ident_cely": ident_cely})
         return get_object_or_404(
@@ -1045,10 +1053,11 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         self.init_translations()
         zaznam = self.get_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": zaznam.dokument.stav})
@@ -1062,12 +1071,13 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        """Provádí operaci dispatch.
+        """
+        Provádí operaci dispatch.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         zaznam = self.get_zaznam().dokument
         if zaznam.stav not in self.allowed_states:
             logger.debug("dokument.views.TransakceView.dispatch", extra={"value": self.action})
@@ -1084,22 +1094,24 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         zaznam = self.get_zaznam()
         getattr(Dokument, self.action)(zaznam, request.user)
         messages.add_message(request, messages.SUCCESS, self.success_message)
@@ -1108,26 +1120,23 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
 
 class DokumentCastPripojitAkciView(TransakceView):
-    """
-    Třida pohledu pro připojení akce do části dokumentu pomoci modalu.
-    """
+    """Třida pohledu pro připojení akce do části dokumentu pomoci modalu."""
 
     template_name = "core/transakce_table_modal.html"
     id_tag = "pripojit-eo-form"
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         self.title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
         self.success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         type_arch = self.request.GET.get("type")
         form = PripojitArchZaznamForm(type_arch=type_arch, dok=True)
@@ -1139,12 +1148,13 @@ class DokumentCastPripojitAkciView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         cast = self.get_zaznam()
         cast: DokumentCast
         type_arch = self.request.GET.get("type")
@@ -1166,26 +1176,23 @@ class DokumentCastPripojitAkciView(TransakceView):
 
 
 class DokumentCastPripojitProjektView(TransakceView):
-    """
-    Třida pohledu pro připojení projektu do části dokumentu pomoci modalu.
-    """
+    """Třida pohledu pro připojení projektu do části dokumentu pomoci modalu."""
 
     template_name = "core/transakce_table_modal.html"
     id_tag = "pripojit-projekt-form"
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         self.title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
         self.success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         form = PripojitProjektForm(dok=True)
         context["form"] = form
@@ -1194,12 +1201,13 @@ class DokumentCastPripojitProjektView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         cast = self.get_zaznam()
         form = PripojitProjektForm(data=request.POST, dok=True)
         if form.is_valid():
@@ -1218,25 +1226,22 @@ class DokumentCastPripojitProjektView(TransakceView):
 
 
 class DokumentCastOdpojitView(TransakceView):
-    """
-    Třida pohledu pro odpojení části dokumentu pomoci modalu.
-    """
+    """Třida pohledu pro odpojení části dokumentu pomoci modalu."""
 
     id_tag = "odpojit-cast-form"
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         self.title = _("dokument.views.DokumentCastOdpojitView.title.text")
         self.button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
         self.success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         cast = self.get_zaznam()
         if cast.archeologicky_zaznam is not None:
@@ -1253,12 +1258,13 @@ class DokumentCastOdpojitView(TransakceView):
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         cast = self.get_zaznam()
         fedora_transaction = cast.create_transaction(request.user, self.success_message)
         fedora_transaction.redirect_url = cast.get_absolute_url()
@@ -1300,27 +1306,24 @@ class DokumentCastOdpojitView(TransakceView):
 
 
 class DokumentCastSmazatView(TransakceView):
-    """
-    Třida pohledu pro smazání části dokumentu pomoci modalu.
-    """
+    """Třida pohledu pro smazání části dokumentu pomoci modalu."""
 
     id_tag = "smazat-cast-form"
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         self.title = _("dokument.views.DokumentCastSmazatView.title.text")
         self.button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
         self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         cast = self.get_zaznam()
         cast.create_transaction(request.user, self.success_message)
         dokument = cast.dokument
@@ -1369,36 +1372,34 @@ class DokumentCastSmazatView(TransakceView):
 
 
 class DokumentNeidentAkceSmazatView(TransakceView):
-    """
-    Třida pohledu pro smazání neident akce z části dokumentu pomoci modalu.
-    """
+    """Třida pohledu pro smazání neident akce z části dokumentu pomoci modalu."""
 
     id_tag = "smazat-neident-akce-form"
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         self.title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
         self.button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
         self.success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         context["object"] = context["object"].neident_akce
         return context
 
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         cast = self.get_zaznam()
         if cast.neident_akce:
             cast.neident_akce.delete()
@@ -1415,6 +1416,9 @@ class DokumentNeidentAkceSmazatView(TransakceView):
 def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci dokumentu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     dokument: Dokument = get_object_or_404(
         Dokument.objects.exclude(typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES), ident_cely=ident_cely
@@ -1520,6 +1524,9 @@ def edit(request, ident_cely):
 def edit_model_3D(request, ident_cely):
     """
     Funkce pohledu pro editaci modelu 3D.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     dokument: Dokument = get_object_or_404(
         Dokument, ident_cely=ident_cely, typ_dokumentu__id__in=MODEL_3D_DOKUMENT_TYPES
@@ -1658,6 +1665,9 @@ def edit_model_3D(request, ident_cely):
 def zapsat_do_akce(request, arch_z_ident_cely):
     """
     Funkce pohledu pro zapsání dokumentu do akce.
+
+    :param request: Popis parametru ``request``.
+    :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
     """
     zaznam: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     return zapsat(request, zaznam)
@@ -1667,6 +1677,9 @@ def zapsat_do_akce(request, arch_z_ident_cely):
 def zapsat_do_projektu(request, proj_ident_cely):
     """
     Funkce pohledu pro zapsání dokumentu do projektu.
+
+    :param request: Popis parametru ``request``.
+    :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
     """
     zaznam = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     if zaznam.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
@@ -1683,6 +1696,8 @@ def zapsat_do_projektu(request, proj_ident_cely):
 def create_model_3D(request):
     """
     Funkce pohledu pro vytvoření modelu 3D.
+
+    :param request: Popis parametru ``request``.
     """
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
@@ -1825,6 +1840,9 @@ def create_model_3D(request):
 def odeslat(request, ident_cely):
     """
     Funkce pohledu pro odeslání dokumentu cez modal.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
     dokument: Dokument
@@ -1876,6 +1894,9 @@ def odeslat(request, ident_cely):
 def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci dokumentu cez modal.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
     dokument: Dokument
@@ -1965,6 +1986,9 @@ def archivovat(request, ident_cely):
 def vratit(request, ident_cely):
     """
     Funkce pohledu pro vrácení dokumentu cez modal.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
     if dokument.stav != D_STAV_ODESLANY and dokument.stav != D_STAV_ARCHIVOVANY:
@@ -2014,6 +2038,9 @@ def vratit(request, ident_cely):
 def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání dokumentu cez modal.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     dokument: Dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
     dokument.deleted_by_user = request.user
@@ -2067,23 +2094,20 @@ def smazat(request, ident_cely):
 
 
 class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PermissionFilterMixin):
-    """
-    Třída pohledu pro autocomplete dokumentů.
-    """
+    """Třída pohledu pro autocomplete dokumentů."""
 
     typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_result_label(self, result):
-        """Vrací result label.
+        """
+        Vrací result label.
 
         :param result: Vstupní hodnota ``result`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})"
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
         ident = self.request.GET.get("ident")
@@ -2100,9 +2124,7 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
 
 def get_hierarchie_dokument_typ():
-    """
-    Funkce pro získaní hierarchie pro heslař.
-    """
+    """Funkce pro získaní hierarchie pro heslař."""
     hierarchie_qs = HeslarHierarchie.objects.filter(heslo_podrazene__nazev_heslare__id=HESLAR_DOKUMENT_TYP).values_list(
         "heslo_podrazene", "heslo_nadrazene"
     )
@@ -2118,6 +2140,9 @@ def get_hierarchie_dokument_typ():
 def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
+
+    :param historie_vazby: Popis parametru ``historie_vazby``.
+    :param request_user: Popis parametru ``request_user``.
     """
     request_user: User
     anonymized = request_user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
@@ -2132,6 +2157,9 @@ def get_history_dates(historie_vazby, request_user):
 def get_detail_template_shows(dokument, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
+
+    :param dokument: Popis parametru ``dokument``.
+    :param user: Popis parametru ``user``.
     """
     if "3D" in dokument.ident_cely:
         show_edit = check_permissions(p.actionChoices.model_edit, user, dokument.ident_cely)
@@ -2178,6 +2206,9 @@ def get_detail_template_shows(dokument, user):
 def zapsat(request, zaznam=None):
     """
     Funkce pohledu pro zapsání dokumentu.
+
+    :param request: Popis parametru ``request``.
+    :param zaznam: Popis parametru ``zaznam``.
     """
     required_fields = get_required_fields_dokument()
     required_fields_next = get_required_fields_dokument(next=1)
@@ -2293,6 +2324,11 @@ def zapsat(request, zaznam=None):
 def odpojit(request, ident_doku, ident_zaznamu, zaznam):
     """
     Funkce pohledu pro odpojení dokumentu cez modal.
+
+    :param request: Popis parametru ``request``.
+    :param ident_doku: Popis parametru ``ident_doku``.
+    :param ident_zaznamu: Popis parametru ``ident_zaznamu``.
+    :param zaznam: Popis parametru ``zaznam``.
     """
     relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_doku)
     remove_orphan = False
@@ -2378,6 +2414,11 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
 def pripojit(request, ident_zaznam, proj_ident_cely, typ):
     """
     Funkce pohledu pro pripojení dokumentu cez modal.
+
+    :param request: Popis parametru ``request``.
+    :param ident_zaznam: Popis parametru ``ident_zaznam``.
+    :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
+    :param typ: Popis parametru ``typ``.
     """
     zaznam = get_object_or_404(typ, ident_cely=ident_zaznam)
     if isinstance(zaznam, ArcheologickyZaznam):
@@ -2465,6 +2506,8 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 def get_dokument_table_row(request):
     """
     Funkce pohledu pro získaní řádku dokumentu pro vykreslení v modalu.
+
+    :param request: Popis parametru ``request``.
     """
     context = {"d": Dokument.objects.get(id=request.GET.get("id", "")), "prefix": "modaldoc"}
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
@@ -2475,6 +2518,8 @@ def get_dokument_table_row(request):
 def get_dokument_table_row_vratit(request):
     """
     AJAX pohled pro načtení jednoho řádku dokumentu do tabulky pro "vrácení dokumentu".
+
+    :param request: Popis parametru ``request``.
     """
     dokument_id = request.GET.get("id")
     index = request.GET.get("index")
@@ -2502,6 +2547,8 @@ def get_dokument_table_row_vratit(request):
 def get_detail_view(ident_cely):
     """
     Funkce pohledu pro redirect podle identu na model 3D nebo dokument detail.
+
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     if "3D" in ident_cely:
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
@@ -2512,6 +2559,8 @@ def get_detail_view(ident_cely):
 def get_detail_json_view(ident_cely):
     """
     Funkce pohledu pro vrácení url pro redirect podle identu na model 3D nebo dokument detail.
+
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     if "3D" in ident_cely:
         return reverse("dokument:detail-model-3D", kwargs={"ident_cely": ident_cely})
@@ -2524,12 +2573,15 @@ def get_required_fields_model3D(zaznam=None, next=0):
     Funkce pro získaní dictionary povinných polí podle stavu modelu 3D.
 
     Args:
-        zaznam (Dokument): model Dokument pro který se dané pole počítají.
+    zaznam (Dokument): model Dokument pro který se dané pole počítají.
 
-        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+    next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
 
     Returns:
-        required_fields: list polí.
+    required_fields: list polí.
+
+    :param zaznam: Popis parametru ``zaznam``.
+    :param next: Popis parametru ``next``.
     """
     required_fields = []
     if zaznam:
@@ -2560,12 +2612,15 @@ def get_required_fields_dokument(zaznam=None, next=0):
     Funkce pro získaní dictionary povinných polí podle stavu dokumentu.
 
     Args:
-        zaznam (Dokument): model Dokument pro který se dané pole počítají.
+    zaznam (Dokument): model Dokument pro který se dané pole počítají.
 
-        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+    next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
 
     Returns:
-        required_fields: list polí.
+    required_fields: list polí.
+
+    :param zaznam: Popis parametru ``zaznam``.
+    :param next: Popis parametru ``next``.
     """
     required_fields = []
     if zaznam:
@@ -2594,6 +2649,11 @@ def get_required_fields_dokument(zaznam=None, next=0):
 def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely):
     """
     Funkce pro získaní formsetu predmetu a objektu pro komponentu.
+
+    :param komponenta: Popis parametru ``komponenta``.
+    :param show: Popis parametru ``show``.
+    :param old_nalez_post: Popis parametru ``old_nalez_post``.
+    :param komp_ident_cely: Popis parametru ``komp_ident_cely``.
     """
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
@@ -2652,16 +2712,12 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
 
 
 def get_obdobi_choices():
-    """
-    Funkce která vrací dvou stupňový heslař pro období.
-    """
+    """Funkce která vrací dvou stupňový heslař pro období."""
     return heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
 
 
 def get_areal_choices():
-    """
-    Funkce která vrací dvou stupňový heslař pro areál.
-    """
+    """Funkce která vrací dvou stupňový heslař pro areál."""
     return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
 
 
@@ -2670,6 +2726,8 @@ def get_areal_choices():
 def post_ajax_get_3d_limit(request):
     """
     Funkce pohledu pro získaní 3D.
+
+    :param request: Popis parametru ``request``.
     """
     body = json.loads(request.body.decode("utf-8"))
     pians = get_3d_from_envelope(
@@ -2695,17 +2753,16 @@ def post_ajax_get_3d_limit(request):
 
 
 class DokumentyAzTableView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro zobrazení tabulky dokumentů.
-    """
+    """Třída pohledu pro zobrazení tabulky dokumentů."""
 
     def get(self, request, typ_vazby, ident_cely):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if typ_vazby == "arch_z":
             qs = (
                 Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
@@ -2742,6 +2799,8 @@ class DokumentyAzTableView(LoginRequiredMixin, View):
 def zjisti_licenci_organizace(request):
     """
     Funkce pohledu pro zjištení licence organizace.
+
+    :param request: Popis parametru ``request``.
     """
     organizace_id = request.GET.get("organizace", "").strip()
     organizace_id = int(organizace_id) if organizace_id and organizace_id.isdigit() else 0

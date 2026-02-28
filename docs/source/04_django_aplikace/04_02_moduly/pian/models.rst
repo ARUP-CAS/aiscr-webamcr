@@ -18,19 +18,14 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: pristupnost_pom()
 
       Provádí operaci pristupnost pom.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: pristupnost()
 
       Provádí operaci pristupnost.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: evaluate_pristupnost_change()
 
@@ -38,7 +33,6 @@ Třídy
 
       :param added_pristupnost_id: Identifikátor objektu ``added_pristupnost``.
       :param skip_zaznam_id: Identifikátor objektu ``skip_zaznam``.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __str__()
 
@@ -51,42 +45,43 @@ Třídy
       Vrací absolute url.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_create_user()
 
       Vrací create user.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: set_permanent_ident_cely()
 
       Metoda pro nastavení permanentního identifikátoru pro PIAN.
+
       Metoda vrátí identifikátor podle sekvence PIAN.
 
    .. py:method:: set_vymezeny()
 
       Metoda pro nastavení stavu vymezený.
 
+      :param user: Popis parametru ``user``.
+
    .. py:method:: set_potvrzeny()
 
       Metoda pro nastavení stavu potvrzený.
 
+      :param user: Popis parametru ``user``.
+      :param old_ident: Popis parametru ``old_ident``.
+
    .. py:method:: zaznamenej_zapsani()
 
       Metoda pro uložení změny do historie pro pianu.
+
+      :param user: Popis parametru ``user``.
 
 
 .. py:class:: Kladyzm
@@ -106,9 +101,11 @@ Funkce
 
    Funkce pro vytvoření pianu v DB podle katastru.
 
+   :param katastr: Popis parametru ``katastr``.
+   :param fedora_transaction: Popis parametru ``fedora_transaction``.
+
 .. py:function:: get_ZM_from_point(point)
 
    Vrací ZM from point.
 
    :param point: Vstupní hodnota ``point`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.

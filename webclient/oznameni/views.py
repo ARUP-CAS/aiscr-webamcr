@@ -38,12 +38,13 @@ class OznameniView(View):
     """Implementuje komponentu ``OznameniView`` v rámci aplikace."""
 
     def dispatch(self, request, *args, **kwargs):
-        """Provádí operaci dispatch.
+        """
+        Provádí operaci dispatch.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         self.session_identifier = SessionIdentifier(request)
         self.ident_cely = kwargs.pop("ident_cely", None)
         return super().dispatch(request, *args, **kwargs)
@@ -51,14 +52,15 @@ class OznameniView(View):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniZapsatView(OznameniView):
-    """
-    Třída pohledu pro 1. stranu oznámení.
-    """
+    """Třída pohledu pro 1. stranu oznámení."""
 
     def post(self, request):
         """
         Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
+
         V prvém kroku uživatel zadává údaje a v druhém je potvrzuje a případně uploaduje soubory.
+
+        :param request: Popis parametru ``request``.
         """
         logger.debug("oznameni.views.index.start")
         if "oznamovatel" in request.POST:
@@ -140,10 +142,11 @@ class OznameniZapsatView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug("oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely})
@@ -197,15 +200,14 @@ class OznameniZapsatView(OznameniView):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniDokumentaceView(OznameniView):
-    """
-    Třída pohledu pro 2. stranu oznámení.
-    """
+    """Třída pohledu pro 2. stranu oznámení."""
 
     def post(self, request):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací výsledek provedené operace."""
+        """
         if "ident_cely" in request.POST:
             logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
             projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
@@ -227,10 +229,11 @@ class OznameniDokumentaceView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
@@ -262,16 +265,15 @@ class OznameniDokumentaceView(OznameniView):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniPotvrzeniView(OznameniView):
-    """
-    Třída pohledu pro potvrzení oznámení.
-    """
+    """Třída pohledu pro potvrzení oznámení."""
 
     @method_decorator(never_cache)
     def get(self, request):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
@@ -304,6 +306,9 @@ class OznameniPotvrzeniView(OznameniView):
 def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci oznamovatele.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     oznameni = projekt.oznamovatel
@@ -337,6 +342,8 @@ def edit(request, ident_cely):
 def post_poi2kat(request):
     """
     Funkce pohledu pro získaní katastru podle bodu pro oznámení.
+
+    :param request: Popis parametru ``request``.
     """
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
@@ -350,17 +357,16 @@ def post_poi2kat(request):
 
 
 class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro vytvoření oznamovatele pomocí modalu.
-    """
+    """Třída pohledu pro vytvoření oznamovatele pomocí modalu."""
 
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         ident_cely = self.kwargs.get("ident_cely")
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
@@ -374,12 +380,13 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
@@ -391,12 +398,13 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]
         if check_stav_changed(request, projekt):

@@ -22,9 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class PianCreateForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení pianu.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení pianu."""
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -45,11 +43,12 @@ class PianCreateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(PianCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -67,19 +66,19 @@ class PianCreateForm(forms.ModelForm):
         )
 
     def _instance_geom_wkt(self, field_name):
-        """Provádí operaci instance geom wkt.
+        """
+        Provádí operaci instance geom wkt.
 
         :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         g = getattr(self.instance, field_name, None)
         if not g:
             return None
         return g.wkt if hasattr(g, "wkt") else str(g)
 
     def run_loaded_validation(self):
-        """
-        Metoda pro validaci geometrií při potvrzení PIANu.
-        """
+        """Metoda pro validaci geometrií při potvrzení PIANu."""
         self._errors = ErrorDict()
         self.cleaned_data = {}
         geom_wkt = self._instance_geom_wkt("geom")
@@ -97,9 +96,7 @@ class PianCreateForm(forms.ModelForm):
         return not bool(self.errors)
 
     def clean(self):
-        """Provádí operaci clean.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci clean."""
         validation_geom = self.data.get("geom")
         self.validate_geom(validation_geom, "4326")
         validation_geom_jtsk = self.data.get("geom_sjtsk")
@@ -127,6 +124,9 @@ class PianCreateForm(forms.ModelForm):
     def validate_geom(self, geom, epsg):
         """
         Metoda pro validaci PIAN pomocí funkce v postgres databázi.
+
+        :param geom: Popis parametru ``geom``.
+        :param epsg: Popis parametru ``epsg``.
         """
         c = connections["urgent"].cursor()
         logger.debug("pian.forms.validate_geom.start")

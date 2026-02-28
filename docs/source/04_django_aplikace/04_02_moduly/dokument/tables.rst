@@ -18,11 +18,13 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: render_nahled()
 
       Metoda pro správně zobrazení náhledu souboru.
+
+      :param value: Popis parametru ``value``.
+      :param record: Popis parametru ``record``.
 
 
 .. py:class:: DokumentTable
@@ -35,11 +37,13 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
+      :param value: Popis parametru ``value``.
+      :param record: Popis parametru ``record``.
+
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 

@@ -11,9 +11,7 @@ class DokumentWithMetadataAdmin(ObjectWithMetadataAdmin):
 
 @admin.register(Let)
 class LetAdmin(DokumentWithMetadataAdmin):
-    """
-    Admin část pro správu modelu Let.
-    """
+    """Admin část pro správu modelu Let."""
 
     list_display = (
         "ident_cely",
@@ -46,11 +44,12 @@ class LetAdmin(DokumentWithMetadataAdmin):
     search_fields = ("ident_cely", "uzivatelske_oznaceni")
 
     def get_readonly_fields(self, request, obj=None):
-        """Vrací readonly fields.
+        """
+        Vrací readonly fields.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if obj:  # editace existujícího objektu
             return self.readonly_fields + ("ident_cely",)
         return self.readonly_fields

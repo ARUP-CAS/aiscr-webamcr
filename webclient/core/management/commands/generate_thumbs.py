@@ -17,29 +17,30 @@ class Command(BaseCommand):
     vygeneruje je ze zdrojového souboru.
 
     Parametry (vzájemně se vylučují):
-        - --pks: Seznam primárních klíčů souborů (odděleno mezerami)
-        - --range: Rozsah primárních klíčů ve formátu "start end"
-        - --csv: Cesta k CSV souboru s listem cest v sloupci "record" (repository path)
+    - --pks: Seznam primárních klíčů souborů (odděleno mezerami)
+    - --range: Rozsah primárních klíčů ve formátu "start end"
+    - --csv: Cesta k CSV souboru s listem cest v sloupci "record" (repository path)
 
     Poznámka:
-        - Musí být zadán právě jeden z parametrů --pks, --range, nebo --csv
-        - Náhledy jsou generovány pouze pro obrazové formáty podporované systémem
+    - Musí být zadán právě jeden z parametrů --pks, --range, nebo --csv
+    - Náhledy jsou generovány pouze pro obrazové formáty podporované systémem
 
     Příklady použití::
 
-        python manage.py generate_thumbs --pks 1 2 3
-        python manage.py generate_thumbs --range 100 200
-        python manage.py generate_thumbs --range 1 1000
-        python manage.py generate_thumbs --csv /tmp/missing_thumbs.csv
+    python manage.py generate_thumbs --pks 1 2 3
+    python manage.py generate_thumbs --range 100 200
+    python manage.py generate_thumbs --range 1 1000
+    python manage.py generate_thumbs --csv /tmp/missing_thumbs.csv
     """
 
     help = _("core.management.commands.generate_thumbs.Command.help")
 
     def add_arguments(self, parser):
-        """Provádí operaci add arguments.
+        """
+        Provádí operaci add arguments.
 
         :param parser: Vstupní hodnota ``parser`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         parser.add_argument(
             "--pks",
             nargs="+",
@@ -60,10 +61,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Zpracuje vstupní argumenty příkazu a spustí generování náhledů.
+        """
+        Zpracuje vstupní argumenty příkazu a spustí generování náhledů.
+
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
         """
         pks = options.get("pks")
         pk_range = options.get("range")

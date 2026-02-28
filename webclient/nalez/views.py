@@ -39,6 +39,11 @@ logger = logging.getLogger(__name__)
 def smazat_nalez(request, typ_vazby, typ, ident_cely):
     """
     Funkce pohledu pro smazání nálezu předmětu nebo objektu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param typ_vazby: Popis parametru ``typ_vazby``.
+    :param typ: Popis parametru ``typ``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     if typ == "objekt":
         zaznam = get_object_or_404(NalezObjekt, id=ident_cely)
@@ -93,6 +98,10 @@ def smazat_nalez(request, typ_vazby, typ, ident_cely):
 def edit_nalez(request, typ_vazby, komp_ident_cely):
     """
     Funkce pohledu pro zapsání editace nálezu předmětu a objektu.
+
+    :param request: Popis parametru ``request``.
+    :param typ_vazby: Popis parametru ``typ_vazby``.
+    :param komp_ident_cely: Popis parametru ``komp_ident_cely``.
     """
     komponenta: Komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)

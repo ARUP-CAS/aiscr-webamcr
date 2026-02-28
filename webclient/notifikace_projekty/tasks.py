@@ -17,10 +17,11 @@ logger = logging.getLogger(__name__)
 
 
 def get_project_type_notification(projekt_type):
-    """Vrací project type notification.
+    """
+    Vrací project type notification.
 
     :param projekt_type: Vstupní hodnota ``projekt_type`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     projekt_notifikace = {
         TYP_PROJEKTU_BADATELSKY_ID: "S-E-P-02a",
         TYP_PROJEKTU_PRUZKUM_ID: "S-E-P-02b",
@@ -33,6 +34,8 @@ def get_project_type_notification(projekt_type):
 def check_hlidaci_pes(projekt_id):
     """
     Task pro celery pro skontrolování jestli je nastavený hlídací pes.
+
+    :param projekt_id: Popis parametru ``projekt_id``.
     """
     logger.debug("cron.Notifications.collect_watchdogs.start")
     notification_type = UserNotificationType.objects.get(ident_cely="E-P-02")

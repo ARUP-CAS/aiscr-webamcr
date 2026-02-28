@@ -18,7 +18,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: _instance_geom_wkt()
 
@@ -35,9 +34,10 @@ Třídy
 
       Provádí operaci clean.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: validate_geom()
 
       Metoda pro validaci PIAN pomocí funkce v postgres databázi.
+
+      :param geom: Popis parametru ``geom``.
+      :param epsg: Popis parametru ``epsg``.
 

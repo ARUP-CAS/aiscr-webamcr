@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class CreateKomponentaForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení komponenty.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení komponenty."""
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -54,7 +52,8 @@ class CreateKomponentaForm(forms.ModelForm):
     def __init__(
         self, obdobi_choices, areal_choices, *args, readonly=False, required=None, required_next=None, **kwargs
     ):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param obdobi_choices: Vstupní hodnota ``obdobi_choices`` pro danou operaci.
         :param areal_choices: Vstupní hodnota ``areal_choices`` pro danou operaci.
@@ -63,7 +62,7 @@ class CreateKomponentaForm(forms.ModelForm):
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
         self.fields["obdobi"] = TwoLevelSelectField(
             label=_("komponenta.form.createKomponentaForm.obdobi.label"),

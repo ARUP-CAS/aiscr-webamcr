@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 class OdstavkaSystemuAdmin(admin.ModelAdmin):
     """
     Třída admin panelu pro zobrazení odstávek systému.
+
     Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
     """
 
@@ -63,8 +64,14 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         """
         Metoda na uložení modelu odstávky.
+
         Jednotlivé texty z modelu se ukladají do textú prekladů a template.
         Po uložení se restartuje wsgi pro načítaní nových prekladů.
+
+        :param request: Popis parametru ``request``.
+        :param obj: Popis parametru ``obj``.
+        :param form: Popis parametru ``form``.
+        :param change: Popis parametru ``change``.
         """
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
@@ -105,18 +112,27 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
         """
         Metoda pro určení práv na modul odstávky.
+
+        :param request: Popis parametru ``request``.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def has_view_permission(self, request, obj=None, *args):
         """
         Metoda pro určení práv na videní odstávky.
+
+        :param request: Popis parametru ``request``.
+        :param obj: Popis parametru ``obj``.
+        :param args: Popis parametru ``args``.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def has_add_permission(self, request, *args):
         """
         Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
+
+        :param request: Popis parametru ``request``.
+        :param args: Popis parametru ``args``.
         """
         if OdstavkaSystemu.objects.count() > 0:
             return False
@@ -125,12 +141,19 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None, *args):
         """
         Metoda pro určení práv pro úpravu odstávky.
+
+        :param request: Popis parametru ``request``.
+        :param obj: Popis parametru ``obj``.
+        :param args: Popis parametru ``args``.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def file_handler(self, language, form):
         """
         Pomocní metoda pro úpravu template zobrazených během odstávky.
+
+        :param language: Popis parametru ``language``.
+        :param form: Popis parametru ``form``.
         """
         with open("/vol/web/nginx/data/" + language + "/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
@@ -148,9 +171,7 @@ admin.site.register(OdstavkaSystemu, OdstavkaSystemuAdmin)
 
 
 class CustomAdminSettingsAdmin(admin.ModelAdmin):
-    """
-    Admin panel pro vlastních nastavení.
-    """
+    """Admin panel pro vlastních nastavení."""
 
     change_list_template = "core/custom_settings_changelist.html"
     model = CustomAdminSettings
@@ -162,9 +183,7 @@ admin.site.register(CustomAdminSettings, CustomAdminSettingsAdmin)
 
 @admin.register(Permissions)
 class PermissionAdmin(admin.ModelAdmin):
-    """
-    Třída admin panelu pro zobrazení a správu oprávnení.
-    """
+    """Třída admin panelu pro zobrazení a správu oprávnení."""
 
     change_list_template = "core/permissions_changelist.html"
     list_display = ["address_in_app", "main_role", "action", "base", "status", "ownership", "accessibility"]
@@ -172,17 +191,17 @@ class PermissionAdmin(admin.ModelAdmin):
     search_fields = ["address_in_app", "action"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
-        """Provádí operaci changelist view.
+        """
+        Provádí operaci changelist view.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return super().changelist_view(request, {"import_list": True})
 
     def get_urls(self):
-        """
-        Metoda pri definici dodatečných url.
-        """
+        """Metoda pri definici dodatečných url."""
         urls = super().get_urls()
         my_urls = [
             path("import_file/", self.admin_site.admin_view(self.import_file), name="import_permissions"),
@@ -202,6 +221,8 @@ class PermissionAdmin(admin.ModelAdmin):
     def import_file(self, request):
         """
         Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+
+        :param request: Popis parametru ``request``.
         """
         model = self.model
         opts = model._meta
@@ -261,6 +282,8 @@ class PermissionAdmin(admin.ModelAdmin):
     def import_success(self, request):
         """
         Metoda view pro zobrazení tabulky s výsledkom importu.
+
+        :param request: Popis parametru ``request``.
         """
         json_table = cache.get("import_json_results")
         missing_urls = cache.get("import_missing_results")
@@ -296,6 +319,8 @@ class PermissionAdmin(admin.ModelAdmin):
     def reload_permissions(self, request):
         """
         Metoda view pro automatický import oprávnění z csv v gitu a zobrazení výsledků importu.
+
+        :param request: Popis parametru ``request``.
         """
         with open("core/resources/uzivatelska_prava.csv", "rb") as f:
             permission_file = SimpleUploadedFile(
@@ -341,9 +366,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
 @admin.register(PermissionsSkip)
 class PermissionSkipAdmin(admin.ModelAdmin):
-    """
-    Třída admin panelu pro zobrazení a správu proskakovani oprávnení.
-    """
+    """Třída admin panelu pro zobrazení a správu proskakovani oprávnení."""
 
     change_list_template = "core/permissions_changelist.html"
     list_display = ["user"]
@@ -351,17 +374,17 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     search_fields = ["user"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
-        """Provádí operaci changelist view.
+        """
+        Provádí operaci changelist view.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return super().changelist_view(request, {"import_skip_list": True})
 
     def get_urls(self):
-        """
-        Metoda pri definici dodatečných url.
-        """
+        """Metoda pri definici dodatečných url."""
         urls = super().get_urls()
         my_urls = [
             path(
@@ -378,6 +401,8 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     def validate_sheet(self, sheet):
         """
         Metoda pro validaci importovaného excelu a jeho úpravu.
+
+        :param sheet: Popis parametru ``sheet``.
         """
         if not sheet.columns[0] == "IDENT_CELY" or not sheet.columns[1] == "IDENT_LIST":
             raise WrongCSVError
@@ -386,6 +411,8 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     def import_skip_file(self, request):
         """
         Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+
+        :param request: Popis parametru ``request``.
         """
         model = self.model
         opts = model._meta
@@ -441,10 +468,11 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         )
 
     def check_save_row(self, row):
-        """Ověří save row.
+        """
+        Ověří save row.
 
         :param row: Vstupní hodnota ``row`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         try:
             PermissionsSkip.objects.create(
                 user=User.objects.get(ident_cely=row.iloc[0]),
@@ -458,6 +486,8 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     def import_skip_success(self, request):
         """
         Metoda view pro zobrazení tabulky s výsledkom importu.
+
+        :param request: Popis parametru ``request``.
         """
         json_table = cache.get("import_json_results")
         cache.delete("import_json_results")
@@ -488,11 +518,12 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         )
 
     def export_as_csv(self, request, queryset):
-        """Exportuje as csv.
+        """
+        Exportuje as csv.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=opravneni_override.csv"
         writer = csv.writer(response, delimiter=";")
@@ -511,11 +542,13 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
     @staticmethod
     def _read_file(uploaded_file, context):
-        """Načte file.
+        """
+        Načte file.
 
         :param uploaded_file: Vstupní hodnota ``uploaded_file`` pro danou operaci.
         :param context: Vstupní hodnota ``context`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         sheet = None
         if uploaded_file.content_type == "text/csv":
             try:
@@ -547,10 +580,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
         return sheet
 
     def update_doi(self, request):
-        """Aktualizuje doi.
+        """
+        Aktualizuje doi. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací výsledek provedené operace."""
+        """
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -573,10 +607,11 @@ class FedoraCustomAdminSite(admin.AdminSite):
         return TemplateResponse(request, "admin/doi_management/update_doi.html", context)
 
     def update_metadata_file_upload(self, request):
-        """Aktualizuje metadata file upload.
+        """
+        Aktualizuje metadata file upload.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací výsledek provedené operace."""
+        """
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -599,13 +634,17 @@ class FedoraCustomAdminSite(admin.AdminSite):
     def import_data(self, request):
         """
         Creates a view for importing data from a zip file.
+
+        :param request: Popis parametru ``request``.
         """
 
         def normalize_file_name(name: str) -> str:
-            """Provádí operaci normalize file name.
+            """
+            Provádí operaci normalize file name.
 
             :param name: Vstupní hodnota ``name`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            :return: Vrací výsledek provedené operace.
+            """
             if "/" in name:
                 name = name.split("/")[-1]
             return name.strip().lower()
@@ -661,10 +700,12 @@ class FedoraCustomAdminSite(admin.AdminSite):
                             mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
 
                             def format_primary_key(pk):
-                                """Provádí operaci format primary key.
+                                """
+                                Provádí operaci format primary key.
 
                                 :param pk: Primární klíč zpracovávaného záznamu.
-                                :return: Vrací výsledek provedené operace."""
+                                :return: Vrací výsledek provedené operace.
+                                """
                                 if isinstance(pk, dict):
                                     return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
                                 return str(pk)
@@ -759,9 +800,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
     def get_urls(
         self,
     ):
-        """Vrací urls.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací urls. v aplikaci."""
         return [
             path(
                 "update-metadata/",

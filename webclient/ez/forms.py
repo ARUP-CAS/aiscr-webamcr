@@ -19,9 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení externího zdroju.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení externího zdroju."""
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -141,14 +139,15 @@ class ExterniZdrojForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(ExterniZdrojForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         if not readonly:
@@ -254,9 +253,7 @@ class ExterniZdrojForm(forms.ModelForm):
 
 
 class ExterniOdkazForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci externího odkazu.
-    """
+    """Hlavní formulář pro vytvoření, editaci externího odkazu."""
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -274,30 +271,30 @@ class ExterniOdkazForm(forms.ModelForm):
         }
 
     def __init__(self, type_arch=None, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param type_arch: Vstupní hodnota ``type_arch`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(ExterniOdkazForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
 
 class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
-    """
-    Hlavní formulář pro připojení archeologického záznamu.
-    """
+    """Hlavní formulář pro připojení archeologického záznamu."""
 
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param type_arch: Vstupní hodnota ``type_arch`` pro danou operaci.
         :param dok: Vstupní hodnota ``dok`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
         if dok:
@@ -341,16 +338,15 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
 
 
 class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
-    """
-    Hlavní formulář pro připojení externího zdroju.
-    """
+    """Hlavní formulář pro připojení externího zdroju."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
         new_choices = list(ExterniZdroj.objects.filter().values_list("id", "ident_cely"))

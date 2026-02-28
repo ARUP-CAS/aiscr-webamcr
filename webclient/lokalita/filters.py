@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class LokalitaFilter(ArchZaznamFilter):
-    """
-    Třída pro zakladní filtrování lokality a jejich potomků.
-    """
+    """Třída pro zakladní filtrování lokality a jejich potomků."""
 
     igsn = CharFilter(
         lookup_expr="icontains",
@@ -58,10 +56,11 @@ class LokalitaFilter(ArchZaznamFilter):
     )
 
     def filter_queryset(self, queryset):
-        """Filtruje queryset.
+        """
+        Filtruje queryset. v aplikaci.
 
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug("lokalita.filters.LokalitaFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(LokalitaFilter, self).filter_queryset(queryset)
@@ -90,6 +89,10 @@ class LokalitaFilter(ArchZaznamFilter):
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metoda pro filtrování podle názvu, popisu, uživatelského označení a poznámek.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             Q(nazev__icontains=value)
@@ -109,27 +112,27 @@ class LokalitaFilter(ArchZaznamFilter):
         )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(LokalitaFilter, self).__init__(*args, **kwargs)
         self.helper = LokalitaFilterFormHelper()
 
 
 class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
-    """
-    Třída pro správně zobrazení filtru.
-    """
+    """Třída pro správně zobrazení filtru."""
 
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param form: Vstupní hodnota ``form`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("lokalita.filters.djPian.divider.label")
         }

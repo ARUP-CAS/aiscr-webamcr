@@ -13,12 +13,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=Lokalita, weak=False)
 def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
-    """Uloží lokalita snapshot.
+    """
+    Uloží lokalita snapshot.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug(
         "lokalita.signals.save_lokalita_snapshot.start", extra={"ident_cely": instance.archeologicky_zaznam.ident_cely}
     )
@@ -40,12 +41,13 @@ def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
 
 @receiver(post_save, sender=Lokalita, weak=False)
 def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
-    """Uloží lokalita redis snapshot.
+    """
+    Uloží lokalita redis snapshot.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug(
         "lokalita.signals.save_lokalita_redis_snapshot.start",
         extra={"ident_cely": instance.archeologicky_zaznam.ident_cely},
@@ -60,12 +62,13 @@ def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
 
 @receiver(pre_delete, sender=Lokalita, weak=False)
 def delete_lokalita(sender, instance: Lokalita, **kwargs):
-    """Odstraní lokalita.
+    """
+    Odstraní lokalita. v aplikaci.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek operace odstranění."""
+    """
     logger.debug(
         "lokalita.signals.delete_lokalita.start", extra={"ident_cely": instance.archeologicky_zaznam.ident_cely}
     )

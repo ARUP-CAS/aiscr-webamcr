@@ -17,7 +17,6 @@ Třídy
       Provádí operaci format value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: CreateADBForm
@@ -47,7 +46,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 Funkce

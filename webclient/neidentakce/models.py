@@ -10,9 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
-    """
-    Databázový model neidentifikované akce.
-    """
+    """Databázový model neidentifikované akce."""
 
     katastr = models.ForeignKey(RuianKatastr, models.RESTRICT, db_column="katastr", blank=True, null=True)
     lokalizace = models.TextField(blank=True, null=True)
@@ -37,11 +35,12 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
         db_table = "neident_akce"
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(NeidentAkce, self).__init__(*args, **kwargs)
         try:
             dokument_cast: DokumentCast = self.dokument_cast
@@ -53,9 +52,7 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
 
 
 class NeidentAkceVedouci(ExportModelOperationsMixin("neident_akce_vedouci"), models.Model):
-    """
-    Databázový model vedoucího neidentifikované akce.
-    """
+    """Databázový model vedoucího neidentifikované akce."""
 
     neident_akce = models.ForeignKey(NeidentAkce, on_delete=models.CASCADE, db_column="neident_akce")
     vedouci = models.ForeignKey(Osoba, models.RESTRICT, db_column="vedouci")

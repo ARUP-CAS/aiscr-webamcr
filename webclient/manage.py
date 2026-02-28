@@ -6,9 +6,7 @@ import sys
 
 
 def main():
-    """Provádí operaci main.
-
-    :return: Vrací výsledek provedené operace."""
+    """Provádí operaci main."""
     if os.getenv("DJANGO_SETTINGS_MODULE") is None:
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings")
     try:

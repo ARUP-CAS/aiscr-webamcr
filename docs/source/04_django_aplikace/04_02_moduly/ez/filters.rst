@@ -14,22 +14,33 @@ Třídy
 
    .. py:method:: filter_queryset()
 
-      Filtruje queryset.
+      Filtruje queryset. v aplikaci.
 
       :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: filter_popisne_udaje()
 
       Metoda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
 
+      :param queryset: Popis parametru ``queryset``.
+      :param name: Popis parametru ``name``.
+      :param value: Popis parametru ``value``.
+
    .. py:method:: filter_akce_ident()
 
       Metoda pro filtrování podle identu celý akce.
 
+      :param queryset: Popis parametru ``queryset``.
+      :param name: Popis parametru ``name``.
+      :param value: Popis parametru ``value``.
+
    .. py:method:: filter_lokalita_ident()
 
       Metoda pro filtrování podle identu celý lokality.
+
+      :param queryset: Popis parametru ``queryset``.
+      :param name: Popis parametru ``name``.
+      :param value: Popis parametru ``value``.
 
    .. py:method:: __init__()
 
@@ -37,7 +48,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ExterniZdrojFilterFormHelper
@@ -51,5 +61,4 @@ Třídy
       Inicializuje instanci třídy.
 
       :param form: Vstupní hodnota ``form`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 

@@ -28,9 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadata):
-    """
-    Databázový model externího zdroje.
-    """
+    """Databázový model externího zdroje."""
 
     STATES = (
         (EZ_STAV_ZAPSANY, _("ez.models.externiZdroj.states.zapsany.label")),
@@ -92,18 +90,18 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         db_table = "externi_zdroj"
 
     def get_absolute_url(self):
-        """
-        Metoda pro získaní absolut url záznamu podle identu.
-        """
+        """Metoda pro získaní absolut url záznamu podle identu."""
         return reverse(
             "ez:detail",
             kwargs={"slug": self.ident_cely},
         )
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if self.ident_cely:
             return self.ident_cely
         else:
@@ -112,6 +110,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     def set_odeslany(self, user):
         """
         Metoda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = EZ_STAV_ODESLANY
         historie_poznamka = self.check_set_permanent_ident()
@@ -127,6 +127,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     def set_vraceny(self, user, new_state, poznamka):
         """
         Metoda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
+
+        :param user: Popis parametru ``user``.
+        :param new_state: Popis parametru ``new_state``.
+        :param poznamka: Popis parametru ``poznamka``.
         """
         self.stav = new_state
         Historie(
@@ -140,7 +144,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     def set_potvrzeny(self, user):
         """
         Metoda pro nastavení stavu potvrzená a uložení změny do historie pro externí zdroj.
+
         Pokud je ident dočasný nahrazení identem stálým.
+
+        :param user: Popis parametru ``user``.
         """
 
         self.stav = EZ_STAV_POTVRZENY
@@ -169,6 +176,8 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
     def set_zapsany(self, user):
         """
         Metoda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = EZ_STAV_ZAPSANY
         Historie(
@@ -179,15 +188,11 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         self.save()
 
     def get_permission_object(self):
-        """Vrací permission object.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací permission object."""
         return self
 
     def get_create_user(self):
-        """Vrací create user.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create user."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_EXT_ZD)[0].uzivatel,)
         except Exception as e:
@@ -195,9 +200,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create org."""
         try:
             return (self.get_create_user()[0].organizace,)
         except Exception as e:
@@ -205,9 +208,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             return ()
 
     def set_snapshots(self):
-        """Nastaví snapshots.
-
-        :return: Vrací výsledek provedené operace."""
+        """Nastaví snapshots. v aplikaci."""
         if not self.externizdrojautor_set.all():
             self.autori_snapshot = None
         else:
@@ -223,17 +224,13 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci redis snapshot id."""
         from ez.views import ExterniZdrojListView
 
         return f"{ExterniZdrojListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Vygeneruje redis snapshot."""
         from ez.tables import ExterniZdrojTable
 
         data = ExterniZdroj.objects.filter(pk=self.pk)
@@ -242,9 +239,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         return self.redis_snapshot_id, data
 
     def check_set_permanent_ident(self):
-        """Ověří set permanent ident.
-
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """Ověří set permanent ident."""
         historie_poznamka = None
         if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             old_ident = self.ident_cely
@@ -258,6 +253,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 def get_perm_ez_ident():
     """
     Funkce pro výpočet ident celý pro externí zdroj.
+
     Funkce vrátí pro permanentní ident ID podle sekvence externího zdroje.
     """
     MAXIMUM: int = 9999999
@@ -289,18 +285,14 @@ def get_perm_ez_ident():
 
 
 class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), models.Model):
-    """
-    Databázový model autora externího zdroje se zohledněním pořadí zadání.
-    """
+    """Databázový model autora externího zdroje se zohledněním pořadí zadání."""
 
     externi_zdroj = models.ForeignKey(ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
     poradi = models.IntegerField()
 
     def get_osoba(self):
-        """Vrací osoba.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací osoba. v aplikaci."""
         return self.autor.vypis_cely
 
     class Meta:
@@ -311,18 +303,14 @@ class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), model
 
 
 class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), models.Model):
-    """
-    Databázový model editora externího zdroje se zohledněním pořadí zadání.
-    """
+    """Databázový model editora externího zdroje se zohledněním pořadí zadání."""
 
     externi_zdroj = models.ForeignKey(ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
     editor = models.ForeignKey(Osoba, models.RESTRICT, db_column="editor")
     poradi = models.IntegerField()
 
     def get_osoba(self):
-        """Vrací osoba.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací osoba. v aplikaci."""
         return self.editor.vypis_cely
 
     class Meta:
@@ -336,9 +324,7 @@ class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), mod
 
 
 class ExterniZdrojSekvence(models.Model):
-    """
-    Model pro tabulku se sekvencemi externích zdrojů.
-    """
+    """Model pro tabulku se sekvencemi externích zdrojů."""
 
     id = models.SmallIntegerField(default=1, primary_key=True)
     sekvence = models.IntegerField()

@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class CreateDJForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky."""
 
     pian_text = forms.CharField(
         max_length=100,
@@ -36,6 +34,11 @@ class CreateDJForm(forms.ModelForm):
     ):
         """
         Metoda formuláře pro získaní querysetu pro typ DJ podle typu akce.
+
+        :param jednotky: Popis parametru ``jednotky``.
+        :param instance: Popis parametru ``instance``.
+        :param typ_arch_z: Popis parametru ``typ_arch_z``.
+        :param typ_akce: Popis parametru ``typ_akce``.
         """
         logger.debug(
             "dj.forms.CreateDJForm.__init__.cannot_get_typ_akce",
@@ -137,14 +140,15 @@ class CreateDJForm(forms.ModelForm):
         typ_akce=None,
         **kwargs,
     ):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param not_readonly: Vstupní hodnota ``not_readonly`` pro danou operaci.
         :param typ_arch_z: Vstupní hodnota ``typ_arch_z`` pro danou operaci.
         :param typ_akce: Vstupní hodnota ``typ_akce`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
         if self.instance.ident_cely and typ_akce is None:
@@ -204,9 +208,7 @@ class CreateDJForm(forms.ModelForm):
 
 
 class ChangeKatastrForm(forms.Form):
-    """
-    Formulář pro editaci katastru u archeologického záznamu.
-    """
+    """Formulář pro editaci katastru u archeologického záznamu."""
 
     katastr = forms.ModelChoiceField(
         label=_("dj.forms.ChangeKatastrForm.katastr.label"),
@@ -217,11 +219,12 @@ class ChangeKatastrForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(ChangeKatastrForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

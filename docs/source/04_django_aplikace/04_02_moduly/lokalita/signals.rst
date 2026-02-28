@@ -13,7 +13,6 @@ Funkce
    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: save_lokalita_redis_snapshot(sender, instance)
 
@@ -22,13 +21,11 @@ Funkce
    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: delete_lokalita(sender, instance)
 
-   Odstraní lokalita.
+   Odstraní lokalita. v aplikaci.
 
    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek operace odstranění.

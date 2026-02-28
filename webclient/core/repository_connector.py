@@ -35,14 +35,15 @@ class FedoraError(Exception):
     """Implementuje komponentu ``FedoraError`` v rámci aplikace."""
 
     def __init__(self, url, message, code, headers=None, fedora_transaction=None):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param url: Vstupní hodnota ``url`` pro danou operaci.
         :param message: Vstupní hodnota ``message`` pro danou operaci.
         :param code: Vstupní hodnota ``code`` pro danou operaci.
         :param headers: Vstupní hodnota ``headers`` pro danou operaci.
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.url = url
         self.message = message
         self.code = code
@@ -77,30 +78,29 @@ class RepositoryBinaryFile:
 
     @staticmethod
     def get_url_without_domain(url):
-        """Vrací url without domain.
+        """
+        Vrací url without domain.
 
         :param url: Vstupní hodnota ``url`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         return "/".join(url.split("/")[3:])
 
     @property
     def url_without_domain(self):
-        """Provádí operaci url without domain.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci url without domain."""
         return self.get_url_without_domain(self.url)
 
     @property
     def uuid(self):
-        """Provádí operaci uuid.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci uuid."""
         return self.url.split("/")[-1]
 
     def _calculate_sha_512(self):
-        """Provádí operaci calculate sha 512.
+        """
+        Provádí operaci calculate sha 512.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         data = self.content.read()
         sha_512 = hashlib.sha512(data).hexdigest()
         self.content.seek(0)
@@ -108,26 +108,23 @@ class RepositoryBinaryFile:
 
     @property
     def size_mb(self):
-        """Provádí operaci size mb.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci size mb."""
         return self.size / 1024**2
 
     @property
     def mime_type(self):
-        """Provádí operaci mime type.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci mime type."""
         if self.filename is not None:
             return get_mime_type(self.filename)
 
     def __init__(self, url: str, content: io.BytesIO, filename: Union[str, None] = None):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param url: Vstupní hodnota ``url`` pro danou operaci.
         :param content: Vstupní hodnota ``content`` pro danou operaci.
         :param filename: Vstupní hodnota ``filename`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.url = url
         self.content = content
         self.filename = filename
@@ -192,12 +189,13 @@ class FedoraRepositoryConnector:
     """Implementuje komponentu ``FedoraRepositoryConnector`` v rámci aplikace."""
 
     def __init__(self, record, transaction=None, skip_container_check=True):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param transaction: Vstupní hodnota ``transaction`` pro danou operaci.
         :param skip_container_check: Vstupní hodnota ``skip_container_check`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         from core.models import ModelWithMetadata
         from uzivatel.models import User
 
@@ -225,9 +223,11 @@ class FedoraRepositoryConnector:
         )
 
     def _get_model_name(self):
-        """Vrací model name.
+        """
+        Vrací model name.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         class_name = self.record.__class__.__name__
         return {
             "Adb": "adb",
@@ -248,18 +248,22 @@ class FedoraRepositoryConnector:
         }.get(class_name)
 
     def _get_rdf_inset_data(self):
-        """Vrací rdf inset data.
+        """
+        Vrací rdf inset data.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         return f"""PREFIX dcterms: <http://purl.org/dc/terms/>
 DELETE WHERE {{ <> dcterms:creator ?oldCreator .}};
 INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
 
     def _get_creator(self, url):
-        """Vrací creator.
+        """
+        Vrací creator.
 
         :param url: Vstupní hodnota ``url`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         headers = {"Accept": "text/turtle"}
         r = self._send_request(url, FedoraRequestType.GET_METADATA, headers=headers)
         if r.status_code != 200:
@@ -273,12 +277,14 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return None
 
     def _update_creator(self, request_type: FedoraRequestType, uuid=None, ident_cely=None):
-        """Aktualizuje creator.
+        """
+        Aktualizuje creator.
 
         :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
         :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         url = self._get_request_url(request_type, uuid=uuid, ident_cely=ident_cely)
         existing_creator = self._get_creator(url)
         if existing_creator != self.user:
@@ -291,21 +297,21 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
 
     @staticmethod
     def get_base_url():
-        """Vrací base url.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací base url."""
         return (
             f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
             f"{settings.FEDORA_SERVER_NAME}"
         )
 
     def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None) -> Optional[str]:
-        """Vrací request url.
+        """
+        Vrací request url.
 
         :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
         :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         base_url = self.get_base_url()
         if request_type == FedoraRequestType.CREATE_CONTAINER:
             return f"{base_url}/record/"
@@ -405,29 +411,32 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         logger.error("core_repository_connector._get_request_url.not_implemented", extra={"request_type": request_type})
 
     def check_container_deleted(self, ident_cely):
-        """Ověří container deleted.
+        """
+        Ověří container deleted.
 
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         result = self._send_request(f"{self.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
         return hasattr(result, "text") and regex.search(result.text)
 
     @classmethod
     def check_container_deleted_or_not_exists(cls, ident_cely, model_name):
-        """Ověří container deleted or not exists.
+        """
+        Ověří container deleted or not exists.
 
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         logger.debug("core_repository_connector.check_container_is_deleted.start", extra={"ident_cely": ident_cely})
 
         def send_request(url, request_type):
-            """Odešle request.
+            """
+            Odešle request. v aplikaci.
 
             :param url: Vstupní hodnota ``url`` pro danou operaci.
             :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            """
             auth = cls._get_auth(request_type)
             response = requests.get(url, auth=auth, verify=False)
             return response
@@ -471,10 +480,12 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
 
     @classmethod
     def _get_auth(cls, request_type: FedoraRequestType):
-        """Vrací auth.
+        """
+        Vrací auth.
 
         :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         if request_type in (
             FedoraRequestType.DELETE_CONTAINER,
             FedoraRequestType.DELETE_TOMBSTONE,
@@ -489,13 +500,15 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def _send_request(
         self, url: str, request_type: FedoraRequestType, *, headers=None, data=None
     ) -> requests.Response | None:
-        """Odešle request.
+        """
+        Odešle request.
 
         :param url: Vstupní hodnota ``url`` pro danou operaci.
         :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
         :param headers: Vstupní hodnota ``headers`` pro danou operaci.
         :param data: Vstupní hodnota ``data`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
             extra["data"] = data
@@ -654,9 +667,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return response
 
     def _create_container(self):
-        """Vytvoří container.
+        """
+        Vytvoří container.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         logger.debug(
             "core_repository_connector._create_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -676,10 +691,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def create_link(self, ident_cely_proxy=None):
-        """Vytvoří link.
+        """
+        Vytvoří link. v aplikaci.
 
         :param ident_cely_proxy: Vstupní hodnota ``ident_cely_proxy`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        """
         logger.debug(
             "core_repository_connector._create_link.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -700,9 +716,7 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def container_exists(self):
-        """Provádí operaci container exists.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci container exists."""
         logger.debug(
             "core_repository_connector._container_exists.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -722,9 +736,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return True
 
     def _connect_deleted_container(self):
-        """Provádí operaci connect deleted container.
+        """
+        Provádí operaci connect deleted container.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         logger.debug(
             "core_repository_connector._connect_deleted_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -752,17 +768,17 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def link_exists(self):
-        """Provádí operaci link exists.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci link exists."""
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
         return result.status_code != 404
 
     def _check_container(self):
-        """Ověří container.
+        """
+        Ověří container.
 
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        :return: Vrací výsledek ověření nebo validačního pravidla.
+        """
         logger.debug(
             "core_repository_connector._check_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -791,9 +807,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def _create_binary_file_container(self):
-        """Vytvoří binary file container.
+        """
+        Vytvoří binary file container.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         logger.debug(
             "core_repository_connector._create_binary_file_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -811,9 +829,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def _check_binary_file_container(self):
-        """Ověří binary file container.
+        """
+        Ověří binary file container.
 
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        :return: Vrací výsledek ověření nebo validačního pravidla.
+        """
         logger.debug(
             "core_repository_connector._check_binary_file_container.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -830,9 +850,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def _generate_metadata(self):
-        """Vygeneruje metadata.
+        """
+        Vygeneruje metadata.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         logger.debug(
             "core_repository_connector._generate_metadata.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -847,10 +869,12 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return document, hash512
 
     def get_metadata(self, update=False) -> bytes:
-        """Vrací metadata.
+        """
+        Vrací metadata. v aplikaci.
 
         :param update: Vstupní hodnota ``update`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         logger.debug(
             "core_repository_connector.get_metadata.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -867,16 +891,19 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def get_metadata_historicka(self, timestamp):
         """
         Metoda varacející konkrétní verzi metadat
+
+        :param timestamp: Popis parametru ``timestamp``.
         """
         url = self._get_request_url(FedoraRequestType.GET_METADATA_HISTORIE)
         response = self._send_request(f"{url}/{timestamp}", FedoraRequestType.GET_METADATA_HISTORIE)
         return response.content
 
     def parse_historie(self, response_text):
-        """Zpracuje historie.
+        """
+        Zpracuje historie. v aplikaci.
 
         :param response_text: Vstupní hodnota ``response_text`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         result = []
         for line in response_text.splitlines():
             stripped = line.strip()
@@ -906,9 +933,7 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return result
 
     def get_historie_metadat(self):
-        """
-        Metoda k získání info o verzích metadat
-        """
+        """Metoda k získání info o verzích metadat"""
         url = self._get_request_url(FedoraRequestType.GET_METADATA_HISTORIE)
         response = self._send_request(url, FedoraRequestType.GET_METADATA_HISTORIE, headers={"Accept": "text/turtle"})
         result = self.parse_historie(response.text)
@@ -920,6 +945,8 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def get_historie_file(self, uuid):
         """
         Metoda k získání info o verzích souborů
+
+        :param uuid: Popis parametru ``uuid``.
         """
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE, uuid=uuid)
         response = self._send_request(
@@ -932,10 +959,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return result
 
     def save_metadata(self, update=True):
-        """Uloží metadata.
+        """
+        Uloží metadata. v aplikaci.
 
         :param update: Vstupní hodnota ``update`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug(
             "core_repository_connector.save_metadata.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -946,9 +974,7 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         result = self._send_request(url, FedoraRequestType.GET_METADATA)
 
         def generate_metadata():
-            """Vygeneruje metadata.
-
-            :return: Vrací nově vytvořený výsledek operace."""
+            """Vygeneruje metadata. v aplikaci."""
             document_func, hash512 = self._generate_metadata()
             headers_func = {
                 "Content-Type": "application/xml",
@@ -978,13 +1004,15 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def save_binary_file(
         self, file_name, content_type, file: io.BytesIO, save_thumbs: bool = True
     ) -> RepositoryBinaryFile:
-        """Uloží binary file.
+        """
+        Uloží binary file.
 
         :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
         :param content_type: Vstupní hodnota ``content_type`` pro danou operaci.
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :param save_thumbs: Vstupní hodnota ``save_thumbs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         logger.debug(
             "core_repository_connector.save_binary_file.start",
             extra={"file": file_name, "ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1019,20 +1047,22 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
 
     @staticmethod
     def __generate_thumb(file_name: str, file_content: BytesIO, large=False):
-        """Vygeneruje thumb.
+        """
+        Vygeneruje thumb. v aplikaci.
 
         :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
         :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
         :param large: Vstupní hodnota ``large`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        """
         logger.debug("core_repository_connector.__generate_thumb.start", extra={"file": file_name, "large": large})
 
         def resize_image(image: BytesIO, large_inner=False):
-            """Provádí operaci resize image.
+            """
+            Provádí operaci resize image.
 
             :param image: Vstupní hodnota ``image`` pro danou operaci.
             :param large_inner: Vstupní hodnota ``large_inner`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            """
             image = Image.open(image)
             image = ImageOps.exif_transpose(image)
             max_size = ((1 + large_inner * 7) * 100, (1 + large_inner * 7) * 100)
@@ -1043,12 +1073,13 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             return output_buffer
 
         def __generate_thumb_from_icon(file_name: str, file_content: BytesIO, large=False):
-            """Vygeneruje thumb from icon.
+            """
+            Vygeneruje thumb from icon.
 
             :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
             :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
             :param large: Vstupní hodnota ``large`` pro danou operaci.
-            :return: Vrací nově vytvořený výsledek operace."""
+            """
             from core.models import Soubor
 
             thumb_icon, mime_type = Soubor.get_thumb_icon(file_content)
@@ -1097,14 +1128,15 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             return __generate_thumb_from_icon(file_name, file_content, large)
 
     def save_thumbs(self, file_name, file, uuid, update=False, ident_cely_old=None):
-        """Uloží thumbs.
+        """
+        Uloží thumbs. v aplikaci.
 
         :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
         :param update: Vstupní hodnota ``update`` pro danou operaci.
         :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug(
             "core_repository_connector._save_thumb.start",
             extra={
@@ -1197,13 +1229,15 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def migrate_binary_file(
         self, soubor, include_content=True, check_if_exists=True, ident_cely_old=None
     ) -> Optional[RepositoryBinaryFile]:
-        """Provádí operaci migrate binary file.
+        """
+        Provádí operaci migrate binary file.
 
         :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
         :param include_content: Vstupní hodnota ``include_content`` pro danou operaci.
         :param check_if_exists: Vstupní hodnota ``check_if_exists`` pro danou operaci.
         :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         from core.models import Soubor
 
         soubor: Soubor
@@ -1260,14 +1294,16 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def get_binary_file(
         self, uuid, ident_cely_old=None, thumb_small=False, thumb_large=False, timestamp=None
     ) -> RepositoryBinaryFile | None:
-        """Vrací binary file.
+        """
+        Vrací binary file.
 
         :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
         :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
         :param thumb_small: Vstupní hodnota ``thumb_small`` pro danou operaci.
         :param thumb_large: Vstupní hodnota ``thumb_large`` pro danou operaci.
         :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         logger.debug(
             "core_repository_connector.get_binary_file.start",
             extra={
@@ -1318,14 +1354,16 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
     def update_binary_file(
         self, file_name, content_type, file: io.BytesIO, uuid: str, save_thumbs: bool = True
     ) -> RepositoryBinaryFile:
-        """Aktualizuje binary file.
+        """
+        Aktualizuje binary file.
 
         :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
         :param content_type: Vstupní hodnota ``content_type`` pro danou operaci.
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
         :param save_thumbs: Vstupní hodnota ``save_thumbs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         logger.debug(
             "core_repository_connector.update_binary_file.start",
             extra={
@@ -1354,10 +1392,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         return rep_bin_file
 
     def delete_binary_file(self, soubor):
-        """Odstraní binary file.
+        """
+        Odstraní binary file.
 
         :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        """
         from core.models import Soubor
 
         soubor: Soubor
@@ -1389,10 +1428,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             )
 
     def delete_binary_file_completely(self, soubor):
-        """Odstraní binary file completely.
+        """
+        Odstraní binary file completely.
 
         :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        """
         logger.debug(
             "core_repository_connector.delete_binary_file_completely.start",
             extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely},
@@ -1412,10 +1452,11 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def delete_container(self, delete_tombstone=True):
-        """Odstraní container.
+        """
+        Odstraní container. v aplikaci.
 
         :param delete_tombstone: Vstupní hodnota ``delete_tombstone`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        """
         self._delete_link()
         logger.debug(
             "core_repository_connector.delete_container.start",
@@ -1432,10 +1473,12 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def _delete_link(self, ident_cely=None):
-        """Odstraní link.
+        """
+        Odstraní link.
 
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        :return: Vrací výsledek operace odstranění.
+        """
         logger.debug(
             "core_repository_connector.delete_link.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1450,9 +1493,7 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
         )
 
     def record_deletion(self):
-        """Provádí operaci record deletion.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci record deletion."""
         logger.debug(
             "core_repository_connector.record_deletion.start",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},
@@ -1490,11 +1531,12 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
         )
 
     def record_ident_change(self, ident_cely_old, delete_container=True):
-        """Provádí operaci record ident change.
+        """
+        Provádí operaci record ident change.
 
         :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
         :param delete_container: Vstupní hodnota ``delete_container`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug(
             "core_repository_connector.record_ident_change.start",
             extra={
@@ -1571,10 +1613,11 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
 
     @classmethod
     def generate_thumb_for_single_file(cls, record) -> None:
-        """Vygeneruje thumb for single file.
+        """
+        Vygeneruje thumb for single file.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        """
         from core.models import Soubor
         from xml_generator.models import ModelWithMetadata
 
@@ -1656,9 +1699,7 @@ class BaseFedoraTransaction(ABC):
     """
 
     def __init__(self):
-        """Inicializuje instanci třídy.
-
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """Inicializuje instanci třídy."""
         self.uid = None
 
     def mark_transaction_as_closed(self):
@@ -1679,9 +1720,7 @@ class DryRunFedoraTransaction(BaseFedoraTransaction):
     """
 
     def __init__(self):
-        """Inicializuje instanci třídy.
-
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """Inicializuje instanci třídy."""
         super().__init__()
         self.updated_ident_cely: set[str] = set()
 
@@ -1690,7 +1729,9 @@ class DryRunFedoraTransaction(BaseFedoraTransaction):
         Přidá identifikátor záznamu do množiny dotčených záznamů.
 
         Args:
-            ident_cely: identifikátor záznamu (ident_cely)
+        ident_cely: identifikátor záznamu (ident_cely)
+
+        :param ident_cely: Popis parametru ``ident_cely``.
         """
         self.updated_ident_cely.add(ident_cely)
 
@@ -1704,18 +1745,18 @@ class FedoraTransaction(BaseFedoraTransaction):
     existující uid). Výsledek transakce se ukládá do Redis pro zobrazení uživateli.
 
     Args:
-        main_record: hlavní záznam (ModelWithMetadata), ke kterému se transakce váže
-        transaction_user: uživatel provádějící transakci
-        success_message: zpráva zobrazená při úspěšném dokončení
-        error_message: zpráva zobrazená při chybě
-        uid: existující UID transakce; pokud není zadáno, vytvoří se nová transakce
-        request: HTTP request pro předání kontextu
-        suppress_message: pokud True, neukládá výsledek transakce do Redis
-        redirect_on_error: pokud True, při chybě provede přesměrování
-        redirect_url: URL pro přesměrování při chybě
+    main_record: hlavní záznam (ModelWithMetadata), ke kterému se transakce váže
+    transaction_user: uživatel provádějící transakci
+    success_message: zpráva zobrazená při úspěšném dokončení
+    error_message: zpráva zobrazená při chybě
+    uid: existující UID transakce; pokud není zadáno, vytvoří se nová transakce
+    request: HTTP request pro předání kontextu
+    suppress_message: pokud True, neukládá výsledek transakce do Redis
+    redirect_on_error: pokud True, při chybě provede přesměrování
+    redirect_url: URL pro přesměrování při chybě
 
     Raises:
-        FedoraTransactionNoIDError: pokud se nepodaří vytvořit transakci nebo získat její UID
+    FedoraTransactionNoIDError: pokud se nepodaří vytvořit transakci nebo získat její UID
     """
 
     def __init__(
@@ -1731,7 +1772,8 @@ class FedoraTransaction(BaseFedoraTransaction):
         redirect_on_error=False,
         redirect_url=None,
     ):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param main_record: Vstupní hodnota ``main_record`` pro danou operaci.
         :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
@@ -1742,7 +1784,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         :param suppress_message: Vstupní hodnota ``suppress_message`` pro danou operaci.
         :param redirect_on_error: Vstupní hodnota ``redirect_on_error`` pro danou operaci.
         :param redirect_url: Vstupní hodnota ``redirect_url`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__()
         from uzivatel.models import User
 
@@ -1765,39 +1807,44 @@ class FedoraTransaction(BaseFedoraTransaction):
         self.changes_count = 0
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.uid
 
     @staticmethod
     def get_transaction_redis_key(ident_cely: str, transaction_user_id: int):
-        """Vrací transaction redis key.
+        """
+        Vrací transaction redis key.
 
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
         :param transaction_user_id: Identifikátor objektu ``transaction_user``.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         return f"fedora-transaction-result-{ident_cely}-{transaction_user_id}"
 
     @property
     def _transaction_redis_key(self):
-        """Provádí operaci transaction redis key.
+        """
+        Provádí operaci transaction redis key.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.get_transaction_redis_key(self.main_record.ident_cely, self.transaction_user.id)
 
     @property
     def status(self):
-        """Provádí operaci status.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci status."""
         return self.__status
 
     def _save_transaction_result_to_redis(self, result: FedoraTransactionResult):
-        """Uloží transaction result to redis.
+        """
+        Uloží transaction result to redis.
 
         :param result: Vstupní hodnota ``result`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if self.main_record and self.transaction_user and not self.suppress_message:
             r = RedisConnector()
             redis_connection = r.get_connection()
@@ -1808,10 +1855,12 @@ class FedoraTransaction(BaseFedoraTransaction):
                 redis_connection.hset(self._transaction_redis_key, "error_message", str(self.error_message))
 
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
-        """Odešle transaction request.
+        """
+        Odešle transaction request.
 
         :param operation: Vstupní hodnota ``operation`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         logger.debug(
             "core_repository_connector.FedoraTransaction.commit_transaction.start", extra={"transaction": self.uid}
         )
@@ -1901,9 +1950,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):
-        """Vytvoří transaction.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Vytvoří transaction. v aplikaci."""
         logger.debug("core_repository_connector.FedoraTransaction.__create_transaction.start")
         url = (
             f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/fcr:tx"
@@ -1932,9 +1979,7 @@ class FedoraTransaction(BaseFedoraTransaction):
 
     @staticmethod
     def call_digiarchiv_update():
-        """Provádí operaci call digiarchiv update.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci call digiarchiv update."""
         from cron.tasks import call_digiarchiv_update_task
 
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
@@ -1981,9 +2026,7 @@ class FedoraDeletionOnlyTransaction(FedoraTransaction):
     """
 
     def __init__(self):
-        """Inicializuje instanci třídy.
-
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """Inicializuje instanci třídy."""
         super().__init__()
         self.updated_ident_cely: set[str] = set()
 
@@ -1992,6 +2035,8 @@ class FedoraDeletionOnlyTransaction(FedoraTransaction):
         Přidá identifikátor záznamu do množiny dotčených záznamů.
 
         Args:
-            ident_cely: identifikátor záznamu (ident_cely)
+        ident_cely: identifikátor záznamu (ident_cely)
+
+        :param ident_cely: Popis parametru ``ident_cely``.
         """
         self.updated_ident_cely.add(ident_cely)

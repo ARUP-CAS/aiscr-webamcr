@@ -18,18 +18,18 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: uzivatel_protected()
 
       Vrátí textovou reprezentaci uživatele v anonymizované nebo plné podobě.
+
+      :param anonymized: Popis parametru ``anonymized``.
 
    .. py:method:: save_record_deletion_record()
 
       Uloží record deletion record.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: set_snapshots()
 
@@ -53,6 +53,11 @@ Třídy
    .. py:method:: get_last_transaction_date()
 
       Vrátí datum a uživatele poslední transakce požadovaného typu.
+
+      :param transaction_type: Popis parametru ``transaction_type``.
+      :param anonymized: Popis parametru ``anonymized``.
+      :param user_protected: Popis parametru ``user_protected``.
+      :return: Vrací výsledek operace.
 
    .. py:method:: navazany_objekt()
 

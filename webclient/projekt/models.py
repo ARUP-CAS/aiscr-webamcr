@@ -57,9 +57,7 @@ logger = logging.getLogger(__name__)
 
 
 class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
-    """
-    Databázový model projektu.
-    """
+    """Databázový model projektu."""
 
     CHOICES = (
         (PROJEKT_STAV_OZNAMENY, _("projekt.models.projekt.states.oznamen.label")),
@@ -178,49 +176,47 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def datum_oznameni(self):
-        """Provádí operaci datum oznameni.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci datum oznameni."""
         return self.historie.historie_set.order_by("datum_zmeny").first().datum_zmeny
 
     @property
     def pristupnost(self):
-        """Provádí operaci pristupnost.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci pristupnost."""
         return self.pristupnost_snapshot
 
     @property
     def get_ident_cely_link(self):
-        """Vrací ident cely link.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací ident cely link."""
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
             return f"<a href='{self.get_absolute_url()}' target='_blank' class='link-projekt'>{self.ident_cely}</a>"
 
     def save(self, *args, **kwargs):
-        """Uloží změny objektu.
+        """
+        Uloží změny objektu.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.pk is None:
             self.set_pristupnost()
         super().save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(Projekt, self).__init__(*args, **kwargs)
         self.initial_dokumenty = []
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if self.ident_cely:
             return self.ident_cely
         else:
@@ -233,10 +229,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         verbose_name = "projekty"
 
     def send_ep01(self, rep_bin_file=None):
-        """Odešle ep01.
+        """
+        Odešle ep01. v aplikaci.
 
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug("projekt.models.Projekt.send_ep01", extra={"file": rep_bin_file, "ident_cely": self.ident_cely})
         from services.mailer import Mailer
 
@@ -246,9 +243,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             Mailer.send_ep01b(self, rep_bin_file)
 
     def set_vytvoreny(self):
-        """
-        Metoda pro nastavení pomocného stavu vytvořený.
-        """
+        """Metoda pro nastavení pomocného stavu vytvořený."""
         self.stav = PROJEKT_STAV_VYTVORENY
         owner = get_object_or_404(User, pk=hesla_dynamicka.ADMIN_USER)
         hist, created = Historie.objects.update_or_create(
@@ -257,9 +252,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         self.save()
 
     def set_oznameny(self):
-        """
-        Metoda pro nastavení stavu oznámený a uložení změny do historie.
-        """
+        """Metoda pro nastavení stavu oznámený a uložení změny do historie."""
         self.stav = PROJEKT_STAV_OZNAMENY
         owner = get_object_or_404(User, pk=hesla_dynamicka.ADMIN_USER)
         hist, created = Historie.objects.update_or_create(
@@ -270,6 +263,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_schvaleny(self, user, old_ident):
         """
         Metoda pro nastavení stavu schvýlený a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
+        :param old_ident: Popis parametru ``old_ident``.
         """
         logger.debug(
             "projekt.models.Projekt.set_schvaleny.start",
@@ -299,6 +295,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_zapsany(self, user):
         """
         Metoda pro nastavení stavu zapsaný a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
@@ -307,6 +305,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_prihlaseny(self, user):
         """
         Metoda pro nastavení stavu prihlásený a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = PROJEKT_STAV_PRIHLASENY
         Historie(
@@ -319,6 +319,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_zahajeny_v_terenu(self, user, info_text):
         """
         Metoda pro nastavení stavu zahájený v terénu a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
+        :param info_text: Popis parametru ``info_text``.
         """
         self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
         Historie(
@@ -332,6 +335,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_ukoncen_v_terenu(self, user, info_text):
         """
         Metoda pro nastavení stavu ukončený v terénu a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
+        :param info_text: Popis parametru ``info_text``.
         """
         self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
         Historie(
@@ -345,6 +351,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_uzavreny(self, user):
         """
         Metoda pro nastavení stavu uzavřený a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = PROJEKT_STAV_UZAVRENY
         Historie(
@@ -356,9 +364,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def archive_project_documentation(self):
         # Vytvoří textový soubor se seznamem smazaných souborů.
-        """Provádí operaci archive project documentation.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci archive project documentation."""
         soubory = self.soubory.soubory.all()
         if soubory.count() > 0:
             conn = FedoraRepositoryConnector(self, self.active_transaction)
@@ -376,7 +382,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_archivovany(self, user):
         """
         Metoda pro nastavení stavu archivovaný a uložení změny do historie.
+
         Součásti je archivace dokumentů a odesláni emailu.
+
+        :param user: Popis parametru ``user``.
         """
         from services.mailer import Mailer
 
@@ -394,6 +403,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_navrzen_ke_zruseni(self, user: User, poznamka: str):
         """
         Metoda pro nastavení stavu navržen k zrušení a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
+        :param poznamka: Popis parametru ``poznamka``.
         """
         self.stav = PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
         Historie(
@@ -407,6 +419,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_zruseny(self, user, poznamka, typ_zmeny=None):
         """
         Metoda pro nastavení stavu zrušený a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
+        :param poznamka: Popis parametru ``poznamka``.
+        :param typ_zmeny: Popis parametru ``typ_zmeny``.
         """
         typ_zmeny = typ_zmeny if typ_zmeny else RUSENI_PROJ
         self.datum_ukonceni = None
@@ -422,6 +438,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_vracen(self, user, new_state, poznamka):
         """
         Metoda pro vrácení stavu zpět a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
+        :param new_state: Popis parametru ``new_state``.
+        :param poznamka: Popis parametru ``poznamka``.
         """
         if self.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
             self.datum_ukonceni = None
@@ -444,6 +464,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_znovu_zapsan(self, user, poznamka):
         """
         Metoda pro nastavení stavu zapsaný ze stavu zrušen nebo navrh na zrušení a uložení změny do historie.
+
+        :param user: Popis parametru ``user``.
+        :param poznamka: Popis parametru ``poznamka``.
         """
         if self.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI:
             zmena = VRACENI_NAVRHU_ZRUSENI
@@ -469,9 +492,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro kontrolu prerekvizit před posunem do stavu archivovaný:
 
-            kontrola jako před uzavřením a navíc
+        kontrola jako před uzavřením a navíc
 
-            Připojení akce musejí být ve stavu archivovaná.
+        Připojení akce musejí být ve stavu archivovaná.
         """
         result = self.check_pred_uzavrenim()
         for akce in self.akce_set.all():
@@ -484,7 +507,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro kontrolu prerekvizit před posunem do stavu navržen ke zrušení:
 
-            Projekt nesmí mít připojené akce.
+        Projekt nesmí mít připojené akce.
         """
         has_event = len(self.akce_set.all()) > 0
         if has_event:
@@ -496,7 +519,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro kontrolu prerekvizit před smazáním projektu:
 
-            Projekt nesmí mít žádnou akci, soubor ani samostatný nález.
+        Projekt nesmí mít žádnou akci, soubor ani samostatný nález.
+        :return: Vrací výsledek operace.
         """
         resp = []
         has_event = len(self.akce_set.all()) > 0
@@ -515,7 +539,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro kontrolu prerekvizit před posunem do stavu uzavřený:
 
-            Projekt musí mít alespoň jednu akci, která projde svou kontrolou před odesláním.
+        Projekt musí mít alespoň jednu akci, která projde svou kontrolou před odesláním.
         """
         does_not_have_event = len(self.akce_set.all()) == 0
         result = {}
@@ -540,7 +564,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro kontrolu prerekvizit před posunem do stavu „zahájen v terénu“:
 
-            Projekt musí mít lokalizaci.
+        Projekt musí mít lokalizaci.
         """
         resp = []
         if self.geom is None or len(self.geom) < 2:
@@ -573,9 +597,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         return permanent, region, year, number
 
     def has_oznamovatel(self):
-        """
-        Metoda pro kontrolu, jestli má projekt oznamovatele.
-        """
+        """Metoda pro kontrolu, jestli má projekt oznamovatele."""
         has_oznamovatel = False
         try:
             has_oznamovatel = self.oznamovatel is not None
@@ -586,6 +608,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def set_permanent_ident_cely(self, update_repository=True):
         """
         Metoda na nastavení permanentního identu akce z projektu sekvence.
+
+        :param update_repository: Popis parametru ``update_repository``.
         """
         logger.debug(
             "projekt.models.projekt.set_permanent_ident_cely.start",
@@ -646,13 +670,15 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def _save_document(
         self, creator: DocumentCreator, fedora_transaction: FedoraTransaction, user=None, check_duplicate=True
     ) -> RepositoryBinaryFile:
-        """Uloží document.
+        """
+        Uloží document.
 
         :param creator: Vstupní hodnota ``creator`` pro danou operaci.
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :param check_duplicate: Vstupní hodnota ``check_duplicate`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         rep_bin_file: RepositoryBinaryFile = creator.build_document()
         duplikat = Soubor.objects.filter(nazev=rep_bin_file.filename)
         filename = rep_bin_file.filename
@@ -691,6 +717,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def create_cancel_confirmation_document(self, user=None) -> RepositoryBinaryFile:
         """
         Metoda na vytvoření potvrzení o zrušení oznámení.
+
+        :param user: Popis parametru ``user``.
+        :return: Vrací výsledek operace.
         """
         logger.debug(
             "projekt.models.create_cancel_confirmation_document.start",
@@ -708,6 +737,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     ) -> RepositoryBinaryFile:
         """
         Metoda na vytvoření oznámovací dokumentace.
+
+        :param fedora_transaction: Popis parametru ``fedora_transaction``.
+        :param additional: Popis parametru ``additional``.
+        :param user: Popis parametru ``user``.
+        :return: Vrací výsledek operace.
         """
         logger.debug(
             "projekt.models.create_confirmation_document.start",
@@ -723,42 +757,38 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def expert_list_can_be_created(self):
-        """Provádí operaci expert list can be created.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci expert list can be created."""
         if self.typ_projektu.pk != TYP_PROJEKTU_ZACHRANNY_ID:
             return False
         return True
 
     def create_expert_list(self, popup_parametry=None):
-        """Vytvoří expert list.
+        """
+        Vytvoří expert list.
 
         :param popup_parametry: Vstupní hodnota ``popup_parametry`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        """
         elc = ExpertniListCreator(self, popup_parametry)
         output = elc.build_document()
         return output
 
     @property
     def should_generate_confirmation_document(self):
-        """Provádí operaci should generate confirmation document.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci should generate confirmation document."""
         if self.stav == PROJEKT_STAV_ZAPSANY and self.has_oznamovatel():
             return True
         return False
 
     def get_absolute_url(self):
-        """Vrací absolute url.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací absolute url."""
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_pristupnost(self, fixes: Union[Dict, None] = None):
-        """Nastaví pristupnost.
+        """
+        Nastaví pristupnost. v aplikaci.
 
         :param fixes: Vstupní hodnota ``fixes`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.pk is None:
             self.pristupnost_snapshot = Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
             return
@@ -786,9 +816,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def planovane_zahajeni_str(self):
-        """Provádí operaci planovane zahajeni str.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci planovane zahajeni str."""
         if self.planovane_zahajeni:
             return f"[{self.planovane_zahajeni.lower}, {self.planovane_zahajeni.upper + datetime.timedelta(days=-1)}]"
         else:
@@ -796,24 +824,18 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def planovane_zahajeni_vypis(self):
-        """Provádí operaci planovane zahajeni vypis.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci planovane zahajeni vypis."""
         if self.planovane_zahajeni:
             return f"{self.planovane_zahajeni.lower.strftime('%-d.%-m.%Y')} - {(self.planovane_zahajeni.upper + datetime.timedelta(days=-1)).strftime('%-d.%-m.%Y')}"
         else:
             return ""
 
     def get_permission_object(self):
-        """Vrací permission object.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací permission object."""
         return self
 
     def get_create_user(self):
-        """Vrací create user.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create user."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel,)
         except Exception as e:
@@ -821,24 +843,18 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create org."""
         return (self.organizace,)
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci redis snapshot id."""
         from projekt.views import ProjektListView
 
         return f"{ProjektListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Vygeneruje redis snapshot."""
         from projekt.tables import ProjektTable
 
         data = Projekt.objects.filter(pk=self.pk)
@@ -847,9 +863,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         return self.redis_snapshot_id, data
 
     def get_kraje_s_emailem(self):
-        """Vrací kraje s emailem.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací kraje s emailem."""
         all_katastre = RuianKatastr.objects.filter(
             Q(pk=self.hlavni_katastr.id) | Q(pk__in=self.katastry.values_list("id"))
         )
@@ -858,17 +872,17 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
-    """
-    Databázový model dalších katastrů projektu.
-    """
+    """Databázový model dalších katastrů projektu."""
 
     projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)
     katastr = models.ForeignKey(RuianKatastr, on_delete=models.RESTRICT)
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return "P: " + str(self.projekt) + " - K: " + str(self.katastr)
 
     class Meta:
