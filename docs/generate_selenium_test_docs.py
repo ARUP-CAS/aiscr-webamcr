@@ -584,6 +584,8 @@ def main() -> int:
     - 0: vše OK a bez změn,
     - 1: chyba validace nebo došlo k přegenerování souboru (je třeba `git add`),
     - 2: zásadní problém (nenalezeny soubory).
+
+    :return: Návratový kód procesu generování dokumentace selenium testů.
     """
     root = _repo_root_from_script()
     rst_file = _find_rst_file(root)
