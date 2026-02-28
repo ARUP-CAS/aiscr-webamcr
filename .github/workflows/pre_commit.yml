@@ -93,10 +93,26 @@ jobs:
 
           echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
 
-          echo "warnings<<EOF" >> "$GITHUB_OUTPUT"
+          # Extract docstring warnings
+          echo "doc_warnings<<EOF" >> "$GITHUB_OUTPUT"
           grep -E "WARNING DOC[0-9]{3}" precommit.log || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
+          # Extract flake8 errors
+          echo "flake_errors<<EOF" >> "$GITHUB_OUTPUT"
+          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.log || true
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          # Emit GitHub inline annotations for flake8
+          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.log | while read line; do
+            FILE=$(echo "$line" | cut -d: -f1)
+            LINE=$(echo "$line" | cut -d: -f2)
+            COL=$(echo "$line" | cut -d: -f3)
+            MSG=$(echo "$line" | cut -d: -f4-)
+            echo "::error file=$FILE,line=$LINE,col=$COL::$MSG"
+          done || true
+
+          # Log tail
           echo "log_tail<<EOF" >> "$GITHUB_OUTPUT"
           tail -n 80 precommit.log || true
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -135,7 +151,7 @@ jobs:
 
             It includes:
             - Pre-commit formatting fixes
-            - Updated `python_knihovny.rst` (pip license list)
+            - Updated `python_knihovny.rst`
 
             Please merge this PR to make the original PR pass.
           assignees: ${{ github.actor }}
@@ -152,24 +168,20 @@ jobs:
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [ -n "${{ steps.hooks.outputs.warnings }}" ]; then
+          if [ -n "${{ steps.hooks.outputs.doc_warnings }}" ]; then
             echo "### Docstring warnings" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "${{ steps.hooks.outputs.warnings }}" >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.hooks.outputs.doc_warnings }}" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
-          echo "### Pre-commit log (tail)" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.hooks.outputs.log_tail }}" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ "${{ steps.changes.outputs.changed }}" = "true" ]; then
-            echo "A fix PR has been created or updated." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Pre-commit checks failed and require manual fixes." >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.hooks.outputs.flake_errors }}" ]; then
+            echo "### Flake8 errors" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.hooks.outputs.flake_errors }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Comment on original PR (sticky)
@@ -179,91 +191,85 @@ jobs:
           script: |
             const changed = "${{ steps.changes.outputs.changed }}" === "true";
             const exitCode = "${{ steps.hooks.outputs.exit_code }}";
-            const warnings = ${{ toJSON(steps.hooks.outputs.warnings || '') }};
-            const logTail = ${{ toJSON(steps.hooks.outputs.log_tail) }};
+            const docWarnings = ${{ toJSON(steps.hooks.outputs.doc_warnings || '') }};
+            const flakeErrors = ${{ toJSON(steps.hooks.outputs.flake_errors || '') }};
+            const logTail = ${{ toJSON(steps.hooks.outputs.log_tail || '') }};
             const marker = "<!-- precommit-bot-comment -->";
+
             let body = `${marker}
             ## ⚠️ Pre-commit results
             
             - Exit code: ${exitCode}
             - Changes detected: ${changed}
             `;
-            if (changed) {
-              const fixPrNumber = "${{ steps.create_pr.outputs.pull-request-number || '' }}";
-              const fixPrUrl = "${{ steps.create_pr.outputs.pull-request-url || '' }}";
-              if (fixPrNumber && fixPrUrl) {
-                body += `
-                An automatic fix PR has been created or updated: [#${fixPrNumber}](${fixPrUrl})
-                
-                Please merge it to make this PR pass.
-                `;
-              } else {
-                body += `
-                An automatic fix PR has been created or updated.
-                Please merge it to make this PR pass.
-                `;
-                }
-            } else {
+
+            if (docWarnings && docWarnings.trim()) {
               body += `
-              Pre-commit checks failed and require manual fixes.
-              `;
-            }
 
-            if (warnings && warnings.trim()) {
-                body += `
-
-                ### Docstring warnings
-
-                \`\`\`
-                ${warnings}
-                \`\`\`
-                `;
-            }
-
-            if (logTail && logTail.trim()) {
-                body += `
-
-                <details>
-                <summary>Pre-commit log (tail)</summary>
-
-                \`\`\`
-                ${logTail}
-                \`\`\`
-                </details>
-                `;
-            }
+            ### Docstring warnings
+            \`\`\`
+            ${docWarnings}
+            \`\`\`
+            `;
+                        }
+            
+                        if (flakeErrors && flakeErrors.trim()) {
+                          body += `
+            
+            ### Flake8 errors
+            \`\`\`
+            ${flakeErrors}
+            \`\`\`
+            `;
+                        }
+            
+                        if (logTail && logTail.trim()) {
+                          body += `
+            
+            <details>
+            <summary>Pre-commit log (tail)</summary>
+            
+            \`\`\`
+            ${logTail}
+            \`\`\`
+            </details>
+            `;
+                        }
 
             body = body.replace(/^[ \t]+/gm, '');
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
             });
+
             const existing = comments.find(
               c => c.user.type === "Bot" && c.body && c.body.includes(marker)
             );
+
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: existing.id,
-                body: body,
+                body,
               });
             } else {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number,
-                body: body,
+                body,
               });
             }
 
       - name: Final status check
         if: steps.hooks.outputs.strict_mode == 'true' && steps.hooks.outputs.exit_code != '0'
         run: |
-          echo "Strict mode enabled and docstring/linting issues found."
+          echo "Strict mode enabled and docstring issues found."
           EXIT_CODE="${{ steps.hooks.outputs.exit_code }}"
-          if [ -z "$EXIT_CODE" ]; then
+          if ! [[ "$EXIT_CODE" =~ ^[0-9]+$ ]]; then
             EXIT_CODE=1
           fi
           exit "$EXIT_CODE"
