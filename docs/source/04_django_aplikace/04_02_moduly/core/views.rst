@@ -55,6 +55,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vyrenderovaná stránka nebo redirect při neplatné vazbě souboru.
 
    .. py:method:: post()
 
@@ -63,6 +64,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Redirect na bezpečnou URL.
 
    .. py:method:: get_context_data()
 
@@ -80,6 +82,8 @@ Třídy
    .. py:method:: get_zaznam()
 
       Načte doménový záznam, ke kterému se budou soubory nahrávat.
+
+      :return: Instance záznamu odpovídající ``typ_vazby`` a ``ident_cely`` z URL.
 
    .. py:method:: get_context_data()
 
@@ -102,6 +106,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Redirect na bezpečnou URL.
 
 
 .. py:class:: BasePostUploadView
@@ -137,6 +142,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Redirect na bezpečnou URL.
 
    .. py:method:: handle_upload()
 
@@ -149,6 +155,7 @@ Třídy
       :param soubor_data: Binární obsah souboru v objektu ``BytesIO``.
       :param args: Dodatečné poziční argumenty z URL dispatcheru.
       :param kwargs: Dodatečné klíčové argumenty z URL (např. ``ident_cely``).
+      :return: JSON odpověď s výsledkem zpracování uploadu.
       :raises NotImplementedError: Pokud potomek metodu nepřepíše.
 
    .. py:method:: _append_duplicate_message()
@@ -241,6 +248,7 @@ Třídy
       :param soubor_data: Binární obsah souboru.
       :param args: Dodatečné poziční argumenty z URL.
       :param kwargs: Klíčové argumenty včetně ``ident_cely`` a ``typ_vazby``.
+      :return: JSON odpověď s výsledkem operace nahrání.
 
    .. py:method:: _resolve_object_and_name()
 
@@ -296,6 +304,7 @@ Třídy
       :param soubor_data: Binární obsah nového souboru.
       :param args: Dodatečné poziční argumenty z URL.
       :param kwargs: Klíčové argumenty včetně ``typ_vazby``, ``ident_cely`` a ``file_id``.
+      :return: JSON odpověď s výsledkem aktualizace souboru.
       :raises Http404: Pokud soubor s daným ``file_id`` neexistuje.
       :raises ZaznamSouborNotmatching: Pokud soubor nepatří k uvedenému záznamu.
 
@@ -331,6 +340,7 @@ Třídy
 
       :param export_format: Cílový formát exportu (např. ``csv``, ``xlsx``).
       :param export_name: Volitelný základ názvu; pokud není zadán, použije ``self.export_name``.
+      :return: Název exportního souboru včetně přípony.
 
 
 .. py:class:: PermissionFilterMixin
@@ -383,7 +393,6 @@ Třídy
    .. py:method:: create_export()
 
       Vytvoří export výsledků vyhledávání v požadovaném formátu.
-
       :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
 
    .. py:method:: init_translations()
@@ -405,6 +414,7 @@ Třídy
    .. py:method:: get_queryset()
 
       Vrací queryset výsledků vyhledávání podle zadaných filtrů.
+      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get()
 
@@ -413,6 +423,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vyrenderovaná stránka nebo redirect při neplatné vazbě souboru.
 
 
 .. py:class:: StahnoutDataHistorickaView
@@ -444,6 +455,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vyrenderovaná stránka nebo redirect při neplatné vazbě souboru.
 
 
 .. py:class:: ReadTempValueView
@@ -564,6 +576,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vyrenderovaná stránka nebo redirect při neplatné vazbě souboru.
 
 
 .. py:class:: TranslationFileSmazatBackup
@@ -579,6 +592,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vyrenderovaná stránka nebo redirect při neplatné vazbě souboru.
 
    .. py:method:: post()
 
@@ -587,6 +601,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Redirect na bezpečnou URL.
 
 
 .. py:class:: PrometheusMetricsView
@@ -602,6 +617,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Vyrenderovaná stránka nebo redirect při neplatné vazbě souboru.
 
 
 .. py:class:: ApplicationRestartView
@@ -617,6 +633,7 @@ Třídy
       :param request: Django HTTP požadavek.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Redirect na bezpečnou URL.
 
 
 .. py:class:: DataImportProgress
@@ -669,6 +686,7 @@ Funkce
    Zobrazí hlavní stránku aplikace po přihlášení uživatele.
 
    :param request: HTTP požadavek aktuálního uživatele.
+   :return: Vyrenderovaná odpověď s šablonou domovské stránky.
 
 .. py:function:: delete_file_DZ(request, typ_vazby, ident_cely, pk)
 
@@ -678,6 +696,7 @@ Funkce
    :param typ_vazby: Typ vazby souboru na doménový objekt (např. dokument, projekt, PAS).
    :param ident_cely: Identifikátor záznamu, ke kterému je soubor navázán.
    :param pk: Primární klíč mazaného souboru.
+   :return: JSON odpověď s výsledkem mazání.
 
 .. py:function:: delete_file(request, typ_vazby, ident_cely, pk)
 
@@ -687,10 +706,14 @@ Funkce
    :param typ_vazby: Typ vazby souboru na navázaný doménový objekt.
    :param ident_cely: Identifikátor záznamu, u kterého se soubor odstraňuje.
    :param pk: Primární klíč mazaného souboru.
+   :return: Redirect nebo JSON odpověď podle typu požadavku.
 
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 
    Funkce pro získaní jména souboru pro samostatný nález.
+   :param find: Hodnota parametru ``find`` použitého touto operací.
+   :param filename: Hodnota parametru ``filename`` použitého touto operací.
+   :param add_to_index: Hodnota parametru ``add_to_index`` použitého touto operací.
 
    :param find: Hodnota parametru ``find`` použitého touto operací.
    :param filename: Hodnota parametru ``filename`` použitého touto operací.
@@ -702,6 +725,7 @@ Funkce
 
    :param projekt: Projekt, ke kterému se soubor nahrává.
    :param file_name: Původní název nahrávaného souboru.
+   :return: Normalizovaný název souboru nebo ``False`` při překročení limitu souborů.
 
 .. py:function:: check_stav_changed(request, zaznam)
 
@@ -709,6 +733,7 @@ Funkce
 
    :param request: Django HTTP požadavek s daty odeslaného formuláře.
    :param zaznam: Ukládaný záznam, jehož stav se porovnává.
+   :return: ``True``, pokud byl mezitím stav změněn; jinak ``False``.
 
 .. py:function:: redirect_ident_view(request, ident_cely)
 
@@ -716,16 +741,19 @@ Funkce
 
    :param request: Django HTTP požadavek.
    :param ident_cely: Hledaný identifikátor záznamu.
+   :return: Redirect na detail záznamu nebo domovskou stránku při chybě.
 
 .. py:function:: prolong_session(request)
 
    Vrátí zbývající čas relace pro AJAX prodloužení přihlášení.
 
    :param request: Django HTTP požadavek aktuálního uživatele.
+   :return: JSON odpověď s počtem sekund do vypršení nečinnosti.
 
 .. py:function:: post_ajax_get_pas_and_pian_limit(request)
 
    Funkce pohledu pro získaní heatmapy.
+   :param request: Hodnota parametru ``request`` použitého touto operací.
 
    :param request: Hodnota parametru ``request`` použitého touto operací.
 

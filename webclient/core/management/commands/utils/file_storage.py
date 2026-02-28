@@ -26,17 +26,17 @@ def save_single_file_from_storage_impl(
     a uloží jej do Fedora repozitáře včetně aktualizace metadat v databázi.
 
     Args:
-    record: Instance modelu Soubor nebo jeho primární klíč
-    storage_path: Cesta k adresáři se soubory
-    save_thumbs: Zda generovat náhledy pro obrazové soubory
-    disable_antivirus: Zda přeskočit antivirovou kontrolu
+        record: Instance modelu Soubor nebo jeho primární klíč
+        storage_path: Cesta k adresáři se soubory
+        save_thumbs: Zda generovat náhledy pro obrazové soubory
+        disable_antivirus: Zda přeskočit antivirovou kontrolu
 
     Raises:
-    core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje
+        core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje
 
     Příklad:
-    >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
-    >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
+        >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
+        >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
 
     :param record_par: Hodnota parametru ``record_par`` použitého touto operací.
     :param storage_path: Hodnota parametru ``storage_path`` použitého touto operací.

@@ -9,12 +9,14 @@ Funkce
 .. py:function:: constants_import(request)
 
    Automatický import stavov projektú do kontextu všech template.
+   :param request: Hodnota parametru ``request`` použitého touto operací.
 
    :param request: Hodnota parametru ``request`` použitého touto operací.
 
 .. py:function:: digi_links_from_settings(request)
 
    Automatický import linkov na digitálni archiv zo settings do kontextov všech template.
+   :param request: Hodnota parametru ``request`` použitého touto operací.
 
    :param request: Hodnota parametru ``request`` použitého touto operací.
 
@@ -27,6 +29,7 @@ Funkce
 .. py:function:: auto_logout_client(request)
 
    Automatický výpočet a import kontextu potrebného pro správně zobrzazení automatického logoutu na všech stránkach.
+   :param request: Hodnota parametru ``request`` použitého touto operací.
 
    :param request: Hodnota parametru ``request`` použitého touto operací.
 

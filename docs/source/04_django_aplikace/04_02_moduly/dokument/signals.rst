@@ -13,6 +13,7 @@ Funkce
    :param sender: Model, který signal vyvolal.
    :param instance: Ukládaná instance dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: create_dokument_cast_vazby(sender, instance)
 
@@ -21,6 +22,7 @@ Funkce
    :param sender: Model, který signal vyvolal.
    :param instance: Ukládaná instance části dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: dokument_save_metadata(sender, instance)
 
@@ -29,6 +31,7 @@ Funkce
    :param sender: Model, který signal vyvolal.
    :param instance: Uložená instance dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: let_save_metadata(sender, instance)
 
@@ -37,6 +40,7 @@ Funkce
    :param sender: Model, který signal vyvolal.
    :param instance: Uložená instance letu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: dokument_delete_repository_container(sender, instance)
 
@@ -45,6 +49,7 @@ Funkce
    :param sender: Model, který signal vyvolal.
    :param instance: Smazaná instance dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: let_delete_repository_container(sender, instance)
 
@@ -53,6 +58,7 @@ Funkce
    :param sender: Model, který signal vyvolal.
    :param instance: Smazaná instance letu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: dokument_cast_save_metadata_save(sender, instance, created)
 
@@ -62,6 +68,7 @@ Funkce
    :param instance: Uložená instance části dokumentu.
    :param created: Příznak, zda byla část dokumentu právě vytvořena.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: dokument_cast_save_metadata_delete(sender, instance)
 
@@ -70,6 +77,7 @@ Funkce
    :param sender: Model, který signal vyvolal.
    :param instance: Smazaná instance části dokumentu.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: tvar_save(sender, instance, created)
 
@@ -79,6 +87,7 @@ Funkce
    :param instance: Uložená instance tvaru.
    :param created: Příznak, zda byl tvar právě vytvořen.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: tvar_delete(sender, instance)
 
@@ -87,3 +96,4 @@ Funkce
    :param sender: Model, který signal vyvolal.
    :param instance: Smazaná instance tvaru.
    :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).

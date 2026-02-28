@@ -22,7 +22,6 @@ Třídy
    .. py:method:: render()
 
       Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
-
       :param value: Vstupní hodnota ``value`` pro danou operaci.
 
 

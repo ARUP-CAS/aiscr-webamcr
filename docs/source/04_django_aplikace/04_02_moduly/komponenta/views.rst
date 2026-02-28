@@ -13,6 +13,7 @@ Funkce
    :param request: HTTP požadavek s daty editace komponenty.
    :param typ_vazby: Typ vazby, který určuje návratovou URL po uložení.
    :param ident_cely: Identifikátor upravované komponenty.
+   :return: Redirect na detail dokumentační jednotky nebo části dokumentu.
 
 .. py:function:: zapsat(request, typ_vazby, dj_ident_cely)
 
@@ -21,6 +22,7 @@ Funkce
    :param request: HTTP požadavek obsahující data nově zakládané komponenty.
    :param typ_vazby: Typ vazby určující, zda jde o dokument nebo dokumentační jednotku.
    :param dj_ident_cely: Identifikátor cílové dokumentační jednotky nebo části dokumentu.
+   :return: Redirect na formulář komponenty po zpracování požadavku.
 
 .. py:function:: smazat(request, typ_vazby, ident_cely)
 
@@ -29,3 +31,4 @@ Funkce
    :param request: HTTP požadavek; při POST provádí vlastní smazání komponenty.
    :param typ_vazby: Typ vazby předaný URL konfigurací.
    :param ident_cely: Identifikátor mazané komponenty.
+   :return: JSON odpověď s redirect URL nebo vyrenderovaný potvrzovací dialog.
