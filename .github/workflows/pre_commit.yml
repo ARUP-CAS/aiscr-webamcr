@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       strict_precommit_check:
-        description: "Fail workflow if any pre-commit hook fails"
+        description: "Fail workflow on docstring, flake8 or log warnings"
         type: boolean
         default: false
 
@@ -104,7 +104,9 @@ jobs:
           # Extract generic warnings from pre-commit log
           # (without duplicating already extracted docstring warnings)
           echo "log_warnings<<EOF" >> "$GITHUB_OUTPUT"
-          grep -Ei "warning" precommit.clean.log | grep -Evi "warning DOC[0-9]{3}" || true
+          grep -Ei "warning" precommit.clean.log \
+            | grep -Evi "warning DOC[0-9]{3}" \
+            | sort -u || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           # Extract flake8 errors
@@ -297,7 +299,8 @@ jobs:
       - name: Final status check
         if: steps.hooks.outputs.strict_mode == 'true'
         run: |
-          if [ -n "${{ steps.hooks.outputs.doc_warnings }}" ] || \
+          if [ -n "${{ steps.hooks.outputs.log_warnings }}" ] || \
+             [ -n "${{ steps.hooks.outputs.doc_warnings }}" ] || \
              [ -n "${{ steps.hooks.outputs.flake_errors }}" ]; then
             echo "Strict mode enabled and issues found."
             exit 1
