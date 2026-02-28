@@ -99,7 +99,15 @@ jobs:
           echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
 
           # Extract docstring warnings
+          TOTAL_DOC_WARNINGS=$(grep -c -E "DOC[0-9][0-9][0-9]" precommit.clean.log)
+
           DOC_WARNINGS=$(grep -E "DOC[0-9][0-9][0-9]" precommit.clean.log | head -n 200)
+          
+          if [ "$TOTAL_DOC_WARNINGS" -gt 200 ]; then
+            DOC_WARNINGS="${DOC_WARNINGS}
+          ...
+          (Zobrazeno prvních 200 z ${TOTAL_DOC_WARNINGS} záznamů)"
+          fi
           
           echo "doc_warnings<<EOF" >> "$GITHUB_OUTPUT"
           echo "$DOC_WARNINGS" >> "$GITHUB_OUTPUT"
