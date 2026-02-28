@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       strict_precommit_check:
-        description: "Fail workflow if any pre-commit hook fails"
+        description: "Fail workflow on docstring, flake8 or log warnings"
         type: boolean
         default: false
 
@@ -98,7 +98,15 @@ jobs:
 
           # Extract docstring warnings
           echo "doc_warnings<<EOF" >> "$GITHUB_OUTPUT"
-          grep -E "WARNING DOC[0-9]{3}" precommit.clean.log || true
+          grep -Ei "warning DOC[0-9]{3}" precommit.clean.log || true
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          # Extract generic warnings from pre-commit log
+          # (without duplicating already extracted docstring warnings)
+          echo "log_warnings<<EOF" >> "$GITHUB_OUTPUT"
+          grep -Ei "warning" precommit.clean.log \
+            | grep -Evi "warning DOC[0-9]{3}" \
+            | sort -u || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           # Extract flake8 errors
@@ -160,7 +168,7 @@ jobs:
           assignees: ${{ github.actor }}
 
       - name: Publish workflow summary
-        if: steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' || steps.hooks.outputs.doc_warnings != ''
+        if: steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' || steps.hooks.outputs.doc_warnings != '' || steps.hooks.outputs.log_warnings != ''
         run: |
           {
             echo "## ⚠️ Pre-commit results"
@@ -171,29 +179,39 @@ jobs:
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
 
+          if [ -n "${{ steps.hooks.outputs.log_warnings }}" ]; then
+            echo "### Log warnings" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.hooks.outputs.log_warnings }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           if [ -n "${{ steps.hooks.outputs.doc_warnings }}" ]; then
-            echo "### Docstring warnings" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "${{ steps.hooks.outputs.doc_warnings }}" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Docstring warnings" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.hooks.outputs.doc_warnings }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           if [ -n "${{ steps.hooks.outputs.flake_errors }}" ]; then
-            echo "### Flake8 errors" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "${{ steps.hooks.outputs.flake_errors }}" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Flake8 errors" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.hooks.outputs.flake_errors }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Comment on original PR (sticky)
-        if: github.event_name == 'pull_request' && (steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' || steps.hooks.outputs.doc_warnings != '')
+        if: github.event_name == 'pull_request' && (steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' || steps.hooks.outputs.doc_warnings != '' || steps.hooks.outputs.log_warnings != '')
         uses: actions/github-script@v8
         with:
           script: |
             const changed = "${{ steps.changes.outputs.changed }}" === "true";
             const exitCode = "${{ steps.hooks.outputs.exit_code }}";
+            const strictMode = "${{ steps.hooks.outputs.strict_mode }}";
+            const logWarnings = ${{ toJSON(steps.hooks.outputs.log_warnings || '') }};
             const docWarnings = ${{ toJSON(steps.hooks.outputs.doc_warnings || '') }};
             const flakeErrors = ${{ toJSON(steps.hooks.outputs.flake_errors || '') }};
             const logTail = ${{ toJSON(steps.hooks.outputs.log_tail || '') }};
@@ -203,8 +221,19 @@ jobs:
             ## ⚠️ Pre-commit results
             
             - Exit code: ${exitCode}
+            - Strict mode: ${strictMode}
             - Changes detected: ${changed}
             `;
+
+            if (logWarnings && logWarnings.trim()) {
+              body += `
+
+            ### Log warnings
+            \`\`\`
+            ${logWarnings}
+            \`\`\`
+            `;
+            }
 
             if (docWarnings && docWarnings.trim()) {
               body += `
@@ -270,7 +299,8 @@ jobs:
       - name: Final status check
         if: steps.hooks.outputs.strict_mode == 'true'
         run: |
-          if [ -n "${{ steps.hooks.outputs.doc_warnings }}" ] || \
+          if [ -n "${{ steps.hooks.outputs.log_warnings }}" ] || \
+             [ -n "${{ steps.hooks.outputs.doc_warnings }}" ] || \
              [ -n "${{ steps.hooks.outputs.flake_errors }}" ]; then
             echo "Strict mode enabled and issues found."
             exit 1
