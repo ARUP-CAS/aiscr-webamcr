@@ -167,7 +167,7 @@ class MethodDocstringChecker(ast.NodeVisitor):
             self.warnings.append(f"{loc}: WARNING {DOC_MISSING} Chybí docstring {element_type} '{name}'.")
             return
 
-        lines = [l for l in docstring.splitlines() if l.strip()]
+        lines = [line for line in docstring.splitlines() if line.strip()]
         if not lines:
             self.warnings.append(f"{loc}: WARNING {DOC_EMPTY} Prázdný docstring {element_type} '{name}'.")
             return
