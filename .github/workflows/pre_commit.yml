@@ -18,8 +18,8 @@ on:
         description: "Bypass file/class/method exclusions in docstring reminder hook"
         type: boolean
         default: false
-      strict_docstring_check:
-        description: "Fail workflow on docstring warnings"
+      strict_precommit_check:
+        description: "Fail workflow if any pre-commit hook fails"
         type: boolean
         default: false
 
@@ -82,7 +82,7 @@ jobs:
         id: hooks
         env:
           DOCSTRING_CHECK_BYPASS_EXCLUSIONS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bypass_docstring_exclusions == 'true' || 'false' }}
-          DOCSTRING_CHECK_STRICT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.strict_docstring_check == 'true' || 'false' }}
+          DOCSTRING_CHECK_STRICT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.strict_precommit_check == 'true' || 'false' }}
         run: |
           set +e
 
@@ -91,20 +91,23 @@ jobs:
           pre-commit run --all-files 2>&1 | tee precommit.log
           EXIT_CODE=${PIPESTATUS[0]}
 
+          # Remove ANSI escape sequences so grep reliably matches hook output.
+          sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' precommit.log > precommit.clean.log
+
           echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
 
           # Extract docstring warnings
           echo "doc_warnings<<EOF" >> "$GITHUB_OUTPUT"
-          grep -E "WARNING DOC[0-9]{3}" precommit.log || true
+          grep -E "WARNING DOC[0-9]{3}" precommit.clean.log || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           # Extract flake8 errors
           echo "flake_errors<<EOF" >> "$GITHUB_OUTPUT"
-          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.log || true
+          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           # Emit GitHub inline annotations for flake8
-          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.log | while read line; do
+          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log | while read line; do
             FILE=$(echo "$line" | cut -d: -f1)
             LINE=$(echo "$line" | cut -d: -f2)
             COL=$(echo "$line" | cut -d: -f3)
@@ -114,7 +117,7 @@ jobs:
 
           # Log tail
           echo "log_tail<<EOF" >> "$GITHUB_OUTPUT"
-          tail -n 80 precommit.log || true
+          tail -n 80 precommit.clean.log || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           exit 0
@@ -157,7 +160,7 @@ jobs:
           assignees: ${{ github.actor }}
 
       - name: Publish workflow summary
-        if: steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true'
+        if: steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' || steps.hooks.outputs.doc_warnings != ''
         run: |
           {
             echo "## ⚠️ Pre-commit results"
@@ -185,7 +188,7 @@ jobs:
           fi
 
       - name: Comment on original PR (sticky)
-        if: github.event_name == 'pull_request' && (steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true')
+        if: github.event_name == 'pull_request' && (steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' || steps.hooks.outputs.doc_warnings != '')
         uses: actions/github-script@v8
         with:
           script: |
@@ -265,11 +268,10 @@ jobs:
             }
 
       - name: Final status check
-        if: steps.hooks.outputs.strict_mode == 'true' && steps.hooks.outputs.exit_code != '0'
+        if: steps.hooks.outputs.strict_mode == 'true'
         run: |
-          echo "Strict mode enabled and docstring issues found."
-          EXIT_CODE="${{ steps.hooks.outputs.exit_code }}"
-          if ! [[ "$EXIT_CODE" =~ ^[0-9]+$ ]]; then
-            EXIT_CODE=1
+          if [ -n "${{ steps.hooks.outputs.doc_warnings }}" ] || \
+             [ -n "${{ steps.hooks.outputs.flake_errors }}" ]; then
+            echo "Strict mode enabled and issues found."
+            exit 1
           fi
-          exit "$EXIT_CODE"
