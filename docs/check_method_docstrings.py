@@ -10,7 +10,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Iterable, Union, Set
+from typing import Iterable, Set, Union
 
 # =========================
 # Configuration
@@ -100,9 +100,7 @@ class MethodDocstringChecker(ast.NodeVisitor):
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._handle_function_like(node)
 
-    def _handle_function_like(
-        self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
-    ) -> None:
+    def _handle_function_like(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> None:
         if self.function_depth > 0:
             self.generic_visit(node)
             return
@@ -132,9 +130,7 @@ class MethodDocstringChecker(ast.NodeVisitor):
             return True
         return name.startswith("_") and not name.startswith("__")
 
-    def _collect_args(
-        self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
-    ) -> list[str]:
+    def _collect_args(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> list[str]:
         all_args = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
         args = [a.arg for a in all_args if a.arg not in {"self", "cls"}]
 
@@ -145,9 +141,7 @@ class MethodDocstringChecker(ast.NodeVisitor):
 
         return args
 
-    def _has_meaningful_return(
-        self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
-    ) -> bool:
+    def _has_meaningful_return(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> bool:
         if node.returns is None:
             return False
 
@@ -170,16 +164,12 @@ class MethodDocstringChecker(ast.NodeVisitor):
         loc = f"{self.file_path}:{line}"
 
         if not docstring:
-            self.warnings.append(
-                f"{loc}: WARNING {DOC_MISSING} Chybí docstring {element_type} '{name}'."
-            )
+            self.warnings.append(f"{loc}: WARNING {DOC_MISSING} Chybí docstring {element_type} '{name}'.")
             return
 
         lines = [l for l in docstring.splitlines() if l.strip()]
         if not lines:
-            self.warnings.append(
-                f"{loc}: WARNING {DOC_EMPTY} Prázdný docstring {element_type} '{name}'."
-            )
+            self.warnings.append(f"{loc}: WARNING {DOC_EMPTY} Prázdný docstring {element_type} '{name}'.")
             return
 
         if len(lines[0].split()) < MIN_SUMMARY_WORDS:
@@ -187,12 +177,7 @@ class MethodDocstringChecker(ast.NodeVisitor):
                 f"{loc}: WARNING {DOC_SHORT_SUMMARY} Shrnutí je příliš krátké u {element_type} '{name}'."
             )
 
-        compiled_patterns = {
-            arg: re.compile(
-                rf":param\s+(?:[^\s]+\s+)?{re.escape(arg)}\s*:"
-            )
-            for arg in args
-        }
+        compiled_patterns = {arg: re.compile(rf":param\s+(?:[^\s]+\s+)?{re.escape(arg)}\s*:") for arg in args}
 
         for arg, pattern in compiled_patterns.items():
             if not pattern.search(docstring):
@@ -202,9 +187,7 @@ class MethodDocstringChecker(ast.NodeVisitor):
 
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and self._has_meaningful_return(node):
             if ":return:" not in docstring and ":returns:" not in docstring:
-                self.warnings.append(
-                    f"{loc}: WARNING {DOC_MISSING_RETURN} Chybí ':return:' u {element_type} '{name}'."
-                )
+                self.warnings.append(f"{loc}: WARNING {DOC_MISSING_RETURN} Chybí ':return:' u {element_type} '{name}'.")
 
 
 # =========================
@@ -233,17 +216,11 @@ def main() -> int:
             checker.visit(tree)
             all_warnings.extend(checker.warnings)
         except SyntaxError as exc:
-            all_warnings.append(
-                f"{file_path}:{exc.lineno}: WARNING {DOC_PARSE_ERROR} Syntaktická chyba: {exc.msg}"
-            )
+            all_warnings.append(f"{file_path}:{exc.lineno}: WARNING {DOC_PARSE_ERROR} Syntaktická chyba: {exc.msg}")
         except UnicodeDecodeError:
-            all_warnings.append(
-                f"{file_path}:0: WARNING {DOC_PARSE_ERROR} Chyba kódování (očekáváno UTF-8)"
-            )
+            all_warnings.append(f"{file_path}:0: WARNING {DOC_PARSE_ERROR} Chyba kódování (očekáváno UTF-8)")
         except Exception as exc:
-            all_warnings.append(
-                f"{file_path}:0: WARNING {DOC_PARSE_ERROR} Neočekávaná chyba: {exc}"
-            )
+            all_warnings.append(f"{file_path}:0: WARNING {DOC_PARSE_ERROR} Neočekávaná chyba: {exc}")
 
     if all_warnings:
         print("\n--- Připomínka stylu docstringů ---")
