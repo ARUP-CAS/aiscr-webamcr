@@ -19,24 +19,27 @@ logger = logging.getLogger(__name__)
 def save_single_file_from_storage_impl(
     record_par: int | Soubor, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False
 ) -> None:
-    """
-    Společná implementace pro ukládání jednotlivého souboru ze storage do Fedora repozitáře.
-
+    """Společná implementace pro ukládání jednotlivého souboru ze storage do Fedora repozitáře.
     Tato funkce načte soubor z lokálního úložiště, provede kontroly (MIME type, antivirus),
     a uloží jej do Fedora repozitáře včetně aktualizace metadat v databázi.
-
+    
     Args:
         record: Instance modelu Soubor nebo jeho primární klíč
         storage_path: Cesta k adresáři se soubory
         save_thumbs: Zda generovat náhledy pro obrazové soubory
         disable_antivirus: Zda přeskočit antivirovou kontrolu
-
+    
     Raises:
         core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje
-
+    
     Příklad:
         >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
         >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
+    
+    :param record_par: Hodnota parametru ``record_par`` použitého touto operací.
+    :param storage_path: Hodnota parametru ``storage_path`` použitého touto operací.
+    :param save_thumbs: Hodnota parametru ``save_thumbs`` použitého touto operací.
+    :param disable_antivirus: Hodnota parametru ``disable_antivirus`` použitého touto operací.
     """
     from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
     from xml_generator.models import ModelWithMetadata

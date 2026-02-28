@@ -100,8 +100,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ]
 
     def set_zapsany(self, user):
-        """
-        Metoda pro nastavení stavu zapsaný a uložení změny do historie.
+        """Metoda pro nastavení stavu zapsaný a uložení změny do historie.
+        :param user: Hodnota parametru ``user`` použitého touto operací.
         """
         self.stav = AZ_STAV_ZAPSANY
         Historie(
@@ -112,10 +112,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.save()
 
     def set_odeslany(self, user, request, messages):
-        """
-        Metoda pro nastavení stavu odeslaný a uložení změny do historie.
+        """Metoda pro nastavení stavu odeslaný a uložení změny do historie.
         Dokumenty se taky posouvají do stavu odeslaný.
         Externí zdroje se posouvají do stavu zapsaný.
+        
+        :param user: Hodnota parametru ``user`` použitého touto operací.
+        :param request: Hodnota parametru ``request`` použitého touto operací.
+        :param messages: Hodnota parametru ``messages`` použitého touto operací.
         """
         self.stav = AZ_STAV_ODESLANY
         self.save()
@@ -144,9 +147,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             ez.set_odeslany(user)
 
     def set_archivovany(self, user):
-        """
-        Metoda pro nastavení stavu archivovaný a uložení změny do historie.
+        """Metoda pro nastavení stavu archivovaný a uložení změny do historie.
         Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
+        
+        :param user: Hodnota parametru ``user`` použitého touto operací.
         """
         self.suppress_signal = True
         self.stav = AZ_STAV_ARCHIVOVANY
@@ -160,8 +164,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ).save()
 
     def set_vraceny(self, user, new_state, poznamka):
-        """
-        Metoda pro vrácení o jeden stav méně a uložení změny do historie.
+        """Metoda pro vrácení o jeden stav méně a uložení změny do historie.
+        :param user: Hodnota parametru ``user`` použitého touto operací.
         """
         self.stav = new_state
         Historie(

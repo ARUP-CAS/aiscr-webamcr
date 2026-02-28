@@ -10,11 +10,11 @@ LOG_PATH = "/run/logs/"
 
 
 def get_secret(setting, default_value=None):
-    """Vrací secret.
-
+    """Vrací tajnou hodnotu ze settings nebo dodanou výchozí hodnotu.
     :param setting: Vstupní hodnota ``setting`` pro danou operaci.
     :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    :return: Vrací načtená data odpovídající vstupním parametrům.
+    """
     file_path = (
         "/run/secrets/db_conf"
         if os.path.exists("/run/secrets/db_conf")

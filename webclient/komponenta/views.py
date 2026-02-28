@@ -54,8 +54,10 @@ logger = logging.getLogger(__name__)
 @handle_fedora_error
 @require_http_methods(["POST"])
 def detail(request, typ_vazby, ident_cely):
-    """
-    Funkce pohledu pro zapsání editace komponenty.
+    """Funkce pohledu pro zapsání editace komponenty.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param typ_vazby: Hodnota parametru ``typ_vazby`` použitého touto operací.
+    :param ident_cely: Hodnota parametru ``ident_cely`` použitého touto operací.
     """
     komponenta: Komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     fedora_transaction = FedoraTransaction(komponenta, request.user, suppress_message=True)
@@ -163,8 +165,10 @@ def detail(request, typ_vazby, ident_cely):
 @handle_fedora_error
 @require_http_methods(["POST"])
 def zapsat(request, typ_vazby, dj_ident_cely):
-    """
-    Funkce pohledu pro zapsání vytvořeni komponenty.
+    """Funkce pohledu pro zapsání vytvořeni komponenty.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param typ_vazby: Hodnota parametru ``typ_vazby`` použitého touto operací.
+    :param dj_ident_cely: Hodnota parametru ``dj_ident_cely`` použitého touto operací.
     """
     dj = None
     cast = None
@@ -242,8 +246,10 @@ def zapsat(request, typ_vazby, dj_ident_cely):
 @handle_fedora_error
 @require_http_methods(["GET", "POST"])
 def smazat(request, typ_vazby, ident_cely):
-    """
-    Funkce pohledu pro smazání komponenty pomoci modalu.
+    """Funkce pohledu pro smazání komponenty pomoci modalu.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param typ_vazby: Hodnota parametru ``typ_vazby`` použitého touto operací.
+    :param ident_cely: Hodnota parametru ``ident_cely`` použitého touto operací.
     """
     komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     dj = None

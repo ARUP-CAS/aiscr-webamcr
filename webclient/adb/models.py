@@ -124,13 +124,13 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None, main_record=None):
-        """Vytvoří transaction.
-
+        """Vytvoří Fedora transakci pro ADB záznam a vrátí ji volajícímu.
         :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
         :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
         :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
         :param main_record: Vstupní hodnota ``main_record`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -141,17 +141,20 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
 
 
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
-    """
-    Funkce pro výpočet ident celý pro VB.
+    """Funkce pro výpočet ident celý pro VB.
     Obsahuje test na přetečení hodnot.
-
+    
     Args:
         adb (adb): adb objekt pro získaní základu identu.
-
+    
         offset (int): offset k připočtení k poslednímu VB
-
+    
     Returns:
         string: nový ident celý
+    
+    :param adb: Hodnota parametru ``adb`` použitého touto operací.
+    :param offset: Hodnota parametru ``offset`` použitého touto operací.
+    :return: Vrací vypočtený identifikátor výškového bodu.
     """
     MAXIMAL_VYSKOVY_BOD: int = 9999
     last_digit_count = 4
@@ -191,8 +194,10 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
     geom = pgmodels.PointField(srid=5514, dim=3)
 
     def set_geom(self, northing, easting, niveleta):
-        """
-        Metoda na nastavení geomu (souřadnic).
+        """Metoda na nastavení geomu (souřadnic).
+        :param northing: Hodnota parametru ``northing`` použitého touto operací.
+        :param easting: Hodnota parametru ``easting`` použitého touto operací.
+        :param niveleta: Hodnota parametru ``niveleta`` použitého touto operací.
         """
 
         logger.debug(
@@ -209,8 +214,9 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
             logger.debug("adb.models.VyskovyBod.set_geom.point", extra={"geom": self.geom})
 
     def save(self, *args, **kwargs):
-        """
-        Override save metody na nastavení ident celý pokud je prázdny.
+        """Override save metody na nastavení ident celý pokud je prázdny.
+        :param args: Hodnota parametru ``args`` použitého touto operací.
+        :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
         """
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)

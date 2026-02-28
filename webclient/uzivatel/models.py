@@ -191,8 +191,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             return self.user_str
 
     def display_name(self, viewer=None):
-        """
-        Textová reprezentace uživatele pro tabulky a autocomplete pole.
+        """Textová reprezentace uživatele pro tabulky a autocomplete pole.
+        :param viewer: Hodnota parametru ``viewer`` použitého touto operací.
         """
         lang = get_language()
 
@@ -340,12 +340,12 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return connector.get_metadata()
 
     def save_metadata(self, fedora_transaction=None, close_transaction=False, **kwargs):
-        """Uloží metadata.
-
+        """Uloží metadata uživatele do Fedora repozitáře a případně uzavře transakci.
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         from core.repository_connector import FedoraTransaction
 
         if fedora_transaction is None and self.active_transaction is not None:
@@ -384,7 +384,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         )
 
     def record_deletion(self, fedora_transaction=None, close_transaction=False):
-        """Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby."""
+        """Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby.
+        :param fedora_transaction: Hodnota parametru ``fedora_transaction`` použitého touto operací.
+        :param close_transaction: Hodnota parametru ``close_transaction`` použitého touto operací.
+        """
         logger.debug("uzivatel.models.User.delete_repository_container.start")
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
@@ -581,9 +584,9 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                 return ""
 
     def get_nazev(self):
-        """Vrací nazev.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací název organizace ve formátu používaném v aplikaci.
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         if get_language() == "en":
             if self.nazev_en:
                 return self.nazev_en
