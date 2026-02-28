@@ -101,10 +101,12 @@ jobs:
           grep -Ei "warning DOC[0-9]{3}" precommit.clean.log || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
-          # Extract generic warnings from pre-commit log
-          # (without duplicating already extracted docstring warnings)
+          # Extract generic warnings from pre-commit log.
+          # Match both "warning" and shorter "warn" forms because
+          # some tools emit WARN/WARNI prefixes instead of whole word.
+          # Remove docstring warnings that are reported separately.
           echo "log_warnings<<EOF" >> "$GITHUB_OUTPUT"
-          grep -Ei "warning" precommit.clean.log \
+          grep -Ei "(::warning::|\bwarn(ing)?\b)" precommit.clean.log \
             | grep -Evi "warning DOC[0-9]{3}" \
             | sort -u || true
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -218,6 +220,19 @@ jobs:
             const runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             const marker = "<!-- precommit-bot-comment -->";
       
+            const sections = [];
+            if (logWarnings && logWarnings.trim()) {
+              sections.push(`### Log warnings\n\`\`\`\n${logWarnings}\n\`\`\``);
+            }
+
+            if (docWarnings && docWarnings.trim()) {
+              sections.push(`### Docstring warnings\n\`\`\`\n${docWarnings}\n\`\`\``);
+            }
+
+            if (flakeErrors && flakeErrors.trim()) {
+              sections.push(`### Flake8 errors\n\`\`\`\n${flakeErrors}\n\`\`\``);
+            }
+
             let body = `${marker}
             ## ⚠️ Pre-commit results
             
@@ -225,41 +240,12 @@ jobs:
             - Strict mode: ${strictMode}
             - Changes detected: ${changed}
             - Workflow run: [View logs](${runUrl})
+            ${sections.join("\n\n")}
             `;
 
-            if (logWarnings && logWarnings.trim()) {
+            if (logTail && logTail.trim()) {
               body += `
 
-            ### Log warnings
-            \`\`\`
-            ${logWarnings}
-            \`\`\`
-            `;
-            }
-
-            if (docWarnings && docWarnings.trim()) {
-              body += `
-
-            ### Docstring warnings
-            \`\`\`
-            ${docWarnings}
-            \`\`\`
-            `;
-                        }
-            
-                        if (flakeErrors && flakeErrors.trim()) {
-                          body += `
-            
-            ### Flake8 errors
-            \`\`\`
-            ${flakeErrors}
-            \`\`\`
-            `;
-                        }
-            
-                        if (logTail && logTail.trim()) {
-                          body += `
-            
             <details>
             <summary>Pre-commit log (tail)</summary>
             
@@ -268,7 +254,7 @@ jobs:
             \`\`\`
             </details>
             `;
-                        }
+            }
 
             body = body.replace(/^[ \t]+/gm, '');
 
