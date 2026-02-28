@@ -42,7 +42,6 @@ Třídy
    .. py:method:: display_name()
 
       Textová reprezentace uživatele pro tabulky a autocomplete pole.
-      :param viewer: Hodnota parametru ``viewer`` použitého touto operací.
 
       :param viewer: Hodnota parametru ``viewer`` použitého touto operací.
 
@@ -87,6 +86,7 @@ Třídy
    .. py:method:: save_metadata()
 
       Uloží metadata uživatele do Fedora repozitáře a případně uzavře transakci.
+
       :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
       :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
@@ -94,8 +94,6 @@ Třídy
    .. py:method:: record_deletion()
 
       Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby.
-      :param fedora_transaction: Hodnota parametru ``fedora_transaction`` použitého touto operací.
-      :param close_transaction: Hodnota parametru ``close_transaction`` použitého touto operací.
 
       :param fedora_transaction: Hodnota parametru ``fedora_transaction`` použitého touto operací.
       :param close_transaction: Hodnota parametru ``close_transaction`` použitého touto operací.
@@ -156,7 +154,6 @@ Třídy
    .. py:method:: get_nazev()
 
       Vrací název organizace ve formátu používaném v aplikaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: Osoba
