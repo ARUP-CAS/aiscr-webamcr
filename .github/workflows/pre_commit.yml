@@ -215,14 +215,16 @@ jobs:
             const docWarnings = ${{ toJSON(steps.hooks.outputs.doc_warnings || '') }};
             const flakeErrors = ${{ toJSON(steps.hooks.outputs.flake_errors || '') }};
             const logTail = ${{ toJSON(steps.hooks.outputs.log_tail || '') }};
+            const runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             const marker = "<!-- precommit-bot-comment -->";
-
+      
             let body = `${marker}
             ## ⚠️ Pre-commit results
             
             - Exit code: ${exitCode}
             - Strict mode: ${strictMode}
             - Changes detected: ${changed}
+            - Workflow run: [View logs](${runUrl})
             `;
 
             if (logWarnings && logWarnings.trim()) {
