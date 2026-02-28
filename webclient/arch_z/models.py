@@ -100,8 +100,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         ]
 
     def set_zapsany(self, user):
-        """Metoda pro nastavení stavu zapsaný a uložení změny do historie.
-        :param user: Hodnota parametru ``user`` použitého touto operací.
+        """Přepne archeologický záznam do stavu „zapsaný“ a zapíše změnu do historie.
+
+        :param user: Uživatel, který změnu stavu provedl.
+        :return: Funkce nevrací hodnotu (``None``).
         """
         self.stav = AZ_STAV_ZAPSANY
         Historie(
@@ -112,13 +114,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.save()
 
     def set_odeslany(self, user, request, messages):
-        """Metoda pro nastavení stavu odeslaný a uložení změny do historie.
-        Dokumenty se taky posouvají do stavu odeslaný.
-        Externí zdroje se posouvají do stavu zapsaný.
-        
-        :param user: Hodnota parametru ``user`` použitého touto operací.
-        :param request: Hodnota parametru ``request`` použitého touto operací.
-        :param messages: Hodnota parametru ``messages`` použitého touto operací.
+        """Přepne záznam do stavu „odeslaný“ a propíše navazující změny do souvisejících dat.
+
+        Metoda zároveň posune navázané dokumenty a externí zdroje do odpovídajících stavů.
+
+        :param user: Uživatel, který odeslání provedl.
+        :param request: HTTP požadavek použitý při generování trvalých identifikátorů dokumentů.
+        :param messages: Django message backend pro předání uživatelských hlášek.
+        :return: Funkce nevrací hodnotu (``None``).
         """
         self.stav = AZ_STAV_ODESLANY
         self.save()
@@ -147,10 +150,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             ez.set_odeslany(user)
 
     def set_archivovany(self, user):
-        """Metoda pro nastavení stavu archivovaný a uložení změny do historie.
-        Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
-        
-        :param user: Hodnota parametru ``user`` použitého touto operací.
+        """Přepne záznam do stavu „archivovaný“ a zaznamená změnu do historie.
+
+        U samostatné akce s dočasným identifikátorem se při archivaci nastaví trvalý ident.
+
+        :param user: Uživatel, který archivaci provedl.
+        :return: Funkce nevrací hodnotu (``None``).
         """
         self.suppress_signal = True
         self.stav = AZ_STAV_ARCHIVOVANY
@@ -165,7 +170,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_vraceny(self, user, new_state, poznamka):
         """Metoda pro vrácení o jeden stav méně a uložení změny do historie.
-        :param user: Hodnota parametru ``user`` použitého touto operací.
+
+        :param user: Uživatel, který vrácení stavu provedl.
+        :param new_state: Cílový stav záznamu, do kterého má být záznam vrácen.
+        :param poznamka: Poznámka uložená do historie k provedenému vrácení.
         """
         self.stav = new_state
         Historie(
@@ -334,10 +342,11 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         self.save()
 
     def _set_connected_records_ident(self, new_ident):
-        """Nastaví connected records ident.
+        """Propíše nový základ identifikátoru do navázaných DJ a komponent.
 
-        :param new_ident: Vstupní hodnota ``new_ident`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :param new_ident: Nový prefix identifikátoru archeologické akce.
+        :return: Funkce nevrací hodnotu (``None``).
+        """
         for dj in self.dokumentacni_jednotky_akce.all():
             dj.ident_cely = new_ident + dj.ident_cely[-4:]
             if dj.komponenty is None:
@@ -351,11 +360,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             dj.save()
 
     def set_akce_ident(self, ident=None, delete_container=True):
-        """Nastaví akce ident.
+        """Nastaví nebo vygeneruje identifikátor akce a promítne změnu do navázaných dat.
 
-        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
-        :param delete_container: Vstupní hodnota ``delete_container`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :param ident: Volitelný identifikátor; pokud není zadán, vygeneruje se nový.
+        :param delete_container: Určuje, zda se při změně identifikátoru smaže původní kontejner.
+        :return: Funkce nevrací hodnotu (``None``).
+        """
         old_ident_cely = self.ident_cely
         if ident:
             new_ident = ident
@@ -368,8 +378,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             self.record_ident_change(old_ident_cely, delete_container=delete_container)
 
     def get_absolute_url(self, dj_ident_cely=None):
-        """
-        Metoda pro získaní absolut url záznamu podle typu arch záznamu a argumentu dj_ident_cely.
+        """Vrátí detail URL archeologického záznamu nebo jeho dokumentační jednotky.
+
+        :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
+        :return: URL detailu akce nebo lokality podle typu archeologického záznamu.
         """
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if dj_ident_cely is None:
@@ -383,8 +395,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 return reverse("lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely])
 
     def get_redirect(self, dj_ident_cely=None):
-        """
-        Metoda pro získaní redirect záznamu podle typu arch záznamu a argumentu dj_ident_cely.
+        """Vrátí redirect odpověď na detail archeologického záznamu.
+
+        :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
+        :return: Redirect na URL vrácenou metodou ``get_absolute_url``.
         """
         return redirect(self.get_absolute_url(dj_ident_cely))
 
@@ -460,9 +474,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @property
     def initial_casti_dokumentu(self):
-        """Provádí operaci initial casti dokumentu.
+        """Vrátí ID navázaných částí dokumentu v okamžiku načtení instance.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Seznam ID částí dokumentu, případně prázdný seznam.
+        """
         try:
             return self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError:
@@ -470,9 +485,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @property
     def initial_pristupnost(self):
-        """Provádí operaci initial pristupnost.
+        """Vrátí původní hodnotu přístupnosti záznamu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Hodnota původní přístupnosti nebo ``None``.
+        """
         if hasattr(self, "_initial_pristupnost"):
             return self._initial_pristupnost
         if hasattr(self, "pristupnost"):
@@ -483,10 +499,11 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @initial_pristupnost.setter
     def initial_pristupnost(self, value):
-        """Provádí operaci initial pristupnost.
+        """Nastaví interně uloženou původní hodnotu přístupnosti.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :param value: Nová hodnota původní přístupnosti.
+        :return: Funkce nevrací hodnotu (``None``).
+        """
         self._initial_pristupnost = value
 
     def save(self, *args, **kwargs):
@@ -494,7 +511,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        :return: Funkce nevrací hodnotu (``None``)."""
         if self.pk is not None:
             previous = ArcheologickyZaznam.objects.get(pk=self.pk)
             if previous.pristupnost != self.pristupnost:
@@ -502,35 +519,39 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         super(ArcheologickyZaznam, self).save(*args, **kwargs)
 
     def igsn_lokalita_hide(self, check_status=True):
-        """Provádí operaci igsn lokalita hide.
+        """Skryje IGSN záznam lokality, pokud je aktuální záznam typu lokalita.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :param check_status: Při ``True`` ověří stav před provedením změny v IGSN.
+        :return: Funkce nevrací hodnotu (``None``).
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_hide(check_status)
 
     def igsn_lokalita_publish(self, check_status=True):
-        """Provádí operaci igsn lokalita publish.
+        """Publikuje IGSN lokality, pokud je záznam lokality archivovaný.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :param check_status: Při ``True`` ověří stav před publikací v IGSN.
+        :return: Funkce nevrací hodnotu (``None``).
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA and self.stav == AZ_STAV_ARCHIVOVANY:
             self.lokalita.igsn_publish(check_status)
 
     def igsn_lokalita_delete(self, check_status=True):
-        """Provádí operaci igsn lokalita delete.
+        """Odstraní IGSN záznam lokality, pokud jde o záznam typu lokalita.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :param check_status: Při ``True`` ověří stav před smazáním v IGSN.
+        :return: Funkce nevrací hodnotu (``None``).
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_delete(check_status)
 
     def igsn_lokalita_update(self, check_status=True, reload_record=False):
-        """Provádí operaci igsn lokalita update.
+        """Aktualizuje IGSN metadata lokality, pokud jde o záznam typu lokalita.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :param check_status: Při ``True`` ověří stav před aktualizací v IGSN.
+        :param reload_record: Určuje, zda se má záznam před aktualizací znovu načíst.
+        :return: Funkce nevrací hodnotu (``None``).
+        """
         if self.typ_zaznamu == self.TYP_ZAZNAMU_LOKALITA:
             self.lokalita.igsn_update(check_status, reload_record)
 
@@ -655,9 +676,10 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def initial_projekt(self):
-        """Provádí operaci initial projekt.
+        """Vrátí původní projekt navázaný při inicializaci instance.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Instance projektu z ``initial_projekt_id`` nebo ``None``.
+        """
         from projekt.models import Projekt
 
         if self.initial_projekt_id is not None:
@@ -665,28 +687,31 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         return None
 
     def get_absolute_url(self):
-        """
-        Metoda pro získaní absolut url záznamu.
+        """Vrátí URL detailu archeologického záznamu navázaného na akci.
+
+        :return: Absolutní URL detailu akce.
         """
         return reverse("arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely})
 
     def vedouci_organizace(self):
-        """Provádí operaci vedouci organizace.
+        """Vrátí seznam vedoucích organizací akce jako text.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Čárkou oddělený seznam názvů organizací.
+        """
         return ", ".join([str(x.organizace) for x in self.akcevedouci_set.all()])
 
     @cached_property
     def vedouci(self):
-        """Provádí operaci vedouci.
+        """Vrátí textový seznam vedoucích osob navázaných na akci.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Čárkou oddělený seznam jmen vedoucích.
+        """
         return ", ".join([str(x.vedouci) for x in self.akcevedouci_set.all()])
 
     def set_snapshots(self):
-        """Nastaví snapshots.
+        """Přepočítá a uloží snapshot textového výpisu vedoucích akce.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Funkce nevrací hodnotu (``None``)."""
         if not self.akcevedouci_set.all():
             self.vedouci_snapshot = None
         else:
@@ -701,17 +726,19 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
+        """Sestaví klíč Redis snapshotu pro seznam akci.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Identifikátor snapshotu používaný v Redis cache.
+        """
         from arch_z.views import AkceListView
 
         return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """Připraví data akce pro uložení snapshotu do Redis cache.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Dvojice ``(snapshot_id, data)`` nebo ``(None, None)``, pokud akce neexistuje.
+        """
         from arch_z.tables import AkceTable
 
         data = Akce.objects.filter(archeologicky_zaznam=self)
@@ -728,10 +755,11 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
-        """Vrací by ident cely.
+        """Vrátí instanci akce podle identifikátoru archeologického záznamu.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :param ident_cely: Identifikátor archeologického záznamu.
+        :return: Nalezená instance ``Akce`` nebo ``None``.
+        """
         try:
             return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
         except Exception:
@@ -804,7 +832,7 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user):
-        """Vytvoří transaction.
+        """Vytvoří a vrátí Fedora transakci pro práci s externím odkazem.
 
         :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
         :return: Vrací nově vytvořený výsledek operace."""
@@ -817,8 +845,10 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
 
 
 def get_akce_ident(region):
-    """
-    Metoda pro získání permanentního identifikátoru akce ze sekvence akcí.
+    """Vygeneruje nový permanentní identifikátor akce pro zadaný region.
+
+    :param region: Identifikátor regionu použitého jako prefix sekvence akcí.
+    :return: Nový jednoznačný identifikátor archeologické akce.
     """
     MAXIMUM: int = 999999
     try:

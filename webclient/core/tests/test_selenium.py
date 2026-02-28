@@ -1456,7 +1456,13 @@ return new Date('2025-06-28T12:00:00Z');}};
         return hodnoty
 
     def nahrad_base_uri_v_json(self, data, puvodni_base, nova_base):
-        """Rekurzivně nahradí base URI ve všech stringových hodnotách JSON objektu."""
+        """Rekurzivně nahradí base URI ve všech stringových hodnotách JSON objektu.
+
+        :param data: JSON struktura (slovník, seznam nebo skalární hodnota) určená k úpravě.
+        :param puvodni_base: Původní prefix URI, který se má ve stringových hodnotách nahradit.
+        :param nova_base: Nový prefix URI, kterým se původní hodnota nahradí.
+        :return: Upravená JSON struktura se zaměněnými URI prefixy.
+        """
         if isinstance(data, dict):
             return {k: self.nahrad_base_uri_v_json(v, puvodni_base, nova_base) for k, v in data.items()}
         elif isinstance(data, list):
@@ -1467,8 +1473,11 @@ return new Date('2025-06-28T12:00:00Z');}};
             return data
 
     def nahrad_base_uri_auto_json(self, data, nova_base="info:test-base/"):
-        """
-        Najde a nahradí nejčastější base URI v JSON string hodnotách.
+        """Najde a nahradí nejčastější base URI v JSON string hodnotách.
+
+        :param data: JSON struktura, ve které se má automaticky detekovat base URI.
+        :param nova_base: Náhradní base URI použitá při přepisu nalezeného prefixu.
+        :return: Upravená JSON struktura; pokud base URI nelze určit, vrací původní data.
         """
         vsechny_str = self.sesbiraj_retezce(data)
         puvodni_base = self.najdi_base_uri(vsechny_str)
@@ -1477,8 +1486,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         return data  # žádná změna
 
     def odstran_klice(self, data, klice_k_ignoraci):
-        """
-        Rekurzivně odstraní z JSON objektu všechny klíče uvedené v seznamu.
+        """Rekurzivně odstraní z JSON objektu všechny klíče uvedené v seznamu.
+
+        :param data: JSON struktura, ve které se mají odstranit vybrané klíče.
+        :param klice_k_ignoraci: Seznam klíčů, které mají být z výsledku odstraněny.
+        :return: JSON struktura bez ignorovaných klíčů.
         """
         if isinstance(data, dict):
             return {k: self.odstran_klice(v, klice_k_ignoraci) for k, v in data.items() if k not in klice_k_ignoraci}
@@ -1488,8 +1500,10 @@ return new Date('2025-06-28T12:00:00Z');}};
             return data
 
     def normalizuj_json(self, data):
-        """
-        Rekurzivně seřadí seznamy (pokud to jde) a klíče ve slovnících.
+        """Rekurzivně seřadí seznamy (pokud to jde) a klíče ve slovnících.
+
+        :param data: JSON struktura určená k normalizaci před porovnáním.
+        :return: Deterministicky uspořádaná JSON struktura pro stabilní porovnání.
         """
         if isinstance(data, dict):
             return {k: self.normalizuj_json(v) for k, v in sorted(data.items())}
@@ -1506,8 +1520,10 @@ return new Date('2025-06-28T12:00:00Z');}};
     UUID_REGEX = re.compile(r"[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}", re.IGNORECASE)
 
     def odstran_uuid(self, data):
-        """
-        Rekurzivně nahradí UUID ve stringových hodnotách JSON objektu za placeholder.
+        """Rekurzivně nahradí UUID ve stringových hodnotách JSON objektu za placeholder.
+
+        :param data: JSON struktura obsahující hodnoty s UUID identifikátory.
+        :return: JSON struktura, kde jsou UUID nahrazené placeholderem ``UUID-REMOVED``.
         """
         if isinstance(data, dict):
             return {k: self.odstran_uuid(v) for k, v in data.items()}
