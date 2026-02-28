@@ -83,7 +83,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     def add_fedora_history(self, context):
         """Pokud potomek definuje fedora_model, automaticky se načte
         metadata historie z Fedory a přidá se druhá tabulka fedora_table.
-        
+
         :param context: Hodnota parametru ``context`` použitého touto operací.
         """
         if not hasattr(self, "fedora_model") or self.fedora_model is None:

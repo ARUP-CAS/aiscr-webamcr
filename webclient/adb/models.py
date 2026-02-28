@@ -143,15 +143,15 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
     """Funkce pro výpočet ident celý pro VB.
     Obsahuje test na přetečení hodnot.
-    
+
     Args:
         adb (adb): adb objekt pro získaní základu identu.
-    
+
         offset (int): offset k připočtení k poslednímu VB
-    
+
     Returns:
         string: nový ident celý
-    
+
     :param adb: Hodnota parametru ``adb`` použitého touto operací.
     :param offset: Hodnota parametru ``offset`` použitého touto operací.
     :return: Vrací vypočtený identifikátor výškového bodu.

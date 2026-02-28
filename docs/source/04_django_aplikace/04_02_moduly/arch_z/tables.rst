@@ -22,8 +22,7 @@ Třídy
 
    .. py:method:: render()
 
-      Vyrenderuje hodnotu.
-
+      Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
       :param value: Vstupní hodnota ``value`` pro danou operaci.
       :return: Vrací výsledek provedené operace.
 

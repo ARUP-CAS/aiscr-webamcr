@@ -1152,7 +1152,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
         podle obsahu (pomocí _element_klic).
         Nezasahuje do pořadí různých typů elementů, čímž zachovává validitu vůči XSD.
-        
+
         :param element: Hodnota parametru ``element`` použitého touto operací.
         """
         # Nejprve rekurze
@@ -1197,7 +1197,7 @@ return new Date('2025-06-28T12:00:00Z');}};
     def nahrad_element_id_rekurzivne(self, element, element_name):
         """Rekurzivně upraví všechny elementy <amcr:id> s textem 'element_name-XXX' na 'element_name-0000001'.
         Nezávislé na konkrétní verzi namespace.
-        
+
         :param element: Hodnota parametru ``element`` použitého touto operací.
         :param element_name: Hodnota parametru ``element_name`` použitého touto operací.
         """

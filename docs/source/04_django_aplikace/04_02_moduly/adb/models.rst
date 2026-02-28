@@ -40,8 +40,7 @@ Třídy
 
    .. py:method:: create_transaction()
 
-      Vytvoří transaction.
-
+      Vytvoří Fedora transakci pro ADB záznam a vrátí ji volajícímu.
       :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
       :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
       :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
@@ -59,10 +58,15 @@ Třídy
    .. py:method:: set_geom()
 
       Metoda na nastavení geomu (souřadnic).
+      :param northing: Hodnota parametru ``northing`` použitého touto operací.
+      :param easting: Hodnota parametru ``easting`` použitého touto operací.
+      :param niveleta: Hodnota parametru ``niveleta`` použitého touto operací.
 
    .. py:method:: save()
 
       Override save metody na nastavení ident celý pokud je prázdny.
+      :param args: Hodnota parametru ``args`` použitého touto operací.
+      :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
 
    .. py:method:: __init__()
 

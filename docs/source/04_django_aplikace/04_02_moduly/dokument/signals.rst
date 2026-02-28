@@ -8,84 +8,92 @@ Funkce
 
 .. py:function:: create_dokument_vazby(sender, instance)
 
-   Metoda pro vytvoření historických vazeb dokumentu.
-   Metoda se volá pred uložením záznamu.
+   Před uložením dokumentu připraví vazby historie a souborů.
+
+   :param sender: Model, který signal vyvolal.
+   :param instance: Ukládaná instance dokumentu.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: create_dokument_cast_vazby(sender, instance)
 
-   Metoda pro vytvoření komponent vazeb dokument části.
-   Metoda se volá pred uložením dokument části.
+   Před uložením části dokumentu zajistí vytvoření komponentové vazby.
+
+   :param sender: Model, který signal vyvolal.
+   :param instance: Ukládaná instance části dokumentu.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: dokument_save_metadata(sender, instance)
 
-   Provádí operaci dokument save metadata.
+   Po uložení dokumentu synchronizuje metadata navázaných objektů.
 
-   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
+   :param sender: Model, který signal vyvolal.
+   :param instance: Uložená instance dokumentu.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: let_save_metadata(sender, instance)
 
-   Provádí operaci let save metadata.
+   Po uložení letu zapíše metadata do repozitáře.
 
-   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
+   :param sender: Model, který signal vyvolal.
+   :param instance: Uložená instance letu.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: dokument_delete_repository_container(sender, instance)
 
-   Provádí operaci dokument delete repository container.
+   Po smazání dokumentu odstraní repozitářové vazby a přegeneruje metadata.
 
-   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
+   :param sender: Model, který signal vyvolal.
+   :param instance: Smazaná instance dokumentu.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: let_delete_repository_container(sender, instance)
 
-   Provádí operaci let delete repository container.
+   Po smazání letu zapíše jeho odstranění do repozitáře.
 
-   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
+   :param sender: Model, který signal vyvolal.
+   :param instance: Smazaná instance letu.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: dokument_cast_save_metadata_save(sender, instance, created)
 
-   Provádí operaci dokument cast save metadata save.
+   Po uložení části dokumentu synchronizuje metadata navázaných záznamů.
 
-   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param created: Vstupní hodnota ``created`` pro danou operaci.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
+   :param sender: Model, který signal vyvolal.
+   :param instance: Uložená instance části dokumentu.
+   :param created: Příznak, zda byla část dokumentu právě vytvořena.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: dokument_cast_save_metadata_delete(sender, instance)
 
-   Provádí operaci dokument cast save metadata delete.
+   Po smazání části dokumentu přepočítá metadata navázaných objektů.
 
-   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
+   :param sender: Model, který signal vyvolal.
+   :param instance: Smazaná instance části dokumentu.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: tvar_save(sender, instance, created)
 
-   Provádí operaci tvar save.
+   Po uložení tvaru zajistí zápis metadat souvisejícího dokumentu.
 
-   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param created: Vstupní hodnota ``created`` pro danou operaci.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
+   :param sender: Model, který signal vyvolal.
+   :param instance: Uložená instance tvaru.
+   :param created: Příznak, zda byl tvar právě vytvořen.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).
 
 .. py:function:: tvar_delete(sender, instance)
 
-   Provádí operaci tvar delete.
+   Po smazání tvaru přepočítá metadata navázaného dokumentu.
 
-   :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-   :return: Vrací výsledek provedené operace.
+   :param sender: Model, který signal vyvolal.
+   :param instance: Smazaná instance tvaru.
+   :param kwargs: Dodatečné argumenty předané Django signalem.
+   :return: Funkce nevrací hodnotu (``None``).

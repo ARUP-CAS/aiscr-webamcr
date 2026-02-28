@@ -20,30 +20,33 @@ Třídy
    .. py:method:: prepare_queryset()
 
       Potomek může přepsat pro vlastní řazení nebo dodatečné filtry.
+      :param qs: Hodnota parametru ``qs`` použitého touto operací.
 
    .. py:method:: add_extra_context()
 
       Potomek může přepsat a doplnit další hodnoty do contextu.
+      :param context: Hodnota parametru ``context`` použitého touto operací.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
+      Vrací queryset historie po aplikaci výchozího řazení a filtrů.
       :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_header_config()
 
       Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
+      :param context: Hodnota parametru ``context`` použitého touto operací.
 
    .. py:method:: add_fedora_history()
 
       Pokud potomek definuje fedora_model, automaticky se načte
       metadata historie z Fedory a přidá se druhá tabulka fedora_table.
 
+      :param context: Hodnota parametru ``context`` použitého touto operací.
+
    .. py:method:: get_table()
 
-      Vrací table.
-
+      Vrací tabulku historie naplněnou připraveným querysetem.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
       :return: Vrací načtená data odpovídající vstupním parametrům.
 
