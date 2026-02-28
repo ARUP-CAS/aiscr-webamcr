@@ -32,10 +32,12 @@ logger = logging.getLogger(__name__)
 
 
 def get_next_sequence(sequence_name: str) -> str:
-    """Vrací next sequence.
+    """
+    Vrací next sequence.
 
     :param sequence_name: Vstupní hodnota ``sequence_name`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    :return: Vrací načtená data odpovídající vstupním parametrům.
+    """
     query = "select nextval(%s)"
     cursor = connections["urgent"].cursor()
     cursor.execute(query, [sequence_name])
@@ -48,6 +50,9 @@ def get_temporary_project_ident(region: str) -> str:
 
     Logika složení je: "X-" + region (M nebo C) + "-" + 9místné číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
     Příklad: "X-M-000001234"
+
+    :param region: Popis parametru ``region``.
+    :return: Vrací výsledek operace.
     """
     id_number = f"{get_next_sequence('projekt_xident_seq'):09}"
     return "X-" + region + "-" + id_number
@@ -60,6 +65,9 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
     Logika složení je: ident_cely projektu + písmeno abecedy v posloupnosti od A po Z
     Při překročení maxima čísla sekvence (99999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A"
+
+    :param project: Popis parametru ``project``.
+    :return: Vrací výsledek operace.
     """
     MAXIMAL_PROJECT_EVENTS: int = 26
     if project.ident_cely:
@@ -89,6 +97,9 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
 def get_dokument_rada(typ, material):
     """
     Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
+
+    :param typ: Popis parametru ``typ``.
+    :param material: Popis parametru ``material``.
     """
     instances = HeslarDokumentTypMaterialRada.objects.filter(dokument_typ=typ, dokument_material=material)
     if len(instances) == 1:
@@ -110,6 +121,9 @@ def get_temp_dokument_ident(rada, region):
 
     Logika složení je: "X-" + region (M nebo C) + "-" + řada (TX/DD/3D) + "-" 9místné číslo (ID ze sekvence dokument_xident_seq doplněné na 9 číslic nulami)
     Příklad: "X-M-TX-000000034"
+
+    :param rada: Popis parametru ``rada``.
+    :param region: Popis parametru ``region``.
     """
     sequence = f"{get_next_sequence('dokument_xident_seq'):09}"
     prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + rada + "-")
@@ -123,6 +137,9 @@ def get_cast_dokumentu_ident(dokument: Dokument) -> str:
     Logika složení je: ident_cely dokumentu + "-D" + pořadové číslo části per dokument doplněno na 3 číslice nulami.
     Při překročení maxima DJ u dokumentu (999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-DD-202100034-D001"
+
+    :param dokument: Popis parametru ``dokument``.
+    :return: Vrací výsledek operace.
     """
     MAXIMUM: int = 999
     last_digit_count = 3
@@ -148,6 +165,9 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
     Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ per arch záznam doplněno na 2 číslice nulami.
     Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-D01"
+
+    :param event: Popis parametru ``event``.
+    :return: Vrací výsledek operace.
     """
     MAXIMAL_EVENT_DJS: int = 99
     dj_last_digit_count = 2
@@ -171,6 +191,10 @@ def get_komponenta_ident(zaznam, fedora_transaction: FedoraTransaction) -> str:
     Logika složení je: ident_cely arch záznamu nebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
     Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
+
+    :param zaznam: Popis parametru ``zaznam``.
+    :param fedora_transaction: Popis parametru ``fedora_transaction``.
+    :return: Vrací výsledek operace.
     """
     MAXIMAL_KOMPONENTAS: int = 999
     last_digit_count = 3
@@ -208,6 +232,8 @@ def get_komponenta_ident(zaznam, fedora_transaction: FedoraTransaction) -> str:
 def get_sm_from_point(point):
     """
     Metoda pro získání kladu sm5 pro pian z bodu.
+
+    :param point: Popis parametru ``point``.
     """
     mapovy_list = Kladysm5.objects.filter(geom__contains=point)
     if mapovy_list.count() == 1:
@@ -223,6 +249,9 @@ def get_temporary_pian_ident(zm50) -> str:
 
     Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 9 místní číslo ze sekvence pian_xident_seq doplněno na 9 číslic.
     Příklad: "N-1224-000123456"
+
+    :param zm50: Popis parametru ``zm50``.
+    :return: Vrací výsledek operace.
     """
     prefix = "N-" + str(zm50.cislo).replace("-", "").zfill(4) + "-"
     sequence = f"{get_next_sequence('pian_xident_seq'):09}"
@@ -236,6 +265,9 @@ def get_sn_ident(projekt: Projekt) -> str:
     Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 číslic nulami.
     Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-N00001"
+
+    :param projekt: Popis parametru ``projekt``.
+    :return: Vrací výsledek operace.
     """
     MAXIMAL_FINDS: int = 99999
     last_digit_count = 5
@@ -258,6 +290,9 @@ def get_adb_ident(pian: Pian) -> str:
     Logika složení je: "ADB-" + mapno pro sm5 + "-" + číslo sekvence z tabulky 'adb_sekvence' (podle kladysm5) doplněno na 6 číslic nulami.
     Při překročení maxima sekvence u ADB (999999) se uživateli na web vrátí chybová hláška.
     Příklad: "ADB-PRAH43-000012"
+
+    :param pian: Popis parametru ``pian``.
+    :return: Vrací výsledek operace.
     """
     MAXIMAL_ADBS: int = 999999
     point = None
@@ -305,6 +340,9 @@ def get_temp_lokalita_ident(typ, region):
     Logika složení je: "X-" + region (M nebo C) + "-" + typ + 9místné číslo ze sekvence lokalita_xident_seq doplněné na 9 číslic.
 
     Příklad: "X-M-L000123456"
+
+    :param typ: Popis parametru ``typ``.
+    :param region: Popis parametru ``region``.
     """
     prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-" + typ)
     sequence = f"{get_next_sequence('lokalita_xident_seq'):09}"
@@ -318,6 +356,8 @@ def get_temp_akce_ident(region):
     Logika složení je: "X-" + region (M nebo C) + "-9" + 9místné číslo ze sekvence akce_xident_seq doplněné na 9 číslic a suffix „-A“.
 
     Příklad: "X-M-9000123456A"
+
+    :param region: Popis parametru ``region``.
     """
     id_number = f"{get_next_sequence('akce_xident_seq'):09}"
     return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + id_number + "A")
@@ -336,10 +376,12 @@ def get_temp_ez_ident():
 
 
 def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Type[User]) -> str:
-    """Vrací next sequence integrity check.
+    """
+    Vrací next sequence integrity check.
 
     :param object_class: Vstupní hodnota ``object_class`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    :return: Vrací načtená data odpovídající vstupním parametrům.
+    """
     while True:
         current_value = f"{object_class.IDENT_PREFIX}-{get_next_sequence(object_class.SEQUENCE_NAME):06}"
         if not object_class.objects.filter(ident_cely=current_value).exists():
@@ -347,36 +389,30 @@ def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Ty
 
 
 def get_heslar_ident():
-    """
-    Metoda pro výpočet identu hesláře.
-    """
+    """Metoda pro výpočet identu hesláře."""
     return get_next_sequence_integrity_check(Heslar)
 
 
 def get_uzivatel_ident():
-    """
-    Metoda pro výpočet identu uživatele.
-    """
+    """Metoda pro výpočet identu uživatele."""
     return get_next_sequence_integrity_check(User)
 
 
 def get_organizace_ident():
-    """
-    Metoda pro výpočet identu organizce.
-    """
+    """Metoda pro výpočet identu organizce."""
     return get_next_sequence_integrity_check(Organizace)
 
 
 def get_osoba_ident():
-    """
-    Metoda pro výpočet identu osoby.
-    """
+    """Metoda pro výpočet identu osoby."""
     return get_next_sequence_integrity_check(Osoba)
 
 
 def get_record_from_ident(ident_cely):
     """
     Funkce pro získaní záznamu podle ident cely.
+
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     from dokument.models import Dokument
     from pas.models import SamostatnyNalez

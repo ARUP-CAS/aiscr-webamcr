@@ -26,7 +26,6 @@ Třídy
       :param code: Vstupní hodnota ``code`` pro danou operaci.
       :param headers: Vstupní hodnota ``headers`` pro danou operaci.
       :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: FedoraUpdatedByAnotherTransactionError
@@ -55,19 +54,14 @@ Třídy
       Vrací url without domain.
 
       :param url: Vstupní hodnota ``url`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: url_without_domain()
 
       Provádí operaci url without domain.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: uuid()
 
       Provádí operaci uuid.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _calculate_sha_512()
 
@@ -79,13 +73,9 @@ Třídy
 
       Provádí operaci size mb.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: mime_type()
 
       Provádí operaci mime type.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __init__()
 
@@ -94,7 +84,6 @@ Třídy
       :param url: Vstupní hodnota ``url`` pro danou operaci.
       :param content: Vstupní hodnota ``content`` pro danou operaci.
       :param filename: Vstupní hodnota ``filename`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: FedoraRequestType
@@ -115,7 +104,6 @@ Třídy
       :param record: Vstupní hodnota ``record`` pro danou operaci.
       :param transaction: Vstupní hodnota ``transaction`` pro danou operaci.
       :param skip_container_check: Vstupní hodnota ``skip_container_check`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: _get_model_name()
 
@@ -149,8 +137,6 @@ Třídy
 
       Vrací base url.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: _get_request_url()
 
       Vrací request url.
@@ -165,7 +151,6 @@ Třídy
       Ověří container deleted.
 
       :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: check_container_deleted_or_not_exists()
 
@@ -173,7 +158,6 @@ Třídy
 
       :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
       :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: _get_auth()
 
@@ -200,16 +184,13 @@ Třídy
 
    .. py:method:: create_link()
 
-      Vytvoří link.
+      Vytvoří link. v aplikaci.
 
       :param ident_cely_proxy: Vstupní hodnota ``ident_cely_proxy`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: container_exists()
 
       Provádí operaci container exists.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _connect_deleted_container()
 
@@ -220,8 +201,6 @@ Třídy
    .. py:method:: link_exists()
 
       Provádí operaci link exists.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _check_container()
 
@@ -249,7 +228,7 @@ Třídy
 
    .. py:method:: get_metadata()
 
-      Vrací metadata.
+      Vrací metadata. v aplikaci.
 
       :param update: Vstupní hodnota ``update`` pro danou operaci.
       :return: Vrací načtená data odpovídající vstupním parametrům.
@@ -258,12 +237,13 @@ Třídy
 
       Metoda varacející konkrétní verzi metadat
 
+      :param timestamp: Popis parametru ``timestamp``.
+
    .. py:method:: parse_historie()
 
-      Zpracuje historie.
+      Zpracuje historie. v aplikaci.
 
       :param response_text: Vstupní hodnota ``response_text`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_historie_metadat()
 
@@ -273,12 +253,13 @@ Třídy
 
       Metoda k získání info o verzích souborů
 
+      :param uuid: Popis parametru ``uuid``.
+
    .. py:method:: save_metadata()
 
-      Uloží metadata.
+      Uloží metadata. v aplikaci.
 
       :param update: Vstupní hodnota ``update`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: save_binary_file()
 
@@ -292,23 +273,21 @@ Třídy
 
    .. py:method:: __generate_thumb()
 
-      Vygeneruje thumb.
+      Vygeneruje thumb. v aplikaci.
 
       :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
       :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
       :param large: Vstupní hodnota ``large`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: save_thumbs()
 
-      Uloží thumbs.
+      Uloží thumbs. v aplikaci.
 
       :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
       :param file: Vstupní hodnota ``file`` pro danou operaci.
       :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
       :param update: Vstupní hodnota ``update`` pro danou operaci.
       :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: migrate_binary_file()
 
@@ -347,21 +326,18 @@ Třídy
       Odstraní binary file.
 
       :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
-      :return: Vrací výsledek operace odstranění.
 
    .. py:method:: delete_binary_file_completely()
 
       Odstraní binary file completely.
 
       :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
-      :return: Vrací výsledek operace odstranění.
 
    .. py:method:: delete_container()
 
-      Odstraní container.
+      Odstraní container. v aplikaci.
 
       :param delete_tombstone: Vstupní hodnota ``delete_tombstone`` pro danou operaci.
-      :return: Vrací výsledek operace odstranění.
 
    .. py:method:: _delete_link()
 
@@ -374,22 +350,18 @@ Třídy
 
       Provádí operaci record deletion.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: record_ident_change()
 
       Provádí operaci record ident change.
 
       :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
       :param delete_container: Vstupní hodnota ``delete_container`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: generate_thumb_for_single_file()
 
       Vygeneruje thumb for single file.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
 
 
 .. py:class:: FedoraTransactionQueueClosedError
@@ -446,8 +418,6 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :return: Funkce nevrací hodnotu (``None``).
-
    .. py:method:: mark_transaction_as_closed()
 
       Označí transakci jako uzavřenou. Výchozí implementace neprovádí žádnou akci.
@@ -469,8 +439,6 @@ Třídy
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
-
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: add_updated_ident_cely()
 
@@ -522,7 +490,6 @@ Třídy
       :param suppress_message: Vstupní hodnota ``suppress_message`` pro danou operaci.
       :param redirect_on_error: Vstupní hodnota ``redirect_on_error`` pro danou operaci.
       :param redirect_url: Vstupní hodnota ``redirect_url`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __str__()
 
@@ -536,7 +503,6 @@ Třídy
 
       :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
       :param transaction_user_id: Identifikátor objektu ``transaction_user``.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: _transaction_redis_key()
 
@@ -547,8 +513,6 @@ Třídy
    .. py:method:: status()
 
       Provádí operaci status.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _save_transaction_result_to_redis()
 
@@ -578,15 +542,11 @@ Třídy
 
    .. py:method:: __create_transaction()
 
-      Vytvoří transaction.
-
-      :return: Vrací nově vytvořený výsledek operace.
+      Vytvoří transaction. v aplikaci.
 
    .. py:method:: call_digiarchiv_update()
 
       Provádí operaci call digiarchiv update.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: FedoraDeletionOnlyTransaction
@@ -602,8 +562,6 @@ Třídy
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
-
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: add_updated_ident_cely()
 

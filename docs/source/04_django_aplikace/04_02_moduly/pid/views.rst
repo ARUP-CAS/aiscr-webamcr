@@ -17,7 +17,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: _get_value_from_cache()
 
@@ -40,7 +39,6 @@ Třídy
 
       :param q: Vstupní hodnota ``q`` pro danou operaci.
       :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get()
 
@@ -49,20 +47,16 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: autocomplete_results()
 
       Provádí operaci autocomplete results.
 
       :param results: Vstupní hodnota ``results`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_list()
 
-      Vrací list.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací list. v aplikaci.
 
 
 .. py:class:: DoiAutocompleteView
@@ -105,7 +99,6 @@ Třídy
 
       :param q: Vstupní hodnota ``q`` pro danou operaci.
       :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: OrcidAutocompleteView
@@ -120,7 +113,6 @@ Třídy
 
       :param q: Vstupní hodnota ``q`` pro danou operaci.
       :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: RorAutocompleteView
@@ -135,7 +127,6 @@ Třídy
 
       :param q: Vstupní hodnota ``q`` pro danou operaci.
       :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: WikiDataAutocompleteView
@@ -150,7 +141,6 @@ Třídy
 
       :param q: Vstupní hodnota ``q`` pro danou operaci.
       :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ContinuePidProcessing
@@ -176,5 +166,4 @@ Třídy
       :param record: Vstupní hodnota ``record`` pro danou operaci.
       :param result: Vstupní hodnota ``result`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 

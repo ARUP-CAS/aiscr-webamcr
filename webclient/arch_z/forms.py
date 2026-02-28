@@ -24,16 +24,15 @@ logger = logging.getLogger(__name__)
 
 
 class AkceVedouciFormSetHelper(FormHelper):
-    """
-    Form helper pro správné vykreslení formuláře vedoucích.
-    """
+    """Form helper pro správné vykreslení formuláře vedoucích."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset_vedouci.html"
         self.form_tag = False
@@ -44,19 +43,19 @@ def create_akce_vedouci_objekt_form(readonly=True):
     Funkce která vrací formulář VB pro formset.
 
     Args:
-        readonly (boolean): nastavuje formulář na readonly.
+    readonly (boolean): nastavuje formulář na readonly.
 
     Returns:
-        CreateAkceVedouciObjektForm: django model formulář AkceVedouci
+    CreateAkceVedouciObjektForm: django model formulář AkceVedouci
+
+    :param readonly: Popis parametru ``readonly``.
     """
 
     class CreateAkceVedouciObjektForm(forms.ModelForm):
         """Implementuje komponentu ``CreateAkceVedouciObjektForm`` v rámci aplikace."""
 
         def clean(self):
-            """Provádí operaci clean.
-
-            :return: Vrací výsledek provedené operace."""
+            """Provádí operaci clean."""
             cleaned_data = super().clean()
             if (cleaned_data.get("vedouci", None) is None and cleaned_data.get("organizace", None) is not None) or (
                 cleaned_data.get("vedouci", None) is not None and cleaned_data.get("organizace", None) is None
@@ -92,11 +91,12 @@ def create_akce_vedouci_objekt_form(readonly=True):
             }
 
         def __init__(self, *args, **kwargs):
-            """Inicializuje instanci třídy.
+            """
+            Inicializuje instanci třídy.
 
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-            :return: Funkce nevrací hodnotu (``None``)."""
+            """
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
             logger.debug("CreateAkceVedouciObjektForm.init", extra={"option": readonly, "initial": self.initial})
@@ -108,9 +108,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
 
 
 class CreateArchZForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení Archeologického záznamu.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení Archeologického záznamu."""
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -155,9 +153,7 @@ class CreateArchZForm(forms.ModelForm):
         readonly=False,
         **kwargs,
     ):
-        """
-        Prepis init metody pro vyplnení init hodnot, nastanvení readonly.
-        """
+        """Prepis init metody pro vyplnení init hodnot, nastanvení readonly."""
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateArchZForm, self).__init__(*args, **kwargs)
@@ -243,31 +239,33 @@ class CreateArchZForm(forms.ModelForm):
 
 
 class CustomDateInput(forms.DateField):
-    """
-    Custom class pro zadávaní počátečního a konečního datumu v roce zadaním jen roku.
-    """
+    """Custom class pro zadávaní počátečního a konečního datumu v roce zadaním jen roku."""
 
     year_only_month = None
     year_only_day = None
 
     @classmethod
     def year_only(cls, value):
-        """Provádí operaci year only.
+        """
+        Provádí operaci year only.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return re.fullmatch(r"\d{4}", value)
 
     def get_date_based_on_year(self, year):
-        """Vrací date based on year.
+        """
+        Vrací date based on year.
 
         :param year: Vstupní hodnota ``year`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         return datetime.date(year, self.year_only_month, self.year_only_day)
 
     def to_python(self, value):
         """
         Prepis kvůli jinému objektu CustomDateInput.
+
+        :param value: Popis parametru ``value``.
         """
         if value:
             if isinstance(value, str) and CustomDateInput.year_only(value):
@@ -282,27 +280,21 @@ class CustomDateInput(forms.DateField):
 
 
 class StartDateInput(CustomDateInput):
-    """
-    Class pro input prvního dne v roce.
-    """
+    """Class pro input prvního dne v roce."""
 
     year_only_month = 1
     year_only_day = 1
 
 
 class EndDateInput(CustomDateInput):
-    """
-    Class pro input posledního dne v roce.
-    """
+    """Class pro input posledního dne v roce."""
 
     year_only_month = 12
     year_only_day = 31
 
 
 class CreateAkceForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení akce.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení akce."""
 
     datum_zahajeni = StartDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_zahajeni.tooltip"),
@@ -321,9 +313,7 @@ class CreateAkceForm(forms.ModelForm):
     )
 
     def clean(self):
-        """
-        Přepis clean metody s custom oveřením datumu ukončení a zahájení.
-        """
+        """Přepis clean metody s custom oveřením datumu ukončení a zahájení."""
         cleaned_data = super().clean()
         if cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_zahajeni") is None:
             raise forms.ValidationError(_("arch_z.forms.CreateAkceForm.validation.datum_zahajeni.error"))
@@ -425,13 +415,14 @@ class CreateAkceForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         uzamknout_specifikace = kwargs.pop("uzamknout_specifikace", False)
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
@@ -527,9 +518,7 @@ class CreateAkceForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean_odlozena_nz(self):
-        """
-        Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True.
-        """
+        """Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True."""
         je_nz = self.cleaned_data["je_nz"]
         odlozena_nz = self.cleaned_data["odlozena_nz"]
         if odlozena_nz and je_nz:
@@ -540,9 +529,9 @@ class CreateAkceForm(forms.ModelForm):
         """
         Custom clean metoda pro ověření:
 
-            ak je specifikace_data=přesně tak datum_zahájení nesmí být prázdne
+        ak je specifikace_data=přesně tak datum_zahájení nesmí být prázdne
 
-            datum zahájení není dále něž mesíc v budoucnu
+        datum zahájení není dále něž mesíc v budoucnu
         """
         if (
             self.cleaned_data["specifikace_data"] == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
@@ -555,9 +544,9 @@ class CreateAkceForm(forms.ModelForm):
         """
         Custom clean metoda pro ověření:
 
-            ak je specifikace_data=přesně tak datum_ukončení nesmí být prázdne
+        ak je specifikace_data=přesně tak datum_ukončení nesmí být prázdne
 
-            datum ukončení není dále něž mesíc v budoucnu
+        datum ukončení není dále něž mesíc v budoucnu
         """
         if (
             self.cleaned_data["specifikace_data"] == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)

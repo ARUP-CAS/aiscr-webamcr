@@ -10,25 +10,29 @@ logger = logging.getLogger(__name__)
 
 
 def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
-    """Zpracuje fedora error.
+    """
+    Zpracuje fedora error.
 
     :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
     :param additional_exceptions: Vstupní hodnota ``additional_exceptions`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
 
     def decorator(func):
-        """Provádí operaci decorator.
+        """
+        Provádí operaci decorator.
 
         :param func: Vstupní hodnota ``func`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
 
         @wraps(func)
         def _wrapped(*args, **kwargs):
-            """Provádí operaci wrapped.
+            """
+            Provádí operaci wrapped.
 
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-            :return: Vrací výsledek provedené operace."""
+            :return: Vrací výsledek provedené operace.
+            """
             try:
                 return func(*args, **kwargs)
             except (FedoraError,) + additional_exceptions as err:

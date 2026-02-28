@@ -40,10 +40,12 @@ class DigitalObjectIdentifierClient:
             raise ValueError(_("doi.client.DigitalObjectIdentifierClient.invalid_record_class"))
 
     def _check_response_status(self, response):
-        """Ověří response status.
+        """
+        Ověří response status.
 
         :param response: Vstupní hodnota ``response`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        :return: Vrací výsledek ověření nebo validačního pravidla.
+        """
         if not str(response.status_code).startswith("2"):
             logger.error(
                 "doi.client.DigitalObjectIdentifierClient._check_response_status.error",
@@ -60,7 +62,11 @@ class DigitalObjectIdentifierClient:
         return f"{DATACITE_URL.rstrip('/')}/{self.serializer._get_prefix()}/{self.serializer.get_ident_cely()}"
 
     def check_record_exists(self, check_status=True):
-        """Zjistí, zda záznam v DataCite existuje."""
+        """
+        Zjistí, zda záznam v DataCite existuje.
+
+        :param check_status: Popis parametru ``check_status``.
+        """
         response = requests.get(self.get_record_url(), auth=self.auth)
         if str(response.status_code).startswith("5") and check_status:
             logger.error(
@@ -74,7 +80,11 @@ class DigitalObjectIdentifierClient:
         return str(response.status_code).startswith("2")
 
     def delete_record(self, check_status=True):
-        """Skryje/smaže záznam v DataCite podle serializovaného payloadu."""
+        """
+        Skryje/smaže záznam v DataCite podle serializovaného payloadu.
+
+        :param check_status: Popis parametru ``check_status``.
+        """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.delete_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
@@ -95,10 +105,11 @@ class DigitalObjectIdentifierClient:
             )
 
     def hide_record(self, check_status=True):
-        """Provádí operaci hide record.
+        """
+        Provádí operaci hide record.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.hide_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},
@@ -119,7 +130,11 @@ class DigitalObjectIdentifierClient:
             )
 
     def publish_record(self, check_status=True):
-        """Publikuje záznam v DataCite, případně jej nejdříve vytvoří."""
+        """
+        Publikuje záznam v DataCite, případně jej nejdříve vytvoří.
+
+        :param check_status: Popis parametru ``check_status``.
+        """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.check_record_exists.publish_record",
             extra={"ident_cely": self.serializer.get_ident_cely()},
@@ -139,11 +154,12 @@ class DigitalObjectIdentifierClient:
         return response.json()
 
     def update_record(self, check_status=True, reload_record=False):
-        """Aktualizuje record.
+        """
+        Aktualizuje record. v aplikaci.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.update_record.start",
             extra={"ident_cely": self.serializer.get_ident_cely()},

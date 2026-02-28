@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 def create_pian_vazby(sender, instance, **kwargs):
     """
     Metoda pro vytvoření historických vazeb pianu.
+
     Metoda se volá pred uložením záznamu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug("pian.signals.create_pian_vazby.start")
     if instance.pk is None:
@@ -31,7 +36,12 @@ def create_pian_vazby(sender, instance, **kwargs):
 def pian_save_metadata(sender, instance: Pian, **kwargs):
     """
     Metoda pro vytvoření historických vazeb pianu.
+
     Metoda se volá pred uložením záznamu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug("pian.signals.pian_save_metadata.start", extra={"instance": instance.ident_cely})
     if not instance.suppress_signal:
@@ -58,12 +68,13 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
 
 @receiver(pre_delete, sender=Pian, weak=False)
 def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, **kwargs):
-    """Provádí operaci samostatny nalez okres delete repository container.
+    """
+    Provádí operaci samostatny nalez okres delete repository container.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug(
         "pian.signals.samostatny_nalez_okres_delete_repository_container.start", extra={"instance": instance.ident_cely}
     )

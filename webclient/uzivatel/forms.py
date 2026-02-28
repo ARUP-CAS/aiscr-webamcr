@@ -30,9 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
-    """
-    Formulář pro vytvoření uživatele.
-    """
+    """Formulář pro vytvoření uživatele."""
 
     class Meta(RegistrationForm):
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -74,11 +72,12 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
         }
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.fields["telefon"].validators = [validate_phone_number]
@@ -136,20 +135,19 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
         )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(AuthUserCreationFormWithRecaptcha, self).__init__(*args, **kwargs)
         if settings.SKIP_RECAPTCHA:
             self.fields.pop("captcha")
 
 
 class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
-    """
-    Formulář pro editaci uživatele.
-    """
+    """Formulář pro editaci uživatele."""
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -168,11 +166,12 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
         }
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -194,9 +193,7 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
 
 
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
-    """
-    Formulář pro zobrazení detailu uživatele.
-    """
+    """Formulář pro zobrazení detailu uživatele."""
 
     hlavni_role = forms.CharField(
         widget=ForeignKeyReadOnlyTextInput(),
@@ -239,11 +236,12 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.fields["organizace"].widget.value = self.instance.organizace
         self.fields["hlavni_role"].widget.value = self.instance.hlavni_role
@@ -276,11 +274,12 @@ class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
             widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
@@ -291,9 +290,7 @@ class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
 
 
 class NotificationsForm(forms.ModelForm):
-    """
-    Formulář pro správu typu notifikací.
-    """
+    """Formulář pro správu typu notifikací."""
 
     notification_types = forms.ModelMultipleChoiceField(
         queryset=UserNotificationType.objects.filter(
@@ -316,9 +313,7 @@ class NotificationsForm(forms.ModelForm):
 
 
 class UpdatePasswordSettings(forms.ModelForm):
-    """
-    Formulář pro změnu hesla.
-    """
+    """Formulář pro změnu hesla."""
 
     old_password = forms.CharField(
         required=False,
@@ -340,9 +335,7 @@ class UpdatePasswordSettings(forms.ModelForm):
     )
 
     def clean(self):
-        """Provádí operaci clean.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci clean."""
         cleaned_data = super().clean()
         old_password = cleaned_data.get("old_password")[2:-2]
         password1 = cleaned_data.get("password1")[2:-2]
@@ -369,11 +362,12 @@ class UpdatePasswordSettings(forms.ModelForm):
         fields = ("password1", "password2")
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -388,16 +382,15 @@ class UpdatePasswordSettings(forms.ModelForm):
 
 
 class AuthUserLoginForm(AuthenticationForm):
-    """
-    Formulář pro prihlášení uživatele.
-    """
+    """Formulář pro prihlášení uživatele."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(AuthUserLoginForm, self).__init__(*args, **kwargs)
         self.fields["username"].help_text = _("uzivatel.forms.login.username.tooltip")
         self.fields["password"].help_text = _("uzivatel.forms.login.password.tooltip")
@@ -413,9 +406,7 @@ class AuthUserLoginForm(AuthenticationForm):
         )
 
     def get_invalid_login_error(self):
-        """Vrací invalid login error.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací invalid login error."""
         return ValidationError(
             _("uzivatel.forms.login.error"),
             code="invalid_login",
@@ -426,11 +417,12 @@ class UserPasswordResetForm(PasswordResetForm):
     """Implementuje komponentu ``UserPasswordResetForm`` v rámci aplikace."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)
         self.fields["email"].label = _("uzivatel.forms.passwordReset.email.label")
         self.fields["email"].help_text = _("uzivatel.forms.passwordReset.email.tooltip")
@@ -448,6 +440,13 @@ class UserPasswordResetForm(PasswordResetForm):
     ):
         """
         Send a django.core.mail.EmailMultiAlternatives to `to_email`.
+
+        :param subject_template_name: Popis parametru ``subject_template_name``.
+        :param email_template_name: Popis parametru ``email_template_name``.
+        :param context: Popis parametru ``context``.
+        :param from_email: Popis parametru ``from_email``.
+        :param to_email: Popis parametru ``to_email``.
+        :param html_email_template_name: Popis parametru ``html_email_template_name``.
         """
         subject = loader.render_to_string(subject_template_name, context)
         # Předmět e-mailu *nesmí* obsahovat znaky nového řádku.
@@ -480,9 +479,7 @@ class UserPasswordResetForm(PasswordResetForm):
 
 
 class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
-    """
-    Formulář pro vytvoření osoby.
-    """
+    """Formulář pro vytvoření osoby."""
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -524,11 +521,12 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
         }
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         kwargs.pop("create", False)
         super(OsobaForm, self).__init__(*args, **kwargs)
         # Pokud jde o vytvoření:

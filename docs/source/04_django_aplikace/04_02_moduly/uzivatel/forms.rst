@@ -18,7 +18,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AuthUserCreationFormWithRecaptcha
@@ -33,7 +32,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AuthUserChangeForm
@@ -48,7 +46,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AuthReadOnlyUserChangeForm
@@ -63,7 +60,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AuthUserChangeAdminForm
@@ -78,7 +74,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NotificationsForm
@@ -96,15 +91,12 @@ Třídy
 
       Provádí operaci clean.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AuthUserLoginForm
@@ -119,13 +111,10 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_invalid_login_error()
 
       Vrací invalid login error.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UserPasswordResetForm
@@ -140,11 +129,17 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: send_mail()
 
       Send a django.core.mail.EmailMultiAlternatives to `to_email`.
+
+      :param subject_template_name: Popis parametru ``subject_template_name``.
+      :param email_template_name: Popis parametru ``email_template_name``.
+      :param context: Popis parametru ``context``.
+      :param from_email: Popis parametru ``from_email``.
+      :param to_email: Popis parametru ``to_email``.
+      :param html_email_template_name: Popis parametru ``html_email_template_name``.
 
 
 .. py:class:: OsobaForm
@@ -159,7 +154,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AuthActivationForm

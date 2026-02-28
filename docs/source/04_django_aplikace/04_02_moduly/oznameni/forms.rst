@@ -17,7 +17,6 @@ Třídy
       Provádí operaci to python.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DateRangeWidget
@@ -31,7 +30,6 @@ Třídy
       Provádí operaci format value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: OznamovatelForm
@@ -46,7 +44,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: OznamovatelProjektForm
@@ -64,15 +61,12 @@ Třídy
 
       Provádí operaci clean send mail.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ProjektOznameniForm
@@ -87,7 +81,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: FormWithCaptcha

@@ -16,13 +16,15 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
+      :param value: Popis parametru ``value``.
+      :param record: Popis parametru ``record``.
+
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: AktivaceDeaktivaceColumn
@@ -33,14 +35,13 @@ Třídy
 
    .. py:method:: render()
 
-      Vyrenderuje hodnotu.
+      Vyrenderuje hodnotu. v aplikaci.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
       :param table: Vstupní hodnota ``table`` pro danou operaci.
       :param value: Vstupní hodnota ``value`` pro danou operaci.
       :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: smazatColumn
@@ -51,14 +52,13 @@ Třídy
 
    .. py:method:: render()
 
-      Vyrenderuje hodnotu.
+      Vyrenderuje hodnotu. v aplikaci.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
       :param table: Vstupní hodnota ``table`` pro danou operaci.
       :param value: Vstupní hodnota ``value`` pro danou operaci.
       :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UzivatelSpolupraceTable
@@ -73,7 +73,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_all_idents()
 

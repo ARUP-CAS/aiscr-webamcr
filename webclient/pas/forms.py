@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 def validate_uzivatel_email(email):
     """
     Funkce pro validaci zadaného emailu uživatele.
+
+    :param email: Popis parametru ``email``.
     """
     user = User.objects.filter(email=email)
     if not user.exists():
@@ -46,22 +48,19 @@ def validate_uzivatel_email(email):
 
 
 class ProjectModelChoiceField(ModelChoiceField):
-    """
-    Třída pro správně zobrazení label.
-    """
+    """Třída pro správně zobrazení label."""
 
     def label_from_instance(self, obj):
-        """Provádí operaci label from instance.
+        """
+        Provádí operaci label from instance.
 
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
 
 
 class PotvrditNalezForm(forms.ModelForm):
-    """
-    Hlavní formulář pro potvrzení nálezu lokality.
-    """
+    """Hlavní formulář pro potvrzení nálezu lokality."""
 
     predano = forms.BooleanField(
         required=False,
@@ -106,14 +105,15 @@ class PotvrditNalezForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, predano_required=False, predano_hidden=False, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param predano_required: Vstupní hodnota ``predano_required`` pro danou operaci.
         :param predano_hidden: Vstupní hodnota ``predano_hidden`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
         self.fields["evidencni_cislo"].required = True
         self.fields["predano_organizace"].required = False
@@ -156,9 +156,7 @@ class PotvrditNalezForm(forms.ModelForm):
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení samostatnýho nálezu.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení samostatnýho nálezu."""
 
     katastr = forms.CharField(
         label=_("pas.forms.createSamostatnyNalezForm.katastr.label"),
@@ -237,7 +235,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     def __init__(
         self, *args, readonly=False, user=None, required=None, required_next=None, project_ident=None, **kwargs
     ):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
@@ -246,7 +245,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
         :param project_ident: Vstupní hodnota ``project_ident`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         projekt_disabed = kwargs.pop("projekt_disabled", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 2
@@ -346,9 +345,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
 
 
 class CreateZadostForm(forms.Form):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení žádosti o spoluprácu.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení žádosti o spoluprácu."""
 
     email_uzivatele = forms.EmailField(
         label=_("pas.forms.createZadostForm.emailUzivatele.label"),
@@ -365,11 +362,12 @@ class CreateZadostForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(CreateZadostForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -382,9 +380,7 @@ class PasFilterForm(BaseFilterForm):
 
 
 class DeaktivovatSpolupraciForm(forms.Form):
-    """
-    Formulář pro deaktivaci záznamu. Obsahuje jen text pole pro zdůvodnění deaktivace.
-    """
+    """Formulář pro deaktivaci záznamu. Obsahuje jen text pole pro zdůvodnění deaktivace."""
 
     reason = forms.CharField(
         label=_("pas.forms.DeaktivovatSpolupraciForm.reason.label"),
@@ -393,11 +389,12 @@ class DeaktivovatSpolupraciForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(DeaktivovatSpolupraciForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

@@ -11,12 +11,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Pes, weak=False)
 def pes_save(sender, instance: Pes, **kwargs):
-    """Provádí operaci pes save.
+    """
+    Provádí operaci pes save.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(lambda: instance.user.save_metadata(fedora_transaction, close_transaction=True))
@@ -28,12 +29,13 @@ def pes_save(sender, instance: Pes, **kwargs):
 
 @receiver(pre_delete, sender=Pes, weak=False)
 def pes_delete(sender, instance: Pes, **kwargs):
-    """Provádí operaci pes delete.
+    """
+    Provádí operaci pes delete.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()
         try:

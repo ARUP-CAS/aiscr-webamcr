@@ -45,6 +45,10 @@ logger = logging.getLogger(__name__)
 def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro editaci dokumentační jednotky a ADB.
+
+    :param request: Popis parametru ``request``.
+    :param typ_vazby: Popis parametru ``typ_vazby``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     logger.debug("dj.views.detail.start")
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
@@ -224,6 +228,9 @@ def detail(request, typ_vazby, ident_cely):
 def zapsat(request, arch_z_ident_cely):
     """
     Funkce pohledu pro vytvoření dokumentační jednotky.
+
+    :param request: Popis parametru ``request``.
+    :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     form = CreateDJForm(request.POST)
@@ -264,6 +271,9 @@ def zapsat(request, arch_z_ident_cely):
 def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání dokumentační jednotky.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
@@ -304,17 +314,17 @@ def smazat(request, ident_cely):
 
 
 class ChangeKatastrView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro editaci katastru dokumentační jednotky.
-    """
+    """Třída pohledu pro editaci katastru dokumentační jednotky."""
 
     template_name = "core/transakce_modal.html"
     id_tag = "zmenit-katastr-form"
 
     def get_zaznam(self) -> DokumentacniJednotka:
-        """Vrací zaznam.
+        """
+        Vrací zaznam. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             DokumentacniJednotka,
@@ -322,10 +332,11 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         zaznam = self.get_zaznam()
         form = ChangeKatastrForm(initial={"katastr": zaznam.archeologicky_zaznam.hlavni_katastr})
         context = {
@@ -338,23 +349,25 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         zaznam: DokumentacniJednotka = self.get_zaznam()
         form = ChangeKatastrForm(data=request.POST)
         if form.is_valid():

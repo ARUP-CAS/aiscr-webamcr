@@ -7,9 +7,7 @@ class DokumentConfig(AppConfig):
     name = "dokument"
 
     def ready(self):
-        """Provádí operaci ready.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ready."""
         super(DokumentConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import dokument.signals

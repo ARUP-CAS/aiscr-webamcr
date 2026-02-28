@@ -16,19 +16,13 @@ Třídy
 
       Provádí operaci dokument typ material rada.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: podrazena_hesla()
 
       Provádí operaci podrazena hesla.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: nadrazena_hesla()
 
       Provádí operaci nadrazena hesla.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __str__()
 
@@ -42,7 +36,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: HeslarDatace
@@ -57,7 +50,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: HeslarDokumentTypMaterialRada
@@ -72,7 +64,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: HeslarHierarchie
@@ -87,7 +78,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: HeslarNazev
@@ -115,7 +105,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: RuianKatastr
@@ -128,8 +117,6 @@ Třídy
 
       Provádí operaci pian ident cely.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
@@ -140,15 +127,12 @@ Třídy
 
       Provádí operaci ident cely.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: save()
 
       Uloží změny objektu.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: RuianKraj
@@ -167,15 +151,12 @@ Třídy
 
       Provádí operaci ident cely.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: save()
 
       Uloží změny objektu.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: RuianOkres
@@ -194,13 +175,10 @@ Třídy
 
       Provádí operaci ident cely.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: save()
 
       Uloží změny objektu.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 

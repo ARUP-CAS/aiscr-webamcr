@@ -26,7 +26,7 @@ Třídy
 
    .. py:method:: get_connection()
 
-      Vrací connection.
+      Vrací connection. v aplikaci.
 
       :return: Vrací načtená data odpovídající vstupním parametrům.
 
@@ -41,7 +41,6 @@ Třídy
       Provádí operaci prepare model for redis.
 
       :param table: Vstupní hodnota ``table`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ClamdError

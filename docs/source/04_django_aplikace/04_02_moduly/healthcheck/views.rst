@@ -17,7 +17,6 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -25,6 +24,4 @@ Funkce
 
 .. py:function:: check_status()
 
-   Ověří status.
-
-   :return: Vrací výsledek ověření nebo validačního pravidla.
+   Ověří status. v aplikaci.

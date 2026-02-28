@@ -36,15 +36,17 @@ Třídy
 
       Metoda pro získaní dalších vedoucích navázaných na akci.
 
+      :param context: Popis parametru ``context``.
+
    .. py:method:: check_locality_arch_z_conflict()
 
       Ověří locality arch z conflict.
 
-      :return: Vrací výsledek ověření nebo validačního pravidla.
-
    .. py:method:: get_context_data()
 
       Metoda pro získaní contextu akci pro template.
+
+      :param kwargs: Popis parametru ``kwargs``.
 
 
 .. py:class:: ArcheologickyZaznamDetailView
@@ -57,9 +59,13 @@ Třídy
 
       Metoda pro získani záznamu akce z db podle ident_cely.
 
+      :return: Vrací výsledek operace.
+
    .. py:method:: get_context_data()
 
       Metoda pro získaní context dat navíc oproti přepisované metóde.
+
+      :param kwargs: Popis parametru ``kwargs``.
 
 
 .. py:class:: DokumentacniJednotkaRelatedUpdateView
@@ -85,6 +91,8 @@ Třídy
 
       Metoda pro získaní context dat DJ navíc oproti přepisované metóde, záznam DJ.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
    .. py:method:: get()
 
       Vrací výsledek operace.
@@ -92,7 +100,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentacniJednotkaCreateView
@@ -105,6 +112,8 @@ Třídy
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření DJ.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
    .. py:method:: get()
 
       Vrací výsledek operace.
@@ -112,7 +121,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DokumentacniJednotkaUpdateView
@@ -125,6 +133,8 @@ Třídy
 
       Metoda pro získaní context dat DJ navíc oproti přepisované metóde, pro zobrazení správneho detailu.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
 
 .. py:class:: KomponentaCreateView
 
@@ -135,6 +145,8 @@ Třídy
    .. py:method:: get_context_data()
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář na vytvoření komponenty.
+
+      :param kwargs: Popis parametru ``kwargs``.
 
 
 .. py:class:: KomponentaUpdateView
@@ -160,12 +172,13 @@ Třídy
 
       Vrací dokumentacni jednotka.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_context_data()
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro úpravu komponenty,
+
       případně data poslaného chybného formuláře.
+
+      :param kwargs: Popis parametru ``kwargs``.
 
 
 .. py:class:: PianCreateView
@@ -178,6 +191,8 @@ Třídy
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření PIANu.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
    .. py:method:: get()
 
       Vrací výsledek operace.
@@ -185,7 +200,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: PianUpdateView
@@ -207,6 +221,8 @@ Třídy
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro editaci PIANu.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
    .. py:method:: get()
 
       Vrací výsledek operace.
@@ -214,7 +230,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AdbCreateView
@@ -227,6 +242,8 @@ Třídy
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření ADB.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
 
 .. py:class:: GetAkceOtherKatastrView
 
@@ -237,6 +254,8 @@ Třídy
    .. py:method:: post()
 
       Trida pohledu pro získaní souradnic dalších katastrů akce.
+
+      :param request: Popis parametru ``request``.
 
 
 .. py:class:: AkceIndexView
@@ -249,6 +268,8 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
 
 .. py:class:: AkceListView
 
@@ -260,20 +281,15 @@ Třídy
 
       Provádí operaci init translations.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: rename_field_for_ordering()
 
       Provádí operaci rename field for ordering.
 
       :param field: Vstupní hodnota ``field`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: ProjektAkceChange
@@ -286,17 +302,28 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
    .. py:method:: get()
 
       Metoda pro vrácení stránky při volání GET.
 
+      :param request: Popis parametru ``request``.
+      :param args: Popis parametru ``args``.
+      :param kwargs: Popis parametru ``kwargs``.
+
    .. py:method:: post()
 
       Metoda po potvrzení zmeny akce na samostatnou.
+
       Pri zavolíní se kontroluje, že akce nebyla změnena v mezičase potvrzení.
       Po úspešné kontrole se odebere projekt, nastaví typ akce na samostatnú a nastaví nový ident celý.
       Celá událost je zapsaná do historie.
       Uživatel je presmerován na detail akce.
+
+      :param request: Popis parametru ``request``.
+      :param args: Popis parametru ``args``.
+      :param kwargs: Popis parametru ``kwargs``.
 
 
 .. py:class:: SamostatnaAkceChange
@@ -309,17 +336,28 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
+      :param kwargs: Popis parametru ``kwargs``.
+
    .. py:method:: get()
 
       Metoda pro vrácení stránky při volání GET s formulářem pro výběr projektu.
 
+      :param request: Popis parametru ``request``.
+      :param args: Popis parametru ``args``.
+      :param kwargs: Popis parametru ``kwargs``.
+
    .. py:method:: post()
 
       Metoda po potvrzení zmeny akce na projektovou.
+
       Pri zavolíní se kontroluje, že akce nebyla změnena v mezičase potvrzení.
       Po úspešné kontrole se napojí projekt, nastaví typ akce na projektovou a nastaví nový ident celý.
       Celá událost je zapsaná do historie.
       Uživatel je presmerován na detail akce.
+
+      :param request: Popis parametru ``request``.
+      :param args: Popis parametru ``args``.
+      :param kwargs: Popis parametru ``kwargs``.
 
 
 .. py:class:: ArchZAutocomplete
@@ -333,13 +371,10 @@ Třídy
       Vrací result label.
 
       :param result: Vstupní hodnota ``result`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: ArchZTableRowView
@@ -353,7 +388,6 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -370,60 +404,98 @@ Funkce
 .. py:function:: edit(request, ident_cely)
 
    Funkce pohledu pro zobrazení a zpracování editace akce.
+
    Na začátku se kontroluje, jestli stav není archivovaný.
    Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: odeslat(request, ident_cely)
 
    Funkce pohledu pro zobrazení a zpracování odeslání akce.
+
    Na začátku se kontroluje, jestli stav není jiný než zapsaný nebo někdo nezměnil stav akce během odesílání.
    Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
    Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: archivovat(request, ident_cely)
 
    Funkce pohledu pro zobrazení a zpracování archivace akce.
+
    Na začátku se kontroluje, jestli stav není jiný než odeslaný nebo někdo nezměnil stav akce během archivace.
    Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
    Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: vratit(request, ident_cely)
 
    Funkce pohledu pro zobrazení a zpracování vrácení stavu akce o jeden krok zpět.
+
    Na začátku se kontroluje, jestli někdo nezměnil stav akce během vrácení.
    Pro vrácení se používá formulář pro vrácení, který je jednotný napříč aplikací.
    Po POST volání se volá metoda na modelu pro posun stavu zpět.
    Pokud se jedná o projektovou akci, tak se vrací i stav projektu ze stavu uzavřený nebo archivovaný.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: zapsat(request, projekt_ident_cely)
 
    Funkce pohledu pro vytvoření akce.
+
    Na začátku se kontroluje, jestli jde o vytvoření projektové nebo samostatné akce a zda je možné projektovou akci vytvořit.
    Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
+
+   :param request: Popis parametru ``request``.
+   :param projekt_ident_cely: Popis parametru ``projekt_ident_cely``.
 
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro zobrazení a zpracování smazání akce.
+
    Na začátku se kontroluje, jestli někdo nezměnil stav akce během smazání.
    Po POST volání se volá metoda na modelu pro smazání akce.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely)
 
    Funkce pohledu pro připojení dokumentu do akce.
+
    Funkce volá další funkci pro připojení s parametrem třídou modelu navíc.
+
+   :param request: Popis parametru ``request``.
+   :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
+   :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
 
 .. py:function:: odpojit_dokument(request, ident_cely, arch_z_ident_cely)
 
    Funkce pohledu pro odpojení dokumentu do akce.
+
    Funkce volá další funkci pro odpojení s parametrem navíc - arch záznamem.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+   :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
 
 .. py:function:: post_ajax_get_pians(request)
 
    Vypada nepouzito check s J. Bartos
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: post_akce2kat(request)
 
    Funkce pohledu pro získaní souradnic katastru akce.
+
+   :param request: Popis parametru ``request``.
 
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
@@ -471,6 +543,10 @@ Funkce
 .. py:function:: smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id)
 
    Funkce pohledu pro smazání dalšího vedoucího akce.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+   :param akce_vedouci_id: Popis parametru ``akce_vedouci_id``.
 
 .. py:function:: get_dj_form_detail(app, jednotka, jednotky, show, old_adb_post, user)
 

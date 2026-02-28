@@ -28,47 +28,54 @@ class ApiView(autocomplete.Select2ListView):
     r = RedisConnector().get_connection()
 
     def __init__(self, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(**kwargs)
 
     @classmethod
     def _get_value_from_cache(cls, key):
-        """Vrací value from cache.
+        """
+        Vrací value from cache.
 
         :param key: Vstupní hodnota ``key`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         cached_value = cls.r.get(f"{cls.CACHE_PREFIX}_{key}")
         if cached_value:
             return [key, cached_value.decode("utf-8")]
 
     @classmethod
     def _save_value_to_cache(cls, key, value):
-        """Uloží value to cache.
+        """
+        Uloží value to cache.
 
         :param key: Vstupní hodnota ``key`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         cls.r.set(f"{cls.CACHE_PREFIX}_{key}", value)
 
     @classmethod
     def api_call(cls, q, use_cache=False):
-        """Provádí operaci api call.
+        """
+        Provádí operaci api call.
 
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         pass
 
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if self.q:
             results = self.get_list()
             results = self.autocomplete_results(results)
@@ -77,16 +84,15 @@ class ApiView(autocomplete.Select2ListView):
             return JsonResponse({"results": []})
 
     def autocomplete_results(self, results):
-        """Provádí operaci autocomplete results.
+        """
+        Provádí operaci autocomplete results.
 
         :param results: Vstupní hodnota ``results`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return [dict(id=x, text=y) for x, y in results]
 
     def get_list(self):
-        """Vrací list.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací list. v aplikaci."""
         return self.api_call(self.q)
 
 
@@ -98,10 +104,12 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _api_call_data_cite(cls, q):
-        """Provádí operaci api call data cite.
+        """
+        Provádí operaci api call data cite.
 
         :param q: Vstupní hodnota ``q`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         params = {
             "query": f"doi:*{q.upper()}*",
         }
@@ -118,10 +126,12 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _api_call_cross_ref_doi(cls, q):
-        """Provádí operaci api call cross ref doi.
+        """
+        Provádí operaci api call cross ref doi.
 
         :param q: Vstupní hodnota ``q`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         base_url = f"https://api.crossref.org/works/{q}"
         response = requests.get(base_url)
         if response.status_code == 200:
@@ -149,10 +159,12 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _api_call_cross_ref_title(cls, q):
-        """Provádí operaci api call cross ref title.
+        """
+        Provádí operaci api call cross ref title.
 
         :param q: Vstupní hodnota ``q`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         base_url = f"https://api.crossref.org/works"
         params = {"query.title": q}
         response = requests.get(base_url, params=params)
@@ -167,10 +179,12 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _doi_item_exists(cls, doi: str) -> list:
-        """Provádí operaci doi item exists.
+        """
+        Provádí operaci doi item exists.
 
         :param doi: Vstupní hodnota ``doi`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         url = f"https://doi.org/{doi}"
         resp = requests.head(url, allow_redirects=True, timeout=5)
         if resp.status_code < 400:
@@ -180,11 +194,12 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
-        """Provádí operaci api call.
+        """
+        Provádí operaci api call.
 
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         results = cls._api_call_cross_ref_doi(q)
         if not results:
             results = cls._api_call_data_cite(q) + cls._api_call_cross_ref_title(q)
@@ -202,11 +217,12 @@ class OrcidAutocompleteView(ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=True):
-        """Provádí operaci api call.
+        """
+        Provádí operaci api call.
 
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if use_cache:
             cached_value = cls._get_value_from_cache(q)
             if cached_value:
@@ -243,11 +259,12 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
-        """Provádí operaci api call.
+        """
+        Provádí operaci api call.
 
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         params = {
             "query": q,
         }
@@ -282,11 +299,12 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
-        """Provádí operaci api call.
+        """
+        Provádí operaci api call.
 
         :param q: Vstupní hodnota ``q`` pro danou operaci.
         :param use_cache: Vstupní hodnota ``use_cache`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if not q:
             return []
         if q.startswith("https://www.wikidata.org/entity/"):
@@ -345,13 +363,15 @@ class ContinuePidProcessing(AdminRecordProcessingView):
 
     @staticmethod
     def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
-        """Provádí operaci perform client action.
+        """
+        Provádí operaci perform client action.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param attribute_name: Vstupní hodnota ``attribute_name`` pro danou operaci.
         :param publish_callable_method: Vstupní hodnota ``publish_callable_method`` pro danou operaci.
         :param set_callable_method: Vstupní hodnota ``set_callable_method`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         try:
             result = publish_callable_method()
             if set_callable_method:
@@ -368,12 +388,13 @@ class ContinuePidProcessing(AdminRecordProcessingView):
             )
 
     def process_record(self, record, result, **kwargs):
-        """Provádí operaci process record.
+        """
+        Provádí operaci process record.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         fedora_transaction = FedoraTransaction()
         record.active_transaction = fedora_transaction
         performed_action = kwargs.get("performed_action")

@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def check_status():
-    """Ověří status.
-
-    :return: Vrací výsledek ověření nebo validačního pravidla."""
+    """Ověří status. v aplikaci."""
     io_out = StringIO()
     io_out_db = StringIO()
     try:
@@ -30,10 +28,11 @@ class HealthCheckView(IPWhitelistMixin, View):
     """Implementuje komponentu ``HealthCheckView`` v rámci aplikace."""
 
     def get(self, request):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         status = "healthy"
         r_code, msg, msg_db = check_status()
         status = ("healthy", 200) if r_code == 0 else ("unhealthy", 500)

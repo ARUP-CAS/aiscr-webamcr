@@ -63,6 +63,9 @@ class AntivirusCheckResult(Enum):
 def get_upload_to(instance, filename):
     """
     Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
+
+    :param instance: Popis parametru ``instance``.
+    :param filename: Popis parametru ``filename``.
     """
     instance: Soubor
     vazba: SouborVazby = instance.vazba
@@ -86,6 +89,7 @@ def get_upload_to(instance, filename):
 class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
     """
     Model pro relační tabulku mezi souborem a záznamem.
+
     Obsahuje typ vazby podle typu záznamu.
     """
 
@@ -105,9 +109,11 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
 
     @property
     def navazany_objekt(self) -> Optional[ModelWithMetadata]:
-        """Provádí operaci navazany objekt.
+        """
+        Provádí operaci navazany objekt.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if self.typ_vazby == PROJEKT_RELATION_TYPE:
             return self.projekt_souboru
         if self.typ_vazby == DOKUMENT_RELATION_TYPE:
@@ -118,9 +124,7 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
 
 
 class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
-    """
-    Model pro soubor. Obsahuje jeho základné data, vazbu na historii a souborovů vazbu.
-    """
+    """Model pro soubor. Obsahuje jeho základné data, vazbu na historii a souborovů vazbu."""
 
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
@@ -139,36 +143,31 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def url(self):
-        """Provádí operaci url.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci url."""
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return f"{settings.DIGIARCHIV_SERVER_URL}id/{self.path.split('record/')[1]}"
         return ""
 
     @property
     def repository_uuid(self):
-        """Provádí operaci repository uuid.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci repository uuid."""
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return self.path.split("/")[-1]
 
     def calculate_sha_512(self):
-        """Provádí operaci calculate sha 512.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci calculate sha 512."""
         repository_content = self.get_repository_content()
         if repository_content is not None:
             return repository_content.sha_512
         return ""
 
     def delete(self, using=None, keep_parents=False):
-        """Odstraní záznam objektu.
+        """
+        Odstraní záznam objektu.
 
         :param using: Vstupní hodnota ``using`` pro danou operaci.
         :param keep_parents: Vstupní hodnota ``keep_parents`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        """
         if self.historie is None:
             self.create_soubor_vazby()
         super().delete(using, keep_parents)
@@ -191,11 +190,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         ]
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(Soubor, self).__init__(*args, **kwargs)
         self.suppress_signal = False
         self.active_transaction = None
@@ -203,15 +203,15 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         self.binary_data = None
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.nazev
 
     def create_soubor_vazby(self):
-        """
-        Metoda pro vytvoření vazby na historii.
-        """
+        """Metoda pro vytvoření vazby na historii."""
         logger.debug("core.models.Soubor.create_soubor_vazby.start")
         hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
         hv.save()
@@ -221,9 +221,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def vytvoreno(self):
-        """Provádí operaci vytvoreno.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci vytvoreno."""
         if self.historie is not None:
             return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
         else:
@@ -234,13 +232,15 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def get_repository_content(
         self, ident_cely_old=None, thumb_small=False, thumb_large=False, timestamp=None
     ) -> Optional[RepositoryBinaryFile]:
-        """Vrací repository content.
+        """
+        Vrací repository content.
 
         :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
         :param thumb_small: Vstupní hodnota ``thumb_small`` pro danou operaci.
         :param thumb_large: Vstupní hodnota ``thumb_large`` pro danou operaci.
         :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         from .repository_connector import FedoraRepositoryConnector
 
         record = self.vazba.navazany_objekt
@@ -263,6 +263,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def zaznamenej_nahrani(self, user, file_name=None):
         """
         Metoda pro zapsáni vytvoření souboru do historie.
+
+        :param user: Popis parametru ``user``.
+        :param file_name: Popis parametru ``file_name``.
         """
         self.create_soubor_vazby()
         hist = Historie(
@@ -276,6 +279,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
         Metoda pro zapsáni nahrání nové verze souboru do historie.
+
+        :param user: Popis parametru ``user``.
+        :param nazev: Popis parametru ``nazev``.
         """
         if self.historie is None:
             self.create_soubor_vazby()
@@ -291,10 +297,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def get_file_extension_by_mime(cls, file):
-        """Vrací file extension by mime.
+        """
+        Vrací file extension by mime.
 
         :param file: Vstupní hodnota ``file`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         mime_type = cls.get_mime_types(file)
         return {
             "image/jpeg": ("jpeg", "jpg", "jpe", "jfif", "jfif-tbnl", "jif", "pjpg"),
@@ -326,10 +333,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def get_thumb_icon(cls, file):
-        """Vrací thumb icon.
+        """
+        Vrací thumb icon.
 
         :param file: Vstupní hodnota ``file`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug("core.models.Soubor.get_thumb_icon.start", extra={"mime_type": mime_type})
         icon_filename = {
@@ -373,11 +381,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def get_mime_types(cls, file, check_archive=False) -> Union[set, bool, str]:
-        """Vrací mime types.
+        """
+        Vrací mime types.
 
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :param check_archive: Vstupní hodnota ``check_archive`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         file.seek(0)
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug(
@@ -439,10 +449,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def remove_gps_data(cls, bytes_io: io.BytesIO) -> io.BytesIO:
-        """Provádí operaci remove gps data.
+        """
+        Provádí operaci remove gps data.
 
         :param bytes_io: Vstupní hodnota ``bytes_io`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        :return: Vrací výsledek operace odstranění.
+        """
         try:
             img = Image.open(bytes_io)
             exif_data = img.info.get("exif")
@@ -506,11 +518,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @classmethod
     def check_mime_for_url(cls, file, source_url=""):
-        """Ověří mime for url.
+        """
+        Ověří mime for url.
 
         :param file: Vstupní hodnota ``file`` pro danou operaci.
         :param source_url: Vstupní hodnota ``source_url`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         mime = cls.get_mime_types(file, check_archive=True)
         logger.debug("core.models.Soubor.check_mime_for_url.mime_types", extra={"mime_type": mime})
         if mime == "encrypted":
@@ -572,10 +585,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Zkontroluje soubor na přítomnost virů pomocí ClamAV.
 
         Args:
-            bytes_io: souborový objekt ke skenování
+        bytes_io: souborový objekt ke skenování
 
         Returns:
-            AntivirusCheckResult: výsledek kontroly
+        AntivirusCheckResult: výsledek kontroly
+
+        :param bytes_io: Popis parametru ``bytes_io``.
         """
         if settings.CLAMD_HOST and settings.CLAMD_PORT:
             try:
@@ -612,10 +627,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         return AntivirusCheckResult.SKIPPED
 
     def _create_file_response(self, rep_bin_file: RepositoryBinaryFile) -> FileResponse:
-        """Vytvoří file response.
+        """
+        Vytvoří file response.
 
         :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         content = rep_bin_file.content
         response = FileResponse(content, filename=self.nazev)
         content.seek(0)
@@ -626,9 +643,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @cached_property
     def large_thumbnail(self) -> FileResponse | None:
-        """Provádí operaci large thumbnail.
+        """
+        Provádí operaci large thumbnail.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
             response = self._create_file_response(rep_bin_file)
@@ -639,9 +658,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @cached_property
     def small_thumbnail(self) -> FileResponse | None:
-        """Provádí operaci small thumbnail.
+        """
+        Provádí operaci small thumbnail.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
             response = self._create_file_response(rep_bin_file)
@@ -652,24 +673,22 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @cached_property
     def content_file_response(self) -> FileResponse | None:
-        """Provádí operaci content file response.
+        """
+        Provádí operaci content file response.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content()
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
             return self._create_file_response(rep_bin_file)
         return None
 
     def getMock(self):
-        """Provádí operaci getMock.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci getMock."""
         return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
 
     def get_historicke_verze(self):
-        """
-        Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
-        """
+        """Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie"""
         from core.repository_connector import FedoraRepositoryConnector
         from core.utils import get_timezone
 
@@ -705,6 +724,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def get_soubor_historicky(self, timestamp) -> FileResponse | None:
         """
         Metoda k získání vlastního souboru dané verze z Fedory
+
+        :param timestamp: Popis parametru ``timestamp``.
+        :return: Vrací výsledek operace.
         """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(timestamp=timestamp)
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
@@ -713,9 +735,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
 
 class ProjektSekvence(models.Model):
-    """
-    Model pro tabulku se sekvencemi projektu.
-    """
+    """Model pro tabulku se sekvencemi projektu."""
 
     region = models.CharField(max_length=1)
     rok = models.IntegerField()
@@ -731,9 +751,7 @@ class ProjektSekvence(models.Model):
 
 
 class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Model):
-    """
-    Model pro tabulku s odstávkami systému.
-    """
+    """Model pro tabulku s odstávkami systému."""
 
     info_od = models.DateField(_("core.model.OdstavkaSystemu.infoOd.label"))
     datum_odstavky = models.DateField(_("core.model.OdstavkaSystemu.datumOdstavky.label"))
@@ -748,9 +766,7 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
         verbose_name_plural = _("core.model.OdstavkaSystemu.modelTitles.label")
 
     def clean(self):
-        """
-        Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
-        """
+        """Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena."""
         odstavky = OdstavkaSystemu.objects.filter(status=True)
         if odstavky.count() > 0 and self.status:
             if odstavky.first().pk != self.pk:
@@ -758,9 +774,11 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
         super(OdstavkaSystemu, self).clean()
 
     def __str__(self) -> str:
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
 
 
@@ -1080,12 +1098,13 @@ class Permissions(models.Model):
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
     def check_concrete_permission(self, user, ident=None, typ=None):
-        """Ověří concrete permission.
+        """
+        Ověří concrete permission.
 
         :param user: Vstupní hodnota ``user`` pro danou operaci.
         :param ident: Vstupní hodnota ``ident`` pro danou operaci.
         :param typ: Vstupní hodnota ``typ`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         self.typ = typ
         self.object = None
         self.logged_in_user = user
@@ -1114,18 +1133,14 @@ class Permissions(models.Model):
         return perm_check
 
     def check_base(self):
-        """Ověří base.
-
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """Ověří base. v aplikaci."""
         if self.base:
             return True
         else:
             return False
 
     def check_status(self):
-        """Ověří status.
-
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """Ověří status. v aplikaci."""
         if self.status:
             if not self.permission_object:
                 self.get_permission_object()
@@ -1154,10 +1169,11 @@ class Permissions(models.Model):
         return True
 
     def check_ownership(self, ownership):
-        """Ověří ownership.
+        """
+        Ověří ownership. v aplikaci.
 
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         if ownership:
             if not self.permission_object:
                 self.get_permission_object()
@@ -1175,9 +1191,7 @@ class Permissions(models.Model):
         return True
 
     def check_accessibility(self):
-        """Ověří accessibility.
-
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """Ověří accessibility. v aplikaci."""
         if self.accessibility:
             if not self.check_ownership(self.accessibility):
                 permission_object_pristupnost = self.permission_object.pristupnost.pk
@@ -1192,9 +1206,7 @@ class Permissions(models.Model):
         return True
 
     def check_permission_skip(self):
-        """Ověří permission skip.
-
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """Ověří permission skip."""
         if not self.permission_object:
             self.get_permission_object()
             if self.permission_object == "error":
@@ -1218,9 +1230,7 @@ class Permissions(models.Model):
         return False
 
     def get_permission_object(self):
-        """Vrací permission object.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací permission object."""
         from core.ident_cely import get_record_from_ident
         from pas.models import UzivatelSpoluprace
 
@@ -1251,9 +1261,7 @@ class Permissions(models.Model):
                 self.permission_object = "error"
 
     def permission_override(self):
-        """
-        Metoda pro uplatneni specifickych obejiti opravneni podle nazvu akce.
-        """
+        """Metoda pro uplatneni specifickych obejiti opravneni podle nazvu akce."""
         if self.action in [self.actionChoices.soubor_nahled_dokument, self.actionChoices.soubor_stahnout_dokument]:
             if (
                 self.logged_in_user.organizace.cteni_dokumentu
@@ -1265,12 +1273,13 @@ class Permissions(models.Model):
 
 
 def check_permissions(action, user, ident=None):
-    """Ověří permissions.
+    """
+    Ověří permissions. v aplikaci.
 
     :param action: Vstupní hodnota ``action`` pro danou operaci.
     :param user: Vstupní hodnota ``user`` pro danou operaci.
     :param ident: Vstupní hodnota ``ident`` pro danou operaci.
-    :return: Vrací výsledek ověření nebo validačního pravidla."""
+    """
     permission_set = Permissions.objects.filter(
         main_role=user.hlavni_role,
         action=action,

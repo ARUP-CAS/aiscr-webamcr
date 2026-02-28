@@ -17,7 +17,6 @@ Třídy
       Provádí operaci label from instance.
 
       :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: PotvrditNalezForm
@@ -35,7 +34,6 @@ Třídy
       :param predano_required: Vstupní hodnota ``predano_required`` pro danou operaci.
       :param predano_hidden: Vstupní hodnota ``predano_hidden`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: CreateSamostatnyNalezForm
@@ -55,7 +53,6 @@ Třídy
       :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
       :param project_ident: Vstupní hodnota ``project_ident`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: CreateZadostForm
@@ -70,7 +67,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: PasFilterForm
@@ -90,7 +86,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 Funkce
@@ -99,3 +94,5 @@ Funkce
 .. py:function:: validate_uzivatel_email(email)
 
    Funkce pro validaci zadaného emailu uživatele.
+
+   :param email: Popis parametru ``email``.

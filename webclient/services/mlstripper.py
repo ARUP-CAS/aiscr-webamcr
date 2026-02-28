@@ -14,7 +14,11 @@ class MLStripper(HTMLParser):
         self.text = StringIO()
 
     def handle_data(self, d):
-        """Ukládá textová data nalezená parserem."""
+        """
+        Ukládá textová data nalezená parserem.
+
+        :param d: Popis parametru ``d``.
+        """
         self.text.write(d)
 
     def get_data(self):

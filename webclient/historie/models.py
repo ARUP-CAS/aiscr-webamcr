@@ -67,9 +67,7 @@ logger = logging.getLogger(__name__)
 
 
 class Historie(ExportModelOperationsMixin("historie"), models.Model):
-    """
-    Databázový model pro záznam historie změn.
-    """
+    """Databázový model pro záznam historie změn."""
 
     CHOICES = (
         # Volby navázané na projekt.
@@ -150,16 +148,21 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     vazba = models.ForeignKey("HistorieVazby", on_delete=models.CASCADE, db_column="vazba", db_index=True)
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.suppress_signal = False
 
     def uzivatel_protected(self, anonymized=True):
-        """Vrátí textovou reprezentaci uživatele v anonymizované nebo plné podobě."""
+        """
+        Vrátí textovou reprezentaci uživatele v anonymizované nebo plné podobě.
+
+        :param anonymized: Popis parametru ``anonymized``.
+        """
         if anonymized:
             return f"{self.uzivatel.ident_cely} ({self.uzivatel.organizace})"
         else:
@@ -167,10 +170,11 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
 
     @classmethod
     def save_record_deletion_record(cls, record):
-        """Uloží record deletion record.
+        """
+        Uloží record deletion record.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug("history.models.save_record_deletion_record.start")
         from arch_z.models import ArcheologickyZaznam
 
@@ -247,14 +251,21 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         verbose_name = "historie_vazby"
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
     def get_last_transaction_date(self, transaction_type, anonymized: bool = True, user_protected: bool = True) -> dict:
         """
         Vrátí datum a uživatele poslední transakce požadovaného typu.
+
+        :param transaction_type: Popis parametru ``transaction_type``.
+        :param anonymized: Popis parametru ``anonymized``.
+        :param user_protected: Popis parametru ``user_protected``.
+        :return: Vrací výsledek operace.
         """
         resp = {}
         if isinstance(transaction_type, list):

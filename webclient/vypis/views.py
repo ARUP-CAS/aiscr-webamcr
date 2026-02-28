@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 def add_section_data(instance, section, fields, sections_data, iterator=False, user=None):
-    """Provádí operaci add section data.
+    """
+    Provádí operaci add section data.
 
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param section: Vstupní hodnota ``section`` pro danou operaci.
@@ -21,7 +22,7 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
     :param sections_data: Vstupní hodnota ``sections_data`` pro danou operaci.
     :param iterator: Vstupní hodnota ``iterator`` pro danou operaci.
     :param user: Vstupní hodnota ``user`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     if fields["section_name"].get_permission(instance, user) is False:
         return None
     if isinstance(fields["section_name"], RepeatableSectionNameWithAccessor) and not iterator:
@@ -89,10 +90,11 @@ class VypisView(LoginRequiredMixin, TemplateView):
     template_name = "vypis/vypis.html"
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         name = kwargs.get("typ_vazby")
         ident_cely = kwargs.get("ident_cely")
@@ -140,10 +142,11 @@ class VypisListView(LoginRequiredMixin, TemplateView):
     template_name = "vypis/vypis_list.html"
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         name = kwargs.get("typ_vazby")
         config = get_config(name)

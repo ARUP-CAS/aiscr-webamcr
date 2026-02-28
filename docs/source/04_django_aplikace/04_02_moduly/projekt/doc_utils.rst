@@ -20,7 +20,6 @@ Třídy
       :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
       :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
       :param additional: Vstupní hodnota ``additional`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: format_date()
 
@@ -96,8 +95,6 @@ Třídy
 
       Provádí operaci body style.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: _generate_text()
 
       Vygeneruje text.
@@ -106,9 +103,7 @@ Třídy
 
    .. py:method:: build_document()
 
-      Sestaví document.
-
-      :return: Vrací nově vytvořený výsledek operace.
+      Sestaví document. v aplikaci.
 
 
 .. py:class:: OznameniPDFCreator
@@ -125,7 +120,7 @@ Třídy
 
    .. py:method:: build_document()
 
-      Sestaví document.
+      Sestaví document. v aplikaci.
 
       :return: Vrací nově vytvořený výsledek operace.
 
@@ -144,7 +139,7 @@ Třídy
 
    .. py:method:: build_document()
 
-      Sestaví document.
+      Sestaví document. v aplikaci.
 
       :return: Vrací nově vytvořený výsledek operace.
 
@@ -159,7 +154,6 @@ Funkce
    :param filename: Vstupní hodnota ``filename`` pro danou operaci.
    :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
    :param counter: Vstupní hodnota ``counter`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: add_page_number(canvas, doc)
 
@@ -167,7 +161,6 @@ Funkce
 
    :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
    :param doc: Vstupní hodnota ``doc`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: draw_header(canvas, doc)
 
@@ -175,4 +168,3 @@ Funkce
 
    :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
    :param doc: Vstupní hodnota ``doc`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.

@@ -17,7 +17,6 @@ Třídy
       Vyrenderuje uzivatel custom.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: SimpleHistoryTable
@@ -33,18 +32,16 @@ Třídy
 
    .. py:method:: render_uzivatel()
 
-      Vyrenderuje uzivatel.
+      Vyrenderuje uzivatel. v aplikaci.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: render_url()
 
-      Vyrenderuje url.
+      Vyrenderuje url. v aplikaci.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: value_url()
 
@@ -52,5 +49,4 @@ Třídy
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 

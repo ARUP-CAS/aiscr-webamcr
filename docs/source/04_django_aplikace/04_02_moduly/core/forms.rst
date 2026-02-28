@@ -18,7 +18,6 @@ Třídy
 
       :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
       :param choices: Vstupní hodnota ``choices`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: TwoLevelSelectField
@@ -32,7 +31,6 @@ Třídy
       Provádí operaci to python.
 
       :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: has_changed()
 
@@ -54,14 +52,12 @@ Třídy
       Provádí operaci clean.
 
       :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: to_python()
 
       Provádí operaci to python.
 
       :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: has_changed()
 
@@ -75,6 +71,7 @@ Třídy
 .. py:class:: CheckStavNotChangedForm
 
    Formulář pro kontrolu jestli se stav záznamu nezmenil mezi jeho načtením a odeslánim zmeny.
+
    Celá logika je v clean metóde.
 
    **Metody:**
@@ -88,13 +85,10 @@ Třídy
       :param dokument_warnings: Vstupní hodnota ``dokument_warnings`` pro danou operaci.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: clean()
 
       Provádí operaci clean.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: VratitForm
@@ -109,7 +103,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: VratitFormDokument
@@ -124,7 +117,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: VratitFormAZ
@@ -140,7 +132,6 @@ Třídy
       :param args: Dodatečné poziční argumenty předané voláním.
       :param az: Vstupní hodnota ``az`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: DecimalTextWideget
@@ -154,12 +145,12 @@ Třídy
       Provádí operaci format value.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: OdstavkaSystemuForm
 
    Formulář pro nastavení a úpravu odstávky.
+
    Vrámci načítáni formuláře se doplní načítají hodnoty z template odstávky.
 
    **Metody:**
@@ -170,7 +161,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: PermissionImportForm
@@ -193,8 +183,6 @@ Třídy
 
       Provádí operaci clean.
 
-      :return: Vrací výsledek provedené operace.
-
 
 .. py:class:: TransaltionImportForm
 
@@ -205,8 +193,6 @@ Třídy
    .. py:method:: clean()
 
       Provádí operaci clean.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ImportDataAdminForm

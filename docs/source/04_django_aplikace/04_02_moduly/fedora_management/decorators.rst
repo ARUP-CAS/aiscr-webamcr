@@ -12,4 +12,3 @@ Funkce
 
    :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
    :param additional_exceptions: Vstupní hodnota ``additional_exceptions`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.

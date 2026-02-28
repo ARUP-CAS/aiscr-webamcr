@@ -16,25 +16,26 @@ class Command(BaseCommand):
     výkonu a zamezení přílišnému zatížení databáze.
 
     Parametry:
-        - --batch-size: Velikost dávky pro zpracování (výchozí: 100)
+    - --batch-size: Velikost dávky pro zpracování (výchozí: 100)
 
     Poznámka:
-        - Pro projekty je dočasně potlačen signál (suppress_signal=True) aby nedošlo k nežádoucím vedlejším efektům během hromadné aktualizace
+    - Pro projekty je dočasně potlačen signál (suppress_signal=True) aby nedošlo k nežádoucím vedlejším efektům během hromadné aktualizace
 
     Příklady použití::
 
-        python manage.py update_pristupnost_snapshot
-        python manage.py update_pristupnost_snapshot --batch-size 200
-        python manage.py update_pristupnost_snapshot --batch-size 50
+    python manage.py update_pristupnost_snapshot
+    python manage.py update_pristupnost_snapshot --batch-size 200
+    python manage.py update_pristupnost_snapshot --batch-size 50
     """
 
     help = _("core.management.commands.update_pristupnost_snapshot.Command.help")
 
     def add_arguments(self, parser):
-        """Provádí operaci add arguments.
+        """
+        Provádí operaci add arguments.
 
         :param parser: Vstupní hodnota ``parser`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         parser.add_argument(
             "--batch-size",
             type=int,
@@ -43,11 +44,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Zpracuje hodnotu.
+        """
+        Zpracuje hodnotu. v aplikaci.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param options: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         from projekt.models import Projekt
 
         batch_size = options["batch_size"]

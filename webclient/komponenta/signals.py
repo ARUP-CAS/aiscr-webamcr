@@ -14,12 +14,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Komponenta, weak=False)
 def komponenta_save(sender, instance: Komponenta, **kwargs):
-    """Provádí operaci komponenta save.
+    """
+    Provádí operaci komponenta save.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("komponenta.signals.komponenta_save.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_save.suppress_signal", extra={"pk": instance.pk})
@@ -53,12 +54,13 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
 
 @receiver(post_delete, sender=Komponenta, weak=False)
 def komponenta_delete(sender, instance: Komponenta, **kwargs):
-    """Provádí operaci komponenta delete.
+    """
+    Provádí operaci komponenta delete.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("komponenta.signals.komponenta_delete.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_delete.suppress_signal", extra={"pk": instance.pk})
@@ -70,9 +72,11 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
 
         def save_metadata():
-            """Uloží metadata.
+            """
+            Uloží metadata.
 
-            :return: Vrací výsledek provedené operace."""
+            :return: Vrací výsledek provedené operace.
+            """
             if isinstance(navazany_objekt, DokumentCast):
                 navazany_objekt.dokument.save_metadata(fedora_transaction, skip_container_check=True)
             elif isinstance(navazany_objekt, DokumentacniJednotka):

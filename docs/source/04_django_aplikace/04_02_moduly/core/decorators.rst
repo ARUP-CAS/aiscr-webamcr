@@ -18,3 +18,5 @@ Funkce
 .. py:function:: odstavka_in_progress(view_func)
 
    Při aktivní odstávce vrátí stránku údržby namísto cílového pohledu.
+
+   :param view_func: Popis parametru ``view_func``.

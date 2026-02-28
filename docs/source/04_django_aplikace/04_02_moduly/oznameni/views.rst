@@ -19,7 +19,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: OznameniZapsatView
@@ -31,14 +30,16 @@ Třídy
    .. py:method:: post()
 
       Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
+
       V prvém kroku uživatel zadává údaje a v druhém je potvrzuje a případně uploaduje soubory.
+
+      :param request: Popis parametru ``request``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: OznameniDokumentaceView
@@ -52,14 +53,12 @@ Třídy
       Obsluhuje HTTP metodu POST.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: OznameniPotvrzeniView
@@ -73,7 +72,6 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: OznamovatelCreateView
@@ -87,7 +85,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get()
 
@@ -96,7 +93,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: post()
 
@@ -105,7 +101,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 Funkce
@@ -115,6 +110,11 @@ Funkce
 
    Funkce pohledu pro editaci oznamovatele.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: post_poi2kat(request)
 
    Funkce pohledu pro získaní katastru podle bodu pro oznámení.
+
+   :param request: Popis parametru ``request``.

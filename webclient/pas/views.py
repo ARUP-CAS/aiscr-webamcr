@@ -83,6 +83,9 @@ logger = logging.getLogger(__name__)
 def get_detail_context(sn, request):
     """
     Funkce pro získaní potřebného kontextu pro samostatný nález.
+
+    :param sn: Popis parametru ``sn``.
+    :param request: Popis parametru ``request``.
     """
     context = {"sn": sn}
     context["form"] = CreateSamostatnyNalezForm(instance=sn, readonly=True, user=request.user)
@@ -102,6 +105,8 @@ def get_detail_context(sn, request):
 def index(request):
     """
     Funkce pohledu pro zobrazení domovské stránky samostatného nálezu s navigačními možnostmi.
+
+    :param request: Popis parametru ``request``.
     """
     return render(request, "pas/index.html")
 
@@ -121,22 +126,24 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         CREATE_AS_COPY = 3
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.get_action_type = None
         self.copy_source = None
         super().__init__(*args, **kwargs)
 
     def dispatch(self, request, *args, **kwargs):
-        """Provádí operaci dispatch.
+        """
+        Provádí operaci dispatch.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         if "kopie" in self.request.path:
             get_action_type = self.ActionType.CREATE_AS_COPY.value
             self._set_copy_source()
@@ -148,9 +155,11 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def _set_copy_source(self):
-        """Nastaví copy source.
+        """
+        Nastaví copy source.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         copy_source = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
         copy_source.id = None
         copy_source.soubory = None
@@ -162,9 +171,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         self.copy_source = copy_source
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací form kwargs."""
         kwargs = super().get_form_kwargs()
         if self.get_action_type == self.ActionType.CREATE_AS_COPY.value:
             kwargs["instance"] = self.copy_source
@@ -177,10 +184,11 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         return kwargs
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         if self.get_action_type in (self.ActionType.CREATE.value, self.ActionType.CREATE_FROM_PROJECT.value):
             context["formCoor"] = CoordinatesDokumentForm()
@@ -193,10 +201,11 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """Provádí operaci form valid.
+        """
+        Provádí operaci form valid.
 
         :param form: Vstupní hodnota ``form`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         form_coor = CoordinatesDokumentForm(self.request.POST)
         sn = form.save(commit=False)
         geom, geom_sjtsk = self.handle_geometry(form_coor)
@@ -238,16 +247,21 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         return HttpResponseRedirect(reverse("pas:detail", kwargs={"ident_cely": sn.ident_cely}))
 
     def form_invalid(self, form):
-        """Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu."""
+        """
+        Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu.
+
+        :param form: Popis parametru ``form``.
+        """
         logger.info("pas.views.create.form_invalid", extra={"error": form.errors})
         messages.error(self.request, FORM_NOT_VALID)
         return super().form_invalid(form)
 
     def handle_geometry(self, form_coor):
-        """Zpracuje geometry.
+        """
+        Zpracuje geometry. v aplikaci.
 
         :param form_coor: Vstupní hodnota ``form_coor`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         geom = None
         geom_sjtsk = None
         try:
@@ -271,12 +285,13 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         ident_cely = kwargs.get("ident_cely")
         if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value:
             proj = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -292,6 +307,9 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 def detail(request, ident_cely):
     """
     Funkce pohledu pro zobrazení detailu samostatného nálezu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     context = {"warnings": request.session.pop("temp_data", None)}
     sn = get_object_or_404(
@@ -329,6 +347,9 @@ def detail(request, ident_cely):
 def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci samostatného nálezu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav == SN_ARCHIVOVANY:
@@ -415,6 +436,9 @@ def edit(request, ident_cely):
 def edit_ulozeni(request, ident_cely):
     """
     Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
@@ -465,6 +489,9 @@ def edit_ulozeni(request, ident_cely):
 def vratit(request, ident_cely):
     """
     Funkce pohledu pro vrácení stavu samostatného nálezu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     sn: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
@@ -518,6 +545,9 @@ def vratit(request, ident_cely):
 def odeslat(request, ident_cely):
     """
     Funkce pohledu pro odeslání samostatného nálezu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     sn: SamostatnyNalez = get_object_or_404(
         SamostatnyNalez.objects.select_related(
@@ -577,6 +607,9 @@ def odeslat(request, ident_cely):
 def potvrdit(request, ident_cely):
     """
     Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_ODESLANY:
@@ -627,6 +660,9 @@ def potvrdit(request, ident_cely):
 def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     sn: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_POTVRZENY:
@@ -685,11 +721,12 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
     """Implementuje komponentu ``PasPermissionFilterMixin`` v rámci aplikace."""
 
     def add_ownership_lookup(self, ownership, qs):
-        """Provádí operaci add ownership lookup.
+        """
+        Provádí operaci add ownership lookup.
 
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == p.ownershipChoices.our:
@@ -699,9 +736,7 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
 
 
 class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
-    """
-    Třída pohledu pro zobrazení přehledu samostatných nálezu s filtrem v podobe tabulky.
-    """
+    """Třída pohledu pro zobrazení přehledu samostatných nálezu s filtrem v podobe tabulky."""
 
     table_class = SamostatnyNalezTable
     model = SamostatnyNalez
@@ -716,9 +751,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     vypis_app = "pas"
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         super().init_translations()
         self.page_title = _("pas.views.samostatnyNalezListView.pageTitle")
         self.search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
@@ -732,10 +765,11 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Provádí operaci rename field for ordering.
+        """
+        Provádí operaci rename field for ordering.
 
         :param field: Vstupní hodnota ``field`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         field = field.replace("-", "")
         return {
             "katastr": "katastr__nazev",
@@ -751,9 +785,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -782,6 +814,9 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
 def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání samostatného nálezu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     nalez: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if check_stav_changed(request, nalez):
@@ -836,6 +871,8 @@ def smazat(request, ident_cely):
 def zadost(request):
     """
     Funkce pohledu pro vytvoření žádosti o spolupráci.
+
+    :param request: Popis parametru ``request``.
     """
     if request.method == "POST":
         logger.debug("pas.views.zadost.start")
@@ -914,9 +951,7 @@ def zadost(request):
 
 
 class UzivatelSpolupraceListView(SearchListView):
-    """
-    Třída pohledu pro zobrazení přehledu spoluprác s filtrem v podobe tabulky.
-    """
+    """Třída pohledu pro zobrazení přehledu spoluprác s filtrem v podobe tabulky."""
 
     table_class = UzivatelSpolupraceTable
     model = UzivatelSpoluprace
@@ -930,9 +965,7 @@ class UzivatelSpolupraceListView(SearchListView):
     typ_zmeny_lookup = SPOLUPRACE_ZADOST
 
     def init_translations(self):
-        """Provádí operaci init translations.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci init translations."""
         super().init_translations()
         self.page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
         self.search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
@@ -941,10 +974,11 @@ class UzivatelSpolupraceListView(SearchListView):
 
     @staticmethod
     def rename_field_for_ordering(field: str):
-        """Provádí operaci rename field for ordering.
+        """
+        Provádí operaci rename field for ordering.
 
         :param field: Vstupní hodnota ``field`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         field = field.replace("-", "")
         return {
             "organizace_vedouci": "vedouci__organizace__nazev_zkraceny",
@@ -952,9 +986,7 @@ class UzivatelSpolupraceListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -980,11 +1012,12 @@ class UzivatelSpolupraceListView(SearchListView):
         return self.check_filter_permission(qs).order_by("id")
 
     def add_ownership_lookup(self, ownership, qs=None):
-        """Provádí operaci add ownership lookup.
+        """
+        Provádí operaci add ownership lookup.
 
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         filtered_my = Q(spolupracovnik=self.request.user)
         if ownership == p.ownershipChoices.our:
             filtered_our = Q(vedouci__organizace=self.request.user.organizace)
@@ -993,18 +1026,20 @@ class UzivatelSpolupraceListView(SearchListView):
             return filtered_my
 
     def add_accessibility_lookup(self, permission, qs):
-        """Provádí operaci add accessibility lookup.
+        """
+        Provádí operaci add accessibility lookup.
 
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return qs
 
     def get_context_data(self, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = super().get_context_data(**kwargs)
         context["show_zadost"] = check_permissions(p.actionChoices.spoluprace_zadost, self.request.user)
         context["trans_deaktivovat"] = _("pas.templates.aktivace_deaktivace_cell.deaktivovat")
@@ -1013,9 +1048,7 @@ class UzivatelSpolupraceListView(SearchListView):
         return context
 
     def get_table_kwargs(self):
-        """Vrací table kwargs.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací table kwargs."""
         if self.request.user.hlavni_role.id != ROLE_ADMIN_ID:
             return {"exclude": ("smazani",)}
         return {}
@@ -1026,6 +1059,9 @@ class UzivatelSpolupraceListView(SearchListView):
 def aktivace(request, pk):
     """
     Funkce pohledu pro aktivaci spolupráce pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param pk: Popis parametru ``pk``.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
@@ -1070,12 +1106,13 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
     model = UzivatelSpoluprace
 
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         obj: UzivatelSpoluprace = self.get_object()
         fedora_transaction = FedoraTransaction()
         try:
@@ -1093,24 +1130,21 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
 
 
 class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
-    """
-    Definuje pohled pro deaktivaci spolupráce v modálním dialogu.
-    """
+    """Definuje pohled pro deaktivaci spolupráce v modálním dialogu."""
 
     template_name = "core/transakce_modal.html"
 
     def get_object(self):
-        """Vrací object.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací object. v aplikaci."""
         return get_object_or_404(UzivatelSpoluprace, id=self.kwargs["pk"])
 
     def get_context_data(self, *args, **kwargs):
-        """Vrací context data.
+        """
+        Vrací context data.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         obj: UzivatelSpoluprace = self.get_object()
         form = DeaktivovatSpolupraciForm()
         context = {
@@ -1128,12 +1162,13 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         context = self.get_context_data()
         warnings = context["object"].check_pred_deaktivaci()
         if warnings:
@@ -1143,12 +1178,13 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         obj: UzivatelSpoluprace = self.get_object()
         logger.info("pas.views.deaktivace_spoluprace.start", extra={"pk": obj.pk})
         form = DeaktivovatSpolupraciForm(request.POST)
@@ -1182,6 +1218,9 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
 def smazat_spolupraci(request, pk):
     """
     Funkce pohledu pro smazání spolupráce pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param pk: Popis parametru ``pk``.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
@@ -1225,6 +1264,9 @@ def smazat_spolupraci(request, pk):
 def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
+
+    :param historie_vazby: Popis parametru ``historie_vazby``.
+    :param request_user: Popis parametru ``request_user``.
     """
     anonymized = request_user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
@@ -1239,6 +1281,9 @@ def get_history_dates(historie_vazby, request_user):
 def get_detail_template_shows(sn, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
+
+    :param sn: Popis parametru ``sn``.
+    :param user: Popis parametru ``user``.
     """
     show_arch_links = sn.stav == SN_ARCHIVOVANY
     show = {
@@ -1265,6 +1310,8 @@ def get_detail_template_shows(sn, user):
 def post_point_position_2_katastre(request):
     """
     Funkce pro získaní názvu katastru z bodu.
+
+    :param request: Popis parametru ``request``.
     """
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("pas.views.post_point_position_2_katastre", extra={"data": body})
@@ -1285,6 +1332,8 @@ def post_point_position_2_katastre(request):
 def post_point_position_2_katastre_with_geom(request):
     """
     Funkce pro získaní názvu katastru, geomu z bodu.
+
+    :param request: Popis parametru ``request``.
     """
     body = json.loads(request.body.decode("utf-8"))
     [katastr_name, katastr_db, katastr_geom] = get_cadastre_from_point_with_geometry(Point(body["x1"], body["x2"]))
@@ -1306,12 +1355,15 @@ def get_required_fields(zaznam=None, next=0):
     Funkce pro získaní dictionary povinných polí podle stavu samostatného nálezu.
 
     Args:
-        zaznam (PAS): model samostatního nálezu pro který se dané pole počítají.
+    zaznam (PAS): model samostatního nálezu pro který se dané pole počítají.
 
-        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+    next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
 
     Returns:
-        required_fields: list polí.
+    required_fields: list polí.
+
+    :param zaznam: Popis parametru ``zaznam``.
+    :param next: Popis parametru ``next``.
     """
     required_fields = []
     if zaznam:
@@ -1341,16 +1393,15 @@ def get_required_fields(zaznam=None, next=0):
 
 
 class ProjektPasTableView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro zobrazení řádku tabulky samostatných nálezů.
-    """
+    """Třída pohledu pro zobrazení řádku tabulky samostatných nálezů."""
 
     def get(self, request, ident_cely):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         projekt = Projekt.objects.get(ident_cely=ident_cely)
         qs = (
             projekt.samostatne_nalezy.select_related("obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr")

@@ -18,7 +18,6 @@ Třídy
 
       :param pian: Vstupní hodnota ``pian`` pro danou operaci.
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: MaximalIdentNumberError
@@ -33,7 +32,6 @@ Třídy
 
       :param number: Vstupní hodnota ``number`` pro danou operaci.
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: DJNemaPianError
@@ -48,7 +46,6 @@ Třídy
 
       :param dj: Vstupní hodnota ``dj`` pro danou operaci.
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NelzeZjistitRaduError
@@ -62,7 +59,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NeocekavanaRadaError
@@ -76,7 +72,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: WrongSheetError
@@ -90,7 +85,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NeznamaGeometrieError
@@ -104,7 +98,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: UnexpectedDataRelations
@@ -118,7 +111,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: MaximalEventCount
@@ -133,7 +125,6 @@ Třídy
 
       :param number: Vstupní hodnota ``number`` pro danou operaci.
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: WrongCSVError
@@ -147,7 +138,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ZaznamSouborNotmatching
@@ -161,7 +151,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: StateChangedError
@@ -175,5 +164,4 @@ Třídy
       Inicializuje instanci třídy.
 
       :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 

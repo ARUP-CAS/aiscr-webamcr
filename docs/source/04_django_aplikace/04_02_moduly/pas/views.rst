@@ -18,7 +18,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: dispatch()
 
@@ -27,7 +26,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _set_copy_source()
 
@@ -39,32 +37,29 @@ Třídy
 
       Vrací form kwargs.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_context_data()
 
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: form_valid()
 
       Provádí operaci form valid.
 
       :param form: Vstupní hodnota ``form`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: form_invalid()
 
       Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu.
 
+      :param form: Popis parametru ``form``.
+
    .. py:method:: handle_geometry()
 
-      Zpracuje geometry.
+      Zpracuje geometry. v aplikaci.
 
       :param form_coor: Vstupní hodnota ``form_coor`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get()
 
@@ -73,7 +68,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: PasPermissionFilterMixin
@@ -88,7 +82,6 @@ Třídy
 
       :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: SamostatnyNalezListView
@@ -101,20 +94,15 @@ Třídy
 
       Provádí operaci init translations.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: rename_field_for_ordering()
 
       Provádí operaci rename field for ordering.
 
       :param field: Vstupní hodnota ``field`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: UzivatelSpolupraceListView
@@ -127,20 +115,15 @@ Třídy
 
       Provádí operaci init translations.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: rename_field_for_ordering()
 
       Provádí operaci rename field for ordering.
 
       :param field: Vstupní hodnota ``field`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
    .. py:method:: add_ownership_lookup()
 
@@ -148,7 +131,6 @@ Třídy
 
       :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_accessibility_lookup()
 
@@ -156,20 +138,16 @@ Třídy
 
       :param permission: Vstupní hodnota ``permission`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_table_kwargs()
 
       Vrací table kwargs.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AktivaceEmailView
@@ -185,7 +163,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DeaktivaceSpolupraceView
@@ -196,9 +173,7 @@ Třídy
 
    .. py:method:: get_object()
 
-      Vrací object.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací object. v aplikaci.
 
    .. py:method:: get_context_data()
 
@@ -206,7 +181,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get()
 
@@ -215,7 +189,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: post()
 
@@ -224,7 +197,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ProjektPasTableView
@@ -239,7 +211,6 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -249,69 +220,116 @@ Funkce
 
    Funkce pro získaní potřebného kontextu pro samostatný nález.
 
+   :param sn: Popis parametru ``sn``.
+   :param request: Popis parametru ``request``.
+
 .. py:function:: index(request)
 
    Funkce pohledu pro zobrazení domovské stránky samostatného nálezu s navigačními možnostmi.
+
+   :param request: Popis parametru ``request``.
 
 .. py:function:: detail(request, ident_cely)
 
    Funkce pohledu pro zobrazení detailu samostatného nálezu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: edit(request, ident_cely)
 
    Funkce pohledu pro editaci samostatného nálezu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: edit_ulozeni(request, ident_cely)
 
    Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: vratit(request, ident_cely)
 
    Funkce pohledu pro vrácení stavu samostatného nálezu pomocí modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: odeslat(request, ident_cely)
 
    Funkce pohledu pro odeslání samostatného nálezu pomocí modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: potvrdit(request, ident_cely)
 
    Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: archivovat(request, ident_cely)
 
    Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
 
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
+
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro smazání samostatného nálezu pomocí modalu.
+
+   :param request: Popis parametru ``request``.
+   :param ident_cely: Popis parametru ``ident_cely``.
 
 .. py:function:: zadost(request)
 
    Funkce pohledu pro vytvoření žádosti o spolupráci.
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: aktivace(request, pk)
 
    Funkce pohledu pro aktivaci spolupráce pomocí modalu.
+
+   :param request: Popis parametru ``request``.
+   :param pk: Popis parametru ``pk``.
 
 .. py:function:: smazat_spolupraci(request, pk)
 
    Funkce pohledu pro smazání spolupráce pomocí modalu.
 
+   :param request: Popis parametru ``request``.
+   :param pk: Popis parametru ``pk``.
+
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
    Funkce pro získaní historických datumu.
+
+   :param historie_vazby: Popis parametru ``historie_vazby``.
+   :param request_user: Popis parametru ``request_user``.
 
 .. py:function:: get_detail_template_shows(sn, user)
 
    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
 
+   :param sn: Popis parametru ``sn``.
+   :param user: Popis parametru ``user``.
+
 .. py:function:: post_point_position_2_katastre(request)
 
    Funkce pro získaní názvu katastru z bodu.
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: post_point_position_2_katastre_with_geom(request)
 
    Funkce pro získaní názvu katastru, geomu z bodu.
+
+   :param request: Popis parametru ``request``.
 
 .. py:function:: get_required_fields(zaznam, next)
 

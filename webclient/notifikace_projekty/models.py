@@ -6,9 +6,7 @@ from uzivatel.models import User
 
 
 class Pes(ExportModelOperationsMixin("pes"), models.Model):
-    """
-    Databázový model hlídacího psa.
-    """
+    """Databázový model hlídacího psa."""
 
     user = models.ForeignKey(User, models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
@@ -18,15 +16,15 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ident cely."""
         return getattr(self.content_object, "ident_cely", None)
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return str(self.content_object)
 
     class Meta:
@@ -41,7 +39,5 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
         ]
 
     def get_create_user(self):
-        """Vrací create user.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create user."""
         return (self.user,)

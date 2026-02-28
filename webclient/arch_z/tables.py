@@ -10,18 +10,20 @@ class BooleanValueColumn(tables.columns.Column):
     """Implementuje komponentu ``BooleanValueColumn`` v rámci aplikace."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.value_labels = kwargs.pop("value_labels", None)
         super(BooleanValueColumn, self).__init__(*args, **kwargs)
 
     def render(self, value):
-        """Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
+        """
+        Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
+
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
         """
         value = [x for x in self.value_labels if x[0] == bool(value)]
         if len(value) > 0:
@@ -30,9 +32,7 @@ class BooleanValueColumn(tables.columns.Column):
 
 
 class AkceTable(SearchTable):
-    """
-    Definuje tabulku akcí pro přehled i export.
-    """
+    """Definuje tabulku akcí pro přehled i export."""
 
     ident_cely = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.ident_cely.label"),
@@ -140,11 +140,12 @@ class AkceTable(SearchTable):
     )
 
     def order_vedouci_organizace(self, queryset, is_descending):
-        """Provádí operaci order vedouci organizace.
+        """
+        Provádí operaci order vedouci organizace.
 
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :param is_descending: Vstupní hodnota ``is_descending`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         queryset = queryset.annotate(
             vedouci_organizace__nazev_zkraceny=StringAgg(
                 "akcevedouci__organizace__nazev_zkraceny",
@@ -216,15 +217,14 @@ class AkceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(AkceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):
-        """
-        Vrátí seznam identifikátorů archeologických záznamů pro akci.
-        """
+        """Vrátí seznam identifikátorů archeologických záznamů pro akci."""
         return ",".join([record.record.archeologicky_zaznam.ident_cely for record in self.paginated_rows])

@@ -19,7 +19,12 @@ logger = logging.getLogger(__name__)
 def create_dokument_vazby(sender, instance, **kwargs):
     """
     Metoda pro vytvoření historických a souborových vazeb samostatnýho náleze.
+
     Metoda se volá pred uložením záznamu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug("pas.signals.create_dokument_vazby.start", extra={"ident_cely": instance.ident_cely})
     if instance.pk is None:
@@ -34,13 +39,14 @@ def create_dokument_vazby(sender, instance, **kwargs):
 
 @receiver(post_save, sender=SamostatnyNalez, weak=False)
 def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, **kwargs):
-    """Uloží metadata samostatny nalez.
+    """
+    Uloží metadata samostatny nalez.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param created: Vstupní hodnota ``created`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
@@ -49,10 +55,12 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
         fedora_transaction = instance.active_transaction
 
         def save_metadata(close_transaction=False):
-            """Uloží metadata.
+            """
+            Uloží metadata.
 
             :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            :return: Vrací výsledek provedené operace.
+            """
             if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
                 instance.projekt.set_pristupnost()
                 instance.projekt.active_transaction = fedora_transaction
@@ -73,22 +81,24 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
 
 @receiver(pre_delete, sender=SamostatnyNalez, weak=False)
 def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **kwargs):
-    """Provádí operaci dokument delete container soubor vazby.
+    """
+    Provádí operaci dokument delete container soubor vazby.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
     invalidate_model(Projekt)
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
-        """Uloží metadata.
+        """
+        Uloží metadata. v aplikaci.
 
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if instance.projekt:
             instance.projekt.save_metadata(fedora_transaction)
         instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
@@ -112,21 +122,24 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
 
 @receiver(post_save, sender=UzivatelSpoluprace, weak=False)
 def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
-    """Uloží uzivatel spoluprce.
+    """
+    Uloží uzivatel spoluprce.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
     if not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
 
         def save_metadata(close_transaction=False):
-            """Uloží metadata.
+            """
+            Uloží metadata.
 
             :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            :return: Vrací výsledek provedené operace.
+            """
             instance.vedouci.save_metadata(fedora_transaction)
             instance.spolupracovnik.save_metadata(fedora_transaction, close_transaction=close_transaction)
 
@@ -139,20 +152,22 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
 
 @receiver(post_delete, sender=UzivatelSpoluprace, weak=False)
 def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, **kwargs):
-    """Odstraní uzivatel spoluprce connections.
+    """
+    Odstraní uzivatel spoluprce connections.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek operace odstranění."""
+    """
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
     fedora_transaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
-        """Uloží metadata.
+        """
+        Uloží metadata. v aplikaci.
 
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         Historie.save_record_deletion_record(record=instance)
         instance.vedouci.save_metadata(fedora_transaction)
         if instance.historie and instance.historie.pk:

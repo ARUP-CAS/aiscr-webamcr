@@ -22,5 +22,4 @@ Třídy
       :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
       :param detail: Vstupní hodnota ``detail`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 

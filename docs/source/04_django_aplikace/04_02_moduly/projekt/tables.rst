@@ -17,7 +17,6 @@ Třídy
       Vyrenderuje planovane zahajeni.
 
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __init__()
 
@@ -25,5 +24,4 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 

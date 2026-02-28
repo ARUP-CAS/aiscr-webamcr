@@ -20,6 +20,9 @@ Funkce
    Logika složení je: "X-" + region (M nebo C) + "-" + 9místné číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
    Příklad: "X-M-000001234"
 
+   :param region: Popis parametru ``region``.
+   :return: Vrací výsledek operace.
+
 .. py:function:: get_project_event_ident(project)
 
    Metoda pro výpočet identu projektové akce.
@@ -28,9 +31,15 @@ Funkce
    Při překročení maxima čísla sekvence (99999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A"
 
+   :param project: Popis parametru ``project``.
+   :return: Vrací výsledek operace.
+
 .. py:function:: get_dokument_rada(typ, material)
 
    Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
+
+   :param typ: Popis parametru ``typ``.
+   :param material: Popis parametru ``material``.
 
 .. py:function:: get_temp_dokument_ident(rada, region)
 
@@ -38,6 +47,9 @@ Funkce
 
    Logika složení je: "X-" + region (M nebo C) + "-" + řada (TX/DD/3D) + "-" 9místné číslo (ID ze sekvence dokument_xident_seq doplněné na 9 číslic nulami)
    Příklad: "X-M-TX-000000034"
+
+   :param rada: Popis parametru ``rada``.
+   :param region: Popis parametru ``region``.
 
 .. py:function:: get_cast_dokumentu_ident(dokument)
 
@@ -47,6 +59,9 @@ Funkce
    Při překročení maxima DJ u dokumentu (999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-DD-202100034-D001"
 
+   :param dokument: Popis parametru ``dokument``.
+   :return: Vrací výsledek operace.
+
 .. py:function:: get_dj_ident(event)
 
    Metoda pro výpočet identu dokumentační jednotky akce.
@@ -54,6 +69,9 @@ Funkce
    Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ per arch záznam doplněno na 2 číslice nulami.
    Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-D01"
+
+   :param event: Popis parametru ``event``.
+   :return: Vrací výsledek operace.
 
 .. py:function:: get_komponenta_ident(zaznam, fedora_transaction)
 
@@ -63,9 +81,15 @@ Funkce
    Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
 
+   :param zaznam: Popis parametru ``zaznam``.
+   :param fedora_transaction: Popis parametru ``fedora_transaction``.
+   :return: Vrací výsledek operace.
+
 .. py:function:: get_sm_from_point(point)
 
    Metoda pro získání kladu sm5 pro pian z bodu.
+
+   :param point: Popis parametru ``point``.
 
 .. py:function:: get_temporary_pian_ident(zm50)
 
@@ -73,6 +97,9 @@ Funkce
 
    Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 9 místní číslo ze sekvence pian_xident_seq doplněno na 9 číslic.
    Příklad: "N-1224-000123456"
+
+   :param zm50: Popis parametru ``zm50``.
+   :return: Vrací výsledek operace.
 
 .. py:function:: get_sn_ident(projekt)
 
@@ -82,6 +109,9 @@ Funkce
    Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-N00001"
 
+   :param projekt: Popis parametru ``projekt``.
+   :return: Vrací výsledek operace.
+
 .. py:function:: get_adb_ident(pian)
 
    Metoda pro výpočet identu ADB.
@@ -89,6 +119,9 @@ Funkce
    Logika složení je: "ADB-" + mapno pro sm5 + "-" + číslo sekvence z tabulky 'adb_sekvence' (podle kladysm5) doplněno na 6 číslic nulami.
    Při překročení maxima sekvence u ADB (999999) se uživateli na web vrátí chybová hláška.
    Příklad: "ADB-PRAH43-000012"
+
+   :param pian: Popis parametru ``pian``.
+   :return: Vrací výsledek operace.
 
 .. py:function:: get_temp_lokalita_ident(typ, region)
 
@@ -98,6 +131,9 @@ Funkce
 
    Příklad: "X-M-L000123456"
 
+   :param typ: Popis parametru ``typ``.
+   :param region: Popis parametru ``region``.
+
 .. py:function:: get_temp_akce_ident(region)
 
    Metoda pro výpočet dočasného identu samostatný akce.
@@ -105,6 +141,8 @@ Funkce
    Logika složení je: "X-" + region (M nebo C) + "-9" + 9místné číslo ze sekvence akce_xident_seq doplněné na 9 číslic a suffix „-A“.
 
    Příklad: "X-M-9000123456A"
+
+   :param region: Popis parametru ``region``.
 
 .. py:function:: get_temp_ez_ident()
 
@@ -140,3 +178,5 @@ Funkce
 .. py:function:: get_record_from_ident(ident_cely)
 
    Funkce pro získaní záznamu podle ident cely.
+
+   :param ident_cely: Popis parametru ``ident_cely``.

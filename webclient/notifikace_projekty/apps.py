@@ -8,9 +8,7 @@ class NotifikaceProjektyConfig(AppConfig):
     name = "notifikace_projekty"
 
     def ready(self):
-        """Provádí operaci ready.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ready."""
         super(NotifikaceProjektyConfig, self).ready()
         # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
         import notifikace_projekty.signals

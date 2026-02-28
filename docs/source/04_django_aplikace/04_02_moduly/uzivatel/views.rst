@@ -14,9 +14,7 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: UzivatelAutocomplete
@@ -30,13 +28,10 @@ Třídy
       Vrací result label.
 
       :param result: Vstupní hodnota ``result`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
    .. py:method:: add_accessibility_lookup()
 
@@ -44,7 +39,6 @@ Třídy
 
       :param permission: Vstupní hodnota ``permission`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_ownership_lookup()
 
@@ -52,7 +46,6 @@ Třídy
 
       :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UzivatelAutocompletePublic
@@ -66,13 +59,10 @@ Třídy
       Vrací result label.
 
       :param result: Vstupní hodnota ``result`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací queryset. v aplikaci.
 
 
 .. py:class:: UserRegistrationView
@@ -86,7 +76,6 @@ Třídy
       Odešle activation email.
 
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UserLoginView
@@ -107,7 +96,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UserAccountUpdateView
@@ -118,17 +106,15 @@ Třídy
 
    .. py:method:: get_object()
 
-      Vrací object.
+      Vrací object. v aplikaci.
 
       :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: _change_password()
 
@@ -144,7 +130,6 @@ Třídy
 
       :param form: Vstupní hodnota ``form`` pro danou operaci.
       :param form_tag: Vstupní hodnota ``form_tag`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: post()
 
@@ -153,7 +138,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UserActivationView
@@ -176,7 +160,6 @@ Třídy
       Provádí operaci activate.
 
       :param form: Vstupní hodnota ``form`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UserPasswordResetView
@@ -215,7 +198,6 @@ Třídy
       Provádí operaci authenticate credentials.
 
       :param key: Vstupní hodnota ``key`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: MyXMLRenderer
@@ -227,6 +209,10 @@ Třídy
    .. py:method:: render()
 
       Renders `data` into serialized XML.
+
+      :param data: Popis parametru ``data``.
+      :param accepted_media_type: Popis parametru ``accepted_media_type``.
+      :param renderer_context: Popis parametru ``renderer_context``.
 
 
 .. py:class:: GetUserInfo
@@ -241,14 +227,12 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param format: Vstupní hodnota ``format`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: handle_exception()
 
-      Zpracuje exception.
+      Zpracuje exception. v aplikaci.
 
       :param exc: Vstupní hodnota ``exc`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: perform_content_negotiation()
 
@@ -256,7 +240,6 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param force: Vstupní hodnota ``force`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: finalize_response()
 
@@ -266,7 +249,6 @@ Třídy
       :param response: Vstupní hodnota ``response`` pro danou operaci.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: ObtainAuthTokenWithUpdate
@@ -282,7 +264,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UserDeleteRequest
@@ -298,7 +279,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get()
 
@@ -307,7 +287,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -317,6 +296,10 @@ Funkce
 
    Funkce pohledu pro vytvoření osoby.
 
+   :param request: Popis parametru ``request``.
+
 .. py:function:: update_notifications(request)
 
    Funkce pohledu pro editaci notifikací.
+
+   :param request: Popis parametru ``request``.

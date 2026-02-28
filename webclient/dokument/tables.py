@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class Model3DTable(SearchTable):
-    """
-    Definuje tabulku 3D modelů pro přehled i export.
-    """
+    """Definuje tabulku 3D modelů pro přehled i export."""
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.modelTable.ident_cely.label"))
     doi = tables.Column(verbose_name=_("dokument.tables.modelTable.doi.label"), default="")
@@ -97,16 +95,20 @@ class Model3DTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(Model3DTable, self).__init__(*args, **kwargs)
 
     def render_nahled(self, value, record):
         """
         Metoda pro správně zobrazení náhledu souboru.
+
+        :param value: Popis parametru ``value``.
+        :param record: Popis parametru ``record``.
         """
         if len(record.soubory.soubory.all()) > 0:
             soubor = record.soubory.soubory.first()
@@ -140,9 +142,7 @@ class Model3DTable(SearchTable):
 
 
 class DokumentTable(SearchTable):
-    """
-    Definuje tabulku dokumentů pro přehled i export.
-    """
+    """Definuje tabulku dokumentů pro přehled i export."""
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.ident_cely.label"))
     doi = tables.Column(verbose_name=_("dokument.tables.dokumentTable.doi.label"), default="")
@@ -256,6 +256,9 @@ class DokumentTable(SearchTable):
     def render_nahled(self, value, record):
         """
         Metoda pro správně zobrazení náhledu souboru.
+
+        :param value: Popis parametru ``value``.
+        :param record: Popis parametru ``record``.
         """
         if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
             soubor = record.soubory.first_soubor[0]
@@ -368,9 +371,10 @@ class DokumentTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(DokumentTable, self).__init__(*args, **kwargs)

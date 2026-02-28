@@ -10,10 +10,11 @@ LOG_PATH = "/run/logs/"
 
 
 def get_secret(setting, default_value=None):
-    """Vrací tajnou hodnotu ze settings nebo dodanou výchozí hodnotu.
+    """
+    Vrací tajnou hodnotu ze settings nebo dodanou výchozí hodnotu.
+
     :param setting: Vstupní hodnota ``setting`` pro danou operaci.
     :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům.
     """
     file_path = (
         "/run/secrets/db_conf"
@@ -39,11 +40,12 @@ def get_secret(setting, default_value=None):
 
 
 def get_mail_secret(setting, default_value=None):
-    """Vrací mail secret.
+    """
+    Vrací mail secret.
 
     :param setting: Vstupní hodnota ``setting`` pro danou operaci.
     :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     file_mail_path = (
         "/run/secrets/mail_conf"
         if os.path.exists("/run/secrets/mail_conf")
@@ -66,10 +68,11 @@ def get_mail_secret(setting, default_value=None):
 
 # REDIS SETTINGS
 def get_plain_redis_pass(default_value=""):
-    """Vrací plain redis pass.
+    """
+    Vrací plain redis pass.
 
     :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
             return file.readline().rstrip()
@@ -78,10 +81,11 @@ def get_plain_redis_pass(default_value=""):
 
 
 def get_redis_pass(default_value=""):
-    """Vrací redis pass.
+    """
+    Vrací redis pass.
 
     :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
             return ":" + file.readline().rstrip() + "@"
@@ -290,10 +294,11 @@ ROSETTA_UWSGI_AUTO_RELOAD = False
 
 
 def rosetta_translation_rights(user):
-    """Provádí operaci rosetta translation rights.
+    """
+    Provádí operaci rosetta translation rights.
 
     :param user: Vstupní hodnota ``user`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     from core.constants import ROLE_UPRAVA_TEXTU
 
     return user.groups.filter(id=ROLE_UPRAVA_TEXTU).count() > 0

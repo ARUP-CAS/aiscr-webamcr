@@ -52,12 +52,13 @@ pageinfo = "platypus example"
 
 
 def draw_image(filename, canvas, counter):
-    """Provádí operaci draw image.
+    """
+    Provádí operaci draw image.
 
     :param filename: Vstupní hodnota ``filename`` pro danou operaci.
     :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
     :param counter: Vstupní hodnota ``counter`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     img = utils.ImageReader(filename)
     iw, ih = img.getSize()
     target_height = HEADER_HEIGHT
@@ -81,11 +82,12 @@ def draw_image(filename, canvas, counter):
 
 
 def add_page_number(canvas, doc):
-    """Provádí operaci add page number.
+    """
+    Provádí operaci add page number.
 
     :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
     :param doc: Vstupní hodnota ``doc`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     canvas.saveState()
     canvas.setFont("OpenSans", 10)
     page_number_text = "%d" % (doc.page)
@@ -94,11 +96,12 @@ def add_page_number(canvas, doc):
 
 
 def draw_header(canvas, doc):
-    """Provádí operaci draw header.
+    """
+    Provádí operaci draw header.
 
     :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
     :param doc: Vstupní hodnota ``doc`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     counter = 0
     for filename in HEADER_IMAGES:
         draw_image(f"static/img/{filename}", canvas, counter)
@@ -112,13 +115,14 @@ class DocumentCreator(ABC):
     FILENAME_PREFIX = ""
 
     def __init__(self, oznamovatel, projekt, fedora_transaction, additional=False):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param oznamovatel: Vstupní hodnota ``oznamovatel`` pro danou operaci.
         :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
         :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
         :param additional: Vstupní hodnota ``additional`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         from oznameni.models import Oznamovatel
 
         self.oznamovatel: Oznamovatel = oznamovatel
@@ -136,10 +140,12 @@ class DocumentCreator(ABC):
 
     @classmethod
     def format_date(cls, date_obj: datetime.datetime | None) -> str:
-        """Provádí operaci format date.
+        """
+        Provádí operaci format date.
 
         :param date_obj: Vstupní hodnota ``date_obj`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if date_obj is None:
             return ""
         if os.name == "nt":
@@ -148,9 +154,11 @@ class DocumentCreator(ABC):
             return date_obj.strftime("%-d. %-m. %Y")
 
     def _create_style_dict(self):
-        """Vytvoří style dict.
+        """
+        Vytvoří style dict.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         self.styles.add(
             ParagraphStyle(
                 "amBodyText",
@@ -222,9 +230,11 @@ class DocumentCreator(ABC):
         )
 
     def _create_header_oznamovatel(self):
-        """Vytvoří header oznamovatel.
+        """
+        Vytvoří header oznamovatel.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         self.texts["header_line_1"] = self.projekt.oznamovatel.oznamovatel
         self.texts["header_line_2"] = f"Zast.: {self.projekt.oznamovatel.odpovedna_osoba}"
         self.texts["header_line_3"] = self.projekt.oznamovatel.adresa
@@ -232,9 +242,11 @@ class DocumentCreator(ABC):
         self.texts["header_line_5"] = f"Tel.: {self.projekt.oznamovatel.telefon}"
 
     def _create_header_oznamovatel_doc(self) -> List[Paragraph]:
-        """Vytvoří header oznamovatel doc.
+        """
+        Vytvoří header oznamovatel doc.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         return [
             Paragraph(self.texts.get("header_line_1"), self.styles.get("amBodyTextSmallerSpaceAfter")),
             Paragraph(self.texts.get("header_line_2"), self.styles.get("amBodyTextSmallerSpaceAfter")),
@@ -244,9 +256,11 @@ class DocumentCreator(ABC):
         ]
 
     def _create_header_tab_dates(self):
-        """Vytvoří header tab dates.
+        """
+        Vytvoří header tab dates.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         self.texts["header_tab_1_1"] = "<strong>Oznámení ze dne</strong>"
         self.texts["header_tab_1_2"] = "<strong>Evidenční číslo</strong>"
         self.texts["header_tab_1_3"] = f"<strong>{DOK_VE_MESTE[self.dok_index]} dne</strong>"
@@ -255,9 +269,11 @@ class DocumentCreator(ABC):
         self.texts["header_tab_2_3"] = self.format_date(datetime.datetime.now())
 
     def _create_header_tab_dates_doc(self) -> Table:
-        """Vytvoří header tab dates doc.
+        """
+        Vytvoří header tab dates doc.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         tbl_data = [
             [
                 Paragraph(self.texts.get("header_tab_1_1"), self.styles.get("amBodyTextSmallerSpaceAfter")),
@@ -274,9 +290,11 @@ class DocumentCreator(ABC):
         return tbl
 
     def _create_data_document_part(self):
-        """Vytvoří data document part.
+        """
+        Vytvoří data document part.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         self.texts["data_part_1"] = f"<strong>Podnět oznámení</strong>: {self.projekt.podnet}"
         self.texts["data_part_2"] = f"<strong>Katastrální území</strong>: {self.projekt.hlavni_katastr}"
         self.texts["data_part_3"] = f"<strong>Lokalizace</strong>: {self.projekt.lokalizace}"
@@ -287,9 +305,11 @@ class DocumentCreator(ABC):
         )
 
     def _create_signature(self):
-        """Vytvoří signature.
+        """
+        Vytvoří signature.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         self.texts["doc_sign_1"] = "S pozdravem"
         self.texts["doc_sign_2"] = DOC_REDITEL[self.dok_index]
         self.texts["doc_sign_3"] = (
@@ -297,9 +317,11 @@ class DocumentCreator(ABC):
         )
 
     def _create_signature_doc(self):
-        """Vytvoří signature doc.
+        """
+        Vytvoří signature doc.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         return [
             Paragraph("", self.body_style),
             Paragraph(self.texts.get("doc_sign_1"), self.styles.get("amSignature")),
@@ -308,9 +330,11 @@ class DocumentCreator(ABC):
         ]
 
     def _initiate_document(self):
-        """Provádí operaci initiate document.
+        """
+        Provádí operaci initiate document.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         pdf_buffer = BytesIO()
         my_doc = SimpleDocTemplate(
             pdf_buffer,
@@ -323,12 +347,14 @@ class DocumentCreator(ABC):
         return pdf_buffer, my_doc
 
     def _generate_repository_file(self, my_doc, document_content, pdf_buffer):
-        """Vygeneruje repository file.
+        """
+        Vygeneruje repository file.
 
         :param my_doc: Vstupní hodnota ``my_doc`` pro danou operaci.
         :param document_content: Vstupní hodnota ``document_content`` pro danou operaci.
         :param pdf_buffer: Vstupní hodnota ``pdf_buffer`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         my_doc.build(document_content, onFirstPage=draw_header, onLaterPages=draw_header)
         pdf_value = pdf_buffer.getvalue()
         pdf_buffer.close()
@@ -346,23 +372,21 @@ class DocumentCreator(ABC):
 
     @property
     def body_style(self):
-        """Provádí operaci body style.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci body style."""
         return self.styles["amBodyText"]
 
     @abstractmethod
     def _generate_text(self):
-        """Vygeneruje text.
+        """
+        Vygeneruje text.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         pass
 
     @abstractmethod
     def build_document(self):
-        """Sestaví document.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Sestaví document. v aplikaci."""
         pass
 
 
@@ -372,9 +396,11 @@ class OznameniPDFCreator(DocumentCreator):
     FILENAME_PREFIX = "oznameni"
 
     def _generate_text(self):
-        """Vygeneruje text.
+        """
+        Vygeneruje text.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
         self.texts["doc_vec"] = """
@@ -653,9 +679,11 @@ class OznameniPDFCreator(DocumentCreator):
                """
 
     def build_document(self) -> RepositoryBinaryFile:
-        """Sestaví document.
+        """
+        Sestaví document. v aplikaci.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         pdf_buffer, my_doc = self._initiate_document()
         styles = self.styles
         body_style = self.body_style
@@ -724,9 +752,11 @@ class ZruseniPDFCreator(DocumentCreator):
     FILENAME_PREFIX = "zruseni"
 
     def _generate_text(self):
-        """Vygeneruje text.
+        """
+        Vygeneruje text.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
         self.texts["doc_vec"] = (
@@ -816,9 +846,11 @@ class ZruseniPDFCreator(DocumentCreator):
         self._create_signature()
 
     def build_document(self) -> RepositoryBinaryFile:
-        """Sestaví document.
+        """
+        Sestaví document. v aplikaci.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         pdf_buffer, my_doc = self._initiate_document()
         styles = self.styles
         body_style = self.body_style

@@ -8,7 +8,6 @@ Funkce
 
 .. py:function:: get_config(name)
 
-   Vrací config.
+   Vrací config. v aplikaci.
 
    :param name: Vstupní hodnota ``name`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.

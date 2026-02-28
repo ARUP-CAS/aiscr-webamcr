@@ -76,10 +76,11 @@ output_buffer = StringIO()
 
 
 def reader_and_capture(pipe):
-    """Provádí operaci reader and capture.
+    """
+    Provádí operaci reader and capture.
 
     :param pipe: Vstupní hodnota ``pipe`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     while True:
         line = pipe.readline()
         if not line:
@@ -89,10 +90,11 @@ def reader_and_capture(pipe):
 
 
 def filelog(pipe):
-    """Provádí operaci filelog.
+    """
+    Provádí operaci filelog.
 
     :param pipe: Vstupní hodnota ``pipe`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     with open("/vol/web/selenium_test/test.log", "a") as file:
         while True:
             line = pipe.read(1)

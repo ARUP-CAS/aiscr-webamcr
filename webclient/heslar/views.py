@@ -16,14 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete ruian katastru.
-    """
+    """Třída pohledu pro autocomplete ruian katastru."""
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         qs = RuianKatastr.objects.all()
         if self.q:
             new_qs = qs.filter(nazev__istartswith=self.q).annotate(qs_order=Value(0, IntegerField()))
@@ -39,6 +35,9 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
 def merge_heslare(first, second):
     """
     Pomocní funkce pro vytvoření dvoustupňového selectu.
+
+    :param first: Popis parametru ``first``.
+    :param second: Popis parametru ``second``.
     """
     data = [("", "")]
     # logger.debug(get_language())
@@ -67,6 +66,10 @@ def merge_heslare(first, second):
 def heslar_12(druha, prvni_kat, id=False):
     """
     Funkce pro vytvoření dvoustupňového selectu.
+
+    :param druha: Popis parametru ``druha``.
+    :param prvni_kat: Popis parametru ``prvni_kat``.
+    :param id: Popis parametru ``id``.
     """
     druha = (
         Heslar.objects.filter(nazev_heslare=druha)
@@ -84,6 +87,8 @@ def heslar_12(druha, prvni_kat, id=False):
 def zjisti_katastr_souradnic(request):
     """
     Funkce pohledu pro vrácení katastru podle souradnic.
+
+    :param request: Popis parametru ``request``.
     """
     nalezene_katastry = RuianKatastr.objects.filter(
         hranice__contains=Point(float(request.GET.get("long", 0)), float(request.GET.get("lat", 0)))
@@ -102,6 +107,8 @@ def zjisti_katastr_souradnic(request):
 def zjisti_vychozi_hodnotu(request):
     """
     Funkce pohledu pro zjištení výchozí hodnoty z heslaře.
+
+    :param request: Popis parametru ``request``.
     """
     try:
         nadrazene = int(request.GET.get("nadrazene"))
@@ -121,6 +128,8 @@ def zjisti_vychozi_hodnotu(request):
 def zjisti_nadrazenou_hodnotu(request):
     """
     Funkce pohledu pro zjištení nadřazené hodnoty z heslaře.
+
+    :param request: Popis parametru ``request``.
     """
     podrazene = request.GET.get("podrazene", 0)
     i = 0
@@ -137,14 +146,10 @@ def zjisti_nadrazenou_hodnotu(request):
 
 
 class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete dokument typu.
-    """
+    """Třída pohledu pro autocomplete dokument typu."""
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -152,14 +157,10 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
 
 
 class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete dokument formatu.
-    """
+    """Třída pohledu pro autocomplete dokument formatu."""
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(id__in=MODEL_3D_DOKUMENT_FORMATS)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -167,14 +168,10 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
 
 
 class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete pristupnosti.
-    """
+    """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -182,14 +179,10 @@ class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
 
 
 class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete pristupnosti.
-    """
+    """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         qs = Heslar.objects.all()
         heslar_nazev = self.forwarded.get("heslar_nazev", None)
         if self.q:
@@ -200,14 +193,10 @@ class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetVie
 
 
 class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete pristupnosti.
-    """
+    """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         qs = HeslarNazev.objects.all()
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -215,12 +204,13 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
 
 
 def heslar_list(heslo_nazev, filter={}, use_exclude=False):
-    """Provádí operaci heslar list.
+    """
+    Provádí operaci heslar list.
 
     :param heslo_nazev: Vstupní hodnota ``heslo_nazev`` pro danou operaci.
     :param filter: Vstupní hodnota ``filter`` pro danou operaci.
     :param use_exclude: Vstupní hodnota ``use_exclude`` pro danou operaci.
-    :return: Vrací výsledek provedené operace."""
+    """
     hesla = Heslar.objects.filter(nazev_heslare=heslo_nazev)
     if use_exclude:
         hesla_filtered = hesla.exclude(**filter)

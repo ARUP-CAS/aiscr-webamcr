@@ -23,5 +23,4 @@ Třídy
       :param required: Vstupní hodnota ``required`` pro danou operaci.
       :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 

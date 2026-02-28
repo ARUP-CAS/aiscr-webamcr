@@ -11,9 +11,7 @@ logger = logging.getLogger("request.timer")
 
 
 def get_slow_request_settings():
-    """Vrací slow request settings.
-
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """Vrací slow request settings."""
     try:
         settings_query = CustomAdminSettings.objects.filter(item_group="settings", item_id="variables")
         return json.loads(settings_query.last().value)["SLOW_REQUEST_THRESHOLD"]
@@ -26,9 +24,7 @@ SLOW_REQUEST_THRESHOLD = get_slow_request_settings()
 
 
 def _resolve_view_info(request) -> dict:
-    """
-    Vrátí dict s informacemi o view: view_name, view_module, kwargs.
-    """
+    """Vrátí dict s informacemi o view: view_name, view_module, kwargs."""
     try:
         match = resolve(request.path_info)
         view_func = match.func
@@ -49,23 +45,26 @@ def _resolve_view_info(request) -> dict:
 
 class LogMiddleware:
     """
-    Middleware, který:
+    Middleware, který: v aplikaci.
+
     - ukládá do thread-local: url, user_id
     - měří duration a zapisuje strukturovaný log po odpovědi
     """
 
     def __init__(self, get_response):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.get_response = get_response
 
     def __call__(self, request):
-        """Provádí operaci call.
+        """
+        Provádí operaci call.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací výsledek provedené operace."""
+        """
         start = time.monotonic()
         log_request_data.url = request.get_full_path()
         log_request_data.user_id = (
@@ -108,14 +107,10 @@ class LogMiddleware:
 
     @staticmethod
     def get_request_url():
-        """Vrací request url.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací request url."""
         return getattr(log_request_data, "url", None)
 
     @staticmethod
     def get_user_id():
-        """Vrací user id.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací user id."""
         return getattr(log_request_data, "user_id", "anonymous")

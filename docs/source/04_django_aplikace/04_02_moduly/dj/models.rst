@@ -20,8 +20,6 @@ Třídy
 
       Provádí operaci ident cely safe.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: has_adb()
 
       Metoda pro ověření, jestli dokumentační jednotka má ADB.
@@ -30,15 +28,12 @@ Třídy
 
       Vrací permission object.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: initial_pian()
 

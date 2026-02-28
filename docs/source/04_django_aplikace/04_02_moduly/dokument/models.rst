@@ -18,7 +18,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __str__()
 
@@ -32,13 +31,13 @@ Třídy
 
    .. py:method:: set_doi()
 
-      Nastaví doi.
-
-      :return: Vrací výsledek provedené operace.
+      Nastaví doi. v aplikaci.
 
    .. py:method:: set_zapsany()
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie.
+
+      :param user: Popis parametru ``user``.
 
    .. py:method:: set_permanent_identificator()
 
@@ -54,13 +53,23 @@ Třídy
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie.
 
+      :param user: Popis parametru ``user``.
+      :param old_ident: Popis parametru ``old_ident``.
+
    .. py:method:: set_archivovany()
 
       Metoda pro nastavení stavu archivovaný a uložení změny do historie.
 
+      :param user: Popis parametru ``user``.
+      :param old_ident: Popis parametru ``old_ident``.
+
    .. py:method:: set_vraceny()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie.
+
+      :param user: Popis parametru ``user``.
+      :param new_state: Popis parametru ``new_state``.
+      :param poznamka: Popis parametru ``poznamka``.
 
    .. py:method:: check_pred_odeslanim()
 
@@ -89,8 +98,12 @@ Třídy
    .. py:method:: set_permanent_ident_cely()
 
       Metoda pro nastavení permanentního ident celý pro dokument.
+
       Metoda bere pořadoví číslo z db dokument sekvence.
       Metoda zmení i ident připojených souborů.
+
+      :param region: Popis parametru ``region``.
+      :param rada: Popis parametru ``rada``.
 
    .. py:method:: set_datum_zverejneni()
 
@@ -100,25 +113,17 @@ Třídy
 
       Vrací permission object.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_create_user()
 
       Vrací create user.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: thumbnail_image()
 
       Provádí operaci thumbnail image.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: thumbnail_image_file()
 
@@ -130,31 +135,21 @@ Třídy
 
       Provádí operaci large thumbnail.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: small_thumbnail()
 
       Provádí operaci small thumbnail.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: set_snapshots()
 
-      Nastaví snapshots.
-
-      :return: Vrací výsledek provedené operace.
+      Nastaví snapshots. v aplikaci.
 
    .. py:method:: redis_snapshot_id()
 
       Provádí operaci redis snapshot id.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: generate_redis_snapshot()
 
       Vygeneruje redis snapshot.
-
-      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: _get_doi_client()
 
@@ -166,28 +161,23 @@ Třídy
 
       Provádí operaci doi exists.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: doi_delete()
 
       Provádí operaci doi delete.
 
       :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: doi_hide()
 
       Provádí operaci doi hide.
 
       :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: doi_publish()
 
       Provádí operaci doi publish.
 
       :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: doi_update()
 
@@ -195,13 +185,10 @@ Třídy
 
       :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
       :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: doi_url()
 
       Provádí operaci doi url.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentCast
@@ -218,19 +205,18 @@ Třídy
 
       Vrací permission object.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: initial_archeologicky_zaznam()
 
       Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (líné načtení).
+
+      :return: Vrací výsledek operace.
 
    .. py:method:: initial_projekt()
 
@@ -240,18 +226,15 @@ Třídy
 
    .. py:method:: create_transaction()
 
-      Vytvoří transaction.
+      Vytvoří transaction. v aplikaci.
 
       :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
       :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
       :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: dokument_doi()
 
       Provádí operaci dokument doi.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentExtraData
@@ -307,16 +290,14 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: create_transaction()
 
-      Vytvoří transaction.
+      Vytvoří transaction. v aplikaci.
 
       :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
       :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
       :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
 
 
 .. py:class:: DokumentSekvence
@@ -342,13 +323,10 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_absolute_url()
 
       Vrací absolute url.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -357,3 +335,7 @@ Funkce
 .. py:function:: get_dokument_soubor_name(dokument, filename, add_to_index)
 
    Funkce pro získaní správného jména souboru.
+
+   :param dokument: Popis parametru ``dokument``.
+   :param filename: Popis parametru ``filename``.
+   :param add_to_index: Popis parametru ``add_to_index``.
