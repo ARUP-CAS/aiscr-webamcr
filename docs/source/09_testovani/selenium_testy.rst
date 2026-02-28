@@ -310,7 +310,7 @@ Přehled testů
 
    * - 027
      - oznameni
-     - | \-
+     - 
      -
        .. raw:: html
        
@@ -6538,7 +6538,7 @@ Oznámení projektu stavebníkem
 Uživatelská role
 ^^^^^^^^^^^^^^^^
 
-\-
+-
 
 Předpoklady
 ^^^^^^^^^^^
