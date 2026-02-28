@@ -43,6 +43,12 @@ MIN_SUMMARY_WORDS = 3
 
 
 def env_flag(name: str, default: str = "false") -> bool:
+    """Vyhodnotí hodnotu proměnné prostředí jako booleovský příznak.
+
+    :param name: Název proměnné prostředí.
+    :param default: Výchozí hodnota použitá při neexistenci proměnné.
+    :return: ``True``, pokud hodnota odpovídá pravdivému příznaku.
+    """
     value = os.getenv(name, default).strip().lower()
     return value in {"1", "true", "yes", "on"}
 
@@ -53,6 +59,12 @@ def env_flag(name: str, default: str = "false") -> bool:
 
 
 def iter_python_files(paths: list[str], bypass_exclusions: bool) -> Iterable[Path]:
+    """Iteruje Python soubory ve vstupních cestách.
+
+    :param paths: Seznam souborů nebo adresářů ke kontrole.
+    :param bypass_exclusions: Pokud ``True``, nepoužije se filtr ignorovaných adresářů.
+    :return: Generátor cest k nalezeným ``.py`` souborům.
+    """
     for path_str in paths:
         path = Path(path_str)
 
@@ -76,6 +88,8 @@ def iter_python_files(paths: list[str], bypass_exclusions: bool) -> Iterable[Pat
 
 
 class MethodDocstringChecker(ast.NodeVisitor):
+    """AST návštěvník, který kontroluje přítomnost a kvalitu docstringů."""
+
     def __init__(self, file_path: Path, bypass_exclusions: bool = False) -> None:
         self.file_path = file_path
         self.bypass_exclusions = bypass_exclusions
@@ -84,6 +98,10 @@ class MethodDocstringChecker(ast.NodeVisitor):
         self.warnings: list[str] = []
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        """Zkontroluje docstring třídy a navštíví její potomky.
+
+        :param node: AST uzel definice třídy.
+        """
         if self._should_skip(node.name, IGNORED_CLASS_NAMES):
             return
 
@@ -95,9 +113,17 @@ class MethodDocstringChecker(ast.NodeVisitor):
         self.class_stack.pop()
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        """Zpracuje běžnou definici funkce nebo metody.
+
+        :param node: AST uzel definice funkce.
+        """
         self._handle_function_like(node)
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        """Zpracuje asynchronní definici funkce nebo metody.
+
+        :param node: AST uzel asynchronní definice funkce.
+        """
         self._handle_function_like(node)
 
     def _handle_function_like(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]) -> None:
@@ -196,6 +222,10 @@ class MethodDocstringChecker(ast.NodeVisitor):
 
 
 def main() -> int:
+    """Spustí kontrolu docstringů nad zadanými Python soubory.
+
+    :return: Návratový kód procesu (0 při úspěchu, jinak 1 ve strict režimu).
+    """
     bypass_exclusions = env_flag("DOCSTRING_CHECK_BYPASS_EXCLUSIONS")
     strict_mode = env_flag("DOCSTRING_CHECK_STRICT")
 
