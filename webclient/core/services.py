@@ -26,21 +26,19 @@ logger = logging.getLogger(__name__)
 
 
 class PermissionService:
-    """
-    Třída pro načtení oprávnení.
-    """
+    """Třída pro načtení oprávnení."""
 
     def __init__(self):
-        """Inicializuje instanci třídy.
-
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """Inicializuje instanci třídy."""
         pass
 
     def run(self, docfile: InMemoryUploadedFile) -> tuple[pd.DataFrame, list[str]]:
-        """Spustí hodnotu.
+        """
+        Spustí hodnotu. v aplikaci.
 
         :param docfile: Vstupní hodnota ``docfile`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if docfile.name and docfile.name.lower().endswith(".csv"):
             sheet = pd.read_csv(docfile)
             sheet = self.validate_and_prepare_csv(sheet)
@@ -85,6 +83,9 @@ class PermissionService:
     def validate_and_prepare_csv(self, csv_sheet: pd.DataFrame) -> pd.DataFrame:
         """
         Metoda pro validaci importovaného csv.
+
+        :param csv_sheet: Popis parametru ``csv_sheet``.
+        :return: Vrací výsledek operace.
         """
         expected = [
             "app",
@@ -116,6 +117,9 @@ class PermissionService:
     def validate_and_prepare_sheet(self, sheet: pd.DataFrame) -> pd.DataFrame:
         """
         Metoda pro validaci importovaného excelu a jeho úpravu.
+
+        :param sheet: Popis parametru ``sheet``.
+        :return: Vrací výsledek operace.
         """
         if (
             not sheet.columns[3] == PERMISSIONS_SHEET_ZAKLADNI_NAME
@@ -150,14 +154,15 @@ class PermissionService:
     def find_missing_urls(self, sheet: pd.DataFrame, url_list: pd.DataFrame) -> List[str]:
         """
         Najde URL, která chybí v importní tabulce, ale v projektu
+
         existují, a vrátí jejich seznam.
         ignorované URL ('admin/', '__debug__/')
 
         :param sheet: DataFrame se vstupní tabulkou oprávnění.
-        :type sheet: pandas.DataFrame
         :param url_list: DataFrame se seznamem URL z projektu.
-        :type url_list: pandas.DataFrame
         :return: Seznam chybějících URL.
+        :type sheet: pandas.DataFrame
+        :type url_list: pandas.DataFrame
         :rtype: list[str]
         """
         expected_urls = (
@@ -187,13 +192,14 @@ class PermissionService:
     ) -> Union[str, list[str]]:
         """
         Zkontroluje a zpracuje jeden řádek importního souboru s oprávněními
+
         a uloží odpovídající záznamy do databáze.
 
         :param row: Řádek importovaných dat.
-        :type row: pandas.Series
         :param url_list: Seznam dostupných URL v projektu.
-        :type url_list: pandas.DataFrame
         :return: Textový stav výsledku nebo seznam výsledků pro jednotlivé role.
+        :type row: pandas.Series
+        :type url_list: pandas.DataFrame
         :rtype: str nebo list[str]
         """
         number_to_role = ["B", "C", "D", "E"]
@@ -226,13 +232,14 @@ class PermissionService:
     def save_permission(self, row: pd.Series, i: int) -> bool:
         """
         Zkontroluje a uloží jedno konkrétní oprávnění z daného řádku
+
         importního souboru.
 
         :param row: Řádek s importovanými daty.
-        :type row: pandas.Series
         :param i: Index zpracovávané role/sloupce.
-        :type i: int
         :return: True při úspěšném uložení, jinak False.
+        :type row: pandas.Series
+        :type i: int
         :rtype: bool
         """
         ROLE_COL_OFFSET = 4
@@ -314,5 +321,8 @@ class PermissionService:
     def check_status_regex(self, cell: str) -> bool:
         """
         Metoda pro kontrolu správneho zadáni statusu v excelu.
+
+        :param cell: Popis parametru ``cell``.
+        :return: Vrací výsledek operace.
         """
         return bool(re.fullmatch(r"(<|>|)[A-Z]{1,2}\d{1}", cell) or re.fullmatch(r"\D{1,2}\d{1}-\D{1,2}\d{1}", cell))

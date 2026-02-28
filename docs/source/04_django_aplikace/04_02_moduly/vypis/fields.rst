@@ -17,7 +17,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param name: Vstupní hodnota ``name`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __str__()
 
@@ -27,18 +26,16 @@ Třídy
 
    .. py:method:: get_name()
 
-      Vrací name.
+      Vrací name. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_permission()
 
-      Vrací permission.
+      Vrací permission. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SectionNameWithAccessor
@@ -54,14 +51,12 @@ Třídy
       :param name: Vstupní hodnota ``name`` pro danou operaci.
       :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
       :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_name()
 
-      Vrací name.
+      Vrací name. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: PianSectionNameWithAccessor
@@ -72,10 +67,9 @@ Třídy
 
    .. py:method:: get_name()
 
-      Vrací name.
+      Vrací name. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: OznamovatelSectionNameWithAccessor
@@ -86,11 +80,10 @@ Třídy
 
    .. py:method:: get_permission()
 
-      Vrací permission.
+      Vrací permission. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: Field
@@ -105,7 +98,6 @@ Třídy
 
       :param label: Vstupní hodnota ``label`` pro danou operaci.
       :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __repr__()
 
@@ -121,17 +113,14 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_label()
 
-      Vrací label.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací label. v aplikaci.
 
 
 .. py:class:: SouborField
@@ -147,15 +136,13 @@ Třídy
       :param label: Vstupní hodnota ``label`` pro danou operaci.
       :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
       :param key_name: Vstupní hodnota ``key_name`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SouborDownloadField
@@ -166,11 +153,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: Model3dKomponentaField
@@ -181,11 +167,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: Model3dKomponentaAktivityField
@@ -196,11 +181,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ChooseField
@@ -211,11 +195,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: StatusField
@@ -226,11 +209,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ZjisteniField
@@ -241,11 +223,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignField
@@ -261,15 +242,13 @@ Třídy
       :param name: Vstupní hodnota ``name`` pro danou operaci.
       :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
       :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: GeomGmlField
@@ -280,11 +259,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: GeomWktField
@@ -295,11 +273,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignGeomGmlField
@@ -310,11 +287,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignGeomWktField
@@ -325,11 +301,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ManyToManyField
@@ -340,11 +315,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignManyToManyField
@@ -355,11 +329,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DoubleField
@@ -370,11 +343,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DoubleFieldNum
@@ -385,11 +357,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignDoubleField
@@ -400,11 +371,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: ForeignDoubleFieldNum
@@ -415,11 +385,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: RepeatableField
@@ -437,22 +406,19 @@ Třídy
       :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
       :param template_name: Vstupní hodnota ``template_name`` pro danou operaci.
       :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_related_manager()
 
       Vrací related manager.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: VbRepeatableField
@@ -463,11 +429,10 @@ Třídy
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: HistorieRepeatableField
@@ -481,15 +446,13 @@ Třídy
       Vrací related manager.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: RepeatableSectionField
@@ -500,24 +463,20 @@ Třídy
 
    .. py:method:: get_label()
 
-      Vrací label.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací label. v aplikaci.
 
    .. py:method:: get_sections()
 
-      Vrací sections.
+      Vrací sections. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_value()
 
-      Vrací value.
+      Vrací value. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
       :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SectionField
@@ -533,7 +492,6 @@ Třídy
       :param name: Vstupní hodnota ``name`` pro danou operaci.
       :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
       :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: RepeatableSectionNameWithAccessor
@@ -550,21 +508,18 @@ Třídy
       :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
       :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
       :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_sections()
 
-      Vrací sections.
+      Vrací sections. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_name()
 
-      Vrací name.
+      Vrací name. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SouboryRepeatableSectionNameWithAccessor
@@ -575,17 +530,15 @@ Třídy
 
    .. py:method:: get_sections()
 
-      Vrací sections.
+      Vrací sections. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_name()
 
-      Vrací name.
+      Vrací name. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: KomponentaRepeatableSectionNameWithAccessor
@@ -596,10 +549,9 @@ Třídy
 
    .. py:method:: get_name()
 
-      Vrací name.
+      Vrací name. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: SubSectionField
@@ -614,20 +566,16 @@ Třídy
 
       :param config: Vstupní hodnota ``config`` pro danou operaci.
       :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_config()
 
-      Vrací config.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací config. v aplikaci.
 
    .. py:method:: get_instance()
 
-      Vrací instance.
+      Vrací instance. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: NeidentAkceSubSectionField
@@ -638,10 +586,9 @@ Třídy
 
    .. py:method:: get_instance()
 
-      Vrací instance.
+      Vrací instance. v aplikaci.
 
       :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: HistorieSubSectionField
@@ -656,13 +603,10 @@ Třídy
 
       :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
       :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_config()
 
-      Vrací config.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací config. v aplikaci.
 
 
 Funkce
@@ -670,28 +614,24 @@ Funkce
 
 .. py:function:: get_model(name)
 
-   Vrací model.
+   Vrací model. v aplikaci.
 
    :param name: Vstupní hodnota ``name`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: get_gml(geom)
 
-   Vrací gml.
+   Vrací gml. v aplikaci.
 
    :param geom: Vstupní hodnota ``geom`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: get_wkt(geom)
 
-   Vrací wkt.
+   Vrací wkt. v aplikaci.
 
    :param geom: Vstupní hodnota ``geom`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.
 
 .. py:function:: get_historie_config(label_key)
 
    Vrací historie config.
 
    :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.

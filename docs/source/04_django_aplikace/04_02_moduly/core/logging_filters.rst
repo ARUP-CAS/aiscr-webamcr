@@ -14,8 +14,7 @@ Třídy
 
    .. py:method:: filter()
 
-      Filtruje hodnotu.
+      Filtruje hodnotu. v aplikaci.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 

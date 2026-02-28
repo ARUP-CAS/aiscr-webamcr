@@ -23,45 +23,54 @@ class RedisConnector:
 
     @classmethod
     def _create_connection(cls):
-        """Vytvoří connection.
+        """
+        Vytvoří connection.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         cls.r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass())
 
     # Tento konektor vrací přímo řetězec, takže není potřeba volat `decode("utf-8")`.
     @classmethod
     def _create_connection_decode(cls):
-        """Vytvoří connection decode.
+        """
+        Vytvoří connection decode.
 
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         cls.r_decode = redis.Redis(
             host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass(), decode_responses=True
         )
 
     @classmethod
     def get_connection(cls) -> redis.Redis:
-        """Vrací connection.
+        """
+        Vrací connection. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         if not cls.r:
             cls._create_connection()
         return cls.r
 
     @classmethod
     def get_connection_decode(cls) -> redis.Redis:
-        """Vrací connection decode.
+        """
+        Vrací connection decode.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         if not cls.r_decode:
             cls._create_connection_decode()
         return cls.r_decode
 
     @staticmethod
     def prepare_model_for_redis(table):
-        """Provádí operaci prepare model for redis.
+        """
+        Provádí operaci prepare model for redis.
 
         :param table: Vstupní hodnota ``table`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         columns = table.columns.iterall()
         row = table.rows[0]
         data = {}
@@ -121,14 +130,16 @@ class ClamdNetworkSocket:
         Skenuje buffer na přítomnost virů.
 
         Args:
-            buff: instance BytesIO se soubory ke skenování
+        buff: instance BytesIO se soubory ke skenování
 
         Returns:
-            dict: {filename: (status, reason)} kde status je 'FOUND' nebo 'OK'
+        dict: {filename: (status, reason)} kde status je 'FOUND' nebo 'OK'
 
         Raises:
-            ClamdBufferTooLongError: pokud velikost bufferu překročí limity clamd
-            ClamdConnectionError: při problému s komunikací
+        ClamdBufferTooLongError: pokud velikost bufferu překročí limity clamd
+        ClamdConnectionError: při problému s komunikací
+
+        :param buff: Popis parametru ``buff``.
         """
         try:
             self._init_socket()
@@ -156,10 +167,12 @@ class ClamdNetworkSocket:
             self._close_socket()
 
     def _basic_command(self, command):
-        """Provádí operaci basic command.
+        """
+        Provádí operaci basic command.
 
         :param command: Vstupní hodnota ``command`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         self._init_socket()
         try:
             self._send_command(command)
@@ -178,7 +191,7 @@ class ClamdNetworkSocket:
         Pouze pro interní použití.
 
         Raises:
-            ClamdConnectionError: pokud se nelze připojit k clamd
+        ClamdConnectionError: pokud se nelze připojit k clamd
         """
         try:
             self.clamd_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -193,10 +206,10 @@ class ClamdNetworkSocket:
         Formátuje chybovou zprávu pro selhání socketového připojení.
 
         Args:
-            exception: výjimka socket.error
+        exception: výjimka socket.error
 
         Returns:
-            str: formátovaná chybová zpráva
+        str: formátovaná chybová zpráva
         """
         # argumenty pro síťovou výjimku mohou být buď (errno, "zpráva")
         # nebo jen "zpráva"
@@ -210,11 +223,13 @@ class ClamdNetworkSocket:
             )
 
     def _send_command(self, cmd, *args):
-        """Odešle command.
+        """
+        Odešle command.
 
         :param cmd: Vstupní hodnota ``cmd`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         concat_args = ""
         if args:
             concat_args = " " + " ".join(args)
@@ -227,10 +242,10 @@ class ClamdNetworkSocket:
         Přijme jednořádkovou odpověď od clamd.
 
         Returns:
-            str: dekódovaný a oříznutý řádek odpovědi
+        str: dekódovaný a oříznutý řádek odpovědi
 
         Raises:
-            ClamdConnectionError: při chybě čtení ze socketu
+        ClamdConnectionError: při chybě čtení ze socketu
         """
         try:
             with contextlib.closing(self.clamd_socket.makefile("rb")) as f:
@@ -244,13 +259,13 @@ class ClamdNetworkSocket:
         Parsuje odpovědi pro příkazy SCAN, CONTSCAN, MULTISCAN a STREAM.
 
         Args:
-            msg (str): zpráva odpovědi od clamd
+        msg (str): zpráva odpovědi od clamd
 
         Returns:
-            tuple: (path, virus, status)
+        tuple: (path, virus, status)
 
         Raises:
-            ClamdResponseError: pokud nelze odpověď parsovat
+        ClamdResponseError: pokud nelze odpověď parsovat
         """
         try:
             return scan_response.match(msg).group("path", "virus", "status")
@@ -258,8 +273,6 @@ class ClamdNetworkSocket:
             raise ClamdResponseError(msg.rsplit("ERROR", 1)[0])
 
     def _close_socket(self):
-        """
-        Uzavře socketové připojení k clamd.
-        """
+        """Uzavře socketové připojení k clamd."""
         self.clamd_socket.close()
         return

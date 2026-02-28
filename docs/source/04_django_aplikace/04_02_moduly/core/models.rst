@@ -14,6 +14,7 @@ Třídy
 .. py:class:: SouborVazby
 
    Model pro relační tabulku mezi souborem a záznamem.
+
    Obsahuje typ vazby podle typu záznamu.
 
    **Metody:**
@@ -35,19 +36,13 @@ Třídy
 
       Provádí operaci url.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: repository_uuid()
 
       Provádí operaci repository uuid.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: calculate_sha_512()
 
       Provádí operaci calculate sha 512.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: delete()
 
@@ -55,7 +50,6 @@ Třídy
 
       :param using: Vstupní hodnota ``using`` pro danou operaci.
       :param keep_parents: Vstupní hodnota ``keep_parents`` pro danou operaci.
-      :return: Vrací výsledek operace odstranění.
 
    .. py:method:: __init__()
 
@@ -63,7 +57,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __str__()
 
@@ -79,8 +72,6 @@ Třídy
 
       Provádí operaci vytvoreno.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: get_repository_content()
 
       Vrací repository content.
@@ -95,23 +86,27 @@ Třídy
 
       Metoda pro zapsáni vytvoření souboru do historie.
 
+      :param user: Popis parametru ``user``.
+      :param file_name: Popis parametru ``file_name``.
+
    .. py:method:: zaznamenej_nahrani_nove_verze()
 
       Metoda pro zapsáni nahrání nové verze souboru do historie.
+
+      :param user: Popis parametru ``user``.
+      :param nazev: Popis parametru ``nazev``.
 
    .. py:method:: get_file_extension_by_mime()
 
       Vrací file extension by mime.
 
       :param file: Vstupní hodnota ``file`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_thumb_icon()
 
       Vrací thumb icon.
 
       :param file: Vstupní hodnota ``file`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_mime_types()
 
@@ -134,7 +129,6 @@ Třídy
 
       :param file: Vstupní hodnota ``file`` pro danou operaci.
       :param source_url: Vstupní hodnota ``source_url`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: check_antivirus()
 
@@ -178,8 +172,6 @@ Třídy
 
       Provádí operaci getMock.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: get_historicke_verze()
 
       Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
@@ -187,6 +179,9 @@ Třídy
    .. py:method:: get_soubor_historicky()
 
       Metoda k získání vlastního souboru dané verze z Fedory
+
+      :param timestamp: Popis parametru ``timestamp``.
+      :return: Vrací výsledek operace.
 
 
 .. py:class:: ProjektSekvence
@@ -224,44 +219,32 @@ Třídy
       :param user: Vstupní hodnota ``user`` pro danou operaci.
       :param ident: Vstupní hodnota ``ident`` pro danou operaci.
       :param typ: Vstupní hodnota ``typ`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: check_base()
 
-      Ověří base.
-
-      :return: Vrací výsledek ověření nebo validačního pravidla.
+      Ověří base. v aplikaci.
 
    .. py:method:: check_status()
 
-      Ověří status.
-
-      :return: Vrací výsledek ověření nebo validačního pravidla.
+      Ověří status. v aplikaci.
 
    .. py:method:: check_ownership()
 
-      Ověří ownership.
+      Ověří ownership. v aplikaci.
 
       :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: check_accessibility()
 
-      Ověří accessibility.
-
-      :return: Vrací výsledek ověření nebo validačního pravidla.
+      Ověří accessibility. v aplikaci.
 
    .. py:method:: check_permission_skip()
 
       Ověří permission skip.
 
-      :return: Vrací výsledek ověření nebo validačního pravidla.
-
    .. py:method:: get_permission_object()
 
       Vrací permission object.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: permission_override()
 
@@ -280,11 +263,13 @@ Funkce
 
    Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
 
+   :param instance: Popis parametru ``instance``.
+   :param filename: Popis parametru ``filename``.
+
 .. py:function:: check_permissions(action, user, ident)
 
-   Ověří permissions.
+   Ověří permissions. v aplikaci.
 
    :param action: Vstupní hodnota ``action`` pro danou operaci.
    :param user: Vstupní hodnota ``user`` pro danou operaci.
    :param ident: Vstupní hodnota ``ident`` pro danou operaci.
-   :return: Vrací výsledek ověření nebo validačního pravidla.

@@ -6,16 +6,18 @@ class HistorieOrganizaceMultipleChoiceFilter(django_filters.ModelMultipleChoiceF
     """Implementuje komponentu ``HistorieOrganizaceMultipleChoiceFilter`` v rámci aplikace."""
 
     def get_queryset(self, request):
-        """Vrací queryset.
+        """
+        Vrací queryset. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         return Organizace.objects.all()
 
     def filter(self, qs, value):
-        """Filtruje hodnotu.
+        """
+        Filtruje hodnotu. v aplikaci.
 
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return qs

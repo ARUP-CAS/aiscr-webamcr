@@ -23,5 +23,4 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 

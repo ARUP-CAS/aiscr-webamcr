@@ -16,6 +16,8 @@ orcid_pattern = re.compile(r"\d{4}-\d{4}-\d{4}-\d{4}")
 def validate_phone_number(number):
     """
     Validátor pro ověření telefonního čísla na správny formát.
+
+    :param number: Popis parametru ``number``.
     """
     regex_tel = re.compile(r"[\s\d\+\-\(+\)]+")
     if not regex_tel.fullmatch(number):
@@ -32,10 +34,11 @@ def validate_phone_number(number):
 
 
 def validate_date_min_1600(value):
-    """Validuje date min 1600.
+    """
+    Validuje date min 1600.
 
     :param value: Vstupní hodnota ``value`` pro danou operaci.
-    :return: Vrací výsledek ověření nebo validačního pravidla."""
+    """
     min_date = datetime(1600, 1, 1).date()
     if isinstance(value, DateRange):
         if value.lower <= min_date:

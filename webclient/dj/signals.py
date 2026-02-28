@@ -21,7 +21,13 @@ logger = logging.getLogger(__name__)
 def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
     """
     Metoda pro vytvoření pianu z katastru arch záznamu.
+
     Metoda se volá po uložením DJ.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param created: Popis parametru ``created``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug("dj.signals.save_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     if instance.suppress_signal:
@@ -95,10 +101,11 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
             )
 
     def arch_z_save_metadata(inner_close_transaction=False):
-        """Provádí operaci arch z save metadata.
+        """
+        Provádí operaci arch z save metadata.
 
         :param inner_close_transaction: Vstupní hodnota ``inner_close_transaction`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         instance.archeologicky_zaznam.save_metadata(fedora_transaction)
         if inner_close_transaction:
             fedora_transaction.mark_transaction_as_closed()
@@ -121,12 +128,13 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
 
 @receiver(pre_delete, sender=DokumentacniJednotka, weak=False)
 def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
-    """Provádí operaci pre delete dokumentacni jednotka.
+    """
+    Provádí operaci pre delete dokumentacni jednotka.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("dj.signals.pre_delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
     pian: Pian = instance.pian
@@ -164,12 +172,13 @@ def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **k
 
 @receiver(post_delete, sender=DokumentacniJednotka, weak=False)
 def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwargs):
-    """Odstraní dokumentacni jednotka.
+    """
+    Odstraní dokumentacni jednotka.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek operace odstranění."""
+    """
     logger.debug("dj.signals.delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     if instance.suppress_signal:
         logger.debug(
@@ -195,9 +204,11 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
         if instance.close_active_transaction_when_finished:
 
             def save_metadata():
-                """Uloží metadata.
+                """
+                Uloží metadata.
 
-                :return: Vrací výsledek provedené operace."""
+                :return: Vrací výsledek provedené operace.
+                """
                 if not instance.suppress_signal_arch_z:
                     instance.archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
                 if instance.save_pian_metadata:

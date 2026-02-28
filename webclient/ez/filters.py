@@ -22,9 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojFilter(HistorieFilter, FilterSet):
-    """
-    Třída pro zakladní filtrování externího zdroju a jejich potomků.
-    """
+    """Třída pro zakladní filtrování externího zdroju a jejich potomků."""
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = "EZ"
     INCLUDE_KAT_TYP_ZMENY = False
@@ -121,10 +119,11 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     )
 
     def filter_queryset(self, queryset):
-        """Filtruje queryset.
+        """
+        Filtruje queryset. v aplikaci.
 
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(ExterniZdrojFilter, self).filter_queryset(queryset)
@@ -147,6 +146,10 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metoda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             Q(nazev__icontains=value)
@@ -162,6 +165,10 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     def filter_akce_ident(self, queryset, name, value):
         """
         Metoda pro filtrování podle identu celý akce.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
@@ -171,6 +178,10 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
     def filter_lokalita_ident(self, queryset, name, value):
         """
         Metoda pro filtrování podle identu celý lokality.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
@@ -198,11 +209,12 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         user: User = kwargs.get("request").user
         super(ExterniZdrojFilter, self).__init__(*args, **kwargs)
         self.set_filter_fields(user)
@@ -210,17 +222,16 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
 
 class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
-    """
-    Třída pro správně zobrazení filtru.
-    """
+    """Třída pro správně zobrazení filtru."""
 
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param form: Vstupní hodnota ``form`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("ez.filters.history.divider.label")
         }

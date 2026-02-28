@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class SamostatnyNalezTable(SearchTable):
-    """
-    Definuje tabulku samostatných nálezů pro přehled i export.
-    """
+    """Definuje tabulku samostatných nálezů pro přehled i export."""
 
     ident_cely = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.ident_cely.label"), linkify=True)
     igsn = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.igsn.label"), default="")
@@ -133,6 +131,9 @@ class SamostatnyNalezTable(SearchTable):
     def render_nahled(self, value, record):
         """
         Metoda pro správně zobrazení náhledu souboru.
+
+        :param value: Popis parametru ``value``.
+        :param record: Popis parametru ``record``.
         """
         soubor = record.nahled_soubor
         if soubor is not None:
@@ -162,11 +163,12 @@ class SamostatnyNalezTable(SearchTable):
         return ""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(SamostatnyNalezTable, self).__init__(*args, **kwargs)
 
 
@@ -174,14 +176,15 @@ class AktivaceDeaktivaceColumn(tables.TemplateColumn):
     """Implementuje komponentu ``AktivaceDeaktivaceColumn`` v rámci aplikace."""
 
     def render(self, record, table, value, bound_column, **kwargs):
-        """Vyrenderuje hodnotu.
+        """
+        Vyrenderuje hodnotu. v aplikaci.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param table: Vstupní hodnota ``table`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         if not hasattr(table, "request"):
             return ""
         if record.aktivni:
@@ -198,14 +201,15 @@ class smazatColumn(tables.TemplateColumn):
     """Implementuje komponentu ``smazatColumn`` v rámci aplikace."""
 
     def render(self, record, table, value, bound_column, **kwargs):
-        """Vyrenderuje hodnotu.
+        """
+        Vyrenderuje hodnotu. v aplikaci.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param table: Vstupní hodnota ``table`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         if not hasattr(table, "request"):
             return ""
         if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user, record.id):
@@ -215,9 +219,7 @@ class smazatColumn(tables.TemplateColumn):
 
 
 class UzivatelSpolupraceTable(SearchTable):
-    """
-    Definuje tabulku uživatelských spoluprací pro přehled i export.
-    """
+    """Definuje tabulku uživatelských spoluprací pro přehled i export."""
 
     stav = tables.Column(verbose_name="Stav", default="")
     vedouci = tables.Column(
@@ -295,15 +297,14 @@ class UzivatelSpolupraceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):
-        """
-        Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
-        """
+        """Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami."""
         return ""

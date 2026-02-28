@@ -12,12 +12,13 @@ class WerkzeugServerThread(Thread):
     """Implementuje komponentu ``WerkzeugServerThread`` v rámci aplikace."""
 
     def __init__(self, host="0.0.0.0", port=8000, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param host: Vstupní hodnota ``host`` pro danou operaci.
         :param port: Vstupní hodnota ``port`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__()
         self.host = host
         self.port = port
@@ -26,9 +27,7 @@ class WerkzeugServerThread(Thread):
         self.error = None
 
     def setup_ssl(self):
-        """Provádí operaci setup ssl.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci setup ssl."""
         try:
             cert_path, key_path = make_ssl_devcert("./core/tests/resources/ssl", host="localhost")
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -38,9 +37,7 @@ class WerkzeugServerThread(Thread):
             self.error = str(e)
 
     def run(self):
-        """Spustí hodnotu.
-
-        :return: Vrací výsledek provedené operace."""
+        """Spustí hodnotu. v aplikaci."""
         try:
             self.setup_ssl()
             application = StaticFilesHandler(get_wsgi_application())
@@ -57,15 +54,11 @@ class WerkzeugServerThread(Thread):
             print(f"Chyba při spuštění serveru: {self.error}")
 
     def terminate(self):
-        """Provádí operaci terminate.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci terminate."""
         pass
 
     def get_free_port(self):
-        """Vrací free port.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací free port."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(("127.0.0.1", 0))  # Bind na port 0, což znamená "najdi volný port"
             s.listen(1)  # Spustí naslouchání na tomto portu

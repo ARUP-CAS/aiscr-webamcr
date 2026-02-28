@@ -5,16 +5,15 @@ from django.utils.translation import gettext as _
 
 
 class ForeignKeyReadOnlyTextInput(forms.TextInput):
-    """
-    Widget pro textinput pro vazbu cizí klíč.
-    """
+    """Widget pro textinput pro vazbu cizí klíč."""
 
     def __init__(self, value=None, attrs=None):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         if attrs is None:
             attrs = {}
         attrs["readonly"] = True
@@ -22,10 +21,11 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
         self.value = None
 
     def format_value(self, value):
-        """Provádí operaci format value.
+        """
+        Provádí operaci format value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return str(self.value)
 
 
@@ -33,7 +33,12 @@ class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
     """Implementuje komponentu ``AutocompleteSelect2WidgetMixin`` v rámci aplikace."""
 
     def build_attrs(self, *args, **kwargs):
-        """Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy."""
+        """
+        Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy.
+
+        :param args: Popis parametru ``args``.
+        :param kwargs: Popis parametru ``kwargs``.
+        """
         attrs = super(AutocompleteSelect2WidgetMixin, self).build_attrs(*args, **kwargs)
         attrs.setdefault("data-placeholder", _("core.widgets.AutocompleteSelect2WidgetMixin.data-placeholder"))
 

@@ -45,8 +45,6 @@ Třídy
 
       Vrací path to schema.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: _parse_schema()
 
       Zpracuje schema.
@@ -141,7 +139,6 @@ Třídy
       Vrací ref type attribute name.
 
       :param type_name: Vstupní hodnota ``type_name`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: _replace_redundant_namespaces()
 
@@ -152,14 +149,11 @@ Třídy
 
    .. py:method:: generate_document()
 
-      Vygeneruje document.
-
-      :return: Vrací nově vytvořený výsledek operace.
+      Vygeneruje document. v aplikaci.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
       :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 

@@ -9,6 +9,7 @@ Třídy
 .. py:class:: ManyToManyRestrictedClassMixin
 
    Třída pro model pro vytvoření property has_connections.
+
    Hledá jestli má model nejakou many to many vazbu.
 
    **Metody:**
@@ -16,8 +17,6 @@ Třídy
    .. py:method:: has_connections()
 
       Určí, zda connections.
-
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: IPWhitelistMixin
@@ -33,5 +32,4 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 

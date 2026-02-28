@@ -71,7 +71,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UploadFileView
@@ -91,7 +90,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: dispatch()
 
@@ -100,7 +98,6 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: post()
 
@@ -178,12 +175,10 @@ Třídy
       **Návratová hodnota:**
 
       *dict*: Upravený response_data slovník s přidanou duplicitní zprávou.
-      Pokud není nalezen žádný duplikát, vrací nezměněný slovník.
 
       **Klíče odpovědi:**
 
       - ``duplicate`` (*tuple*): Tuple obsahující zprávu o duplicitě ve formátu:
-        "Soubor {original_filename} byl již nahrán k záznamu {parent_ident}. Zpráva..."
 
    .. py:method:: _append_rename_message()
 
@@ -202,12 +197,10 @@ Třídy
       **Návratová hodnota:**
 
       *dict*: Upravený response_data slovník s přidanou zprávou o přejmenování.
-      Pokud nedošlo k přejmenování (renamed=False), vrací nezměněný slovník.
 
       **Klíče odpovědi:**
 
       - ``file_renamed`` (*tuple*): Tuple obsahující zprávu o přejmenování ve formátu:
-        "Soubor {original_filename} byl přejmenován na {new_name}"
 
    .. py:method:: _unknown_error_response()
 
@@ -277,23 +270,19 @@ Třídy
       **Návratová hodnota:**
 
       *tuple | JsonResponse*: Při úspěchu vrací tuple (objekt, new_name):
-      - objekt (Projekt|Dokument|SamostatnyNalez): Instance nalezeného záznamu
-      - new_name (str): Vygenerovaný standardizovaný název souboru
-      Při chybě vrací JsonResponse s chybovou zprávou a status kódem 403/500
 
 
 .. py:class:: UpdateExistingFileUploadView
 
    Pohled pro nahrazení existujícího souboru novou verzí.
 
-
-   **Rozdíly oproti NewFileUploadView:**
-
+   Rozdíly oproti NewFileUploadView:
    - Vždy vyžaduje přihlášení uživatele (LoginRequiredMixin)
    - Nepodporuje projekty (pouze dokument, model3d, pas)
    - Zachovává původní název souboru, aktualizuje pouze příponu
    - Aktualizuje existující záznam v Fedora repository místo vytváření nového
    - V historii zaznamenává jako novou verzi, ne nový soubor
+
 
    **URL parametry:**
 
@@ -337,7 +326,6 @@ Třídy
       **Návratová hodnota:**
 
       *bool | JsonResponse*: True pokud je vše v pořádku,
-      JsonResponse s chybovou zprávou při problému
 
 
 .. py:class:: ExportMixinDate
@@ -367,7 +355,6 @@ Třídy
 
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
       :param action: Vstupní hodnota ``action`` pro danou operaci.
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: filter_by_permission()
 
@@ -375,14 +362,12 @@ Třídy
 
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
       :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_status_lookup()
 
       Provádí operaci add status lookup.
 
       :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_ownership_lookup()
 
@@ -390,7 +375,6 @@ Třídy
 
       :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: add_accessibility_lookup()
 
@@ -398,7 +382,6 @@ Třídy
 
       :param permission: Vstupní hodnota ``permission`` pro danou operaci.
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: SearchListView
@@ -411,13 +394,10 @@ Třídy
 
       Vytvoří export výsledků vyhledávání v požadovaném formátu.
       :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
 
    .. py:method:: init_translations()
 
       Provádí operaci init translations.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _get_sort_params()
 
@@ -430,7 +410,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_queryset()
 
@@ -461,7 +440,6 @@ Třídy
       :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
       :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
       :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: CheckUserAuthentication
@@ -491,7 +469,6 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DeleteTempValueView
@@ -505,7 +482,6 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AbortDownloadUpdateTempValueView
@@ -519,7 +495,6 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: RosettaFileLevelMixinWithBackup
@@ -531,6 +506,7 @@ Třídy
    .. py:method:: po_file_path()
 
       Podle URL parametrů `kwargs` odvodí a vrátí cestu k `.po` souboru,
+
       který se má zobrazit nebo upravit.
 
       Pokud soubor neexistuje, vyvolá chybu 404.
@@ -547,21 +523,18 @@ Třídy
       Provádí operaci form valid.
 
       :param form: Vstupní hodnota ``form`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: handle_uploaded_file()
 
       Zpracuje uploaded file.
 
       :param f: Vstupní hodnota ``f`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: TranslationFileListWithBackupView
@@ -575,7 +548,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: TranslationFormWithBackupView
@@ -589,7 +561,6 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: TranslationFileDownloadBackup
@@ -677,7 +648,6 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DataImportStop
@@ -692,7 +662,6 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: DataImportStart
@@ -707,7 +676,6 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 Funkce
@@ -743,6 +711,10 @@ Funkce
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 
    Funkce pro získaní jména souboru pro samostatný nález.
+   :param find: Hodnota parametru ``find`` použitého touto operací.
+   :param filename: Hodnota parametru ``filename`` použitého touto operací.
+   :param add_to_index: Hodnota parametru ``add_to_index`` použitého touto operací.
+
    :param find: Hodnota parametru ``find`` použitého touto operací.
    :param filename: Hodnota parametru ``filename`` použitého touto operací.
    :param add_to_index: Hodnota parametru ``add_to_index`` použitého touto operací.
@@ -783,6 +755,8 @@ Funkce
    Funkce pohledu pro získaní heatmapy.
    :param request: Hodnota parametru ``request`` použitého touto operací.
 
+   :param request: Hodnota parametru ``request`` použitého touto operací.
+
 .. py:function:: check_soubor_vazba(typ_vazby, ident, id_zaznamu)
 
    Ověří soubor vazba.
@@ -790,4 +764,3 @@ Funkce
    :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
    :param ident: Vstupní hodnota ``ident`` pro danou operaci.
    :param id_zaznamu: Vstupní hodnota ``id_zaznamu`` pro danou operaci.
-   :return: Vrací výsledek ověření nebo validačního pravidla.

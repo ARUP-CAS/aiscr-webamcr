@@ -18,7 +18,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __str__()
 
@@ -29,8 +28,6 @@ Třídy
    .. py:method:: get_permission_object()
 
       Vrací permission object.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: NalezPredmet
@@ -45,7 +42,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __str__()
 
@@ -56,6 +52,4 @@ Třídy
    .. py:method:: get_permission_object()
 
       Vrací permission object.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 

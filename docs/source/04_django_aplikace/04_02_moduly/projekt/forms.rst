@@ -20,13 +20,10 @@ Třídy
       :param required: Vstupní hodnota ``required`` pro danou operaci.
       :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: clean()
 
       Provádí operaci clean.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: EditProjektForm
@@ -44,7 +41,6 @@ Třídy
       :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
       :param edit_fields: Vstupní hodnota ``edit_fields`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: clean()
 
@@ -63,7 +59,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: clean()
 
@@ -82,7 +77,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ZahajitVTerenuForm
@@ -97,13 +91,10 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: clean()
 
       Provádí operaci clean.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: UkoncitVTerenuForm
@@ -118,7 +109,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: clean()
 
@@ -137,7 +127,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: GenerovatNovePotvrzeniForm
@@ -152,7 +141,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: GenerovatExpertniListForm
@@ -167,7 +155,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: PripojitProjektForm
@@ -183,7 +170,6 @@ Třídy
       :param dok: Vstupní hodnota ``dok`` pro danou operaci.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ProjektFilterForm
@@ -205,7 +191,6 @@ Třídy
       :param help_text: Vstupní hodnota ``help_text`` pro danou operaci.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: UpravitDatumOznameniForm
@@ -220,7 +205,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: NeodeslatMailForm
@@ -235,5 +219,4 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 

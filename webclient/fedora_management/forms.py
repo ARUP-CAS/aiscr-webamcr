@@ -19,9 +19,10 @@ class UpdateMetadataFileForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)

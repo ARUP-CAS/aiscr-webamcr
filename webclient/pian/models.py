@@ -32,9 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
-    """
-    Databázový model PIAN.
-    """
+    """Databázový model PIAN."""
 
     STATES = (
         (PIAN_NEPOTVRZEN, _("pian.models.pian.states.nepotvrzen")),
@@ -86,19 +84,18 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN, db_index=True)
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.update_all_azs = True
 
     @property
     def pristupnost_pom(self):
-        """Provádí operaci pristupnost pom.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci pristupnost pom."""
         try:
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
             pristupnosti_ids = set()
@@ -116,17 +113,16 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     @property
     def pristupnost(self):
-        """Provádí operaci pristupnost.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci pristupnost."""
         return self.pristupnost_pom
 
     def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
-        """Provádí operaci evaluate pristupnost change.
+        """
+        Provádí operaci evaluate pristupnost change.
 
         :param added_pristupnost_id: Identifikátor objektu ``added_pristupnost``.
         :param skip_zaznam_id: Identifikátor objektu ``skip_zaznam``.
-        :return: Vrací výsledek provedené operace."""
+        """
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         pristupnosti_ids = set()
         for dok_jednotka in dok_jednotky:
@@ -158,16 +154,19 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         ]
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
     def get_absolute_url(self, request=None):
-        """Vrací absolute url.
+        """
+        Vrací absolute url.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         if dok_jednotky:
             for dok_jednotka in dok_jednotky:
@@ -180,15 +179,11 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return reverse("core:home")
 
     def get_permission_object(self):
-        """Vrací permission object.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací permission object."""
         return self
 
     def get_create_user(self):
-        """Vrací create user.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create user."""
         try:
             my_list = []
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -205,9 +200,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create org."""
         try:
             our_list = []
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -228,6 +221,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     def set_permanent_ident_cely(self):
         """
         Metoda pro nastavení permanentního identifikátoru pro PIAN.
+
         Metoda vrátí identifikátor podle sekvence PIAN.
         """
         katastr = True if self.presnost.zkratka == "4" else False
@@ -259,6 +253,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     def set_vymezeny(self, user):
         """
         Metoda pro nastavení stavu vymezený.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = PIAN_NEPOTVRZEN
         self.zaznamenej_zapsani(user)
@@ -266,6 +262,9 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     def set_potvrzeny(self, user, old_ident):
         """
         Metoda pro nastavení stavu potvrzený.
+
+        :param user: Popis parametru ``user``.
+        :param old_ident: Popis parametru ``old_ident``.
         """
         self.stav = PIAN_POTVRZEN
         Historie(
@@ -276,15 +275,15 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     def zaznamenej_zapsani(self, user):
         """
         Metoda pro uložení změny do historie pro pianu.
+
+        :param user: Popis parametru ``user``.
         """
         Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()
 
 
 class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
-    """
-    Databázový model kladu ZM.
-    """
+    """Databázový model kladu ZM."""
 
     gid = models.AutoField(primary_key=True)
     kategorie = models.IntegerField(choices=KLADYZM_KATEGORIE)
@@ -298,9 +297,7 @@ class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
 
 
 class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
-    """
-    Databázový model sekvence PIAN podle kladu ZM 50 a katastru.
-    """
+    """Databázový model sekvence PIAN podle kladu ZM 50 a katastru."""
 
     kladyzm50 = models.ForeignKey(
         "Kladyzm",
@@ -323,6 +320,9 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
 def vytvor_pian(katastr, fedora_transaction):
     """
     Funkce pro vytvoření pianu v DB podle katastru.
+
+    :param katastr: Popis parametru ``katastr``.
+    :param fedora_transaction: Popis parametru ``fedora_transaction``.
     """
     zm10, zm50 = get_ZM_from_point(katastr.definicni_bod)
     if zm10 is None:
@@ -359,10 +359,11 @@ def vytvor_pian(katastr, fedora_transaction):
 
 
 def get_ZM_from_point(point):
-    """Vrací ZM from point.
+    """
+    Vrací ZM from point.
 
     :param point: Vstupní hodnota ``point`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     try:
         zm10s = list(Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=point))
         zm50s = list(Kladyzm.objects.filter(kategorie=KLADYZM50).filter(the_geom__contains=point))

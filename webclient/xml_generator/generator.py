@@ -64,9 +64,11 @@ class DocumentGenerator:
 
     @classmethod
     def _get_schema_dict(cls):
-        """Vrací schema dict.
+        """
+        Vrací schema dict.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         from adb.models import Adb
         from arch_z.models import ArcheologickyZaznam
         from dokument.models import Dokument, Let
@@ -96,9 +98,11 @@ class DocumentGenerator:
         }
 
     def _get_schema_name(self):
-        """Vrací schema name.
+        """
+        Vrací schema name.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         type_class_dict = self._get_schema_dict()
         object_class = self.document_object.__class__
         name = type_class_dict.get(object_class)
@@ -106,10 +110,12 @@ class DocumentGenerator:
 
     @staticmethod
     def _create_xpath_query(model_name):
-        """Vytvoří xpath query.
+        """
+        Vytvoří xpath query.
 
         :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         if model_name.lower().endswith("type"):
             model_name = model_name.replace("amcr:", "")
             query_attribute_selection = f"[local-name()='complexType' and @name='{model_name}']"
@@ -120,26 +126,28 @@ class DocumentGenerator:
 
     @staticmethod
     def get_path_to_schema():
-        """Vrací path to schema.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací path to schema."""
         return os.path.join("xml_generator/definitions/", AMCR_XSD_FILENAME)
 
     def _parse_schema(self, model_name):
-        """Zpracuje schema.
+        """
+        Zpracuje schema.
 
         :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         parser = etree.XMLParser()
         tree = etree.parse(self.get_path_to_schema(), parser)
         return tree.xpath(self._create_xpath_query(model_name))
 
     @staticmethod
     def _get_prefix(comment_text: str) -> str:
-        """Vrací prefix.
+        """
+        Vrací prefix.
 
         :param comment_text: Vstupní hodnota ``comment_text`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         if "-" not in comment_text:
             return ""
         if "|" in comment_text:
@@ -151,10 +159,12 @@ class DocumentGenerator:
 
     @staticmethod
     def _parse_comment(comment_text: str) -> Optional[ParsedComment]:
-        """Zpracuje comment.
+        """
+        Zpracuje comment.
 
         :param comment_text: Vstupní hodnota ``comment_text`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         attribute_list = comment_text.split("|")
         attribute_list = [
             text.replace('"', "").replace("{", "").replace("}", "").strip().lower() for text in attribute_list
@@ -168,11 +178,13 @@ class DocumentGenerator:
             return ParsedComment(attribute_list[-1], attribute_list[:-1])
 
     def _get_attribute_of_record(self, attribute_name, record=None):
-        """Vrací attribute of record.
+        """
+        Vrací attribute of record.
 
         :param attribute_name: Vstupní hodnota ``attribute_name`` pro danou operaci.
         :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         attribute_value = None
         if record is None:
             record = self.document_object
@@ -262,20 +274,23 @@ class DocumentGenerator:
 
     @staticmethod
     def _get_attribute_of_record_unbounded(record, parsed_comment: ParsedComment, schema_element) -> dict:
-        """Vrací attribute of record unbounded.
+        """
+        Vrací attribute of record unbounded.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param parsed_comment: Vstupní hodnota ``parsed_comment`` pro danou operaci.
         :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         attributes_dict = {}
 
         def get_attribute(record, attribute_name):
-            """Vrací attribute.
+            """
+            Vrací attribute. v aplikaci.
 
             :param record: Vstupní hodnota ``record`` pro danou operaci.
             :param attribute_name: Vstupní hodnota ``attribute_name`` pro danou operaci.
-            :return: Vrací načtená data odpovídající vstupním parametrům."""
+            """
             attributes = []
             record_name_split = attribute_name.split(".")
             if len(record_name_split) == 1:
@@ -348,7 +363,8 @@ class DocumentGenerator:
         id_field_prefix="",
         ref_type=None,
     ):
-        """Vytvoří element.
+        """
+        Vytvoří element.
 
         :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
         :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
@@ -356,7 +372,8 @@ class DocumentGenerator:
         :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
         :param id_field_prefix: Vstupní hodnota ``id_field_prefix`` pro danou operaci.
         :param ref_type: Vstupní hodnota ``ref_type`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         if document_object is None:
             document_object = self.document_object
         attribute_value = self._get_attribute_of_record(parsed_comment.value_field_name, document_object)
@@ -391,7 +408,8 @@ class DocumentGenerator:
     def _create_many_to_many_ref_elements(
         self, schema_element, parent_element, related_records, parsed_comment: ParsedComment, prefix="", ref_type=None
     ):
-        """Vytvoří many to many ref elements.
+        """
+        Vytvoří many to many ref elements.
 
         :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
         :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
@@ -399,7 +417,8 @@ class DocumentGenerator:
         :param parsed_comment: Vstupní hodnota ``parsed_comment`` pro danou operaci.
         :param prefix: Vstupní hodnota ``prefix`` pro danou operaci.
         :param ref_type: Vstupní hodnota ``ref_type`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace."""
+        :return: Vrací nově vytvořený výsledek operace.
+        """
         for i, record in enumerate(related_records["value"]):
             new_sub_element = ET.SubElement(
                 parent_element, f"{{{AMCR_NAMESPACE_URL}}}" + schema_element.attrib["name"], nsmap=self._nsmap
@@ -434,11 +453,13 @@ class DocumentGenerator:
                     )
 
     def _parse_scheme_create_element(self, schema_element, parent_element):
-        """Zpracuje scheme create element.
+        """
+        Zpracuje scheme create element.
 
         :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
         :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if schema_element.__class__.__name__ == "_Element":
             next_element = schema_element.getnext()
             # Komentář by měl být bezprostředně následující element.
@@ -493,12 +514,14 @@ class DocumentGenerator:
                     self._parse_scheme_create_element(child_schema_element, parent_element)
 
     def _iterate_unbound_records(self, related_records, schema_element, parent_element):
-        """Provádí operaci iterate unbound records.
+        """
+        Provádí operaci iterate unbound records.
 
         :param related_records: Vstupní hodnota ``related_records`` pro danou operaci.
         :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
         :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         child_schema_element = self._parse_schema(schema_element.attrib["type"])
         for obj in related_records["value"]:
             self._parse_scheme_create_nested_element(
@@ -508,13 +531,15 @@ class DocumentGenerator:
     def _parse_scheme_create_nested_element(
         self, schema_element, parent_element, document_object, child_parent_element_name
     ):
-        """Zpracuje scheme create nested element.
+        """
+        Zpracuje scheme create nested element.
 
         :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
         :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
         :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
         :param child_parent_element_name: Vstupní hodnota ``child_parent_element_name`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         child_parent_element = ET.SubElement(
             parent_element, f"{{{AMCR_NAMESPACE_URL}}}{child_parent_element_name}", nsmap=self._nsmap
         )
@@ -576,10 +601,11 @@ class DocumentGenerator:
                                 )
 
     def get_ref_type_attribute_name(self, type_name):
-        """Vrací ref type attribute name.
+        """
+        Vrací ref type attribute name.
 
         :param type_name: Vstupní hodnota ``type_name`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         parser = etree.XMLParser()
         type_name = type_name.replace("amcr:", "")
         if type_name not in self.attribute_names:
@@ -592,18 +618,21 @@ class DocumentGenerator:
 
     @staticmethod
     def _replace_redundant_namespaces(xml_string):
-        """Provádí operaci replace redundant namespaces.
+        """
+        Provádí operaci replace redundant namespaces.
 
         :param xml_string: Vstupní hodnota ``xml_string`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         pattern = r'\sxmlns:gml="[^"]*"'
         counter = [0]
 
         def replace(match):
-            """Provádí operaci replace.
+            """
+            Provádí operaci replace.
 
             :param match: Vstupní hodnota ``match`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            """
             if counter[0] > 0:
                 return ""
             else:
@@ -616,9 +645,7 @@ class DocumentGenerator:
         return xml_string
 
     def generate_document(self):
-        """Vygeneruje document.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Vygeneruje document. v aplikaci."""
         self.document_root.attrib["{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"] = SCHEMA_LOCATION
         parent_element = ET.SubElement(
             self.document_root, f"{{{AMCR_NAMESPACE_URL}}}{self._get_schema_name()}", nsmap=self._nsmap
@@ -637,10 +664,11 @@ class DocumentGenerator:
         return xml_string
 
     def __init__(self, document_object):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.document_object = document_object
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
         ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")

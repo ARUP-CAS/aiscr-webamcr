@@ -52,11 +52,12 @@ class HeslarHierarchieForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(HeslarHierarchieForm, self).__init__(*args, **kwargs)
         logger.debug(self.instance)
         if self.instance.pk is not None:
@@ -84,11 +85,12 @@ class HeslarOdkazForm(forms.ModelForm):
         widgets = {"heslo": AutocompleteModelSelect2(url="heslar:heslar-autocomplete", forward=["heslar_nazev"])}
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(HeslarOdkazForm, self).__init__(*args, **kwargs)
         logger.debug(self.instance)
         if self.instance.pk is not None:
@@ -105,11 +107,12 @@ class OsobaAdminForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
             widget=AutocompleteListSelect2(url="pid:orcid-autocomplete"),
@@ -141,11 +144,12 @@ class OrganizaceAdminForm(forms.ModelForm):
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.fields["ror"] = RorAutocompleteField(
             widget=AutocompleteListSelect2(url="pid:ror-autocomplete"),

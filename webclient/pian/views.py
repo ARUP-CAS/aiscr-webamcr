@@ -54,6 +54,9 @@ logger = logging.getLogger(__name__)
 def detail(request, ident_cely):
     """
     Funkce pohledu pro zapsání změny pianu.
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     dj_ident_cely = request.POST["dj_ident_cely"]
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
@@ -93,6 +96,9 @@ def detail(request, ident_cely):
 def odpojit(request, dj_ident_cely):
     """
     Funkce pohledu pro odpojení pianu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
     """
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian_djs = DokumentacniJednotka.objects.filter(pian=dj.pian)
@@ -157,6 +163,9 @@ def odpojit(request, dj_ident_cely):
 def potvrdit(request, dj_ident_cely):
     """
     Funkce pohledu pro potvrzení pianu pomocí modalu.
+
+    :param request: Popis parametru ``request``.
+    :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
     """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
@@ -216,6 +225,9 @@ def potvrdit(request, dj_ident_cely):
 def create(request, dj_ident_cely):
     """
     Funkce pohledu pro vytvoření pianu.
+
+    :param request: Popis parametru ``request``.
+    :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
     """
     logger.debug("pian.views.create.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
@@ -267,6 +279,9 @@ def create(request, dj_ident_cely):
 def mapa_dj(request, ident_cely):
     """
     Funkce ziskej Dj pro Pian
+
+    :param request: Popis parametru ``request``.
+    :param ident_cely: Popis parametru ``ident_cely``.
     """
     logger.debug("pian.views.create.start")
     back = []
@@ -292,11 +307,12 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
     """Implementuje komponentu ``PianPermissionFilterMixin`` v rámci aplikace."""
 
     def filter_by_permission(self, qs, permission):
-        """Filtruje by permission.
+        """
+        Filtruje by permission.
 
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         qs = qs.annotate(
             historie_zapsat_pian=FilteredRelation(
                 "historie__historie",
@@ -322,11 +338,12 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         return qs
 
     def add_ownership_lookup(self, ownership, qs=None):
-        """Provádí operaci add ownership lookup.
+        """
+        Provádí operaci add ownership lookup.
 
         :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
         filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
         if ownership == Permissions.ownershipChoices.our:
@@ -351,11 +368,12 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
             )
 
     def add_accessibility_lookup(self, permission, qs):
-        """Provádí operaci add accessibility lookup.
+        """
+        Provádí operaci add accessibility lookup.
 
         :param permission: Vstupní hodnota ``permission`` pro danou operaci.
         :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         accessibility_key = self.permission_model_lookup + "pristupnost_filter__in"
         accessibilities = Heslar.objects.filter(
             nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id)
@@ -375,14 +393,10 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
 
 
 class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PianPermissionFilterMixin):
-    """
-    Třída pohledu pro autocomplete pianu.
-    """
+    """Třída pohledu pro autocomplete pianu."""
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací queryset. v aplikaci."""
         qs = Pian.objects.all().order_by("ident_cely")
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
@@ -390,9 +404,7 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pia
 
 
 class ImportovatPianView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro získaní řádku tabulky s externím zdrojem.
-    """
+    """Třída pohledu pro získaní řádku tabulky s externím zdrojem."""
 
     sheet = None
 
@@ -402,10 +414,11 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
     template_name = "pian/pian_import_table.html"
 
     def post(self, request):
-        """Obsluhuje HTTP metodu POST.
+        """
+        Obsluhuje HTTP metodu POST.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací výsledek provedené operace."""
+        """
         docfile = request.FILES["file"]
         if docfile.size == 0:
             logger.debug("pian.views.ImportovatPianView.post.label_check.fileEmpty")
@@ -492,8 +505,9 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
 
     def check_epsg(self, epsg):
         # @jiribartos kontrola geometrie
-        """Ověří epsg.
+        """
+        Ověří epsg. v aplikaci.
 
         :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return file_validate_epsg(epsg)

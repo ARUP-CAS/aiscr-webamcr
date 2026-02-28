@@ -21,9 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def invalidate_arch_z_related_models():
-    """Provádí operaci invalidate arch z related models.
-
-    :return: Vrací výsledek provedené operace."""
+    """Provádí operaci invalidate arch z related models."""
     invalidate_model(Akce)
     invalidate_model(Projekt)
 
@@ -32,7 +30,12 @@ def invalidate_arch_z_related_models():
 def create_arch_z_vazby(sender, instance, **kwargs):
     """
     Metoda pro vytvoření historických vazeb arch záznamu.
+
     Metoda se volá pred uložením arch záznamu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug("arch_z.signals.create_arch_z_vazby.start")
     if instance.pk is None:
@@ -48,6 +51,10 @@ def create_arch_z_vazby(sender, instance, **kwargs):
 def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"pk": instance.pk})
 
@@ -85,10 +92,12 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
         close_transaction = instance.close_active_transaction_when_finished
 
         def save_metadata(inner_close_transaction=False):
-            """Uloží metadata.
+            """
+            Uloží metadata.
 
             :param inner_close_transaction: Vstupní hodnota ``inner_close_transaction`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            :return: Vrací výsledek provedené operace.
+            """
             try:
                 if (
                     instance.akce
@@ -128,12 +137,13 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 
 @receiver(post_save, sender=Akce, weak=False)
 def update_akce_snapshot(sender, instance: Akce, **kwargs):
-    """Aktualizuje akce snapshot.
+    """
+    Aktualizuje akce snapshot.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"pk": instance.pk})
     if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
         update_single_redis_snapshot.apply_async(["Akce", instance.pk], countdown=UPDATE_REDIS_SNAPSHOT)
@@ -163,6 +173,10 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
 def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
     """
     Funkce pro aktualizaci metadat externího odkazu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
@@ -185,6 +199,10 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
 def delete_arch_z_repository_container_and_connections(sender, instance: ArcheologickyZaznam, **kwargs):
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_container_and_connections.start",
@@ -211,12 +229,13 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
 
 @receiver(post_delete, sender=ArcheologickyZaznam, weak=False)
 def delete_arch_z_repository_update_connected_records(sender, instance: ArcheologickyZaznam, **kwargs):
-    """Odstraní arch z repository update connected records.
+    """
+    Odstraní arch z repository update connected records.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek operace odstranění."""
+    """
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_update_connected_records.start",
         extra={"ident_cely": instance.ident_cely},
@@ -224,10 +243,11 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     fedora_transaction: FedoraTransaction = instance.active_transaction
 
     def save_metadata(close_transaction=False):
-        """Uloží metadata.
+        """
+        Uloží metadata. v aplikaci.
 
         :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         invalidate_arch_z_related_models()
         try:
             if instance.akce and instance.akce.projekt is not None:
@@ -253,6 +273,10 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
 def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **kwargs):
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug(
         "arch_z.signals.delete_externi_odkaz_repository_container.start",
@@ -263,10 +287,11 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     invalidate_arch_z_related_models()
 
     def save_metadata(inner_close_transaction=False):
-        """Uloží metadata.
+        """
+        Uloží metadata. v aplikaci.
 
         :param inner_close_transaction: Vstupní hodnota ``inner_close_transaction`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
             instance.archeologicky_zaznam.save_metadata(fedora_transaction)
         if instance.externi_zdroj is not None:

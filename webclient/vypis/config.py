@@ -37,10 +37,11 @@ from .fields import (
 
 
 def get_config(name):
-    """Vrací config.
+    """
+    Vrací config. v aplikaci.
 
     :param name: Vstupní hodnota ``name`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     configs = {
         "dokument": DOKUMENTY_CONFIG,
         "projekt": PROJEKTY_CONFIG,

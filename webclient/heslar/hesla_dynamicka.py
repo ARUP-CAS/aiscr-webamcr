@@ -9,11 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 def get_settings(item_group, item_id):
-    """Vrací settings.
+    """
+    Vrací settings. v aplikaci.
 
     :param item_group: Vstupní hodnota ``item_group`` pro danou operaci.
     :param item_id: Identifikátor objektu ``item``.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     try:
         settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
         if settings_query.count() > 0:
@@ -24,7 +25,15 @@ def get_settings(item_group, item_id):
 
 
 def get_id_from_database(table, heslo, ident_cely, heslarDB) -> int:
-    """Vrátí ID položky hesláře podle mapování nebo výchozího identifikátoru."""
+    """
+    Vrátí ID položky hesláře podle mapování nebo výchozího identifikátoru.
+
+    :param table: Popis parametru ``table``.
+    :param heslo: Popis parametru ``heslo``.
+    :param ident_cely: Popis parametru ``ident_cely``.
+    :param heslarDB: Popis parametru ``heslarDB``.
+    :return: Vrací výsledek operace.
+    """
     try:
         if heslo in heslarDB:
             heslar_obj = table.objects.filter(ident_cely=heslarDB[heslo]).values_list("pk", flat=True).first()
@@ -41,13 +50,14 @@ def get_id_from_database(table, heslo, ident_cely, heslarDB) -> int:
 
 
 def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
-    """Načte constants.
+    """
+    Načte constants. v aplikaci.
 
     :param model: Vstupní hodnota ``model`` pro danou operaci.
     :param constant_name: Vstupní hodnota ``constant_name`` pro danou operaci.
     :param CONSTANTS: Vstupní hodnota ``CONSTANTS`` pro danou operaci.
     :param COMPOSITE_CONSTANTS: Vstupní hodnota ``COMPOSITE_CONSTANTS`` pro danou operaci.
-    :return: Vrací načtená data odpovídající vstupním parametrům."""
+    """
     heslarDB = get_settings("constants", constant_name)
     missing_keys = set(heslarDB.keys()) - set(CONSTANTS.keys())
     if missing_keys:

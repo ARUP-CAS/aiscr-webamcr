@@ -9,10 +9,11 @@ class AMCRAuthUser(ModelBackend):
     """
 
     def user_can_authenticate(self, user):
-        """Provádí operaci user can authenticate.
+        """
+        Provádí operaci user can authenticate.
 
         :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if user.is_active:
             return True
         else:

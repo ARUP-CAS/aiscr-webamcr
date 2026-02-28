@@ -17,18 +17,21 @@ Třídy
       Inicializuje instanci třídy.
 
       :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __call__()
 
       Provádí operaci call.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: process_view()
 
       Metoda pro kontrolu oprvávnení pro každý view.
+
+      :param request: Popis parametru ``request``.
+      :param view_func: Popis parametru ``view_func``.
+      :param view_args: Popis parametru ``view_args``.
+      :param view_kwargs: Popis parametru ``view_kwargs``.
 
 
 .. py:class:: ErrorMiddleware
@@ -42,14 +45,12 @@ Třídy
       Inicializuje instanci třídy.
 
       :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __call__()
 
       Provádí operaci call.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: process_exception()
 
@@ -57,7 +58,6 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param exception: Vstupní hodnota ``exception`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: StatusMessageMiddleware
@@ -71,14 +71,12 @@ Třídy
       Inicializuje instanci třídy.
 
       :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: __call__()
 
       Provádí operaci call.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _show_message()
 
@@ -97,5 +95,4 @@ Třídy
       :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
       :param view_args: Vstupní hodnota ``view_args`` pro danou operaci.
       :param view_kwargs: Vstupní hodnota ``view_kwargs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 

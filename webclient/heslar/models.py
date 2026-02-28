@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
-    """
-    Databázový model hesláře.
-    """
+    """Databázový model hesláře."""
 
     # Zvažte změnu na CharField, pokud se neočekává dlouhý text.
     ident_cely = models.TextField(unique=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
@@ -36,23 +34,17 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def dokument_typ_material_rada(self):
-        """Provádí operaci dokument typ material rada.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci dokument typ material rada."""
         return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):
-        """Provádí operaci podrazena hesla.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci podrazena hesla."""
         return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
 
     @property
     def nadrazena_hesla(self):
-        """Provádí operaci nadrazena hesla.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci nadrazena hesla."""
         return HeslarHierarchie.objects.filter(heslo_podrazene=self)
 
     class Meta:
@@ -68,9 +60,11 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
         verbose_name_plural = "Heslář"
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if get_language() == "en":
             if self.heslo_en:
                 return self.heslo_en
@@ -85,11 +79,12 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
                 return ""
 
     def save(self, *args, **kwargs):
-        """Uloží změny objektu.
+        """
+        Uloží změny objektu.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         super().save(*args, **kwargs)
@@ -100,9 +95,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
 
 class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
-    """
-    Databázový model datace hesláře.
-    """
+    """Databázový model datace hesláře."""
 
     obdobi = models.OneToOneField(
         Heslar,
@@ -126,11 +119,12 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         verbose_name_plural = "Heslář datace"
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(HeslarDatace, self).__init__(*args, **kwargs)
         try:
             self.initial_obdobi = self.obdobi
@@ -141,9 +135,7 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
 
 
 class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
-    """
-    Databázový model vazby typu dokumentu, materiálu a řady.
-    """
+    """Databázový model vazby typu dokumentu, materiálu a řady."""
 
     dokument_rada = models.ForeignKey(
         Heslar,
@@ -178,11 +170,12 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(HeslarDokumentTypMaterialRada, self).__init__(*args, **kwargs)
         self.initial_dokument_rada = self.dokument_rada
         self.initial_dokument_typ = self.dokument_typ
@@ -191,9 +184,7 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
 
 
 class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
-    """
-    Databázový model hierarchie hesláře.
-    """
+    """Databázový model hierarchie hesláře."""
 
     TYP_CHOICES = [
         ("podřízenost", _("heslar.models.HeslarHierarchie.TYP_CHOICES.podrizenost")),
@@ -231,11 +222,12 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         ]
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(HeslarHierarchie, self).__init__(*args, **kwargs)
         if self.pk:
             self.initial_heslo_podrazene = self.heslo_podrazene
@@ -247,17 +239,17 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
 
 
 class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
-    """
-    Databázový model názvu hesláře.
-    """
+    """Databázový model názvu hesláře."""
 
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.HeslarNazev.nazev"))
     povolit_zmeny = models.BooleanField(default=True, verbose_name=_("heslar.models.HeslarNazev.povolit_zmeny"))
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.nazev
 
     class Meta:
@@ -268,9 +260,7 @@ class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
 
 
 class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
-    """
-    Databázový model odkazu hesláře.
-    """
+    """Databázový model odkazu hesláře."""
 
     SKOS_MAPPING_RELATION_CHOICES = [
         ("skos:closeMatch", _("heslar.models.HeslarOdkaz.skos_mapping_relation_choices.skos_closeMatch")),
@@ -305,11 +295,12 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         verbose_name_plural = "Heslář odkaz"
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(HeslarOdkaz, self).__init__(*args, **kwargs)
         if self.pk:
             logger.debug(self.heslo)
@@ -320,9 +311,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
 
 
 class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadata):
-    """
-    Databázový model katastru RÚIAN.
-    """
+    """Databázový model katastru RÚIAN."""
 
     okres = models.ForeignKey(
         "RuianOkres",
@@ -341,9 +330,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def pian_ident_cely(self):
-        """Provádí operaci pian ident cely.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci pian ident cely."""
         if self.pian is not None:
             return self.pian.ident_cely
         else:
@@ -357,24 +344,25 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
         verbose_name_plural = "Ruian katastry"
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return f"{self.nazev} ({self.okres.nazev}; {self.kod})"
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ident cely."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Uloží změny objektu.
+        """
+        Uloží změny objektu.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -386,9 +374,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
 
 class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
-    """
-    Databázový model kraje RÚIAN.
-    """
+    """Databázový model kraje RÚIAN."""
 
     nazev = models.CharField(unique=True, max_length=100, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
@@ -408,24 +394,25 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
         verbose_name_plural = "Ruian kraje"
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ident cely."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Uloží změny objektu.
+        """
+        Uloží změny objektu.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -437,9 +424,7 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
 
 
 class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
-    """
-    Databázový model okresu RÚIAN.
-    """
+    """Databázový model okresu RÚIAN."""
 
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianOkres.nazev"))
     kraj = models.ForeignKey(
@@ -461,24 +446,25 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
         verbose_name_plural = "Ruian okresy"
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ident cely."""
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
-        """Uloží změny objektu.
+        """
+        Uloží změny objektu.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(

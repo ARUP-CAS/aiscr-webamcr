@@ -44,10 +44,11 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
     """
 
     def clean(self, value):
-        """Provádí operaci clean.
+        """
+        Provádí operaci clean.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         qs = super().clean(value)
         if value:
             i = 1
@@ -64,9 +65,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
 
 class CoordinatesDokumentForm(forms.Form):
-    """
-    Hlavní formulář pro editaci souřadnic v modelu 3D a PAS.
-    """
+    """Hlavní formulář pro editaci souřadnic v modelu 3D a PAS."""
 
     visible_ss_combo = forms.ChoiceField(
         label=_("pas.forms.coordinates.detector.label"),
@@ -93,9 +92,7 @@ class CoordinatesDokumentForm(forms.Form):
 
 
 class EditDokumentExtraDataForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D."""
 
     rada = forms.CharField(
         label=_("dokument.forms.editDokumentExtraDataForm.rada.label"),
@@ -223,14 +220,15 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
         dok_osoby = kwargs.pop("dok_osoby", None)
@@ -344,9 +342,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 
 
 class EditDokumentForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu."""
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -466,7 +462,8 @@ class EditDokumentForm(forms.ModelForm):
     def __init__(
         self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False, **kwargs
     ):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
@@ -474,7 +471,7 @@ class EditDokumentForm(forms.ModelForm):
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
         :param can_edit_datum_zverejneni: Vstupní hodnota ``can_edit_datum_zverejneni`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
@@ -569,9 +566,7 @@ class EditDokumentForm(forms.ModelForm):
 
 
 class CreateModelDokumentForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D."""
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -635,14 +630,15 @@ class CreateModelDokumentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
@@ -682,9 +678,7 @@ class CreateModelDokumentForm(forms.ModelForm):
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D."""
 
     coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
@@ -738,14 +732,15 @@ class CreateModelExtraDataForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
         :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
         # Hodnoty z disabled polí se na server neodesílají.
@@ -774,17 +769,16 @@ class CreateModelExtraDataForm(forms.ModelForm):
 
 
 class PripojitDokumentForm(forms.Form):
-    """
-    Hlavní formulář připojení dokumentu do projektu nebo arch záznamu.
-    """
+    """Hlavní formulář připojení dokumentu do projektu nebo arch záznamu."""
 
     def __init__(self, ident_zaznam, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param ident_zaznam: Vstupní hodnota ``ident_zaznam`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(PripojitDokumentForm, self).__init__(*args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
             label=_("dokument.forms.pripojitDokumentForm.dokument.label"),
@@ -803,9 +797,7 @@ class PripojitDokumentForm(forms.Form):
 
 
 class DokumentCastForm(forms.ModelForm):
-    """
-    Hlavní formulář pro zobrazení Dokument části.
-    """
+    """Hlavní formulář pro zobrazení Dokument části."""
 
     poznamka = forms.CharField(
         help_text=_("dokument.forms.dokumentCastForm.poznamka.tooltip"),
@@ -820,12 +812,13 @@ class DokumentCastForm(forms.ModelForm):
         fields = ("poznamka",)
 
     def __init__(self, readonly=False, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(DokumentCastForm, self).__init__(*args, **kwargs)
 
         self.helper = FormHelper(self)
@@ -839,9 +832,7 @@ class DokumentCastForm(forms.ModelForm):
 
 
 class DokumentCastCreateForm(forms.Form):
-    """
-    Hlavní formulář pro vytvoření, editaci Dokument části.
-    """
+    """Hlavní formulář pro vytvoření, editaci Dokument části."""
 
     poznamka = forms.CharField(
         help_text=_("dokument.forms.dokumentCastCreateForm.poznamka.tooltip"),
@@ -850,11 +841,12 @@ class DokumentCastCreateForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(DokumentCastCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -863,7 +855,10 @@ class DokumentCastCreateForm(forms.Form):
 def create_tvar_form(not_readonly=True):
     """
     Funkce která vrací formulář Tvar pro formset.
+
     Pomocí ní je možné předat výběr formuláři.
+
+    :param not_readonly: Popis parametru ``not_readonly``.
     """
 
     class TvarForm(forms.ModelForm):
@@ -894,11 +889,12 @@ def create_tvar_form(not_readonly=True):
             }
 
         def __init__(self, *args, **kwargs):
-            """Inicializuje instanci třídy.
+            """
+            Inicializuje instanci třídy.
 
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-            :return: Funkce nevrací hodnotu (``None``)."""
+            """
             super(TvarForm, self).__init__(*args, **kwargs)
             if not not_readonly:
                 self.fields["tvar"].required = False
@@ -916,16 +912,15 @@ def create_tvar_form(not_readonly=True):
 
 
 class TvarFormSetHelper(FormHelper):
-    """
-    Form helper pro správné vykreslení formuláře tvarů.
-    """
+    """Form helper pro správné vykreslení formuláře tvarů."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False

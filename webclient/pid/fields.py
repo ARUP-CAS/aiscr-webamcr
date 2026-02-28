@@ -10,25 +10,30 @@ class PidAutocompleteField(autocomplete.Select2ListChoiceField):
     attribute_name = None
 
     def __init__(self, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.instance = kwargs.pop("instance", None)
         self.initial_value = kwargs.pop("initial_value", None)
         super().__init__(**kwargs)
         self._set_initial_values()
 
     def _get_initial_value_from_instance(self):
-        """Vrací initial value from instance.
+        """
+        Vrací initial value from instance.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         return getattr(self.instance, self.attribute_name)
 
     def _set_initial_values(self):
-        """Nastaví initial values.
+        """
+        Nastaví initial values.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if self.initial_value:
             result_list = self.autocomplete_class.api_call(self.initial_value, True)
         elif self.instance and getattr(self.instance, self.attribute_name, None):
@@ -47,17 +52,19 @@ class DoiAutocompleteField(PidAutocompleteField):
     attribute_name = "doi"
 
     def valid_value(self, value):
-        """Provádí operaci valid value.
+        """
+        Provádí operaci valid value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return verify_doi(value)
 
     def validate(self, value):
-        """Validuje hodnotu.
+        """
+        Validuje hodnotu. v aplikaci.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return verify_doi(value)
 
 
@@ -68,32 +75,37 @@ class OrcidAutocompleteField(PidAutocompleteField):
     attribute_name = "orcid"
 
     def _get_initial_value_from_instance(self):
-        """Vrací initial value from instance.
+        """
+        Vrací initial value from instance.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         value = super()._get_initial_value_from_instance()
         value = value.replace("https://orcid.org/", "") if value else None
         return value
 
     def prepare_value(self, value):
-        """Provádí operaci prepare value.
+        """
+        Provádí operaci prepare value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return value.replace("https://orcid.org/", "") if value else None
 
     def valid_value(self, value):
-        """Provádí operaci valid value.
+        """
+        Provádí operaci valid value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return verify_orcid(value)
 
     def validate(self, value):
-        """Validuje hodnotu.
+        """
+        Validuje hodnotu. v aplikaci.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return verify_orcid(value)
 
 
@@ -104,17 +116,19 @@ class RorAutocompleteField(PidAutocompleteField):
     attribute_name = "ror"
 
     def valid_value(self, value):
-        """Provádí operaci valid value.
+        """
+        Provádí operaci valid value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return verify_ror(value)
 
     def validate(self, value):
-        """Validuje hodnotu.
+        """
+        Validuje hodnotu. v aplikaci.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return verify_ror(value)
 
 
@@ -125,30 +139,35 @@ class WikiDataAutocompleteField(PidAutocompleteField):
     attribute_name = "wikidata"
 
     def _get_initial_value_from_instance(self):
-        """Vrací initial value from instance.
+        """
+        Vrací initial value from instance.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         value = super()._get_initial_value_from_instance()
         value = value.replace("https://www.wikidata.org/entity/", "") if value else None
         return value
 
     def prepare_value(self, value):
-        """Provádí operaci prepare value.
+        """
+        Provádí operaci prepare value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return value.replace("https://www.wikidata.org/entity/", "") if value else None
 
     def valid_value(self, value):
-        """Provádí operaci valid value.
+        """
+        Provádí operaci valid value.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return verify_wikidata(value)
 
     def validate(self, value):
-        """Validuje hodnotu.
+        """
+        Validuje hodnotu. v aplikaci.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return verify_wikidata(value)

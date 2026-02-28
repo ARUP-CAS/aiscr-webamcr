@@ -66,18 +66,20 @@ class NumberRangeWidget(SuffixedMultiWidget):
     suffixes = ["min", "max"]
 
     def __init__(self, attrs=None):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         widgets = (NumberInput, NumberInput)
         super().__init__(widgets, attrs)
 
     def decompress(self, value):
-        """Provádí operaci decompress.
+        """
+        Provádí operaci decompress.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if value:
             return [value.start, value.stop]
         return [None, None]
@@ -96,9 +98,7 @@ class NumberRangeFilter(RangeFilter):
 
 
 class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
-    """
-    Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
-    """
+    """Třída pro zakladní filtrování archeologických záznamů a jejich potomků."""
 
     # Filtrování podle historie
 
@@ -247,6 +247,10 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     def filtr_katastr(self, queryset, name, value):
         """
         Metoda pro filtrování podle hlavního i vedlejšího katastru.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         if value:
             return queryset.filter(
@@ -257,6 +261,10 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     def filtr_katastr_kraj(self, queryset, name, value):
         """
         Metoda pro filtrování podle hlavního i vedlejšího kraje.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__okres__kraj__in=value)
@@ -266,6 +274,10 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     def filtr_katastr_okres(self, queryset, name, value):
         """
         Metoda pro filtrování podle hlavního i vedlejšího okresu.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__okres__in=value)
@@ -275,6 +287,10 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     def filter_dj_zjisteni(self, queryset, name, value):
         """
         Metoda pro filtrování podle dj_zjisteni.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         if "True" in value and "False" in value:
             return queryset.filter(
@@ -291,6 +307,10 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         """
         Metoda pro filtrování podle poznámky a počtu predmětu.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             Q(
@@ -304,6 +324,10 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
     def filter_objekt_pozn_pocet(self, queryset, name, value):
         """
         Metoda pro filtrování podle poznámky a počtu objektu.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             Q(
@@ -315,11 +339,12 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         ).distinct()
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(ArchZaznamFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
@@ -380,9 +405,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
 
 class AkceFilter(ArchZaznamFilter):
-    """
-    Class pro filtrování akce.
-    """
+    """Class pro filtrování akce."""
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
@@ -575,12 +598,20 @@ class AkceFilter(ArchZaznamFilter):
     def filter_akce_typ(self, queryset, name, value):
         """
         Metoda pro filtrování podle typu akce.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(Q(hlavni_typ__in=value) | Q(vedlejsi_typ__in=value)).distinct()
 
     def filtr_vedouci(self, queryset, name, value):
         """
         Metoda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         if not value:
             return queryset
@@ -589,6 +620,10 @@ class AkceFilter(ArchZaznamFilter):
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metoda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             Q(lokalizace_okolnosti__icontains=value)
@@ -601,6 +636,10 @@ class AkceFilter(ArchZaznamFilter):
     def filtr_zahrnout_projektove(self, queryset, name, value):
         """
         Metoda pro filtrování mezi projektovými a samostatnými akcemi.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         if value is None:
             return queryset.filter(~Q(typ=Akce.TYP_AKCE_PROJEKTOVA))
@@ -612,6 +651,10 @@ class AkceFilter(ArchZaznamFilter):
     def filter_has_positive_find(self, queryset, name, value):
         """
         Metoda pro filtrování podle toho či akce má pozitivní DJ.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         if "True" not in value and "False" not in value:
             return queryset
@@ -629,6 +672,10 @@ class AkceFilter(ArchZaznamFilter):
     def filter_adb_popisne_udaje(self, queryset, name, value):
         """
         Metoda pro filtrování podle popisných údajů ADB.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__uzivatelske_oznaceni_sondy__icontains=value)
@@ -641,6 +688,10 @@ class AkceFilter(ArchZaznamFilter):
     def filtr_adb_autori(self, queryset, name, value):
         """
         Metoda pro filtrování podle autorů revize a popisu ADB.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         if not value:
             return queryset
@@ -652,6 +703,10 @@ class AkceFilter(ArchZaznamFilter):
     def filter_adb_roky(self, queryset, name, value):
         """
         Metoda pro filtrování podle roku revize a popisu ADB.
+
+        :param queryset: Popis parametru ``queryset``.
+        :param name: Popis parametru ``name``.
+        :param value: Popis parametru ``value``.
         """
         if value:
             if value.start is not None and value.stop is not None:
@@ -674,12 +729,13 @@ class AkceFilter(ArchZaznamFilter):
         return queryset.filter(Q(**{lookup1: value}) | Q(**{lookup2: value})).distinct()
 
     def filter_by_z_range(self, queryset, name, value):
-        """Filtruje by z range.
+        """
+        Filtruje by z range.
 
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
         :param name: Vstupní hodnota ``name`` pro danou operaci.
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if value:
             if name == "vb_niveleta_od":
                 queryset = queryset.extra(where=["ST_Z(geom) >= %s"], params=[value])
@@ -688,10 +744,11 @@ class AkceFilter(ArchZaznamFilter):
         return queryset
 
     def filter_queryset(self, queryset):
-        """Filtruje queryset.
+        """
+        Filtruje queryset. v aplikaci.
 
         :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(AkceFilter, self).filter_queryset(queryset)
@@ -728,11 +785,12 @@ class AkceFilter(ArchZaznamFilter):
         form = ArchzFilterForm
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(AkceFilter, self).__init__(*args, **kwargs)
         self.filters["typ"].extra["choices"] = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:]
         self.filters["historie_uzivatel_organizace"] = HistorieOrganizaceMultipleChoiceFilter(
@@ -744,17 +802,16 @@ class AkceFilter(ArchZaznamFilter):
 
 
 class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
-    """
-    Class pro form helper pro zobrazení formuláře.
-    """
+    """Class pro form helper pro zobrazení formuláře."""
 
     form_method = "GET"
 
     def __init__(self, form=None):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param form: Vstupní hodnota ``form`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("arch_z.filters.AkceFilterFormHelper.djPian.divider.label")
         }

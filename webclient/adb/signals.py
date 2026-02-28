@@ -12,13 +12,14 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Adb, weak=False)
 def adb_save_metadata(sender, instance: Adb, created, **kwargs):
-    """Provádí operaci adb save metadata.
+    """
+    Provádí operaci adb save metadata.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param created: Vstupní hodnota ``created`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug(
         "adb.signals.adb_save_metadata.start",
         extra={"ident_cely": instance.ident_cely, "signal": instance.suppress_signal},
@@ -41,12 +42,13 @@ def adb_save_metadata(sender, instance: Adb, created, **kwargs):
 
 @receiver(post_save, sender=VyskovyBod, weak=False)
 def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
-    """Provádí operaci vyskovy bod save metadata.
+    """
+    Provádí operaci vyskovy bod save metadata.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug(
         "adb.signals.vyskovy_bod_save_metadata.start",
         extra={"ident_cely": instance.ident_cely, "signal": instance.suppress_signal},
@@ -67,12 +69,13 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
 
 @receiver(post_delete, sender=Adb, weak=False)
 def adb_delete_repository_container(sender, instance: Adb, **kwargs):
-    """Provádí operaci adb delete repository container.
+    """
+    Provádí operaci adb delete repository container.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     invalidate_arch_z_related_models()
     fedora_transaction = instance.active_transaction
@@ -94,12 +97,13 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
 
 @receiver(post_delete, sender=VyskovyBod, weak=False)
 def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwargs):
-    """Provádí operaci vyskovy bod delete repository container.
+    """
+    Provádí operaci vyskovy bod delete repository container.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
     invalidate_arch_z_related_models()

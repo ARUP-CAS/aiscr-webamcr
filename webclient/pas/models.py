@@ -39,9 +39,7 @@ from uzivatel.models import Organizace, Osoba, User
 
 
 class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithMetadata):
-    """
-    Databázový model samostatného nálezu.
-    """
+    """Databázový model samostatného nálezu."""
 
     PAS_STATES = [
         (SN_ZAPSANY, _("pas.models.samostatnyNalez.states.zapsany.label")),
@@ -153,9 +151,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @property
     def initial_pristupnost(self):
-        """Provádí operaci initial pristupnost.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci initial pristupnost."""
         if hasattr(self, "_initial_pristupnost"):
             return self._initial_pristupnost
         if hasattr(self, "pristupnost"):
@@ -166,18 +162,20 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @initial_pristupnost.setter
     def initial_pristupnost(self, value):
-        """Provádí operaci initial pristupnost.
+        """
+        Provádí operaci initial pristupnost.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         self._initial_pristupnost = value
 
     def save(self, *args, **kwargs):
-        """Uloží změny objektu.
+        """
+        Uloží změny objektu.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.pk is not None:
             previous = SamostatnyNalez.objects.get(pk=self.pk)
             if previous.pristupnost != self.pristupnost:
@@ -187,6 +185,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def set_zapsany(self, user):
         """
         Metoda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = SN_ZAPSANY
         Historie(
@@ -199,6 +199,10 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def set_vracen(self, user, new_state, poznamka):
         """
         Metoda pro vrácení o jeden stav méně a uložení změny do historie pro samostatný nález.
+
+        :param user: Popis parametru ``user``.
+        :param new_state: Popis parametru ``new_state``.
+        :param poznamka: Popis parametru ``poznamka``.
         """
         self.stav = new_state
         Historie(
@@ -212,6 +216,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def set_odeslany(self, user):
         """
         Metoda pro nastavení stavu odeslaný a uložení změny do historie pro samostatný nález.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = SN_ODESLANY
         Historie(
@@ -224,6 +230,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def set_potvrzeny(self, user):
         """
         Metoda pro nastavení stavu potvrzený a uložení změny do historie pro samostatný nález.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = SN_POTVRZENY
         Historie(
@@ -236,6 +244,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     def set_archivovany(self, user):
         """
         Metoda pro nastavení stavu archivovaný a uložení změny do historie pro samostatný nález.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = SN_ARCHIVOVANY
         Historie(
@@ -246,15 +256,11 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         self.save()
 
     def get_absolute_url(self):
-        """
-        Metoda pro získaní absolut url záznamu podle identu.
-        """
+        """Metoda pro získaní absolut url záznamu podle identu."""
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
     def check_pred_archivaci(self):
-        """Ověří pred archivaci.
-
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """Ověří pred archivaci."""
         resp = []
         if not self.soubory.soubory.exists():
             resp.append(_("pas.models.samostatnyNalez.checkPredArchivaci.soubory.text"))
@@ -262,9 +268,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return resp
 
     def check_pred_potvrzenim(self):
-        """Ověří pred potvrzenim.
-
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """Ověří pred potvrzenim."""
         resp = []
         if not self.soubory.soubory.exists():
             resp.append(_("pas.models.samostatnyNalez.checkPredPotvrzenim.soubory.text"))
@@ -275,9 +279,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
 
-            polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
+        polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
 
-            Samostaný nález má připojený alespoň jeden soubor.
+        Samostaný nález má připojený alespoň jeden soubor.
         """
         resp = []
         if not self.obdobi:
@@ -307,9 +311,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @property
     def nahled_soubor(self):
-        """Provádí operaci nahled soubor.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci nahled soubor."""
         if self.soubory.soubory.count() > 0:
             return self.soubory.soubory.first()
         else:
@@ -317,9 +319,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @cached_property
     def large_thumbnail(self):
-        """Provádí operaci large thumbnail.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci large thumbnail."""
         soubor = self.nahled_soubor
         if soubor:
             return soubor.large_thumbnail
@@ -327,18 +327,14 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @cached_property
     def small_thumbnail(self):
-        """Provádí operaci small thumbnail.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci small thumbnail."""
         soubor = self.nahled_soubor
         if soubor:
             return soubor.small_thumbnail
         return None
 
     def generate_coord_forms_initial(self):
-        """Vygeneruje coord forms initial.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Vygeneruje coord forms initial."""
         geom = "0 0"
         if self.geom:
             geom = str(self.geom).split("(")[1].replace(", ", ",").replace(")", "")
@@ -383,48 +379,40 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         ]
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         if self.ident_cely:
             return self.ident_cely
         else:
             return "Samostatny nalez [ident_cely not yet assigned]"
 
     def get_permission_object(self):
-        """Vrací permission object.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací permission object."""
         return self
 
     def get_create_user(self):
-        """Vrací create user.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create user."""
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel,)
         except Exception:
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create org."""
         return (self.projekt.organizace,)
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci redis snapshot id."""
         from pas.views import SamostatnyNalezListView
 
         return f"{SamostatnyNalezListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Vygeneruje redis snapshot."""
         from pas.tables import SamostatnyNalezTable
 
         data = SamostatnyNalez.objects.filter(pk=self.pk)
@@ -433,70 +421,68 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return self.redis_snapshot_id, data
 
     def set_igsn(self):
-        """Nastaví igsn.
-
-        :return: Vrací výsledek provedené operace."""
+        """Nastaví igsn. v aplikaci."""
         self.igsn = f"{settings.IGSN_PREFIX}/{self.ident_cely}"
 
     def _get_igsn_client(self):
-        """Vrací igsn client.
+        """
+        Vrací igsn client.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        :return: Vrací načtená data odpovídající vstupním parametrům.
+        """
         from pid.client import DigitalObjectIdentifierClient
 
         return DigitalObjectIdentifierClient(self)
 
     @property
     def igsn_exists(self):
-        """Provádí operaci igsn exists.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci igsn exists."""
         return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self, check_status=True):
-        """Provádí operaci igsn delete.
+        """
+        Provádí operaci igsn delete.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.igsn:
             return self._get_igsn_client().delete_record(check_status)
 
     def igsn_hide(self, check_status=True):
-        """Provádí operaci igsn hide.
+        """
+        Provádí operaci igsn hide.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.igsn:
             return self._get_igsn_client().hide_record(check_status)
 
     def igsn_publish(self, check_status=True):
-        """Provádí operaci igsn publish.
+        """
+        Provádí operaci igsn publish.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return self._get_igsn_client().publish_record(check_status)
 
     def igsn_update(self, check_status=True, reload_record=False):
-        """Provádí operaci igsn update.
+        """
+        Provádí operaci igsn update.
 
         :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
         :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
 
     @property
     def igsn_url(self):
-        """Provádí operaci igsn url.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci igsn url."""
         return self._get_igsn_client().get_record_url()
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
-    """
-    Databázový model spolupráce.
-    """
+    """Databázový model spolupráce."""
 
     SPOLUPRACE_STATES = [
         (SPOLUPRACE_NEAKTIVNI, _("pas.models.uzivatelSpoluprace.states.neaktivni.label")),
@@ -526,11 +512,12 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     )
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.suppress_signal = False
         self.active_transaction = None
@@ -538,14 +525,14 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     @property
     def aktivni(self):
-        """Provádí operaci aktivni.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci aktivni."""
         return self.stav == SPOLUPRACE_AKTIVNI
 
     def set_aktivni(self, user):
         """
         Metoda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
+
+        :param user: Popis parametru ``user``.
         """
         self.stav = SPOLUPRACE_AKTIVNI
         Historie(
@@ -558,6 +545,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     def set_neaktivni(self, user, duvod):
         """
         Metoda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
+
+        :param user: Popis parametru ``user``.
+        :param duvod: Popis parametru ``duvod``.
         """
         self.stav = SPOLUPRACE_NEAKTIVNI
         Historie(
@@ -571,6 +561,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     def check_pred_aktivaci(self):
         """
         Metoda na kontrolu prerekvizit pred posunem do stavu aktivní.
+
         Kontrola že stav není aktivný.
         """
         result = []
@@ -581,6 +572,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     def check_pred_deaktivaci(self):
         """
         Metoda na kontrolu prerekvizit pred posunem do stavu neaktivní.
+
         Kontrola že stav není neaktivný.
         """
         result = []
@@ -595,36 +587,30 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         unique_together = (("vedouci", "spolupracovnik"),)
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
 
     def get_create_user(self):
-        """Vrací create user.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create user."""
         return (self.spolupracovnik,)
 
     def get_create_org(self):
-        """Vrací create org.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací create org."""
         return (self.vedouci.organizace,)
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci redis snapshot id."""
         from pas.views import UzivatelSpolupraceListView
 
         return f"{UzivatelSpolupraceListView.redis_snapshot_prefix}_{self.pk}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
-
-        :return: Vrací nově vytvořený výsledek operace."""
+        """Vygeneruje redis snapshot."""
         from pas.tables import UzivatelSpolupraceTable
 
         data = UzivatelSpoluprace.objects.filter(pk=self.pk)
@@ -634,10 +620,11 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     @classmethod
     def get_by_ident_cely(cls, pk):
-        """Vrací by ident cely.
+        """
+        Vrací by ident cely.
 
         :param pk: Primární klíč zpracovávaného záznamu.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         try:
             return cls.objects.get(pk=pk)
         except Exception:

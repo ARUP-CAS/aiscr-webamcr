@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
     """
     Metoda pro vytvoření historických vazeb externího zdroje.
+
     Metoda se volá pred uložením záznamu.
+
+    :param sender: Popis parametru ``sender``.
+    :param instance: Popis parametru ``instance``.
+    :param kwargs: Popis parametru ``kwargs``.
     """
     logger.debug("ez.signals.create_ez_vazby.start", extra={"ident_cely": instance.ident_cely})
     if instance.pk is None:
@@ -34,12 +39,13 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(post_save, sender=ExterniZdroj, weak=False)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
-    """Provádí operaci externi zdroj save metadata.
+    """
+    Provádí operaci externi zdroj save metadata.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek provedené operace."""
+    """
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(ExterniZdroj)
     if not instance.suppress_signal:
@@ -57,12 +63,13 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(pre_delete, sender=ExterniZdroj, weak=False)
 def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
-    """Odstraní externi zdroj repository container.
+    """
+    Odstraní externi zdroj repository container.
 
     :param sender: Vstupní hodnota ``sender`` pro danou operaci.
     :param instance: Vstupní hodnota ``instance`` pro danou operaci.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-    :return: Vrací výsledek operace odstranění."""
+    """
     logger.debug(
         "ez.signals.delete_externi_zdroj_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )

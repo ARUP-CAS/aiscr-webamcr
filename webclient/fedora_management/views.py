@@ -17,20 +17,22 @@ class AdminRecordProcessingView(LoginRequiredMixin, View):
     """Implementuje komponentu ``AdminRecordProcessingView`` v rámci aplikace."""
 
     def process_record(self, record, result, **kwargs):
-        """Provádí operaci process record.
+        """
+        Provádí operaci process record.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         pass
 
     def get(self, request, **kwargs):
-        """Vrací výsledek operace.
+        """
+        Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         r = RedisConnector().get_connection()
         job_id = kwargs.get("job_id")
         job_data = r.get(job_id).decode("utf-8")
@@ -68,12 +70,13 @@ class ContinueMedataProcessing(AdminRecordProcessingView):
     """Implementuje komponentu ``ContinueMedataProcessing`` v rámci aplikace."""
 
     def process_record(self, record, result, **kwargs):
-        """Provádí operaci process record.
+        """
+        Provádí operaci process record.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
         :param result: Vstupní hodnota ``result`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):
             try:
                 fedora_transaction = FedoraTransaction()

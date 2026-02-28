@@ -8,12 +8,13 @@ class DoiWriteError(Exception):
     """Implementuje komponentu ``DoiWriteError`` v rámci aplikace."""
 
     def __init__(self, status_code=None, response_text=None, request_url=None):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param status_code: Vstupní hodnota ``status_code`` pro danou operaci.
         :param response_text: Vstupní hodnota ``response_text`` pro danou operaci.
         :param request_url: Vstupní hodnota ``request_url`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         message = f"Request to {request_url} failed with status {status_code} and response: {response_text}."
         super().__init__(message)
         self.status_code = status_code

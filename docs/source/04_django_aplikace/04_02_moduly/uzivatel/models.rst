@@ -18,7 +18,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: hlavni_role()
 
@@ -30,13 +29,9 @@ Třídy
 
       Provádí operaci user str.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: user_str_en()
 
       Provádí operaci user str en.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __str__()
 
@@ -49,17 +44,15 @@ Třídy
       Textová reprezentace uživatele pro tabulky a autocomplete pole.
       :param viewer: Hodnota parametru ``viewer`` použitého touto operací.
 
+      :param viewer: Hodnota parametru ``viewer`` použitého touto operací.
+
    .. py:method:: moje_spolupracujici_organizace()
 
       Provádí operaci moje spolupracujici organizace.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: moje_stavy_pruzkumnych_projektu()
 
       Provádí operaci moje stavy pruzkumnych projektu.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: email_user()
 
@@ -67,7 +60,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: name_and_id()
 
@@ -77,13 +69,9 @@ Třídy
 
       Určí, zda archiver or more.
 
-      :return: Vrací výsledek ověření nebo validačního pravidla.
-
    .. py:method:: is_archeolog_or_more()
 
       Určí, zda archeolog or more.
-
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: save()
 
@@ -91,13 +79,10 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: metadata()
 
       Provádí operaci metadata.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: save_metadata()
 
@@ -105,7 +90,6 @@ Třídy
       :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
       :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: record_deletion()
 
@@ -113,47 +97,36 @@ Třídy
       :param fedora_transaction: Hodnota parametru ``fedora_transaction`` použitého touto operací.
       :param close_transaction: Hodnota parametru ``close_transaction`` použitého touto operací.
 
+      :param fedora_transaction: Hodnota parametru ``fedora_transaction`` použitého touto operací.
+      :param close_transaction: Hodnota parametru ``close_transaction`` použitého touto operací.
+
    .. py:method:: can_see_users_details()
 
       Provádí operaci can see users details.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: full_details()
 
       Provádí operaci full details.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: anonymous_details()
 
       Provádí operaci anonymous details.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: can_see_ours_item()
 
       Provádí operaci can see ours item.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: get_permission_object()
 
       Vrací permission object.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_user()
 
       Vrací create user.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_create_org()
 
       Vrací create org.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: UzivatelPrihlaseniLog
@@ -173,7 +146,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __str__()
 
@@ -199,7 +171,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __str__()
 
@@ -263,10 +234,6 @@ Funkce
 
    Provádí operaci only notification groups.
 
-   :return: Vrací výsledek provedené operace.
-
 .. py:function:: get_default_licence()
 
    Vrací default licence.
-
-   :return: Vrací načtená data odpovídající vstupním parametrům.

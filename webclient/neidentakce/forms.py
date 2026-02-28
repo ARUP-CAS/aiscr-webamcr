@@ -12,9 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class NeidentAkceForm(forms.ModelForm):
-    """
-    Hlavní formulář pro editaci a zobrazení neident akce.
-    """
+    """Hlavní formulář pro editaci a zobrazení neident akce."""
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -79,12 +77,13 @@ class NeidentAkceForm(forms.ModelForm):
         js = ["js/create_osoba_modal.js"]
 
     def __init__(self, *args, readonly=False, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False

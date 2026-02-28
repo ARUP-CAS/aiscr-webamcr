@@ -17,21 +17,18 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: format_date()
 
       Provádí operaci format date.
 
       :param date: Vstupní hodnota ``date`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: format_date_time()
 
       Provádí operaci format date time.
 
       :param date_time: Vstupní hodnota ``date_time`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: _get_creators()
 
@@ -48,8 +45,6 @@ Třídy
    .. py:method:: get_ident_cely()
 
       Vrací ident cely.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: _get_publication_year()
 
@@ -152,25 +147,17 @@ Třídy
 
       Provádí operaci serialize delete.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: serialize_hide()
 
       Provádí operaci serialize hide.
-
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: serialize_publish()
 
       Provádí operaci serialize publish.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: serialize_update()
 
       Provádí operaci serialize update.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: PartialSerializer
@@ -184,13 +171,10 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: serialize_publish()
 
       Provádí operaci serialize publish.
-
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: DokumentSerializer
@@ -204,7 +188,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: _get_creators()
 
@@ -221,8 +204,6 @@ Třídy
    .. py:method:: get_ident_cely()
 
       Vrací ident cely.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: _get_language()
 
@@ -333,7 +314,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: _get_creators()
 
@@ -350,8 +330,6 @@ Třídy
    .. py:method:: get_ident_cely()
 
       Vrací ident cely.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: _get_soubory_queryset()
 
@@ -456,7 +434,6 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: _get_creators()
 
@@ -467,8 +444,6 @@ Třídy
    .. py:method:: get_ident_cely()
 
       Vrací ident cely.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: _get_historie_queryset()
 
@@ -583,13 +558,9 @@ Třídy
 
       Provádí operaci serialize publish.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: serialize_update()
 
       Provádí operaci serialize update.
-
-      :return: Vrací výsledek provedené operace.
 
 
 Funkce
@@ -630,7 +601,6 @@ Funkce
    Provádí operaci serialize affiliation.
 
    :param organizace: Vstupní hodnota ``organizace`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: serialize_organizace_contributor(organizace, contributor_type)
 
@@ -638,14 +608,12 @@ Funkce
 
    :param organizace: Vstupní hodnota ``organizace`` pro danou operaci.
    :param contributor_type: Vstupní hodnota ``contributor_type`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: serialize_osoba_identifiers(osoba)
 
    Provádí operaci serialize osoba identifiers.
 
    :param osoba: Vstupní hodnota ``osoba`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: serialize_osoba(osoba, organizace, contributor_type)
 
@@ -663,14 +631,12 @@ Funkce
    :param serialized_record: Vstupní hodnota ``serialized_record`` pro danou operaci.
    :param subject_attr: Vstupní hodnota ``subject_attr`` pro danou operaci.
    :param lang: Vstupní hodnota ``lang`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: serialize_subjects_komponenty(komp)
 
    Provádí operaci serialize subjects komponenty.
 
    :param komp: Vstupní hodnota ``komp`` pro danou operaci.
-   :return: Vrací výsledek provedené operace.
 
 .. py:function:: serialize_dates_coverage(datace)
 

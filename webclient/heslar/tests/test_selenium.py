@@ -13,32 +13,33 @@ class AkceHeslar(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceHeslar`` v rámci aplikace."""
 
     def test_151_test_Fedora_heslar_001(self):
-        """Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
+        """
+        Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
 
         Role:
-            Administrator
+        Administrator
 
         TestData:
-            HES-000886
-            HES-001066
-            HES-001065
+        HES-000886
+        HES-001066
+        HES-001065
 
         Steps:
-            - Vytvoření záznamu Heslář
-            - Editace záznamu Heslář
-            - Vytvoření záznamu Heslář datace
-            - Editace záznamu Heslář datace
-            - Smazání záznamu Heslář datace
-            - Vytvoření záznamu Heslář hierarchie
-            - Editace záznamu Heslář hierarchie
-            - Smazání záznamu Heslář hierarchie
-            - Vytvoření záznamu Heslář odkaz
-            - Editace záznamu Heslář odkaz
-            - Smazání záznamu Heslář odkaz
-            - Smazání záznamu Heslář
+        - Vytvoření záznamu Heslář
+        - Editace záznamu Heslář
+        - Vytvoření záznamu Heslář datace
+        - Editace záznamu Heslář datace
+        - Smazání záznamu Heslář datace
+        - Vytvoření záznamu Heslář hierarchie
+        - Editace záznamu Heslář hierarchie
+        - Smazání záznamu Heslář hierarchie
+        - Vytvoření záznamu Heslář odkaz
+        - Editace záznamu Heslář odkaz
+        - Smazání záznamu Heslář odkaz
+        - Smazání záznamu Heslář
 
         Expected:
-            - zápis dat do Fedory
+        - zápis dat do Fedory
         """
         logger.info("AkceHeslar.test_151_test_Fedora_heslar_001.start")
         self.login("administrator")

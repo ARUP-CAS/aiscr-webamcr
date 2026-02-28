@@ -7,8 +7,6 @@ class DjConfig(AppConfig):
     name = "dj"
 
     def ready(self):
-        """Provádí operaci ready.
-
-        :return: Vrací výsledek provedené operace."""
+        """Provádí operaci ready."""
         super(DjConfig, self).ready()
         import dj.signals

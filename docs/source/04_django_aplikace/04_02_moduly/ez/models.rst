@@ -26,60 +26,57 @@ Třídy
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
 
+      :param user: Popis parametru ``user``.
+
    .. py:method:: set_vraceny()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
 
+      :param user: Popis parametru ``user``.
+      :param new_state: Popis parametru ``new_state``.
+      :param poznamka: Popis parametru ``poznamka``.
+
    .. py:method:: set_potvrzeny()
 
       Metoda pro nastavení stavu potvrzená a uložení změny do historie pro externí zdroj.
+
       Pokud je ident dočasný nahrazení identem stálým.
+
+      :param user: Popis parametru ``user``.
 
    .. py:method:: set_zapsany()
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
 
+      :param user: Popis parametru ``user``.
+
    .. py:method:: get_permission_object()
 
       Vrací permission object.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_user()
 
       Vrací create user.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_create_org()
 
       Vrací create org.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: set_snapshots()
 
-      Nastaví snapshots.
-
-      :return: Vrací výsledek provedené operace.
+      Nastaví snapshots. v aplikaci.
 
    .. py:method:: redis_snapshot_id()
 
       Provádí operaci redis snapshot id.
 
-      :return: Vrací výsledek provedené operace.
-
    .. py:method:: generate_redis_snapshot()
 
       Vygeneruje redis snapshot.
 
-      :return: Vrací nově vytvořený výsledek operace.
-
    .. py:method:: check_set_permanent_ident()
 
       Ověří set permanent ident.
-
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: ExterniZdrojAutor
@@ -90,9 +87,7 @@ Třídy
 
    .. py:method:: get_osoba()
 
-      Vrací osoba.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací osoba. v aplikaci.
 
 
 .. py:class:: ExterniZdrojEditor
@@ -103,9 +98,7 @@ Třídy
 
    .. py:method:: get_osoba()
 
-      Vrací osoba.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      Vrací osoba. v aplikaci.
 
 
 .. py:class:: ExterniZdrojSekvence
@@ -119,4 +112,5 @@ Funkce
 .. py:function:: get_perm_ez_ident()
 
    Funkce pro výpočet ident celý pro externí zdroj.
+
    Funkce vrátí pro permanentní ident ID podle sekvence externího zdroje.

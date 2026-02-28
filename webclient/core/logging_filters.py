@@ -5,10 +5,11 @@ class UserLogFilter(logging.Filter):
     """Implementuje komponentu ``UserLogFilter`` v rámci aplikace."""
 
     def filter(self, record):
-        """Filtruje hodnotu.
+        """
+        Filtruje hodnotu. v aplikaci.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         from core.log_middleware import LogMiddleware
 
         record.url = LogMiddleware.get_request_url()

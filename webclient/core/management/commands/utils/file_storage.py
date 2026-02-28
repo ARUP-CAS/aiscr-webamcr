@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 def save_single_file_from_storage_impl(
     record_par: int | Soubor, storage_path: str, save_thumbs: bool = False, disable_antivirus: bool = False
 ) -> None:
-    """Společná implementace pro ukládání jednotlivého souboru ze storage do Fedora repozitáře.
+    """
+    Společná implementace pro ukládání jednotlivého souboru ze storage do Fedora repozitáře.
+
     Tato funkce načte soubor z lokálního úložiště, provede kontroly (MIME type, antivirus),
     a uloží jej do Fedora repozitáře včetně aktualizace metadat v databázi.
 
@@ -59,7 +61,12 @@ def save_single_file_from_storage_impl(
     conn = FedoraRepositoryConnector(related_record, fedora_transaction)
 
     def find_matching_file(directory, number):
-        """Najde soubor v adresáři podle čísla v názvu."""
+        """
+        Najde soubor v adresáři podle čísla v názvu.
+
+        :param directory: Popis parametru ``directory``.
+        :param number: Popis parametru ``number``.
+        """
         for inner_file in os.listdir(directory):
             filename, _ = os.path.splitext(inner_file)
             if filename.isdigit() and int(filename) == number:

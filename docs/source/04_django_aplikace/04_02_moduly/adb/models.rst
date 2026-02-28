@@ -14,6 +14,7 @@ Třídy
 .. py:class:: Adb
 
    Databázový model ADB.
+
    Obsahuje vazbu na dokumentační jednotku.
 
    **Metody:**
@@ -22,13 +23,9 @@ Třídy
 
       Vrací absolute url.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_permission_object()
 
       Vrací permission object.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: __init__()
 
@@ -36,7 +33,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: create_transaction()
 
@@ -45,12 +41,12 @@ Třídy
       :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
       :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
       :param main_record: Vstupní hodnota ``main_record`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
 
 
 .. py:class:: VyskovyBod
 
    Databázový model výškového bodu.
+
    Obsahuje vazbu na ADB.
 
    **Metody:**
@@ -62,9 +58,16 @@ Třídy
       :param easting: Hodnota parametru ``easting`` použitého touto operací.
       :param niveleta: Hodnota parametru ``niveleta`` použitého touto operací.
 
+      :param northing: Hodnota parametru ``northing`` použitého touto operací.
+      :param easting: Hodnota parametru ``easting`` použitého touto operací.
+      :param niveleta: Hodnota parametru ``niveleta`` použitého touto operací.
+
    .. py:method:: save()
 
       Override save metody na nastavení ident celý pokud je prázdny.
+      :param args: Hodnota parametru ``args`` použitého touto operací.
+      :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
+
       :param args: Hodnota parametru ``args`` použitého touto operací.
       :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
 
@@ -76,13 +79,9 @@ Třídy
 
       Vrací absolute url.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_permission_object()
 
       Vrací permission object.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
 
 .. py:class:: AdbSekvence
@@ -96,6 +95,7 @@ Funkce
 .. py:function:: get_vyskovy_bod(adb, offset)
 
    Funkce pro výpočet ident celý pro VB.
+
    Obsahuje test na přetečení hodnot.
 
 

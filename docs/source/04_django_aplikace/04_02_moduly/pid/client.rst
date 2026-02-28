@@ -31,26 +31,30 @@ Třídy
 
       Zjistí, zda záznam v DataCite existuje.
 
+      :param check_status: Popis parametru ``check_status``.
+
    .. py:method:: delete_record()
 
       Skryje/smaže záznam v DataCite podle serializovaného payloadu.
+
+      :param check_status: Popis parametru ``check_status``.
 
    .. py:method:: hide_record()
 
       Provádí operaci hide record.
 
       :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: publish_record()
 
       Publikuje záznam v DataCite, případně jej nejdříve vytvoří.
 
+      :param check_status: Popis parametru ``check_status``.
+
    .. py:method:: update_record()
 
-      Aktualizuje record.
+      Aktualizuje record. v aplikaci.
 
       :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
       :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 

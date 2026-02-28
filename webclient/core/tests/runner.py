@@ -27,7 +27,11 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
         return super(CustomTextTestResult, self).__init__(stream, descriptions, verbosity)
 
     def startTest(self, test):
-        """Pokud je showAll zapnuto, zapíše číslo testu do výstupu a poté zavolá implementaci předka."""
+        """
+        Pokud je showAll zapnuto, zapíše číslo testu do výstupu a poté zavolá implementaci předka.
+
+        :param test: Popis parametru ``test``.
+        """
 
         if True:  # self.showAll:
             progress = "[{0}/{1}] ".format(next(self.test_numbers), self.test_case_count)
@@ -57,18 +61,21 @@ class CustomTextTestRunner(unittest.runner.TextTestRunner):
     resultclass = CustomTextTestResult
 
     def run(self, test):
-        """Spustí hodnotu.
+        """
+        Spustí hodnotu. v aplikaci.
 
         :param test: Vstupní hodnota ``test`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
 
         self.test_case_count = test.countTestCases()
         return super(CustomTextTestRunner, self).run(test)
 
     def _makeResult(self):
-        """Provádí operaci makeResult.
+        """
+        Provádí operaci makeResult.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
 
         result = super(CustomTextTestRunner, self)._makeResult()
         result.test_case_count = self.test_case_count
@@ -79,20 +86,22 @@ class AMCRSeleniumTestRunner(BaseRunner):
     """Implementuje komponentu ``AMCRSeleniumTestRunner`` v rámci aplikace."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(AMCRSeleniumTestRunner, self).__init__(*args, **kwargs)
         self.test_runner = CustomTextTestRunner
 
     def setup_databases(self, *args, **kwargs):
-        """Provádí operaci setup databases.
+        """
+        Provádí operaci setup databases.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         self.keepdb = True
         temp_return = super().setup_databases(*args, **kwargs)
         return temp_return
@@ -100,9 +109,10 @@ class AMCRSeleniumTestRunner(BaseRunner):
     def teardown_databases(self, *args, **kwargs):
         # do somthing
         # return super().teardown_databases(*args, **kwargs)
-        """Provádí operaci teardown databases.
+        """
+        Provádí operaci teardown databases.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         pass

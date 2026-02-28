@@ -42,16 +42,15 @@ logger = logging.getLogger(__name__)
 
 
 class UserNotificationTypeInlineForm(forms.ModelForm):
-    """
-    Inline form pro nastavení notifikací uživatele.
-    """
+    """Inline form pro nastavení notifikací uživatele."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
             Q(ident_cely__icontains="S-E-A")
@@ -68,11 +67,12 @@ class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     model = UserNotificationType.user.through
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
             notification_ids = UserNotificationType.objects.filter(
@@ -91,9 +91,7 @@ class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
 
 
 class UserNotificationTypeInline(admin.TabularInline):
-    """
-    Inline panel pro nastavení notifikací uživatele.
-    """
+    """Inline panel pro nastavení notifikací uživatele."""
 
     model = UserNotificationType.user.through
     form = UserNotificationTypeInlineForm
@@ -102,10 +100,11 @@ class UserNotificationTypeInline(admin.TabularInline):
     verbose_name_plural = _("uzivatel.admin.form.notifikace.user")
 
     def get_queryset(self, request):
-        """Vrací queryset.
+        """
+        Vrací queryset. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         logger.debug(self.model._default_manager)
         queryset = super(UserNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(
@@ -118,12 +117,13 @@ class UserNotificationTypeInline(admin.TabularInline):
         return queryset
 
     def get_extra(self, request, obj=None, **kwargs):
-        """Vrací extra.
+        """
+        Vrací extra. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         extra = 1  # Výchozí hodnota je 0.
         if not obj:  # pouze při vytváření nového záznamu
             extra = UserNotificationType.objects.filter(
@@ -135,18 +135,17 @@ class UserNotificationTypeInline(admin.TabularInline):
         return extra
 
     def __init__(self, parent_model, admin_site):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param parent_model: Vstupní hodnota ``parent_model`` pro danou operaci.
         :param admin_site: Vstupní hodnota ``admin_site`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
 
 
 class PesNotificationTypeInline(admin.TabularInline):
-    """
-    Inline panel pro nastavení hlídacích psů uživatele.
-    """
+    """Inline panel pro nastavení hlídacích psů uživatele."""
 
     model_type = None
     model = Pes
@@ -154,19 +153,18 @@ class PesNotificationTypeInline(admin.TabularInline):
     form.admin_app = True
 
     def get_queryset(self, request):
-        """Vrací queryset.
+        """
+        Vrací queryset. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         queryset = super(PesNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(content_type__model=self.model_type)
         return queryset
 
 
 class PesKrajNotificationTypeInline(PesNotificationTypeInline):
-    """
-    Inline panel pro nastavení hlídacích psů uživatele pro kraj.
-    """
+    """Inline panel pro nastavení hlídacích psů uživatele pro kraj."""
 
     model_type = KRAJ_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
@@ -176,9 +174,7 @@ class PesKrajNotificationTypeInline(PesNotificationTypeInline):
 
 
 class PesOkresNotificationTypeInline(PesNotificationTypeInline):
-    """
-    Inline panel pro nastavení hlídacích psů uživatele pro okres.
-    """
+    """Inline panel pro nastavení hlídacích psů uživatele pro okres."""
 
     model_type = OKRES_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
@@ -188,9 +184,7 @@ class PesOkresNotificationTypeInline(PesNotificationTypeInline):
 
 
 class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
-    """
-    Inline panel pro nastavení hlídacích psů uživatele pro katastr.
-    """
+    """Inline panel pro nastavení hlídacích psů uživatele pro katastr."""
 
     model_type = KATASTR_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
@@ -200,16 +194,15 @@ class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
 
 
 class PesUserNotificationTypeInlineForm(forms.ModelForm):
-    """
-    Inline form pro nastavení notifikací uživatele.
-    """
+    """Inline form pro nastavení notifikací uživatele."""
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(PesUserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
             Q(ident_cely__in=PES_NOTIFICATIONS)
@@ -222,11 +215,12 @@ class PesUserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
     model = UserNotificationType.user.through
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(PesUserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
             notification_ids = UserNotificationType.objects.filter(Q(ident_cely__in=PES_NOTIFICATIONS)).values_list(
@@ -242,9 +236,7 @@ class PesUserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
 
 
 class PesUserNotificationTypeInline(admin.TabularInline):
-    """
-    Inline panel pro nastavení notifikací uživatele.
-    """
+    """Inline panel pro nastavení notifikací uživatele."""
 
     model = UserNotificationType.user.through
     form = PesUserNotificationTypeInlineForm
@@ -253,22 +245,24 @@ class PesUserNotificationTypeInline(admin.TabularInline):
     verbose_name_plural = _("uzivatel.admin.form.notifikace.psy")
 
     def get_queryset(self, request):
-        """Vrací queryset.
+        """
+        Vrací queryset. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         logger.debug(self.model._default_manager)
         queryset = super(PesUserNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(Q(usernotificationtype__ident_cely__in=PES_NOTIFICATIONS))
         return queryset
 
     def get_extra(self, request, obj=None, **kwargs):
-        """Vrací extra.
+        """
+        Vrací extra. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         extra = 1  # Výchozí hodnota je 0.
         if not obj:  # pouze při vytváření nového záznamu
             extra = UserNotificationType.objects.filter(Q(ident_cely__in=PES_NOTIFICATIONS)).count()
@@ -276,9 +270,7 @@ class PesUserNotificationTypeInline(admin.TabularInline):
 
 
 class CustomUserAdmin(DjangoObjectActions, UserAdmin):
-    """
-    Admin panel pro správu uživatele.
-    """
+    """Admin panel pro správu uživatele."""
 
     add_form = AuthUserCreationForm
     form = AuthUserChangeAdminForm
@@ -360,24 +352,26 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     change_form_template = "admin/admin_user_change.html"
 
     def has_delete_permission(self, request, obj=None):
-        """Určí, zda delete permission.
+        """
+        Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         if obj:
             if Historie.objects.filter(uzivatel=obj).count() > 1000:
                 return False
         return True
 
     def save_model(self, request, obj: User, form, change):
-        """Uloží model.
+        """
+        Uloží model. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
         :param form: Vstupní hodnota ``form`` pro danou operaci.
         :param change: Vstupní hodnota ``change`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         fedora_transaction = FedoraTransaction()
         user = request.user
         obj.created_from_admin_panel = True
@@ -511,12 +505,13 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         obj.save()
 
     def user_change_password(self, request, id, form_url=""):
-        """Provádí operaci user change password.
+        """
+        Provádí operaci user change password.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param id: Identifikátor zpracovávaného záznamu.
         :param form_url: Vstupní hodnota ``form_url`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if request.method == "POST":
             user = self.get_object(request, unquote(id))
             form = self.change_password_form(user, request.POST)
@@ -529,21 +524,23 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return super(CustomUserAdmin, self).user_change_password(request, id, form_url=form_url)
 
     def log_deletion(self, request, object, object_repr):
-        """Provádí operaci log deletion.
+        """
+        Provádí operaci log deletion.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param object: Vstupní hodnota ``object`` pro danou operaci.
         :param object_repr: Vstupní hodnota ``object_repr`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         object.deleted_by_user = request.user
         super().log_deletion(request, object, object_repr)
 
     def get_readonly_fields(self, request, obj=None):
-        """Vrací readonly fields.
+        """
+        Vrací readonly fields.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         fields = super().get_readonly_fields(request, obj)
         if obj:
             if request.user.ident_cely == obj.ident_cely:
@@ -551,12 +548,13 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return fields
 
     def render_change_form(self, request, context, **kwargs):
-        """Vyrenderuje change form.
+        """
+        Vyrenderuje change form.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param context: Vstupní hodnota ``context`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         object_id = request.resolver_match.kwargs.get("object_id")
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
         context.update(
@@ -572,9 +570,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return super().render_change_form(request, context, **kwargs)
 
     def get_urls(self):
-        """Vrací urls.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací urls. v aplikaci."""
         urls = super().get_urls()
         custom_urls = [
             path(
@@ -586,10 +582,11 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return custom_urls + urls
 
     def get_histore_related_records(self, object_id):
-        """Vrací histore related records.
+        """
+        Vrací histore related records.
 
         :param object_id: Identifikátor objektu ``object``.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if User.objects.filter(pk=object_id).exists():
             uzivatel = User.objects.get(pk=object_id)
             history = Historie.objects.filter(uzivatel=uzivatel)
@@ -600,13 +597,14 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             return None, None
 
     def delete_history_records(self, request, object_id, *args, **kwargs):
-        """Odstraní history records.
+        """
+        Odstraní history records.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param object_id: Identifikátor objektu ``object``.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek operace odstranění."""
+        """
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
         obj: User = self.get_object(request, object_id)
         if request.method == "GET":
@@ -638,11 +636,12 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             return HttpResponseRedirect(change_url)
 
     def delete_model(self, request, obj):
-        """Odstraní model.
+        """
+        Odstraní model. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        """
         with transaction.atomic():
             pes_set = obj.pes_set.all()
             for item in pes_set:
@@ -653,16 +652,15 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
 
 class CustomGroupAdmin(admin.ModelAdmin):
-    """
-    Admin panel pro správu uživatelskych skupin.
-    """
+    """Admin panel pro správu uživatelskych skupin."""
 
     def has_delete_permission(self, request, obj=None):
-        """Určí, zda delete permission.
+        """
+        Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         if obj is not None:
             obj: Group
             user_count = User.objects.filter(groups__id__in=[obj.pk]).count()

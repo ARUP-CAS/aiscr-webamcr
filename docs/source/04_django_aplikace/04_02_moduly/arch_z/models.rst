@@ -108,25 +108,17 @@ Třídy
 
       Vrací permission object.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: get_create_user()
 
       Vrací create user.
-
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
-
    .. py:method:: check_set_permanent_ident()
 
       Ověří set permanent ident.
-
-      :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: __init__()
 
@@ -134,7 +126,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: initial_casti_dokumentu()
 
@@ -210,7 +201,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: initial_projekt()
 
@@ -289,14 +279,12 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: create_transaction()
 
       Vytvoří a vrátí Fedora transakci pro práci s externím odkazem.
 
       :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
 
 
 .. py:class:: LokalitaSekvence

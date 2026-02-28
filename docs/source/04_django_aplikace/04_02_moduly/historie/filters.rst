@@ -14,16 +14,14 @@ Třídy
 
    .. py:method:: get_queryset()
 
-      Vrací queryset.
+      Vrací queryset. v aplikaci.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
 
    .. py:method:: filter()
 
-      Filtruje hodnotu.
+      Filtruje hodnotu. v aplikaci.
 
       :param qs: Vstupní hodnota ``qs`` pro danou operaci.
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 

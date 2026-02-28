@@ -7,9 +7,7 @@ from komponenta.models import Komponenta
 
 
 class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
-    """
-    Databázový model objektu nálezu.
-    """
+    """Databázový model objektu nálezu."""
 
     komponenta = models.ForeignKey(
         Komponenta,
@@ -48,32 +46,31 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Vrací permission object.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací permission object."""
         return self.komponenta.get_permission_object()
 
 
 class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
-    """
-    Databázový model předmětu nálezu.
-    """
+    """Databázový model předmětu nálezu."""
 
     komponenta = models.ForeignKey(
         Komponenta,
@@ -112,23 +109,24 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init_(self, *args, **kwargs):
-        """Provádí operaci init.
+        """
+        Provádí operaci init.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
-        """Vrací textovou reprezentaci objektu.
+        """
+        Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Vrací permission object.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací permission object."""
         return self.komponenta.get_permission_object()

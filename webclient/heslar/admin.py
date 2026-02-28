@@ -26,18 +26,20 @@ class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
 
     @action(label="Metadata", description="Download of metadata")
     def metadata(self, request, obj):
-        """Provádí operaci metadata.
+        """
+        Provádí operaci metadata.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         metadata = obj.metadata
 
         def context_processor(content):
-            """Provádí operaci context processor.
+            """
+            Provádí operaci context processor.
 
             :param content: Vstupní hodnota ``content`` pro danou operaci.
-            :return: Vrací výsledek provedené operace."""
+            """
             yield content
 
         response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
@@ -57,6 +59,7 @@ class HeslarWithMetadataAdmin(ObjectWithMetadataAdmin):
 class HeslarNazevAdmin(admin.ModelAdmin):
     """
     Admin část pro prohlížení modelu heslař název.
+
     Práva na změnu jsou zakázaná.
     """
 
@@ -66,35 +69,36 @@ class HeslarNazevAdmin(admin.ModelAdmin):
     search_fields = ("nazev",)
 
     def has_add_permission(self, request, obj=None):
-        """Určí, zda add permission.
+        """
+        Určí, zda add permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
-        """Určí, zda delete permission.
+        """
+        Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
-        """Určí, zda change permission.
+        """
+        Určí, zda change permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
 
 @admin.register(Heslar)
 class HeslarAdmin(HeslarWithMetadataAdmin):
-    """
-    Admin část pro správu modelu heslař.
-    """
+    """Admin část pro správu modelu heslař."""
 
     list_display = ("ident_cely", "nazev_heslare", "heslo", "heslo_en", "zkratka", "popis", "popis_en", "razeni")
     fields = ("nazev_heslare", "ident_cely", "heslo", "heslo_en", "zkratka", "popis", "popis_en", "razeni")
@@ -102,7 +106,8 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
     list_filter = ("nazev_heslare",)
 
     def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
-        """Vyrenderuje change form.
+        """
+        Vyrenderuje change form.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param context: Vstupní hodnota ``context`` pro danou operaci.
@@ -110,38 +115,41 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
         :param change: Vstupní hodnota ``change`` pro danou operaci.
         :param form_url: Vstupní hodnota ``form_url`` pro danou operaci.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if add:
             context["adminform"].form.fields["nazev_heslare"].queryset = HeslarNazev.objects.filter(povolit_zmeny=True)
         return super(HeslarAdmin, self).render_change_form(request, context, add, change, form_url, obj)
 
     def has_change_permission(self, request, obj=None):
-        """Určí, zda change permission.
+        """
+        Určí, zda change permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
         return super().has_change_permission(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
-        """Vrací readonly fields.
+        """
+        Vrací readonly fields.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if obj is not None and obj.pk is not None:
             return "ident_cely", "nazev_heslare"
         else:
             return ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
-        """Určí, zda delete permission.
+        """
+        Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
         if obj is not None:
@@ -151,9 +159,7 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
 
 @admin.register(HeslarDatace)
 class HeslarDataceAdmin(admin.ModelAdmin):
-    """
-    Admin část pro správu modelu heslař datace.
-    """
+    """Admin část pro správu modelu heslař datace."""
 
     list_display = ("obdobi_ident_cely", "obdobi", "rok_od_min", "rok_od_max", "rok_do_min", "rok_do_max", "poznamka")
     fields = ("obdobi", "rok_od_min", "rok_od_max", "rok_do_min", "rok_do_max", "poznamka")
@@ -161,21 +167,23 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     list_filter = ("obdobi",)
 
     def get_readonly_fields(self, request, obj=None):
-        """Vrací readonly fields.
+        """
+        Vrací readonly fields.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         if obj:  # Znamená to, že jde o úpravu existujícího záznamu.
             return ("obdobi",)
         else:
             return []
 
     def obdobi_ident_cely(self, obj):
-        """Provádí operaci obdobi ident cely.
+        """
+        Provádí operaci obdobi ident cely.
 
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return obj.obdobi.ident_cely
 
 
@@ -183,6 +191,7 @@ class HeslarDataceAdmin(admin.ModelAdmin):
 class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     """
     Admin část pro prohlížení modelu heslař dokument typ material.
+
     Práva na změnu jsou zakázaná.
     """
 
@@ -200,35 +209,36 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
-        """Určí, zda add permission.
+        """
+        Určí, zda add permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
-        """Určí, zda delete permission.
+        """
+        Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
-        """Určí, zda change permission.
+        """
+        Určí, zda change permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
 
 @admin.register(HeslarOdkaz)
 class HeslarOdkazAdmin(admin.ModelAdmin):
-    """
-    Admin část pro správu modelu heslař odkaz.
-    """
+    """Admin část pro správu modelu heslař odkaz."""
 
     list_display = ("heslo_ident_cely", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     fields = ("heslar_nazev", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation", "scheme_uri")
@@ -237,18 +247,17 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     form = HeslarOdkazForm
 
     def heslo_ident_cely(self, obj):
-        """Provádí operaci heslo ident cely.
+        """
+        Provádí operaci heslo ident cely.
 
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return obj.heslo.ident_cely
 
 
 @admin.register(HeslarHierarchie)
 class HeslarHierarchieAdmin(admin.ModelAdmin):
-    """
-    Admin část pro správu modelu heslař hierarchie.
-    """
+    """Admin část pro správu modelu heslař hierarchie."""
 
     list_display = ("heslo_podrazene_ident_cely", "heslo_podrazene", "heslo_nadrazene", "typ")
     fields = ("heslar_nazev_podrazene", "heslo_podrazene", "heslar_nazev_nadrazene", "heslo_nadrazene", "typ")
@@ -262,18 +271,17 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     form = HeslarHierarchieForm
 
     def heslo_podrazene_ident_cely(self, obj):
-        """Provádí operaci heslo podrazene ident cely.
+        """
+        Provádí operaci heslo podrazene ident cely.
 
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return obj.heslo_podrazene.ident_cely
 
 
 @admin.register(Osoba)
 class OsobaAdmin(ObjectWithMetadataAdmin):
-    """
-    Admin část pro správu modelu osob.
-    """
+    """Admin část pro správu modelu osob."""
 
     form = OsobaAdminForm
 
@@ -303,30 +311,33 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     readonly_fields = ("ident_cely",)
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.wiki_data_available = None
         super().__init__(*args, **kwargs)
 
     def has_delete_permission(self, request, obj=None):
-        """Určí, zda delete permission.
+        """
+        Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         if obj is not None:
             return not obj.has_connections
         return super().has_delete_permission(request)
 
     def get_fields(self, request, obj=None):
-        """Vrací fields.
+        """
+        Vrací fields. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """
         fields = list(self.fields)
         if self.wiki_data_available is None:
             try:
@@ -343,9 +354,7 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
 
 @admin.register(Organizace)
 class OrganizaceAdmin(ObjectWithMetadataAdmin):
-    """
-    Admin část pro správu modelu organizace.
-    """
+    """Admin část pro správu modelu organizace."""
 
     form = OrganizaceAdminForm
     list_display = (
@@ -404,11 +413,12 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     readonly_fields = ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
-        """Určí, zda delete permission.
+        """
+        Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         if obj is not None:
             return not obj.has_connections
         return super().has_delete_permission(request)
@@ -418,35 +428,36 @@ class HeslarRuianAdmin(ObjectWithMetadataAdmin):
     """Implementuje komponentu ``HeslarRuianAdmin`` v rámci aplikace."""
 
     def has_add_permission(self, request, obj=None):
-        """Určí, zda add permission.
+        """
+        Určí, zda add permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
-        """Určí, zda delete permission.
+        """
+        Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
-        """Určí, zda change permission.
+        """
+        Určí, zda change permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """
         return False
 
 
 @admin.register(RuianKraj)
 class HeslarRuianKrajAdmin(ObjectWithMetadataAdmin):
-    """
-    Admin část pro správu modelu ruian kraj.
-    """
+    """Admin část pro správu modelu ruian kraj."""
 
     list_display = ("nazev", "kod", "rada_id", "nazev_en", "email")
     fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en", "email")
@@ -456,9 +467,7 @@ class HeslarRuianKrajAdmin(ObjectWithMetadataAdmin):
 
 @admin.register(RuianOkres)
 class HeslarRuianOkresAdmin(HeslarRuianAdmin):
-    """
-    Admin část pro správu modelu ruian okres.
-    """
+    """Admin část pro správu modelu ruian okres."""
 
     list_display = ("nazev", "kraj", "spz", "kod", "nazev_en")
     fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
@@ -468,9 +477,7 @@ class HeslarRuianOkresAdmin(HeslarRuianAdmin):
 
 @admin.register(RuianKatastr)
 class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
-    """
-    Admin část pro správu modelu ruian katastr.
-    """
+    """Admin část pro správu modelu ruian katastr."""
 
     list_display = ("nazev", "okres", "pian_ident_cely", "kod")
     fields = ("nazev", "kod", "okres")

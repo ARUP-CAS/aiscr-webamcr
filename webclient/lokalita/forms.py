@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class LokalitaForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení lokality.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení lokality."""
 
     typ_lokality_disp = forms.CharField(
         label=_("lokalita.forms.typLokality.label"),
@@ -67,7 +65,8 @@ class LokalitaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, detail=False, **kwargs):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
         :param required: Vstupní hodnota ``required`` pro danou operaci.
@@ -75,7 +74,7 @@ class LokalitaForm(forms.ModelForm):
         :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
         :param detail: Vstupní hodnota ``detail`` pro danou operaci.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         super(LokalitaForm, self).__init__(*args, **kwargs)
         if self.instance.pk is not None:
             nadrazene = HeslarHierarchie.objects.filter(

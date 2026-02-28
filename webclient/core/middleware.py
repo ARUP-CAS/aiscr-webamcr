@@ -16,28 +16,33 @@ logger = logging.getLogger(__name__)
 
 
 class PermissionMiddleware:
-    """
-    Middleware třída užívaná pro kontrolu oprávnení.
-    """
+    """Middleware třída užívaná pro kontrolu oprávnení."""
 
     def __init__(self, get_response):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.get_response = get_response
 
     def __call__(self, request):
-        """Provádí operaci call.
+        """
+        Provádí operaci call.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací výsledek provedené operace."""
+        """
         response = self.get_response(request)
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """
         Metoda pro kontrolu oprvávnení pro každý view.
+
+        :param request: Popis parametru ``request``.
+        :param view_func: Popis parametru ``view_func``.
+        :param view_args: Popis parametru ``view_args``.
+        :param view_kwargs: Popis parametru ``view_kwargs``.
         """
         from core.models import Permissions
 
@@ -80,26 +85,29 @@ class ErrorMiddleware:
     """Implementuje komponentu ``ErrorMiddleware`` v rámci aplikace."""
 
     def __init__(self, get_response):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.get_response = get_response
 
     def __call__(self, request):
-        """Provádí operaci call.
+        """
+        Provádí operaci call.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací výsledek provedené operace."""
+        """
         response = self.get_response(request)
         return response
 
     def process_exception(self, request, exception):
-        """Provádí operaci process exception.
+        """
+        Provádí operaci process exception.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param exception: Vstupní hodnota ``exception`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
             return render(request, "fedora_error.html", context, status=500)
@@ -115,29 +123,33 @@ class StatusMessageMiddleware:
     pattern = re.compile(r"[\w-]+\d+[A-Z]?")
 
     def __init__(self, get_response):
-        """Inicializuje instanci třídy.
+        """
+        Inicializuje instanci třídy.
 
         :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
-        :return: Funkce nevrací hodnotu (``None``)."""
+        """
         self.get_response = get_response
         r = RedisConnector()
         self.redis_connection = r.get_connection()
 
     def __call__(self, request):
-        """Provádí operaci call.
+        """
+        Provádí operaci call.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací výsledek provedené operace."""
+        """
         response = self.get_response(request)
         return response
 
     def _show_message(self, value, request, redis_key):
-        """Provádí operaci show message.
+        """
+        Provádí operaci show message.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param request: Django HTTP požadavek použitý při zpracování.
         :param redis_key: Vstupní hodnota ``redis_key`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        :return: Vrací výsledek provedené operace.
+        """
         value = int(value.decode("utf-8"))
         if value == FedoraTransactionResult.COMMITED.value:
             try:
@@ -164,13 +176,14 @@ class StatusMessageMiddleware:
         self.redis_connection.delete(redis_key)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        """Provádí operaci process view.
+        """
+        Provádí operaci process view.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
         :param view_args: Vstupní hodnota ``view_args`` pro danou operaci.
         :param view_kwargs: Vstupní hodnota ``view_kwargs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         regex_result = self.pattern.findall(request.path)
         for item in regex_result:
             redis_key = FedoraTransaction.get_transaction_redis_key(item, request.user.id)

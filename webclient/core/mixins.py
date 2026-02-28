@@ -10,14 +10,13 @@ logger = logging.getLogger(__name__)
 class ManyToManyRestrictedClassMixin:
     """
     Třída pro model pro vytvoření property has_connections.
+
     Hledá jestli má model nejakou many to many vazbu.
     """
 
     @property
     def has_connections(self):
-        """Určí, zda connections.
-
-        :return: Vrací výsledek ověření nebo validačního pravidla."""
+        """Určí, zda connections."""
         attr_list = []
         for attr in dir(self):
             if not attr.startswith("_") and attr not in ("has_connections", "objects"):
@@ -37,12 +36,13 @@ class IPWhitelistMixin:
     """Implementuje komponentu ``IPWhitelistMixin`` v rámci aplikace."""
 
     def dispatch(self, request, *args, **kwargs):
-        """Provádí operaci dispatch.
+        """
+        Provádí operaci dispatch.
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """
         ALLOWED_IPS = settings.ALLOWED_HOSTS + ["127.0.0.1", "10.0.0.2"]
         client_ip = request.META.get("REMOTE_ADDR", "")  # Get client IP
         if client_ip not in ALLOWED_IPS and "*" not in ALLOWED_IPS:  # Ověří, že je IP adresa povolena.

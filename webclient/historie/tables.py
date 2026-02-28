@@ -9,9 +9,7 @@ from uzivatel.models import User
 
 
 class HistorieTable(ColumnShiftTableBootstrap4):
-    """
-    Definuje tabulku pro zobrazení historie změn.
-    """
+    """Definuje tabulku pro zobrazení historie změn."""
 
     datum_zmeny = columns.DateTimeColumn(
         format="Y-m-d, H:i", default="", verbose_name=_("core.tables.HistorieTable.datum_zmeny")
@@ -23,10 +21,11 @@ class HistorieTable(ColumnShiftTableBootstrap4):
     )
 
     def render_uzivatel_custom(self, record):
-        """Vyrenderuje uzivatel custom.
+        """
+        Vyrenderuje uzivatel custom.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         if not record.uzivatel:
             return ""
         return record.uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
@@ -55,9 +54,7 @@ class SimpleHistoryTable(ColumnShiftTableBootstrap4):
 
 
 class FedoraHistorieTable(ColumnShiftTableBootstrap4):
-    """
-    Definuje tabulku verzí metadat a souborů z Fedory na stránce historie.
-    """
+    """Definuje tabulku verzí metadat a souborů z Fedory na stránce historie."""
 
     column_excluded = ["url"]
     datum = tables.DateTimeColumn(
@@ -83,21 +80,23 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
     )
 
     def render_uzivatel(self, record):
-        """Vyrenderuje uzivatel.
+        """
+        Vyrenderuje uzivatel. v aplikaci.
 
         :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         uzivatel = User.objects.filter(ident_cely=record["uzivatel"]).first()
         if uzivatel is None:
             return record["uzivatel"]
         return uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
 
     def render_url(self, value, record):
-        """Vyrenderuje url.
+        """
+        Vyrenderuje url. v aplikaci.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return format_html(
             '<a href="{}" class="btn-sm" target="_blank">'
             '<span class="material-icons" style="vertical-align:middle;">download</span>'
@@ -106,11 +105,12 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         )
 
     def value_url(self, value, record):
-        """Provádí operaci value url.
+        """
+        Provádí operaci value url.
 
         :param value: Vstupní hodnota ``value`` pro danou operaci.
         :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací výsledek provedené operace."""
+        """
         return f"{settings.SITE_URL}{record['url']}"
 
     class Meta:

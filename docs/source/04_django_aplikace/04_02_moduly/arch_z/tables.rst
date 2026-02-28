@@ -18,13 +18,11 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: render()
 
       Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
       :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
 
 .. py:class:: AkceTable
@@ -39,7 +37,6 @@ Třídy
 
       :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
       :param is_descending: Vstupní hodnota ``is_descending`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
 
    .. py:method:: __init__()
 
@@ -47,7 +44,6 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_all_idents()
 
