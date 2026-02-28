@@ -92,7 +92,9 @@ jobs:
           EXIT_CODE=${PIPESTATUS[0]}
 
           # Remove ANSI escape sequences so grep reliably matches hook output.
-          sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' precommit.log > precommit.clean.log
+          sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' precommit.log \
+            | tr -d '\r' \
+            > precommit.clean.log
 
           echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
 
@@ -107,7 +109,7 @@ jobs:
           # Remove docstring warnings that are reported separately.
           echo "log_warnings<<EOF" >> "$GITHUB_OUTPUT"
           grep -Ei "(::warning::|\bwarn(ing)?\b)" precommit.clean.log \
-            | grep -Evi "warning DOC[0-9]{3}" \
+            | grep -Evi "warning DOC[0-9][0-9][0-9]" \
             | sort -u || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
