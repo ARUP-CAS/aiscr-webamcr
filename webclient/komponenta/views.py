@@ -55,10 +55,9 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, typ_vazby, ident_cely):
     """Funkce pohledu pro zapsání editace komponenty.
-
-    :param request: Popis parametru `request`.
-    :param typ_vazby: Popis parametru `typ_vazby`.
-    :param ident_cely: Popis parametru `ident_cely`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param typ_vazby: Hodnota parametru ``typ_vazby`` použitého touto operací.
+    :param ident_cely: Hodnota parametru ``ident_cely`` použitého touto operací.
     """
     komponenta: Komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     fedora_transaction = FedoraTransaction(komponenta, request.user, suppress_message=True)
@@ -167,10 +166,9 @@ def detail(request, typ_vazby, ident_cely):
 @require_http_methods(["POST"])
 def zapsat(request, typ_vazby, dj_ident_cely):
     """Funkce pohledu pro zapsání vytvořeni komponenty.
-
-    :param request: Popis parametru `request`.
-    :param typ_vazby: Popis parametru `typ_vazby`.
-    :param dj_ident_cely: Popis parametru `dj_ident_cely`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param typ_vazby: Hodnota parametru ``typ_vazby`` použitého touto operací.
+    :param dj_ident_cely: Hodnota parametru ``dj_ident_cely`` použitého touto operací.
     """
     dj = None
     cast = None
@@ -249,10 +247,9 @@ def zapsat(request, typ_vazby, dj_ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, typ_vazby, ident_cely):
     """Funkce pohledu pro smazání komponenty pomoci modalu.
-
-    :param request: Popis parametru `request`.
-    :param typ_vazby: Popis parametru `typ_vazby`.
-    :param ident_cely: Popis parametru `ident_cely`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param typ_vazby: Hodnota parametru ``typ_vazby`` použitého touto operací.
+    :param ident_cely: Hodnota parametru ``ident_cely`` použitého touto operací.
     """
     komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     dj = None

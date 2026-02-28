@@ -25,8 +25,7 @@ logger = logging.getLogger(__name__)
 
 def constants_import(request):
     """Automatický import stavov projektú do kontextu všech template.
-
-    :param request: Popis parametru `request`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
     """
     constants_dict = {
         "PROJEKT_STAV_OZNAMENY": PROJEKT_STAV_OZNAMENY,
@@ -45,8 +44,7 @@ def constants_import(request):
 
 def digi_links_from_settings(request):
     """Automatický import linkov na digitálni archiv zo settings do kontextov všech template.
-
-    :param request: Popis parametru `request`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
     """
     return getattr(settings, "DIGI_LINKS")
 
@@ -63,8 +61,7 @@ def logout_next_url(request):
 # Pro funkci automatického odhlášení přesměruje ihned.
 def auto_logout_client(request):
     """Automatický výpočet a import kontextu potrebného pro správně zobrzazení automatického logoutu na všech stránkach.
-
-    :param request: Popis parametru `request`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
     """
     if request.user.is_anonymous:
         return {}

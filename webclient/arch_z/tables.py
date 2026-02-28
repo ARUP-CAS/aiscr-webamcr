@@ -19,7 +19,9 @@ class BooleanValueColumn(tables.columns.Column):
         super(BooleanValueColumn, self).__init__(*args, **kwargs)
 
     def render(self, value):
-        """Vyrenderuje booleovskou hodnotu do textové reprezentace pro tabulku.
+        """Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
+        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :return: Vrací výsledek provedené operace.
         """
         value = [x for x in self.value_labels if x[0] == bool(value)]
         if len(value) > 0:

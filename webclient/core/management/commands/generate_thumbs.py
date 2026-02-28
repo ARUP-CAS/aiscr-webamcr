@@ -60,7 +60,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Zpracuje argumenty příkazu a vygeneruje náhledové obrázky.
+        """Zpracuje vstupní argumenty příkazu a spustí generování náhledů.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param options: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace.
         """
         pks = options.get("pks")
         pk_range = options.get("range")

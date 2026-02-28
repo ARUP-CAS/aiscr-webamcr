@@ -101,8 +101,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_zapsany(self, user):
         """Metoda pro nastavení stavu zapsaný a uložení změny do historie.
-
-        :param user: Popis parametru `user`.
+        :param user: Hodnota parametru ``user`` použitého touto operací.
         """
         self.stav = AZ_STAV_ZAPSANY
         Historie(
@@ -114,10 +113,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_odeslany(self, user, request, messages):
         """Metoda pro nastavení stavu odeslaný a uložení změny do historie.
-
-        :param user: Popis parametru `user`.
-        :param request: Popis parametru `request`.
-        :param messages: Popis parametru `messages`.
+        Dokumenty se taky posouvají do stavu odeslaný.
+        Externí zdroje se posouvají do stavu zapsaný.
+        
+        :param user: Hodnota parametru ``user`` použitého touto operací.
+        :param request: Hodnota parametru ``request`` použitého touto operací.
+        :param messages: Hodnota parametru ``messages`` použitého touto operací.
         """
         self.stav = AZ_STAV_ODESLANY
         self.save()
@@ -147,8 +148,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_archivovany(self, user):
         """Metoda pro nastavení stavu archivovaný a uložení změny do historie.
-
-        :param user: Popis parametru `user`.
+        Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
+        
+        :param user: Hodnota parametru ``user`` použitého touto operací.
         """
         self.suppress_signal = True
         self.stav = AZ_STAV_ARCHIVOVANY
@@ -163,8 +165,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     def set_vraceny(self, user, new_state, poznamka):
         """Metoda pro vrácení o jeden stav méně a uložení změny do historie.
-
-        :param user: Popis parametru `user`.
+        :param user: Hodnota parametru ``user`` použitého touto operací.
         """
         self.stav = new_state
         Historie(

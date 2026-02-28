@@ -908,8 +908,31 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
         """Implementuje aktualizaci existujícího souboru novou verzí.
-
-        :param kwargs: Popis parametru `kwargs`.
+        Provádí kompletní workflow pro nahrazení obsahu existujícího souboru včetně
+        validace vazeb, aktualizace v repository a databázi. Zachovává původní název
+        souboru (s možnou úpravou přípony) a vytváří novou verzi v historii.
+        
+        Args:
+            request (HttpRequest): HTTP request s informacemi o přihlášeném uživateli
+            soubor (TemporaryUploadedFile): Nový nahraný soubor z requestu
+            soubor_data (BytesIO): Binární obsah nového souboru
+            *args: Poziční argumenty z URL
+            **kwargs: Obsahuje 'typ_vazby', 'ident_cely' a 'file_id'
+        
+        Returns:
+            JsonResponse: JSON odpověď s výsledkem operace
+        
+        Response Status Codes:
+            200: Soubor úspěšně aktualizován
+            400: Chyba vazby, transakční konflikt, MIME typ nebo neplatný typ_vazby
+            403: Nedostatečná oprávnění k nahrazení souboru
+            500: Chybějící vazba nebo jiná interní chyba
+        
+        Raises:
+            Http404: Pokud soubor s daným file_id neexistuje (get_object_or_404)
+            ZaznamSouborNotmatching: Pokud soubor nepatří k danému záznamu
+        
+        :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
         """
         typ_vazby = kwargs.get("typ_vazby")
         ident_cely = kwargs.get("ident_cely")
@@ -1084,10 +1107,9 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
 
 def get_finds_soubor_name(find, filename, add_to_index=1):
     """Funkce pro získaní jména souboru pro samostatný nález.
-
-    :param find: Popis parametru `find`.
-    :param filename: Popis parametru `filename`.
-    :param add_to_index: Popis parametru `add_to_index`.
+    :param find: Hodnota parametru ``find`` použitého touto operací.
+    :param filename: Hodnota parametru ``filename`` použitého touto operací.
+    :param add_to_index: Hodnota parametru ``add_to_index`` použitého touto operací.
     """
     ident_cely_sanitized = find.ident_cely.replace("-", "")
     files = find.soubory.soubory.filter(nazev__contains=ident_cely_sanitized)
@@ -1110,9 +1132,8 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
 
 def get_projekt_soubor_name(projekt: Projekt, file_name):
     """Funkce pro získaní jména souboru pro projekt.
-
-    :param projekt: Popis parametru `projekt`.
-    :param file_name: Popis parametru `file_name`.
+    :param projekt: Hodnota parametru ``projekt`` použitého touto operací.
+    :param file_name: Hodnota parametru ``file_name`` použitého touto operací.
     """
     if Soubor.objects.filter(vazba__projekt_souboru=projekt).count() >= MAX_POCET_SOUBORU_PROJEKTU:
         return False
@@ -1125,9 +1146,8 @@ def get_projekt_soubor_name(projekt: Projekt, file_name):
 
 def check_stav_changed(request, zaznam):
     """Funkce pro ověření, jestli se změnil stav záznamu při uložení formuláře oproti jeho načtení.
-
-    :param request: Popis parametru `request`.
-    :param zaznam: Popis parametru `zaznam`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param zaznam: Hodnota parametru ``zaznam`` použitého touto operací.
     """
     logger.debug("core.views.check_stav_changed.start", extra={"pk": zaznam.pk})
     if request.method == "POST":
@@ -1218,9 +1238,8 @@ def check_stav_changed(request, zaznam):
 @require_http_methods(["GET"])
 def redirect_ident_view(request, ident_cely):
     """Funkce pro získaní správneho redirectu na záznam podle ident%cely záznamu.
-
-    :param request: Popis parametru `request`.
-    :param ident_cely: Popis parametru `ident_cely`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param ident_cely: Hodnota parametru ``ident_cely`` použitého touto operací.
     """
     object = get_record_from_ident(ident_cely)
     if object:
@@ -1242,8 +1261,7 @@ def redirect_ident_view(request, ident_cely):
 @require_http_methods(["GET"])
 def prolong_session(request):
     """Funkce pohledu pro prodloužení prihlášení.
-
-    :param request: Popis parametru `request`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
     """
     options = getattr(settings, "AUTO_LOGOUT")
     current_time = now()
@@ -1433,6 +1451,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
     def create_export(self, export_format):
         """Vytvoří export výsledků vyhledávání v požadovaném formátu.
+        :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
+        :return: Vrací nově vytvořený výsledek operace.
         """
         from redis import Redis
 
@@ -1628,7 +1648,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return context
 
     def get_queryset(self):
-        """Vrátí queryset výsledků hledání podle aktuálně zadaných filtrů.
+        """Vrací queryset výsledků vyhledávání podle zadaných filtrů.
+        :return: Vrací načtená data odpovídající vstupním parametrům.
         """
         qs = super().get_queryset()
         qs.cache()
@@ -1710,8 +1731,7 @@ class CheckUserAuthentication(View):
 @require_http_methods(["POST"])
 def post_ajax_get_pas_and_pian_limit(request):
     """Funkce pohledu pro získaní heatmapy.
-
-    :param request: Popis parametru `request`.
+    :param request: Hodnota parametru ``request`` použitého touto operací.
     """
     body = json.loads(request.body.decode("utf-8"))
     params = [

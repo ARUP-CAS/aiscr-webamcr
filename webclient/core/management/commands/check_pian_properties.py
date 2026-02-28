@@ -37,7 +37,10 @@ class Command(BaseCommand):
     help = _("core.management.commands.check_pian_properties.Command.help")
 
     def handle(self, *args, **options):
-        """Zpracuje vstupní argumenty a ověří vlastnosti PIAN dat.
+        """Zpracuje argumenty příkazu a zkontroluje konzistenci vlastností PIAN.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param options: Dodatečné pojmenované argumenty předané voláním.
+        :return: Vrací výsledek provedené operace.
         """
         from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
         from heslar.models import Heslar

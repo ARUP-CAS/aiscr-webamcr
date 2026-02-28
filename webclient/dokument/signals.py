@@ -20,10 +20,11 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Dokument, weak=False)
 def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     """Metoda pro vytvoření historických vazeb dokumentu.
-
-    :param sender: Popis parametru `sender`.
-    :param instance: Popis parametru `instance`.
-    :param kwargs: Popis parametru `kwargs`.
+    Metoda se volá pred uložením záznamu.
+    
+    :param sender: Hodnota parametru ``sender`` použitého touto operací.
+    :param instance: Hodnota parametru ``instance`` použitého touto operací.
+    :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
     """
     invalidate_model(Dokument)
     invalidate_model(Akce)
@@ -57,10 +58,11 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
 @receiver(pre_save, sender=DokumentCast, weak=False)
 def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     """Metoda pro vytvoření komponent vazeb dokument části.
-
-    :param sender: Popis parametru `sender`.
-    :param instance: Popis parametru `instance`.
-    :param kwargs: Popis parametru `kwargs`.
+    Metoda se volá pred uložením dokument části.
+    
+    :param sender: Hodnota parametru ``sender`` použitého touto operací.
+    :param instance: Hodnota parametru ``instance`` použitého touto operací.
+    :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
     """
     logger.debug("dokument.signals.create_dokument_cast_vazby.start", extra={"pk": instance.pk})
     invalidate_model(Dokument)
