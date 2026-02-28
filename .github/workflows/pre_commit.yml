@@ -98,7 +98,7 @@ jobs:
 
           # Extract docstring warnings
           echo "doc_warnings<<EOF" >> "$GITHUB_OUTPUT"
-          grep -Ei "warning DOC[0-9]{3}" precommit.clean.log | wc -l
+          grep -Ei "warning DOC[0-9][0-9][0-9]" precommit.clean.log || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           # Extract generic warnings from pre-commit log.
