@@ -1,29 +1,78 @@
 #!/usr/bin/env python3
-"""Upozornění na chybějící/nesprávné docstringy metod podle projektového style guide."""
+"""
+Kontrola docstringů tříd, metod a funkcí dle projektového style guide.
+"""
 
 from __future__ import annotations
 
 import ast
 import os
+import re
 import sys
 from pathlib import Path
+from typing import Iterable, Union, Set
 
-IGNORED_FILE_PATH_PARTS = {"migrations"}
+# =========================
+# Configuration
+# =========================
+
+IGNORED_DIRS = {
+    "migrations",
+    "venv",
+    ".venv",
+    "__pycache__",
+    ".git",
+    "static",
+    "media",
+}
 IGNORED_CLASS_NAMES = {"Meta"}
-IGNORED_METHOD_NAMES = {"__str__", "__repr__"}
+IGNORED_METHOD_NAMES = {"__str__", "__repr__", "__init__", "__len__"}
+
+DOC_PARSE_ERROR = "DOC000"
+DOC_MISSING = "DOC001"
+DOC_EMPTY = "DOC002"
+DOC_SHORT_SUMMARY = "DOC003"
+DOC_MISSING_PARAM = "DOC004"
+DOC_MISSING_RETURN = "DOC005"
+
+MIN_SUMMARY_WORDS = 3
+
+# =========================
+# Helpers
+# =========================
 
 
-def should_bypass_exclusions() -> bool:
-    value = os.getenv("DOCSTRING_CHECK_BYPASS_EXCLUSIONS", "false").strip().lower()
+def env_flag(name: str, default: str = "false") -> bool:
+    value = os.getenv(name, default).strip().lower()
     return value in {"1", "true", "yes", "on"}
 
 
-def should_check_file(path: Path, bypass_exclusions: bool) -> bool:
-    if bypass_exclusions:
-        return True
+# =========================
+# File selection
+# =========================
 
-    path_parts = set(path.parts)
-    return not bool(path_parts & IGNORED_FILE_PATH_PARTS)
+
+def iter_python_files(paths: list[str], bypass_exclusions: bool) -> Iterable[Path]:
+    for path_str in paths:
+        path = Path(path_str)
+
+        if path.is_file() and path.suffix == ".py":
+            yield path
+            continue
+
+        if path.is_dir():
+            for root, dirs, files in os.walk(path):
+                if not bypass_exclusions:
+                    dirs[:] = [d for d in dirs if d not in IGNORED_DIRS]
+
+                for file in files:
+                    if file.endswith(".py"):
+                        yield Path(root) / file
+
+
+# =========================
+# AST Checker
+# =========================
 
 
 class MethodDocstringChecker(ast.NodeVisitor):
@@ -35,132 +84,184 @@ class MethodDocstringChecker(ast.NodeVisitor):
         self.warnings: list[str] = []
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        self._check_class(node)
+        if self._should_skip(node.name, IGNORED_CLASS_NAMES):
+            return
+
+        qualified_name = ".".join(self.class_stack + [node.name])
+        self._check_docstring(node, "třídy", qualified_name, node.lineno, [])
+
         self.class_stack.append(node.name)
         self.generic_visit(node)
         self.class_stack.pop()
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        self._check_function_like(node)
-        self.function_depth += 1
-        self.generic_visit(node)
-        self.function_depth -= 1
+        self._handle_function_like(node)
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        self._check_function_like(node)
+        self._handle_function_like(node)
+
+    def _handle_function_like(
+        self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+    ) -> None:
+        if self.function_depth > 0:
+            self.generic_visit(node)
+            return
+
+        ignored = IGNORED_METHOD_NAMES if self.class_stack else set()
+        if self._should_skip(node.name, ignored):
+            return
+
+        if self.class_stack:
+            qualified_name = f"{'.'.join(self.class_stack)}.{node.name}"
+            element_type = "metody"
+        else:
+            qualified_name = node.name
+            element_type = "funkce"
+
+        args = self._collect_args(node)
+        self._check_docstring(node, element_type, qualified_name, node.lineno, args)
+
         self.function_depth += 1
         self.generic_visit(node)
         self.function_depth -= 1
 
-    def _check_class(self, node: ast.ClassDef) -> None:
-        if not self.bypass_exclusions:
-            if node.name in IGNORED_CLASS_NAMES:
-                return
+    def _should_skip(self, name: str, ignored_set: Set[str]) -> bool:
+        if self.bypass_exclusions:
+            return False
+        if name in ignored_set:
+            return True
+        return name.startswith("_") and not name.startswith("__")
 
-            if node.name.startswith("_") and not node.name.startswith("__"):
-                return
+    def _collect_args(
+        self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+    ) -> list[str]:
+        all_args = node.args.posonlyargs + node.args.args + node.args.kwonlyargs
+        args = [a.arg for a in all_args if a.arg not in {"self", "cls"}]
 
-        location = f"{self.file_path}:{node.lineno}"
-        qualified_name = f"{'.'.join(self.class_stack + [node.name])}"
-        self._check_docstring(node, "třídy", qualified_name, location, args=[])
+        if node.args.vararg:
+            args.append(node.args.vararg.arg)
+        if node.args.kwarg:
+            args.append(node.args.kwarg.arg)
 
-    def _check_function_like(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
-        if self.function_depth > 0:
-            return
+        return args
 
-        function_name = node.name
-        args = [arg.arg for arg in node.args.args if arg.arg not in {"self", "cls"}]
-        location = f"{self.file_path}:{node.lineno}"
-        if self.class_stack:
-            if not self.bypass_exclusions:
-                if function_name in IGNORED_METHOD_NAMES:
-                    return
+    def _has_meaningful_return(
+        self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+    ) -> bool:
+        if node.returns is None:
+            return False
 
-                if function_name.startswith("_") and not function_name.startswith("__"):
-                    return
+        if isinstance(node.returns, ast.Constant) and node.returns.value is None:
+            return False
+        if isinstance(node.returns, ast.Name) and node.returns.id == "None":
+            return False
 
-            qualified_name = f"{'.'.join(self.class_stack)}.{function_name}"
-            self._check_docstring(node, "metody", qualified_name, location, args=args)
-            return
-
-        if not self.bypass_exclusions and function_name.startswith("_") and not function_name.startswith("__"):
-            return
-
-        self._check_docstring(node, "funkce", function_name, location, args=args)
+        return True
 
     def _check_docstring(
         self,
-        node: ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef,
+        node: ast.AST,
         element_type: str,
-        qualified_name: str,
-        location: str,
+        name: str,
+        line: int,
         args: list[str],
     ) -> None:
         docstring = ast.get_docstring(node)
+        loc = f"{self.file_path}:{line}"
+
         if not docstring:
-            self.warnings.append(f"{location}: WARNING DOC001 Chybí docstring {element_type} '{qualified_name}'.")
-            return
-
-        lines = [line for line in docstring.splitlines() if line.strip()]
-        if not lines:
-            self.warnings.append(f"{location}: WARNING DOC002 Prázdný docstring {element_type} '{qualified_name}'.")
-            return
-
-        if len(lines[0].split()) < 3:
             self.warnings.append(
-                f"{location}: WARNING DOC003 Shrnutí je příliš krátké u {element_type} '{qualified_name}'."
+                f"{loc}: WARNING {DOC_MISSING} Chybí docstring {element_type} '{name}'."
+            )
+            return
+
+        lines = [l for l in docstring.splitlines() if l.strip()]
+        if not lines:
+            self.warnings.append(
+                f"{loc}: WARNING {DOC_EMPTY} Prázdný docstring {element_type} '{name}'."
+            )
+            return
+
+        if len(lines[0].split()) < MIN_SUMMARY_WORDS:
+            self.warnings.append(
+                f"{loc}: WARNING {DOC_SHORT_SUMMARY} Shrnutí je příliš krátké u {element_type} '{name}'."
             )
 
-        for arg in args:
-            if f":param {arg}:" not in docstring:
+        compiled_patterns = {
+            arg: re.compile(
+                rf":param\s+(?:[^\s]+\s+)?{re.escape(arg)}\s*:"
+            )
+            for arg in args
+        }
+
+        for arg, pattern in compiled_patterns.items():
+            if not pattern.search(docstring):
                 self.warnings.append(
-                    f"{location}: WARNING DOC004 Chybí ':param {arg}:' u {element_type} '{qualified_name}'."
+                    f"{loc}: WARNING {DOC_MISSING_PARAM} Chybí ':param {arg}:' u {element_type} '{name}'."
                 )
 
-        has_return_annotation = getattr(node, "returns", None) is not None
-        if has_return_annotation and ":return:" not in docstring and ":returns:" not in docstring:
-            self.warnings.append(f"{location}: WARNING DOC005 Chybí ':return:' u {element_type} '{qualified_name}'.")
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and self._has_meaningful_return(node):
+            if ":return:" not in docstring and ":returns:" not in docstring:
+                self.warnings.append(
+                    f"{loc}: WARNING {DOC_MISSING_RETURN} Chybí ':return:' u {element_type} '{name}'."
+                )
 
 
-def iter_python_files(paths: list[str]) -> list[Path]:
-    candidates = [Path(path) for path in paths if path.endswith(".py")]
-    bypass_exclusions = should_bypass_exclusions()
-    return [
-        path for path in candidates if path.exists() and path.is_file() and should_check_file(path, bypass_exclusions)
-    ]
+# =========================
+# Main
+# =========================
 
 
 def main() -> int:
-    bypass_exclusions = should_bypass_exclusions()
-    files = iter_python_files(sys.argv[1:])
+    bypass_exclusions = env_flag("DOCSTRING_CHECK_BYPASS_EXCLUSIONS")
+    strict_mode = env_flag("DOCSTRING_CHECK_STRICT")
+
+    input_paths = sys.argv[1:] if len(sys.argv) > 1 else ["."]
+    files = list(iter_python_files(input_paths, bypass_exclusions))
+
     if not files:
+        print("Nebyl nalezen žádný soubor ke kontrole.")
         return 0
 
-    warnings: list[str] = []
+    all_warnings: list[str] = []
+
     for file_path in files:
         try:
             source = file_path.read_text(encoding="utf-8")
             tree = ast.parse(source, filename=str(file_path))
+            checker = MethodDocstringChecker(file_path, bypass_exclusions)
+            checker.visit(tree)
+            all_warnings.extend(checker.warnings)
         except SyntaxError as exc:
-            warnings.append(
-                f"{file_path}:{exc.lineno}: WARNING DOC000 Soubor se nepodařilo zpracovat pro kontrolu docstringů: {exc.msg}"
+            all_warnings.append(
+                f"{file_path}:{exc.lineno}: WARNING {DOC_PARSE_ERROR} Syntaktická chyba: {exc.msg}"
             )
-            continue
+        except UnicodeDecodeError:
+            all_warnings.append(
+                f"{file_path}:0: WARNING {DOC_PARSE_ERROR} Chyba kódování (očekáváno UTF-8)"
+            )
+        except Exception as exc:
+            all_warnings.append(
+                f"{file_path}:0: WARNING {DOC_PARSE_ERROR} Neočekávaná chyba: {exc}"
+            )
 
-        checker = MethodDocstringChecker(file_path, bypass_exclusions=bypass_exclusions)
-        checker.visit(tree)
-        warnings.extend(checker.warnings)
+    if all_warnings:
+        print("\n--- Připomínka stylu docstringů ---")
+        for w in all_warnings:
+            print(w)
 
-    if warnings:
-        print("Připomínka stylu docstringů (neblokující):")
-        for warning in warnings:
-            print(warning)
-        print(
-            "\nProsím upravte docstringy metod podle docs/source/04_django_aplikace/04_01_core/docstring_style_guide.rst"
-        )
+        print(f"\nNalezeno {len(all_warnings)} nedostatků.")
+        print("Prosím upravte docstringy dle dokumentace:")
+        print("docs/source/04_django_aplikace/04_01_core/docstring_style_guide.rst")
 
+        return 1 if strict_mode else 0
+
+    print("✅ Všechny docstringy odpovídají standardu.")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(1)
