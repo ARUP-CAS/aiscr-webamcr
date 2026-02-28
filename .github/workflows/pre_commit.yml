@@ -94,9 +94,11 @@ jobs:
           # Remove ANSI escape sequences so grep reliably matches hook output.
           sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' precommit.log > precommit.clean.log
 
-          echo "---- CLEAN LOG PREVIEW ----"
-          cat precommit.clean.log
-          echo "---------------------------"
+          echo "----- RAW LINE -----"
+          grep -n "DOC004" precommit.clean.log
+          echo "----- HEX DUMP -----"
+          grep -n "DOC004" precommit.clean.log | head -n1 | od -An -t x1
+          echo "----- END DUMP -----"
 
           echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
 
