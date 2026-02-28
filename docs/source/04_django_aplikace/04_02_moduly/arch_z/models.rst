@@ -17,7 +17,6 @@ Třídy
       Přepne archeologický záznam do stavu „zapsaný“ a zapíše změnu do historie.
 
       :param user: Uživatel, který změnu stavu provedl.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: set_odeslany()
 
@@ -28,7 +27,6 @@ Třídy
       :param user: Uživatel, který odeslání provedl.
       :param request: HTTP požadavek použitý při generování trvalých identifikátorů dokumentů.
       :param messages: Django message backend pro předání uživatelských hlášek.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: set_archivovany()
 
@@ -37,7 +35,6 @@ Třídy
       U samostatné akce s dočasným identifikátorem se při archivaci nastaví trvalý ident.
 
       :param user: Uživatel, který archivaci provedl.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: set_vraceny()
 
@@ -76,7 +73,6 @@ Třídy
       Propíše nový základ identifikátoru do navázaných DJ a komponent.
 
       :param new_ident: Nový prefix identifikátoru archeologické akce.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: set_akce_ident()
 
@@ -84,21 +80,18 @@ Třídy
 
       :param ident: Volitelný identifikátor; pokud není zadán, vygeneruje se nový.
       :param delete_container: Určuje, zda se při změně identifikátoru smaže původní kontejner.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: get_absolute_url()
 
       Vrátí detail URL archeologického záznamu nebo jeho dokumentační jednotky.
 
       :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
-      :return: URL detailu akce nebo lokality podle typu archeologického záznamu.
 
    .. py:method:: get_redirect()
 
       Vrátí redirect odpověď na detail archeologického záznamu.
 
       :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
-      :return: Redirect na URL vrácenou metodou ``get_absolute_url``.
 
    .. py:method:: __str__()
 
@@ -131,20 +124,15 @@ Třídy
 
       Vrátí ID navázaných částí dokumentu v okamžiku načtení instance.
 
-      :return: Seznam ID částí dokumentu, případně prázdný seznam.
-
    .. py:method:: initial_pristupnost()
 
       Vrátí původní hodnotu přístupnosti záznamu.
-
-      :return: Hodnota původní přístupnosti nebo ``None``.
 
    .. py:method:: initial_pristupnost()
 
       Nastaví interně uloženou původní hodnotu přístupnosti.
 
       :param value: Nová hodnota původní přístupnosti.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: save()
 
@@ -152,28 +140,24 @@ Třídy
 
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: igsn_lokalita_hide()
 
       Skryje IGSN záznam lokality, pokud je aktuální záznam typu lokalita.
 
       :param check_status: Při ``True`` ověří stav před provedením změny v IGSN.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: igsn_lokalita_publish()
 
       Publikuje IGSN lokality, pokud je záznam lokality archivovaný.
 
       :param check_status: Při ``True`` ověří stav před publikací v IGSN.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: igsn_lokalita_delete()
 
       Odstraní IGSN záznam lokality, pokud jde o záznam typu lokalita.
 
       :param check_status: Při ``True`` ověří stav před smazáním v IGSN.
-      :return: Funkce nevrací hodnotu (``None``).
 
    .. py:method:: igsn_lokalita_update()
 
@@ -181,7 +165,6 @@ Třídy
 
       :param check_status: Při ``True`` ověří stav před aktualizací v IGSN.
       :param reload_record: Určuje, zda se má záznam před aktualizací znovu načíst.
-      :return: Funkce nevrací hodnotu (``None``).
 
 
 .. py:class:: ArcheologickyZaznamKatastr
@@ -206,50 +189,35 @@ Třídy
 
       Vrátí původní projekt navázaný při inicializaci instance.
 
-      :return: Instance projektu z ``initial_projekt_id`` nebo ``None``.
-
    .. py:method:: get_absolute_url()
 
       Vrátí URL detailu archeologického záznamu navázaného na akci.
-
-      :return: Absolutní URL detailu akce.
 
    .. py:method:: vedouci_organizace()
 
       Vrátí seznam vedoucích organizací akce jako text.
 
-      :return: Čárkou oddělený seznam názvů organizací.
-
    .. py:method:: vedouci()
 
       Vrátí textový seznam vedoucích osob navázaných na akci.
-
-      :return: Čárkou oddělený seznam jmen vedoucích.
 
    .. py:method:: set_snapshots()
 
       Přepočítá a uloží snapshot textového výpisu vedoucích akce.
 
-      :return: Funkce nevrací hodnotu (``None``).
-
    .. py:method:: redis_snapshot_id()
 
       Sestaví klíč Redis snapshotu pro seznam akci.
 
-      :return: Identifikátor snapshotu používaný v Redis cache.
-
    .. py:method:: generate_redis_snapshot()
 
       Připraví data akce pro uložení snapshotu do Redis cache.
-
-      :return: Dvojice ``(snapshot_id, data)`` nebo ``(None, None)``, pokud akce neexistuje.
 
    .. py:method:: get_by_ident_cely()
 
       Vrátí instanci akce podle identifikátoru archeologického záznamu.
 
       :param ident_cely: Identifikátor archeologického záznamu.
-      :return: Nalezená instance ``Akce`` nebo ``None``.
 
 
 .. py:class:: AkceVedouci
@@ -305,4 +273,3 @@ Funkce
    Vygeneruje nový permanentní identifikátor akce pro zadaný region.
 
    :param region: Identifikátor regionu použitého jako prefix sekvence akcí.
-   :return: Nový jednoznačný identifikátor archeologické akce.

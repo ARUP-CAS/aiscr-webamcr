@@ -18,9 +18,6 @@ Třídy
    .. py:method:: create_user()
 
       Create and save a User with the given email and password.
-      :param email: Hodnota parametru ``email`` použitého touto operací.
-      :param password: Hodnota parametru ``password`` použitého touto operací.
-      :param extra_fields: Hodnota parametru ``extra_fields`` použitého touto operací.
 
       :param email: Hodnota parametru ``email`` použitého touto operací.
       :param password: Hodnota parametru ``password`` použitého touto operací.
@@ -29,9 +26,6 @@ Třídy
    .. py:method:: create_superuser()
 
       Create and save a SuperUser with the given email and password.
-      :param email: Hodnota parametru ``email`` použitého touto operací.
-      :param password: Hodnota parametru ``password`` použitého touto operací.
-      :param extra_fields: Hodnota parametru ``extra_fields`` použitého touto operací.
 
       :param email: Hodnota parametru ``email`` použitého touto operací.
       :param password: Hodnota parametru ``password`` použitého touto operací.
