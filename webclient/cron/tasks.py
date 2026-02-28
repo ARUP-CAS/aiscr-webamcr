@@ -61,12 +61,6 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def send_notifications_enz():
-    """
-    Každý den zkontrolovat a případně odeslat upozornění uživatelům na základě pole projekt.datum_odevzdani_NZ,
-    pokud je projekt ve stavu <P5 a zároveň:
-       -- pokud [dnes] + 90 dní = datum_odevzdani_NZ => email E-NZ-01
-       -- pokud [dnes] - 1 den = datum_odevzdani_NZ => email E-NZ-02
-    """
     try:
         logger.debug("cron.tasks.send_notifications_enz.do.start")
         Mailer.send_enz01()
