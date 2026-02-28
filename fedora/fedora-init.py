@@ -39,14 +39,23 @@ def create_new_transaction():
 
 
 def commit(Atomic_ID):
-    """Potvrdí (commitne) otevřenou Fedora transakci."""
+    """Potvrdí (commitne) otevřenou Fedora transakci.
+
+    :param Atomic_ID: URL identifikátor otevřené transakce.
+    """
     print("commit")
     response = requests.put(Atomic_ID, auth=AUTH, timeout=10)
     print(response)
 
 
 def create_container(Atomic_ID, name, path=""):
-    """Vytvoří LDP kontejner v zadané cestě a vrátí jeho URL."""
+    """Vytvoří LDP kontejner v zadané cestě a vrátí jeho URL.
+
+    :param Atomic_ID: URL identifikátor otevřené transakce.
+    :param name: Název kontejneru předávaný v hlavičce ``Slug``.
+    :param path: Cesta v repozitáři, pod kterou se kontejner vytvoří.
+    :return: URL nově vytvořeného kontejneru.
+    """
     print("create container ", name)
     headers = {
         "Atomic-ID": Atomic_ID,
@@ -59,7 +68,12 @@ def create_container(Atomic_ID, name, path=""):
 
 
 def createFedoraWebacAcl(container_path, Atomic_ID, file):
-    """Nahraje ACL definici ve formátu Turtle do kontejneru Fedora."""
+    """Nahraje ACL definici ve formátu Turtle do kontejneru Fedora.
+
+    :param container_path: URL cílového kontejneru ve Fedora API.
+    :param Atomic_ID: URL identifikátor otevřené transakce.
+    :param file: Cesta k Turtle souboru s ACL pravidly.
+    """
     print("createFedoraWebacAcl")
     headers = {"Atomic-ID": Atomic_ID, "Content-Type": "text/turtle"}
     with open(file, "r") as f:
@@ -70,7 +84,13 @@ def createFedoraWebacAcl(container_path, Atomic_ID, file):
 
 
 def upload_file(Atomic_ID, file, type, path):
-    """Nahraje binární soubor na zadanou cestu ve Fedora repozitáři."""
+    """Nahraje binární soubor na zadanou cestu ve Fedora repozitáři.
+
+    :param Atomic_ID: URL identifikátor otevřené transakce.
+    :param file: Cesta k lokálnímu souboru, který se má nahrát.
+    :param type: MIME typ souboru použitý v hlavičce ``Content-Type``.
+    :param path: Relativní cesta cílového objektu v repozitáři.
+    """
     print("upload_file")
     with open(file, "rb") as f:
         data = f.read()
@@ -84,7 +104,13 @@ def upload_file(Atomic_ID, file, type, path):
 
 
 def IndirectContainer(container_path, Atomic_ID, name, file):
-    """Vytvoří nepřímý LDP kontejner z Turtle šablony."""
+    """Vytvoří nepřímý LDP kontejner z Turtle šablony.
+
+    :param container_path: URL rodičovského kontejneru.
+    :param Atomic_ID: URL identifikátor otevřené transakce.
+    :param name: Název nového nepřímého kontejneru.
+    :param file: Cesta k Turtle šabloně nepřímého kontejneru.
+    """
     print("IndirectContainer")
     with open(file, "r") as f:
         data = f.read()
@@ -100,7 +126,11 @@ def IndirectContainer(container_path, Atomic_ID, name, file):
 
 
 def get_container_content(container_path):
-    """Vrátí HTTP status a seznam členů (`ldp:contains`) kontejneru."""
+    """Vrátí HTTP status a seznam členů (`ldp:contains`) kontejneru.
+
+    :param container_path: URL kontejneru, jehož obsah se načítá.
+    :return: Dvojice ``(status_code, members)``.
+    """
     headers = {}
     response = requests.get(container_path, auth=AUTH, headers=headers, timeout=10)
     members = []
@@ -117,13 +147,19 @@ def get_container_content(container_path):
 
 
 def delete_container(container_path):
-    """Odstraní zadaný kontejner."""
+    """Odstraní zadaný kontejner.
+
+    :param container_path: URL kontejneru určeného ke smazání.
+    """
     response = requests.delete(container_path, auth=AUTH, timeout=10)
     print(response.text)
 
 
 def purge_container(container_path):
-    """Odstraní tombstone po předchozím smazání kontejneru."""
+    """Odstraní tombstone po předchozím smazání kontejneru.
+
+    :param container_path: URL původního kontejneru bez suffixu ``/fcr:tombstone``.
+    """
     response = requests.delete(container_path + "/fcr:tombstone", auth=AUTH, timeout=10)
     print(response.text)
 

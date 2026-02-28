@@ -61,7 +61,7 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         Oznámení projektu stavebníkem
 
         Role:
-        \-
+        -
 
         Preconditions:
         žádné
