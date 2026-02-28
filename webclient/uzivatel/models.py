@@ -191,8 +191,9 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             return self.user_str
 
     def display_name(self, viewer=None):
-        """
-        Textová reprezentace uživatele pro tabulky a autocomplete pole.
+        """Textová reprezentace uživatele pro tabulky a autocomplete pole.
+
+        :param viewer: Popis parametru `viewer`.
         """
         lang = get_language()
 
@@ -340,12 +341,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return connector.get_metadata()
 
     def save_metadata(self, fedora_transaction=None, close_transaction=False, **kwargs):
-        """Uloží metadata.
-
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """Uloží metadata uživatele do repozitáře a případně uzavře transakci.
+        """
         from core.repository_connector import FedoraTransaction
 
         if fedora_transaction is None and self.active_transaction is not None:
@@ -384,7 +381,11 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         )
 
     def record_deletion(self, fedora_transaction=None, close_transaction=False):
-        """Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby."""
+        """Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby.
+
+        :param fedora_transaction: Popis parametru `fedora_transaction`.
+        :param close_transaction: Popis parametru `close_transaction`.
+        """
         logger.debug("uzivatel.models.User.delete_repository_container.start")
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
@@ -581,9 +582,8 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                 return ""
 
     def get_nazev(self):
-        """Vrací nazev.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrací název organizace ve výstupním textovém formátu.
+        """
         if get_language() == "en":
             if self.nazev_en:
                 return self.nazev_en

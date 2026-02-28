@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Generátor dokumentace Selenium testů z Google‑style docstringů.
+"""Generátor dokumentace Selenium testů z Google‑style docstringů.
 
 Pravidla:
 - Každá testovací metoda Selenium (funkce začínající na `test_`) musí mít docstring.
@@ -39,9 +38,10 @@ Doporučený formát docstringu (Google‑style):
         Expected:
             - Něco se stane
 
-        Notes:
+        Poznámky:
             - Volitelné poznámky
         \"\"\"
+
 """
 
 from __future__ import annotations
@@ -93,14 +93,16 @@ class TestDoc:
 def _repo_root_from_script() -> Path:
     """Vrátí kořen repozitáře odvozený z umístění tohoto skriptu.
 
-    Předpoklad: skript leží v `<repo>/docs/...`, takže kořen je o dvě úrovně výš."""
+    Předpoklad: skript leží v `<repo>/docs/...`, takže kořen je o dvě úrovně výš.
+    """
     return Path(__file__).resolve().parents[1]
 
 
 def _is_ignored_path(p: Path) -> bool:
     """Vrátí True, pokud cesta patří do adresářů, které při hledání ignorujeme.
 
-    Typicky `.git`, virtuální prostředí, cache, node_modules apod."""
+    Typicky `.git`, virtuální prostředí, cache, node_modules apod.
+    """
     parts = set(p.parts)
     return any(x in parts for x in (".git", ".venv", "venv", "site-packages", "node_modules", "__pycache__"))
 
@@ -109,7 +111,8 @@ def _find_rst_file(root: Path) -> Path:
     """Najde cílový RST soubor `selenium_testy.rst`.
 
     Nejdřív zkusí preferovanou cestu (docs/source/09_testovani/selenium_testy.rst),
-    potom prohledá repozitář. Když soubor nenajde, vyhodí `FileNotFoundError`."""
+    potom prohledá repozitář. Když soubor nenajde, vyhodí `FileNotFoundError`.
+    """
     path = root / "docs" / "source" / "09_testovani" / "selenium_testy.rst"
     if path.exists():
         return path
@@ -123,7 +126,8 @@ def _iter_test_files(root: Path) -> List[Path]:
     """Vyhledá Python soubory se Selenium testy v repozitáři.
 
     Hledá `test_selenium.py` v adresářích obsahujících segment `tests` a ignoruje
-    typické „šumové“ adresáře (venv, node_modules, …)."""
+    typické „šumové“ adresáře (venv, node_modules, …).
+    """
     files: List[Path] = []
     for p in root.rglob("test_selenium.py"):
         if _is_ignored_path(p):
@@ -137,7 +141,8 @@ def _iter_test_files(root: Path) -> List[Path]:
 def _get_app_name(file_path: Path) -> str:
     """Určí název Django appky podle cesty k souboru.
 
-    Jako appku bere adresář bezprostředně před segmentem `tests`."""
+    Jako appku bere adresář bezprostředně před segmentem `tests`.
+    """
     parts = list(file_path.parts)
     if "tests" not in parts:
         return "Unknown"
@@ -150,7 +155,8 @@ def _get_app_name(file_path: Path) -> str:
 def _module_dotted(root: Path, file_path: Path) -> str:
     """Převede cestu k Python souboru na tečkovaný importní název modulu.
 
-    Např. `webclient/ez/tests/test_selenium.py` -> `webclient.ez.tests.test_selenium`."""
+    Např. `webclient/ez/tests/test_selenium.py` -> `webclient.ez.tests.test_selenium`.
+    """
     rel = file_path.relative_to(root).with_suffix("")
     return ".".join(rel.parts)
 
@@ -158,7 +164,8 @@ def _module_dotted(root: Path, file_path: Path) -> str:
 def _extract_test_no(name: str) -> Optional[int]:
     """Vytáhne číslo testu z názvu funkce `test_###_...`.
 
-    Vrací int (např. 24) nebo None, pokud název neodpovídá vzoru."""
+    Vrací int (např. 24) nebo None, pokud název neodpovídá vzoru.
+    """
     m = RE_TEST_NO.match(name)
     return int(m.group(1)) if m else None
 
@@ -167,7 +174,8 @@ def _split_summary_and_rest(doc: str) -> Tuple[str, str]:
     """Rozdělí docstring na první řádek (summary) a zbytek.
 
     - Summary = první neprázdný řádek docstringu.
-    - Rest = zbytek textu (bez počátečních/prázdných okrajů)."""
+    - Rest = zbytek textu (bez počátečních/prázdných okrajů).
+    """
     cleaned = textwrap.dedent(doc).strip("\n")
     lines = cleaned.splitlines()
     while lines and not lines[0].strip():
@@ -186,7 +194,8 @@ def _parse_description_and_sections(rest: str) -> Tuple[str, Dict[str, str]]:
     Sekce jsou ve tvaru „NázevSekce:“ na samostatném řádku a obsah je odsazený.
 
     Vrací dvojici `(description, sections)` kde `sections` mapuje normalizovaný klíč
-    (`steps`, `expected`, `role`, …) na text obsahu sekce."""
+    (`steps`, `expected`, `role`, …) na text obsahu sekce.
+    """
     if not rest.strip():
         return "", {}
 
@@ -245,9 +254,10 @@ def _parse_description_and_sections(rest: str) -> Tuple[str, Dict[str, str]]:
 
 
 def _summary_title_or_error(summary: str, test_no: Optional[int], origin: str) -> str:
-    """
-    Vrátí 'čistý' title bez 'Test XXX', ale současně validuje, že summary začíná 'Test XXX'
-    a že XXX odpovídá test_no (pokud je známé).
+    """Vrátí 'čistý' title bez 'Test XXX'.
+
+    Současně validuje, že summary začíná 'Test XXX' a že XXX odpovídá
+    test_no (pokud je známé).
     """
     m = RE_SUMMARY_PREFIX.match((summary or "").strip())
     if not m:
@@ -268,8 +278,8 @@ def _summary_title_or_error(summary: str, test_no: Optional[int], origin: str) -
 
 
 def _validate_unique_test_numbers(all_docs: List[TestDoc]) -> List[str]:
-    """
-    Vrátí seznam chyb, pokud se stejné číslo testu vyskytuje vícekrát.
+    """Vrátí seznam chyb, pokud se stejné číslo testu vyskytuje vícekrát.
+
     Testy bez čísla (test_no is None) ignoruje.
     """
     by_no: Dict[int, List[TestDoc]] = defaultdict(list)
@@ -297,7 +307,8 @@ def _validate(origin: str, summary: str, sections: Dict[str, str], has_docstring
     - že summary začíná `Test XXX ...` a číslo sedí s názvem funkce,
     - povinné sekce `Steps:` a `Expected:`.
 
-    Vrací seznam chybových hlášek."""
+    Vrací seznam chybových hlášek.
+    """
     errs: List[str] = []
     if not has_docstring:
         errs.append(f"{origin}: test nemá dokumentaci (docstring).")
@@ -317,7 +328,8 @@ def _validate(origin: str, summary: str, sections: Dict[str, str], has_docstring
 def _rst_title(text: str, underline: str) -> str:
     """Vytvoří reST nadpis (text + podtržení).
 
-    Parametr `underline` je znak použítý jako podtržení (např. '-', '~', '^')."""
+    Parametr `underline` je znak použítý jako podtržení (např. '-', '~', '^').
+    """
     return f"{text}\n{underline * len(text)}\n"
 
 
@@ -329,7 +341,8 @@ def _app_heading(app: str) -> str:
 def _test_anchor(app: str, test_no: Optional[int], fallback_name: str) -> str:
     """Vytvoří stabilní RST kotvu (anchor) pro daný test.
 
-    Kotva se skládá z appky, čísla testu a „bezpečné“ části názvu."""
+    Kotva se skládá z appky, čísla testu a „bezpečné“ části názvu.
+    """
     no = f"{test_no:03d}" if test_no is not None else "na"
     safe_app = re.sub(r"[^a-z0-9]+", "-", app.lower()).strip("-")
     safe_fb = re.sub(r"[^a-z0-9]+", "-", fallback_name.lower()).strip("-")
@@ -352,7 +365,8 @@ def _role_short(sections: Dict[str, str]) -> str:
 def _popis_short(description: str) -> str:
     """Vrátí krátký popis (první neprázdný řádek) z description.
 
-    Používá se pro tooltip v přehledové tabulce; delší text zkrátí."""
+    Používá se pro tooltip v přehledové tabulce; delší text zkrátí.
+    """
     line = _first_nonempty_line(description)
     if len(line) > 120:
         return line[:117] + "..."
@@ -367,8 +381,8 @@ def _render_detail_for_test(t: TestDoc) -> str:
     - nadpis testu,
     - volitelný popis,
     - sekce (Role/Preconditions/TestData/Steps/Expected/Notes),
-    - a nakonec „Stav testu“ s cestou na implementaci."""
-
+    - a nakonec „Stav testu“ s cestou na implementaci.
+    """
     out: List[str] = []
     out.append(f".. _{t.anchor}:\n\n")
     out.append(_rst_title(t.summary, "~"))
@@ -414,7 +428,8 @@ def _render_summary_table(all_docs: List[TestDoc]) -> str:
     Tabulka je řazená podle čísla testu. Sloupec „Název“ je odkaz na detail testu
     a krátký popis se zobrazuje jako HTML tooltip při najetí myší.
 
-    Pozn.: funkce používá `.. raw:: html`, protože cílíme pouze na HTML výstup."""
+    Pozn.: funkce používá `.. raw:: html`, protože cílíme pouze na HTML výstup.
+    """
     out: List[str] = []
     out.append(_rst_title("Přehled testů", "-"))
     out.append("\n")
@@ -442,7 +457,8 @@ def _render_summary_table(all_docs: List[TestDoc]) -> str:
     def _role_lines(sections: Dict[str, str]) -> List[str]:
         """Rozdělí sekci Role na seznam rolí.
 
-        Podporuje více rolí oddělených čárkami i po řádcích. Odstraní odrážky a duplicity."""
+        Podporuje více rolí oddělených čárkami i po řádcích. Odstraní odrážky a duplicity.
+        """
         raw = (sections.get("role", "") or "").strip()
         if not raw:
             return []
@@ -467,7 +483,8 @@ def _render_summary_table(all_docs: List[TestDoc]) -> str:
     def _html_link_with_tooltip(anchor: str, label: str, tooltip: str) -> str:
         """Vygeneruje reST blok `raw:: html` s odkazem a tooltipem (title).
 
-        Vrací text, který je potřeba správně odsadit do buňky list-table."""
+        Vrací text, který je potřeba správně odsadit do buňky list-table.
+        """
         tooltip = _escape_html_attr(tooltip)
         label = _escape_html_attr(label)
         # raw html blok musí být odsazený tak, aby byl "uvnitř" buňky list-table
@@ -534,7 +551,8 @@ def _render(all_docs: List[TestDoc]) -> str:
 def _replace_autoblock(original: str, generated: str) -> str:
     """Nahradí autogenerovaný blok mezi START/END markerem v `selenium_testy.rst`.
 
-    Pokud značky chybí, vyhodí `RuntimeError`."""
+    Pokud značky chybí, vyhodí `RuntimeError`.
+    """
     if START_MARKER not in original or END_MARKER not in original:
         raise RuntimeError(
             f"V selenium_testy.rst chybí značky:\n{START_MARKER}\n{END_MARKER}\n"
@@ -565,7 +583,8 @@ def main() -> int:
     Návratové kódy:
     - 0: vše OK a bez změn,
     - 1: chyba validace nebo došlo k přegenerování souboru (je třeba `git add`),
-    - 2: zásadní problém (nenalezeny soubory)."""
+    - 2: zásadní problém (nenalezeny soubory).
+    """
     root = _repo_root_from_script()
     rst_file = _find_rst_file(root)
     test_files = _iter_test_files(root)

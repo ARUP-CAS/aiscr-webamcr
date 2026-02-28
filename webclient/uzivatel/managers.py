@@ -10,8 +10,11 @@ class CustomUserManager(BaseUserManager):
     """
 
     def create_user(self, email, password, **extra_fields):
-        """
-        Create and save a User with the given email and password.
+        """Create and save a User with the given email and password.
+
+        :param email: Popis parametru `email`.
+        :param password: Popis parametru `password`.
+        :param extra_fields: Popis parametru `extra_fields`.
         """
         if not email:
             raise ValueError(_("uzivatel.managers.createUser.email.error"))
@@ -22,8 +25,11 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password, **extra_fields):
-        """
-        Create and save a SuperUser with the given email and password.
+        """Create and save a SuperUser with the given email and password.
+
+        :param email: Popis parametru `email`.
+        :param password: Popis parametru `password`.
+        :param extra_fields: Popis parametru `extra_fields`.
         """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)

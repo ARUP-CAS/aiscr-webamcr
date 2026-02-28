@@ -60,11 +60,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Zpracuje hodnotu.
-
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param options: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """Zpracuje argumenty příkazu a vygeneruje náhledové obrázky.
+        """
         pks = options.get("pks")
         pk_range = options.get("range")
         csv_file = options.get("csv")

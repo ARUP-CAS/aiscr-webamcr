@@ -49,17 +49,22 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         return self.kwargs[self.lookup_kwarg]
 
     def prepare_queryset(self, qs):
-        """Potomek může přepsat pro vlastní řazení nebo dodatečné filtry."""
+        """Potomek může přepsat pro vlastní řazení nebo dodatečné filtry.
+
+        :param qs: Popis parametru `qs`.
+        """
         return qs.order_by("datum_zmeny")
 
     def add_extra_context(self, context):
-        """Potomek může přepsat a doplnit další hodnoty do contextu."""
+        """Potomek může přepsat a doplnit další hodnoty do contextu.
+
+        :param context: Popis parametru `context`.
+        """
         pass
 
     def get_queryset(self):
-        """Vrací queryset.
-
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrátí queryset se záznamy historie po aplikaci základního filtrování.
+        """
         if not self.use_history_table:
             return self.model.objects.none()
         if not self.queryset_filter:
@@ -71,13 +76,16 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         return qs
 
     def get_header_config(self, context):
-        """Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}"""
+        """Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
+
+        :param context: Popis parametru `context`.
+        """
         return None
 
     def add_fedora_history(self, context):
-        """
-        Pokud potomek definuje fedora_model, automaticky se načte
-        metadata historie z Fedory a přidá se druhá tabulka fedora_table.
+        """Pokud potomek definuje fedora_model, automaticky se načte
+
+        :param context: Popis parametru `context`.
         """
         if not hasattr(self, "fedora_model") or self.fedora_model is None:
             return
@@ -103,10 +111,8 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         context["fedora_table"] = fedora_table
 
     def get_table(self, **kwargs):
-        """Vrací table.
-
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací načtená data odpovídající vstupním parametrům."""
+        """Vrátí tabulku historie naplněnou připraveným querysetem.
+        """
         if not self.use_history_table:
             return None
         return super().get_table(**kwargs)

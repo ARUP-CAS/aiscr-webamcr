@@ -37,11 +37,8 @@ class Command(BaseCommand):
     help = _("core.management.commands.check_pian_properties.Command.help")
 
     def handle(self, *args, **options):
-        """Zpracuje hodnotu.
-
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param options: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace."""
+        """Zpracuje vstupní argumenty a ověří vlastnosti PIAN dat.
+        """
         from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
         from heslar.models import Heslar
         from pian.models import Pian, get_ZM_from_point

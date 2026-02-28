@@ -392,10 +392,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
     def delete_container(self, container_path):
-        """Odstraní container.
-
-        :param container_path: Vstupní hodnota ``container_path`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        """Odstraní zadaný kontejner ve Fedora repozitáři pro účely testu.
+        """
         response = requests.delete(container_path, auth=self.auth)
         if not str(response.status_code).startswith("2"):
             logger.error(
@@ -428,12 +426,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return matches
 
     def delete_tombstones(self, url, name, dir):
-        """Odstraní tombstones.
-
-        :param url: Vstupní hodnota ``url`` pro danou operaci.
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
-        :param dir: Vstupní hodnota ``dir`` pro danou operaci.
-        :return: Vrací výsledek operace odstranění."""
+        """Odstraní tombstone záznamy vytvořené během testovacího běhu.
+        """
         results = self.find_files(dir, "fcr-root.json")
         for res in results:
             if os.path.isfile(res):
@@ -953,8 +947,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}{rel_address}")
 
     def upload_file(self, file_path, file_name, mime="image/jpeg"):
-        """
-        Metoda nahraje soubor do Dropzone.
+        """Metoda nahraje soubor do Dropzone.
+
+        :param file_path: Popis parametru `file_path`.
+        :param file_name: Popis parametru `file_name`.
+        :param mime: Popis parametru `mime`.
         """
         with open(file_path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("ascii")
@@ -1087,7 +1084,12 @@ return new Date('2025-06-28T12:00:00Z');}};
                 )
 
     def uploadFileToFedora(self, record, filename, user_name="archeolog"):
-        """Nahraje do Fedory testovací soubor"""
+        """Nahraje do Fedory testovací soubor
+
+        :param record: Popis parametru `record`.
+        :param filename: Popis parametru `filename`.
+        :param user_name: Popis parametru `user_name`.
+        """
         user = User.objects.get(email=self._username(user_name))
         record = Soubor.objects.get(pk=record)
         related_record: ModelWithMetadata = record.vazba.navazany_objekt
@@ -1110,7 +1112,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         fedora_transaction.mark_transaction_as_closed()
 
     def odstran_elementy(self, root, ignorovane_tagy):
-        """Rekurzivně odstraní ignorované tagy z XML stromu."""
+        """Rekurzivně odstraní ignorované tagy z XML stromu.
+
+        :param root: Popis parametru `root`.
+        :param ignorovane_tagy: Popis parametru `ignorovane_tagy`.
+        """
         for elem in list(root):
             if elem.tag in ignorovane_tagy:
                 typ = ignorovane_tagy[elem.tag]
@@ -1122,8 +1128,9 @@ return new Date('2025-06-28T12:00:00Z');}};
                 self.odstran_elementy(elem, ignorovane_tagy)
 
     def odstran_uuid_z_xml(self, element):
-        """
-        Rekurzivně odstraní UUID z textů a atributů XML elementu.
+        """Rekurzivně odstraní UUID z textů a atributů XML elementu.
+
+        :param element: Popis parametru `element`.
         """
         # Nahraď v textu
         if element.text:
@@ -1140,10 +1147,9 @@ return new Date('2025-06-28T12:00:00Z');}};
             self.odstran_uuid_z_xml(child)
 
     def serad_xml_podle_tagu_a_obsahu(self, element):
-        """
-        Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
-        podle obsahu (pomocí _element_klic).
-        Nezasahuje do pořadí různých typů elementů, čímž zachovává validitu vůči XSD.
+        """Rekurzivně seřadí pouze sousední XML elementy se stejným tagem
+
+        :param element: Popis parametru `element`.
         """
         # Nejprve rekurze
         for child in element:
@@ -1185,9 +1191,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         return "|".join(hodnoty)
 
     def nahrad_element_id_rekurzivne(self, element, element_name):
-        """
-        Rekurzivně upraví všechny elementy <amcr:id> s textem 'element_name-XXX' na 'element_name-0000001'.
-        Nezávislé na konkrétní verzi namespace.
+        """Rekurzivně upraví všechny elementy <amcr:id> s textem 'element_name-XXX' na 'element_name-0000001'.
+
+        :param element: Popis parametru `element`.
+        :param element_name: Popis parametru `element_name`.
         """
         # Zjisti namespace prefix 'amcr' z tagu
         if element.tag.endswith("id") and "}" in element.tag:
@@ -1236,7 +1243,13 @@ return new Date('2025-06-28T12:00:00Z');}};
         return text
 
     def porovnej_xml_bez_ignorovanych(self, vzorovy_soubor, vystupni_soubor, ignorovane_tagy, filename):
-        """Porovná dva XML soubory po odstranění ignorovaných tagů."""
+        """Porovná dva XML soubory po odstranění ignorovaných tagů.
+
+        :param vzorovy_soubor: Popis parametru `vzorovy_soubor`.
+        :param vystupni_soubor: Popis parametru `vystupni_soubor`.
+        :param ignorovane_tagy: Popis parametru `ignorovane_tagy`.
+        :param filename: Popis parametru `filename`.
+        """
         vzor = self.xml_to_string_bez_ignorovanych_z_textu(vzorovy_soubor, ignorovane_tagy, filename)
         vystup = self.xml_to_string_bez_ignorovanych_z_textu(vystupni_soubor, ignorovane_tagy, filename)
         res = vzor == vystup
@@ -1248,8 +1261,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def nahrad_base_uri_auto(self, graf, nova_base_uri="info:test-base/"):
-        """
-        Najde nejběžnější základní URI (hostname + prefix) v grafu a nahradí ho za `nova_base_uri`.
+        """Najde nejběžnější základní URI (hostname + prefix) v grafu a nahradí ho za `nova_base_uri`.
+
+        :param graf: Popis parametru `graf`.
+        :param nova_base_uri: Popis parametru `nova_base_uri`.
         """
         uri_counter = {}
 
@@ -1325,8 +1340,9 @@ return new Date('2025-06-28T12:00:00Z');}};
                 graf.add((s, p, new_obj))
 
     def odstran_uuid_z_rdf(self, graf):
-        """
-        Projde RDF graf a nahradí výskyty UUID v URIRef i Literal hodnotách.
+        """Projde RDF graf a nahradí výskyty UUID v URIRef i Literal hodnotách.
+
+        :param graf: Popis parametru `graf`.
         """
         nove_triples = []
 
@@ -1407,8 +1423,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         return nt_stabilni.encode("utf-8")
 
     def najdi_base_uri(self, vsechny_retezce):
-        """
-        Najde nejčastější base URI ve všech string hodnotách (např. http://.../rest/)
+        """Najde nejčastější base URI ve všech string hodnotách (např. http://.../rest/)
+
+        :param vsechny_retezce: Popis parametru `vsechny_retezce`.
         """
         prefixy = []
         for s in vsechny_retezce:
@@ -1423,7 +1440,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         return Counter(prefixy).most_common(1)[0][0]
 
     def sesbiraj_retezce(self, data):
-        """Rekurzivně sesbírá všechny stringy z JSON dat."""
+        """Rekurzivně sesbírá všechny stringy z JSON dat.
+
+        :param data: Popis parametru `data`.
+        """
         hodnoty = []
         if isinstance(data, dict):
             for v in data.values():
