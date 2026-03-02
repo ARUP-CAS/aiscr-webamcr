@@ -37,7 +37,7 @@
         }
 
         .app-flags {
-          margin-top: -5px !important;
+          padding-right: 0px;
 
           .nav-link {
             background: transparent;
@@ -50,7 +50,30 @@
             }
           }
         }
+
+        .app-theme-toggle {
+          padding-left: 0px;
+          ;
+          background: transparent;
+          border: 0;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s ease;
+
+          .material-icons {
+            font-size: 1.25rem;
+          }
+        }
       }
+    }
+
+    .oznameni-warning {
+      padding: 5px;
+      background-color: #eef7b7;
+      margin-bottom: 10px;
+      margin-top: 10px;
     }
 
     .bs-stepper {

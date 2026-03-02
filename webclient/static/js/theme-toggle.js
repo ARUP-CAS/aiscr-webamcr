@@ -72,11 +72,54 @@ class ThemeManager {
     }
 }
 
+// Utility function to initialize theme toggle button
+function initializeThemeToggleButton(buttonId = 'theme-toggle-btn') {
+    if (typeof window.themeManager === 'undefined') {
+        // Wait for theme manager to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initializeThemeToggleButton(buttonId);
+            });
+        } else {
+            setTimeout(() => {
+                initializeThemeToggleButton(buttonId);
+            }, 100);
+        }
+        return;
+    }
+
+    const themeBtn = document.getElementById(buttonId);
+    if (!themeBtn) return;
+
+    // Click handler
+    themeBtn.addEventListener('click', () => {
+        window.themeManager.toggleTheme();
+    });
+
+    // Update button icon based on current theme
+    window.addEventListener('theme-changed', (e) => {
+        const icon = themeBtn.querySelector('.material-icons');
+        if (icon) {
+            icon.textContent = e.detail.theme === 'dark' ? 'light_mode' : 'dark_mode';
+        }
+    });
+
+    // Set initial icon
+    const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const icon = themeBtn.querySelector('.material-icons');
+    if (icon) {
+        icon.textContent = initialTheme === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+}
+
 // Initialize theme manager when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         window.themeManager = new ThemeManager();
+        // Initialize any theme toggle buttons on login/registration pages
+        initializeThemeToggleButton();
     });
 } else {
     window.themeManager = new ThemeManager();
+    initializeThemeToggleButton();
 }

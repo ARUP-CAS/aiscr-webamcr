@@ -1,7 +1,7 @@
 // --- VARIABLES ---
 
 // bootstrap rewrite
-$white:    #fff !default;
+$white: #fff !default;
 $gray-100: #f8f9fa !default;
 $gray-200: #e9ecef !default;
 $gray-300: #dee2e6 !default;
@@ -11,7 +11,7 @@ $gray-600: #6c757d !default;
 $gray-700: #495057 !default;
 $gray-800: #343a40 !default;
 $gray-900: #212529 !default;
-$black:    #000 !default;
+$black: #000 !default;
 
 $primary: #0d47a1 !default;
 $secondary: lighten(#303641, 30) !default;
@@ -30,7 +30,7 @@ $entities: (
   "lokalita": #951E7A,
   "samostatny_nalez": #85140E,
   "knihovna_3d": #778e98,
-  "let":  #15968c,
+  "let": #15968c,
   "ext_zdroj": #E7302A,
   "soubor": #6c697b,
   "uzivatel": #6c697b,
@@ -49,16 +49,16 @@ $container-max-width-xl: 1140px !default;
 $app-flag-width: 27px !default;
 $app-form-control-height: auto !default;
 $app-form-control-line-height: 1 !default;
-$input-line-height:1 !default;
+$input-line-height: 1 !default;
 $app-form-group-mg-bottom: .8rem !default;
-$app-form-label-mg-bottom: .1rem !default; 
+$app-form-label-mg-bottom: .1rem !default;
 $app-logo-sidebar-height: 60px !default;
 $app-logo-nosidebar-height: 60px !default;
 $app-form-control-fix-height: 1.5rem !default;
 
 // card
-$app-card-shadow: 0 0.5rem 1rem rgba(0,0,0,.1) !default;
-$app-card-shadow-hover: 0 0.5rem 1rem rgba(0,0,0,.2) !default;
+$app-card-shadow: 0 0.5rem 1rem rgba(0, 0, 0, .1) !default;
+$app-card-shadow-hover: 0 0.5rem 1rem rgba(0, 0, 0, .2) !default;
 
 // card form
 $app-card-form-header-height: 40px !default;
@@ -97,14 +97,14 @@ $lg: 'only screen and (min-width: 992px) and (max-width: 1199px)';
 $xl: 'only screen and (min-width: 1200px) and (max-width: 5000px)';
 
 $lt-sm: 'only screen and (max-width: 575px)';
-$lt-md:	'only screen and (max-width: 767px)';
-$lt-lg:	'only screen and (max-width: 991px)';
-$lt-xl:	'only screen and (max-width: 1199px)';
+$lt-md: 'only screen and (max-width: 767px)';
+$lt-lg: 'only screen and (max-width: 991px)';
+$lt-xl: 'only screen and (max-width: 1199px)';
 
-$gt-xs:	'only screen and (min-width: 576px)';
-$gt-sm:	'only screen and (min-width: 768px)';
-$gt-md:	'only screen and (min-width: 992px)';
-$gt-lg:	'only screen and (min-width: 1200px)';
+$gt-xs: 'only screen and (min-width: 576px)';
+$gt-sm: 'only screen and (min-width: 768px)';
+$gt-md: 'only screen and (min-width: 992px)';
+$gt-lg: 'only screen and (min-width: 1200px)';
 
 // breakpoint
 $grid-breakpoints: (
@@ -112,23 +112,20 @@ $grid-breakpoints: (
   sm: 576px,
   md: 768px,
   lg: 992px,
-  xl: 1200px
-) !default;
+  xl: 1200px) !default;
 // map-get($grid-breakpoints, "lg") !default;
 
 // spacers
 $spacer: 1rem !default;
-$spacers: () !default;
-$spacers: map-merge(
-  (
-    0: 0,
-    1: ($spacer * .25),
-    2: ($spacer * .5),
-    3: $spacer,
-    4: ($spacer * 1.5),
-    5: ($spacer * 3)
-  ),
-  $spacers
+$spacers: (
+  ) !default;
+$spacers: map-merge((0: 0,
+      1: ($spacer * .25),
+      2: ($spacer * .5),
+      3: $spacer,
+      4: ($spacer * 1.5),
+      5: ($spacer * 3)),
+    $spacers
 );
 
 $spacer-0: map-get($spacers, 0) !default;

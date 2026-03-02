@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="/static/static/css/error_page.css" type="text/css" media="screen">
     <link rel="shortcut icon" id="dynamic-favicon" href="/static/static/loga/favicon.png">
-    <title>AMČR - Oznámení o stavebním či jiném záměru</title>
-  </head>
+    <title>AMČR - Oznámení o stavebním či jiném záměru</title>    <script>
+      // Detect browser dark mode preference
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    </script>  </head>
 
   <body class=" app-error oznameni">
     <div class="d-flex" id="app-wrapper">

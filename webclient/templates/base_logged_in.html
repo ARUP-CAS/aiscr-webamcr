@@ -747,25 +747,4 @@
 </script>
 <script src="{% static 'js/copyIdentLink.js' %}"></script>
 <script src="{% static 'js/theme-toggle.js' %}"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    if (themeBtn) {
-      themeBtn.addEventListener('click', () => {
-        window.themeManager.toggleTheme();
-      });
-      
-      // Update button icon based on current theme
-      window.addEventListener('theme-changed', (e) => {
-        const icon = themeBtn.querySelector('.material-icons');
-        icon.textContent = e.detail.theme === 'dark' ? 'light_mode' : 'dark_mode';
-      });
-      
-      // Set initial icon
-      const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-      const icon = themeBtn.querySelector('.material-icons');
-      icon.textContent = initialTheme === 'dark' ? 'light_mode' : 'dark_mode';
-    }
-  });
-</script>
 {% endblock %}

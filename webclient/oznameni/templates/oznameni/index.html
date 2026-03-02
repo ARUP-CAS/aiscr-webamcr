@@ -6,6 +6,7 @@
 {% block title %}{% trans "oznameni.templates.oznameni.index.title" %}{% endblock %}
 
 {% block head %}
+  <script src="{% static 'js/theme-toggle.js' %}"></script>
   <script>
       const global_csrftoken = '{{ csrf_token }}';
   </script>
