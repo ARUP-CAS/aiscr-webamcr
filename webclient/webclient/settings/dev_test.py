@@ -54,6 +54,7 @@ DATABASES["default"]["TEST"] = {"MIGRATE": False}
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
 SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
+AUTO_LOGOUT = {}
 
 DATABASES["test_db"] = {
     "ENGINE": "django_prometheus.db.backends.postgis",
