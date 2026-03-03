@@ -301,9 +301,15 @@ Třídy
 
       Vrátí třídu mapperu odpovídající zadanému názvu souboru (bez přípony).
 
+   .. py:method:: get_file_name_for_mapper()
+
+      Vrátí název souboru odpovídající zadané třídě mapperu.
+
    .. py:method:: get_mapping()
 
       Vrátí slovník mapování polí pomocí metody map_field.
+
+   .. py:method:: load_record_from_db()
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
@@ -351,6 +357,8 @@ Třídy
    .. py:method:: updated_ident_cely_set()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: GeometryTransformMixin
@@ -455,6 +463,8 @@ Třídy
 
    .. py:method:: map()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: ProjektKatastrMapper
 
@@ -466,6 +476,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: ProjektOznamovatelMapper
 
@@ -476,6 +488,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: SamostatnyNalezMapper
@@ -489,6 +503,8 @@ Třídy
    .. py:method:: map()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: ArcheologickyZaznamAkceMapper
@@ -505,6 +521,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: LokalitaMapper
 
@@ -516,6 +534,8 @@ Třídy
 
    .. py:method:: map_field()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: AkceVedouciMapper
 
@@ -524,6 +544,8 @@ Třídy
    **Metody:**
 
    .. py:method:: get_mapping()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: ArcheologickyZaznamKatastrMapper
@@ -536,6 +558,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: PianMapper
 
@@ -546,6 +570,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: map()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentacniJednotkaMapper
@@ -560,6 +586,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: AdbMapper
 
@@ -571,6 +599,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: AdbVyskovyBod
 
@@ -581,6 +611,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentLetMapper
@@ -608,6 +640,8 @@ Třídy
 
    .. py:method:: map()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: DokumentAutorMapper
 
@@ -618,6 +652,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentJazykMapper
@@ -630,6 +666,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: DokumentOsobaMapper
 
@@ -640,6 +678,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentPosudekMapper
@@ -652,6 +692,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: TvarMapper
 
@@ -662,6 +704,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentCastMapper
@@ -674,6 +718,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: NeidentAkceMapper
 
@@ -684,6 +730,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: NeidentAkceVedouciMapper
@@ -696,6 +744,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: KomponentaMapper
 
@@ -706,6 +756,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: KomponentaAktivitaMapper
@@ -718,6 +770,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: NalezMapper
 
@@ -726,6 +780,8 @@ Třídy
    **Metody:**
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: NalezObjektMapper
@@ -754,6 +810,8 @@ Třídy
 
    .. py:method:: get_mapping()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: ExterniZdrojAutorMapper
 
@@ -764,6 +822,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: ExterniZdrojEditorMapper
@@ -776,6 +836,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: ExterniOdkazMapper
 
@@ -787,6 +849,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: UzivatelMapper
 
@@ -795,6 +859,8 @@ Třídy
    **Metody:**
 
    .. py:method:: get_mapping()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: UzivatelNotifikaceProjektMapper
@@ -817,6 +883,8 @@ Třídy
 
    .. py:method:: _get_updated_ident_cely_record_list()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: UzivatelSpolupraceMapper
 
@@ -827,6 +895,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: UzivatelOpravneniMapper
@@ -843,6 +913,8 @@ Třídy
 
    .. py:method:: import_validation()
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: SouborMapper
 
@@ -853,6 +925,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: UzivatelNotifikaceMapper

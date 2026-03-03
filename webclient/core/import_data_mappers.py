@@ -752,6 +752,14 @@ class ImportModelMapper(ABC):
         return cls.get_import_data_mapper_dict().get(file_name.split(".")[0])
 
     @classmethod
+    def get_file_name_for_mapper(cls, mapper_class):
+        """
+        Vrátí název souboru odpovídající zadané třídě mapperu.
+        """
+
+        return [k for k, v in cls.get_import_data_mapper_dict().items() if v == mapper_class][0]
+
+    @classmethod
     def get_mapping(cls, include_primary_key=False) -> dict:
         """
         Vrátí slovník mapování polí pomocí metody map_field.
@@ -768,6 +776,14 @@ class ImportModelMapper(ABC):
                     if primary_key not in field_mapping:
                         field_mapping[primary_key] = cls.map_field(primary_key)
         return field_mapping
+
+    @classmethod
+    def load_record_from_db(cls, record):
+        if isinstance(cls.primary_key, str):
+            try:
+                return cls.model_class.objects.get(pk=record.pk)
+            except Exception:
+                return None
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
         """
@@ -1025,6 +1041,10 @@ class ImportModelMapper(ABC):
     @staticmethod
     def _get_updated_ident_cely_record_list(record) -> list:
         return []
+
+    @staticmethod
+    def get_record_history(record):
+        return None
 
 
 class GeometryTransformMixin:
@@ -1326,6 +1346,10 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
+    @staticmethod
+    def get_record_history(record: Projekt):
+        return record
+
 
 class ProjektKatastrMapper(ImportModelMapper):
     """Mapper pro model ProjektKatastr."""
@@ -1347,6 +1371,10 @@ class ProjektKatastrMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: ProjektKatastr) -> list:
         return [record.projekt]
 
+    @staticmethod
+    def get_record_history(record: ProjektKatastr):
+        return record.projekt
+
 
 class ProjektOznamovatelMapper(ImportModelMapper):
     """Mapper pro model Oznamovatel."""
@@ -1365,6 +1393,10 @@ class ProjektOznamovatelMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Oznamovatel) -> list:
         return [record.projekt]
+
+    @staticmethod
+    def get_record_history(record: Oznamovatel):
+        return record.projekt
 
 
 class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
@@ -1416,6 +1448,10 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: SamostatnyNalez) -> list:
         return [record.projekt]
+
+    @staticmethod
+    def get_record_history(record: SamostatnyNalez):
+        return record.projekt
 
 
 class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
@@ -1498,6 +1534,11 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
             return [record.akce.projekt]
         return []
 
+    @staticmethod
+    def get_record_history(record: SamostatnyNalez):
+        if isinstance(record, ArcheologickyZaznam):
+            return record
+
 
 class LokalitaMapper(MultipleClassImportModelMapper):
     """Mapper pro modely ArcheologickyZaznam a Lokalita."""
@@ -1556,6 +1597,10 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         mapping_dict = mapping_dict | cls.lookup_fields_mapping
         return mapping_dict.get(field_name, BaseImportField())
 
+    @staticmethod
+    def get_record_history(record: Lokalita):
+        return record.archeologicky_zaznam
+
 
 class AkceVedouciMapper(ImportModelMapper):
     """Mapper pro model AkceVedouci."""
@@ -1571,6 +1616,10 @@ class AkceVedouciMapper(ImportModelMapper):
         field_mapping["vedouci"] = LookupImportField(Osoba)
         field_mapping["organizace"] = LookupImportField(Organizace)
         return field_mapping
+
+    @staticmethod
+    def get_record_history(record: AkceVedouci):
+        return record.akce.archeologicky_zaznam
 
 
 class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
@@ -1593,6 +1642,10 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: ArcheologickyZaznamKatastr) -> list:
         return [record.archeologicky_zaznam]
 
+    @staticmethod
+    def get_record_history(record: ArcheologickyZaznamKatastr):
+        return record.archeologicky_zaznam
+
 
 class PianMapper(ImportModelMapper, GeometryTransformMixin):
     """Mapper pro model Pian."""
@@ -1613,6 +1666,10 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
+
+    @staticmethod
+    def get_record_history(record: Pian):
+        return record
 
 
 class DokumentacniJednotkaMapper(ImportModelMapper):
@@ -1643,6 +1700,10 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: DokumentacniJednotka) -> list:
         return [record.archeologicky_zaznam]
+
+    @staticmethod
+    def get_record_history(record: DokumentacniJednotka):
+        return record.pian
 
 
 class AdbMapper(ImportModelMapper):
@@ -1677,6 +1738,10 @@ class AdbMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: Adb) -> list:
         return [record.dokumentacni_jednotka.archeologicky_zaznam]
 
+    @staticmethod
+    def get_record_history(record: Adb):
+        return record.dokumentacni_jednotka.archeologicky_zaznam
+
 
 class AdbVyskovyBod(ImportModelMapper):
     """Mapper pro model VyskovyBod."""
@@ -1695,6 +1760,10 @@ class AdbVyskovyBod(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: VyskovyBod) -> list:
         return [record.adb.dokumentacni_jednotka.archeologicky_zaznam]
+
+    @staticmethod
+    def get_record_history(record: VyskovyBod):
+        return record.adb.dokumentacni_jednotka.archeologicky_zaznam
 
 
 class DokumentLetMapper(ImportModelMapper):
@@ -1855,6 +1924,11 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
 
+    @staticmethod
+    def get_record_history(record):
+        if isinstance(record, Dokument):
+            return record
+
 
 class DokumentAutorMapper(ImportModelMapper):
     """Mapper pro model DokumentAutor."""
@@ -1876,6 +1950,10 @@ class DokumentAutorMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: DokumentAutor) -> list:
         return [record.dokument]
 
+    @staticmethod
+    def get_record_history(record: DokumentAutor):
+        return record.dokument
+
 
 class DokumentJazykMapper(ImportModelMapper):
     """Mapper pro model DokumentJazyk."""
@@ -1895,6 +1973,10 @@ class DokumentJazykMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: DokumentJazyk) -> list:
         return [record.dokument]
+
+    @staticmethod
+    def get_record_history(record: DokumentJazyk):
+        return record.dokument
 
 
 class DokumentOsobaMapper(ImportModelMapper):
@@ -1916,6 +1998,10 @@ class DokumentOsobaMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: DokumentOsoba) -> list:
         return [record.dokument]
 
+    @staticmethod
+    def get_record_history(record: DokumentOsoba):
+        return record.dokument
+
 
 class DokumentPosudekMapper(ImportModelMapper):
     """Mapper pro model DokumentPosudek."""
@@ -1936,6 +2022,10 @@ class DokumentPosudekMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: DokumentPosudek) -> list:
         return [record.dokument]
 
+    @staticmethod
+    def get_record_history(record: DokumentPosudek):
+        return record.dokument
+
 
 class TvarMapper(ImportModelMapper):
     """Mapper pro model Tvar."""
@@ -1955,6 +2045,10 @@ class TvarMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Tvar) -> list:
         return [record.dokument]
+
+    @staticmethod
+    def get_record_history(record: Tvar):
+        return record.dokument
 
 
 class DokumentCastMapper(ImportModelMapper):
@@ -1977,6 +2071,10 @@ class DokumentCastMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: DokumentCast) -> list:
         return [record.dokument, record.archeologicky_zaznam, record.projekt]
 
+    @staticmethod
+    def get_record_history(record: DokumentCast):
+        return record.dokument
+
 
 class NeidentAkceMapper(ImportModelMapper):
     """Mapper pro model NeidentAkce."""
@@ -1997,6 +2095,10 @@ class NeidentAkceMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: NeidentAkce) -> list:
         return [record.dokument_cast.dokument]
 
+    @staticmethod
+    def get_record_history(record: NeidentAkce):
+        return record.dokument_cast.dokument
+
 
 class NeidentAkceVedouciMapper(ImportModelMapper):
     """Mapper pro model NeidentAkceVedouci."""
@@ -2016,6 +2118,10 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: NeidentAkceVedouci) -> list:
         return [record.neident_akce.dokument_cast.dokument]
+
+    @staticmethod
+    def get_record_history(record: NeidentAkceVedouci):
+        return record.neident_akce.dokument_cast.dokument
 
 
 class KomponentaMapper(ImportModelMapper):
@@ -2039,6 +2145,10 @@ class KomponentaMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: Komponenta) -> list:
         return [record.komponenta_vazby.navazany_objekt]
 
+    @staticmethod
+    def get_record_history(record: Komponenta):
+        return record.komponenta_vazby.navazany_objekt
+
 
 class KomponentaAktivitaMapper(ImportModelMapper):
     """Mapper pro model KomponentaAktivita."""
@@ -2059,6 +2169,10 @@ class KomponentaAktivitaMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: KomponentaAktivita) -> list:
         return [record.komponenta.komponenta_vazby.navazany_objekt]
 
+    @staticmethod
+    def get_record_history(record: KomponentaAktivita):
+        return record.komponenta.komponenta_vazby.navazany_objekt
+
 
 class NalezMapper(ImportModelMapper):
     """Základní mapper pro nálezy."""
@@ -2069,6 +2183,10 @@ class NalezMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: NalezObjekt | NalezPredmet) -> list:
         return [record.komponenta.komponenta_vazby.navazany_objekt]
+
+    @staticmethod
+    def get_record_history(record: NalezObjekt | NalezPredmet):
+        return record.komponenta.komponenta_vazby.navazany_objekt
 
 
 class NalezObjektMapper(NalezMapper):
@@ -2140,6 +2258,10 @@ class ExterniZdrojMapper(ImportModelMapper):
         )
         return field_mapping
 
+    @staticmethod
+    def get_record_history(record: ExterniZdroj):
+        return record
+
 
 class ExterniZdrojAutorMapper(ImportModelMapper):
     """Mapper pro model ExterniZdrojAutor."""
@@ -2160,6 +2282,10 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: ExterniZdrojAutor) -> list:
         return [record.externi_zdroj]
+
+    @staticmethod
+    def get_record_history(record: ExterniZdrojAutor):
+        return record.externi_zdroj
 
 
 class ExterniZdrojEditorMapper(ImportModelMapper):
@@ -2182,6 +2308,10 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: ExterniZdrojEditor) -> list:
         return [record.externi_zdroj]
 
+    @staticmethod
+    def get_record_history(record: ExterniZdrojEditor):
+        return record.externi_zdroj
+
 
 class ExterniOdkazMapper(ImportModelMapper):
     """Mapper pro model ExterniOdkaz."""
@@ -2201,6 +2331,10 @@ class ExterniOdkazMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: ExterniOdkaz) -> list:
         return [record.externi_zdroj, record.archeologicky_zaznam]
+
+    @staticmethod
+    def get_record_history(record: ExterniOdkaz):
+        return record.externi_zdroj
 
 
 class UzivatelMapper(ImportModelMapper):
@@ -2229,6 +2363,10 @@ class UzivatelMapper(ImportModelMapper):
         field_mapping["osoba"] = LookupImportField(Osoba)
         field_mapping["organizace"] = LookupImportField(Organizace)
         return field_mapping
+
+    @staticmethod
+    def get_record_history(record: User):
+        return record
 
 
 class UzivatelNotifikaceProjektMapper(ImportModelMapper):
@@ -2304,6 +2442,10 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
     def _get_updated_ident_cely_record_list(record: Pes) -> list:
         return [record.user]
 
+    @staticmethod
+    def get_record_history(record: Pes):
+        return record.user
+
 
 class UzivatelSpolupraceMapper(ImportModelMapper):
     """Mapper pro model UzivatelSpoluprace."""
@@ -2323,6 +2465,10 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: UzivatelSpoluprace) -> list:
         return [record.vedouci, record.spolupracovnik]
+
+    @staticmethod
+    def get_record_history(record: UzivatelSpoluprace):
+        return record.vedouci
 
 
 class UzivatelOpravneniMapper(ImportModelMapper):
@@ -2346,6 +2492,10 @@ class UzivatelOpravneniMapper(ImportModelMapper):
     def import_validation(self, performed_action):
         return self._get_filter_kwargs_primary_key()
 
+    @staticmethod
+    def get_record_history(record: User):
+        return record
+
 
 class SouborMapper(ImportModelMapper):
     """Mapper pro model Soubor."""
@@ -2364,6 +2514,10 @@ class SouborMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Soubor) -> list:
         return [record.vazba.navazany_objekt]
+
+    @staticmethod
+    def get_record_history(record: Soubor):
+        return record
 
 
 class UzivatelNotifikaceMapper(ImportModelMapper):

@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import traceback
+from collections import defaultdict
 from io import BytesIO
 
 import requests
@@ -40,6 +41,7 @@ from django.contrib.auth.models import Group
 from django.db import connection, transaction
 from django.db.models import F, Min, Model, Prefetch, Q
 from django.db.models.functions import Coalesce, Upper
+from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from dokument.models import Dokument
@@ -475,6 +477,7 @@ def run_data_import(job_id, user_id):
     import_files_list: list[Soubor] = []
     stopped = False
     updated_ident_cely_set = set()
+    updated_history_dict = defaultdict(list)
     transaction_user = User.objects.get(pk=user_id)
 
     try:
@@ -515,42 +518,77 @@ def run_data_import(job_id, user_id):
                         if mapper_class == UzivatelOpravneniMapper:
                             record: User
                             group = Group.objects.get(name=serialized_record["skupina"])
-                            if performed_action in (
-                                ImportDataAdminForm.PERFORMED_ACTION_INSERT,
-                                ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                            if (
+                                performed_action
+                                in (
+                                    ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                                    ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                                )
+                                and group not in record.groups.all()
                             ):
                                 record.groups.add(group)
-                            elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                            elif (
+                                performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE
+                                and group in record.groups.all()
+                            ):
                                 record.groups.remove(group)
-                        if mapper_class == UzivatelNotifikaceMapper:
+                            else:
+                                continue
+                            updated_ident_cely_set.add(record.ident_cely)
+                            updated_history_dict[record.ident_cely].append(
+                                mapper_class.get_file_name_for_mapper(mapper_class)
+                            )
+                        elif mapper_class == UzivatelNotifikaceMapper:
                             record: User
                             group = UserNotificationType.objects.get(ident_cely=serialized_record["notifikace"])
-                            if performed_action in (
-                                ImportDataAdminForm.PERFORMED_ACTION_INSERT,
-                                ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                            if (
+                                performed_action
+                                in (
+                                    ImportDataAdminForm.PERFORMED_ACTION_INSERT,
+                                    ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
+                                )
+                                and group not in record.notification_types.all()
                             ):
                                 record.notification_types.add(group)
-                            elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                            elif (
+                                performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE
+                                and group in record.notification_types.all()
+                            ):
                                 record.notification_types.remove(group)
+                            else:
+                                continue
+                            if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
+                                record_db = mapper_class.load_record_from_db(record)
+                                if record_db:
+                                    updated_ident_cely_set |= mapper_class.updated_ident_cely_set(record_db)
+                            updated_ident_cely_set.add(record.ident_cely)
+                            updated_history_dict[record.ident_cely].append(
+                                mapper_class.get_file_name_for_mapper(mapper_class)
+                            )
                         else:
                             if performed_action in (
                                 ImportDataAdminForm.PERFORMED_ACTION_INSERT,
                                 ImportDataAdminForm.PERFORMED_ACTION_UPDATE,
                             ):
                                 if isinstance(record, Model):
+                                    record_db = mapper_class.load_record_from_db(record)
+                                    record_db_dict = model_to_dict(record_db) if record_db else None
                                     mapper_class.create_relations(record)
                                     mapper_class.record_postprocessing(record, performed_action, fedora_transaction)
                                     updated_ident_cely_set |= mapper_class.updated_ident_cely_set(record)
-                                    if hasattr(record, "historie"):
-                                        record.save()
-                                        Historie(
-                                            typ_zmeny=IMPORT,
-                                            uzivatel=transaction_user,
-                                            vazba=record.historie,
-                                            poznamka=serialized_record,
-                                        ).save()
-                                    else:
-                                        record.save()
+                                    record_history = mapper_class.get_record_history(record)
+                                    # Record is saved to make sure Django value processing is done
+                                    record.save()
+                                    record_saved = mapper_class.load_record_from_db(record)
+                                    record_dict = model_to_dict(record_saved) if record_saved else model_to_dict(record)
+                                    if record_history and (
+                                        performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
+                                        or record_dict != record_db_dict
+                                    ):
+                                        updated_history_dict[record_history.ident_cely].append(
+                                            mapper_class.get_file_name_for_mapper(mapper_class)
+                                        )
+
                                 else:
                                     raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
                             elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
@@ -589,23 +627,49 @@ def run_data_import(job_id, user_id):
                         + traceback.format_exc()
                     )
                     redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
+                    updated_ident_cely_set = set()
+                    updated_history_dict = {}
                     failed = True
-                    break
-                stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
+                stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None or failed
                 if stopped:
-                    redis_connector.set(
-                        f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.stopped_by_user")
-                    )
+                    if not failed:
+                        redis_connector.set(
+                            f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.stopped_by_user")
+                        )
+                    else:
+                        redis_connector.set(
+                            f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.failed")
+                        )
                     redis_connector.set(f"import_data_stop_{job_id}", 1)
                     logger.info("cron.tasks.run_data_import.files.insert.stopped", extra={"job_id": job_id})
                     break
     except Exception as err:
+        redis_connector.set(f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.failed"))
         redis_connector.set(f"import_data_stop_{job_id}", 1)
         logger.error("cron.tasks.run_data_import.database_error", extra={"error": err, "job_id": job_id})
         for record_id in range(record_count):
             import_results[record_id] = f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, "
         failed = True
         updated_ident_cely_set = set()
+        updated_history_dict = {}
+
+    for ident_cely, files in updated_history_dict.items():
+        record = get_record_from_ident(ident_cely)
+        if isinstance(record, User):
+            Historie(
+                typ_zmeny=IMPORT,
+                uzivatel=transaction_user,
+                vazba=record.history_vazba,
+                poznamka=",".join(files),
+            ).save()
+
+        else:
+            Historie(
+                typ_zmeny=IMPORT,
+                uzivatel=transaction_user,
+                vazba=record.historie,
+                poznamka=",".join(files),
+            ).save()
 
     for ident_cely in updated_ident_cely_set:
         record = get_record_from_ident(ident_cely)
@@ -738,7 +802,7 @@ def run_data_import(job_id, user_id):
                         soubor.create_soubor_vazby()
                     Historie(
                         typ_zmeny=IMPORT,
-                        uzivatel=User.objects.get(pk=user_id),
+                        uzivatel=transaction_user,
                         vazba=soubor.historie,
                         poznamka=f"{_('cron.tasks.run_data_import.imported_file')} "
                         f"{import_directory_path}/{ident_cely}/{filename}",
