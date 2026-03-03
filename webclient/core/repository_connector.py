@@ -823,10 +823,12 @@ INSERT DATA {{ <> dcterms:creator "{self.user}" .}};"""
             self._send_request(url, FedoraRequestType.CREATE_METADATA, headers=headers, data=document)
             self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         elif update is True:
+            current_metadata = self.get_metadata()
             document, headers = generate_metadata()
-            url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
-            self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
-            self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
+            if current_metadata != document:
+                url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
+                self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
+                self._update_creator(FedoraRequestType.METADATA_UPDATE_RDF_DATA)
         logger.debug(
             "core_repository_connector.save_metadata.end",
             extra={"ident_cely": self.record.ident_cely, "transaction": self.transaction_uid},

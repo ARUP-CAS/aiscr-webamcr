@@ -475,6 +475,7 @@ def run_data_import(job_id, user_id):
     import_files_list: list[Soubor] = []
     stopped = False
     updated_ident_cely_set = set()
+    transaction_user = User.objects.get(pk=user_id)
 
     try:
         with transaction.atomic():
@@ -539,11 +540,12 @@ def run_data_import(job_id, user_id):
                                 if isinstance(record, Model):
                                     mapper_class.create_relations(record)
                                     mapper_class.record_postprocessing(record, performed_action, fedora_transaction)
+                                    updated_ident_cely_set |= mapper_class.updated_ident_cely_set(record)
                                     if hasattr(record, "historie"):
                                         record.save()
                                         Historie(
                                             typ_zmeny=IMPORT,
-                                            uzivatel=User.objects.get(pk=user_id),
+                                            uzivatel=transaction_user,
                                             vazba=record.historie,
                                             poznamka=serialized_record,
                                         ).save()
@@ -552,6 +554,7 @@ def run_data_import(job_id, user_id):
                                 else:
                                     raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
                             elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
+                                updated_ident_cely_set |= mapper_class.updated_ident_cely_set(record)
                                 record.active_transaction = fedora_transaction
                                 record.delete()
                     fedora_transaction.mark_transaction_as_closed()
@@ -602,10 +605,11 @@ def run_data_import(job_id, user_id):
         for record_id in range(record_count):
             import_results[record_id] = f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, "
         failed = True
+        updated_ident_cely_set = set()
 
     for ident_cely in updated_ident_cely_set:
         record = get_record_from_ident(ident_cely)
-        fedora_transaction = FedoraTransaction()
+        fedora_transaction = FedoraTransaction(transaction_user=transaction_user)
         record.save_metadata(fedora_transaction)
         fedora_transaction.mark_transaction_as_closed()
 

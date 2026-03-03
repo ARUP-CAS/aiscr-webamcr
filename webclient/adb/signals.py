@@ -65,7 +65,8 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
             "adb.signals.adb_delete_repository_container.not_exists",
             extra={"ident_cely": instance.ident_cely, "transaction": fedora_transaction.uid, "error": err},
         )
-    instance.record_deletion(fedora_transaction, close_transaction=True)
+    close_transaction = instance.close_active_transaction_when_finished
+    instance.record_deletion(fedora_transaction, close_transaction=close_transaction)
 
     logger.debug(
         "adb.signals.adb_delete_repository_container.end",

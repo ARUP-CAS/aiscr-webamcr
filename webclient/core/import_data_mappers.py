@@ -205,13 +205,12 @@ class ImportDataIntegrityError(ImportDataError):
         self.model_name = model_name
         self.performed_action = performed_action
         super().__init__(
-            "{} {} {} {} {} ({} {})".format(
+            "{} {} {} {} {} ({})".format(
                 _("core_admin.ImportDataIntegrityError.message.part_1"),
                 record_id,
                 _("core_admin.ImportDataIntegrityError.message.part_2"),
                 model_name,
                 _("core_admin.ImportDataIntegrityError.message.part_3"),
-                _("core_admin.ImportDataIntegrityError.message.part_4"),
                 performed_action,
             )
         )
@@ -224,12 +223,11 @@ class ImportDataLimitChoicesError(ImportDataError):
         self.record_id = record_id
         self.limit_choices_to = limit_choices_to
         super().__init__(
-            "{} {} {} {} {}".format(
+            "{} {} {} {}".format(
                 _("core_admin.ImportDataLimitChoicesError.message.part_1"),
                 record_id,
                 _("core_admin.ImportDataLimitChoicesError.message.part_2"),
                 ",".join(["{}: {}".format(k, v) for k, v in limit_choices_to.items()]),
-                _("core_admin.ImportDataLimitChoicesError.message.part_3"),
             )
         )
 
@@ -1014,6 +1012,20 @@ class ImportModelMapper(ABC):
     def record_postprocessing(cls, record, performed_action, fedora_transaction):
         return record
 
+    @classmethod
+    def updated_ident_cely_set(cls, record) -> set:
+        return set(
+            [
+                item.ident_cely
+                for item in cls._get_updated_ident_cely_record_list(record)
+                if item and getattr(item, "ident_cely", None)
+            ]
+        )
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record) -> list:
+        return []
+
 
 class GeometryTransformMixin:
     """
@@ -1139,6 +1151,10 @@ class HeslarDataceMapper(ImportModelMapper):
         field_mapping["obdobi"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBDOBI})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record) -> list:
+        return [record.obdobi]
+
 
 class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
     """Mapper pro model HeslarDokumentTypMaterialRada."""
@@ -1161,6 +1177,10 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
         )
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: HeslarDokumentTypMaterialRada) -> list:
+        return [record.dokument_rada]
+
 
 class HeslarHierarchieMapper(ImportModelMapper):
     """Mapper pro model HeslarHierarchie."""
@@ -1176,6 +1196,10 @@ class HeslarHierarchieMapper(ImportModelMapper):
         field_mapping["heslo_nadrazene"] = LookupImportField(Heslar)
         field_mapping["heslo_podrazene"] = LookupImportField(Heslar)
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: HeslarHierarchie) -> list:
+        return [record.heslo_nadrazene, record.heslo_podrazene]
 
 
 class HeslarOdkazMapper(ImportModelMapper):
@@ -1235,6 +1259,10 @@ class OrganizaceMapper(ImportModelMapper):
         )
         field_mapping["licence"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LICENCE})
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Organizace) -> list:
+        return [record.soucast]
 
 
 class OsobaMapper(ImportModelMapper):
@@ -1315,6 +1343,10 @@ class ProjektKatastrMapper(ImportModelMapper):
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ProjektKatastr) -> list:
+        return [record.projekt]
+
 
 class ProjektOznamovatelMapper(ImportModelMapper):
     """Mapper pro model Oznamovatel."""
@@ -1329,6 +1361,10 @@ class ProjektOznamovatelMapper(ImportModelMapper):
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["projekt"] = LookupImportField(Projekt)
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Oznamovatel) -> list:
+        return [record.projekt]
 
 
 class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
@@ -1376,6 +1412,10 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
     def map(self, performed_action, instance_values=False, serialize=False, include_primary_key=False) -> dict:
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
         return self.transform_geometries(mapping_dict, performed_action)
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: SamostatnyNalez) -> list:
+        return [record.projekt]
 
 
 class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
@@ -1451,6 +1491,12 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         if isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             record.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
         return super().record_postprocessing(record, performed_action, fedora_transaction)
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record) -> list:
+        if isinstance(record, ArcheologickyZaznam):
+            return [record.akce.projekt]
+        return []
 
 
 class LokalitaMapper(MultipleClassImportModelMapper):
@@ -1543,6 +1589,10 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ArcheologickyZaznamKatastr) -> list:
+        return [record.archeologicky_zaznam]
+
 
 class PianMapper(ImportModelMapper, GeometryTransformMixin):
     """Mapper pro model Pian."""
@@ -1590,6 +1640,10 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
             record.pian = vytvor_pian(record.archeologicky_zaznam.hlavni_katastr, fedora_transaction)
         return record
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentacniJednotka) -> list:
+        return [record.archeologicky_zaznam]
+
 
 class AdbMapper(ImportModelMapper):
     """Mapper pro model Adb."""
@@ -1619,6 +1673,10 @@ class AdbMapper(ImportModelMapper):
         field_mapping["sm5"] = LookupImportField(Kladysm5, "mapno")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Adb) -> list:
+        return [record.dokumentacni_jednotka.archeologicky_zaznam]
+
 
 class AdbVyskovyBod(ImportModelMapper):
     """Mapper pro model VyskovyBod."""
@@ -1633,6 +1691,10 @@ class AdbVyskovyBod(ImportModelMapper):
         field_mapping["adb"] = LookupImportField(Adb)
         field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP})
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: VyskovyBod) -> list:
+        return [record.adb.dokumentacni_jednotka.archeologicky_zaznam]
 
 
 class DokumentLetMapper(ImportModelMapper):
@@ -1810,6 +1872,10 @@ class DokumentAutorMapper(ImportModelMapper):
         field_mapping["autor"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentAutor) -> list:
+        return [record.dokument]
+
 
 class DokumentJazykMapper(ImportModelMapper):
     """Mapper pro model DokumentJazyk."""
@@ -1825,6 +1891,10 @@ class DokumentJazykMapper(ImportModelMapper):
         field_mapping["dokument"] = LookupImportField(Dokument)
         field_mapping["jazyk"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_JAZYK})
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentJazyk) -> list:
+        return [record.dokument]
 
 
 class DokumentOsobaMapper(ImportModelMapper):
@@ -1842,6 +1912,10 @@ class DokumentOsobaMapper(ImportModelMapper):
         field_mapping["osoba"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentOsoba) -> list:
+        return [record.dokument]
+
 
 class DokumentPosudekMapper(ImportModelMapper):
     """Mapper pro model DokumentPosudek."""
@@ -1858,6 +1932,10 @@ class DokumentPosudekMapper(ImportModelMapper):
         field_mapping["posudek"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentPosudek) -> list:
+        return [record.dokument]
+
 
 class TvarMapper(ImportModelMapper):
     """Mapper pro model Tvar."""
@@ -1873,6 +1951,10 @@ class TvarMapper(ImportModelMapper):
         field_mapping["dokument"] = LookupImportField(Dokument)
         field_mapping["tvar"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETFOTO_TVAR})
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Tvar) -> list:
+        return [record.dokument]
 
 
 class DokumentCastMapper(ImportModelMapper):
@@ -1891,6 +1973,10 @@ class DokumentCastMapper(ImportModelMapper):
         field_mapping["projekt"] = LookupImportField(Projekt)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: DokumentCast) -> list:
+        return [record.dokument, record.archeologicky_zaznam, record.projekt]
+
 
 class NeidentAkceMapper(ImportModelMapper):
     """Mapper pro model NeidentAkce."""
@@ -1907,6 +1993,10 @@ class NeidentAkceMapper(ImportModelMapper):
         field_mapping["katastr"] = RuianLookupImportField(RuianKatastr, "kod")
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: NeidentAkce) -> list:
+        return [record.dokument_cast.dokument]
+
 
 class NeidentAkceVedouciMapper(ImportModelMapper):
     """Mapper pro model NeidentAkceVedouci."""
@@ -1922,6 +2012,10 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
         field_mapping["neident_akce"] = LookupImportField(DokumentCast)
         field_mapping["vedouci"] = LookupImportField(Osoba)
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: NeidentAkceVedouci) -> list:
+        return [record.neident_akce.dokument_cast.dokument]
 
 
 class KomponentaMapper(ImportModelMapper):
@@ -1941,6 +2035,10 @@ class KomponentaMapper(ImportModelMapper):
         field_mapping["areal"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AREAL})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Komponenta) -> list:
+        return [record.komponenta_vazby.navazany_objekt]
+
 
 class KomponentaAktivitaMapper(ImportModelMapper):
     """Mapper pro model KomponentaAktivita."""
@@ -1957,12 +2055,20 @@ class KomponentaAktivitaMapper(ImportModelMapper):
         field_mapping["aktivita"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_AKTIVITA})
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: KomponentaAktivita) -> list:
+        return [record.komponenta.komponenta_vazby.navazany_objekt]
+
 
 class NalezMapper(ImportModelMapper):
     """Základní mapper pro nálezy."""
 
     fields = ("pocet", "poznamka")
     primary_key = "id"
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: NalezObjekt | NalezPredmet) -> list:
+        return [record.komponenta.komponenta_vazby.navazany_objekt]
 
 
 class NalezObjektMapper(NalezMapper):
@@ -2051,6 +2157,10 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
         field_mapping["autor"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ExterniZdrojAutor) -> list:
+        return [record.externi_zdroj]
+
 
 class ExterniZdrojEditorMapper(ImportModelMapper):
     """Mapper pro model ExterniZdrojEditor."""
@@ -2068,6 +2178,10 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
         field_mapping["editor"] = LookupImportField(Osoba)
         return field_mapping
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ExterniZdrojEditor) -> list:
+        return [record.externi_zdroj]
+
 
 class ExterniOdkazMapper(ImportModelMapper):
     """Mapper pro model ExterniOdkaz."""
@@ -2083,6 +2197,10 @@ class ExterniOdkazMapper(ImportModelMapper):
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
         field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: ExterniOdkaz) -> list:
+        return [record.externi_zdroj, record.archeologicky_zaznam]
 
 
 class UzivatelMapper(ImportModelMapper):
@@ -2182,6 +2300,10 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
             "object_id": content_object.kod,
         }
 
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Pes) -> list:
+        return [record.user]
+
 
 class UzivatelSpolupraceMapper(ImportModelMapper):
     """Mapper pro model UzivatelSpoluprace."""
@@ -2197,6 +2319,10 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
         field_mapping["vedouci"] = LookupImportField(User)
         field_mapping["spolupracovnik"] = LookupImportField(User)
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: UzivatelSpoluprace) -> list:
+        return [record.vedouci, record.spolupracovnik]
 
 
 class UzivatelOpravneniMapper(ImportModelMapper):
@@ -2234,6 +2360,10 @@ class SouborMapper(ImportModelMapper):
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="soubory")
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Soubor) -> list:
+        return [record.vazba.navazany_objekt]
 
 
 class UzivatelNotifikaceMapper(ImportModelMapper):
@@ -2276,3 +2406,7 @@ class HistorieMapper(ImportModelMapper):
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="historie")
         field_mapping["uzivatel"] = LookupImportField(User)
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: Historie) -> list:
+        return [record.vazba.navazany_objekt]

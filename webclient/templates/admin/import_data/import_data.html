@@ -110,7 +110,7 @@
         </tr>
         {% for result in validation_results %}
           <tr>
-            <td>{{ result.item_order }}</td>
+            <td>{{ result.item_order|add:1 }}</td>
             <td>{{ result.file_name }}</td>
             <td>{{ result.primary_key_import }}</td>
             <td></td>
