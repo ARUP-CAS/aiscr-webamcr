@@ -202,15 +202,15 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             return None
         # Může být dcterms:creator "U-123" nebo dcterms:creator <info:fedora/AMCR/record/U-123>
         pattern = re.compile(
-            r'dcterms:creator\s+(?:"([^"]+)"|<([^>]+)>)', 
+            r'dcterms:creator\s+(?:"([^"]+)"|<([^>]+)>)',
             re.MULTILINE,
-        )    
-        match = pattern.search(r.text) 
+        )
+        match = pattern.search(r.text)
         if not match:
-            return None    
+            return None
         value = match.group(1) or match.group(2)
         if "/" in value:
-            return value.rstrip("/").split("/")[-1]    
+            return value.rstrip("/").split("/")[-1]
         return value.strip()
 
     def _update_creator(self, request_type: FedoraRequestType, uuid=None, ident_cely=None):
@@ -565,7 +565,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "Link": '<http://fedora.info/definitions/v4/repository#ArchivalGroup>;rel="type"',
             "Content-Type": "text/turtle",
         }
-        rdf = f'@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> .'
+        rdf = f"@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
         self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers, data=rdf)
         self.create_link()
         logger.debug(
@@ -585,7 +585,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "@prefix dcterms: <http://purl.org/dc/terms/> . "
             f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/"
             f"{ident_cely_proxy if ident_cely_proxy else self.record.ident_cely}> ; "
-            f'dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> .'
+            f"dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
         )
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
         logger.debug(
@@ -682,7 +682,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             "Slug": "file",
             "Content-Type": "text/turtle",
         }
-        rdf = f'@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> .'
+        rdf = f"@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, headers=headers, data=rdf)
         logger.debug(
             "core_repository_connector._create_binary_file_container.end",
@@ -849,7 +849,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         headers = {
             "Content-Type": "text/turtle",
         }
-        rdf = f'@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> .'
+        rdf = f"@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
         result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE, headers=headers, data=rdf)
         uuid = result.text.split("/")[-1]
         rep_bin_file = RepositoryBinaryFile(result.text, file, file_name)
@@ -1055,7 +1055,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         headers = {
             "Content-Type": "text/turtle",
         }
-        rdf = f'@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> .'
+        rdf = f"@prefix dcterms: <http://purl.org/dc/terms/> . <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
         result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE, headers=headers, data=rdf)
         uuid = result.text.split("/")[-1]
         soubor.path = RepositoryBinaryFile.get_url_without_domain(result.text)
@@ -1268,7 +1268,7 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
                 "@prefix ore: <http://www.openarchives.org/ore/terms/> . "
                 "@prefix dcterms: <http://purl.org/dc/terms/> . "
                 f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}> ; "
-                f'dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> .'
+                f"dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
             )
             url = self._get_request_url(FedoraRequestType.RECORD_DELETION_ADD_MARK)
             self._send_request(url, FedoraRequestType.RECORD_DELETION_ADD_MARK, headers=headers, data=data)
@@ -1306,7 +1306,7 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
             "@prefix ore: <http://www.openarchives.org/ore/terms/> . "
             "@prefix dcterms: <http://purl.org/dc/terms/> . "
             f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}> ; "
-            f'dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> .'
+            f"dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> ."
         )
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
