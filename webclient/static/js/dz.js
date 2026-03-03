@@ -344,7 +344,8 @@ window.onload = function () {
         let mockFile = {
             name: file.name,
             size: file.size,
-            id: file.id // Přidání ID pro mazání
+            id: file.id, // Přidání ID pro mazání
+            accepted: true
         };
         newDropzone.emit("addedfile", mockFile);        
         //stažení ikony souboru ze serveru
