@@ -26,11 +26,11 @@ class Command(BaseCommand):
 
     Příklady použití::
 
-        python manage.py send_test_email
+        python manage.py send_test_emails
 
     """
 
-    help = _("core.management.commands.send_test_email.Command.help")
+    help = _("core.management.commands.send_test_emails.Command.help")
 
     def get_emails_settings(self):
         try:
@@ -46,23 +46,25 @@ class Command(BaseCommand):
             try:
 
                 connection = get_connection(fail_silently=False)
+                domain = getattr(settings, "EMAIL_SERVER_DOMAIN_NAME", "")
                 msg = EmailMessage(
                     subject="AMČR - testovací email | AMCR - testing email",
-                    body="<p>Toto je testovací email - pokud ho čteš, odesílání funguje.</p><p>This is a test email—if you're reading this, sending is working.</p>",
+                    body=f"<p>Toto je testovací email - pokud ho čteš, odesílání funguje.</p><p>Odesláno z: {domain}</p><p>This is a test email—if you're reading this, sending is working.</p><p>Sent from: {domain}</p>",
                     from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
                     to=[to_email],
                     connection=connection,
                 )
+                msg.content_subtype = "html"
                 sent = msg.send(fail_silently=False)
                 self.stdout.write(self.style.SUCCESS(f"Email úspěšně odeslán na {to_email}"))
                 logger.debug(
-                    "core.management.commands.send_test_email.mail_success", extra={"email": to_email, "count": sent}
+                    "core.management.commands.send_test_emails.mail_success", extra={"email": to_email, "count": sent}
                 )
 
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"Chyba při odesílání na {to_email}: {str(e)}"))
                 logger.error(
-                    "core.management.commands.send_test_email.mail_error", extra={"email": to_email, "error": e}
+                    "core.management.commands.send_test_emails.mail_error", extra={"email": to_email, "error": e}
                 )
 
         self.stdout.write(self.style.SUCCESS("Hotovo."))

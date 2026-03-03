@@ -629,13 +629,15 @@ class NotificationsLogAdmin(admin.ModelAdmin):
                 to_email = form.cleaned_data["email"]
                 try:
                     connection = get_connection(fail_silently=False)
+                    domain = getattr(settings, "EMAIL_SERVER_DOMAIN_NAME", "")
                     msg = EmailMessage(
                         subject="AMČR - testovací email | AMCR - testing email",
-                        body="<p>Toto je testovací email - pokud ho čteš, odesílání funguje.</p><p>This is a test email—if you're reading this, sending is working.</p>",
+                        body=f"<p>Toto je testovací email - pokud ho čteš, odesílání funguje.</p><p>Odesláno z: {domain}</p><p>This is a test email—if you're reading this, sending is working.</p><p>Sent from: {domain}</p>",
                         from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
                         to=[to_email],
                         connection=connection,
                     )
+                    msg.content_subtype = "html"
                     sent = msg.send(fail_silently=False)
 
                     result = {
