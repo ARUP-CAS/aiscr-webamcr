@@ -136,7 +136,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://docs.celeryq.dev/
    * - certifi
-     - 2026.1.4
+     - 2026.2.25
      - Mozilla Public License 2.0 (MPL 2.0)
      - https://github.com/certifi/python-certifi
    * - cffi
@@ -312,7 +312,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://foss.heptapod.net/openpyxl/et_xmlfile
    * - filelock
-     - 3.24.3
+     - 3.25.0
      - MIT
      - https://github.com/tox-dev/py-filelock
    * - freezegun
@@ -328,7 +328,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/python-hyper/h11
    * - identify
-     - 2.6.16
+     - 2.6.17
      - MIT
      - https://github.com/pre-commit/identify
    * - idna
@@ -336,7 +336,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/kjd/idna
    * - imagesize
-     - 1.4.1
+     - 2.0.0
      - MIT License
      - https://github.com/shibukawa/imagesize_py
    * - importlib_metadata
@@ -491,6 +491,10 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2.9.0.post0
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
+   * - python-discovery
+     - 1.1.0
+     - MIT License
+     - https://github.com/tox-dev/python-discovery
    * - python-logstash
      - 0.4.8
      - MIT License
@@ -616,8 +620,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://tablib.readthedocs.io
    * - tabulate
-     - 0.9.0
-     - MIT License
+     - 0.10.0
+     - MIT
      - https://github.com/astanin/python-tabulate
    * - texttable
      - 1.7.0
@@ -672,7 +676,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://github.com/celery/vine
    * - virtualenv
-     - 20.39.0
+     - 21.1.0
      - MIT
      - https://github.com/pypa/virtualenv
    * - wcwidth
