@@ -534,6 +534,15 @@ Třídy
    .. py:method:: get()
 
 
+.. py:class:: DataImportStart
+
+   Popis není k dispozici.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+
 Funkce
 ------
 

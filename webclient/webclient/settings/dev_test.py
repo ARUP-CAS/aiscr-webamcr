@@ -1,6 +1,7 @@
-from .dev import *
+from .base import *
 
 DEBUG = False
+ALLOWED_HOSTS += ["web"]
 LOGGING["handlers"]["logstash"]["tags"] = "dev_test"
 
 if "debug_toolbar" in INSTALLED_APPS:
@@ -8,6 +9,10 @@ if "debug_toolbar" in INSTALLED_APPS:
 if "debug_toolbar.middleware.DebugToolbarMiddleware" in MIDDLEWARE:
     MIDDLEWARE.remove("debug_toolbar.middleware.DebugToolbarMiddleware")
 DEBUG_TOOLBAR_PANELS = []
+SITE_URL = "http://localhost:8000"
+
+CLAMD_HOST = get_secret("CLAMD_HOST")
+CLAMD_PORT = 3310
 
 
 def get_test_secret(setting, default_value=None):
@@ -29,6 +34,8 @@ def get_test_secret(setting, default_value=None):
         return secrets_test.get(setting, default_value)
 
 
+TEST_RUNNER = "core.tests.runner.AMCRSeleniumTestRunner"
+
 SELENIMUM_ADDRESS = get_test_secret("TEST_SELENIMUM_ADDRESS")
 SELENIUM_PORT = get_test_secret("TEST_SELENIUM_PORT")
 WEB_SERVER_ADDRESS = get_test_secret("TEST_WEB_SERVER_ADDRESS")  # adresa na které běží test a kterou použije selenium
@@ -47,6 +54,7 @@ DATABASES["default"]["TEST"] = {"MIGRATE": False}
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
 SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
+AUTO_LOGOUT = {}
 
 DATABASES["test_db"] = {
     "ENGINE": "django_prometheus.db.backends.postgis",

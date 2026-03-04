@@ -3,8 +3,7 @@ from django.db import connection
 
 def my_custom_sql(self):
     with connection.cursor() as cursor:
-        cursor.execute(
-            """
+        cursor.execute("""
             DO
             $do$
             BEGIN
@@ -21,5 +20,4 @@ def my_custom_sql(self):
             ON ALL TABLES
             IN SCHEMA "public"
             TO cz_archeologickamapa_api_view;
-        """
-        )
+        """)

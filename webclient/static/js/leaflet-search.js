@@ -87,6 +87,8 @@ L.Control.Search = L.Control.extend({
 		hideMarkerOnCollapse: false,    //remove circle and marker on search control collapsed
 		position: 'topleft',
 		initialSearchUrl: 'geonames',
+		ButtonTitle: '',
+		ButtonSelTitle: '',
 		marker: {						//custom L.Marker or false for hide
 			icon: false,				//custom L.Icon for maker location or false for hide
 			animate: true,				//animate a circle over location found
@@ -173,6 +175,8 @@ L.Control.Search = L.Control.extend({
 		this._inputMinSize= this._currentUrl.name.length;
 		this.options.textCancel=this.options.translations.SearchTextCancel;
 		this.options.textErr=this.options.translations.SearchTextError;
+		this.options.ButtonTitle=this.options.translations.ButtonTitle;
+		this.options.ButtonSelTitle=this.options.translations.ButtonSelTitle;
 		this._parcela={};
 		if(this.options.initialSearchUrl=='parcely') this._parcela.mode=true;
 		else this._parcela.mode=false;
@@ -184,9 +188,9 @@ L.Control.Search = L.Control.extend({
 	onAdd: function (map) {
 		this._map = map;
 		this._container = L.DomUtil.create('div', 'leaflet-control-search');
-		this._button_sel = this._createSelButton(this._currentUrl.name, 'sel-button bi bi-caret-down');		
+		this._button_sel = this._createSelButton(this.options.ButtonSelTitle, 'sel-button bi bi-caret-down');		
 		this._input = this._createInput(this._currentUrl.name, 'search-input');
-		this._button = this._createButton(this._currentUrl.name, 'search-button');
+		this._button = this._createButton(this.options.ButtonTitle, 'search-button');
 		this._cancel = this._createCancel(this.options.textCancel, 'search-cancel');
 		this._input_parcela = this._createInputParcela(this.options.translations.Parcela, 'search-input-parcela');
 		this._tooltip = this._createTooltip('search-tooltip');	

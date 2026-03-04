@@ -6,7 +6,6 @@ LICENSES_MANUAL_FIXES = {
 }
 
 
-
 def csv_to_rst_table():
     output = subprocess.run(
         ["pip-licenses", "--format=json", "--with-urls", "--from=mixed", "--with-system"],

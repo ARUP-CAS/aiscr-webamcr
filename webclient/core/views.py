@@ -1983,6 +1983,7 @@ class DataImportProgress(LoginRequiredMixin, View):
             status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
+            import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}"))
             serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}"))
             serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}"))
 
@@ -2000,6 +2001,7 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "progress_files": progress_files,
                 "finished_record_count": len(serialized_results),
                 "serialized_results": serialized_results,
+                "primary_keys": import_data_primary_keys,
                 "status": status,
                 "serialized_results_files": serialized_results_files,
                 "status_message": status_message,
@@ -2019,4 +2021,15 @@ class DataImportStop(LoginRequiredMixin, View):
         job_id = kwargs.get("job_id")
         redis_connector = RedisConnector().get_connection_decode()
         redis_connector.set(f"import_data_stop_{job_id}", 1)
+        return JsonResponse({"result": "ok"})
+
+
+class DataImportStart(LoginRequiredMixin, View):
+    def get(self, request, **kwargs):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        from cron import tasks
+
+        tasks.run_data_import.delay(job_id, request.user.id)
         return JsonResponse({"result": "ok"})

@@ -6,3 +6,5 @@
 The Archaeological Map of the Czech Republic (AMCR) is an information system for the collection, management and presentation of data on archaeological fieldwork and for supporting related workflows.
 
 Continuously updated documentation is available at: [https://aiscr-webamcr.readthedocs.io/cs/stable/](https://aiscr-webamcr.readthedocs.io/cs/stable/)
+
+For release notes see: https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog

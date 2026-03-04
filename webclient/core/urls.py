@@ -99,4 +99,9 @@ urlpatterns = [
         views.DataImportStop.as_view(),
         name="data-import-stop",
     ),
+    path(
+        "data-import-start/<str:job_id>",
+        views.DataImportStart.as_view(),
+        name="data-import-start",
+    ),
 ]

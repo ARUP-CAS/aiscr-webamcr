@@ -27,6 +27,10 @@ on:
         required: true
         default: GitHub 
 
+concurrency:
+  group: deploy-${{ github.repository }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
 env:
   branch: dev
   server_deploy_root: /home/amcr/aiscr-webamcr
@@ -44,8 +48,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: v${{ inputs.tag }}
-
+          ref: refs/tags/v${{ inputs.tag }}
+          fetch-depth: 0
+    
       - name: Install OpenVPN
         run: |
           sudo apt-get update
@@ -66,34 +71,46 @@ jobs:
         timeout-minutes: 2
         run: |
           for i in {1..10}; do
-            dig ${{ secrets.DNS_RESOLVER }} ${{ env.DEPLOYMENT_SERVER }} A +time=1 && break
-            sleep 2
+            if ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then
+              break
+            fi
+            sleep 3
           done
+          if ! ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then
+            echo "::error::VPN connection failed"
+            exit 1
+          fi
 
       - name: SSH connection
         shell: bash
         run: |
+          set -euo pipefail
           eval $(ssh-agent -s)
           echo "${{ env.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "${{ env.SSH_KNOWN_HOST }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          sleep 30          
-          ping -c 10 ${{ env.DEPLOYMENT_SERVER }}          
-          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"          
-          ssh amcr@${{ env.DEPLOYMENT_SERVER }} << EOF
-          sudo su - root << AOF
-          cd ${{ env.server_deploy_root }}
-          git stash push -m "CI_autostash_${{ inputs.tag }}_${{ env.date_stamp }}"
-          git checkout ${{ env.branch }}
-          git pull
+          for i in {1..10}; do
+            if ping -c 1 ${{ env.DEPLOYMENT_SERVER }}; then break; fi
+            sleep 3
+          done
+          echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> "$GITHUB_ENV"
+          ssh amcr@${{ env.DEPLOYMENT_SERVER }} "sudo bash -s" << EOF
+          set -euo pipefail
+          cd ${{ env.server_deploy_root }}          
+          git fetch --all --tags --force          
+          if ! git rev-parse "refs/tags/v${{ inputs.tag }}" >/dev/null 2>&1; then
+            echo "ERROR: Tag v${{ inputs.tag }} does not exist"
+            git tag -l
+            exit 1
+          fi          
+          git checkout -f "refs/tags/v${{ inputs.tag }}"          
           chmod +x ${{ env.dep_script }}
           ./${{ env.dep_script }} ${{ inputs.tag }} ${{ env.server_deploy_root }} ${{ env.branch }} ${{ inputs.source }}
-          AOF
           EOF
 
       - name: Disconnect VPN
         if: always()
         run: |
-          sudo killall openvpn
+          sudo pkill openvpn || true
