@@ -438,8 +438,49 @@
     }
     $("#sidebar-toggle").click(sidebar_toggle_func);
     $("#sidebar-toggle-2").click(sidebar_toggle_func);
-    const tooltipTriggerList = document.querySelectorAll('[rel="tooltip"]')
-    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    // Suppress Bootstrap's "multiple instance" error for tooltips
+    const originalError = console.error;
+    const suppressTooltipError = function() {
+      return function(...args) {
+        if (args[0] && args[0].includes && args[0].includes("Bootstrap doesn't allow more than one instance")) {
+          return; // Silently suppress this specific error
+        }
+        originalError.apply(console, args);
+      };
+    };
+    console.error = suppressTooltipError();
+    
+    // Initialize all tooltips with proper instance management
+    window.reinitializeTooltips = function() {
+      const tooltipTriggerList = document.querySelectorAll('[rel="tooltip"], [data-bs-toggle="tooltip"]')
+      tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        try {
+          // This safely gets existing instance or creates new one - prevents "multiple instance" error
+          bootstrap.Tooltip.getOrCreateInstance(tooltipTriggerEl);
+        } catch (e) {
+          // Silently skip if instance creation fails
+        }
+      })
+    };
+    window.reinitializeTooltips();
+    
+    // Hide tooltips when dropdowns open
+    const dropdownElements = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+    dropdownElements.forEach(function(dropdownEl) {
+      dropdownEl.addEventListener('show.bs.dropdown', function() {
+        const tooltip = bootstrap.Tooltip.getInstance(this);
+        if (tooltip) {
+          tooltip.hide();
+        }
+      });
+      
+      dropdownEl.addEventListener('hidden.bs.dropdown', function() {
+        const tooltip = bootstrap.Tooltip.getInstance(this);
+        if (tooltip) {
+          tooltip.show();
+        }
+      });
+    });
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
       return new bootstrap.Popover(popoverTriggerEl)

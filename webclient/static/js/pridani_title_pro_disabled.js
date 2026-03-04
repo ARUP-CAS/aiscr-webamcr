@@ -1,10 +1,3 @@
-function initializeTooltips() {
-    $('[data-bs-toggle="tooltip"]').tooltip({
-        container: '#app-page-wrapper',
-        html: true,
-    });
-}
-
 window.onload = function () {
     const inputs = document.querySelectorAll("input[type=text]");
     for (let index = 0; index < inputs.length; ++index) {
@@ -34,5 +27,8 @@ window.onload = function () {
             element.setAttribute("rel", "tooltip")
         }
     }
-    initializeTooltips()
+    // Re-initialize tooltips if new elements were added dynamically
+    if (window.reinitializeTooltips) {
+        window.reinitializeTooltips();
+    }
 }
