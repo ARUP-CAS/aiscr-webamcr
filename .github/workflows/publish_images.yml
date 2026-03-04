@@ -21,6 +21,7 @@ env:
 jobs:
   build_publish_images:
     if: startsWith(inputs.tag, 'v')
+    name: Build and publish images
     runs-on: ubuntu-latest
 
     permissions:
@@ -38,11 +39,14 @@ jobs:
           ref: ${{ inputs.tag }}
           fetch-depth: 0
 
-      - name: Compute SOURCE_DATE_EPOCH
-        run: echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> $GITHUB_ENV
-
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v4
+      - name: Compute build metadata
+        run: |
+          EPOCH=$(git log -1 --pretty=%ct)
+          echo "SOURCE_DATE_EPOCH=${EPOCH}" >> $GITHUB_ENV
+          echo "SOURCE_DATE_ISO=$(date -u -d @${EPOCH} +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+          echo "VERSION_APP=${TAG#v}" >> $GITHUB_ENV
+        env:
+          TAG: ${{ inputs.tag }}
 
       - name: Setup buildx
         uses: docker/setup-buildx-action@v4
@@ -62,86 +66,95 @@ jobs:
 
       - name: Generate bake definition
         run: |
+          if [ "${{ inputs.latest }}" = "true" ]; then
+            PROD_LATEST=',"${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:latest","${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr:latest"'
+            PROXY_LATEST=',"${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:latest","${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-proxy:latest"'
+            REDIS_LATEST=',"${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:latest","${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-redis:latest"'
+          else
+            PROD_LATEST=""
+            PROXY_LATEST=""
+            REDIS_LATEST=""
+          fi
+
           cat <<EOF > docker-bake.hcl
           group "default" {
-            targets = ["prod","proxy","redis"]
+            targets = ["prod", "proxy", "redis"]
           }
 
           target "common" {
-            platforms = ["linux/amd64","linux/arm64"]
             pull = true
 
             args = {
-              VERSION_APP = "${{ inputs.tag }}"
-              TAG_APP = "${{ inputs.tag }}"
-              SOURCE_DATE_EPOCH = "${SOURCE_DATE_EPOCH}"
+              VERSION_APP        = "${VERSION_APP}"
+              TAG_APP            = "${{ inputs.tag }}"
+              SOURCE_DATE_EPOCH  = "${SOURCE_DATE_EPOCH}"
             }
 
             labels = {
-              "org.opencontainers.image.authors" = "Archaeological Information System of the Czech Republic (AIS CR)"
+              "org.opencontainers.image.authors"       = "Archaeological Information System of the Czech Republic (AIS CR)"
               "org.opencontainers.image.documentation" = "https://aiscr-webamcr.readthedocs.io/"
-              "org.opencontainers.image.licenses" = "GPL-3.0-or-later"
-              "org.opencontainers.image.version" = "${{ inputs.tag }}"
-              "org.opencontainers.image.revision" = "${{ github.sha }}"
-              "org.opencontainers.image.created" = "${SOURCE_DATE_EPOCH}"
+              "org.opencontainers.image.licenses"      = "GPL-3.0-or-later"
+              "org.opencontainers.image.version"       = "${VERSION_APP}"
+              "org.opencontainers.image.revision"      = "${{ github.sha }}"
+              "org.opencontainers.image.created"       = "${SOURCE_DATE_ISO}"
             }
           }
 
           target "prod" {
-            inherits = ["common"]
-            context = "."
+            inherits   = ["common"]
+            context    = "."
             dockerfile = "Dockerfile"
 
             tags = [
               "${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:${{ inputs.tag }}",
-              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr:${{ inputs.tag }}"
+              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr:${{ inputs.tag }}"${PROD_LATEST}
             ]
 
             labels = {
               "org.opencontainers.image.description" = "Archaeological Map of the Czech Republic (AMCR)"
-              "org.opencontainers.image.url" = "https://github.com/ARUP-CAS/aiscr-webamcr"
+              "org.opencontainers.image.url"         = "https://github.com/ARUP-CAS/aiscr-webamcr"
             }
 
             cache-from = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:buildcache"]
-            cache-to = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:buildcache,mode=max"]
+            cache-to   = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:buildcache,mode=min"]
           }
 
           target "proxy" {
-            inherits = ["common"]
-            context = "./proxy"
+            inherits   = ["common"]
+            context    = "./proxy"
             dockerfile = "Dockerfile"
 
             tags = [
               "${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:${{ inputs.tag }}",
-              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-proxy:${{ inputs.tag }}"
+              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-proxy:${{ inputs.tag }}"${PROXY_LATEST}
             ]
 
             labels = {
               "org.opencontainers.image.description" = "Archaeological Map of the Czech Republic (AMCR) - Proxy Server"
-              "org.opencontainers.image.url" = "https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy"
+              "org.opencontainers.image.url"         = "https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy"
             }
 
             cache-from = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:buildcache"]
-            cache-to = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:buildcache,mode=max"]
+            cache-to   = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:buildcache,mode=min"]
           }
 
           target "redis" {
-            inherits = ["common"]
-            context = "./redis"
+            inherits   = ["common"]
+            context    = "./redis"
             dockerfile = "Dockerfile"
 
             tags = [
               "${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:${{ inputs.tag }}",
-              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-redis:${{ inputs.tag }}"
+              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-redis:${{ inputs.tag }}"${REDIS_LATEST}
             ]
 
             labels = {
               "org.opencontainers.image.description" = "Archaeological Map of the Czech Republic (AMCR) - Redis Server"
-              "org.opencontainers.image.url" = "https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis"
+              "org.opencontainers.image.url"         = "https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis"
             }
 
             cache-from = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:buildcache"]
-            cache-to = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:buildcache,mode=max"]
+            cache-to   = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:buildcache,mode=min"]
           }
           EOF
 
@@ -156,8 +169,7 @@ jobs:
         id: digests
         run: |
           METADATA='${{ steps.bake.outputs.metadata }}'
-
-          echo "prod=$(jq -r '."prod"."containerimage.digest"' <<< "$METADATA")" >> $GITHUB_OUTPUT
+          echo "prod=$(jq -r '."prod"."containerimage.digest"'   <<< "$METADATA")" >> $GITHUB_OUTPUT
           echo "proxy=$(jq -r '."proxy"."containerimage.digest"' <<< "$METADATA")" >> $GITHUB_OUTPUT
           echo "redis=$(jq -r '."redis"."containerimage.digest"' <<< "$METADATA")" >> $GITHUB_OUTPUT
 
@@ -178,7 +190,7 @@ jobs:
           output: sbom.json
 
       - name: Attest SBOM
-        uses: actions/attest@v1
+        uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr
           subject-digest: ${{ steps.digests.outputs.prod }}
@@ -187,7 +199,7 @@ jobs:
           push-to-registry: true
 
       - name: Attest provenance (prod)
-        uses: actions/attest@v1
+        uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr
           subject-digest: ${{ steps.digests.outputs.prod }}
@@ -195,7 +207,7 @@ jobs:
           push-to-registry: true
 
       - name: Attest provenance (proxy)
-        uses: actions/attest@v1
+        uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy
           subject-digest: ${{ steps.digests.outputs.proxy }}
@@ -203,7 +215,7 @@ jobs:
           push-to-registry: true
 
       - name: Attest provenance (redis)
-        uses: actions/attest@v1
+        uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis
           subject-digest: ${{ steps.digests.outputs.redis }}
