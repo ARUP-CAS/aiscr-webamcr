@@ -29,7 +29,7 @@ Třídy
 
 .. py:class:: ArchZaznamFilter
 
-   Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
+   Třída pro základní filtrování archeologických záznamů a jejich potomků.
 
    **Metody:**
 
@@ -51,11 +51,15 @@ Třídy
 
    .. py:method:: filter_predmet_pozn_pocet()
 
-      Metoda pro filtrování podle poznámky a počtu predmětu.
+      Metoda pro filtrování podle poznámky a počtu předmětů.
 
    .. py:method:: filter_objekt_pozn_pocet()
 
       Metoda pro filtrování podle poznámky a počtu objektu.
+
+   .. py:method:: filter_ident_cely()
+
+      Metoda pro filtrování podle identu akce, ale i dočasného.
 
    .. py:method:: __init__()
 
@@ -72,11 +76,11 @@ Třídy
 
    .. py:method:: filtr_vedouci()
 
-      Metoda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
+      Metoda pro filtrování podle hlavního a vedlejšího vedoucího akce.
 
    .. py:method:: filter_popisne_udaje()
 
-      Metoda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
+      Metoda pro filtrování podle lokalizace, upřesnění, uložení, označení akce.
 
    .. py:method:: filtr_zahrnout_projektove()
 

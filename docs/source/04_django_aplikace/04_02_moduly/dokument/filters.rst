@@ -17,7 +17,7 @@ Třídy
 
 .. py:class:: HistorieFilter
 
-   Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
+   Třída pro základní filtrování historie. Třída je děděná v jednotlivých filtracích záznamů.
 
    **Metody:**
 
@@ -25,10 +25,14 @@ Třídy
 
    .. py:method:: _get_history_subquery()
 
+   .. py:method:: filter_ident_cely()
+
+      Metoda pro filtrování podle identu projektu, ale i dočasného.
+
 
 .. py:class:: Model3DFilter
 
-   Třída pro zakladní filtrování modelu 3D a jejich potomků.
+   Třída pro základní filtrování modelu 3D a jejich potomků.
 
    **Metody:**
 
@@ -60,21 +64,21 @@ Třídy
 
 .. py:class:: DokumentFilter
 
-   Třída pro zakladní filtrování dokumentu a jejich potomků.
+   Třída pro základní filtrování dokumentu a jejich potomků.
 
    **Metody:**
 
    .. py:method:: filter_uzemni_prislusnost()
 
-      Metoda pro filtrování podle územní príslušnosti.
+      Metoda pro filtrování podle územní příslušnosti.
 
    .. py:method:: filter_popisne_udaje()
 
-      Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regiónu a události.
+      Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regionu a události.
 
    .. py:method:: filter_predmet_pozn_pocet()
 
-      Metoda pro filtrování podle poznámky a počtu predmětu.
+      Metoda pro filtrování podle poznámky a počtu předmětů.
 
    .. py:method:: filter_objekt_pozn_pocet()
 

@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: SamostatnyNalezFilter
 
-   Třída pro zakladní filtrování samostatného nálezu a jejich potomků.
+   Třída pro základní filtrování samostatného nálezu a jejich potomků.
 
    **Metody:**
 
@@ -35,7 +35,7 @@ Třídy
 
 .. py:class:: UzivatelSpolupraceFilter
 
-   Třída pro zakladní filtrování uživatelské spolupráce a jejich potomků.
+   Třída pro základní filtrování uživatelské spolupráce a jejich potomků.
 
    **Metody:**
 

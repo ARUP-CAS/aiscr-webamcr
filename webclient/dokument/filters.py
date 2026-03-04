@@ -79,7 +79,7 @@ class SouborTypFilter(MultipleChoiceFilter):
 
 class HistorieFilter(FilterSet):
     """
-    Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
+    Třída pro základní filtrování historie. Třída je děděná v jednotlivých filtracích záznamů.
     """
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = None
@@ -138,6 +138,12 @@ class HistorieFilter(FilterSet):
             widget=SelectMultipleSeparator(),
             distinct=True,
         )
+        self.filters["historie_poznamka"] = CharFilter(
+            field_name="historie__historie__poznamka",
+            lookup_expr="icontains",
+            label=_("dokument.filters.historieFilter.historiePoznamka.label"),
+            distinct=True,
+        )
 
     def _get_history_subquery(self):
         logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
@@ -145,8 +151,9 @@ class HistorieFilter(FilterSet):
         zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
         uzivatel = self.form.cleaned_data.pop("historie_uzivatel", None)
         datum = self.form.cleaned_data.pop("historie_datum_zmeny_od", None)
+        poznamka = self.form.cleaned_data.pop("historie_poznamka", None)
 
-        if not uzivatel_organizace and not zmena and not uzivatel and not datum:
+        if not uzivatel_organizace and not zmena and not uzivatel and not datum and not poznamka:
             return
 
         filtered_fields = {"typ_vazby": self.TYP_VAZBY}
@@ -164,19 +171,41 @@ class HistorieFilter(FilterSet):
             self.filters.pop("historie_datum_zmeny_od")
         if datum and datum.stop:
             filtered_fields["datum_zmeny__lte"] = datum.stop
+        if poznamka:
+            filtered_fields["poznamka__icontains"] = poznamka
+            self.filters.pop("historie_poznamka")
         return filtered_fields
+
+    def filter_ident_cely(self, queryset, name, value):
+        """
+        Metoda pro filtrování podle identu projektu, ale i dočasného.
+        """
+        if not value:
+            return queryset
+
+        # 1) primárně hledat v Projekt.ident_cely
+        qs = queryset.filter(ident_cely__icontains=value)
+        if qs.exists():  # jen když něco najde, tak tím skončit
+            return qs
+
+        # 2) fallback: hledat v Historie.poznamka (přes vazbu Projekt.historie -> HistorieVazby -> Historie)
+        return queryset.filter(
+            historie__historie__poznamka__icontains=value,
+        ).distinct()
 
 
 class Model3DFilter(HistorieFilter, FilterSet):
     """
-    Třída pro zakladní filtrování modelu 3D a jejich potomků.
+    Třída pro základní filtrování modelu 3D a jejich potomků.
     """
 
     TYP_VAZBY = DOKUMENT_RELATION_TYPE
     INCLUDE_KAT_TYP_ZMENY = False
     HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
 
-    ident_cely = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.ident_cely.label"))
+    ident_cely = CharFilter(
+        method="filter_ident_cely", distinct=True, label=_("dokument.filters.dokumentFilter.ident_cely.label")
+    )
 
     doi = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.doi.label"))
 
@@ -319,6 +348,8 @@ class Model3DFilter(HistorieFilter, FilterSet):
                 queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            if "poznamka__icontains" in historie:
+                queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
             queryset = queryset.filter(queryset_history)
 
         return queryset
@@ -520,9 +551,10 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),
@@ -534,7 +566,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
 
 class DokumentFilter(Model3DFilter):
     """
-    Třída pro zakladní filtrování dokumentu a jejich potomků.
+    Třída pro základní filtrování dokumentu a jejich potomků.
     """
 
     TYP_VAZBY = DOKUMENT_RELATION_TYPE
@@ -937,7 +969,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """
-        Metoda pro filtrování podle územní príslušnosti.
+        Metoda pro filtrování podle územní příslušnosti.
         """
         logger.debug("dokument.filters.DokumentFilter.filter_uzemni_prislusnost", extra={"value": value})
         query = reduce(operator.or_, (Q(ident_cely__contains=item) for item in value))
@@ -945,7 +977,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regiónu a události.
+        Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regionu a události.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -959,7 +991,7 @@ class DokumentFilter(Model3DFilter):
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         """
-        Metoda pro filtrování podle poznámky a počtu predmětu.
+        Metoda pro filtrování podle poznámky a počtu předmětů.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
@@ -1180,9 +1212,10 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),

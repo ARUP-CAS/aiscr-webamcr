@@ -17,8 +17,8 @@ Třídy
 
 .. py:class:: KatastrFilterMixin
 
-   Třída pro filtrování záznamu podle katastru, kraje, okresu a popisních údajů.
-   Třída je prepoužita v dalších filtrech.
+   Třída pro filtrování záznamu podle katastru, kraje, okresu a popisných údajů.
+   Třída je použita v dalších filtrech.
 
    **Metody:**
 
@@ -36,7 +36,7 @@ Třídy
 
    .. py:method:: filter_popisne_udaje()
 
-      Metoda pro filtrování podle popisních údajů.
+      Metoda pro filtrování podle popisných údajů.
 
 
 .. py:class:: ProjektFilter
@@ -53,7 +53,7 @@ Třídy
 
    .. py:method:: filter_popisne_udaje_akce()
 
-      Metoda pro filtrování podle popisních údajů akce.
+      Metoda pro filtrování podle popisných údajů akce.
 
    .. py:method:: filter_has_positive_find()
 
@@ -65,19 +65,19 @@ Třídy
 
    .. py:method:: filter_announced_after()
 
-      Metoda pro filtrování podle datumu oznámení od.
+      Metoda pro filtrování podle data oznámení od.
 
    .. py:method:: filter_announced_before()
 
-      Metoda pro filtrování podle datumu oznámení do.
+      Metoda pro filtrování podle data oznámení do.
 
    .. py:method:: filter_approved_after()
 
-      Metoda pro filtrování podle datumu schválení od.
+      Metoda pro filtrování podle data schválení od.
 
    .. py:method:: filter_approved_before()
 
-      Metoda pro filtrování podle datumu schválení do.
+      Metoda pro filtrování podle data schválení do.
 
    .. py:method:: filter_akce_typ()
 

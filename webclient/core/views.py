@@ -1199,7 +1199,11 @@ def redirect_ident_view(request, ident_cely):
     """
     Funkce pro získaní správneho redirectu na záznam podle ident%cely záznamu.
     """
-    object = get_record_from_ident(ident_cely)
+    try:
+        object = get_record_from_ident(ident_cely)
+    except Http404:
+        h = Historie.objects.select_related("vazba").filter(poznamka__icontains=ident_cely).first()
+        object = h.vazba.navazany_objekt if h else None
     if object:
         try:
             if isinstance(object, Pian):
