@@ -123,7 +123,6 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.context }}/${{ matrix.dockerfile }}
           push: true
-          pull: true
           sbom: true
           provenance: mode=max
           tags: ${{ steps.meta.outputs.tags }}
@@ -142,15 +141,25 @@ jobs:
           for i in {1..5}; do
             DIGEST_GITHUB=$(docker buildx imagetools inspect \
               ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:${{ env.VERSION_APP }} \
-              --format '{{json .Manifest.Digest}}' | tr -d '"') && break
+              --format '{{json .Manifest.Digest}}' | tr -d '"') && \
+              [ -n "$DIGEST_GITHUB" ] && break
             sleep 3
           done
           for i in {1..5}; do
             DIGEST_DOCKERHUB=$(docker buildx imagetools inspect \
               ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}:${{ env.VERSION_APP }} \
-              --format '{{json .Manifest.Digest}}' | tr -d '"') && break
+              --format '{{json .Manifest.Digest}}' | tr -d '"') && \
+              [ -n "$DIGEST_DOCKERHUB" ] && break
             sleep 3
           done
+          if [ -z "$DIGEST_GITHUB" ]; then
+            echo "::error::Failed to retrieve GHCR digest for ${{ matrix.image_name_github }} after 5 retries"
+            exit 1
+          fi
+          if [ -z "$DIGEST_DOCKERHUB" ]; then
+            echo "::error::Failed to retrieve DockerHub digest for ${{ matrix.image_name_dockerhub }} after 5 retries"
+            exit 1
+          fi
           echo "github=${DIGEST_GITHUB}" >> $GITHUB_OUTPUT
           echo "dockerhub=${DIGEST_DOCKERHUB}" >> $GITHUB_OUTPUT
 
@@ -186,7 +195,7 @@ jobs:
       - name: Generate SBOM
         continue-on-error: true
         id: sbom
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.34.2
         with:
           image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: spdx-json
@@ -217,7 +226,7 @@ jobs:
       - name: Vulnerability scan
         continue-on-error: true
         id: vulnscan
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.34.2
         with:
           image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: sarif
