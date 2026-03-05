@@ -69,9 +69,6 @@ jobs:
           ref: ${{ inputs.tag }}
           fetch-depth: 0
 
-      # Pin image timestamp to last commit for reproducible builds.
-      # VERSION_APP strips the leading 'v' (v1.2.3 → 1.2.3) to keep
-      # registry tags consistent with the original semver behaviour.
       - name: Compute build metadata
         run: |
           EPOCH=$(git log -1 --pretty=%ct)
