@@ -395,7 +395,6 @@ class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRel
         show = self.get_shows()
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         jednotky = self.get_jednotky()
-        # Zkontrolovat po MR.
         context["j"] = get_dj_form_detail("akce", jednotka, jednotky, show, old_adb_post, self.request.user)
         return context
 
@@ -582,7 +581,6 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         if "index" in self.request.GET and "label" in self.request.GET:
             try:
                 geom = cache.get(str(request.user.id) + "_geom")
-                # Mazání cache geometrie je zde záměrně zakomentované.
                 index = int(self.request.GET["index"])
                 if self.request.GET["label"] != str(geom.iloc[index]["label"]):
                     raise Exception("arch_z.views.PianUpdateView.get.label_not_found")
@@ -1961,26 +1959,14 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
     """
     Funkce pro získaní dictionary contextu dokumentační jednotky.
 
-    Args:
-    app (string): druh archeologického záznamu ro který se daný context počítá.
-
-    jednotka (DokumentacniJednotka): model DokumentacniJednotka pro který se daný context počítá.
-
-    jednotky (DokumentacniJednotka): list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
-
-    show (dictionary): dictionary pro zobrazení možnosti uživatele na stránce.
-
-    old_adb_post (CreateADBForm): staré volání CreateADBForm pro správně zobrazení chyb formuláře.
-
-    Returns:
-    dj_form_detail: dictionary kontextu DJ pro správné zobrazení stránky.
-
-    :param app: Popis parametru ``app``.
-    :param jednotka: Popis parametru ``jednotka``.
-    :param jednotky: Popis parametru ``jednotky``.
-    :param show: Popis parametru ``show``.
-    :param old_adb_post: Popis parametru ``old_adb_post``.
+    :param app: ruh archeologického záznamu ro který se daný context počítá.
+    :param jednotka: model DokumentacniJednotka pro který se daný context počítá.
+    :param jednotky: list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
+    :param show: dictionary pro zobrazení možnosti uživatele na stránce.
+    :param old_adb_post: staré volání CreateADBForm pro správně zobrazení chyb formuláře.
     :param user: Popis parametru ``user``.
+
+    :return: dictionary kontextu DJ pro správné zobrazení stránky.
     """
     vyskovy_bod_formset = inlineformset_factory(
         Adb,
