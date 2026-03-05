@@ -63,10 +63,10 @@ FILE_TYPE_INFO = {
 
 
 def check_content_changed(content: str, output_file: Path) -> bool:
-    """Check if content differs from existing file.
+    """Zkontroluje, zda se obsah liší od existujícího souboru.
 
-    :param content: Hodnota parametru ``content``.
-    :param output_file: Hodnota parametru ``output_file``.
+    :param content: Nový obsah k porovnání.
+    :param output_file: Cesta k existujícímu souboru.
     :return: True, pokud se obsah změnil nebo soubor neexistuje
     """
     if not output_file.exists():
@@ -81,9 +81,9 @@ def check_content_changed(content: str, output_file: Path) -> bool:
 
 
 def extract_url_patterns(urls_file: Path) -> Tuple[Optional[str], List[Dict[str, str]]]:
-    """Extract URL patterns from a urls.py file.
+    """Extrahujte vzory URL ze souboru urls.py.
 
-    :param urls_file: Hodnota parametru ``urls_file``.
+    :param urls_file: Cesta k souboru urls.py.
     :return: Každý url_pattern je slovník s klíči: ``pattern``, ``view``, ``name``
     """
     try:
@@ -122,9 +122,9 @@ def extract_url_patterns(urls_file: Path) -> Tuple[Optional[str], List[Dict[str,
 
 
 def parse_path_call(node: ast.AST) -> Optional[Dict[str, str]]:
-    """Parse a path() or re_path() call to extract URL pattern info.
+    """Analyzuje volání path() nebo re_path() a extrahuje informace o vzoru URL.
 
-    :param node: Hodnota parametru ``node``.
+    :param node: uzel AST představující volání path().
     :return: ``dict: {'pattern': str, 'view': str, 'name': str} or None``
     """
     if not isinstance(node, ast.Call):
@@ -174,7 +174,7 @@ def parse_path_call(node: ast.AST) -> Optional[Dict[str, str]]:
 
 
 def generate_url_routing_rst() -> bool:
-    """Generate URL routing documentation for all modules.
+    """Vygeneruje dokumentaci k směrování URL pro všechny moduly.
 
     Vytvoří docs/source/04_django_aplikace/04_01_core/url_routing.rst
     s tabulkami všech vzorů URL z urls.py každého modulu.
@@ -258,9 +258,9 @@ def generate_url_routing_rst() -> bool:
 
 
 def extract_signals(signals_file: Path) -> List[Dict[str, str]]:
-    """Extract signal receivers from a signals.py file.
+    """Extrahuje přijímače signálu ze souboru signals.py.
 
-    :param signals_file: Hodnota parametru ``signals_file``.
+    :param signals_file: Cesta k souboru signals.py.
     :return: Seznam slovníků informací o signálech s klíči: ``function``, ``signal_type``, ``sender``, ``weak``
     """
     try:
@@ -407,7 +407,7 @@ def generate_signals_rst() -> bool:
 
 
 def extract_permissions(models_file: Path) -> List[str]:
-    """Extrahujte možnosti akcí z třídy Permissions v models.py.
+    """Extrahuje možnosti akcí z třídy Permissions v models.py.
 
     :param models_file: Cesta k souboru models.py.
     :return: Seznam názvů akcí (např. ``adb_smazat``, ``vb_smazat``)
@@ -701,7 +701,7 @@ def extract_xsd_version(schema_root: ET.Element) -> str:
 
 
 def extract_django_command_info(command_file: Path) -> Dict[str, str]:
-    """Extrahujte informace o dokumentaci ze souboru příkazů pro správu Django.
+    """Extrahuje informace o dokumentaci ze souboru příkazů pro správu Django.
 
     :param command_file: Cesta k příkazovému souboru.
     :return: ``dict: {'name': str, 'help': str, 'docstring': str, 'arguments': list}``
@@ -1163,7 +1163,7 @@ def has_meaningful_code(source_file: Path) -> bool:
 
 
 def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Extrahujte docstrings z modulu Python pomocí AST parsování.
+    """Extrahuje docstrings z modulu Python pomocí AST parsování.
 
     :param source_file: Cesta ke zdrojovému souboru.
     :return: tuple: (třídy, funkce), kde každá je seznamem slovníků.
@@ -1509,7 +1509,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
 
 
 def generate_rst_explicit(source_file: Path, module_name: str, module_title: str, module_description: str) -> str:
-    """Vygenerujte soubor RST s explicitním obsahem docstringu.
+    """Vygeneruje soubor RST s explicitním obsahem docstringu.
 
     :param source_file: Cesta k zdrojovému souboru.
     :param module_name: Plně kvalifikovaný název modulu.
@@ -1561,7 +1561,7 @@ def generate_rst_explicit(source_file: Path, module_name: str, module_title: str
 
 
 def generate_rst_autodoc(module_name: str, module_title: str, module_description: str) -> str:
-    """Vygenerujte soubor RST pomocí direktiv Sphinx autodoc.
+    """Vygeneruje soubor RST pomocí direktiv Sphinx autodoc.
 
     :param module_name: Plně kvalifikovaný název modulu.
     :param module_title: Název souboru RST`.
@@ -1582,7 +1582,7 @@ def generate_rst_autodoc(module_name: str, module_title: str, module_description
 
 
 def get_module_title_and_description(module_dir_name: str, filename: str) -> Tuple[str, str]:
-    """Získejte příslušný název a popis souboru modulu.
+    """Předá příslušný název a popis souboru modulu.
 
     :param module_dir_name: Název adresáře modulu (např. ``adb``, ``core``).
     :param filename: Název souboru Python (např. ``models.py``).
@@ -1602,7 +1602,7 @@ def get_module_title_and_description(module_dir_name: str, filename: str) -> Tup
 
 
 def generate_rst_for_file(source_file: Path, module_dir_name: str, output_dir: Path, mode: str = "autodoc") -> bool:
-    """Vygenerujte dokumentaci RST pro jeden soubor Python.
+    """Vygeneruje dokumentaci RST pro jeden soubor Python.
 
     :param source_file: Cesta ke zdrojovému souboru Python.
     :param module_dir_name: Název adresáře modulu.
@@ -1642,7 +1642,7 @@ def generate_rst_for_file(source_file: Path, module_dir_name: str, output_dir: P
 
 
 def generate_index_rst(module_dir_name: str, generated_files: List[str], output_dir: Path) -> bool:
-    """Vygenerujte soubor index.rst s toctree všech vygenerovaných modulů.
+    """Vygeneruje soubor index.rst s toctree všech vygenerovaných modulů.
 
     :param module_dir_name: Název adresáře modulu.
     :param generated_files: Seznam vygenerovaných názvů souborů Python.
@@ -1784,7 +1784,7 @@ def get_all_modules() -> List[str]:
 
 
 def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] = None) -> bool:
-    """Vygenerujte soubory RST pro všechny moduly nebo konkrétní modul.
+    """Vygeneruje soubory RST pro všechny moduly nebo konkrétní modul.
 
     :param mode: Režim generování (``autodoc`` nebo ``explicit``).
     :param specific_module: Konkrétní modul, který se má zpracovat, nebo None pro všechny.
