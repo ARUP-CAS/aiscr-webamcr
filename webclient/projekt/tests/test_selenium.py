@@ -1172,8 +1172,6 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
-    def go_to_form(self):
-        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_019_projekt_zrusit_p_001(self):
         """Test 019 Navržení zrušení projektu (pozitivní scénář 1)
@@ -1205,12 +1203,11 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.createFedoraRecord("C-201665792")
         self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
 
-        self.go_to_form()
-        self.ElementClick(By.LINK_TEXT, "C-201665792")
+        self.goToAddress("/projekt/detail/C-201665792")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
-        self.ElementClick(By.CSS_SELECTOR, ".custom-control:nth-child(2) > .custom-control-label")
+        self.ElementClick(By.ID, "id_reason_1")
         with WaitForPageLoad(self.driver):
-            self.ElementClick(By.CSS_SELECTOR, ".btn-primary:nth-child(2)")
+            self.ElementClick(By.ID, "submit-btn")
 
         ident_cely = self.driver.current_url.split("/")[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
@@ -1247,15 +1244,13 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.createFedoraRecord("C-201665792")
         self.uploadFileToFedora(17511, "projekt/tests/resources/test.doc")
 
-        self.go_to_form()
-        with WaitForPageLoad(self.driver):
-            self.ElementClick(By.LINK_TEXT, "C-201665792")
+        self.goToAddress("/projekt/detail/C-201665792")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
-        self.ElementClick(By.CSS_SELECTOR, ".custom-radio:nth-child(1) > .custom-control-label")
+        self.ElementClick(By.ID, "id_reason_0")
         self.ElementClick(By.ID, "id_projekt_id")
         self.driver.find_element(By.ID, "id_projekt_id").send_keys("test")
         with WaitForPageLoad(self.driver):
-            self.ElementClick(By.CSS_SELECTOR, ".btn-primary:nth-child(2)")
+            self.ElementClick(By.ID, "submit-btn")
         ident_cely = self.driver.current_url.split("/")[-1]
         self.assertEqual(Projekt.objects.get(ident_cely=ident_cely).stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
         logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_020_projekt_zrusit_p_002.end")
@@ -1291,12 +1286,8 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.createFedoraRecord("C-202401104")
         self.uploadFileToFedora(639669, "projekt/tests/resources/test.pdf")
         self.uploadFileToFedora(639688, "projekt/tests/resources/test.pdf")
-        self.go_to_form()
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.uzavren.label") + "')]")
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        self.ElementClick(By.LINK_TEXT, "C-202401104")
+
+        self.goToAddress("/projekt/detail/C-202401104")
         self.ElementClick(By.CSS_SELECTOR, "#projekt-navrh-zruseni > .app-controls-button-text")
         try:
             with WaitForPageLoad(self.driver, 5):
@@ -1399,8 +1390,6 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
-    def go_to_form(self):
-        self.goToAddress("/projekt/vyber?sort=hlavni_katastr&sort=ident_cely")
 
     def test_023_projekt_vytvori_akci_p_001(self):
         """Test 023 Vytvoření projektové akce (pozitivní scénář 1)
@@ -1432,16 +1421,9 @@ class ProjektVytvoreniProjektoveAkce(BaseSeleniumTestClass):
         self.createFedoraRecord("C-202401502")
         self.uploadFileToFedora(643547, "projekt/tests/resources/test.pdf")
 
-        self.go_to_form()
         arch_z_count_old = Akce.objects.count()
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .me-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(
-            By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.zahajenVTerenu.label") + "')]"
-        )
-        self.ElementClick(By.CSS_SELECTOR, ".btn:nth-child(11)")
-        # self.ElementClick(By.CSS_SELECTOR, ".even:nth-child(1) a")
-        self.ElementClick(By.LINK_TEXT, "C-202401502")
+        self.goToAddress("/projekt/detail/C-202401502")
+
         self.ElementClick(By.CSS_SELECTOR, ".card:nth-child(6) .app-fx .material-icons")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "actionSubmitBtn")
