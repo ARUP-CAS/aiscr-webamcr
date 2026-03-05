@@ -9,5 +9,5 @@ class PianConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(PianConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import pian.signals

@@ -9,5 +9,5 @@ class EzConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(EzConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import ez.signals

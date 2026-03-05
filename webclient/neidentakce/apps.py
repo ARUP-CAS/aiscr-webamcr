@@ -9,5 +9,5 @@ class NeidentakceConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(NeidentakceConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import neidentakce.signals

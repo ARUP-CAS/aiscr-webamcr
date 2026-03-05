@@ -10,5 +10,5 @@ class LokalitaConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(LokalitaConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import lokalita.signals

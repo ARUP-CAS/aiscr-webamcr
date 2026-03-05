@@ -9,5 +9,5 @@ class HistorieConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(HistorieConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import historie.signals

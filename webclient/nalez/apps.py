@@ -9,5 +9,5 @@ class NalezConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(NalezConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import nalez.signals

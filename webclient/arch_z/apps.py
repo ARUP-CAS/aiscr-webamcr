@@ -9,5 +9,5 @@ class ArchZConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(ArchZConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import arch_z.signals

@@ -9,5 +9,5 @@ class UzivatelConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(UzivatelConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import uzivatel.signals

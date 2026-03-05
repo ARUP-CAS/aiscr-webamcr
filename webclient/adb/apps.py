@@ -9,5 +9,5 @@ class AdbConfig(AppConfig):
     def ready(self):
         """Provádí operaci ready."""
         super(AdbConfig, self).ready()
-        # noinspection PyUnresolvedReferences  # Potlačení varování IDE pro dynamický import signálů.
+        # noinspection PyUnresolvedReferences
         import adb.signals
