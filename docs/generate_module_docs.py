@@ -67,7 +67,7 @@ def check_content_changed(content: str, output_file: Path) -> bool:
 
     :param content: Hodnota parametru ``content``.
     :param output_file: Hodnota parametru ``output_file``.
-    :return: Návratová hodnota funkce.
+    :return: True, pokud se obsah změnil nebo soubor neexistuje
     """
     if not output_file.exists():
         return True
@@ -84,7 +84,7 @@ def extract_url_patterns(urls_file: Path) -> Tuple[Optional[str], List[Dict[str,
     """Extract URL patterns from a urls.py file.
 
     :param urls_file: Hodnota parametru ``urls_file``.
-    :return: Návratová hodnota funkce.
+    :return: Každý url_pattern je slovník s klíči: ``pattern``, ``view``, ``name``
     """
     try:
         with open(urls_file, "r", encoding="utf-8") as f:
@@ -125,7 +125,7 @@ def parse_path_call(node: ast.AST) -> Optional[Dict[str, str]]:
     """Parse a path() or re_path() call to extract URL pattern info.
 
     :param node: Hodnota parametru ``node``.
-    :return: Návratová hodnota funkce.
+    :return: ``dict: {'pattern': str, 'view': str, 'name': str} or None``
     """
     if not isinstance(node, ast.Call):
         return None
@@ -176,7 +176,10 @@ def parse_path_call(node: ast.AST) -> Optional[Dict[str, str]]:
 def generate_url_routing_rst() -> bool:
     """Generate URL routing documentation for all modules.
 
-    :return: Návratová hodnota funkce.
+    Vytvoří docs/source/04_django_aplikace/04_01_core/url_routing.rst
+    s tabulkami všech vzorů URL z urls.py každého modulu.
+
+    :return: True, pokud úspěšné, jinak false
     """
     global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/url_routing.rst"
@@ -258,7 +261,7 @@ def extract_signals(signals_file: Path) -> List[Dict[str, str]]:
     """Extract signal receivers from a signals.py file.
 
     :param signals_file: Hodnota parametru ``signals_file``.
-    :return: Návratová hodnota funkce.
+    :return: Seznam slovníků informací o signálech s klíči: ``function``, ``signal_type``, ``sender``, ``weak``
     """
     try:
         with open(signals_file, "r", encoding="utf-8") as f:
@@ -286,11 +289,11 @@ def extract_signals(signals_file: Path) -> List[Dict[str, str]]:
 
 
 def parse_receiver_decorator(decorator: ast.Call, function_name: str) -> Optional[Dict[str, str]]:
-    """Parse a @receiver() decorator to extract signal information.
+    """Analyzujte dekorátor @receiver(), abyste extrahovali informace o signálu.
 
-    :param decorator: Hodnota parametru ``decorator``.
-    :param function_name: Hodnota parametru ``function_name``.
-    :return: Návratová hodnota funkce.
+    :param decorator: AST Volací uzel představující @receiver()
+    :param function_name: Název dekorované funkce
+    :return: ``dict: {'function': str, 'signal_type': str, 'sender': str, 'weak': str} or None``
     """
     if len(decorator.args) == 0:
         return None
@@ -320,9 +323,12 @@ def parse_receiver_decorator(decorator: ast.Call, function_name: str) -> Optiona
 
 
 def generate_signals_rst() -> bool:
-    """Generate signals documentation for all modules.
+    """Vygeneruje dokumentaci signálů pro všechny moduly.
 
-    :return: Návratová hodnota funkce.
+    Vytvoří docs/source/04_django_aplikace/04_01_core/signals.rst
+    s tabulkami všech přijímačů signálů z každého modulu signals.py
+
+    :return: True v případě úspěchu, False v opačném případě.
     """
     global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/signals.rst"
@@ -401,10 +407,10 @@ def generate_signals_rst() -> bool:
 
 
 def extract_permissions(models_file: Path) -> List[str]:
-    """Extract action choices from Permissions class in models.py.
+    """Extrahujte možnosti akcí z třídy Permissions v models.py.
 
-    :param models_file: Hodnota parametru ``models_file``.
-    :return: Návratová hodnota funkce.
+    :param models_file: Cesta k souboru models.py.
+    :return: Seznam názvů akcí (např. ``adb_smazat``, ``vb_smazat``)
     """
     try:
         with open(models_file, "r", encoding="utf-8") as f:
@@ -440,9 +446,13 @@ def extract_permissions(models_file: Path) -> List[str]:
 
 
 def generate_permissions_rst() -> bool:
-    """Generate permissions documentation.
+    """Vygeneruje dokumentaci oprávnění.
 
-    :return: Návratová hodnota funkce.
+    Aktualizuje docs/source/04_django_aplikace/04_01_core/permissions.rst
+    připojením seznamu všech definovaných akcí z Permissions.actionChoices
+    za nadpis „Uživatelské akce řízené pomocí oprávnění”.
+
+    :return: True, pokud úspěšné, jinak False.
     """
     global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/permissions.rst"
@@ -575,7 +585,7 @@ def get_following_comment(parent: ET.Element, element: ET.Element) -> str:
 
 
 def collect_choice_element_names(choice_element: ET.Element) -> List[str]:
-    """Collect names of all xs:element nodes inside a choice block.
+    """Shromáždí názvy všech uzlů xs:element uvnitř bloku choice.
 
     :param choice_element: Hodnota parametru ``choice_element``.
     :return: Návratová hodnota funkce.
@@ -682,19 +692,19 @@ def extract_model_mappings(schema_root: ET.Element) -> List[Dict[str, str]]:
 
 
 def extract_xsd_version(schema_root: ET.Element) -> str:
-    """Extract version attribute from XSD schema root element.
+    """Extrahuje atribut verze z kořenového prvku schématu XSD.
 
-    :param schema_root: Hodnota parametru ``schema_root``.
-    :return: Návratová hodnota funkce.
+    :param schema_root: Kořenový prvek schématu XSD.
+    :return: Verze (např. „2.2“) nebo „neznámá“, pokud nebyla nalezena
     """
     return schema_root.attrib.get("version", "neznámá")
 
 
 def extract_django_command_info(command_file: Path) -> Dict[str, str]:
-    """Extract documentation information from a Django management command file.
+    """Extrahujte informace o dokumentaci ze souboru příkazů pro správu Django.
 
-    :param command_file: Hodnota parametru ``command_file``.
-    :return: Návratová hodnota funkce.
+    :param command_file: Cesta k příkazovému souboru.
+    :return: ``dict: {'name': str, 'help': str, 'docstring': str, 'arguments': list}``
     """
     try:
         with open(command_file, "r", encoding="utf-8") as f:
@@ -747,10 +757,10 @@ def extract_django_command_info(command_file: Path) -> Dict[str, str]:
 
 
 def extract_command_arguments(add_arguments_node: ast.FunctionDef) -> List[Dict[str, str]]:
-    """Extract argument definitions from add_arguments method.
+    """Extrahuje definice argumentů z metody add_arguments.
 
-    :param add_arguments_node: Hodnota parametru ``add_arguments_node``.
-    :return: Návratová hodnota funkce.
+    :param add_arguments_node: AST uzel metody add_arguments.
+    :return: Seznam slovníků s informacemi o argumentech s klíči: ``name``, ``type``, ``help``, ``default``
     """
     arguments = []
 
@@ -795,9 +805,12 @@ def extract_command_arguments(add_arguments_node: ast.FunctionDef) -> List[Dict[
 
 
 def generate_management_commands_rst() -> bool:
-    """Generate management commands documentation.
+    """Vygeneruje dokumentaci k příkazům pro správu.
 
-    :return: Návratová hodnota funkce.
+    Vytvoří docs/source/04_django_aplikace/04_01_core/management_commands.rst
+    s dokumentací ke všem příkazům pro správu Django v core/management/commands.
+
+    :return: True, pokud úspěšné, jinak False.
     """
     global changes_detected
     output_file = docs_dir / "source/04_django_aplikace/04_01_core/management_commands.rst"
@@ -1123,10 +1136,10 @@ def generate_export_structure_rst() -> bool:
 
 
 def has_meaningful_code(source_file: Path) -> bool:
-    """Check if a Python file has meaningful code (not just comments).
+    """Zkontroluje, zda soubor Python obsahuje smysluplný kód (nejen komentáře).
 
-    :param source_file: Hodnota parametru ``source_file``.
-    :return: Návratová hodnota funkce.
+    :param source_file: Cesta k souboru.
+    :return: rue, pokud soubor obsahuje smysluplný kód, False v opačném případě.
     """
     try:
         with open(source_file, "r", encoding="utf-8") as f:
@@ -1150,10 +1163,10 @@ def has_meaningful_code(source_file: Path) -> bool:
 
 
 def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """Extract docstrings from the Python module using AST parsing.
+    """Extrahujte docstrings z modulu Python pomocí AST parsování.
 
-    :param source_file: Hodnota parametru ``source_file``.
-    :return: Návratová hodnota funkce.
+    :param source_file: Cesta ke zdrojovému souboru.
+    :return: tuple: (třídy, funkce), kde každá je seznamem slovníků.
     """
     with open(source_file, "r", encoding="utf-8") as f:
         source_code = f.read()
@@ -1187,11 +1200,15 @@ def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Di
 
 
 def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
-    """Format a Google-style docstring for RST output.
+    """Formátuje docstring ve stylu Google pro výstup RST.
 
-    :param docstring: Hodnota parametru ``docstring``.
-    :param indent: Hodnota parametru ``indent``.
-    :return: Návratová hodnota funkce.
+    Převádí sekce Args:, Returns: atd. do správného formátu RST
+    s názvy argumentů uzavřenými v zpětných lomítkách. Názvy sekcí jsou přeloženy
+    do češtiny.
+
+    :param docstring: Docstring, který se má formátovat
+    :param indent: Prefix odsazení pro každý řádek.
+    :return: Seznam formátovaných řádků RST.
     """
     if not docstring:
         return []
@@ -1255,7 +1272,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
         return False
 
     def translate_section(section_name: str) -> str:
-        """Translate section name to Czech."""
+        """Přelokládá název sekce do češtiny."""
         name_without_colon = section_name.rstrip(":")
         return section_translations.get(name_without_colon, name_without_colon)
 
@@ -1304,8 +1321,8 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
         # Zpracuje sekce typu Args – formátuje je jako seznam se zpětnými apostrofy.
         if in_args_section and stripped:
             # Ověří, zda jde o řádek argumentu (název (typ): popis).
-            # or (name: description) format
-            # Supports: name, *args, **kwargs
+            # nebo formát (name: description)
+            # Podporuje: name, *args, **kwargs
             arg_match = re.match(r"^(\*{0,2}\w+)\s*(?:\(([^)]+)\))?\s*:\s*(.*)$", stripped)
             if arg_match:
                 arg_name = arg_match.group(1)
@@ -1492,13 +1509,13 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
 
 
 def generate_rst_explicit(source_file: Path, module_name: str, module_title: str, module_description: str) -> str:
-    """Generate RST file with explicit docstring content.
+    """Vygenerujte soubor RST s explicitním obsahem docstringu.
 
-    :param source_file: Hodnota parametru ``source_file``.
-    :param module_name: Hodnota parametru ``module_name``.
-    :param module_title: Hodnota parametru ``module_title``.
-    :param module_description: Hodnota parametru ``module_description``.
-    :return: Návratová hodnota funkce.
+    :param source_file: Cesta k zdrojovému souboru.
+    :param module_name: Plně kvalifikovaný název modulu.
+    :param module_title: Název souboru RST.
+    :param module_description: Popis modulu.
+    :return: Vygenerovaný obsah RST.
     """
     classes, functions = extract_docstrings(source_file)
 
@@ -1544,12 +1561,12 @@ def generate_rst_explicit(source_file: Path, module_name: str, module_title: str
 
 
 def generate_rst_autodoc(module_name: str, module_title: str, module_description: str) -> str:
-    """Generate RST file with Sphinx autodoc directives.
+    """Vygenerujte soubor RST pomocí direktiv Sphinx autodoc.
 
-    :param module_name: Hodnota parametru ``module_name``.
-    :param module_title: Hodnota parametru ``module_title``.
-    :param module_description: Hodnota parametru ``module_description``.
-    :return: Návratová hodnota funkce.
+    :param module_name: Plně kvalifikovaný název modulu.
+    :param module_title: Název souboru RST`.
+    :param module_description: HPopis modulu.
+    :return: Vygenerovaný obsah RST.
     """
     return f"""{module_title}
 {"=" * len(module_title)}
@@ -1565,11 +1582,11 @@ def generate_rst_autodoc(module_name: str, module_title: str, module_description
 
 
 def get_module_title_and_description(module_dir_name: str, filename: str) -> Tuple[str, str]:
-    """Get appropriate title and description for a module file.
+    """Získejte příslušný název a popis souboru modulu.
 
-    :param module_dir_name: Hodnota parametru ``module_dir_name``.
-    :param filename: Hodnota parametru ``filename``.
-    :return: Návratová hodnota funkce.
+    :param module_dir_name: Název adresáře modulu (např. ``adb``, ``core``).
+    :param filename: Název souboru Python (např. ``models.py``).
+    :return: tuple: (title, description)
     """
     file_info = FILE_TYPE_INFO.get(
         filename, {"suffix": filename.replace(".py", ""), "description": f'Modul {filename.replace(".py", "")}.'}
@@ -1585,13 +1602,13 @@ def get_module_title_and_description(module_dir_name: str, filename: str) -> Tup
 
 
 def generate_rst_for_file(source_file: Path, module_dir_name: str, output_dir: Path, mode: str = "autodoc") -> bool:
-    """Generate RST documentation for a single Python file.
+    """Vygenerujte dokumentaci RST pro jeden soubor Python.
 
-    :param source_file: Hodnota parametru ``source_file``.
-    :param module_dir_name: Hodnota parametru ``module_dir_name``.
-    :param output_dir: Hodnota parametru ``output_dir``.
-    :param mode: Hodnota parametru ``mode``.
-    :return: Návratová hodnota funkce.
+    :param source_file: Cesta ke zdrojovému souboru Python.
+    :param module_dir_name: Název adresáře modulu.
+    :param output_dir: Výstupní adresář pro soubory RST.
+    :param mode: Režim generování (``autodoc`` nebo ``explicit``).
+    :return: True v případě úspěchu, False v opačném případě.
     """
     global changes_detected
     filename = source_file.name
@@ -1625,12 +1642,12 @@ def generate_rst_for_file(source_file: Path, module_dir_name: str, output_dir: P
 
 
 def generate_index_rst(module_dir_name: str, generated_files: List[str], output_dir: Path) -> bool:
-    """Generate index.rst file with toctree of all generated modules.
+    """Vygenerujte soubor index.rst s toctree všech vygenerovaných modulů.
 
-    :param module_dir_name: Hodnota parametru ``module_dir_name``.
-    :param generated_files: Hodnota parametru ``generated_files``.
-    :param output_dir: Hodnota parametru ``output_dir``.
-    :return: Návratová hodnota funkce.
+    :param module_dir_name: Název adresáře modulu.
+    :param generated_files: Seznam vygenerovaných názvů souborů Python.
+    :param output_dir: Výstupní adresář.
+    :return: True v případě úspěchu, False v opačném případě
     """
     global changes_detected
     index_file = output_dir / "index.rst"
@@ -1695,11 +1712,11 @@ Dokumentace modulu {module_dir_name}.
 
 
 def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
-    """Process a single module directory.
+    """Zpracuje jeden adresář modulu.
 
-    :param module_dir_name: Hodnota parametru ``module_dir_name``.
-    :param mode: Hodnota parametru ``mode``.
-    :return: Návratová hodnota funkce.
+    :param module_dir_name: Název adresáře modulu.
+    :param mode: Režim generování (``autodoc`` nebo ``explicit``).
+    :return: True, pokud byly vygenerovány nějaké soubory.
     """
     source_dir = webclient_dir / module_dir_name
     output_dir = output_base_dir / module_dir_name
@@ -1753,9 +1770,9 @@ def process_module(module_dir_name: str, mode: str = "autodoc") -> bool:
 
 
 def get_all_modules() -> List[str]:
-    """Get all Django module directories from webclient.
+    """Získá všechny adresáře modulů Django z webového klienta.
 
-    :return: Návratová hodnota funkce.
+    :return: Seznam názvů adresářů modulů.
     """
     modules = []
     for item in sorted(webclient_dir.iterdir()):
@@ -1767,11 +1784,11 @@ def get_all_modules() -> List[str]:
 
 
 def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] = None) -> bool:
-    """Generate RST files for all modules or a specific module.
+    """Vygenerujte soubory RST pro všechny moduly nebo konkrétní modul.
 
-    :param mode: Hodnota parametru ``mode``.
-    :param specific_module: Hodnota parametru ``specific_module``.
-    :return: Návratová hodnota funkce.
+    :param mode: Režim generování (``autodoc`` nebo ``explicit``).
+    :param specific_module: Konkrétní modul, který se má zpracovat, nebo None pro všechny.
+    :return: True, pokud byla vygenerována nějaká dokumentace.
     """
     print("Generating documentation for webclient modules")
     print(f"Mode: {mode}")
@@ -1815,9 +1832,9 @@ def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] =
 
 
 def build_docs() -> bool:
-    """Build the HTML documentation using Sphinx.
+    """Vytvoří HTML dokumentaci pomocí Sphinx.
 
-    :return: Návratová hodnota funkce.
+    :return: True, pokud se sestavení podařilo, False v opačném případě.
     """
     print("\nBuilding HTML documentation...")
     try:
