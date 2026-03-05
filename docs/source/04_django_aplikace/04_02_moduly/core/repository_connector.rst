@@ -111,7 +111,7 @@ Třídy
 
       :return: Vrací načtená data odpovídající vstupním parametrům.
 
-   .. py:method:: _get_rdf_inset_data()
+   .. py:method:: _get_creator_rdf_data()
 
       Vrací rdf inset data.
 

@@ -5,6 +5,8 @@ import time
 
 from core.setting_models import CustomAdminSettings
 from django.urls import Resolver404, resolve
+from heslar.hesla_dynamicka import ADMIN_USER
+from uzivatel.models import User
 
 log_request_data = threading.local()
 logger = logging.getLogger("request.timer")
@@ -21,6 +23,8 @@ def get_slow_request_settings():
 
 # práh pro „pomalé“ požadavky (v sekundách)
 SLOW_REQUEST_THRESHOLD = get_slow_request_settings()
+
+ANONYMOUS = User.objects.filter(pk=ADMIN_USER).first().ident_cely
 
 
 def _resolve_view_info(request) -> dict:
@@ -68,7 +72,7 @@ class LogMiddleware:
         start = time.monotonic()
         log_request_data.url = request.get_full_path()
         log_request_data.user_id = (
-            request.user.ident_cely if request.user.is_authenticated else "anonymous"
+            request.user.ident_cely if request.user.is_authenticated else ANONYMOUS
         )  # slouží také pro zaznamenání ve Fedoře
         try:
             response = self.get_response(request)
@@ -113,4 +117,4 @@ class LogMiddleware:
     @staticmethod
     def get_user_id():
         """Vrací user id."""
-        return getattr(log_request_data, "user_id", "anonymous")
+        return getattr(log_request_data, "user_id", ANONYMOUS)
