@@ -166,10 +166,19 @@ jobs:
           format: spdx-json
           output: sbom-${{ matrix.component }}.json
 
-      - name: Attest SBOM
+      - name: Attest SBOM - GitHub
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          predicate-path: sbom-${{ matrix.component }}.json
+          predicate-type: https://spdx.dev/Document
+          push-to-registry: true
+
+      - name: Attest SBOM - DockerHub
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
           subject-digest: ${{ steps.push.outputs.digest }}
           predicate-path: sbom-${{ matrix.component }}.json
           predicate-type: https://spdx.dev/Document
