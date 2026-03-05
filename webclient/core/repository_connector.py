@@ -195,27 +195,38 @@ class FedoraRepositoryConnector:
 DELETE WHERE {{ <> dcterms:creator ?oldCreator .}};
 INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.user}> .}};"""
 
-    def _get_creator(self, url):
+    def _get_creator(self, url, only_uri=False):
         headers = {"Accept": "text/turtle"}
         r = self._send_request(url, FedoraRequestType.GET_METADATA, headers=headers)
         if r.status_code != 200:
             return None
         # Může být dcterms:creator "U-123" nebo dcterms:creator <info:fedora/AMCR/record/U-123>
-        pattern = re.compile(
-            r'dcterms:creator\s+(?:"([^"]+)"|<([^>]+)>)',
-            re.MULTILINE,
-        )
-        match = pattern.search(r.text)
-        if not match:
-            return None
-        value = match.group(1) or match.group(2)
+        if only_uri:
+            pattern = re.compile(
+                r"dcterms:creator\s+<([^>]+)>",
+                re.MULTILINE,
+            )
+            match = pattern.search(r.text)
+            if not match:
+                return None
+            value = match.group(1)
+        else:
+            pattern = re.compile(
+                r'dcterms:creator\s+(?:"([^"]+)"|<([^>]+)>)',
+                re.MULTILINE,
+            )
+            match = pattern.search(r.text)
+            if not match:
+                return None
+            value = match.group(1) or match.group(2)
+
         if "/" in value:
             return value.rstrip("/").split("/")[-1]
         return value.strip()
 
     def _update_creator(self, request_type: FedoraRequestType, uuid=None, ident_cely=None):
         url = self._get_request_url(request_type, uuid=uuid, ident_cely=ident_cely)
-        existing_creator = self._get_creator(url)
+        existing_creator = self._get_creator(url, only_uri=True)
         if existing_creator != self.user:
             self._send_request(
                 url,

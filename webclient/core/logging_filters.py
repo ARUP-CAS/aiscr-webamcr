@@ -6,5 +6,5 @@ class UserLogFilter(logging.Filter):
         from core.log_middleware import LogMiddleware
 
         record.url = LogMiddleware.get_request_url()
-        record.user_id = LogMiddleware.get_user_id() or "Anonymous"
+        record.user_id = LogMiddleware.get_user_id()
         return True
