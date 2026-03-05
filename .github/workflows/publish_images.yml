@@ -139,12 +139,18 @@ jobs:
         id: digests
         shell: bash
         run: |
-          DIGEST_GITHUB=$(docker buildx imagetools inspect \
-            ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:${{ env.VERSION_APP }} \
-            --format '{{json .Manifest.Digest}}' | tr -d '"')
-          DIGEST_DOCKERHUB=$(docker buildx imagetools inspect \
-            ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}:${{ env.VERSION_APP }} \
-            --format '{{json .Manifest.Digest}}' | tr -d '"')
+          for i in {1..5}; do
+            DIGEST_GITHUB=$(docker buildx imagetools inspect \
+              ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:${{ env.VERSION_APP }} \
+              --format '{{json .Manifest.Digest}}' | tr -d '"') && break
+            sleep 3
+          done
+          for i in {1..5}; do
+            DIGEST_DOCKERHUB=$(docker buildx imagetools inspect \
+              ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}:${{ env.VERSION_APP }} \
+              --format '{{json .Manifest.Digest}}' | tr -d '"') && break
+            sleep 3
+          done
           echo "github=${DIGEST_GITHUB}" >> $GITHUB_OUTPUT
           echo "dockerhub=${DIGEST_DOCKERHUB}" >> $GITHUB_OUTPUT
 
