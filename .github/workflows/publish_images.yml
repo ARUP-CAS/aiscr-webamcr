@@ -17,12 +17,43 @@ concurrency:
 env:
   REGISTRY_GITHUB: ghcr.io
   REGISTRY_DOCKERHUB: docker.io
+  COMMON_LABELS: |
+    org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
+    org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
+    org.opencontainers.image.licenses=GPL-3.0-or-later
 
 jobs:
   build_publish_images:
     if: startsWith(inputs.tag, 'v')
     name: Build and publish images
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [prod, proxy, redis]
+        include:
+          - component: prod
+            context: .
+            dockerfile: Dockerfile
+            image_name_github: arup-cas/aiscr-webamcr
+            image_name_dockerhub: aiscr/webamcr
+            description: Archaeological Map of the Czech Republic (AMCR)
+            url: https://github.com/ARUP-CAS/aiscr-webamcr
+
+          - component: proxy
+            context: ./proxy
+            dockerfile: Dockerfile
+            image_name_github: arup-cas/aiscr-webamcr-proxy
+            image_name_dockerhub: aiscr/webamcr-proxy
+            description: Archaeological Map of the Czech Republic (AMCR) - Proxy Server
+            url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy
+
+          - component: redis
+            context: ./redis
+            dockerfile: Dockerfile
+            image_name_github: arup-cas/aiscr-webamcr-redis
+            image_name_dockerhub: aiscr/webamcr-redis
+            description: Archaeological Map of the Czech Republic (AMCR) - Redis Server
+            url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis
 
     permissions:
       id-token: write
@@ -32,13 +63,15 @@ jobs:
       attestations: write
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag }}
           fetch-depth: 0
 
+      # Pin image timestamp to last commit for reproducible builds.
+      # VERSION_APP strips the leading 'v' (v1.2.3 → 1.2.3) to keep
+      # registry tags consistent with the original semver behaviour.
       - name: Compute build metadata
         run: |
           EPOCH=$(git log -1 --pretty=%ct)
@@ -48,188 +81,109 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
 
-      - name: Setup buildx
+      - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login GHCR
+      - name: Log in to the GitHub registry
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY_GITHUB }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Login DockerHub
+      - name: Log in to the DockerHub registry
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Generate bake definition
-        run: |
-          if [ "${{ inputs.latest }}" = "true" ]; then
-            PROD_LATEST=',"${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:latest","${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr:latest"'
-            PROXY_LATEST=',"${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:latest","${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-proxy:latest"'
-            REDIS_LATEST=',"${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:latest","${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-redis:latest"'
-          else
-            PROD_LATEST=""
-            PROXY_LATEST=""
-            REDIS_LATEST=""
-          fi
-
-          cat <<EOF > docker-bake.hcl
-          group "default" {
-            targets = ["prod", "proxy", "redis"]
-          }
-
-          target "common" {
-            pull = true
-
-            args = {
-              VERSION_APP        = "${VERSION_APP}"
-              TAG_APP            = "${{ inputs.tag }}"
-              SOURCE_DATE_EPOCH  = "${SOURCE_DATE_EPOCH}"
-            }
-
-            labels = {
-              "org.opencontainers.image.authors"       = "Archaeological Information System of the Czech Republic (AIS CR)"
-              "org.opencontainers.image.documentation" = "https://aiscr-webamcr.readthedocs.io/"
-              "org.opencontainers.image.licenses"      = "GPL-3.0-or-later"
-              "org.opencontainers.image.version"       = "${VERSION_APP}"
-              "org.opencontainers.image.revision"      = "${{ github.sha }}"
-              "org.opencontainers.image.created"       = "${SOURCE_DATE_ISO}"
-            }
-          }
-
-          target "prod" {
-            inherits   = ["common"]
-            context    = "."
-            dockerfile = "Dockerfile"
-
-            tags = [
-              "${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:${{ inputs.tag }}",
-              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr:${{ inputs.tag }}"${PROD_LATEST}
-            ]
-
-            labels = {
-              "org.opencontainers.image.description" = "Archaeological Map of the Czech Republic (AMCR)"
-              "org.opencontainers.image.url"         = "https://github.com/ARUP-CAS/aiscr-webamcr"
-            }
-
-            cache-from = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:buildcache"]
-            cache-to   = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr:buildcache,mode=min"]
-          }
-
-          target "proxy" {
-            inherits   = ["common"]
-            context    = "./proxy"
-            dockerfile = "Dockerfile"
-
-            tags = [
-              "${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:${{ inputs.tag }}",
-              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-proxy:${{ inputs.tag }}"${PROXY_LATEST}
-            ]
-
-            labels = {
-              "org.opencontainers.image.description" = "Archaeological Map of the Czech Republic (AMCR) - Proxy Server"
-              "org.opencontainers.image.url"         = "https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/proxy"
-            }
-
-            cache-from = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:buildcache"]
-            cache-to   = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy:buildcache,mode=min"]
-          }
-
-          target "redis" {
-            inherits   = ["common"]
-            context    = "./redis"
-            dockerfile = "Dockerfile"
-
-            tags = [
-              "${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:${{ inputs.tag }}",
-              "${{ env.REGISTRY_DOCKERHUB }}/aiscr/webamcr-redis:${{ inputs.tag }}"${REDIS_LATEST}
-            ]
-
-            labels = {
-              "org.opencontainers.image.description" = "Archaeological Map of the Czech Republic (AMCR) - Redis Server"
-              "org.opencontainers.image.url"         = "https://github.com/ARUP-CAS/aiscr-webamcr/tree/${{ inputs.tag }}/redis"
-            }
-
-            cache-from = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:buildcache"]
-            cache-to   = ["type=registry,ref=${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis:buildcache,mode=min"]
-          }
-          EOF
-
-      - name: Build and push images
-        id: bake
-        uses: docker/bake-action@v5
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          push: true
-          files: docker-bake.hcl
+          images: |
+            ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
+            ${{ matrix.image_name_dockerhub }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.tag }}
+            type=raw,value=latest,enable=${{ inputs.latest }}
+          labels: |
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.url=${{ matrix.url }}
+            org.opencontainers.image.version=${{ env.VERSION_APP }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ env.SOURCE_DATE_ISO }}
+            ${{ env.COMMON_LABELS }}
 
-      - name: Extract digests
-        id: digests
-        run: |
-          METADATA='${{ steps.bake.outputs.metadata }}'
-          echo "prod=$(jq -r '."prod"."containerimage.digest"'   <<< "$METADATA")" >> $GITHUB_OUTPUT
-          echo "proxy=$(jq -r '."proxy"."containerimage.digest"' <<< "$METADATA")" >> $GITHUB_OUTPUT
-          echo "redis=$(jq -r '."redis"."containerimage.digest"' <<< "$METADATA")" >> $GITHUB_OUTPUT
+      - name: Build and push image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.context }}/${{ matrix.dockerfile }}
+          push: true
+          pull: true
+          sbom: true
+          provenance: mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ env.VERSION_APP }}
+            TAG_APP=${{ inputs.tag }}
+            SOURCE_DATE_EPOCH=${{ env.SOURCE_DATE_EPOCH }}
+          cache-from: type=registry,ref=${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:buildcache,mode=max
 
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
 
-      - name: Sign images
+      - name: Sign image
         run: |
-          cosign sign --yes ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr@${{ steps.digests.outputs.prod }}
-          cosign sign --yes ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy@${{ steps.digests.outputs.proxy }}
-          cosign sign --yes ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis@${{ steps.digests.outputs.redis }}
+          cosign sign --yes \
+            ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.push.outputs.digest }}
+
+      - name: Attest build provenance - GitHub
+        id: attest_github
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attest build provenance - DockerHub
+        id: attest_dockerhub
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
 
       - name: Generate SBOM
-        uses: aquasecurity/trivy-action@v0.24.0
+        uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr@${{ steps.digests.outputs.prod }}
+          image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.push.outputs.digest }}
           format: spdx-json
-          output: sbom.json
+          output: sbom-${{ matrix.component }}.json
 
       - name: Attest SBOM
         uses: actions/attest@v4
         with:
-          subject-name: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr
-          subject-digest: ${{ steps.digests.outputs.prod }}
-          predicate-path: sbom.json
+          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          predicate-path: sbom-${{ matrix.component }}.json
           predicate-type: https://spdx.dev/Document
           push-to-registry: true
 
-      - name: Attest provenance (prod)
-        uses: actions/attest@v4
-        with:
-          subject-name: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr
-          subject-digest: ${{ steps.digests.outputs.prod }}
-          predicate-type: https://slsa.dev/provenance/v1
-          push-to-registry: true
-
-      - name: Attest provenance (proxy)
-        uses: actions/attest@v4
-        with:
-          subject-name: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-proxy
-          subject-digest: ${{ steps.digests.outputs.proxy }}
-          predicate-type: https://slsa.dev/provenance/v1
-          push-to-registry: true
-
-      - name: Attest provenance (redis)
-        uses: actions/attest@v4
-        with:
-          subject-name: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr-redis
-          subject-digest: ${{ steps.digests.outputs.redis }}
-          predicate-type: https://slsa.dev/provenance/v1
-          push-to-registry: true
-
       - name: Vulnerability scan
-        uses: aquasecurity/trivy-action@v0.24.0
+        uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: ${{ env.REGISTRY_GITHUB }}/arup-cas/aiscr-webamcr@${{ steps.digests.outputs.prod }}
+          image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.push.outputs.digest }}
           format: sarif
-          output: trivy.sarif
+          output: trivy-${{ matrix.component }}.sarif
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: trivy.sarif
+          sarif_file: trivy-${{ matrix.component }}.sarif
