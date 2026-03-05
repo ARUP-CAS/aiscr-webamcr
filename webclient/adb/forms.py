@@ -209,19 +209,11 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
     """
     Funkce která vrací formulář VB pro formset.
 
-    Args:
-    pian (pian): objekt PIAN.
-
-    niveleta (niveleta): niveleta objekt.
-
-    not_readonly (boolean): nastavuje formulář na readonly.
-
-    Returns:
-    CreateVysovyBodForm: django model formulář VB
-
-    :param pian: Popis parametru ``pian``.
-    :param niveleta: Popis parametru ``niveleta``.
-    :param not_readonly: Popis parametru ``not_readonly``.
+    :param pian: objekt PIAN.
+    :param niveleta: niveleta objekt.
+    :param not_readonly: nastavuje formulář na readonly.
+    
+    :return: django model formulář VB.
     """
 
     class CreateVyskovyBodForm(forms.ModelForm):
