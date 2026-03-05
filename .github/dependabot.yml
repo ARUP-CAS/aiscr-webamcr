@@ -42,4 +42,5 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 30
+    target-branch: test
  
