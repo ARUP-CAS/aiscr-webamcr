@@ -27,6 +27,7 @@ jobs:
     if: startsWith(inputs.tag, 'v')
     name: Build and publish images
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         component: [prod, proxy, redis]
@@ -70,6 +71,7 @@ jobs:
           fetch-depth: 0
 
       - name: Compute build metadata
+        shell: bash
         run: |
           EPOCH=$(git log -1 --pretty=%ct)
           echo "SOURCE_DATE_EPOCH=${EPOCH}" >> $GITHUB_ENV
@@ -133,22 +135,36 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:buildcache,mode=max
 
+      - name: Extract per-registry digests
+        id: digests
+        shell: bash
+        run: |
+          DIGEST_GITHUB=$(docker buildx imagetools inspect \
+            ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:${{ env.VERSION_APP }} \
+            --format '{{json .Manifest.Digest}}' | tr -d '"')
+          DIGEST_DOCKERHUB=$(docker buildx imagetools inspect \
+            ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}:${{ env.VERSION_APP }} \
+            --format '{{json .Manifest.Digest}}' | tr -d '"')
+          echo "github=${DIGEST_GITHUB}" >> $GITHUB_OUTPUT
+          echo "dockerhub=${DIGEST_DOCKERHUB}" >> $GITHUB_OUTPUT
+
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
 
       - name: Sign image
+        shell: bash
         run: |
           cosign sign --yes \
-            ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.push.outputs.digest }}
+            ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           cosign sign --yes \
-            ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}@${{ steps.push.outputs.digest }}
+            ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}@${{ steps.digests.outputs.dockerhub }}
 
       - name: Attest build provenance - GitHub
         id: attest_github
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.digests.outputs.github }}
           predicate-type: https://slsa.dev/provenance/v1
           push-to-registry: true
 
@@ -157,7 +173,7 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.digests.outputs.dockerhub }}
           predicate-type: https://slsa.dev/provenance/v1
           push-to-registry: true
 
@@ -166,7 +182,7 @@ jobs:
         id: sbom
         uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.push.outputs.digest }}
+          image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: spdx-json
           output: sbom-${{ matrix.component }}.json
 
@@ -176,7 +192,7 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.digests.outputs.github }}
           predicate-path: sbom-${{ matrix.component }}.json
           predicate-type: https://spdx.dev/Document
           push-to-registry: true
@@ -187,7 +203,7 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.digests.outputs.dockerhub }}
           predicate-path: sbom-${{ matrix.component }}.json
           predicate-type: https://spdx.dev/Document
           push-to-registry: true
@@ -197,7 +213,7 @@ jobs:
         id: vulnscan
         uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.push.outputs.digest }}
+          image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: sarif
           output: trivy-${{ matrix.component }}.sarif
 
