@@ -2,6 +2,7 @@ Django==5.2.12
 psycopg2-binary==2.9.11
 simplejson==3.20.2
 django-crispy-forms==2.6
+crispy-bootstrap5==2025.4
 django-recaptcha==4.1.0
 django_registration==5.2.1
 django-filter==25.2
@@ -59,6 +60,5 @@ sphinxcontrib-googleanalytics==0.5
 sphinxcontrib-mermaid
 SPARQLWrapper==2.0.0
 freezegun==1.5.5
-sphinx-rtd-theme==3.1.0
 sphinx==9.1.0
-crispy-bootstrap5==2025.4
+sphinx-rtd-theme==3.1.0
