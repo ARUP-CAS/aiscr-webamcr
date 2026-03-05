@@ -2993,7 +2993,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_komponenta")
 
-        # Vytvoření dokumentační části
+        # Vytvoření části dokumentu
         time = self.getTime()
         self.ElementClick(By.ID, "others_doc")
         with WaitForPageLoad(self.driver):
@@ -3023,7 +3023,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/create_dokument_cast")
 
-        # Smazání dokumentační části
+        # Smazání části dokumentu
         time = self.getTime()
         with WaitForPageLoad(self.driver):
             self.goToAddress("/id/X-C-9000000002A")
@@ -3098,7 +3098,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_138/delete_AZ")
 
-        # Vytvoření existující dokumentační části
+        # Vytvoření existující části dokumentu
         self.createFedoraRecord("X-M-91558334A", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
         self.uploadFileToFedora(534769, "projekt/tests/resources/test.pdf", "archivar")
@@ -3334,7 +3334,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/ident_cely_PIAN")
         self.check_fedora_delete([f"record/{pian}"])
 
-        # Vytvoření DJ v katastru
+        # Vytvoření DJ katastru
         self.createFedoraRecord("ruian-693154", "archivar")
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000011A-D01-typ .btn")
@@ -3343,7 +3343,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "editDjSubmitButton")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/create_DJ_katastr")
 
-        # Úprava DJ v katastru
+        # Úprava DJ katastru
         self.createFedoraRecord("ruian-600016", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "others")
@@ -3356,7 +3356,7 @@ class AkceSamostatneAkce(AkceTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "arch_z/tests/resources/test_139/update_DJ_katastr")
 
-        # Smazání DJ v katastru
+        # Smazání DJ katastru
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000011A-D01-typ .btn")
         self.ElementClick(By.ID, "bs-select-1-1")
