@@ -2,6 +2,7 @@ import logging
 
 from core.constants import ROLE_BADATEL_ID
 from core.ident_cely import get_uzivatel_ident
+from core.log_middleware import LogMiddleware
 from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
 from django.contrib.auth import user_logged_in
 from django.contrib.auth.hashers import check_password
@@ -159,6 +160,7 @@ def send_account_confirmed_email(sender, instance: User, created):
 @receiver(pre_delete, sender=User, weak=False)
 def delete_user_connections(sender, instance, *args, **kwargs):
     logger.debug("uzivatel.signals.delete_user_connections.start", extra={"ident_cely": instance.ident_cely})
+    instance.deleted_by_user = User.objects.filter(ident_cely=LogMiddleware.get_user_id()).first()
     Historie.save_record_deletion_record(record=instance)
     if instance.active_transaction:
         fedora_transaction = instance.active_transaction

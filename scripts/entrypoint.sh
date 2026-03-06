@@ -98,4 +98,6 @@ for lang_item in ${languages[@]}; do
 
 done
 
+python3 manage.py send_test_emails
+
 sudo uwsgi /scripts/uwsgi_site.ini
