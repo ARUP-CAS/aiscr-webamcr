@@ -4,7 +4,6 @@ import os
 import re
 from dataclasses import dataclass
 
-# import xml.etree.ElementTree as ET  # Ponecháno pro případ návratu k alternativnímu parseru.
 from typing import Optional
 
 from adb.models import VyskovyBod
@@ -256,7 +255,6 @@ class DocumentGenerator:
                 field_name = attribute_name.lower().replace("st_srid", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}").srid
             if attribute_value is not None and "st_asgml" in attribute_name.lower():
-                # ET.register_namespace("gml", "http://www.opengis.net/gml/3.2")  # Alternativní registrace namespace.
                 attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
                 attribute_value = ET.fromstring(attribute_value)
         else:
