@@ -52,7 +52,7 @@ Funkce
 
    :param name: Název proměnné prostředí.
    :param default: Výchozí hodnota použitá při neexistenci proměnné.
-   :return: ```True```, pokud hodnota odpovídá pravdivému příznaku.
+   :return: ``True``, pokud hodnota odpovídá pravdivému příznaku.
 
 .. py:function:: iter_python_files(paths, bypass_exclusions)
 
@@ -60,7 +60,7 @@ Funkce
 
    :param paths: Seznam souborů nebo adresářů ke kontrole.
    :param bypass_exclusions: Pokud ``True``, nepoužije se filtr ignorovaných adresářů.
-   :return: Generátor cest k nalezeným ```.py``` souborům.
+   :return: Generátor cest k nalezeným ``.py`` souborům.
 
 .. py:function:: main()
 
