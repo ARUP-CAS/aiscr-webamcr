@@ -785,6 +785,38 @@
       }
   });
 
+  // Close other dropdowns after one is shown
+  $(document).on('shown.bs.dropdown', function(e) {
+      // Get the button that was clicked
+      const clickedButton = e.relatedTarget;
+      
+      // Close all other dropdown menus
+      const allToggles = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+      allToggles.forEach(toggle => {
+          if (toggle !== clickedButton) {
+              // Remove show class from the menu
+              const menu = toggle.nextElementSibling;
+              if (menu && menu.classList.contains('dropdown-menu')) {
+                  menu.classList.remove('show');
+              }
+          }
+      });
+  });
+
+  // Close dropdown when clicking outside of it (but not for bootstrap-select)
+  $(document).on('click', function(e) {
+      // Don't close if clicking on a dropdown button, inside a dropdown menu, or inside bootstrap-select
+      if ($(e.target).closest('[data-bs-toggle="dropdown"]').length === 0 && 
+          $(e.target).closest('.dropdown-menu').length === 0 &&
+          $(e.target).closest('.bootstrap-select').length === 0) {
+          // Close all open dropdowns (but not bootstrap-select)
+          const allMenus = document.querySelectorAll('.dropdown-menu.show:not(.bootstrap-select .dropdown-menu)');
+          allMenus.forEach(menu => {
+              menu.classList.remove('show');
+          });
+      }
+  });
+
 </script>
 <script src="{% static 'js/copyIdentLink.js' %}"></script>
 <script src="{% static 'js/theme-toggle.js' %}"></script>
