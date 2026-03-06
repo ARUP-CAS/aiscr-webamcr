@@ -956,7 +956,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
 
         :param response_text: Číselná hodnota ``response_text`` použitá při výpočtu nebo transformaci.
 
-            :return: Vrací proměnná ``result``.
+            :return: Vrací proměnná ``result`` - list dictů: {"datetime": datetime, "timestamp": str}
         """
         result = []
         for line in response_text.splitlines():
@@ -1830,12 +1830,12 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         Inicializuje instanci třídy.
 
-        :param main_record: Parametr ``main_record`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param main_record: Parametr ``main_record`` slouží jako vstup pro logiku funkce ``__init__``. Hlavní záznam (ModelWithMetadata), ke kterému se transakce váže.
         :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
-        :param success_message: Parametr ``success_message`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param error_message: Parametr ``error_message`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param uid: Identifikátor `uid` používaný pro dohledání cílového záznamu.
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param success_message: Parametr ``success_message`` slouží jako vstup pro logiku funkce ``__init__``. Zpráva zobrazená při úspěšném dokončení.
+        :param error_message: Parametr ``error_message`` slouží jako vstup pro logiku funkce ``__init__``. Zpráva zobrazená při chybě.
+        :param uid: Identifikátor `uid` používaný pro dohledání cílového záznamu. Existující UID transakce; pokud není zadáno, vytvoří se nová transakce.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``__init__``. HTTP request pro předání kontextu.
         :param suppress_message: Pokud ``True``, výsledek transakce se neukládá do Redis.
         :param redirect_on_error: Pokud ``True``, při chybě se použije přesměrování.
         :param redirect_url: URL pro přesměrování při chybě transakce.
@@ -1917,7 +1917,7 @@ class FedoraTransaction(BaseFedoraTransaction):
 
     def _send_transaction_request(self, operation=FedoraTransactionOperation.COMMIT):
         """
-        Odešle transaction request.
+        Odešle požadavek na commit nebo rollback transakce do Fedory.
 
         :param operation: Parametr ``operation`` se předává do volání ``FedoraTransactionUnsupportedOperationError()``, ovlivňuje větvení podmínek.
         :return: Textová reprezentace UID transakce.
@@ -2014,7 +2014,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):
-        """Vytvoří transaction. v aplikaci.
+        """Vytvoří novou transakci ve Fedoře.
 
         :raises FedoraTransactionNoIDError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``; nebo při splnění podmínky ``match``.
         """
@@ -2046,7 +2046,13 @@ class FedoraTransaction(BaseFedoraTransaction):
 
     @staticmethod
     def call_digiarchiv_update():
-        """Provádí operaci call digiarchiv update."""
+        """Provádí operaci call digiarchiv update.
+
+        Spustí asynchronní aktualizaci digiarchívu přes Celery.
+
+        Kontroluje, zda úloha již není naplánovaná nebo běží, aby nedocházelo k duplicitnímu spuštění.
+        
+        """
         from cron.tasks import call_digiarchiv_update_task
 
         logger.debug("core_repository_connector.FedoraTransaction.call_digiarchiv_update.start")
