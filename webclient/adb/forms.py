@@ -331,7 +331,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             """
             Init metoda pro vytvoření formuláře.
 
-            :param args: Dodatečné poziční argumenty předané konstruktoru formuláře.
+            :param args: Dodatečné poziční argumenty předané konstruktoru formuláře. Konkrétně not_readonly (boolean): nastavuje formulář na readonly.
             :param kwargs: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
             """
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
