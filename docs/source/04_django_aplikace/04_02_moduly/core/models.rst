@@ -197,7 +197,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      Textová reprezentace objektu.
+      :return: Textová reprezentace odstávky systému.
 
 
 .. py:class:: Permissions

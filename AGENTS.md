@@ -97,6 +97,26 @@ Dle typu zmen:
 
 Vysledek overeni vzdy strucne popsat v PR/summary (`co bylo spusteno`, `co proslo`, `co nebylo mozne spustit`).
 
+### Fallback bez Pythonu
+
+Pokud v prostredi neni dostupny `python`/`python3`/`py`:
+
+1. Uved tuto skutecnost explicitne v summary/PR.
+2. Proved aspon statickou kontrolu diffu a formatu:
+   - `git diff -- '*.py'`
+   - `git diff -- docs/source/09_testovani/selenium_testy.rst`
+3. Docstringy kontroluj manualne podle checklistu vyse (`:param:`, `:return:`, `:raises:` a bez `Args:/Returns:/Raises:`).
+4. Pokud kontrolni skripty nelze spustit, nikdy netvrd, ze probehly.
+
+## Selenium popisy vs test branch checklist
+
+Pri kontrole vyznamu popisu Selenium testu proti vetvi `test` proved:
+
+1. `git diff -w test -- webclient/*/tests/test_selenium.py`
+2. `git diff -w test -- docs/source/09_testovani/selenium_testy.rst`
+3. Zmeny opravuj jen tam, kde doslo k posunu vyznamu; ciste formatovaci zmeny ponech.
+4. Pokud je `selenium_testy.rst` generovany skriptem, po upravach over konzistenci s `docs/generate_selenium_test_docs.py`.
+
 ## Git a PR workflow
 
 - Branch naming: preferovat `feature/<issue>` nebo `bugfix/<issue>` (viz `CONTRIBUTING.md`).
@@ -107,7 +127,6 @@ Vysledek overeni vzdy strucne popsat v PR/summary (`co bylo spusteno`, `co prosl
   - Description
   - Testing
 - Pokud prace jeste neni pripravena k review, pouzit Draft PR.
-
 ## Co vlastnici a CI typicky ocekavaji
 
 - CODEOWNERS pro repozitar: `@motyc`, `@jhavrlant`

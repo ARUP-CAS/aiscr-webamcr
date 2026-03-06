@@ -29,6 +29,7 @@ Třídy
 
       :param csv_sheet: Záznam/objekt ``csv_sheet``, který funkce čte, validuje nebo upravuje.
       :return: Vrací výsledek operace.
+      :raises WrongCSVError: Pokud CSV neodpovídá očekávané struktuře sloupců.
 
    .. py:method:: validate_and_prepare_sheet()
 
@@ -36,6 +37,7 @@ Třídy
 
       :param sheet: Záznam/objekt ``sheet``, který funkce čte, validuje nebo upravuje.
       :return: Vrací výsledek operace.
+      :raises WrongSheetError: Pokud list neodpovídá očekávanému formátu importní šablony.
 
    .. py:method:: find_missing_urls()
 

@@ -86,6 +86,7 @@ class PermissionService:
 
         :param csv_sheet: Záznam/objekt ``csv_sheet``, který funkce čte, validuje nebo upravuje.
         :return: Vrací výsledek operace.
+        :raises WrongCSVError: Pokud CSV neodpovídá očekávané struktuře sloupců.
         """
         expected = [
             "app",
@@ -120,6 +121,7 @@ class PermissionService:
 
         :param sheet: Záznam/objekt ``sheet``, který funkce čte, validuje nebo upravuje.
         :return: Vrací výsledek operace.
+        :raises WrongSheetError: Pokud list neodpovídá očekávanému formátu importní šablony.
         """
         if (
             not sheet.columns[3] == PERMISSIONS_SHEET_ZAKLADNI_NAME

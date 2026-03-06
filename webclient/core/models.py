@@ -772,7 +772,7 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
         """
                Vrací textovou reprezentaci objektu.
 
-        Textová reprezentace objektu.
+        :return: Textová reprezentace odstávky systému.
         """
         return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
 
