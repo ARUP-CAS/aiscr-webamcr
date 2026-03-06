@@ -1959,7 +1959,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
     """
     Funkce pro získaní dictionary contextu dokumentační jednotky.
 
-    :param app: ruh archeologického záznamu ro který se daný context počítá.
+    :param app: druh archeologického záznamu ro který se daný context počítá.
     :param jednotka: model DokumentacniJednotka pro který se daný context počítá.
     :param jednotky: list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
     :param show: dictionary pro zobrazení možnosti uživatele na stránce.
