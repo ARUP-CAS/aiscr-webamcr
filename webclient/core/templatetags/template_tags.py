@@ -98,6 +98,18 @@ def querystring_multi(parser, token):
     """
     Provádí operaci querystring multi.
 
+    Vytvoří URL (obsahující pouze dotazový řetězec [včetně „?“]) odvozený
+    z dotazového řetězce aktuální URL, a to jeho aktualizací pomocí zadaných
+    klíčových argumentů.
+    
+    Příklad (předpokládejme, že URL je „/abc/?gender=male&name=Brad“):
+    # {% querystring „name“=„abc“ „age“=15 %}
+    ?name=abc&gender=male&age=15
+    {% querystring „name“=„Ayers“ „age“=20 %}
+    ?name=Ayers&gender=male&age=20
+    {% querystring „name“=‚Ayers‘ without „gender“ %}
+    ?name=Ayers
+
     :param parser: Parametr ``parser`` předává se do volání ``token_kwargs()``, pracuje se s atributy ``compile_filter``.
     :param token: Textový nebo strukturální vstup `token` používaný při sestavení nebo zpracování obsahu.
 
