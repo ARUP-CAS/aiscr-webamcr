@@ -12,7 +12,14 @@ Třídy
 
    **Metody:**
 
-   .. py:method:: _preprocess_image()
+   .. py:method:: get()
+
+
+.. py:class:: DownloadThumbnailDZ
+
+   Třída pohledu pro nahrání miniatury do DropZone při obnovení stránky.
+
+   **Metody:**
 
       Připraví binární obsah obrázku před odesláním klientovi.
 
@@ -69,6 +76,8 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      
+   .. py:method:: dispatch()
 
 
 .. py:class:: UploadFileView

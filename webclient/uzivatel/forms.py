@@ -562,3 +562,11 @@ class AuthActivationForm(ActivationForm):
     """Implementuje komponentu ``AuthActivationForm`` v rámci aplikace."""
 
     activation_key = forms.CharField(label=_("templates.djangoRegistration.activationKey.label"))
+
+
+class TestEmailForm(forms.Form):
+    """
+    Formulář pro odeslání testovacího mailu v administraci.
+    """
+
+    email = forms.EmailField(label=_("uzivatel.forms.TestEmailForm.email_address"), required=True)

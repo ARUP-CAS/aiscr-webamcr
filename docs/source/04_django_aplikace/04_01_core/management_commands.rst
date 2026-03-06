@@ -241,6 +241,14 @@ Alternativně je možné vše zapsat do jednoho příkazu (bez otevření intera
      - core.management.commands.save_single_file_from_storage.Command.add_arguments.disable_antivirus_help
 
 
+``send_test_emails``
+--------------------
+
+.. automodule:: core.management.commands.send_test_emails
+   :members: Command
+   :undoc-members:
+
+
 ``transform_to_sjtsk``
 ----------------------
 

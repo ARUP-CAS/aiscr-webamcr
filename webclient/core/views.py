@@ -69,7 +69,14 @@ from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.core.validators import URLValidator
 from django.db import transaction
 from django.db.models import FilteredRelation, Q, Value
-from django.http import FileResponse, Http404, HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse,
+    StreamingHttpResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -184,7 +191,6 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             logger.debug("core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"pk": soubor_pk})
             connector.delete_binary_file_completely(soubor)
             fedora_transaction.mark_transaction_as_closed()
-            session_identifier.remove_file_reference(pk)
             return JsonResponse({"success": True})
         except FedoraUpdatedByAnotherTransactionError as err:
             logger.debug(
@@ -322,16 +328,6 @@ class DownloadFile(LoginRequiredMixin, View):
     thumb_small = False
     thumb_large = False
 
-    @staticmethod
-    def _preprocess_image(file_content: BytesIO) -> BytesIO:
-        """
-        Připraví binární obsah obrázku před odesláním klientovi.
-
-        :param file_content: Obsah souboru načtený z repository.
-        :return: Upravený nebo původní obsah obrázku.
-        """
-        return file_content
-
     def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
         """
         Vrátí požadovaný soubor nebo jeho náhled po ověření vazby k záznamu.
@@ -364,6 +360,30 @@ class DownloadFile(LoginRequiredMixin, View):
                 return soubor.large_thumbnail
             elif soubor.content_file_response is not None:
                 return soubor.content_file_response
+        raise Http404
+
+
+class DownloadThumbnailDZ(View):
+    """
+    Třída pohledu pro nahrání miniatury do DropZone při obnovení stránky.
+    """
+
+    def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
+        if not request.session.get("session_uuid"):
+            raise PermissionDenied
+        session_identifier = SessionIdentifier(request)
+        cache_ident = session_identifier.get_ident()
+        file_can_download = session_identifier.file_exists(pk)
+        if cache_ident is None or ident_cely != cache_ident or not file_can_download:
+            raise PermissionDenied
+        try:
+            check_soubor_vazba(typ_vazby, ident_cely, pk)
+        except ZaznamSouborNotmatching as e:
+            logger.debug(e)
+            raise PermissionDenied
+        soubor: Soubor = get_object_or_404(Soubor, id=pk)
+        if soubor.repository_uuid and soubor.small_thumbnail is not None:
+            return soubor.small_thumbnail
         raise Http404
 
 
@@ -421,6 +441,7 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
+        self.session_identifier.clear_cached_files()
         next_url = request.GET.get("next", "core:home")
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
             safe_redirect = next_url
@@ -435,12 +456,23 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
+        pk_set = self.session_identifier.get_cached_files()
+        queryset = Soubor.objects.filter(pk__in=list(pk_set))
+        seznam_mock = [obj.getMock() for obj in queryset]
+        json_mock = json.dumps(seznam_mock, ensure_ascii=False)
         context["ident_cely"] = self.kwargs.get("ident_cely")
         context["back_url"] = self.request.GET.get("next", "/")
         context["file_id"] = self.kwargs.get("file_id")
         context["typ_vazby"] = self.kwargs.get("typ_vazby")
         context["info_tooltip"] = _("core.upload_file_replace.tooltip")
+        context["seznam_mock"] = json_mock
         return context
+
+    def dispatch(self, request, *args, **kwargs):
+        ident_cely = self.kwargs.get("ident_cely")
+        self.session_identifier = SessionIdentifier(request)
+        self.session_identifier.set_ident(ident_cely)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class UploadFileView(LoginRequiredMixin, TemplateView):
@@ -1010,6 +1042,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             response_data["id"] = soubor_instance.pk
             soubor_instance.close_active_transaction_when_finished = True
             soubor_instance.save()
+            SessionIdentifier(request).add_file_reference(soubor_instance.pk)
             return JsonResponse(response_data, status=200)
         else:
             soubor_instance.close_active_transaction_when_finished = True

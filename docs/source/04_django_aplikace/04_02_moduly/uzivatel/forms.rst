@@ -160,3 +160,8 @@ Třídy
 
    Implementuje komponentu ``AuthActivationForm`` v rámci aplikace.
 
+
+.. py:class:: TestEmailForm
+
+   Formulář pro odeslání testovacího mailu v administraci.
+

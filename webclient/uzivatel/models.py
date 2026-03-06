@@ -756,3 +756,6 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
 
         db_table = "notifikace_log"
+        permissions = [
+            ("send_test_email", "Can send test email"),
+        ]
