@@ -38,7 +38,7 @@ Doporučený formát docstringu (Google‑style):
         Expected:
             - Něco se stane
 
-        Poznámky:
+        Notes:
             - Volitelné poznámky
         \"\"\"
 
