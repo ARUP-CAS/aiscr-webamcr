@@ -1,9 +1,9 @@
 {% load i18n %}
 
-<div class="jumbotron mb-0">
+<div class="p-4 mb-0 bg-body-secondary rounded-3">
   <h1>{% trans "oznameni.templates.components.uvod.title" %}</h1>
   {% trans "oznameni.templates.components.uvod.text" %}
-  {% trans "oznameni.templates.components.warning.text" %}
+  <div class="oznameni-warning">{% trans "oznameni.templates.components.warning.text" %}</div>
   {% blocktranslate with mail_arup=ARUP_MAIL|safe mail_arub=ARUB_MAIL|safe %}
   oznameni.templates.components.uvod.collapsed.text{{mail_arup}}{{mail_arub}}
   {% endblocktranslate %}

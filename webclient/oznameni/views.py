@@ -35,7 +35,18 @@ logger = logging.getLogger(__name__)
 
 
 class OznameniView(View):
+    """Implementuje komponentu ``OznameniView`` v rámci aplikace."""
+
     def dispatch(self, request, *args, **kwargs):
+        """
+        Provádí operaci dispatch.
+
+        :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, ``dispatch()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, pracuje se s atributy ``pop``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``dispatch()``.
+        """
         self.session_identifier = SessionIdentifier(request)
         self.ident_cely = kwargs.pop("ident_cely", None)
         return super().dispatch(request, *args, **kwargs)
@@ -43,14 +54,18 @@ class OznameniView(View):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniZapsatView(OznameniView):
-    """
-    Třída pohledu pro 1. stranu oznámení.
-    """
+    """Třída pohledu pro 1. stranu oznámení."""
 
     def post(self, request):
         """
         Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
+
         V prvém kroku uživatel zadává údaje a v druhém je potvrzuje a případně uploaduje soubory.
+
+        :param request: Parametr ``request`` se předává do volání ``OznamovatelForm()``, ``ProjektOznameniForm()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+            :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
         """
         logger.debug("oznameni.views.index.start")
         if "oznamovatel" in request.POST:
@@ -99,7 +114,7 @@ class OznameniZapsatView(OznameniView):
                         "katastr": projekt.hlavni_katastr,
                     },
                 )
-                # p.save()
+                # Uložení instance je zde záměrně vypnuté.
                 if projekt.hlavni_katastr is not None and not self.ident_cely:
                     projekt.ident_cely = get_temporary_project_ident(projekt.hlavni_katastr.okres.kraj.rada_id)
                 else:
@@ -111,7 +126,7 @@ class OznameniZapsatView(OznameniView):
                 projekt.katastry.add(*[i for i in dalsi_katastry])
                 projekt.save()
                 self.session_identifier.set_ident(projekt.ident_cely)
-                # Uložení vlastnictví projektu pro anonymního uživatele
+                # Uložení vlastnictví projektu pro anonymního uživatele.
                 self.session_identifier.set_project_ownership(projekt.ident_cely)
                 return redirect("oznameni:index2", ident_cely=projekt.ident_cely)
             else:
@@ -132,6 +147,14 @@ class OznameniZapsatView(OznameniView):
 
     @method_decorator(never_cache)
     def get(self, request):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``render()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekty``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug("oznameni.views.index.get.start", extra={"ident_cely": self.ident_cely})
@@ -185,11 +208,17 @@ class OznameniZapsatView(OznameniView):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniDokumentaceView(OznameniView):
-    """
-    Třída pohledu pro 2. stranu oznámení.
-    """
+    """Třída pohledu pro 2. stranu oznámení."""
 
     def post(self, request):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``debug()``, ``get()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``redirect()``.
+            :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
+        """
         if "ident_cely" in request.POST:
             logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
             projekt = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
@@ -206,11 +235,20 @@ class OznameniDokumentaceView(OznameniView):
                 "oznameni.views.index.second_part.end",
                 extra={"ident_cely": request.POST["ident_cely"], "transaction": fedora_transaction.uid},
             )
+            self.session_identifier.clear_cached_files()
             return redirect("oznameni:index3", ident_cely=projekt.ident_cely)
         raise PermissionDenied
 
     @method_decorator(never_cache)
     def get(self, request):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekt``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
@@ -242,12 +280,18 @@ class OznameniDokumentaceView(OznameniView):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class OznameniPotvrzeniView(OznameniView):
-    """
-    Třída pohledu pro potvrzení oznámení.
-    """
+    """Třída pohledu pro potvrzení oznámení."""
 
     @method_decorator(never_cache)
     def get(self, request):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekty``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
+        """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
             logger.debug(
@@ -280,6 +324,12 @@ class OznameniPotvrzeniView(OznameniView):
 def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci oznamovatele.
+
+    :param request: Parametr ``request`` se předává do volání ``OznamovatelProjektForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+        :raises PermissionDenied: Vyvolá se při splnění podmínky ``projekt.stav == PROJEKT_STAV_ARCHIVOVANY``.
     """
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     oznameni = projekt.oznamovatel
@@ -313,6 +363,10 @@ def edit(request, ident_cely):
 def post_poi2kat(request):
     """
     Funkce pohledu pro získaní katastru podle bodu pro oznámení.
+
+    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
@@ -326,13 +380,18 @@ def post_poi2kat(request):
 
 
 class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro vytvoření oznamovatele pomocí modalu.
-    """
+    """Třída pohledu pro vytvoření oznamovatele pomocí modalu."""
 
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
@@ -346,6 +405,15 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` předává se do volání ``check_stav_changed()``, ovlivňuje větvení podmínek.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+        """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
@@ -357,6 +425,15 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``check_stav_changed()``, ``OznamovatelProjektForm()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]
         if check_stav_changed(request, projekt):

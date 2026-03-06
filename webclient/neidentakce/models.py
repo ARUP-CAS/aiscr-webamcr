@@ -10,9 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
-    """
-    Class pro db model neident akce.
-    """
+    """Databázový model neidentifikované akce."""
 
     katastr = models.ForeignKey(RuianKatastr, models.RESTRICT, db_column="katastr", blank=True, null=True)
     lokalizace = models.TextField(blank=True, null=True)
@@ -32,9 +30,17 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "neident_akce"
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(NeidentAkce, self).__init__(*args, **kwargs)
         try:
             dokument_cast: DokumentCast = self.dokument_cast
@@ -46,13 +52,13 @@ class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
 
 
 class NeidentAkceVedouci(ExportModelOperationsMixin("neident_akce_vedouci"), models.Model):
-    """
-    Class pro db model vedouciho neident akce.
-    """
+    """Databázový model vedoucího neidentifikované akce."""
 
     neident_akce = models.ForeignKey(NeidentAkce, on_delete=models.CASCADE, db_column="neident_akce")
     vedouci = models.ForeignKey(Osoba, models.RESTRICT, db_column="vedouci")
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "neident_akce_vedouci"
         unique_together = (("neident_akce", "vedouci"),)

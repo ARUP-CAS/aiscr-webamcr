@@ -16,25 +16,30 @@ class Command(BaseCommand):
     včetně aktualizace metadat v databázi.
 
     Argumenty:
-        - pk: Primární klíč záznamu souboru v databázi
-        - storage_path: Cesta k adresáři obsahujícímu soubory
+    - pk: Primární klíč záznamu souboru v databázi
+    - storage_path: Cesta k adresáři obsahujícímu soubory
 
     Parametry:
-        - --save-thumbs: Generovat náhledy pro obrazové soubory
-        - --disable-antivirus: Přeskočit antivirovou kontrolu
+    - --save-thumbs: Generovat náhledy pro obrazové soubory
+    - --disable-antivirus: Přeskočit antivirovou kontrolu
 
     Příklady použití:
 
-        Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
-        proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
+    Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
+    proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
 
-            python manage.py save_single_file_from_storage 123 /vol/data-migrace/files
-            python manage.py save_single_file_from_storage 456 /vol/data-migrace/storage --save-thumbs
+    python manage.py save_single_file_from_storage 123 /vol/data-migrace/files
+    python manage.py save_single_file_from_storage 456 /vol/data-migrace/storage --save-thumbs
     """
 
     help = _("core.management.commands.save_single_file_from_storage.Command.help")
 
     def add_arguments(self, parser):
+        """
+        Provádí operaci add arguments.
+
+        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        """
         parser.add_argument(
             "pk",
             type=int,
@@ -59,6 +64,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """
+        Zpracuje hodnotu. v aplikaci.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        """
         pk = options["pk"]
         storage_path = options["storage_path"]
         save_thumbs = options["save_thumbs"]

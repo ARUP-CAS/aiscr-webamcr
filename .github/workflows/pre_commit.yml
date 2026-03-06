@@ -11,17 +11,24 @@ on:
   workflow_dispatch:
     inputs:
       dependencies:
-        description: 'Update the list od dependencies'
+        description: "Update the list of dependencies"
         type: boolean
         default: true
-        
+      bypass_docstring_exclusions:
+        description: "Bypass file/class/method exclusions in docstring reminder hook"
+        type: boolean
+        default: false
+      strict_precommit_check:
+        description: "Fail workflow on docstring, flake8 or log warnings"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   pull-requests: write
 
 concurrency:
-  group: pre-commit-${{ github.repository }}/${{ github.ref }}
+  group: pre-commit-${{ github.repository }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -37,7 +44,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: false   # prevent auth header conflict
+          persist-credentials: false
 
       - uses: actions/setup-python@v6
         with:
@@ -57,19 +64,13 @@ jobs:
           restore-keys: |
             pip-${{ runner.os }}-
 
-      # 🔧 Install project dependencies
-      - name: Install Dependencies
-        if: |
-          (github.event_name == 'pull_request' && github.base_ref == 'dev') ||
-          (github.event_name == 'push' && github.ref_name == 'dev') ||
-          (github.event_name == 'workflow_dispatch' && github.event.inputs.dependencies == 'true')
+      - name: Install dependencies
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install pip-licenses
           pip install -r webclient/requirements.txt
           pip install pre-commit
 
-      # 📄 Regenerate license RST
       - name: Run convert_to_rst.py
         if: |
           (github.event_name == 'pull_request' && github.base_ref == 'dev') ||
@@ -77,28 +78,85 @@ jobs:
           (github.event_name == 'workflow_dispatch' && github.event.inputs.dependencies == 'true')
         run: python docs/licenses/convert_to_rst.py
 
-      # 🔍 Run pre-commit and capture exit code
       - name: Run pre-commit
         id: hooks
+        env:
+          DOCSTRING_CHECK_BYPASS_EXCLUSIONS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bypass_docstring_exclusions == 'true' || 'false' }}
+          DOCSTRING_CHECK_STRICT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.strict_precommit_check == 'true' || 'false' }}
         run: |
           set +e
-          pre-commit run --all-files
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+          echo "strict_mode=$DOCSTRING_CHECK_STRICT" >> "$GITHUB_OUTPUT"
+
+          pre-commit run --all-files 2>&1 | tee precommit.log
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          # Remove ANSI escape sequences so grep reliably matches hook output.
+          sed -E 's/\x1B\[[0-9;]*[A-Za-z]//g' precommit.log \
+            | tr -d '\r' \
+            > precommit.clean.log
+
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+          # Extract docstring warnings
+          TOTAL_DOC_WARNINGS=$(grep -c -E "DOC[0-9][0-9][0-9]" precommit.clean.log)
+
+          DOC_WARNINGS=$(grep -E "DOC[0-9][0-9][0-9]" precommit.clean.log | head -n 200)
+          
+          if [ "$TOTAL_DOC_WARNINGS" -gt 200 ]; then
+            DOC_WARNINGS="${DOC_WARNINGS}
+          ...
+          (Zobrazeno prvních 200 z ${TOTAL_DOC_WARNINGS} záznamů)"
+          fi
+          
+          echo "doc_warnings<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$DOC_WARNINGS" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          # Extract generic warnings from pre-commit log.
+          # Match both "warning" and shorter "warn" forms because
+          # some tools emit WARN/WARNI prefixes instead of whole word.
+          # Remove docstring warnings that are reported separately.
+          echo "log_warnings<<EOF" >> "$GITHUB_OUTPUT"
+          grep -Ei "(::warning::|\bwarn(ing)?\b)" precommit.clean.log \
+            | grep -Evi "warning DOC[0-9][0-9][0-9]" \
+            | sort -u || true
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          # Extract flake8 errors
+          echo "flake_errors<<EOF" >> "$GITHUB_OUTPUT"
+          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log || true
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          # Emit GitHub inline annotations for flake8
+          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log | while read line; do
+            FILE=$(echo "$line" | cut -d: -f1)
+            LINE=$(echo "$line" | cut -d: -f2)
+            COL=$(echo "$line" | cut -d: -f3)
+            MSG=$(echo "$line" | cut -d: -f4-)
+            echo "::error file=$FILE,line=$LINE,col=$COL::$MSG"
+          done || true
+
+          # Log tail
+          echo "log_tail<<EOF" >> "$GITHUB_OUTPUT"
+          tail -n 80 precommit.clean.log || true
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
           exit 0
 
-      # 🔎 Detect ANY changes (formatting or RST)
       - name: Check for file changes
         id: changes
         run: |
-          if [ -n "$(git status --porcelain)" ]; then
+          if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Compute short SHA
         id: vars
-        run: echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        run: echo "sha_short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      # 🛠 Create PR with ALL changes
       - name: Create Pull Request with fixes
         id: create_pr
         if: steps.changes.outputs.changed == 'true'
@@ -114,85 +172,136 @@ jobs:
                 || format('Pre-commit fixes for commit {0}', steps.vars.outputs.sha_short) }}
           base: ${{ github.head_ref || github.ref_name }}
           body: |
-            This PR was automatically generated by the CI workflow.
+            This PR was automatically generated by CI.
 
             It includes:
-
             - Pre-commit formatting fixes
-            - Updated `python_knihovny.rst` (pip license list)
+            - Updated `python_knihovny.rst`
 
             Please merge this PR to make the original PR pass.
           assignees: ${{ github.actor }}
 
-      - name: Publish pre-commit result to workflow summary
-        if: steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true'
+      - name: Publish workflow summary
+        if: steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' || steps.hooks.outputs.doc_warnings != '' || steps.hooks.outputs.log_warnings != ''
         run: |
-          echo "## ⚠️ Pre-commit results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Pre-commit exit code: ${{ steps.hooks.outputs.exit_code }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Changes detected: ${{ steps.changes.outputs.changed || 'false' }}" >> $GITHUB_STEP_SUMMARY      
-          echo "" >> $GITHUB_STEP_SUMMARY      
-          if [ "${{ steps.changes.outputs.changed }}" = "true" ]; then
-            echo "A fix PR has been created or updated." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Pre-commit checks failed and require manual fixes." >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## ⚠️ Pre-commit results"
+            echo ""
+            echo "- Exit code: ${{ steps.hooks.outputs.exit_code }}"
+            echo "- Strict mode: ${{ steps.hooks.outputs.strict_mode }}"
+            echo "- Changes detected: ${{ steps.changes.outputs.changed }}"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "${{ steps.hooks.outputs.log_warnings }}" ]; then
+            echo "### Log warnings" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.hooks.outputs.log_warnings }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -n "${{ steps.hooks.outputs.doc_warnings }}" ]; then
+            echo "### Docstring warnings" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.hooks.outputs.doc_warnings }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -n "${{ steps.hooks.outputs.flake_errors }}" ]; then
+            echo "### Flake8 errors" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.hooks.outputs.flake_errors }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Comment on original PR (sticky)
-        if: github.event_name == 'pull_request' && (steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true')
+        if: github.event_name == 'pull_request' && (steps.hooks.outputs.exit_code != '0' || steps.changes.outputs.changed == 'true' || steps.hooks.outputs.doc_warnings != '' || steps.hooks.outputs.log_warnings != '')
         uses: actions/github-script@v8
         with:
           script: |
             const changed = "${{ steps.changes.outputs.changed }}" === "true";
             const exitCode = "${{ steps.hooks.outputs.exit_code }}";
+            const strictMode = "${{ steps.hooks.outputs.strict_mode }}";
+            const logWarnings = ${{ toJSON(steps.hooks.outputs.log_warnings || '') }};
+            const docWarnings = ${{ toJSON(steps.hooks.outputs.doc_warnings || '') }};
+            const flakeErrors = ${{ toJSON(steps.hooks.outputs.flake_errors || '') }};
+            const logTail = ${{ toJSON(steps.hooks.outputs.log_tail || '') }};
+            const runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             const marker = "<!-- precommit-bot-comment -->";
+      
+            const sections = [];
+            if (logWarnings && logWarnings.trim()) {
+              sections.push(`### Log warnings\n\`\`\`\n${logWarnings}\n\`\`\``);
+            }
+
+            if (docWarnings && docWarnings.trim()) {
+              sections.push(`### Docstring warnings\n\`\`\`\n${docWarnings}\n\`\`\``);
+            }
+
+            if (flakeErrors && flakeErrors.trim()) {
+              sections.push(`### Flake8 errors\n\`\`\`\n${flakeErrors}\n\`\`\``);
+            }
+
             let body = `${marker}
             ## ⚠️ Pre-commit results
             
             - Exit code: ${exitCode}
+            - Strict mode: ${strictMode}
             - Changes detected: ${changed}
+            - Workflow run: [View logs](${runUrl})
+            ${sections.join("\n\n")}
             `;
-            if (changed) {
-              const fixPrNumber = "${{ steps.create_pr.outputs.pull-request-number || '' }}";
-              const fixPrUrl = "${{ steps.create_pr.outputs.pull-request-url || '' }}";
-              if (fixPrNumber && fixPrUrl) {
-                body += `
-                An automatic fix PR has been created or updated: [#${fixPrNumber}](${fixPrUrl})
-                
-                Please merge it to make this PR pass.
-                `;
-              } else {
-                body += `
-                An automatic fix PR has been created or updated.
-                Please merge it to make this PR pass.
-                `;
-                }
-            } else {
+
+            if (logTail && logTail.trim()) {
               body += `
-              Pre-commit checks failed and require manual fixes.
-              `;
+
+            <details>
+            <summary>Pre-commit log (tail)</summary>
+            
+            \`\`\`
+            ${logTail}
+            \`\`\`
+            </details>
+            `;
             }
+
             body = body.replace(/^[ \t]+/gm, '');
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
             });
+
             const existing = comments.find(
               c => c.user.type === "Bot" && c.body && c.body.includes(marker)
             );
+
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: existing.id,
-                body: body,
+                body,
               });
             } else {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.pull_request.number,
-                body: body,
+                body,
               });
             }
+
+      - name: Final status check
+        if: steps.hooks.outputs.strict_mode == 'true'
+        run: |
+          if [ -n "${{ steps.hooks.outputs.log_warnings }}" ] || \
+             [ -n "${{ steps.hooks.outputs.doc_warnings }}" ] || \
+             [ -n "${{ steps.hooks.outputs.flake_errors }}" ]; then
+            echo "Strict mode enabled and issues found."
+            exit 1
+          fi

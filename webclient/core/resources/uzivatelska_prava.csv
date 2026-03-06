@@ -110,6 +110,7 @@ core,soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>,soubor_stahnout_p
 core,soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>,soubor_stahnout_model3d,X,*,*,*,*,* | D3,* | D3,*,*,D.my | *,D.ours | *,*,*,*,*,*,*,
 core,soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>,soubor_stahnout_dokument,X,*,*,*,*,* | D3,* | D3,*,*,D.my | *,D.ours | *,*,*,* | D (my),* | D (ours),*,*,
 core,soubor/stahnout/<str:typ_vazby>/<str:ident_cely>/<int:pk>,soubor_stahnout_pas,X,*,*,*,*,* | SN4,* | SN4,*,*,SN.my | *,SN.ours | *,*,*,* | SN (my),* | SN (ours),*,*,
+core,soubor/stahnout-nahled-DZ/<str:typ_vazby>/<str:ident_cely>/<int:pk>,,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,
 dj,detail/<str:typ_vazby>/<str:ident_cely>,akce_dj_zakladni,X,*,*,*,*,*,*,*,*,*,*,*,*,AZ (my),AZ (ours),*,*,
 dj,detail/<str:typ_vazby>/<str:ident_cely>,akce_pripojit_pian_mapa,X,*,*,*,*,AZ1,AZ1,<AZ3,<AZ3,AZ.my,AZ.ours,*,*,*,*,*,*,
 dj,detail/<str:typ_vazby>/<str:ident_cely>,akce_pripojit_pian_id,X,X,X,*,*,X,X,<AZ3,<AZ3,X,X,*,*,X,X,*,*,

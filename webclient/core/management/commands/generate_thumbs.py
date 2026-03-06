@@ -17,25 +17,30 @@ class Command(BaseCommand):
     vygeneruje je ze zdrojového souboru.
 
     Parametry (vzájemně se vylučují):
-        - --pks: Seznam primárních klíčů souborů (odděleno mezerami)
-        - --range: Rozsah primárních klíčů ve formátu "start end"
-        - --csv: Cesta k CSV souboru s listem cest v sloupci "record" (repository path)
+    - --pks: Seznam primárních klíčů souborů (odděleno mezerami)
+    - --range: Rozsah primárních klíčů ve formátu "start end"
+    - --csv: Cesta k CSV souboru s listem cest v sloupci "record" (repository path)
 
     Poznámka:
-        - Musí být zadán právě jeden z parametrů --pks, --range, nebo --csv
-        - Náhledy jsou generovány pouze pro obrazové formáty podporované systémem
+    - Musí být zadán právě jeden z parametrů --pks, --range, nebo --csv
+    - Náhledy jsou generovány pouze pro obrazové formáty podporované systémem
 
     Příklady použití::
 
-        python manage.py generate_thumbs --pks 1 2 3
-        python manage.py generate_thumbs --range 100 200
-        python manage.py generate_thumbs --range 1 1000
-        python manage.py generate_thumbs --csv /tmp/missing_thumbs.csv
+    python manage.py generate_thumbs --pks 1 2 3
+    python manage.py generate_thumbs --range 100 200
+    python manage.py generate_thumbs --range 1 1000
+    python manage.py generate_thumbs --csv /tmp/missing_thumbs.csv
     """
 
     help = _("core.management.commands.generate_thumbs.Command.help")
 
     def add_arguments(self, parser):
+        """
+        Provádí operaci add arguments.
+
+        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        """
         parser.add_argument(
             "--pks",
             nargs="+",
@@ -56,6 +61,14 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """
+        Zpracuje vstupní argumenty příkazu a spustí generování náhledů.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` pracuje se s atributy ``get``.
+
+            :raises CommandError: Vyvolá se při splnění podmínky ``provided_options != 1``.
+        """
         pks = options.get("pks")
         pk_range = options.get("range")
         csv_file = options.get("csv")
@@ -114,7 +127,7 @@ class Command(BaseCommand):
                 related_record = soubor.vazba.navazany_objekt
                 conn = FedoraRepositoryConnector(related_record, None)
 
-                # Check if thumbnails exist
+                # Ověří existenci náhledů.
                 both_thumbnails_exist = (
                     conn.get_binary_file(soubor.repository_uuid, thumb_small=True) is not None
                     and conn.get_binary_file(soubor.repository_uuid, thumb_large=True) is not None
@@ -163,7 +176,7 @@ class Command(BaseCommand):
                     )
                 )
 
-        # Final newline after progress indicator
+        # Závěrečný nový řádek po indikátoru průběhu.
         self.stdout.write("")
 
         logger.debug(

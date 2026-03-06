@@ -20,8 +20,11 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Dokument, weak=False)
 def create_dokument_vazby(sender, instance: Dokument, **kwargs):
     """
-    Metoda pro vytvoření historických vazeb dokumentu.
-    Metoda se volá pred uložením záznamu.
+    Před uložením dokumentu připraví vazby historie a souborů.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Ukládaná instance dokumentu.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
     """
     invalidate_model(Dokument)
     invalidate_model(Akce)
@@ -55,8 +58,11 @@ def create_dokument_vazby(sender, instance: Dokument, **kwargs):
 @receiver(pre_save, sender=DokumentCast, weak=False)
 def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
     """
-    Metoda pro vytvoření komponent vazeb dokument části.
-    Metoda se volá pred uložením dokument části.
+    Před uložením části dokumentu zajistí vytvoření komponentové vazby.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Ukládaná instance části dokumentu.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
     """
     logger.debug("dokument.signals.create_dokument_cast_vazby.start", extra={"pk": instance.pk})
     invalidate_model(Dokument)
@@ -71,6 +77,13 @@ def create_dokument_cast_vazby(sender, instance: DokumentCast, **kwargs):
 
 @receiver(post_save, sender=Dokument, weak=False)
 def dokument_save_metadata(sender, instance: Dokument, **kwargs):
+    """
+    Po uložení dokumentu synchronizuje metadata navázaných objektů.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Uložená instance dokumentu.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
+    """
     logger.debug(
         "dokument.signals.dokument_save_metadata.startdokument.signals.dokument_save_metadata.start",
         extra={
@@ -85,6 +98,11 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
         fedora_transaction = instance.active_transaction
 
         def save_metadata(close_transaction=False):
+            """
+            Uloží metadata.
+
+            :param close_transaction: Pokud ``True``, uzavře transakci po zapsání metadat.
+            """
             if instance.initial_let is None and instance.let is not None:
                 instance.let.save_metadata(fedora_transaction)
             elif instance.initial_let is not None and instance.let is None:
@@ -112,6 +130,13 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
 
 @receiver(post_save, sender=Let, weak=False)
 def let_save_metadata(sender, instance: Let, **kwargs):
+    """
+    Po uložení letu zapíše metadata do repozitáře.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Uložená instance letu.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
+    """
     logger.debug("dokument.signals.let_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     if not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
@@ -125,6 +150,13 @@ def let_save_metadata(sender, instance: Let, **kwargs):
 
 @receiver(post_delete, sender=Dokument, weak=False)
 def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
+    """
+    Po smazání dokumentu odstraní repozitářové vazby a přegeneruje metadata.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Smazaná instance dokumentu.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
+    """
     logger.debug(
         "dokument.signals.dokument_delete_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )
@@ -139,6 +171,11 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
         k.komponenta_vazby.delete()
 
     def save_metadata(close_transaction=False):
+        """
+        Uloží metadata. v aplikaci.
+
+        :param close_transaction: Pokud ``True``, uzavře transakci po zapsání metadat.
+        """
         for item in instance.casti.all():
             item: DokumentCast
             if item.archeologicky_zaznam is not None:
@@ -161,6 +198,13 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
 
 @receiver(post_delete, sender=Let, weak=False)
 def let_delete_repository_container(sender, instance: Let, **kwargs):
+    """
+    Po smazání letu zapíše jeho odstranění do repozitáře.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Smazaná instance letu.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
+    """
     logger.debug("dokument.signals.let_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = FedoraTransaction()
     transaction.on_commit(lambda: instance.record_deletion(fedora_transaction, True))
@@ -172,6 +216,14 @@ def let_delete_repository_container(sender, instance: Let, **kwargs):
 
 @receiver(post_save, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **kwargs):
+    """
+    Po uložení části dokumentu synchronizuje metadata navázaných záznamů.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Uložená instance části dokumentu.
+    :param created: Parametr ``created`` ovlivňuje větvení podmínek.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
+    """
     extra = {"pk": instance.pk, "custom_created": created}
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra=extra)
     from core.repository_connector import FedoraTransaction
@@ -221,12 +273,24 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
 
 @receiver(post_delete, sender=DokumentCast, weak=False)
 def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs):
+    """
+    Po smazání části dokumentu přepočítá metadata navázaných objektů.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Smazaná instance části dokumentu.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
+    """
     logger.debug("dokument.signals.dokument_cast_save_metadata.start", extra={"pk": instance.pk})
     fedora_transaction: FedoraTransaction = instance.active_transaction
     invalidate_model(Dokument)
     invalidate_model(Akce)
 
     def save_metadata(close_transaction=False):
+        """
+        Uloží metadata. v aplikaci.
+
+        :param close_transaction: Pokud ``True``, uzavře transakci po zapsání metadat.
+        """
         if instance.initial_archeologicky_zaznam_id is not None and instance.suppress_signal_arch_z is False:
             instance.initial_archeologicky_zaznam.save_metadata(fedora_transaction, skip_container_check=True)
         if instance.initial_projekt_id is not None:
@@ -247,6 +311,14 @@ def dokument_cast_save_metadata_delete(sender, instance: DokumentCast, **kwargs)
 
 @receiver(post_save, sender=Tvar, weak=False)
 def tvar_save(sender, instance: Tvar, created, **kwargs):
+    """
+    Po uložení tvaru zajistí zápis metadat souvisejícího dokumentu.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Uložená instance tvaru.
+    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``tvar_save``.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
+    """
     logger.debug("dokument.signals.tvar_save.start", extra={"pk": instance.pk})
     if instance.dokument and instance.active_transaction and not instance.suppress_signal:
         fedora_transaction = instance.active_transaction
@@ -258,6 +330,13 @@ def tvar_save(sender, instance: Tvar, created, **kwargs):
 
 @receiver(post_delete, sender=Tvar, weak=False)
 def tvar_delete(sender, instance: Tvar, **kwargs):
+    """
+    Po smazání tvaru přepočítá metadata navázaného dokumentu.
+
+    :param sender: Model, který signal vyvolal.
+    :param instance: Smazaná instance tvaru.
+    :param kwargs: Dodatečné argumenty předané Django signalem.
+    """
     logger.debug("dokument.signals.tvar_delete.start", extra={"pk": instance.pk})
     if instance.dokument:
         fedora_transaction = instance.active_transaction

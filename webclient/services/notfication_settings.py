@@ -25,11 +25,11 @@ notification_settings = {
         "cesta_sablony": "emails/E-U-04.html",
     },
     "E-U-05": {
-        # This notification is handeled by Django authentization system
+        # Toto upozornění zpracovává autentizační systém Django.
         "zasilat_neaktivnim": True,
-        # Change in templates/registration/password_reset_subject.txt
+        # Předmět se mění v šabloně templates/registration/password_reset_subject.txt.
         "predmet": None,
-        # The path is set by system, do not change it
+        # Cesta je nastavena systémově, neměňte ji.
         "cesta_sablony": "registration/password_reset_email.html",
     },
     "E-U-06": {

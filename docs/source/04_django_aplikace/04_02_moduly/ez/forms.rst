@@ -14,6 +14,14 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``, ``DoiAutocompleteField()``.
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: ExterniOdkazForm
 
@@ -22,6 +30,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param type_arch: Parametr ``type_arch`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: PripojitArchZaznamForm
@@ -32,6 +46,13 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param type_arch: Parametr ``type_arch`` předává se do volání ``ChoiceField()``, ``AutocompleteListSelect2()``, ovlivňuje větvení podmínek.
+      :param dok: Parametr ``dok`` ovlivňuje větvení podmínek.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: PripojitExterniOdkazForm
 
@@ -40,4 +61,9 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 

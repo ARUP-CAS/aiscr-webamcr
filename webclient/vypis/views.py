@@ -13,6 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 def add_section_data(instance, section, fields, sections_data, iterator=False, user=None):
+    """
+    Provádí operaci add section data.
+
+    :param instance: Parametr ``instance`` předává se do volání ``get_permission()``, ``get_sections()``, ovlivňuje větvení podmínek.
+    :param section: Parametr ``section`` předává se do volání ``debug()``, ``add_section_data()``, ovlivňuje větvení podmínek.
+    :param fields: Parametr ``fields`` předává se do volání ``isinstance()``, ``add_section_data()``, pracuje se s atributy ``items``, ovlivňuje větvení podmínek.
+    :param sections_data: Kolekce ``sections_data`` zpracovávaná touto funkcí.
+    :param iterator: Parametr ``iterator`` ovlivňuje větvení podmínek.
+    :param user: Parametr ``user`` se předává do volání ``get_permission()``, ``add_section_data()``, ovlivňuje větvení podmínek.
+    """
     if fields["section_name"].get_permission(instance, user) is False:
         return None
     if isinstance(fields["section_name"], RepeatableSectionNameWithAccessor) and not iterator:
@@ -75,9 +85,19 @@ def add_section_data(instance, section, fields, sections_data, iterator=False, u
 
 
 class VypisView(LoginRequiredMixin, TemplateView):
+    """Implementuje komponentu ``VypisView`` v rámci aplikace."""
+
     template_name = "vypis/vypis.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``, pracuje se s atributy ``get``.
+
+            :return: Vrací proměnná ``context``.
+            :raises Http404: Vyvolá se s textem "Page not found"; nebo s textem "Model not found".
+        """
         context = super().get_context_data(**kwargs)
         name = kwargs.get("typ_vazby")
         ident_cely = kwargs.get("ident_cely")
@@ -114,13 +134,25 @@ class VypisView(LoginRequiredMixin, TemplateView):
 
 
 class VypisOnlyView(VypisView):
+    """Implementuje komponentu ``VypisOnlyView`` v rámci aplikace."""
+
     template_name = "vypis/vypis_only.html"
 
 
 class VypisListView(LoginRequiredMixin, TemplateView):
+    """Implementuje komponentu ``VypisListView`` v rámci aplikace."""
+
     template_name = "vypis/vypis_list.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``, pracuje se s atributy ``get``.
+
+            :return: Vrací proměnná ``context``.
+            :raises Http404: Vyvolá se s textem "Page not found".
+        """
         context = super().get_context_data(**kwargs)
         name = kwargs.get("typ_vazby")
         config = get_config(name)

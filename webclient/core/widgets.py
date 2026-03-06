@@ -5,11 +5,15 @@ from django.utils.translation import gettext as _
 
 
 class ForeignKeyReadOnlyTextInput(forms.TextInput):
-    """
-    Widget pro textinput pro vazbu cizí klíč.
-    """
+    """Widget pro textinput pro vazbu cizí klíč."""
 
     def __init__(self, value=None, attrs=None):
+        """
+        Inicializuje instanci třídy.
+
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param attrs: Kolekce ``attrs`` zpracovávaná touto funkcí.
+        """
         if attrs is None:
             attrs = {}
         attrs["readonly"] = True
@@ -17,12 +21,28 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
         self.value = None
 
     def format_value(self, value):
+        """
+        Provádí operaci format value.
+
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``format_value``.
+
+            :return: Vrací výsledek volání ``str()``.
+        """
         return str(self.value)
 
 
 class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
+    """Implementuje komponentu ``AutocompleteSelect2WidgetMixin`` v rámci aplikace."""
+
     def build_attrs(self, *args, **kwargs):
-        """Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy."""
+        """
+        Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy.
+
+        :param args: Parametr ``args`` se předává do volání ``build_attrs()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``build_attrs()``.
+
+            :return: Vrací proměnná ``attrs``.
+        """
         attrs = super(AutocompleteSelect2WidgetMixin, self).build_attrs(*args, **kwargs)
         attrs.setdefault("data-placeholder", _("core.widgets.AutocompleteSelect2WidgetMixin.data-placeholder"))
 
@@ -42,16 +62,24 @@ class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
 
 
 class AutocompleteListSelect2(AutocompleteSelect2WidgetMixin, ListSelect2):
+    """Implementuje komponentu ``AutocompleteListSelect2`` v rámci aplikace."""
+
     pass
 
 
 class AutocompleteSelect2Multiple(AutocompleteSelect2WidgetMixin, Select2Multiple):
+    """Implementuje komponentu ``AutocompleteSelect2Multiple`` v rámci aplikace."""
+
     pass
 
 
 class AutocompleteModelSelect2(AutocompleteSelect2WidgetMixin, ModelSelect2):
+    """Implementuje komponentu ``AutocompleteModelSelect2`` v rámci aplikace."""
+
     pass
 
 
 class AutocompleteModelSelect2Multiple(AutocompleteSelect2WidgetMixin, ModelSelect2Multiple):
+    """Implementuje komponentu ``AutocompleteModelSelect2Multiple`` v rámci aplikace."""
+
     pass

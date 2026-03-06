@@ -6,9 +6,7 @@ from .models import Lokalita
 
 
 class LokalitaTable(SearchTable):
-    """
-    Class pro definování tabulky pro lokaity použitých pro zobrazení přehledu lokalit a exportu.
-    """
+    """Definuje tabulku lokalit pro přehled i export."""
 
     ident_cely = tables.Column(
         verbose_name=_("lokalita.tables.lokalitaTable.ident_cely.label"),
@@ -71,6 +69,8 @@ class LokalitaTable(SearchTable):
     first_columns = None
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Lokalita
         fields = (
             "druh",
@@ -97,7 +97,8 @@ class LokalitaTable(SearchTable):
         )
 
     def get_all_idents(self):
-        """
-        Vrátí seznam identifikátorů archeologických záznamů pro lokalitu.
+        """Vrátí seznam identifikátorů archeologických záznamů pro lokalitu.
+
+        :return: Vrací výsledek volání ``join()``.
         """
         return ",".join([record.record.archeologicky_zaznam.ident_cely for record in self.paginated_rows])

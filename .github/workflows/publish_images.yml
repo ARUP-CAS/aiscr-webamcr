@@ -1,5 +1,5 @@
 name: Build and publish Docker images
-  
+
 on:
   workflow_call:
     inputs:
@@ -16,7 +16,7 @@ concurrency:
 
 env:
   REGISTRY_GITHUB: ghcr.io
-  REGISTRY_DOCKERHUB: index.docker.io
+  REGISTRY_DOCKERHUB: docker.io
   COMMON_LABELS: |
     org.opencontainers.image.authors=Archaeological Information System of the Czech Republic (AIS CR)
     org.opencontainers.image.documentation=https://aiscr-webamcr.readthedocs.io/
@@ -27,6 +27,7 @@ jobs:
     if: startsWith(inputs.tag, 'v')
     name: Build and publish images
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       matrix:
         component: [prod, proxy, redis]
@@ -59,34 +60,45 @@ jobs:
       id-token: write
       packages: write
       contents: read
+      security-events: write
       attestations: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag }}
           fetch-depth: 0
-      
+
+      - name: Compute build metadata
+        shell: bash
+        run: |
+          EPOCH=$(git log -1 --pretty=%ct)
+          echo "SOURCE_DATE_EPOCH=${EPOCH}" >> $GITHUB_ENV
+          echo "SOURCE_DATE_ISO=$(date -u -d @${EPOCH} +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+          echo "VERSION_APP=${TAG#v}" >> $GITHUB_ENV
+        env:
+          TAG: ${{ inputs.tag }}
+
       - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v3
-      
+        uses: docker/setup-buildx-action@v4
+
       - name: Log in to the GitHub registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY_GITHUB }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to the DockerHub registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
@@ -94,16 +106,19 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.tag }}
+            type=raw,value=${{ env.VERSION_APP }}
             type=raw,value=latest,enable=${{ inputs.latest }}
           labels: |
             org.opencontainers.image.description=${{ matrix.description }}
             org.opencontainers.image.url=${{ matrix.url }}
+            org.opencontainers.image.version=${{ env.VERSION_APP }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ env.SOURCE_DATE_ISO }}
             ${{ env.COMMON_LABELS }}
 
       - name: Build and push image
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.context }}/${{ matrix.dockerfile }}
@@ -113,22 +128,113 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VERSION_APP=${{ steps.meta.outputs.version }}
+            VERSION_APP=${{ env.VERSION_APP }}
             TAG_APP=${{ inputs.tag }}
+            SOURCE_DATE_EPOCH=${{ env.SOURCE_DATE_EPOCH }}
           cache-from: type=registry,ref=${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:buildcache,mode=max
 
-      - name: Attest build - GitHub
-        uses: actions/attest-build-provenance@v3
+      - name: Extract per-registry digests
+        id: digests
+        shell: bash
+        run: |
+          for i in {1..10}; do
+            DIGEST_GITHUB=$(docker buildx imagetools inspect \
+              ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}:${{ env.VERSION_APP }} \
+              --format '{{json .Manifest.Digest}}' | tr -d '"') && \
+              [ -n "$DIGEST_GITHUB" ] && break
+            sleep 5
+          done
+          for i in {1..10}; do
+            DIGEST_DOCKERHUB=$(docker buildx imagetools inspect \
+              ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}:${{ env.VERSION_APP }} \
+              --format '{{json .Manifest.Digest}}' | tr -d '"') && \
+              [ -n "$DIGEST_DOCKERHUB" ] && break
+            sleep 5
+          done
+          if [ -z "$DIGEST_GITHUB" ]; then
+            echo "::error::Failed to retrieve GHCR digest for ${{ matrix.image_name_github }} after 10 retries"
+            exit 1
+          fi
+          if [ -z "$DIGEST_DOCKERHUB" ]; then
+            echo "::error::Failed to retrieve DockerHub digest for ${{ matrix.image_name_dockerhub }} after 10 retries"
+            exit 1
+          fi
+          echo "github=${DIGEST_GITHUB}" >> $GITHUB_OUTPUT
+          echo "dockerhub=${DIGEST_DOCKERHUB}" >> $GITHUB_OUTPUT
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4
+
+      - name: Sign image
+        shell: bash
+        run: |
+          cosign sign --yes \
+            ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
+          cosign sign --yes \
+            ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}@${{ steps.digests.outputs.dockerhub }}
+
+      - name: Attest build provenance - GitHub
         id: attest_github
+        uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.digests.outputs.github }}
+          predicate-type: https://slsa.dev/provenance/v1
+          push-to-registry: true
 
-      - name: Attest build - DockerHub
-        uses: actions/attest-build-provenance@v3
+      - name: Attest build provenance - DockerHub
         id: attest_dockerhub
+        uses: actions/attest@v4
         with:
           subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          
+          subject-digest: ${{ steps.digests.outputs.dockerhub }}
+          predicate-type: https://slsa.dev/provenance/v1
+          push-to-registry: true
+
+      - name: Generate SBOM
+        continue-on-error: true
+        id: sbom
+        uses: aquasecurity/trivy-action@v0.34.2
+        with:
+          image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
+          format: spdx-json
+          output: sbom-${{ matrix.component }}.json
+
+      - name: Attest SBOM - GitHub
+        continue-on-error: true
+        if: steps.sbom.outcome == 'success'
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
+          subject-digest: ${{ steps.digests.outputs.github }}
+          predicate-path: sbom-${{ matrix.component }}.json
+          predicate-type: https://spdx.dev/Document
+          push-to-registry: true
+
+      - name: Attest SBOM - DockerHub
+        continue-on-error: true
+        if: steps.sbom.outcome == 'success'
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
+          subject-digest: ${{ steps.digests.outputs.dockerhub }}
+          predicate-path: sbom-${{ matrix.component }}.json
+          predicate-type: https://spdx.dev/Document
+          push-to-registry: true
+
+      - name: Vulnerability scan
+        continue-on-error: true
+        id: vulnscan
+        uses: aquasecurity/trivy-action@v0.34.2
+        with:
+          image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
+          format: sarif
+          output: trivy-${{ matrix.component }}.sarif
+
+      - name: Upload SARIF
+        continue-on-error: true
+        if: steps.vulnscan.outcome == 'success'
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-${{ matrix.component }}.sarif

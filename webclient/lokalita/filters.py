@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class LokalitaFilter(ArchZaznamFilter):
-    """
-    Třída pro zakladní filtrování lokality a jejich potomků.
-    """
+    """Třída pro zakladní filtrování lokality a jejich potomků."""
 
     igsn = CharFilter(
         lookup_expr="icontains",
@@ -58,6 +56,13 @@ class LokalitaFilter(ArchZaznamFilter):
     )
 
     def filter_queryset(self, queryset):
+        """
+        Filtruje queryset. v aplikaci.
+
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
+        """
         logger.debug("lokalita.filters.LokalitaFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(LokalitaFilter, self).filter_queryset(queryset)
@@ -86,6 +91,12 @@ class LokalitaFilter(ArchZaznamFilter):
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metoda pro filtrování podle názvu, popisu, uživatelského označení a poznámek.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(nazev__icontains=value)
@@ -95,6 +106,8 @@ class LokalitaFilter(ArchZaznamFilter):
         ).distinct()
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Lokalita
         exclude = (
             "nazev",
@@ -103,18 +116,27 @@ class LokalitaFilter(ArchZaznamFilter):
         )
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(LokalitaFilter, self).__init__(*args, **kwargs)
         self.helper = LokalitaFilterFormHelper()
 
 
 class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
-    """
-    Třída pro správně zobrazení filtru.
-    """
+    """Třída pro správně zobrazení filtru."""
 
     form_method = "GET"
 
     def __init__(self, form=None):
+        """
+        Inicializuje instanci třídy.
+
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
+        """
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("lokalita.filters.djPian.divider.label")
         }
@@ -148,7 +170,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(history_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#historieCollapse",
                     role="button",
                     aria_expanded="false",
@@ -167,7 +189,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(dj_pian_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#DjPianCollapse",
                     role="button",
                     aria_expanded="false",
@@ -188,7 +210,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(komponenta_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#KomponentaCollapse",
                     role="button",
                     aria_expanded="false",
@@ -215,7 +237,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(dok_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#zaznamyCollapse",
                     role="button",
                     aria_expanded="false",

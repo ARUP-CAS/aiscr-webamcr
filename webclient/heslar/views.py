@@ -16,11 +16,13 @@ logger = logging.getLogger(__name__)
 
 
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete ruian katastru.
-    """
+    """Třída pohledu pro autocomplete ruian katastru."""
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = RuianKatastr.objects.all()
         if self.q:
             new_qs = qs.filter(nazev__istartswith=self.q).annotate(qs_order=Value(0, IntegerField()))
@@ -36,6 +38,11 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
 def merge_heslare(first, second):
     """
     Pomocní funkce pro vytvoření dvoustupňového selectu.
+
+    :param first: Parametr ``first`` slouží jako vstup pro logiku funkce ``merge_heslare``.
+    :param second: Parametr ``second`` slouží jako vstup pro logiku funkce ``merge_heslare``.
+
+        :return: Vrací proměnná ``data``.
     """
     data = [("", "")]
     # logger.debug(get_language())
@@ -53,10 +60,10 @@ def merge_heslare(first, second):
             else:
                 data.append((k["heslo"], tuple(druhy_kategorie)))
     except ProgrammingError as err:
-        # This error will always be shown before
+        # Tato chyba se vždy zobrazí dříve.
         logger.debug("heslar.views.merge_heslare.error", extra={"error": err})
     except OperationalError as err:
-        # This error will always be shown before
+        # Tato chyba se vždy zobrazí dříve.
         logger.debug("heslar.views.merge_heslare.error", extra={"error": err})
     return data
 
@@ -64,6 +71,12 @@ def merge_heslare(first, second):
 def heslar_12(druha, prvni_kat, id=False):
     """
     Funkce pro vytvoření dvoustupňového selectu.
+
+    :param druha: Parametr ``druha`` se předává do volání ``filter()``, ``merge_heslare()``, vstupuje do návratové hodnoty.
+    :param prvni_kat: Parametr ``prvni_kat`` se předává do volání ``filter()``.
+    :param id: Identifikátor ``id`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací výsledek volání ``merge_heslare()``.
     """
     druha = (
         Heslar.objects.filter(nazev_heslare=druha)
@@ -81,6 +94,10 @@ def heslar_12(druha, prvni_kat, id=False):
 def zjisti_katastr_souradnic(request):
     """
     Funkce pohledu pro vrácení katastru podle souradnic.
+
+    :param request: Parametr ``request`` se předává do volání ``filter()``, ``Point()``, pracuje se s atributy ``GET``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     nalezene_katastry = RuianKatastr.objects.filter(
         hranice__contains=Point(float(request.GET.get("long", 0)), float(request.GET.get("lat", 0)))
@@ -99,6 +116,10 @@ def zjisti_katastr_souradnic(request):
 def zjisti_vychozi_hodnotu(request):
     """
     Funkce pohledu pro zjištení výchozí hodnoty z heslaře.
+
+    :param request: Parametr ``request`` se předává do volání ``int()``, pracuje se s atributy ``GET``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     try:
         nadrazene = int(request.GET.get("nadrazene"))
@@ -118,6 +139,10 @@ def zjisti_vychozi_hodnotu(request):
 def zjisti_nadrazenou_hodnotu(request):
     """
     Funkce pohledu pro zjištení nadřazené hodnoty z heslaře.
+
+    :param request: Parametr ``request`` se předává do volání ``int()``, pracuje se s atributy ``GET``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     podrazene = request.GET.get("podrazene", 0)
     i = 0
@@ -134,11 +159,13 @@ def zjisti_nadrazenou_hodnotu(request):
 
 
 class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete dokument typu.
-    """
+    """Třída pohledu pro autocomplete dokument typu."""
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(id__in=MODEL_3D_DOKUMENT_TYPES)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -146,11 +173,13 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
 
 
 class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete dokument formatu.
-    """
+    """Třída pohledu pro autocomplete dokument formatu."""
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(id__in=MODEL_3D_DOKUMENT_FORMATS)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -158,11 +187,13 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
 
 
 class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete pristupnosti.
-    """
+    """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -170,11 +201,13 @@ class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
 
 
 class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete pristupnosti.
-    """
+    """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = Heslar.objects.all()
         heslar_nazev = self.forwarded.get("heslar_nazev", None)
         if self.q:
@@ -185,11 +218,13 @@ class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetVie
 
 
 class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro autocomplete pristupnosti.
-    """
+    """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = HeslarNazev.objects.all()
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
@@ -197,6 +232,15 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
 
 
 def heslar_list(heslo_nazev, filter={}, use_exclude=False):
+    """
+    Provádí operaci heslar list.
+
+    :param heslo_nazev: Heslo ``heslo_nazev`` používané při vytváření nebo aktualizaci účtu.
+    :param filter: Queryset/filtr ``filter`` použitý při výběru záznamů.
+    :param use_exclude: Parametr ``use_exclude`` ovlivňuje větvení podmínek.
+
+        :return: Vrací výsledek volání ``list()``.
+    """
     hesla = Heslar.objects.filter(nazev_heslare=heslo_nazev)
     if use_exclude:
         hesla_filtered = hesla.exclude(**filter)

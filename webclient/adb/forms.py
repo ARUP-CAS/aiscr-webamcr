@@ -15,7 +15,16 @@ logger = logging.getLogger(__name__)
 
 
 class AdbReadOnlyTextInput(forms.TextInput):
+    """Implementuje komponentu ``AdbReadOnlyTextInput`` v rámci aplikace."""
+
     def format_value(self, value):
+        """
+        Provádí operaci format value.
+
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        """
         if value:
             osoba_query = Osoba.objects.filter(pk=value)
             if osoba_query.count():
@@ -24,11 +33,11 @@ class AdbReadOnlyTextInput(forms.TextInput):
 
 
 class CreateADBForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení ADB.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení ADB."""
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Adb
         fields = (
             "typ_sondy",
@@ -104,8 +113,10 @@ class CreateADBForm(forms.ModelForm):
     def __init__(self, *args, readonly=False, **kwargs):
         """
         Init metoda pro vytvoření formuláře.
-        Args:
-            readonly (boolean): nastavuje formulář na readonly.
+
+        :param args: Dodatečné poziční argumenty předané konstruktoru formuláře.
+        :param readonly: Pokud ``True``, formulář se vykreslí jen pro čtení.
+        :param kwargs: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
         """
         super(CreateADBForm, self).__init__(*args, **kwargs)
         self.fields["uzivatelske_oznaceni_sondy"].required = False
@@ -151,7 +162,7 @@ class CreateADBForm(forms.ModelForm):
                                 '<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                             ),
                         ),
-                        css_class="col-sm-2 input-osoba select2-input",
+                        css_class="col-sm-2 input-osoba select2-input form-group",
                     ),
                     # Div("autor_popisu", css_class="col-sm-2"),
                     Div("rok_popisu", css_class="col-sm-2"),
@@ -162,7 +173,7 @@ class CreateADBForm(forms.ModelForm):
                                 '<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                             ),
                         ),
-                        css_class="col-sm-2 input-osoba select2-input",
+                        css_class="col-sm-2 input-osoba select2-input form-group",
                     ),
                     # Div("autor_revize", css_class="col-sm-2"),
                     Div("rok_revize", css_class="col-sm-2"),
@@ -183,11 +194,15 @@ class CreateADBForm(forms.ModelForm):
 
 
 class VyskovyBodFormSetHelper(FormHelper):
-    """
-    Form helper pro správné vykreslení formuláře výškovího bodu.
-    """
+    """Form helper pro správné vykreslení formuláře výškovího bodu."""
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -198,21 +213,15 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
     """
     Funkce která vrací formulář VB pro formset.
 
-    Args:
-        pian (pian): pian objeckt.
+    :param pian: objekt PIAN.
+    :param niveleta: niveleta objekt.
+    :param not_readonly: nastavuje formulář na readonly.
 
-        niveleta (niveleta): niveleta objekt.
-
-        not_readonly (boolean): nastavuje formulář na readonly.
-
-    Returns:
-        CreateVysovyBodForm: django model formulář VB
+    :return: django model formulář VB.
     """
 
     class CreateVyskovyBodForm(forms.ModelForm):
-        """
-        Hlavní formulář pro vytvoření, editaci a zobrazení VB.
-        """
+        """Hlavní formulář pro vytvoření, editaci a zobrazení VB."""
 
         northing = forms.FloatField(
             label=_("adb.forms.createVyskovyBodForm.label.northing"),
@@ -234,6 +243,8 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         )
 
         class Meta:
+            """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = VyskovyBod
 
             fields = ("ident_cely", "typ", "northing", "easting", "niveleta")
@@ -262,12 +273,9 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def _has_initial_values(self):
             """
-            Metoda která vrací či ma formulář vyplnená initial hodnota
-            Args:
-            pian (pian): pian objeckt.
-            niveleta (niveleta): niveleta objekt
-            Returns:
-            has_initial_values: boolean jestli formulář má initial hodnotu nebo ne.
+            Metoda, která vrací, zda má formulář vyplněné initial hodnoty.
+
+            :return: ``True``, pokud data odpovídají pouze implicitně předvyplněným hodnotám.
             """
             cleaned_data = self.cleaned_data
             has_initial_values = False
@@ -298,7 +306,9 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def is_valid(self):
             """
-            Metoda která vrací zda je formulář správně vyplněn, zakomponována metoda na vyplnení initial hodnoty.
+            Metoda, která vrací, zda je formulář správně vyplněn; je zde zakomponována metoda na vyplnění initial hodnoty.
+
+                :return: Vrací hodnotu podle větve zpracování, typicky: bool, proměnná ``parent_is_valid``.
             """
             parent_is_valid = super().is_valid()
             if self._has_initial_values():
@@ -307,7 +317,11 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
         def save(self, commit=True):
             """
-            Metoda která ukládá formulář do modelu, zakomponována metoda na vyplnení initial hodnoty.
+            Metoda, která ukládá formulář do modelu; je zde zakomponována metoda na vyplnění initial hodnoty.
+
+            :param commit: Pokud ``True``, změny se uloží do databáze.
+
+                :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``save()``.
             """
             if self._has_initial_values():
                 return None
@@ -316,8 +330,9 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         def __init__(self, *args, **kwargs):
             """
             Init metoda pro vytvoření formuláře.
-            Args:
-            not_readonly (boolean): nastavuje formulář na readonly.
+
+            :param args: Dodatečné poziční argumenty předané konstruktoru formuláře. Konkrétně not_readonly (boolean): nastavuje formulář na readonly.
+            :param kwargs: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
             """
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
             self.fields["ident_cely"].required = False

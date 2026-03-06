@@ -19,9 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
-    """
-    Class pro db model kladysm5.
-    """
+    """Databázový model kladu SM5."""
 
     gid = models.IntegerField(primary_key=True)
     mapname = models.TextField()
@@ -29,12 +27,15 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
     geom = pgmodels.PolygonField(srid=5514)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "kladysm5"
 
 
 class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     """
-    Class pro db model ADB.
+    Databázový model ADB.
+
     Obsahuje vazbu na dokumentační jednotku.
     """
 
@@ -90,15 +91,31 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     tracker = FieldTracker()
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "adb"
 
     def get_absolute_url(self):
+        """Vrací absolute url.
+
+        :return: Vrací výsledek volání ``get_absolute_url()``.
+        """
         return self.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.dokumentacni_jednotka.get_permission_object()
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(Adb, self).__init__(*args, **kwargs)
         try:
             self.initial_dokumentacni_jednotka = self.dokumentacni_jednotka
@@ -109,6 +126,16 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None, main_record=None):
+        """
+        Vytvoří Fedora transakci pro ADB záznam a vrátí ji volajícímu.
+
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+        :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
+        :param main_record: Parametr ``main_record`` předává se do volání ``FedoraTransaction()``.
+
+            :return: Vrací atribut objektu.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -121,15 +148,14 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
     """
     Funkce pro výpočet ident celý pro VB.
+
     Obsahuje test na přetečení hodnot.
 
-    Args:
-        adb (adb): adb objekt pro získaní základu identu.
+    :param adb: Parametr ``adb`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``, vstupuje do návratové hodnoty.
+    :param offset: Posun přičtený k poslednímu pořadí výškového bodu.
+    :return: Vrací vypočtený identifikátor výškového bodu.
 
-        offset (int): offset k připočtení k poslednímu VB
-
-    Returns:
-        string: nový ident celý
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``vyskove_body.count() <= MAXIMAL_VYSKOVY_BOD + offset``.
     """
     MAXIMAL_VYSKOVY_BOD: int = 9999
     last_digit_count = 4
@@ -153,7 +179,8 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
 
 class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
     """
-    Class pro db model vyškový bod.
+    Databázový model výškového bodu.
+
     Obsahuje vazbu na ADB.
     """
 
@@ -171,6 +198,10 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
     def set_geom(self, northing, easting, niveleta):
         """
         Metoda na nastavení geomu (souřadnic).
+
+        :param northing: Číselná hodnota ``northing`` použitá při výpočtu nebo transformaci.
+        :param easting: Číselná hodnota ``easting`` použitá při výpočtu nebo transformaci.
+        :param niveleta: Výšková hodnota (Z) ukládaná do geometrie bodu.
         """
 
         logger.debug(
@@ -189,14 +220,19 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
     def save(self, *args, **kwargs):
         """
         Override save metody na nastavení ident celý pokud je prázdny.
+
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
         """
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
         super(VyskovyBod, self).save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
-        """
-        Override init metody pro úpravu souřadnic.
+        """Override init metody pro úpravu souřadnic.
+
+        :param args: Parametr ``args`` předává se do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` předává se do volání ``__init__()``.
         """
         super(VyskovyBod, self).__init__(*args, **kwargs)
         self.northing = None
@@ -215,22 +251,30 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         self.suppress_signal = False
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "vyskovy_bod"
         ordering = [
             "ident_cely",
         ]
 
     def get_absolute_url(self):
+        """Vrací absolute url.
+
+        :return: Vrací výsledek volání ``get_absolute_url()``.
+        """
         return self.adb.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.adb.get_permission_object()
 
 
 class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):
-    """
-    Class pro sekvenci ADB pole db modelu kladysm5.
-    """
+    """Class pro sekvenci ADB pole db modelu kladysm5."""
 
     kladysm5 = models.OneToOneField(
         "Kladysm5",
@@ -241,4 +285,6 @@ class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):
     sekvence = models.IntegerField()
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "adb_sekvence"

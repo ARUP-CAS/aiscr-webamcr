@@ -8,11 +8,17 @@ Třídy
 
 .. py:class:: AdbReadOnlyTextInput
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AdbReadOnlyTextInput`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: format_value()
+
+      Provádí operaci format value.
+
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
 
 .. py:class:: CreateADBForm
@@ -25,9 +31,9 @@ Třídy
 
       Init metoda pro vytvoření formuláře.
 
-      **Argumenty:**
-
-      - ``readonly`` (*boolean*): nastavuje formulář na readonly.
+      :param args: Dodatečné poziční argumenty předané konstruktoru formuláře.
+      :param readonly: Pokud ``True``, formulář se vykreslí jen pro čtení.
+      :param kwargs: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
 
 
 .. py:class:: VyskovyBodFormSetHelper
@@ -38,6 +44,11 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 Funkce
 ------
@@ -46,13 +57,8 @@ Funkce
 
    Funkce která vrací formulář VB pro formset.
 
+   :param pian: objekt PIAN.
+   :param niveleta: niveleta objekt.
+   :param not_readonly: nastavuje formulář na readonly.
 
-   **Argumenty:**
-
-   - ``pian`` (*pian*): pian objeckt.
-   - ``niveleta`` (*niveleta*): niveleta objekt.
-   - ``not_readonly`` (*boolean*): nastavuje formulář na readonly.
-
-   **Návratová hodnota:**
-
-   *CreateVysovyBodForm*: django model formulář VB
+   :return: django model formulář VB.

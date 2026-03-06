@@ -4,14 +4,14 @@ from heslar.admin import ObjectWithMetadataAdmin
 
 
 class DokumentWithMetadataAdmin(ObjectWithMetadataAdmin):
+    """Implementuje komponentu ``DokumentWithMetadataAdmin`` v rámci aplikace."""
+
     pass
 
 
 @admin.register(Let)
 class LetAdmin(DokumentWithMetadataAdmin):
-    """
-    Admin část pro správu modelu Let.
-    """
+    """Admin část pro správu modelu Let."""
 
     list_display = (
         "ident_cely",
@@ -44,6 +44,14 @@ class LetAdmin(DokumentWithMetadataAdmin):
     search_fields = ("ident_cely", "uzivatelske_oznaceni")
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Vrací readonly fields.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
+        :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, atribut objektu.
+        """
         if obj:  # editace existujícího objektu
             return self.readonly_fields + ("ident_cely",)
         return self.readonly_fields

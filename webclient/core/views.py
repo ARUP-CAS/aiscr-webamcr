@@ -69,7 +69,14 @@ from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.core.validators import URLValidator
 from django.db import transaction
 from django.db.models import FilteredRelation, Q, Value
-from django.http import FileResponse, Http404, HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse,
+    StreamingHttpResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -126,14 +133,27 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def index(request):
-    "Funkce podledu pro zobrazení hlavní stránky."
+    """
+    Zobrazí hlavní stránku aplikace po přihlášení uživatele.
+
+    :param request: HTTP požadavek aktuálního uživatele.
+
+        :return: Vrací výsledek volání ``render()``.
+    """
     return render(request, "core/index.html")
 
 
 @require_http_methods(["POST"])
 def delete_file_DZ(request, typ_vazby, ident_cely, pk):
     """
-    Funkce pohledu pro smazání souboru z dropzone. Funkce maže jak záznam v DB tak i soubor na disku.
+    Smaže soubor nahraný přes dropzone včetně záznamu v databázi i ve Fedora úložišti.
+
+    :param request: HTTP požadavek obsahující session identifikátor dropzone uploadu.
+    :param typ_vazby: Typ vazby souboru na doménový objekt (např. dokument, projekt, PAS).
+    :param ident_cely: Identifikátor záznamu, ke kterému je soubor navázán.
+    :param pk: Primární klíč mazaného souboru.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     if not request.session.get("session_uuid"):
         return JsonResponse({"success": False}, status=400)
@@ -175,7 +195,6 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             logger.debug("core.views.delete_file_DZ.deleted.delete_binary_file_completely", extra={"pk": soubor_pk})
             connector.delete_binary_file_completely(soubor)
             fedora_transaction.mark_transaction_as_closed()
-            session_identifier.remove_file_reference(pk)
             return JsonResponse({"success": True})
         except FedoraUpdatedByAnotherTransactionError as err:
             logger.debug(
@@ -185,7 +204,7 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_JINA_TRANSAKCE)
             transaction_error = True
     if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
-        # Not sure if 404 is the only correct option
+        # Není jisté, zda je 404 jediná správná varianta.
         logger.debug("core.views.delete_file_DZ.not_deleted", extra={"soubor": soubor})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
         django_messages = []
@@ -211,7 +230,14 @@ def delete_file_DZ(request, typ_vazby, ident_cely, pk):
 @require_http_methods(["POST", "GET"])
 def delete_file(request, typ_vazby, ident_cely, pk):
     """
-    Funkce pohledu pro smazání souboru. Funkce maže jak záznam v DB tak i soubor na disku.
+    Smaže existující soubor, jeho databázový záznam i binární obsah v repozitáři.
+
+    :param request: HTTP požadavek s metodou GET/POST a případnou návratovou URL.
+    :param typ_vazby: Typ vazby souboru na navázaný doménový objekt.
+    :param ident_cely: Identifikátor záznamu, u kterého se soubor odstraňuje.
+    :param pk: Primární klíč mazaného souboru.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     logger.debug(
         "core.views.delete_file.start",
@@ -264,7 +290,7 @@ def delete_file(request, typ_vazby, ident_cely, pk):
                     fedora_transaction.rollback_transaction()
                 return JsonResponse({"success": False}, status=400)
         if transaction_error is False and Soubor.objects.filter(pk=soubor_pk).exists():
-            # Not sure if 404 is the only correct option
+            # Není jisté, zda je 404 jediná správná varianta.
             logger.debug("core.views.delete_file.not_deleted", extra={"soubor": soubor})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             django_messages = []
@@ -303,14 +329,25 @@ def delete_file(request, typ_vazby, ident_cely, pk):
 
 
 class DownloadFile(LoginRequiredMixin, View):
+    """Implementuje komponentu ``DownloadFile`` v rámci aplikace."""
+
     thumb_small = False
     thumb_large = False
 
-    @staticmethod
-    def _preprocess_image(file_content: BytesIO) -> BytesIO:
-        return file_content
-
     def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
+        """
+        Vrátí požadovaný soubor nebo jeho náhled po ověření vazby k záznamu.
+
+        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek.
+        :param typ_vazby: Typ vazby souboru na doménový záznam.
+        :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
+        :param pk: Primární klíč souboru.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+        :return: Odpověď s obsahem souboru, náhledem nebo redirect při chybě vazby.
+
+            :raises Http404: Vyvolá se v konkrétních chybových větvích této funkce.
+        """
         try:
             check_soubor_vazba(typ_vazby, ident_cely, pk)
         except ZaznamSouborNotmatching as e:
@@ -334,34 +371,83 @@ class DownloadFile(LoginRequiredMixin, View):
         raise Http404
 
 
+class DownloadThumbnailDZ(View):
+    """
+    Třída pohledu pro nahrání miniatury do DropZone při obnovení stránky.
+    """
+
+    def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
+        """
+        Vrátí miniaturu souboru z dočasného uploadu po kontrole oprávnění a vazby.
+
+        :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, pracuje se s atributy ``session``, ovlivňuje větvení podmínek.
+        :param typ_vazby: Typ vazby souboru na doménový záznam.
+        :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
+        :param pk: Primární klíč souboru.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+        :return: Odpověď s miniaturou souboru.
+
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.session.get('session_uuid')``; nebo při splnění podmínky ``cache_ident is None or ident_cely != cache_ident or (not file_can_download)``.
+            :raises Http404: Vyvolá se v konkrétních chybových větvích této funkce.
+        """
+        if not request.session.get("session_uuid"):
+            raise PermissionDenied
+        session_identifier = SessionIdentifier(request)
+        cache_ident = session_identifier.get_ident()
+        file_can_download = session_identifier.file_exists(pk)
+        if cache_ident is None or ident_cely != cache_ident or not file_can_download:
+            raise PermissionDenied
+        try:
+            check_soubor_vazba(typ_vazby, ident_cely, pk)
+        except ZaznamSouborNotmatching as e:
+            logger.debug(e)
+            raise PermissionDenied
+        soubor: Soubor = get_object_or_404(Soubor, id=pk)
+        if soubor.repository_uuid and soubor.small_thumbnail is not None:
+            return soubor.small_thumbnail
+        raise Http404
+
+
 class DownloadThumbnailSmall(DownloadFile):
+    """Implementuje komponentu ``DownloadThumbnailSmall`` v rámci aplikace."""
+
     thumb_small = True
 
 
 class DownloadThumbnailLarge(DownloadFile):
+    """Implementuje komponentu ``DownloadThumbnailLarge`` v rámci aplikace."""
+
     thumb_large = True
 
 
 class UpdateFileView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro zobrazení stránky pro nahrazení souboru.
-    """
+    """Třída pohledu pro zobrazení stránky pro nahrazení souboru."""
 
     template_name = "core/upload_file.html"
 
     def get(self, request, *args, **kwargs):
+        """
+        Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
+
+        :param request: Parametr ``request`` předává se do volání ``error()``, ``get()``, pracuje se s atributy ``GET``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``get()``.
+        """
         typ_vazby = self.kwargs.get("typ_vazby")
         ident_cely = self.kwargs.get("ident_cely")
         file_id = self.kwargs.get("file_id")
 
-        # Získání bezpečné URL pro přesměrování
+        # Získání bezpečné URL pro přesměrování.
         next_url = request.GET.get("next", "core:home")
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
             safe_redirect = next_url
         else:
             safe_redirect = "/"
 
-        # Ověření vazby souboru
+        # Ověření vazby souboru.
         try:
             check_soubor_vazba(typ_vazby, ident_cely, file_id)
         except ZaznamSouborNotmatching as e:
@@ -372,6 +458,16 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        """
+        Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``GET``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``redirect()``.
+        """
+        self.session_identifier.clear_cached_files()
         next_url = request.GET.get("next", "core:home")
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
             safe_redirect = next_url
@@ -380,24 +476,52 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         return redirect(safe_redirect)
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         context = super().get_context_data(**kwargs)
+        pk_set = self.session_identifier.get_cached_files()
+        queryset = Soubor.objects.filter(pk__in=list(pk_set))
+        seznam_mock = [obj.getMock() for obj in queryset]
+        json_mock = json.dumps(seznam_mock, ensure_ascii=False)
         context["ident_cely"] = self.kwargs.get("ident_cely")
         context["back_url"] = self.request.GET.get("next", "/")
         context["file_id"] = self.kwargs.get("file_id")
         context["typ_vazby"] = self.kwargs.get("typ_vazby")
         context["info_tooltip"] = _("core.upload_file_replace.tooltip")
+        context["seznam_mock"] = json_mock
         return context
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Inicializuje identifikaci session pro práci s cache nahraných souborů.
+
+        :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, ``dispatch()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :return: Výsledek standardního zpracování dispatch.
+        """
+        ident_cely = self.kwargs.get("ident_cely")
+        self.session_identifier = SessionIdentifier(request)
+        self.session_identifier.set_ident(ident_cely)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class UploadFileView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro zobrazení stránky s uploadem souboru.
-    """
+    """Třída pohledu pro zobrazení stránky s uploadem souboru."""
 
     template_name = "core/upload_file.html"
     http_method_names = ["get", "post"]
 
     def get_zaznam(self):
+        """Načte doménový záznam, ke kterému se budou soubory nahrávat.
+
+        :return: Vrací výsledek volání ``get_object_or_404()``.
+        """
         self.typ_vazby = self.kwargs.get("typ_vazby")
         self.ident = self.kwargs.get("ident_cely")
         logger.debug(
@@ -417,6 +541,13 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
             return get_object_or_404(Projekt, ident_cely=self.ident)
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
+        """
         self.zaznam = self.get_zaznam()
         pk_set = self.session_identifier.get_cached_files()
         queryset = Soubor.objects.filter(pk__in=list(pk_set))
@@ -437,12 +568,30 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Provádí operaci dispatch.
+
+        :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, ``dispatch()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``dispatch()``.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         self.session_identifier = SessionIdentifier(request)
         self.session_identifier.set_ident(ident_cely)
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        """
+        Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``post``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``redirect()``.
+        """
         self.session_identifier.clear_cached_files()
         self.zaznam = self.get_zaznam()
         return redirect(self.zaznam.get_absolute_url())
@@ -458,23 +607,23 @@ class BasePostUploadView(View):
     handle_upload() pro specifické zpracování.
 
     Process Description:
-        1. Kontrola přítomnosti souboru v requestu
-        2. Validace MIME typu a detekce šifrování
-        3. Antivirová kontrola nahrávaného obsahu
-        4. Předání validovaného souboru potomkům pro konkrétní zpracování
+    1. Kontrola přítomnosti souboru v requestu
+    2. Validace MIME typu a detekce šifrování
+    3. Antivirová kontrola nahrávaného obsahu
+    4. Předání validovaného souboru potomkům pro konkrétní zpracování
 
     Attributes:
-        http_method_names (list): Povolené HTTP metody - pouze POST
-        source_url (str): URL zdroje souboru (pokud je specifikována)
-        fedora_transaction (FedoraTransaction): Instance transakce pro práci s Fedora repository
-        original_filename (str): Původní název nahrávaného souboru
+    http_method_names (list): Povolené HTTP metody - pouze POST
+    source_url (str): URL zdroje souboru (pokud je specifikována)
+    fedora_transaction (FedoraTransaction): Instance transakce pro práci s Fedora repository
+    original_filename (str): Původní název nahrávaného souboru
     """
 
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
         """
-        Zpracuje POST request s nahrávaným souborem.
+        Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
 
         Metoda provádí kompletní validaci nahrávaného souboru před jeho uložením:
         - Kontroluje přítomnost souboru v requestu
@@ -482,18 +631,16 @@ class BasePostUploadView(View):
         - Provádí antivirovou kontrolu obsahu
         - Deleguje finální zpracování na potomky prostřednictvím handle_upload()
 
-        Args:
-            request (HttpRequest): Django HTTP request objekt obsahující nahrávaný soubor
-            *args: Poziční argumenty předané z URL dispatcheru
-            **kwargs: Klíčové argumenty z URL patternu (např. ident_cely, typ_vazby)
-
-        Returns:
-            JsonResponse: JSON odpověď s výsledkem operace
-
         Response Status Codes:
             200: Soubor byl úspěšně validován a zpracován
             400: Validační chyba (chybějící soubor, šifrovaný, virus, neplatný MIME typ)
             500: Neznámá chyba při zpracování
+
+        :param request: Parametr ``request`` předává se do volání ``warning()``, ``handle_upload()``, pracuje se s atributy ``POST``, ``FILES``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``handle_upload()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``handle_upload()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``_unknown_error_response()``, výsledek volání ``JsonResponse()``, výsledek volání ``handle_upload()``.
         """
         self.source_url = request.POST.get("source-url", "")
         self.fedora_transaction = FedoraTransaction()
@@ -539,18 +686,12 @@ class BasePostUploadView(View):
         po úspěšné validaci souboru (MIME typ, antivirus). Potomci zde implementují
         specifickou logiku pro nové nahrání nebo aktualizaci existujícího souboru.
 
-        Args:
-            request (HttpRequest): Django HTTP request objekt s informacemi o uživateli a sessions
-            soubor (TemporaryUploadedFile): Nahraný soubor z requestu
-            soubor_data (BytesIO): Binární obsah souboru jako BytesIO objekt
-            *args: Poziční argumenty z URL dispatcheru
-            **kwargs: Klíčové argumenty z URL (např. ident_cely, typ_vazby, file_id)
-
-        Returns:
-            JsonResponse: JSON odpověď s výsledkem operace nahrání
-
-        Raises:
-            NotImplementedError: Pokud potomek tuto metodu neimplementuje
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``handle_upload``.
+        :param soubor: Nahraný soubor z requestu připravený k uložení.
+        :param soubor_data: Binární obsah souboru v objektu ``BytesIO``.
+        :param args: Dodatečné poziční argumenty z URL dispatcheru.
+        :param kwargs: Dodatečné klíčové argumenty z URL (např. ``ident_cely``).
+        :raises NotImplementedError: Pokud potomek metodu nepřepíše.
         """
         raise NotImplementedError
 
@@ -561,18 +702,9 @@ class BasePostUploadView(View):
         Kontroluje, zda v systému již existuje soubor se stejným SHA-512 hashem.
         Pokud ano, přidá do response_data varovnou zprávu s informací o duplicitě
         včetně identifikátoru záznamu, ke kterému je duplicitní soubor připojen.
-
-        Args:
-            response_data (dict): Slovník s daty odpovědi, do kterého bude přidána zpráva
-            duplikat (QuerySet): QuerySet s duplicitními soubory (Soubor objekty)
-
-        Returns:
-            dict: Upravený response_data slovník s přidanou duplicitní zprávou.
-                  Pokud není nalezen žádný duplikát, vrací nezměněný slovník.
-
-        Response Data Keys:
-            duplicate (tuple): Tuple obsahující zprávu o duplicitě ve formátu:
-                "Soubor {original_filename} byl již nahrán k záznamu {parent_ident}. Zpráva..."
+        :param response_data: Slovník s daty odpovědi, který se případně rozšíří o varování.
+        :param duplikat: QuerySet duplicitních souborů podle hashe.
+        :return: Upravený slovník odpovědi (beze změny, pokud duplicita není nalezena).
         """
         if duplikat is not None and duplikat.exists():
             parent_ident = (
@@ -595,19 +727,10 @@ class BasePostUploadView(View):
 
         Pokud byl soubor během uploadu přejmenován (typicky kvůli úpravě přípony
         pro soulad s MIME typem), přidá do response_data informační zprávu.
-
-        Args:
-            response_data (dict): Slovník s daty odpovědi, do kterého bude přidána zpráva
-            renamed (bool): True pokud došlo k přejmenování, False jinak
-            new_name (str): Nový název souboru po přejmenování
-
-        Returns:
-            dict: Upravený response_data slovník s přidanou zprávou o přejmenování.
-                  Pokud nedošlo k přejmenování (renamed=False), vrací nezměněný slovník.
-
-        Response Data Keys:
-            file_renamed (tuple): Tuple obsahující zprávu o přejmenování ve formátu:
-                "Soubor {original_filename} byl přejmenován na {new_name}"
+        :param response_data: Slovník s daty odpovědi, který se případně doplní o zprávu.
+        :param renamed: Parametr ``renamed`` ovlivňuje větvení podmínek.
+        :param new_name: Nově přidělený název souboru.
+        :return: Upravený slovník odpovědi (beze změny, pokud k přejmenování nedošlo).
         """
         if renamed:
             help_translation = _("core.views.post_upload.renamed.text1")
@@ -621,9 +744,7 @@ class BasePostUploadView(View):
         """
         Vrátí JSON odpověď s chybovou zprávou a HTTP status 500 pro neočekávané chyby
         při zpracování souboru, které nejsou pokryty specifickými error handlery.
-
-        Returns:
-            JsonResponse: JSON odpověď s chybovou zprávou a HTTP status 500
+        :return: JSON odpověď s obecnou chybou a HTTP statusem 500.
         """
         help_translation = _("core.views.post_upload.unknown_error")
         logger.error("core.views.post_upload.unknown_error")
@@ -635,43 +756,41 @@ class NewFileUploadView(BasePostUploadView):
     Pohled pro nahrání nového souboru k záznamu (projekt, dokument, samostatný nález).
 
     Process Description:
-        1. Kontrola oprávnění uživatele (nebo anonymního přístupu pro projekty)
-        2. Rozlišení typu záznamu a generování názvu souboru
-        3. Validace a případná úprava přípony souboru podle MIME typu
-        4. Odstranění GPS dat z obrázků samostatných nálezů
-        5. Uložení do Fedora repository
-        6. Vytvoření záznamu v databázi s metadaty
-        7. Detekce duplicit podle SHA-512 hashe
-        8. Zaznamenání události nahrání do historie
+    1. Kontrola oprávnění uživatele (nebo anonymního přístupu pro projekty)
+    2. Rozlišení typu záznamu a generování názvu souboru
+    3. Validace a případná úprava přípony souboru podle MIME typu
+    4. Odstranění GPS dat z obrázků samostatných nálezů
+    5. Uložení do Fedora repository
+    6. Vytvoření záznamu v databázi s metadaty
+    7. Detekce duplicit podle SHA-512 hashe
+    8. Zaznamenání události nahrání do historie
 
     URL Parameters:
-        ident_cely (str): Identifikátor záznamu, ke kterému má být soubor nahrán
-        typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+    ident_cely (str): Identifikátor záznamu, ke kterému má být soubor nahrán
+    typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
     """
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
         """
         Implementuje nahrání nového souboru k záznamu.
 
-        Provádí kompletní workflow pro vytvoření nového souboru včetně kontroly oprávnění,
-        generování názvu, uložení do repository a vytvoření databázového záznamu.
+        Provádí workflow vytvoření nového souboru včetně kontroly oprávnění,
+        generování názvu, uložení do repository a založení databázového záznamu.
         Podporuje anonymní upload pro oznámení a automaticky zpracovává metadata obrázků.
-
-        Args:
-            request (HttpRequest): HTTP request s informacemi o uživateli a session
-            soubor (TemporaryUploadedFile): Nahraný soubor z requestu
-            soubor_data (BytesIO): Binární obsah souboru
-            *args: Poziční argumenty z URL
-            **kwargs: Obsahuje 'ident_cely' (identifikátor záznamu) a 'typ_vazby' (typ vazby)
-
-        Returns:
-            JsonResponse: JSON odpověď s výsledkem operace
 
         Response Status Codes:
             200: Soubor úspěšně nahrán
             400: Chyba při nahrávání (transakční konflikt, MIME typ, atd.)
             403: Nedostatečná oprávnění nebo překročen limit souborů
             500: Neexistující záznam nebo jiná interní chyba
+
+        :param request: HTTP request s informacemi o uživateli a session.
+        :param soubor: Nahraný soubor z requestu.
+        :param soubor_data: Binární obsah souboru.
+        :param args: Dodatečné poziční argumenty z URL.
+        :param kwargs: Klíčové argumenty včetně ``ident_cely`` a ``typ_vazby``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, proměnná ``resolved``.
         """
         ident_cely = kwargs.get("ident_cely")
         logger.debug(
@@ -762,20 +881,13 @@ class NewFileUploadView(BasePostUploadView):
         ověří konzistenci mezi typ_vazby a skutečným typem objektu, zkontroluje
         oprávnění uživatele k nahrání souboru a vygeneruje standardizovaný název
         souboru podle příslušných konvencí.
-
-        Args:
-            request (HttpRequest): HTTP request s informacemi o uživateli
-            ident_cely (str): Úplný identifikátor záznamu (např. "C-202400001")
-            filename (str): Původní název nahrávaného souboru
-            typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
-
-        Returns:
-            tuple | JsonResponse: Při úspěchu vrací tuple (objekt, new_name):
-                - objekt (Projekt|Dokument|SamostatnyNalez): Instance nalezeného záznamu
-                - new_name (str): Vygenerovaný standardizovaný název souboru
-            Při chybě vrací JsonResponse s chybovou zprávou a status kódem 403/500
+        :param request: HTTP request s kontextem aktuálního uživatele.
+        :param ident_cely: Úplný identifikátor cílového záznamu.
+        :param filename: Původní název nahrávaného souboru.
+        :param typ_vazby: Typ vazby (``projekt``, ``dokument``, ``model3d`` nebo ``pas``).
+        :return: Při úspěchu dvojice ``(objekt, new_name)``, jinak ``JsonResponse`` s chybou.
         """
-        # Mapování typu vazby na permission action
+        # Mapování typu vazby na oprávnění akce.
         action_map = {
             "projekt": Permissions.actionChoices.soubor_nahrat_projekt,
             "dokument": Permissions.actionChoices.soubor_nahrat_dokument,
@@ -783,7 +895,7 @@ class NewFileUploadView(BasePostUploadView):
             "pas": Permissions.actionChoices.soubor_nahrat_pas,
         }
 
-        # Kontrola platnosti typu vazby
+        # Kontrola platnosti typu vazby.
         action = action_map.get(typ_vazby)
         if action is None:
             self.fedora_transaction.rollback_transaction()
@@ -796,7 +908,7 @@ class NewFileUploadView(BasePostUploadView):
                 status=400,
             )
 
-        # Rozlišení objektu podle typu vazby - dotazy pouze pro relevantní typ
+        # Rozlišení objektu podle typu vazby – dotazy pouze pro relevantní typ.
         objekt = None
         new_name = None
 
@@ -856,35 +968,24 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
     Pohled pro nahrazení existujícího souboru novou verzí.
 
     Rozdíly oproti NewFileUploadView:
-        - Vždy vyžaduje přihlášení uživatele (LoginRequiredMixin)
-        - Nepodporuje projekty (pouze dokument, model3d, pas)
-        - Zachovává původní název souboru, aktualizuje pouze příponu
-        - Aktualizuje existující záznam v Fedora repository místo vytváření nového
-        - V historii zaznamenává jako novou verzi, ne nový soubor
+    - Vždy vyžaduje přihlášení uživatele (LoginRequiredMixin)
+    - Nepodporuje projekty (pouze dokument, model3d, pas)
+    - Zachovává původní název souboru, aktualizuje pouze příponu
+    - Aktualizuje existující záznam v Fedora repository místo vytváření nového
+    - V historii zaznamenává jako novou verzi, ne nový soubor
 
     URL Parameters:
-        typ_vazby (str): Typ vazby - "dokument", "model3d", nebo "pas"
-        ident_cely (str): Identifikátor záznamu, ke kterému soubor patří
-        file_id (int): Primary key existujícího Soubor objektu
+    typ_vazby (str): Typ vazby - "dokument", "model3d", nebo "pas"
+    ident_cely (str): Identifikátor záznamu, ke kterému soubor patří
+    file_id (int): Primary key existujícího Soubor objektu
     """
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):
         """
         Implementuje aktualizaci existujícího souboru novou verzí.
 
-        Provádí kompletní workflow pro nahrazení obsahu existujícího souboru včetně
-        validace vazeb, aktualizace v repository a databázi. Zachovává původní název
-        souboru (s možnou úpravou přípony) a vytváří novou verzi v historii.
-
-        Args:
-            request (HttpRequest): HTTP request s informacemi o přihlášeném uživateli
-            soubor (TemporaryUploadedFile): Nový nahraný soubor z requestu
-            soubor_data (BytesIO): Binární obsah nového souboru
-            *args: Poziční argumenty z URL
-            **kwargs: Obsahuje 'typ_vazby', 'ident_cely' a 'file_id'
-
-        Returns:
-            JsonResponse: JSON odpověď s výsledkem operace
+        Nahrazuje obsah existujícího souboru, zachovává název (s případnou úpravou
+        přípony), aktualizuje repository a zapisuje novou verzi do historie.
 
         Response Status Codes:
             200: Soubor úspěšně aktualizován
@@ -892,16 +993,22 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             403: Nedostatečná oprávnění k nahrazení souboru
             500: Chybějící vazba nebo jiná interní chyba
 
-        Raises:
-            Http404: Pokud soubor s daným file_id neexistuje (get_object_or_404)
-            ZaznamSouborNotmatching: Pokud soubor nepatří k danému záznamu
+        :param request: HTTP request s informacemi o přihlášeném uživateli.
+        :param soubor: Nový nahraný soubor z requestu.
+        :param soubor_data: Binární obsah nového souboru.
+        :param args: Dodatečné poziční argumenty z URL.
+        :param kwargs: Klíčové argumenty včetně ``typ_vazby``, ``ident_cely`` a ``file_id``.
+        :raises Http404: Pokud soubor s daným ``file_id`` neexistuje.
+        :raises ZaznamSouborNotmatching: Pokud soubor nepatří k uvedenému záznamu.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``permission_check``, výsledek volání ``JsonResponse()``, výsledek volání ``_unknown_error_response()``.
         """
         typ_vazby = kwargs.get("typ_vazby")
         ident_cely = kwargs.get("ident_cely")
         file_id = kwargs.get("file_id")
         logger.debug("core.views.post_upload.updating", extra={"pk": file_id, "source_url": self.source_url})
 
-        # Kontrola platnosti typu vazby a oprávnění
+        # Kontrola platnosti typu vazby. a oprávnění
         permission_check = self._check_update_permissions(request, typ_vazby, ident_cely, file_id)
         if isinstance(permission_check, JsonResponse):
             return permission_check
@@ -985,6 +1092,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
             response_data["id"] = soubor_instance.pk
             soubor_instance.close_active_transaction_when_finished = True
             soubor_instance.save()
+            SessionIdentifier(request).add_file_reference(soubor_instance.pk)
             return JsonResponse(response_data, status=200)
         else:
             soubor_instance.close_active_transaction_when_finished = True
@@ -998,26 +1106,21 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
 
         Na základě typ_vazby ověří, zda je nahrazení souboru povoleno pro daný typ
         záznamu, a zkontroluje oprávnění uživatele pomocí check_permissions.
-
-        Args:
-            request (HttpRequest): HTTP request s informacemi o uživateli
-            typ_vazby (str): Typ vazby - "dokument", "model3d", nebo "pas"
-            ident_cely (str): Úplný identifikátor záznamu
-            file_id (int): Primary key existujícího souboru
-
-        Returns:
-            bool | JsonResponse: True pokud je vše v pořádku,
-                                 JsonResponse s chybovou zprávou při problému
+        :param request: HTTP request s informacemi o přihlášeném uživateli.
+        :param typ_vazby: Typ vazby (``dokument``, ``model3d`` nebo ``pas``).
+        :param ident_cely: Úplný identifikátor záznamu.
+        :param file_id: Primární klíč nahrazovaného souboru.
+        :return: ``True`` při úspěchu, jinak ``JsonResponse`` s chybovým popisem.
         """
-        # Mapování typu vazby na permission action
-        # Poznámka: projekt není v mapování - nahrazení souborů projektu není povoleno
+        # Mapování typu vazby na oprávnění akce.
+        # Poznámka: projekt není v mapování – nahrazení souborů projektu není povoleno.
         action_map = {
             "dokument": Permissions.actionChoices.soubor_nahradit_dokument,
             "model3d": Permissions.actionChoices.soubor_nahradit_model3d,
             "pas": Permissions.actionChoices.soubor_nahradit_pas,
         }
 
-        # Kontrola platnosti typu vazby
+        # Kontrola platnosti typu vazby.
         action = action_map.get(typ_vazby)
         if action is None:
             self.fedora_transaction.rollback_transaction()
@@ -1030,7 +1133,7 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
                 status=400,
             )
 
-        # Rozlišení objektu podle typu vazby - dotazy pouze pro relevantní typ
+        # Rozlišení objektu podle typu vazby – dotazy pouze pro relevantní typ.
         objekt = None
 
         if typ_vazby in ("dokument", "model3d"):
@@ -1070,6 +1173,12 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
 def get_finds_soubor_name(find, filename, add_to_index=1):
     """
     Funkce pro získaní jména souboru pro samostatný nález.
+
+    :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
+    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
+    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
     """
     ident_cely_sanitized = find.ident_cely.replace("-", "")
     files = find.soubory.soubory.filter(nazev__contains=ident_cely_sanitized)
@@ -1092,7 +1201,12 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
 
 def get_projekt_soubor_name(projekt: Projekt, file_name):
     """
-    Funkce pro získaní jména souboru pro projekt.
+    Vygeneruje bezpečný název souboru pro upload do projektu.
+
+    :param projekt: Projekt, ke kterému se soubor nahrává.
+    :param file_name: Původní název nahrávaného souboru.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: bool, hodnotu podle větve zpracování.
     """
     if Soubor.objects.filter(vazba__projekt_souboru=projekt).count() >= MAX_POCET_SOUBORU_PROJEKTU:
         return False
@@ -1100,16 +1214,20 @@ def get_projekt_soubor_name(projekt: Projekt, file_name):
     nfkd_form = unicodedata.normalize("NFKD", split_file[0])
     only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
     return re.sub("[^A-Za-z0-9_]", "_", only_ascii) + split_file[1]
-    # potrebne odstranit constraint soubor_filepath_key
+    # Potřebné odstranit omezení `soubor_filepath_key`.
 
 
 def check_stav_changed(request, zaznam):
     """
-    Funkce pro oveření jestli se zmenil stav záznamu pri uložení formuláře oproti jeho načtení.
+    Ověří, zda se stav záznamu mezitím změnil oproti hodnotě odeslané ve formuláři.
+
+    :param request: Parametr ``request`` předává se do volání ``CheckStavNotChangedForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek.
+    :param zaznam: Ukládaný záznam, jehož stav se porovnává.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
     logger.debug("core.views.check_stav_changed.start", extra={"pk": zaznam.pk})
     if request.method == "POST":
-        # TODO BR-A-5
         form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav)
         if form_check.is_valid():
             pass
@@ -1152,7 +1270,7 @@ def check_stav_changed(request, zaznam):
                 return True
 
     else:
-        # check if stav zaznamu is same in DB as was on detail page entered from
+        # Ověří, že stav záznamu v DB odpovídá stavu při vstupu na detail.
         if request.GET.get("sent_stav", False) and str(request.GET.get("sent_stav")) != str(zaznam.stav):
             sent_stav = str(request.GET.get("sent_stav"))
             zaznam_stav = str(zaznam.stav)
@@ -1197,7 +1315,12 @@ def check_stav_changed(request, zaznam):
 @require_http_methods(["GET"])
 def redirect_ident_view(request, ident_cely):
     """
-    Funkce pro získaní správneho redirectu na záznam podle ident%cely záznamu.
+    Přesměruje uživatele na detail záznamu nalezeného podle identifikátoru.
+
+    :param request: Parametr ``request`` předává se do volání ``redirect()``, ``get_absolute_url()``, vstupuje do návratové hodnoty.
+    :param ident_cely: Hledaný identifikátor záznamu.
+
+        :return: Vrací výsledek volání ``redirect()``.
     """
     object = get_record_from_ident(ident_cely)
     if object:
@@ -1214,12 +1337,16 @@ def redirect_ident_view(request, ident_cely):
         return redirect("core:home")
 
 
-# for prolonging session ajax call
+# Pro AJAX volání na prodloužení relace.
 @login_required
 @require_http_methods(["GET"])
 def prolong_session(request):
     """
-    Funkce pohledu pro prodloužení prihlášení.
+    Vrátí zbývající čas relace pro AJAX prodloužení přihlášení.
+
+    :param request: Parametr ``request`` předává se do volání ``seconds_until_idle_time_end()``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     options = getattr(settings, "AUTO_LOGOUT")
     current_time = now()
@@ -1231,11 +1358,17 @@ def prolong_session(request):
 
 
 class ExportMixinDate(ExportMixin):
-    """
-    Mixin pro získaní názvu exportovaného souboru.
-    """
+    """Mixin pro získaní názvu exportovaného souboru."""
 
     def get_export_filename(self, export_format, export_name=None):
+        """
+        Sestaví název exportního souboru s časovým razítkem.
+
+        :param export_format: Cílový formát exportu (např. ``csv``, ``xlsx``).
+        :param export_name: Volitelný základ názvu; pokud není zadán, použije ``self.export_name``.
+
+            :return: Vrací výsledek volání ``format()``.
+        """
         if export_name is None:
             export_name = self.export_name
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -1243,6 +1376,8 @@ class ExportMixinDate(ExportMixin):
 
 
 class PermissionFilterMixin:
+    """Implementuje komponentu ``PermissionFilterMixin`` v rámci aplikace."""
+
     permission_model_lookup = ""
     typ_zmeny_lookup = ""
     group_to_accessibility = {
@@ -1263,6 +1398,14 @@ class PermissionFilterMixin:
     }
 
     def check_filter_permission(self, qs, action=None):
+        """
+        Ověří filter permission.
+
+        :param qs: Parametr ``qs`` předává se do volání ``filter_by_permission()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param action: Identifikátor akce, která se má provést.
+
+            :return: Vrací proměnná ``qs``.
+        """
         if action:
             permissions = Permissions.objects.filter(
                 main_role=self.request.user.hlavni_role, address_in_app=self.request.resolver_match.route, action=action
@@ -1298,6 +1441,14 @@ class PermissionFilterMixin:
         return qs
 
     def filter_by_permission(self, qs, permission):
+        """
+        Filtruje by permission.
+
+        :param qs: Parametr ``qs`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``annotate``, ``none``, vstupuje do návratové hodnoty.
+        :param permission: Parametr ``permission`` předává se do volání ``filter()``, ``add_status_lookup()``, pracuje se s atributy ``base``, ``status``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, proměnná ``qs``.
+        """
         qs = qs.annotate(
             historie_zapsat=FilteredRelation(
                 self.permission_model_lookup + "historie__historie",
@@ -1317,6 +1468,13 @@ class PermissionFilterMixin:
         return qs
 
     def add_status_lookup(self, permission):
+        """
+        Provádí operaci add status lookup.
+
+        :param permission: Parametr ``permission`` předává se do volání ``sub()``, pracuje se s atributy ``status``.
+
+            :return: Vrací proměnná ``filterdoc``.
+        """
         filterdoc = {}
         subed_status = re.sub("[a-zA-Z]", "", permission.status)
         if ">" in subed_status:
@@ -1342,6 +1500,14 @@ class PermissionFilterMixin:
         return filterdoc
 
     def add_ownership_lookup(self, ownership, qs=None):
+        """
+        Provádí operaci add ownership lookup.
+
+        :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+        :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
+
+            :return: Vrací výsledek volání ``Q()``.
+        """
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
         if ownership == Permissions.ownershipChoices.our:
@@ -1352,6 +1518,14 @@ class PermissionFilterMixin:
             return Q(**{"historie_zapsat__in": filtered_my})
 
     def add_accessibility_lookup(self, permission, qs):
+        """
+        Provádí operaci add accessibility lookup.
+
+        :param permission: Parametr ``permission`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``accessibility``, vstupuje do návratové hodnoty.
+        :param qs: Parametr ``qs`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
+        """
         accessibility_key = self.permission_model_lookup + "pristupnost__in"
         accessibilities = Heslar.objects.filter(
             nazev_heslare=HESLAR_PRISTUPNOST, id__in=self.group_to_accessibility.get(self.request.user.hlavni_role.id)
@@ -1361,9 +1535,7 @@ class PermissionFilterMixin:
 
 
 class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
-    """
-    Třída pohledu pro tabulky záznamů, která je použita jako základ pro jednotlivé pohledy.
-    """
+    """Třída pohledu pro tabulky záznamů, která je použita jako základ pro jednotlivé pohledy."""
 
     template_name = "search_list.html"
     allow_empty = True
@@ -1377,19 +1549,54 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     table_pagination = {"per_page": 100}
 
     def create_export(self, export_format):
+        """
+        Vytvoří export výsledků vyhledávání v požadovaném formátu.
+
+        :param export_format: Parametr ``export_format`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponse()``, proměnná ``response``.
+        """
         from redis import Redis
 
         def check_if_aborted(r_inner: Redis, key_inner: str):
+            """
+            Ověří if aborted.
+
+            :param r_inner: Parametr ``r_inner`` pracuje se s atributy ``get``, ``delete``.
+            :param key_inner: Textový název nebo klíč ``key_inner`` používaný v rámci operace.
+
+                :return: Vrací proměnná ``aborted``.
+            """
             aborted = r_inner.get(key_inner + "_stat") == "-1"
             if aborted:
                 r_inner.delete(key_inner)
             return aborted
 
         def update_progress_bar(r_inner: Redis, key_inner: str, new_value: int, message: str):
+            """
+            Aktualizuje progress bar.
+
+            :param r_inner: Parametr ``r_inner`` se předává do volání ``check_if_aborted()``, pracuje se s atributy ``set``, vstupuje do návratové hodnoty.
+            :param key_inner: Textový název nebo klíč ``key_inner`` používaný v rámci operace.
+            :param new_value: Parametr ``new_value`` se předává do volání ``set()``, ``dumps()``.
+            :param message: Parametr ``message`` předává se do volání ``set()``, ``dumps()``.
+
+                :return: Vrací výsledek volání ``check_if_aborted()``.
+            """
             r_inner.set(key_inner, json.dumps({"percent": int(new_value), "text": message}), ex=3600)
             return check_if_aborted(r_inner, key_inner)
 
         def file_iterator(content, r, redis_variable_name, chunk_size=8192):
+            """
+            Provádí operaci file iterator.
+
+            :param content: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
+            :param r: Parametr ``r`` se předává do volání ``update_progress_bar()``, pracuje se s atributy ``delete``.
+            :param redis_variable_name: Textový název nebo klíč ``redis_variable_name`` používaný v rámci operace.
+            :param chunk_size: Parametr ``chunk_size`` se předává do volání ``range()``, ovlivňuje větvení podmínek.
+
+                :raises Exception: Vyvolá se při zpracování zachycené výjimky typu ``Exception``.
+            """
             bytes_sent = 0
             file_size = len(content)
             try:
@@ -1503,6 +1710,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             return response
 
     def init_translations(self):
+        """Provádí operaci init translations."""
         self.page_title = ""
         self.search_sum = ""
         self.pick_text = ""
@@ -1516,10 +1724,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         self.toolbar_label = ""
 
     def _get_sort_params(self):
+        """
+        Vrací sort params.
+
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         sort_params = self.request.GET.getlist("sort")
         return sort_params
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         context = super().get_context_data(**kwargs)
         self.init_translations()
         context["export_formats"] = self.export_formats
@@ -1542,19 +1762,30 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return context
 
     def get_queryset(self):
+        """Vrací queryset výsledků vyhledávání podle zadaných filtrů.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = super().get_queryset()
         qs.cache()
         return qs
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
+        """
+        Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
+
+        :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
+        """
         return super().get(request, *args, **kwargs)
 
 
 class StahnoutDataHistorickaView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro stažení historické verze souboru nebo metadat z Fedory
-    """
+    """Třída pohledu pro stažení historické verze souboru nebo metadat z Fedory"""
 
     MODEL_MAP = {
         "Pian": Pian,
@@ -1569,11 +1800,27 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
     }
 
     def get(self, request, model_name, ident_cely, timestamp):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param model_name: Název modelu používaný pro cílení operace.
+        :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``.
+        :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
+
+            :return: Vrací proměnná ``response``.
+            :raises Http404: Vyvolá se při splnění podmínky ``Model is None``.
+        """
         Model = self.MODEL_MAP.get(model_name)
         if Model is None:
             raise Http404
 
         def context_processor(content):
+            """
+            Provádí operaci context processor.
+
+            :param content: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
+            """
             yield content
 
         if model_name == "Soubor":
@@ -1589,7 +1836,18 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
 
 
 class CheckUserAuthentication(View):
+    """Implementuje komponentu ``CheckUserAuthentication`` v rámci aplikace."""
+
     def get(self, request, *args, **kwargs):
+        """
+        Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
+
+        :param request: Parametr ``request`` předává se do volání ``JsonResponse()``, pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         return JsonResponse({"is_authenticated": request.user.is_authenticated})
 
 
@@ -1598,6 +1856,10 @@ class CheckUserAuthentication(View):
 def post_ajax_get_pas_and_pian_limit(request):
     """
     Funkce pohledu pro získaní heatmapy.
+
+    :param request: Parametr ``request`` se předává do volání ``loads()``, ``get_pas_from_envelope()``, pracuje se s atributy ``body``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     body = json.loads(request.body.decode("utf-8"))
     params = [
@@ -1661,6 +1923,16 @@ def post_ajax_get_pas_and_pian_limit(request):
 
 
 def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
+    """
+    Ověří soubor vazba.
+
+    :param typ_vazby: Parametr ``typ_vazby`` ovlivňuje větvení podmínek.
+    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+    :param id_zaznamu: Parametr ``id_zaznamu`` předává se do volání ``filter()``.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        :raises ZaznamSouborNotmatching: Vyvolá se při splnění podmínky ``soubor.count() > 0``.
+    """
     if typ_vazby == "model3d" or typ_vazby == "dokument":
         soubor = get_object_or_404(Dokument, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
     elif typ_vazby == "pas":
@@ -1674,7 +1946,16 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
 
 
 class ReadTempValueView(View):
+    """Implementuje komponentu ``ReadTempValueView`` v rámci aplikace."""
+
     def get(self, request):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``GET``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         r = RedisConnector.get_connection_decode()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -1682,15 +1963,24 @@ class ReadTempValueView(View):
             try:
                 return JsonResponse(json.loads(value))
             except Exception:
-                # Handling the case where the key does not exist in Redis
+                # Ošetření případu, kdy klíč v Redis neexistuje.
                 return JsonResponse({"percent": 0, "text": _("core.templates.core.export_modal.file_being_generated")})
         else:
-            # Return a JSON response with a 403 Forbidden status
+            # Vrátí JSON odpověď se stavem 403 (zakázáno).
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
 class DeleteTempValueView(View):
+    """Implementuje komponentu ``DeleteTempValueView`` v rámci aplikace."""
+
     def get(self, request):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``GET``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -1698,12 +1988,21 @@ class DeleteTempValueView(View):
             logger.debug("core.views.ResetTempValueView.get.result", extra={"value": temp_name})
             return JsonResponse({"result": "success"})
         else:
-            # Return a JSON response with a 403 Forbidden status
+            # Vrátí JSON odpověď se stavem 403 (zakázáno).
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
 class AbortDownloadUpdateTempValueView(View):
+    """Implementuje komponentu ``AbortDownloadUpdateTempValueView`` v rámci aplikace."""
+
     def get(self, request):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``GET``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         r = RedisConnector.get_connection()
         temp_name = request.GET.get("temp_name", "")
         if temp_name.startswith("export_"):
@@ -1711,25 +2010,28 @@ class AbortDownloadUpdateTempValueView(View):
             logger.debug("core.views.AbortDownloadUpdateTempValueView.get.result", extra={"value": temp_name})
             return JsonResponse({"result": "success"})
         else:
-            # Return a JSON response with a 403 Forbidden status
+            # Vrátí JSON odpověď se stavem 403 (zakázáno).
             return JsonResponse({"error": "Access to 'export_' prefixed keys is forbidden"}, status=403)
 
 
 class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
-    """
-    Třída podledu pro práci s prekladmi doplnena o backup osubory.
-    """
+    """Třída podledu pro práci s prekladmi doplnena o backup osubory."""
 
     @cached_property
     def po_file_path(self):
-        """Based on the url kwargs, infer and return the path to the .po file to
-        be shown/updated.
-
-        Throw a 404 if a file isn't found.
         """
-        # This was formerly referred to as 'rosetta_i18n_fn'
+        Podle URL parametrů `kwargs` odvodí a vrátí cestu k `.po` souboru,
+
+        který se má zobrazit nebo upravit.
+
+        Pokud soubor neexistuje, vyvolá chybu 404.
+
+            :return: Vrací proměnná ``path``.
+            :raises Http404: Vyvolá se při zpracování zachycené výjimky typu ``IndexError``.
+        """
+        # Dříve se tato hodnota označovala jako `rosetta_i18n_fn`.
         idx = self.kwargs["idx"]
-        idx = int(idx)  # idx matched url re expression; calling int() is safe
+        idx = int(idx)  # `idx` odpovídá regexu v URL; volání `int()` je bezpečné.
 
         third_party_apps = self.po_filter in ("all", "third-party")
         django_apps = self.po_filter in ("all", "django")
@@ -1751,18 +2053,23 @@ class RosettaFileLevelMixinWithBackup(RosettaFileLevelMixin):
 
 
 class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
-    """
-    Třída pohledu pro import prekladových souboru.
-    """
+    """Třída pohledu pro import překladových souborů."""
 
     template_name = "rosetta/import_form.html"
     form_class = TransaltionImportForm
 
     def form_valid(self, form):
+        """
+        Provádí operaci form valid.
+
+        :param form: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
+
+            :return: Vrací výsledek volání ``redirect()``.
+        """
         new_pofile = form.cleaned_data["file"]
         tmp_path = None
         try:
-            # Write uploaded InMemoryUploadedFile to a temporary file and pass its path to pofile
+            # Zapíše nahraný InMemoryUploadedFile do dočasného souboru a předá jeho cestu nástroji pofile.
             tmp = tempfile.NamedTemporaryFile(delete=False)
             tmp_path = tmp.name
             for chunk in new_pofile.chunks():
@@ -1770,13 +2077,13 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
             tmp.flush()
             tmp.close()
             po_file = pofile(tmp_path)
-            # remove temp file once polib has loaded it
+            # Dočasný soubor smaže až po načtení obsahu knihovnou polib.
             try:
                 os.unlink(tmp_path)
             except Exception:
                 pass
         except Exception as e:
-            # cleanup on error
+            # Úklid při chybě.
             if tmp_path:
                 try:
                     os.unlink(tmp_path)
@@ -1795,6 +2102,13 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         return redirect(reverse("rosetta-file-list", args=[self.po_filter]))
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         context = super(TranslationImportView, self).get_context_data(**kwargs)
         rosetta_i18n_lang_name = str(dict(rosetta_settings.ROSETTA_LANGUAGES).get(self.language_id))
         context.update(
@@ -1810,17 +2124,27 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         return context
 
     def handle_uploaded_file(self, f):
+        """
+        Zpracuje uploaded file.
+
+        :param f: Pomocný stream/objekt používaný interně funkcí.
+        """
         with open(self.po_file_path, "wb+") as destination:
             for chunk in f.chunks():
                 destination.write(chunk)
 
 
 class TranslationFileListWithBackupView(TranslationFileListView):
-    """
-    Třída pohledu pro zobrazení prekladových souboru s backup souborami.
-    """
+    """Třída pohledu pro zobrazení prekladových souboru s backup souborami."""
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         context = super(TranslationFileListView, self).get_context_data(**kwargs)
 
         third_party_apps = self.po_filter in ("all", "third-party")
@@ -1852,11 +2176,16 @@ class TranslationFileListWithBackupView(TranslationFileListView):
 
 
 class TranslationFormWithBackupView(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TranslationFormView):
-    """
-    Třída pohledu pro zobrazení formulaře s prekladmi i pro backup soubory
-    """
+    """Třída pohledu pro zobrazení formulaře s prekladmi i pro backup soubory"""
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         context = super(TranslationFormWithBackupView, self).get_context_data(**kwargs)
         po_filename = self.po_file_path.split("/")[-1]
         context["po_filename"] = po_filename
@@ -1865,18 +2194,25 @@ class TranslationFormWithBackupView(RosettaFileLevelMixinWithBackup, LoginRequir
 
 
 class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TranslationFileDownload):
-    """
-    Třída pohledu pro stahování prekladových souboru is backup souborami.
-    """
+    """Třída pohledu pro stahování prekladových souboru is backup souborami."""
 
     def get(self, request, *args, **kwargs):
+        """
+        Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``response``, výsledek volání ``HttpResponseRedirect()``.
+        """
         try:
             if len(self.po_file_path.split("/")) >= 5:
                 offered_fn = "_".join(self.po_file_path.split("/")[-5:])
             else:
                 offered_fn = self.po_file_path.split("/")[-1]
             po_fn = str(self.po_file_path.split("/")[-1])
-            mo_fn = str(po_fn.replace(".po", ".mo"))  # not so smart, huh
+            mo_fn = str(po_fn.replace(".po", ".mo"))  # Jednoduchá náhrada názvu souboru.
             zipdata = BytesIO()
             with zipfile.ZipFile(zipdata, mode="w") as zipf:
                 zipf.writestr(po_fn, str(self.po_file).encode("utf8"))
@@ -1896,13 +2232,20 @@ class TranslationFileDownloadBackup(RosettaFileLevelMixinWithBackup, LoginRequir
 
 
 class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro smazání backup prekladových souboru.
-    """
+    """Třída pohledu pro smazání backup prekladových souboru."""
 
     template_name = "core/transakce_modal.html"
 
     def get(self, request, *args, **kwargs):
+        """
+        Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``render_to_response()``.
+        """
         context = {
             "object_identification": self.po_file_path.split("/")[-1],
             "title": _("core.views.translationFileSmazatbackup.title.text"),
@@ -1912,6 +2255,15 @@ class TranslationFileSmazatBackup(RosettaFileLevelMixinWithBackup, LoginRequired
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``post``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         if self.po_file_path.split("/")[-1] == "django.po":
             messages.add_message(self.request, messages.ERROR, TRANSLATION_DELETE_CANNOT_MAIN)
         else:
@@ -1930,24 +2282,41 @@ class PrometheusMetricsView(IPWhitelistMixin, View):
     """
 
     def get(self, request, *args, **kwargs):
+        """
+        Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
+
+        :param request: Parametr ``request`` předává se do volání ``ExportToDjangoView()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``ExportToDjangoView()``.
+        """
         return ExportToDjangoView(request)
 
 
 class ApplicationRestartView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro restartovani uwsgi aplikace.
-    """
+    """Třída pohledu pro restartovani uwsgi aplikace."""
 
     http_method_names = ["post"]
 
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
+        """
+        Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, ``META``, ovlivňuje větvení podmínek.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``redirect()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``request.user.hlavni_role.id != ROLE_ADMIN_ID``.
+        """
         if request.user.hlavni_role.id != ROLE_ADMIN_ID:
             raise PermissionDenied
         try:
             import uwsgi
 
-            uwsgi.reload()  # pretty easy right?
+            uwsgi.reload()  # Jednoduché volání restartu aplikace.
             messages.add_message(self.request, messages.SUCCESS, APPLICATION_RESTART_SUCCESS)
         except Exception as e:
             logger.debug("core.views.ApplicationRestartView.exception", extra={"exception": e})
@@ -1955,7 +2324,7 @@ class ApplicationRestartView(LoginRequiredMixin, View):
         referer = request.META.get("HTTP_REFERER")
         fallback_url = "/admin"
         if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts=settings.ALLOWED_HOSTS):
-            # Validate referer URL
+            # Ověření referenční URL.
             try:
                 validator = URLValidator()
                 validator(referer)
@@ -1963,12 +2332,23 @@ class ApplicationRestartView(LoginRequiredMixin, View):
                 referer = fallback_url
         else:
             referer = fallback_url
-        # Redirect to referer or fallback URL
+        # Přesměrování na referer nebo záložní URL.
         return redirect(referer)
 
 
 class DataImportProgress(LoginRequiredMixin, View):
+    """Implementuje komponentu ``DataImportProgress`` v rámci aplikace."""
+
     def get(self, request, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
+        """
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")
@@ -2011,7 +2391,18 @@ class DataImportProgress(LoginRequiredMixin, View):
 
 
 class DataImportStop(LoginRequiredMixin, View):
+    """Implementuje komponentu ``DataImportStop`` v rámci aplikace."""
+
     def get(self, request, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
+        """
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")
@@ -2021,7 +2412,18 @@ class DataImportStop(LoginRequiredMixin, View):
 
 
 class DataImportStart(LoginRequiredMixin, View):
+    """Implementuje komponentu ``DataImportStart`` v rámci aplikace."""
+
     def get(self, request, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` předává se do volání ``delay()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
+        """
         if not request.user.is_superuser:
             raise PermissionDenied
         job_id = kwargs.get("job_id")

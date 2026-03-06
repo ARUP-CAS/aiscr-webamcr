@@ -62,6 +62,10 @@ fi
 
 unset PGPASSWORD
 
+STATIC_ROOT=$(python3 manage.py shell -v 0 -c "from django.conf import settings; print(settings.STATIC_ROOT)")
+echo "Cleaning STATIC_ROOT: $STATIC_ROOT"
+find "$STATIC_ROOT" -mindepth 1 -delete
+
 python3 manage.py migrate
 python3 manage.py collectstatic --noinput
 python3 manage.py compress --force
@@ -97,5 +101,7 @@ for lang_item in ${languages[@]}; do
   eval "rm ${code_locale}/*"
 
 done
+
+python3 manage.py send_test_emails
 
 sudo uwsgi /scripts/uwsgi_site.ini

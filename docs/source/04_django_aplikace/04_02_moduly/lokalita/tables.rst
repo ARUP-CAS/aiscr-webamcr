@@ -8,11 +8,13 @@ Třídy
 
 .. py:class:: LokalitaTable
 
-   Class pro definování tabulky pro lokaity použitých pro zobrazení přehledu lokalit a exportu.
+   Definuje tabulku lokalit pro přehled i export.
 
    **Metody:**
 
    .. py:method:: get_all_idents()
 
       Vrátí seznam identifikátorů archeologických záznamů pro lokalitu.
+
+      :return: Vrací výsledek volání ``join()``.
 

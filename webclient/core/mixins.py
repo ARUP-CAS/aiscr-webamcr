@@ -10,11 +10,16 @@ logger = logging.getLogger(__name__)
 class ManyToManyRestrictedClassMixin:
     """
     Třída pro model pro vytvoření property has_connections.
+
     Hledá jestli má model nejakou many to many vazbu.
     """
 
     @property
     def has_connections(self):
+        """Určí, zda connections.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         attr_list = []
         for attr in dir(self):
             if not attr.startswith("_") and attr not in ("has_connections", "objects"):
@@ -37,6 +42,15 @@ class IPWhitelistMixin:
     """
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Provádí operaci dispatch.
+
+        :param request: Parametr ``request`` předává se do volání ``dispatch()``, pracuje se s atributy ``META``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseForbidden()``, výsledek volání ``dispatch()``.
+        """
         client_ip = None
         try:
             client_ip = ipaddress.ip_address(request.META.get("REMOTE_ADDR", ""))  # Get client IP

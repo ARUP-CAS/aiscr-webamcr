@@ -16,6 +16,15 @@ CLAMD_PORT = 3310
 
 
 def get_test_secret(setting, default_value=None):
+    """
+    Vrací test secret.
+
+    :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
+    :param default_value: Parametr ``default_value`` se předává do volání ``get()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``get()``.
+        :raises ImproperlyConfigured: Vyvolá se při zpracování zachycené výjimky typu ``KeyError``.
+    """
     file_test_path = (
         "/run/secrets/test_conf"
         if os.path.exists("/run/secrets/test_conf")
@@ -54,6 +63,7 @@ DATABASES["default"]["TEST"] = {"MIGRATE": False}
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
 SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
+AUTO_LOGOUT = {}
 
 DATABASES["test_db"] = {
     "ENGINE": "django_prometheus.db.backends.postgis",
