@@ -476,9 +476,14 @@ def run_data_import(job_id, user_id):
     all_records = []
     import_files_list: list[Soubor] = []
     stopped = False
-    updated_ident_cely_set = set()
-    updated_history_dict = defaultdict(list)
+    fedora_update_targets_set = set()
+    updated_history_dict = defaultdict(set)
     transaction_user = User.objects.get(pk=user_id)
+
+    def add_updated_history(history_target, mapper_class):
+        updated_history_dict[(history_target.__class__, history_target.pk)].add(
+            mapper_class.get_file_name_for_mapper(mapper_class)
+        )
 
     try:
         with transaction.atomic():
@@ -534,10 +539,8 @@ def run_data_import(job_id, user_id):
                                 record.groups.remove(group)
                             else:
                                 continue
-                            updated_ident_cely_set.add(mapper_class.updated_ident_cely_set(record))
-                            updated_history_dict[mapper_class.get_record_history(record).ident_cely].append(
-                                mapper_class.get_file_name_for_mapper(mapper_class)
-                            )
+                            fedora_update_targets_set |= mapper_class.fedora_update_targets(record)
+                            add_updated_history(mapper_class.get_record_history(record), mapper_class)
                         elif mapper_class == UzivatelNotifikaceMapper:
                             record: User
                             group = UserNotificationType.objects.get(ident_cely=serialized_record["notifikace"])
@@ -557,10 +560,8 @@ def run_data_import(job_id, user_id):
                                 record.notification_types.remove(group)
                             else:
                                 continue
-                            updated_ident_cely_set.add(mapper_class.updated_ident_cely_set(record))
-                            updated_history_dict[mapper_class.get_record_history(record).ident_cely].append(
-                                mapper_class.get_file_name_for_mapper(mapper_class)
-                            )
+                            fedora_update_targets_set |= mapper_class.fedora_update_targets(record)
+                            add_updated_history(mapper_class.get_record_history(record), mapper_class)
                         else:
                             if performed_action in (
                                 ImportDataAdminForm.PERFORMED_ACTION_INSERT,
@@ -571,28 +572,28 @@ def run_data_import(job_id, user_id):
                                     record_db_dict = model_to_dict(record_db) if record_db else None
                                     mapper_class.create_relations(record)
                                     mapper_class.record_postprocessing(record, performed_action, fedora_transaction)
-                                    updated_ident_cely_set |= mapper_class.updated_ident_cely_set(record)
-                                    record_history = mapper_class.get_record_history(record)
                                     # Record is saved to make sure Django value processing is done
                                     record.save()
                                     record_saved = mapper_class.load_record_from_db(record)
+                                    fedora_update_targets_set |= mapper_class.fedora_update_targets(
+                                        record_saved or record
+                                    )
                                     record_dict = model_to_dict(record_saved) if record_saved else model_to_dict(record)
-                                    if record_history and (
+                                    history_target = mapper_class.get_record_history(record_saved or record)
+                                    if history_target and (
                                         performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
                                         or record_dict != record_db_dict
                                     ):
-                                        updated_history_dict[record_history.ident_cely].append(
-                                            mapper_class.get_file_name_for_mapper(mapper_class)
-                                        )
+                                        add_updated_history(history_target, mapper_class)
 
                                 else:
                                     raise ValueError(f"{_('cron.tasks.run_data_import.error.not_model')} {record_id}")
                             elif performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE:
-                                updated_ident_cely_set |= mapper_class.updated_ident_cely_set(record)
+                                fedora_update_targets_set |= mapper_class.fedora_update_targets(record)
                                 record.active_transaction = fedora_transaction
                                 record.delete()
                     fedora_transaction.mark_transaction_as_closed()
-                    updated_ident_cely_set |= fedora_transaction.updated_ident_cely
+                    fedora_update_targets_set |= fedora_transaction.updated_ident_cely
                     logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id, "job_id": job_id})
                     import_results[record_id] = "cron.tasks.run_data_import.success"
                     if primary_key_record:
@@ -623,8 +624,8 @@ def run_data_import(job_id, user_id):
                         + traceback.format_exc()
                     )
                     redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
-                    updated_ident_cely_set = set()
-                    updated_history_dict = {}
+                    fedora_update_targets_set = set()
+                    updated_history_dict = defaultdict(set)
                     failed = True
                 stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None or failed
                 if stopped:
@@ -646,29 +647,26 @@ def run_data_import(job_id, user_id):
         for record_id in range(record_count):
             import_results[record_id] = f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, "
         failed = True
-        updated_ident_cely_set = set()
-        updated_history_dict = {}
+        fedora_update_targets_set = set()
+        updated_history_dict = defaultdict(set)
 
-    for ident_cely, files in updated_history_dict.items():
-        record = get_record_from_ident(ident_cely)
-        if isinstance(record, User):
-            Historie(
-                typ_zmeny=IMPORT,
-                uzivatel=transaction_user,
-                vazba=record.history_vazba,
-                poznamka=",".join(files),
-            ).save()
+    for history_target_key, files in updated_history_dict.items():
+        history_target_class, history_target_pk = history_target_key
+        record = history_target_class.objects.get(pk=history_target_pk)
+        historie_vazba = record.history_vazba if isinstance(record, User) else record.historie
+        Historie(
+            typ_zmeny=IMPORT,
+            uzivatel=transaction_user,
+            vazba=historie_vazba,
+            poznamka=",".join(sorted(files)),
+        ).save()
 
+    for item in fedora_update_targets_set:
+        if isinstance(item, tuple) and len(item) == 2:
+            item_class, item_pk = item
+            record = item_class.objects.get(pk=item_pk)
         else:
-            Historie(
-                typ_zmeny=IMPORT,
-                uzivatel=transaction_user,
-                vazba=record.historie,
-                poznamka=",".join(files),
-            ).save()
-
-    for ident_cely in updated_ident_cely_set:
-        record = get_record_from_ident(ident_cely)
+            record = get_record_from_ident(item)
         fedora_transaction = FedoraTransaction(transaction_user=transaction_user)
         record.save_metadata(fedora_transaction)
         fedora_transaction.mark_transaction_as_closed()

@@ -363,7 +363,7 @@ Třídy
 
    .. py:method:: record_postprocessing()
 
-   .. py:method:: updated_ident_cely_set()
+   .. py:method:: fedora_update_targets()
 
    .. py:method:: _get_updated_ident_cely_record_list()
 

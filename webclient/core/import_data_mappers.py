@@ -1045,14 +1045,12 @@ class ImportModelMapper(ABC):
         return record
 
     @classmethod
-    def updated_ident_cely_set(cls, record) -> set:
-        return set(
-            [
-                item.ident_cely
-                for item in cls._get_updated_ident_cely_record_list(record)
-                if item and getattr(item, "ident_cely", None)
-            ]
-        )
+    def fedora_update_targets(cls, record) -> set:
+        return {
+            (item.__class__, item.pk)
+            for item in cls._get_updated_ident_cely_record_list(record)
+            if item and getattr(item, "ident_cely", None)
+        }
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record) -> list:
@@ -1305,7 +1303,7 @@ class OrganizaceMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Organizace) -> list:
-        return [record.soucast]
+        return [record]
 
 
 class OsobaMapper(ImportModelMapper):
@@ -1471,9 +1469,11 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: SamostatnyNalez) -> list:
         return [record, record.projekt]
+        return [record, record.projekt]
 
     @staticmethod
     def get_record_history(record: SamostatnyNalez):
+        return record
         return record
 
 
@@ -1552,16 +1552,18 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         return super().record_postprocessing(record, performed_action, fedora_transaction)
 
     @staticmethod
-    def _get_updated_ident_cely_record_list(record) -> list:
-        record_list = [record]
+    def _get_updated_ident_cely_record_list(record: Akce | ArcheologickyZaznam) -> list:
         if isinstance(record, ArcheologickyZaznam):
-            record_list += [record.akce.projekt]
-        return record_list
+            return [record, record.akce.projekt]
+        elif isinstance(record, Akce):
+            return [record.archeologicky_zaznam, record.projekt]
 
     @staticmethod
     def get_record_history(record: Akce | ArcheologickyZaznam):
         if isinstance(record, ArcheologickyZaznam):
             return record
+        elif isinstance(record, Akce):
+            return record.archeologicky_zaznam
 
 
 class LokalitaMapper(MultipleClassImportModelMapper):
@@ -1625,6 +1627,8 @@ class LokalitaMapper(MultipleClassImportModelMapper):
     def get_record_history(record: ArcheologickyZaznam | Lokalita):
         if isinstance(record, Lokalita):
             return record.archeologicky_zaznam
+        else:
+            return record
 
 
 class AkceVedouciMapper(ImportModelMapper):
@@ -1733,6 +1737,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
     @staticmethod
     def get_record_history(record: DokumentacniJednotka):
         return record.archeologicky_zaznam
+        return record.archeologicky_zaznam
 
 
 class AdbMapper(ImportModelMapper):
@@ -1766,6 +1771,7 @@ class AdbMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Adb) -> list:
         return [record, record.dokumentacni_jednotka.archeologicky_zaznam]
+        return [record, record.dokumentacni_jednotka.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: Adb):
@@ -1788,6 +1794,7 @@ class AdbVyskovyBod(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: VyskovyBod) -> list:
+        return [record.adb, record.adb.dokumentacni_jednotka.archeologicky_zaznam]
         return [record.adb, record.adb.dokumentacni_jednotka.archeologicky_zaznam]
 
     @staticmethod
@@ -1954,9 +1961,11 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         return self.transform_geometries(mapping_dict, performed_action)
 
     @staticmethod
-    def get_record_history(record):
+    def get_record_history(record: Dokument | DokumentExtraData):
         if isinstance(record, Dokument):
             return record
+        else:
+            return record.dokument
 
 
 class DokumentAutorMapper(ImportModelMapper):
@@ -2172,11 +2181,27 @@ class KomponentaMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Komponenta) -> list:
-        return [record.komponenta_vazby.navazany_objekt]
+        record_list = []
+        navazany_objekt = record.komponenta_vazby.navazany_objekt
+        if isinstance(navazany_objekt, DokumentCast):
+            if navazany_objekt.archeologicky_zaznam:
+                record_list.append(navazany_objekt.archeologicky_zaznam)
+            elif navazany_objekt.dokument:
+                record_list.append(navazany_objekt.dokument)
+        elif isinstance(navazany_objekt, DokumentacniJednotka):
+            record_list.append(navazany_objekt.archeologicky_zaznam)
+        return record_list
 
     @staticmethod
     def get_record_history(record: Komponenta):
-        return record.komponenta_vazby.navazany_objekt
+        navazany_objekt = record.komponenta_vazby.navazany_objekt
+        if isinstance(navazany_objekt, DokumentCast):
+            if navazany_objekt.archeologicky_zaznam:
+                return navazany_objekt.archeologicky_zaznam
+            elif navazany_objekt.dokument:
+                return navazany_objekt.dokument
+        elif isinstance(navazany_objekt, DokumentacniJednotka):
+            return navazany_objekt.archeologicky_zaznam
 
 
 class KomponentaAktivitaMapper(ImportModelMapper):
@@ -2196,11 +2221,13 @@ class KomponentaAktivitaMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: KomponentaAktivita) -> list:
-        return [record.komponenta.komponenta_vazby.navazany_objekt]
+        komponenta = record.komponenta
+        return KomponentaMapper._get_updated_ident_cely_record_list(komponenta)
 
     @staticmethod
     def get_record_history(record: KomponentaAktivita):
-        return record.komponenta.komponenta_vazby.navazany_objekt
+        komponenta = record.komponenta
+        return KomponentaMapper.get_record_history(komponenta)
 
 
 class NalezMapper(ImportModelMapper):
@@ -2211,11 +2238,13 @@ class NalezMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: NalezObjekt | NalezPredmet) -> list:
-        return [record.komponenta.komponenta_vazby.navazany_objekt]
+        komponenta = record.komponenta
+        return KomponentaMapper._get_updated_ident_cely_record_list(komponenta)
 
     @staticmethod
     def get_record_history(record: NalezObjekt | NalezPredmet):
-        return record.komponenta.komponenta_vazby.navazany_objekt
+        komponenta = record.komponenta
+        return KomponentaMapper.get_record_history(komponenta)
 
 
 class NalezObjektMapper(NalezMapper):
@@ -2612,4 +2641,10 @@ class HistorieMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Historie) -> list:
-        return [record.vazba.navazany_objekt]
+        navazany_objekt = record.vazba.navazany_objekt
+        if isinstance(navazany_objekt, ModelWithMetadata) or isinstance(navazany_objekt, User):
+            return [navazany_objekt]
+        elif isinstance(navazany_objekt, UzivatelSpoluprace):
+            return [navazany_objekt.spolupracovnik, navazany_objekt.vedouci]
+        elif isinstance(navazany_objekt, Soubor):
+            return [navazany_objekt]
