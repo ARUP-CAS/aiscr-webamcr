@@ -36,6 +36,7 @@ docs_dir = Path(__file__).parent
 project_root = docs_dir.parent
 webclient_dir = project_root / "webclient"
 output_base_dir = docs_dir / "source/04_django_aplikace/04_02_moduly"
+docs_scripts_output_dir = docs_dir / "source/03_vyvoj/dokumentacni_skripty"
 XS_NS = "{http://www.w3.org/2001/XMLSchema}"
 
 # Files to skip
@@ -1831,6 +1832,121 @@ def generate_all_modules(mode: str = "autodoc", specific_module: Optional[str] =
     return total_generated > 0
 
 
+def generate_rst_for_docs_script(source_file: Path, output_dir: Path, mode: str = "autodoc") -> bool:
+    """Vygeneruje dokumentaci RST pro jeden Python skript v adresáři docs/.
+
+    :param source_file: Cesta ke zdrojovému souboru Python v docs/.
+    :param output_dir: Výstupní adresář pro soubory RST.
+    :param mode: Režim generování (``autodoc`` nebo ``explicit``).
+    :return: True v případě úspěchu, False v opačném případě.
+    """
+    global changes_detected
+    module_name = f"docs.{source_file.stem}"
+    output_file = output_dir / f"{source_file.stem}.rst"
+    module_title = f"Skript {source_file.stem}"
+    module_description = f"Dokumentace skriptu ``docs/{source_file.name}``."
+
+    try:
+        if mode == "explicit":
+            rst_content = generate_rst_explicit(source_file, module_name, module_title, module_description)
+        else:
+            rst_content = generate_rst_autodoc(module_name, module_title, module_description)
+
+        if check_content_changed(rst_content, output_file):
+            changes_detected = True
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(rst_content)
+
+        print(f"    ✓ {output_file.name}")
+        return True
+
+    except Exception as e:
+        print(f"    ✗ Error generating RST for docs script {source_file.name}: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return False
+
+
+def generate_docs_scripts_index_rst(generated_files: List[str], output_dir: Path) -> bool:
+    """Vygeneruje index.rst pro dokumentační skripty v docs/.
+
+    :param generated_files: Seznam vygenerovaných názvů souborů Python.
+    :param output_dir: Výstupní adresář.
+    :return: True v případě úspěchu, False v opačném případě.
+    """
+    global changes_detected
+    index_file = output_dir / "index.rst"
+    toctree_entries = [f.replace(".py", "") for f in sorted(generated_files)]
+
+    index_content = """Dokumentační skripty
+====================
+
+Tato sekce obsahuje technickou dokumentaci Python skriptů v adresáři ``docs/``.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Obsah:
+
+"""
+
+    for entry in toctree_entries:
+        index_content += f"   {entry}\n"
+
+    try:
+        if check_content_changed(index_content, index_file):
+            changes_detected = True
+        with open(index_file, "w", encoding="utf-8") as f:
+            f.write(index_content)
+        print("    ✓ index.rst")
+        return True
+    except Exception as e:
+        print(f"    ✗ Error updating docs scripts index.rst: {e}")
+        return False
+
+
+def generate_docs_scripts_docs(mode: str = "autodoc") -> bool:
+    """Vygeneruje RST dokumentaci pro všechny ``*.py`` skripty v ``docs/``.
+
+    :param mode: Režim generování (``autodoc`` nebo ``explicit``).
+    :return: True, pokud byl vygenerován alespoň jeden soubor.
+    """
+    output_dir = docs_scripts_output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("\nGenerating documentation for docs/*.py scripts")
+    print(f"Mode: {mode}")
+    print(f"Source: {docs_dir}")
+    print(f"Output: {output_dir}")
+
+    generated_files = []
+    skipped_files = []
+
+    py_files = sorted(docs_dir.glob("*.py"))
+    if not py_files:
+        print("  ⊝ No Python scripts found in docs/")
+        return False
+
+    for source_file in py_files:
+        if source_file.name == "__init__.py":
+            skipped_files.append(source_file.name)
+            continue
+
+        if not has_meaningful_code(source_file):
+            skipped_files.append(source_file.name)
+            continue
+
+        if generate_rst_for_docs_script(source_file, output_dir, mode):
+            generated_files.append(source_file.name)
+
+    if generated_files:
+        generate_docs_scripts_index_rst(generated_files, output_dir)
+
+    print(f"  Generated: {len(generated_files)}, Skipped: {len(skipped_files)}")
+    return len(generated_files) > 0
+
+
 def build_docs() -> bool:
     """Vytvoří HTML dokumentaci pomocí Sphinx.
 
@@ -1879,6 +1995,9 @@ def main() -> None:
     if not generate_all_modules(mode=args.mode, specific_module=args.module):
         print("\n✗ No documentation files were generated")
         sys.exit(1)
+
+    # Generate RST files for docs/*.py scripts
+    generate_docs_scripts_docs(mode=args.mode)
 
     # Generate URL routing documentation
     generate_url_routing_rst()
