@@ -153,11 +153,11 @@ jobs:
             sleep 5
           done
           if [ -z "$DIGEST_GITHUB" ]; then
-            echo "::error::Failed to retrieve GHCR digest for ${{ matrix.image_name_github }} after 5 retries"
+            echo "::error::Failed to retrieve GHCR digest for ${{ matrix.image_name_github }} after 10 retries"
             exit 1
           fi
           if [ -z "$DIGEST_DOCKERHUB" ]; then
-            echo "::error::Failed to retrieve DockerHub digest for ${{ matrix.image_name_dockerhub }} after 5 retries"
+            echo "::error::Failed to retrieve DockerHub digest for ${{ matrix.image_name_dockerhub }} after 10 retries"
             exit 1
           fi
           echo "github=${DIGEST_GITHUB}" >> $GITHUB_OUTPUT
