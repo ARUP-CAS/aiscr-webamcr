@@ -74,7 +74,7 @@ class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = {
             "toolbar_name": _("ez.views.externiZdrojIndexView.toolbarName"),
@@ -114,7 +114,7 @@ class ExterniZdrojListView(SearchListView):
         """
         Provádí operaci rename field for ordering.
 
-        :param field: Vstupní hodnota ``field`` pro danou operaci.
+        :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
         """
         field = field.replace("-", "")
         return {
@@ -153,8 +153,8 @@ class ExterniZdrojListView(SearchListView):
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         return qs
 
@@ -229,7 +229,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci form valid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         ez = form.save(commit=False)
         ez: ExterniZdroj
@@ -261,7 +261,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci form invalid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"error": form.errors})
@@ -313,7 +313,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form valid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         self.object: ExterniZdroj = form.save(commit=False)
         self.object.active_transaction = self.object.create_transaction(self.request.user)
@@ -330,7 +330,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form invalid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"error": form.errors})
@@ -379,7 +379,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         """
         Vrací zaznam. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         ident_cely = self.kwargs.get("ident_cely")
         logger.debug("ez.views.TransakceView.get_zaznam.start", extra={"ident_cely": ident_cely})
@@ -623,12 +623,12 @@ class ExterniOdkazOdpojitView(TransakceView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         eo = get_object_or_404(
             ExterniOdkaz,
@@ -769,12 +769,12 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         eo = self.get_object()
         if self.kwargs.get("typ_vazby") == "ez":
@@ -820,7 +820,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         """
         Vrací object. v aplikaci.
 
-        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
         """
         object = super().get_object()
         object: ExterniOdkaz
@@ -847,7 +847,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form valid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return super().form_valid(form)
@@ -856,7 +856,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form invalid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"error": form.errors})
@@ -876,12 +876,12 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         eo = get_object_or_404(
             ExterniOdkaz,
@@ -967,7 +967,7 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
         """
         Vrací result label.
 
-        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
         """
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vydani_vzniku}: {result.nazev})"
 
@@ -990,8 +990,8 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         return qs
 
@@ -1083,8 +1083,9 @@ def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
 
-    :param historie_vazby: Popis parametru ``historie_vazby``.
-    :param request_user: Popis parametru ``request_user``.
+    :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+    :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+    :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
     """
     request_user: User
     anonymized = request_user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
@@ -1100,8 +1101,9 @@ def get_detail_template_shows(zaznam, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
 
-    :param zaznam: Popis parametru ``zaznam``.
-    :param user: Popis parametru ``user``.
+    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
     """
     show_arch_links = zaznam.stav == EZ_STAV_POTVRZENY
     show_ez_odkazy = True
@@ -1126,14 +1128,6 @@ def get_detail_template_shows(zaznam, user):
 def get_required_fields():
     """
     Funkce pro získaní dictionary povinných polí podle stavu externího zdroje.
-
-    Args:
-    zaznam (Externí zdroj): model ExterniZdroj pro který se dané pole počítají.
-
-    next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-    Returns:
-    required_fields: list polí.
     """
     required_fields = [
         "typ",
@@ -1148,8 +1142,8 @@ def save_autor_editor(zaznam, form):
     """
     Funkce pro uložení autorů a editorů k externímu zdroji podle toho v jakém pořadí byly zadáni.
 
-    :param zaznam: Popis parametru ``zaznam``.
-    :param form: Popis parametru ``form``.
+    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param form: Formulářová instance zpracovávaná funkcí.
     """
     i = 1
     for autor in form.cleaned_data["autori"]:
@@ -1177,7 +1171,7 @@ class EzOdkazyTableView(LoginRequiredMixin, View):
         Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         """
         card_type = request.GET.get("card_type", False)
         action_type = request.GET.get("type", False)

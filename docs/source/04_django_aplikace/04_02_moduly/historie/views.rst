@@ -22,13 +22,13 @@ Třídy
 
       Potomek může přepsat pro vlastní řazení nebo dodatečné filtry.
 
-      :param qs: Hodnota parametru ``qs`` použitého touto operací.
+      :param qs: Queryset/filtr ``qs`` použitý při výběru záznamů.
 
    .. py:method:: add_extra_context()
 
       Potomek může přepsat a doplnit další hodnoty do contextu.
 
-      :param context: Hodnota parametru ``context`` použitého touto operací.
+      :param context: Kolekce ``context`` zpracovávaná touto funkcí.
 
    .. py:method:: get_queryset()
 
@@ -38,7 +38,7 @@ Třídy
 
       Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
 
-      :param context: Hodnota parametru ``context`` použitého touto operací.
+      :param context: Kolekce ``context`` zpracovávaná touto funkcí.
 
    .. py:method:: add_fedora_history()
 
@@ -46,7 +46,7 @@ Třídy
 
       metadata historie z Fedory a přidá se druhá tabulka fedora_table.
 
-      :param context: Hodnota parametru ``context`` použitého touto operací.
+      :param context: Kolekce ``context`` zpracovávaná touto funkcí.
 
    .. py:method:: get_table()
 
@@ -64,7 +64,7 @@ Třídy
 
       Vyrenderuje to response.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
       :param response_kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -78,7 +78,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: AkceHistorieListView
@@ -91,7 +91,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: DokumentHistorieListView
@@ -104,13 +104,13 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
    .. py:method:: add_extra_context()
 
       Provádí operaci add extra context.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: SamostatnyNalezHistorieListView
@@ -123,7 +123,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: SpolupraceHistorieListView
@@ -136,7 +136,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: SouborHistorieListView
@@ -149,19 +149,19 @@ Třídy
 
       Provádí operaci prepare queryset.
 
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: add_extra_context()
 
       Provádí operaci add extra context.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
    .. py:method:: get_header_config()
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: LokalitaHistorieListView
@@ -174,7 +174,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: UzivatelHistorieListView
@@ -187,7 +187,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: ExterniZdrojHistorieListView
@@ -200,7 +200,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: PianHistorieListView
@@ -213,7 +213,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: PianLokalitaHistorieListView
@@ -226,7 +226,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 
 
 .. py:class:: AdbHistorieListView
@@ -239,5 +239,5 @@ Třídy
 
       Vrací header config.
 
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
 

@@ -24,15 +24,15 @@ class PidAutocompleteField(autocomplete.Select2ListChoiceField):
         """
         Vrací initial value from instance.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return getattr(self.instance, self.attribute_name)
 
     def _set_initial_values(self):
         """
-        Nastaví initial values.
+               Nastaví initial values.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if self.initial_value:
             result_list = self.autocomplete_class.api_call(self.initial_value, True)
@@ -55,7 +55,7 @@ class DoiAutocompleteField(PidAutocompleteField):
         """
         Provádí operaci valid value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return verify_doi(value)
 
@@ -63,7 +63,7 @@ class DoiAutocompleteField(PidAutocompleteField):
         """
         Validuje hodnotu. v aplikaci.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return verify_doi(value)
 
@@ -78,7 +78,7 @@ class OrcidAutocompleteField(PidAutocompleteField):
         """
         Vrací initial value from instance.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         value = super()._get_initial_value_from_instance()
         value = value.replace("https://orcid.org/", "") if value else None
@@ -88,7 +88,7 @@ class OrcidAutocompleteField(PidAutocompleteField):
         """
         Provádí operaci prepare value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return value.replace("https://orcid.org/", "") if value else None
 
@@ -96,7 +96,7 @@ class OrcidAutocompleteField(PidAutocompleteField):
         """
         Provádí operaci valid value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return verify_orcid(value)
 
@@ -104,7 +104,7 @@ class OrcidAutocompleteField(PidAutocompleteField):
         """
         Validuje hodnotu. v aplikaci.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return verify_orcid(value)
 
@@ -119,7 +119,7 @@ class RorAutocompleteField(PidAutocompleteField):
         """
         Provádí operaci valid value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return verify_ror(value)
 
@@ -127,7 +127,7 @@ class RorAutocompleteField(PidAutocompleteField):
         """
         Validuje hodnotu. v aplikaci.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return verify_ror(value)
 
@@ -142,7 +142,7 @@ class WikiDataAutocompleteField(PidAutocompleteField):
         """
         Vrací initial value from instance.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         value = super()._get_initial_value_from_instance()
         value = value.replace("https://www.wikidata.org/entity/", "") if value else None
@@ -152,7 +152,7 @@ class WikiDataAutocompleteField(PidAutocompleteField):
         """
         Provádí operaci prepare value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return value.replace("https://www.wikidata.org/entity/", "") if value else None
 
@@ -160,7 +160,7 @@ class WikiDataAutocompleteField(PidAutocompleteField):
         """
         Provádí operaci valid value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return verify_wikidata(value)
 
@@ -168,6 +168,6 @@ class WikiDataAutocompleteField(PidAutocompleteField):
         """
         Validuje hodnotu. v aplikaci.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return verify_wikidata(value)

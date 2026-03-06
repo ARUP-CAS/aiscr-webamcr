@@ -23,8 +23,8 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
-      :param value: Popis parametru ``value``.
-      :param record: Popis parametru ``record``.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param record: Záznam, který funkce čte nebo upravuje.
 
 
 .. py:class:: DokumentTable
@@ -37,8 +37,8 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
-      :param value: Popis parametru ``value``.
-      :param record: Popis parametru ``record``.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param record: Záznam, který funkce čte nebo upravuje.
 
    .. py:method:: __init__()
 

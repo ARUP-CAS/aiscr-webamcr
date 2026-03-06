@@ -16,7 +16,7 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
@@ -48,20 +48,20 @@ Funkce
 
    Funkce pohledu pro editaci dokumentační jednotky a ADB.
 
-   :param request: Popis parametru ``request``.
-   :param typ_vazby: Popis parametru ``typ_vazby``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: zapsat(request, arch_z_ident_cely)
 
    Funkce pohledu pro vytvoření dokumentační jednotky.
 
-   :param request: Popis parametru ``request``.
-   :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro smazání dokumentační jednotky.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.

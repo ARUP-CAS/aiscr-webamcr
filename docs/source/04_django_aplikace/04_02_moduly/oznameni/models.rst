@@ -16,5 +16,5 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 

@@ -44,13 +44,13 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_object_identification()
 
       Vrací object identification.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 

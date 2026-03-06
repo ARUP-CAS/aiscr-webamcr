@@ -107,8 +107,8 @@ class Model3DTable(SearchTable):
         """
         Metoda pro správně zobrazení náhledu souboru.
 
-        :param value: Popis parametru ``value``.
-        :param record: Popis parametru ``record``.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         if len(record.soubory.soubory.all()) > 0:
             soubor = record.soubory.soubory.first()
@@ -257,8 +257,8 @@ class DokumentTable(SearchTable):
         """
         Metoda pro správně zobrazení náhledu souboru.
 
-        :param value: Popis parametru ``value``.
-        :param record: Popis parametru ``record``.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
             soubor = record.soubory.first_soubor[0]

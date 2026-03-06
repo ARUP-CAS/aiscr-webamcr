@@ -38,11 +38,11 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: form_invalid()
 
       Provádí operaci form invalid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 

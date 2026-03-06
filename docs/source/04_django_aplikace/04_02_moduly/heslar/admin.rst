@@ -17,7 +17,7 @@ Třídy
       Provádí operaci metadata.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: HeslarWithMetadataAdmin
@@ -38,21 +38,21 @@ Třídy
       Určí, zda add permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: has_change_permission()
 
       Určí, zda change permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: HeslarAdmin
@@ -66,32 +66,32 @@ Třídy
       Vyrenderuje change form.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
-      :param add: Vstupní hodnota ``add`` pro danou operaci.
-      :param change: Vstupní hodnota ``change`` pro danou operaci.
-      :param form_url: Vstupní hodnota ``form_url`` pro danou operaci.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param add: Příznak, zda se formulář/objekt vytváří v režimu přidání.
+      :param change: Číselná nebo geometrická hodnota `change` použitá při výpočtu nebo transformaci.
+      :param form_url: Cesta, URL nebo název zdroje ``form_url``, ze kterého funkce čte nebo kam zapisuje.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: has_change_permission()
 
       Určí, zda change permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: get_readonly_fields()
 
       Vrací readonly fields.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: HeslarDataceAdmin
@@ -105,13 +105,13 @@ Třídy
       Vrací readonly fields.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: obdobi_ident_cely()
 
       Provádí operaci obdobi ident cely.
 
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: HeslarDokumentTypMaterialRadaAdmin
@@ -127,21 +127,21 @@ Třídy
       Určí, zda add permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: has_change_permission()
 
       Určí, zda change permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: HeslarOdkazAdmin
@@ -154,7 +154,7 @@ Třídy
 
       Provádí operaci heslo ident cely.
 
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: HeslarHierarchieAdmin
@@ -167,7 +167,7 @@ Třídy
 
       Provádí operaci heslo podrazene ident cely.
 
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: OsobaAdmin
@@ -188,14 +188,14 @@ Třídy
       Určí, zda delete permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: get_fields()
 
       Vrací fields. v aplikaci.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: OrganizaceAdmin
@@ -209,7 +209,7 @@ Třídy
       Určí, zda delete permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: HeslarRuianAdmin
@@ -223,21 +223,21 @@ Třídy
       Určí, zda add permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: has_change_permission()
 
       Určí, zda change permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: HeslarRuianKrajAdmin

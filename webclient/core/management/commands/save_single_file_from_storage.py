@@ -38,7 +38,7 @@ class Command(BaseCommand):
         """
         Provádí operaci add arguments.
 
-        :param parser: Vstupní hodnota ``parser`` pro danou operaci.
+        :param parser: Typová nebo konfigurační hodnota `parser` určující cílovou logiku.
         """
         parser.add_argument(
             "pk",

@@ -26,8 +26,8 @@ def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
     """
     Provádí operaci orgnaizace save metadata.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("uzivatel.signals.orgnaizace_save_metadata.start", extra={"ident_cely": instance.ident_cely})
@@ -45,8 +45,8 @@ def osoba_save_metadata(sender, instance: Osoba, **kwargs):
     """
     Provádí operaci osoba save metadata.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("uzivatel.signals.osoba_save_metadata.start", extra={"ident_cely": instance.ident_cely})
@@ -64,9 +64,9 @@ def create_ident_cely(sender, instance: User, **kwargs):
     """
     Přidelení identu celý pro usera.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("uzivatel.signals.create_ident_cely.start")
     if not kwargs["update_fields"] and instance.id:
@@ -100,9 +100,9 @@ def user_post_save_method(sender, instance: User, created: bool, **kwargs):
     """
     Provádí operaci user post save method.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-    :param created: Vstupní hodnota ``created`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param created: Příznak, zda byla instance právě vytvořena.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     fedora_transaction = instance.active_transaction
@@ -160,9 +160,9 @@ def send_deactivation_email(sender, instance: User, **kwargs):
     """
     Signál pro poslání deaktivačního emailu uživately.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("uzivatel.signals.send_deactivation_email.start", extra={"ident_cely": instance.ident_cely})
     if not kwargs.get("update_fields") and hasattr(instance, "old") and instance.old is not None:
@@ -179,9 +179,9 @@ def send_account_confirmed_email(sender, instance: User, created):
     """
     signál pro zaslání emailu uživately o jeho konfirmaci.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param created: Popis parametru ``created``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param created: Příznak, zda byla instance právě vytvořena.
     """
     logger.debug(
         "uzivatel.signals.send_account_confirmed_email.start",
@@ -201,8 +201,8 @@ def delete_user_connections(sender, instance, *args, **kwargs):
     """
     Odstraní user connections.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param args: Dodatečné poziční argumenty předané voláním.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
@@ -226,10 +226,10 @@ def delete_profile(sender, instance: User, *args, **kwargs):
     """
     Signál pro zaslání emailu uživately o jeho smazání.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param args: Popis parametru ``args``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param args: Dodatečné poziční argumenty předané voláním.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("uzivatel.signals.delete_profile.start", extra={"ident_cely": instance.ident_cely})
     Mailer.send_eu03(user=instance)
@@ -247,8 +247,8 @@ def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
     """
     Provádí operaci osoba delete repository container.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("uzivatel.signals.osoba_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
@@ -265,8 +265,8 @@ def organizace_delete_repository_container(sender, instance: Organizace, **kwarg
     """
     Provádí operaci organizace delete repository container.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(
@@ -286,8 +286,8 @@ def log_user_signin(sender, user, request, **kwargs):
     """
     Provádí operaci log user signin.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param user: Vstupní hodnota ``user`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param user: Uživatel, v jehož kontextu se operace provádí.
     :param request: Django HTTP požadavek použitý při zpracování.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """

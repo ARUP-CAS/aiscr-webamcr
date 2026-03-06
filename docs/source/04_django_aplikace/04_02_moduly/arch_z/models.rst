@@ -252,7 +252,7 @@ Třídy
 
       Vytvoří a vrátí Fedora transakci pro práci s externím odkazem.
 
-      :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
+      :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
 
 
 .. py:class:: LokalitaSekvence

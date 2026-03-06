@@ -20,7 +20,7 @@ Třídy
 
       Provádí operaci rename field for ordering.
 
-      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: get_context_data()
 
@@ -58,7 +58,7 @@ Třídy
 
       Provádí operaci rename field for ordering.
 
-      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: get_queryset()
 
@@ -75,22 +75,22 @@ Třídy
 
       Metoda pro získaní informací ohlědně části dokumentu.
 
-      :param context: Popis parametru ``context``.
-      :param cast: Popis parametru ``cast``.
-      :param kwargs: Popis parametru ``kwargs``.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param cast: Typ nebo hodnota použitá při převodu datového typu.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: get_context_data()
 
       Metoda pro získaní contextu dokumentu pro template.
 
-      :param kwargs: Popis parametru ``kwargs``.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: render_to_response()
 
       Metoda pro render response, kvúli správnemu zobrazení zpět možnosti.
 
-      :param context: Popis parametru ``context``.
-      :param response_kwargs: Popis parametru ``response_kwargs``.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param response_kwargs: Dodatečné argumenty předané voláním.
 
 
 .. py:class:: DokumentDetailView
@@ -121,7 +121,7 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_context_data()
 
@@ -150,7 +150,7 @@ Třídy
 
       Vrací object. v aplikaci.
 
-      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: post()
 
@@ -164,7 +164,7 @@ Třídy
 
       Provádí operaci form invalid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
 
 .. py:class:: KomponentaDokumentDetailView
@@ -180,7 +180,7 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_context_data()
 
@@ -202,7 +202,7 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_context_data()
 
@@ -247,7 +247,7 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_zaznam()
 
@@ -286,7 +286,7 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
@@ -325,7 +325,7 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
@@ -487,7 +487,7 @@ Třídy
 
       Vrací result label.
 
-      :param result: Vstupní hodnota ``result`` pro danou operaci.
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
 
    .. py:method:: get_queryset()
 
@@ -505,8 +505,8 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 
 Funkce
@@ -516,76 +516,76 @@ Funkce
 
    Funkce pohledu pro zobrazení domovské stránky modelu 3D s navigačními možnostmi.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: detail_model_3D(request, ident_cely)
 
    Třida pohledu pro zobrazení detailu modelu 3D.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: edit(request, ident_cely)
 
    Funkce pohledu pro editaci dokumentu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: edit_model_3D(request, ident_cely)
 
    Funkce pohledu pro editaci modelu 3D.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: zapsat_do_akce(request, arch_z_ident_cely)
 
    Funkce pohledu pro zapsání dokumentu do akce.
 
-   :param request: Popis parametru ``request``.
-   :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: zapsat_do_projektu(request, proj_ident_cely)
 
    Funkce pohledu pro zapsání dokumentu do projektu.
 
-   :param request: Popis parametru ``request``.
-   :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: create_model_3D(request)
 
    Funkce pohledu pro vytvoření modelu 3D.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: odeslat(request, ident_cely)
 
    Funkce pohledu pro odeslání dokumentu cez modal.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: archivovat(request, ident_cely)
 
    Funkce pohledu pro archivaci dokumentu cez modal.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: vratit(request, ident_cely)
 
    Funkce pohledu pro vrácení dokumentu cez modal.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro smazání dokumentu cez modal.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: get_hierarchie_dokument_typ()
 
@@ -595,101 +595,91 @@ Funkce
 
    Funkce pro získaní historických datumu.
 
-   :param historie_vazby: Popis parametru ``historie_vazby``.
-   :param request_user: Popis parametru ``request_user``.
+   :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+   :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+   :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
 
 .. py:function:: get_detail_template_shows(dokument, user)
 
    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
 
-   :param dokument: Popis parametru ``dokument``.
-   :param user: Popis parametru ``user``.
+   :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
+   :param user: Uživatel, v jehož kontextu se operace provádí.
+   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
 
 .. py:function:: zapsat(request, zaznam)
 
    Funkce pohledu pro zapsání dokumentu.
 
-   :param request: Popis parametru ``request``.
-   :param zaznam: Popis parametru ``zaznam``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
 
 .. py:function:: odpojit(request, ident_doku, ident_zaznamu, zaznam)
 
    Funkce pohledu pro odpojení dokumentu cez modal.
 
-   :param request: Popis parametru ``request``.
-   :param ident_doku: Popis parametru ``ident_doku``.
-   :param ident_zaznamu: Popis parametru ``ident_zaznamu``.
-   :param zaznam: Popis parametru ``zaznam``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_doku: Identifikátor ``ident_doku`` používaný pro dohledání cílového záznamu.
+   :param ident_zaznamu: Identifikátor ``ident_zaznamu`` používaný pro dohledání cílového záznamu.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
 
 .. py:function:: pripojit(request, ident_zaznam, proj_ident_cely, typ)
 
    Funkce pohledu pro pripojení dokumentu cez modal.
 
-   :param request: Popis parametru ``request``.
-   :param ident_zaznam: Popis parametru ``ident_zaznam``.
-   :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
-   :param typ: Popis parametru ``typ``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_zaznam: Identifikátor ``ident_zaznam`` používaný pro dohledání cílového záznamu.
+   :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
+   :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
 
 .. py:function:: get_dokument_table_row(request)
 
    Funkce pohledu pro získaní řádku dokumentu pro vykreslení v modalu.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: get_dokument_table_row_vratit(request)
 
    AJAX pohled pro načtení jednoho řádku dokumentu do tabulky pro "vrácení dokumentu".
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: get_detail_view(ident_cely)
 
    Funkce pohledu pro redirect podle identu na model 3D nebo dokument detail.
 
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: get_detail_json_view(ident_cely)
 
    Funkce pohledu pro vrácení url pro redirect podle identu na model 3D nebo dokument detail.
 
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: get_required_fields_model3D(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu modelu 3D.
 
-
-   **Argumenty:**
-
-   - ``zaznam`` (*Dokument*): model Dokument pro který se dané pole počítají.
-   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-   **Návratová hodnota:**
-
-   *required_fields*: list polí.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+   :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+   :return: Seznam názvů polí, která mají být v daném stavu povinná.
 
 .. py:function:: get_required_fields_dokument(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu dokumentu.
 
-
-   **Argumenty:**
-
-   - ``zaznam`` (*Dokument*): model Dokument pro který se dané pole počítají.
-   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-   **Návratová hodnota:**
-
-   *required_fields*: list polí.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+   :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+   :return: Seznam názvů polí, která mají být v daném stavu povinná.
 
 .. py:function:: get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
 
    Funkce pro získaní formsetu predmetu a objektu pro komponentu.
 
-   :param komponenta: Popis parametru ``komponenta``.
-   :param show: Popis parametru ``show``.
-   :param old_nalez_post: Popis parametru ``old_nalez_post``.
-   :param komp_ident_cely: Popis parametru ``komp_ident_cely``.
+   :param komponenta: Komponenta, se kterou funkce pracuje.
+   :param show: Číselná nebo geometrická hodnota `show` použitá při výpočtu nebo transformaci.
+   :param old_nalez_post: Číselná nebo geometrická hodnota `old_nalez_post` použitá při výpočtu nebo transformaci.
+   :param komp_ident_cely: Identifikátor ``komp_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: get_obdobi_choices()
 
@@ -703,10 +693,10 @@ Funkce
 
    Funkce pohledu pro získaní 3D.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: zjisti_licenci_organizace(request)
 
    Funkce pohledu pro zjištení licence organizace.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.

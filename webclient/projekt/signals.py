@@ -25,9 +25,9 @@ def projekt_pre_save(sender, instance: Projekt, **kwargs):
     """
     Metoda pro volání dílčích metod pro nastavení projektu pred uložením.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     create_projekt_vazby(sender, instance)
     change_termin_odevzdani_NZ(sender, instance)
@@ -43,9 +43,9 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
     """
     Metoda pro nastavení terminu odevzdání NZ.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     try:
         instance_db = sender.objects.get(pk=instance.pk)
@@ -67,9 +67,9 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
     Metoda se volá pred uložením projektu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     if instance.pk is None:
         logger.debug("projekt.signals.create_projekt_vazby.history_created", extra={"instance": instance})
@@ -87,8 +87,8 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     """
     Provádí operaci projekt pre delete.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(
@@ -105,10 +105,10 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
 
         def save_metadata(close_transaction=False):
             """
-            Uloží metadata.
+                       Uloží metadata.
 
-            :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
-            :return: Vrací výsledek provedené operace.
+                       :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+            Výsledek provedené změny nad cílovým objektem.
             """
             if instance.soubory and instance.soubory.pk:
                 instance.soubory.delete()
@@ -132,9 +132,9 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     Metoda pro odeslání emailu hlídacího psa pri založení projektu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     # Když je projekt vytvořen přes stránku „oznámení“, metadata se ukládají přímo bez Celery.
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
@@ -147,9 +147,9 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
 
             def save_metadata():
                 """
-                Uloží metadata.
+                               Uloží metadata.
 
-                :return: Vrací výsledek provedené operace.
+                Výsledek provedené změny nad cílovým objektem.
                 """
                 if instance.hlavni_katastr in instance.katastry.all():
                     # Toto je nutné provést ve funkci `on_commit`, viz

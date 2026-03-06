@@ -14,8 +14,8 @@ def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
     """
     Provádí operaci neident akce post save.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
@@ -34,8 +34,8 @@ def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
     """
     Provádí operaci neident akce post delete.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:

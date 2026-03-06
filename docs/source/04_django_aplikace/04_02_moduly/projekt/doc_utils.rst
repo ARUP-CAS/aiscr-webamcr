@@ -16,80 +16,80 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param oznamovatel: Vstupní hodnota ``oznamovatel`` pro danou operaci.
-      :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
-      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-      :param additional: Vstupní hodnota ``additional`` pro danou operaci.
+      :param oznamovatel: Uživatel nebo osoba `oznamovatel`, v jejímž kontextu se operace provádí.
+      :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+      :param additional: Kolekce nebo datová struktura `additional` zpracovávaná touto funkcí.
 
    .. py:method:: format_date()
 
       Provádí operaci format date.
 
-      :param date_obj: Vstupní hodnota ``date_obj`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param date_obj: Časový údaj ``date_obj`` použitý při filtrování nebo výpočtu.
+      Zpracovaná hodnota po validaci nebo transformaci.
 
    .. py:method:: _create_style_dict()
 
       Vytvoří style dict.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_header_oznamovatel()
 
       Vytvoří header oznamovatel.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_header_oznamovatel_doc()
 
       Vytvoří header oznamovatel doc.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_header_tab_dates()
 
       Vytvoří header tab dates.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_header_tab_dates_doc()
 
       Vytvoří header tab dates doc.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_data_document_part()
 
       Vytvoří data document part.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_signature()
 
       Vytvoří signature.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_signature_doc()
 
       Vytvoří signature doc.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _initiate_document()
 
       Provádí operaci initiate document.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _generate_repository_file()
 
       Vygeneruje repository file.
 
-      :param my_doc: Vstupní hodnota ``my_doc`` pro danou operaci.
-      :param document_content: Vstupní hodnota ``document_content`` pro danou operaci.
-      :param pdf_buffer: Vstupní hodnota ``pdf_buffer`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param my_doc: Číselná hodnota ``my_doc`` použitá při výpočtu nebo transformaci.
+      :param document_content: Textový nebo strukturální vstup `document_content` používaný při sestavení nebo zpracování obsahu.
+      :param pdf_buffer: Číselná hodnota ``pdf_buffer`` použitá při výpočtu nebo transformaci.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: body_style()
 
@@ -99,7 +99,7 @@ Třídy
 
       Vygeneruje text.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: build_document()
 
@@ -116,13 +116,13 @@ Třídy
 
       Vygeneruje text.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: build_document()
 
       Sestaví document. v aplikaci.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
 
 .. py:class:: ZruseniPDFCreator
@@ -135,13 +135,13 @@ Třídy
 
       Vygeneruje text.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: build_document()
 
       Sestaví document. v aplikaci.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
 
 Funkce
@@ -151,20 +151,20 @@ Funkce
 
    Provádí operaci draw image.
 
-   :param filename: Vstupní hodnota ``filename`` pro danou operaci.
-   :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
-   :param counter: Vstupní hodnota ``counter`` pro danou operaci.
+   :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+   :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
+   :param counter: Číselná nebo geometrická hodnota `counter` použitá při výpočtu nebo transformaci.
 
 .. py:function:: add_page_number(canvas, doc)
 
    Provádí operaci add page number.
 
-   :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
-   :param doc: Vstupní hodnota ``doc`` pro danou operaci.
+   :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
+   :param doc: Objekt dokumentu, který je funkcí upravován nebo čten.
 
 .. py:function:: draw_header(canvas, doc)
 
    Provádí operaci draw header.
 
-   :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
-   :param doc: Vstupní hodnota ``doc`` pro danou operaci.
+   :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
+   :param doc: Objekt dokumentu, který je funkcí upravován nebo čten.

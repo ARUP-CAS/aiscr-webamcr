@@ -47,7 +47,7 @@ def env_flag(name: str, default: str = "false") -> bool:
 
     :param name: Název proměnné prostředí.
     :param default: Výchozí hodnota použitá při neexistenci proměnné.
-    :return: ``True``, pokud hodnota odpovídá pravdivému příznaku.
+    :return: ```True```, pokud hodnota odpovídá pravdivému příznaku.
     """
     value = os.getenv(name, default).strip().lower()
     return value in {"1", "true", "yes", "on"}
@@ -63,7 +63,7 @@ def iter_python_files(paths: list[str], bypass_exclusions: bool) -> Iterable[Pat
 
     :param paths: Seznam souborů nebo adresářů ke kontrole.
     :param bypass_exclusions: Pokud ``True``, nepoužije se filtr ignorovaných adresářů.
-    :return: Generátor cest k nalezeným ``.py`` souborům.
+    :return: Generátor cest k nalezeným ```.py``` souborům.
     """
     for path_str in paths:
         path = Path(path_str)

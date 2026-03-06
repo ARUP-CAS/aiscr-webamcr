@@ -35,7 +35,7 @@ class Command(BaseCommand):
         """
         Provádí operaci add arguments.
 
-        :param parser: Vstupní hodnota ``parser`` pro danou operaci.
+        :param parser: Typová nebo konfigurační hodnota `parser` určující cílovou logiku.
         """
         parser.add_argument(
             "model",
@@ -74,9 +74,9 @@ class Command(BaseCommand):
 
     def _transform_pian(self):
         """
-        Transformuje pian.
+               Transformuje pian.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         from pian.models import Pian
 
@@ -154,9 +154,9 @@ class Command(BaseCommand):
 
     def _transform_nalez(self):
         """
-        Transformuje nalez.
+               Transformuje nalez.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         from pas.models import SamostatnyNalez
 
@@ -234,9 +234,9 @@ class Command(BaseCommand):
 
     def _transform_projekt(self):
         """
-        Transformuje projekt.
+               Transformuje projekt.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         from projekt.models import Projekt
 
@@ -314,9 +314,9 @@ class Command(BaseCommand):
 
     def _transform_dokument(self):
         """
-        Transformuje dokument.
+               Transformuje dokument.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         from dokument.models import DokumentExtraData
 

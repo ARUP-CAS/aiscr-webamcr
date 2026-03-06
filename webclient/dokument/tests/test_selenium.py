@@ -1301,7 +1301,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         """
         Provádí operaci odeslat zaznam.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         """
         self.goToAddress(f"/dokument/model/detail/{ident_cely}")
         self.ElementClick(By.ID, "buttonEdit")
@@ -1331,7 +1331,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         """
         Provádí operaci pridani objektu.
 
-        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+        :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
         """
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_o-0-druh .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
@@ -1349,7 +1349,7 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         """
         Provádí operaci pridani predmetu.
 
-        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+        :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
         """
         self.driver.execute_script("$(window).scrollTop(1500 );")
         self.ElementClick(By.CSS_SELECTOR, f"#div_id_{ident}-K001_p-0-druh .filter-option-inner-inner")

@@ -12,8 +12,8 @@ class NalezFormSetHelper(FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param typ: Vstupní hodnota ``typ`` pro danou operaci.
-        :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
+        :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
+        :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
@@ -29,9 +29,9 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
     """
     Funkce která vrací formulář nálezu objekty pro formset.
 
-    :param druh_obj_choices: Popis parametru ``druh_obj_choices``.
-    :param spec_obj_choices: Popis parametru ``spec_obj_choices``.
-    :param not_readonly: Popis parametru ``not_readonly``.
+    :param druh_obj_choices: Záznam/objekt ``druh_obj_choices``, který funkce čte, validuje nebo upravuje.
+    :param spec_obj_choices: Záznam/objekt ``spec_obj_choices``, který funkce čte, validuje nebo upravuje.
+    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
     """
 
     class CreateNalezObjektForm(forms.ModelForm):
@@ -63,8 +63,8 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
             """
             Inicializuje instanci třídy.
 
-            :param druh_objekt_choices: Vstupní hodnota ``druh_objekt_choices`` pro danou operaci.
-            :param specifikace_objekt_choices: Vstupní hodnota ``specifikace_objekt_choices`` pro danou operaci.
+            :param druh_objekt_choices: Záznam/objekt ``druh_objekt_choices``, který funkce čte, validuje nebo upravuje.
+            :param specifikace_objekt_choices: Záznam/objekt ``specifikace_objekt_choices``, který funkce čte, validuje nebo upravuje.
             :param args: Dodatečné poziční argumenty předané voláním.
             :param kwargs: Dodatečné pojmenované argumenty předané voláním.
             """
@@ -106,9 +106,9 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
     """
     Funkce která vrací formulář nálezu předměty pro formset.
 
-    :param druh_projekt_choices: Popis parametru ``druh_projekt_choices``.
-    :param specifikce_predmetu_choices: Popis parametru ``specifikce_predmetu_choices``.
-    :param not_readonly: Popis parametru ``not_readonly``.
+    :param druh_projekt_choices: Doménový objekt `druh_projekt_choices`, se kterým funkce pracuje.
+    :param specifikce_predmetu_choices: Číselná nebo geometrická hodnota `specifikce_predmetu_choices` použitá při výpočtu nebo transformaci.
+    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
     """
 
     class CreateNalezPredmetForm(forms.ModelForm):

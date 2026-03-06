@@ -143,9 +143,9 @@ class ExterniZdrojForm(forms.ModelForm):
         Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
-        :param required: Vstupní hodnota ``required`` pro danou operaci.
-        :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
-        :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
+        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         super(ExterniZdrojForm, self).__init__(*args, **kwargs)
@@ -274,7 +274,7 @@ class ExterniOdkazForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param type_arch: Vstupní hodnota ``type_arch`` pro danou operaci.
+        :param type_arch: Název nebo typ ``type_arch`` používaný pro volbu cílové logiky.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
@@ -290,8 +290,8 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
         """
         Inicializuje instanci třídy.
 
-        :param type_arch: Vstupní hodnota ``type_arch`` pro danou operaci.
-        :param dok: Vstupní hodnota ``dok`` pro danou operaci.
+        :param type_arch: Název nebo typ ``type_arch`` používaný pro volbu cílové logiky.
+        :param dok: Doménový objekt `dok`, se kterým funkce pracuje.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """

@@ -55,9 +55,9 @@ def draw_image(filename, canvas, counter):
     """
     Provádí operaci draw image.
 
-    :param filename: Vstupní hodnota ``filename`` pro danou operaci.
-    :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
-    :param counter: Vstupní hodnota ``counter`` pro danou operaci.
+    :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+    :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
+    :param counter: Číselná nebo geometrická hodnota `counter` použitá při výpočtu nebo transformaci.
     """
     img = utils.ImageReader(filename)
     iw, ih = img.getSize()
@@ -85,8 +85,8 @@ def add_page_number(canvas, doc):
     """
     Provádí operaci add page number.
 
-    :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
-    :param doc: Vstupní hodnota ``doc`` pro danou operaci.
+    :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
+    :param doc: Objekt dokumentu, který je funkcí upravován nebo čten.
     """
     canvas.saveState()
     canvas.setFont("OpenSans", 10)
@@ -99,8 +99,8 @@ def draw_header(canvas, doc):
     """
     Provádí operaci draw header.
 
-    :param canvas: Vstupní hodnota ``canvas`` pro danou operaci.
-    :param doc: Vstupní hodnota ``doc`` pro danou operaci.
+    :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
+    :param doc: Objekt dokumentu, který je funkcí upravován nebo čten.
     """
     counter = 0
     for filename in HEADER_IMAGES:
@@ -118,10 +118,10 @@ class DocumentCreator(ABC):
         """
         Inicializuje instanci třídy.
 
-        :param oznamovatel: Vstupní hodnota ``oznamovatel`` pro danou operaci.
-        :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :param additional: Vstupní hodnota ``additional`` pro danou operaci.
+        :param oznamovatel: Uživatel nebo osoba `oznamovatel`, v jejímž kontextu se operace provádí.
+        :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param additional: Kolekce nebo datová struktura `additional` zpracovávaná touto funkcí.
         """
         from oznameni.models import Oznamovatel
 
@@ -141,10 +141,10 @@ class DocumentCreator(ABC):
     @classmethod
     def format_date(cls, date_obj: datetime.datetime | None) -> str:
         """
-        Provádí operaci format date.
+               Provádí operaci format date.
 
-        :param date_obj: Vstupní hodnota ``date_obj`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param date_obj: Časový údaj ``date_obj`` použitý při filtrování nebo výpočtu.
+        Zpracovaná hodnota po validaci nebo transformaci.
         """
         if date_obj is None:
             return ""
@@ -157,7 +157,7 @@ class DocumentCreator(ABC):
         """
         Vytvoří style dict.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         self.styles.add(
             ParagraphStyle(
@@ -233,7 +233,7 @@ class DocumentCreator(ABC):
         """
         Vytvoří header oznamovatel.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         self.texts["header_line_1"] = self.projekt.oznamovatel.oznamovatel
         self.texts["header_line_2"] = f"Zast.: {self.projekt.oznamovatel.odpovedna_osoba}"
@@ -245,7 +245,7 @@ class DocumentCreator(ABC):
         """
         Vytvoří header oznamovatel doc.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         return [
             Paragraph(self.texts.get("header_line_1"), self.styles.get("amBodyTextSmallerSpaceAfter")),
@@ -259,7 +259,7 @@ class DocumentCreator(ABC):
         """
         Vytvoří header tab dates.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         self.texts["header_tab_1_1"] = "<strong>Oznámení ze dne</strong>"
         self.texts["header_tab_1_2"] = "<strong>Evidenční číslo</strong>"
@@ -272,7 +272,7 @@ class DocumentCreator(ABC):
         """
         Vytvoří header tab dates doc.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         tbl_data = [
             [
@@ -293,7 +293,7 @@ class DocumentCreator(ABC):
         """
         Vytvoří data document part.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         self.texts["data_part_1"] = f"<strong>Podnět oznámení</strong>: {self.projekt.podnet}"
         self.texts["data_part_2"] = f"<strong>Katastrální území</strong>: {self.projekt.hlavni_katastr}"
@@ -308,7 +308,7 @@ class DocumentCreator(ABC):
         """
         Vytvoří signature.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         self.texts["doc_sign_1"] = "S pozdravem"
         self.texts["doc_sign_2"] = DOC_REDITEL[self.dok_index]
@@ -320,7 +320,7 @@ class DocumentCreator(ABC):
         """
         Vytvoří signature doc.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         return [
             Paragraph("", self.body_style),
@@ -331,9 +331,9 @@ class DocumentCreator(ABC):
 
     def _initiate_document(self):
         """
-        Provádí operaci initiate document.
+               Provádí operaci initiate document.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         pdf_buffer = BytesIO()
         my_doc = SimpleDocTemplate(
@@ -350,10 +350,10 @@ class DocumentCreator(ABC):
         """
         Vygeneruje repository file.
 
-        :param my_doc: Vstupní hodnota ``my_doc`` pro danou operaci.
-        :param document_content: Vstupní hodnota ``document_content`` pro danou operaci.
-        :param pdf_buffer: Vstupní hodnota ``pdf_buffer`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace.
+        :param my_doc: Číselná hodnota ``my_doc`` použitá při výpočtu nebo transformaci.
+        :param document_content: Textový nebo strukturální vstup `document_content` používaný při sestavení nebo zpracování obsahu.
+        :param pdf_buffer: Číselná hodnota ``pdf_buffer`` použitá při výpočtu nebo transformaci.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         my_doc.build(document_content, onFirstPage=draw_header, onLaterPages=draw_header)
         pdf_value = pdf_buffer.getvalue()
@@ -380,7 +380,7 @@ class DocumentCreator(ABC):
         """
         Vygeneruje text.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         pass
 
@@ -399,7 +399,7 @@ class OznameniPDFCreator(DocumentCreator):
         """
         Vygeneruje text.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
@@ -682,7 +682,7 @@ class OznameniPDFCreator(DocumentCreator):
         """
         Sestaví document. v aplikaci.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         pdf_buffer, my_doc = self._initiate_document()
         styles = self.styles
@@ -755,7 +755,7 @@ class ZruseniPDFCreator(DocumentCreator):
         """
         Vygeneruje text.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         self._create_header_oznamovatel()
         self._create_header_tab_dates()
@@ -849,7 +849,7 @@ class ZruseniPDFCreator(DocumentCreator):
         """
         Sestaví document. v aplikaci.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         pdf_buffer, my_doc = self._initiate_document()
         styles = self.styles

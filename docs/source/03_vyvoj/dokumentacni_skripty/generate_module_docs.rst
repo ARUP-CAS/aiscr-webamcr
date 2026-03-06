@@ -19,14 +19,14 @@ Funkce
    Extrahujte vzory URL ze souboru urls.py.
 
    :param urls_file: Cesta k souboru urls.py.
-   :return: Každý url_pattern je slovník s klíči: ``pattern``, ``view``, ``name``
+   :return: Každý url_pattern je slovník s klíči: ``pattern``, ``view``, ```name```
 
 .. py:function:: parse_path_call(node)
 
    Analyzuje volání path() nebo re_path() a extrahuje informace o vzoru URL.
 
    :param node: uzel AST představující volání path().
-   :return: ``dict: {'pattern': str, 'view': str, 'name': str} or None``
+   :return: ```dict: {'pattern': str, 'view': str, 'name': str} or None```
 
 .. py:function:: generate_url_routing_rst()
 
@@ -42,7 +42,7 @@ Funkce
    Extrahuje přijímače signálu ze souboru signals.py.
 
    :param signals_file: Cesta k souboru signals.py.
-   :return: Seznam slovníků informací o signálech s klíči: ``function``, ``signal_type``, ``sender``, ``weak``
+   :return: Seznam slovníků informací o signálech s klíči: ``function``, ``signal_type``, ``sender``, ```weak```
 
 .. py:function:: parse_receiver_decorator(decorator, function_name)
 
@@ -50,7 +50,7 @@ Funkce
 
    :param decorator: AST Volací uzel představující @receiver()
    :param function_name: Název dekorované funkce
-   :return: ``dict: {'function': str, 'signal_type': str, 'sender': str, 'weak': str} or None``
+   :return: ```dict: {'function': str, 'signal_type': str, 'sender': str, 'weak': str} or None```
 
 .. py:function:: generate_signals_rst()
 
@@ -66,7 +66,7 @@ Funkce
    Extrahuje možnosti akcí z třídy Permissions v models.py.
 
    :param models_file: Cesta k souboru models.py.
-   :return: Seznam názvů akcí (např. ``adb_smazat``, ``vb_smazat``)
+   :return: Seznam názvů akcí (např. ``adb_smazat``, ```vb_smazat```)
 
 .. py:function:: generate_permissions_rst()
 
@@ -82,59 +82,59 @@ Funkce
 
    Odstraní obalové uvozovky/závorky z hodnoty komentáře.
 
-   :param value: Hodnota parametru ``value``.
-   :return: Návratová hodnota funkce.
+   :param value: Číselná nebo geometrická hodnota `value` použitá při výpočtu nebo transformaci.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: parse_comment_values(comment_text)
 
    Vrátí mapované hodnoty získané z inline komentáře XSD.
 
-   :param comment_text: Hodnota parametru ``comment_text``.
-   :return: Návratová hodnota funkce.
+   :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: get_following_comment(parent, element)
 
    Najde první uzel komentáře bezprostředně za daným elementem.
 
-   :param parent: Hodnota parametru ``parent``.
-   :param element: Hodnota parametru ``element``.
-   :return: Návratová hodnota funkce.
+   :param parent: Číselná nebo geometrická hodnota `parent` použitá při výpočtu nebo transformaci.
+   :param element: Záznam/objekt ``element``, který funkce čte, validuje nebo upravuje.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: collect_choice_element_names(choice_element)
 
    Shromáždí názvy všech uzlů xs:element uvnitř bloku choice.
 
-   :param choice_element: Hodnota parametru ``choice_element``.
-   :return: Návratová hodnota funkce.
+   :param choice_element: Záznam/objekt ``choice_element``, který funkce čte, validuje nebo upravuje.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: format_choice_note(names)
 
    Naformátuje poznámku popisující možnosti uvnitř elementu choice.
 
-   :param names: Hodnota parametru ``names``.
-   :return: Návratová hodnota funkce.
+   :param names: Kolekce ``names`` zpracovávaná touto funkcí.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: extract_elements_from_parent(parent, choice_context)
 
    Rekurzivně extrahuje definice elementů a zaznamená kontext choice, pokud existuje.
 
-   :param parent: Hodnota parametru ``parent``.
-   :param choice_context: Hodnota parametru ``choice_context``.
-   :return: Návratová hodnota funkce.
+   :param parent: Číselná nebo geometrická hodnota `parent` použitá při výpočtu nebo transformaci.
+   :param choice_context: Kolekce ``choice_context`` zpracovávaná touto funkcí.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: extract_elements_from_complex_type(complex_type)
 
    Extrahuje řádky elementů z definice complexType.
 
-   :param complex_type: Hodnota parametru ``complex_type``.
-   :return: Návratová hodnota funkce.
+   :param complex_type: Název nebo typ ``complex_type`` používaný pro volbu cílové logiky.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: extract_model_mappings(schema_root)
 
    Načte mapování z volby elementu amcr do řádků Model -> ComplexType.
 
-   :param schema_root: Hodnota parametru ``schema_root``.
-   :return: Návratová hodnota funkce.
+   :param schema_root: Cesta, URL nebo název zdroje ``schema_root``, ze kterého funkce čte nebo kam zapisuje.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: extract_xsd_version(schema_root)
 
@@ -148,14 +148,14 @@ Funkce
    Extrahuje informace o dokumentaci ze souboru příkazů pro správu Django.
 
    :param command_file: Cesta k příkazovému souboru.
-   :return: ``dict: {'name': str, 'help': str, 'docstring': str, 'arguments': list}``
+   :return: ```dict: {'name': str, 'help': str, 'docstring': str, 'arguments': list}```
 
 .. py:function:: extract_command_arguments(add_arguments_node)
 
    Extrahuje definice argumentů z metody add_arguments.
 
    :param add_arguments_node: AST uzel metody add_arguments.
-   :return: Seznam slovníků s informacemi o argumentech s klíči: ``name``, ``type``, ``help``, ``default``
+   :return: Seznam slovníků s informacemi o argumentech s klíči: ``name``, ``type``, ``help``, ```default```
 
 .. py:function:: generate_management_commands_rst()
 
@@ -170,7 +170,7 @@ Funkce
 
    Vygeneruje docs/source/05_integrace/export_structure.rst ze souboru amcr.xsd.
 
-   :return: Návratová hodnota funkce.
+   :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: has_meaningful_code(source_file)
 

@@ -16,26 +16,26 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param name: Vstupní hodnota ``name`` pro danou operaci.
+      :param name: Název nebo identifikátor používaný v rámci operace.
 
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_name()
 
       Vrací name. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
    .. py:method:: get_permission()
 
       Vrací permission. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: SectionNameWithAccessor
@@ -48,15 +48,15 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param name: Vstupní hodnota ``name`` pro danou operaci.
-      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
 
    .. py:method:: get_name()
 
       Vrací name. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
 
 .. py:class:: PianSectionNameWithAccessor
@@ -69,7 +69,7 @@ Třídy
 
       Vrací name. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
 
 .. py:class:: OznamovatelSectionNameWithAccessor
@@ -82,8 +82,8 @@ Třídy
 
       Vrací permission. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: Field
@@ -96,27 +96,27 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param label: Vstupní hodnota ``label`` pro danou operaci.
-      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+      :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
+      :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
 
    .. py:method:: __repr__()
 
       Vrací reprezentaci objektu pro ladění.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_value()
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: get_label()
 
@@ -133,16 +133,16 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param label: Vstupní hodnota ``label`` pro danou operaci.
-      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-      :param key_name: Vstupní hodnota ``key_name`` pro danou operaci.
+      :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
+      :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+      :param key_name: Textový název nebo klíč ``key_name`` používaný v rámci operace.
 
    .. py:method:: get_value()
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: SouborDownloadField
@@ -155,8 +155,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: Model3dKomponentaField
@@ -169,8 +169,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: Model3dKomponentaAktivityField
@@ -183,8 +183,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ChooseField
@@ -197,8 +197,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: StatusField
@@ -211,8 +211,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ZjisteniField
@@ -225,8 +225,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ForeignField
@@ -239,16 +239,16 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param name: Vstupní hodnota ``name`` pro danou operaci.
-      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
 
    .. py:method:: get_value()
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: GeomGmlField
@@ -261,8 +261,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: GeomWktField
@@ -275,8 +275,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ForeignGeomGmlField
@@ -289,8 +289,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ForeignGeomWktField
@@ -303,8 +303,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ManyToManyField
@@ -317,8 +317,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ForeignManyToManyField
@@ -331,8 +331,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: DoubleField
@@ -345,8 +345,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: DoubleFieldNum
@@ -359,8 +359,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ForeignDoubleField
@@ -373,8 +373,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: ForeignDoubleFieldNum
@@ -387,8 +387,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: RepeatableField
@@ -401,24 +401,24 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param name: Vstupní hodnota ``name`` pro danou operaci.
-      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-      :param template_name: Vstupní hodnota ``template_name`` pro danou operaci.
-      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+      :param template_name: Cesta, URL nebo název zdroje ``template_name``, ze kterého funkce čte nebo kam zapisuje.
+      :param model_name: Název modelu používaný pro cílení operace.
 
    .. py:method:: get_related_manager()
 
       Vrací related manager.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
    .. py:method:: get_value()
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: VbRepeatableField
@@ -431,8 +431,8 @@ Třídy
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: HistorieRepeatableField
@@ -445,14 +445,14 @@ Třídy
 
       Vrací related manager.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
    .. py:method:: get_value()
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: RepeatableSectionField
@@ -469,14 +469,14 @@ Třídy
 
       Vrací sections. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
    .. py:method:: get_value()
 
       Vrací value. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: SectionField
@@ -489,9 +489,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param name: Vstupní hodnota ``name`` pro danou operaci.
-      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
 
 
 .. py:class:: RepeatableSectionNameWithAccessor
@@ -504,22 +504,22 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param name: Vstupní hodnota ``name`` pro danou operaci.
-      :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+      :param model_name: Název modelu používaný pro cílení operace.
 
    .. py:method:: get_sections()
 
       Vrací sections. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
    .. py:method:: get_name()
 
       Vrací name. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
 
 .. py:class:: SouboryRepeatableSectionNameWithAccessor
@@ -532,13 +532,13 @@ Třídy
 
       Vrací sections. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
    .. py:method:: get_name()
 
       Vrací name. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
 
 .. py:class:: KomponentaRepeatableSectionNameWithAccessor
@@ -551,7 +551,7 @@ Třídy
 
       Vrací name. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
 
 .. py:class:: SubSectionField
@@ -564,8 +564,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param config: Vstupní hodnota ``config`` pro danou operaci.
-      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+      :param config: Konfigurační slovník používaný pro sestavení výstupu.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
 
    .. py:method:: get_config()
 
@@ -575,7 +575,7 @@ Třídy
 
       Vrací instance. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
 
 .. py:class:: NeidentAkceSubSectionField
@@ -588,7 +588,7 @@ Třídy
 
       Vrací instance. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
 
 .. py:class:: HistorieSubSectionField
@@ -601,8 +601,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-      :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+      :param label_key: Textový název nebo klíč ``label_key`` používaný v rámci operace.
 
    .. py:method:: get_config()
 
@@ -616,22 +616,22 @@ Funkce
 
    Vrací model. v aplikaci.
 
-   :param name: Vstupní hodnota ``name`` pro danou operaci.
+   :param name: Název nebo identifikátor používaný v rámci operace.
 
 .. py:function:: get_gml(geom)
 
    Vrací gml. v aplikaci.
 
-   :param geom: Vstupní hodnota ``geom`` pro danou operaci.
+   :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
 
 .. py:function:: get_wkt(geom)
 
    Vrací wkt. v aplikaci.
 
-   :param geom: Vstupní hodnota ``geom`` pro danou operaci.
+   :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
 
 .. py:function:: get_historie_config(label_key)
 
    Vrací historie config.
 
-   :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
+   :param label_key: Textový název nebo klíč ``label_key`` používaný v rámci operace.

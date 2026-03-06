@@ -16,5 +16,5 @@ Třídy
 
       Provádí operaci user can authenticate.
 
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 

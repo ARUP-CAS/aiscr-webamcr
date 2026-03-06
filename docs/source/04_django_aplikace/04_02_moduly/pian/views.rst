@@ -16,22 +16,22 @@ Třídy
 
       Filtruje by permission.
 
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :param qs: Vstupní queryset, který má být dále zpracován.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
 
    .. py:method:: add_ownership_lookup()
 
       Provádí operaci add ownership lookup.
 
-      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: add_accessibility_lookup()
 
       Provádí operaci add accessibility lookup.
 
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: PianAutocomplete
@@ -61,7 +61,7 @@ Třídy
 
       Ověří epsg. v aplikaci.
 
-      :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
+      :param epsg: Číselná nebo geometrická hodnota `epsg` použitá při výpočtu nebo transformaci.
 
 
 Funkce
@@ -71,33 +71,33 @@ Funkce
 
    Funkce pohledu pro zapsání změny pianu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: odpojit(request, dj_ident_cely)
 
    Funkce pohledu pro odpojení pianu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param dj_ident_cely: Identifikátor ``dj_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: potvrdit(request, dj_ident_cely)
 
    Funkce pohledu pro potvrzení pianu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param dj_ident_cely: Identifikátor ``dj_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: create(request, dj_ident_cely)
 
    Funkce pohledu pro vytvoření pianu.
 
-   :param request: Popis parametru ``request``.
-   :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param dj_ident_cely: Identifikátor ``dj_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: mapa_dj(request, ident_cely)
 
    Funkce ziskej Dj pro Pian
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.

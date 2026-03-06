@@ -9,8 +9,8 @@ class PianNotInKladysm5Error(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param pian: Vstupní hodnota ``pian`` pro danou operaci.
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param pian: Doménový objekt `pian`, se kterým funkce pracuje.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.pian = pian
         self.message = message
@@ -24,8 +24,8 @@ class MaximalIdentNumberError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param number: Vstupní hodnota ``number`` pro danou operaci.
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.number = number
         self.message = message
@@ -39,8 +39,8 @@ class DJNemaPianError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param dj: Vstupní hodnota ``dj`` pro danou operaci.
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param dj: Doménový objekt `dj`, se kterým funkce pracuje.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.dj = dj
         self.message = message
@@ -54,7 +54,7 @@ class NelzeZjistitRaduError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.message = message
 
@@ -66,7 +66,7 @@ class NeocekavanaRadaError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.message = message
 
@@ -78,7 +78,7 @@ class WrongSheetError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.message = message
 
@@ -90,7 +90,7 @@ class NeznamaGeometrieError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.message = message
 
@@ -102,7 +102,7 @@ class UnexpectedDataRelations(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.message = message
 
@@ -114,8 +114,8 @@ class MaximalEventCount(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param number: Vstupní hodnota ``number`` pro danou operaci.
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.number = number
         self.message = message
@@ -129,7 +129,7 @@ class WrongCSVError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.message = message
 
@@ -141,7 +141,7 @@ class ZaznamSouborNotmatching(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.message = message
 
@@ -153,6 +153,6 @@ class StateChangedError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
         """
         self.message = message

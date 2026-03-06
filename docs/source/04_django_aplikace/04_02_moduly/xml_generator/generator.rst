@@ -26,20 +26,20 @@ Třídy
 
       Vrací schema dict.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _get_schema_name()
 
       Vrací schema name.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _create_xpath_query()
 
       Vytvoří xpath query.
 
-      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param model_name: Název modelu používaný pro cílení operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: get_path_to_schema()
 
@@ -49,103 +49,103 @@ Třídy
 
       Zpracuje schema.
 
-      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param model_name: Název modelu používaný pro cílení operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _get_prefix()
 
       Vrací prefix.
 
-      :param comment_text: Vstupní hodnota ``comment_text`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _parse_comment()
 
       Zpracuje comment.
 
-      :param comment_text: Vstupní hodnota ``comment_text`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _get_attribute_of_record()
 
       Vrací attribute of record.
 
-      :param attribute_name: Vstupní hodnota ``attribute_name`` pro danou operaci.
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _get_attribute_of_record_unbounded()
 
       Vrací attribute of record unbounded.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param parsed_comment: Vstupní hodnota ``parsed_comment`` pro danou operaci.
-      :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
+      :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _create_element()
 
       Vytvoří element.
 
-      :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-      :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-      :param parsed_comment: Vstupní hodnota ``parsed_comment`` pro danou operaci.
-      :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
-      :param id_field_prefix: Vstupní hodnota ``id_field_prefix`` pro danou operaci.
-      :param ref_type: Vstupní hodnota ``ref_type`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+      :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+      :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
+      :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
+      :param id_field_prefix: Záznam/objekt ``id_field_prefix``, který funkce čte, validuje nebo upravuje.
+      :param ref_type: Název nebo typ ``ref_type`` používaný pro volbu cílové logiky.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_many_to_many_ref_elements()
 
       Vytvoří many to many ref elements.
 
-      :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-      :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-      :param related_records: Vstupní hodnota ``related_records`` pro danou operaci.
-      :param parsed_comment: Vstupní hodnota ``parsed_comment`` pro danou operaci.
-      :param prefix: Vstupní hodnota ``prefix`` pro danou operaci.
-      :param ref_type: Vstupní hodnota ``ref_type`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+      :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+      :param related_records: Záznam/objekt ``related_records``, který funkce čte, validuje nebo upravuje.
+      :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
+      :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
+      :param ref_type: Název nebo typ ``ref_type`` používaný pro volbu cílové logiky.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _parse_scheme_create_element()
 
       Zpracuje scheme create element.
 
-      :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-      :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+      :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _iterate_unbound_records()
 
       Provádí operaci iterate unbound records.
 
-      :param related_records: Vstupní hodnota ``related_records`` pro danou operaci.
-      :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-      :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param related_records: Záznam/objekt ``related_records``, který funkce čte, validuje nebo upravuje.
+      :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+      :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _parse_scheme_create_nested_element()
 
       Zpracuje scheme create nested element.
 
-      :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-      :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-      :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
-      :param child_parent_element_name: Vstupní hodnota ``child_parent_element_name`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+      :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+      :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
+      :param child_parent_element_name: Textový název nebo klíč ``child_parent_element_name`` používaný v rámci operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_ref_type_attribute_name()
 
       Vrací ref type attribute name.
 
-      :param type_name: Vstupní hodnota ``type_name`` pro danou operaci.
+      :param type_name: Název nebo typ ``type_name`` používaný pro volbu cílové logiky.
 
    .. py:method:: _replace_redundant_namespaces()
 
       Provádí operaci replace redundant namespaces.
 
-      :param xml_string: Vstupní hodnota ``xml_string`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param xml_string: Cesta, URL nebo název zdroje ``xml_string``, ze kterého funkce čte nebo kam zapisuje.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: generate_document()
 
@@ -155,5 +155,5 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
+      :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
 

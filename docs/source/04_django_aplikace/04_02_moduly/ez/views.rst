@@ -16,7 +16,7 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
-      :param kwargs: Popis parametru ``kwargs``.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
 .. py:class:: ExterniZdrojListView
@@ -33,7 +33,7 @@ Třídy
 
       Provádí operaci rename field for ordering.
 
-      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: get_queryset()
 
@@ -43,8 +43,8 @@ Třídy
 
       Provádí operaci add accessibility lookup.
 
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: ExterniZdrojDetailView
@@ -80,13 +80,13 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: form_invalid()
 
       Provádí operaci form invalid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: get()
 
@@ -117,13 +117,13 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: form_invalid()
 
       Provádí operaci form invalid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: get()
 
@@ -156,7 +156,7 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
@@ -278,7 +278,7 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: init_translation()
 
@@ -337,7 +337,7 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_context_data()
 
@@ -353,7 +353,7 @@ Třídy
 
       Vrací object. v aplikaci.
 
-      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: post()
 
@@ -367,13 +367,13 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: form_invalid()
 
       Provádí operaci form invalid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
 
 .. py:class:: ExterniOdkazOdpojitAZView
@@ -393,7 +393,7 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_zaznam()
 
@@ -424,7 +424,7 @@ Třídy
 
       Vrací result label.
 
-      :param result: Vstupní hodnota ``result`` pro danou operaci.
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
 
    .. py:method:: get_queryset()
 
@@ -434,8 +434,8 @@ Třídy
 
       Provádí operaci add accessibility lookup.
 
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: ExterniZdrojTableRowView
@@ -487,7 +487,7 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 
 Funkce
@@ -497,33 +497,25 @@ Funkce
 
    Funkce pro získaní historických datumu.
 
-   :param historie_vazby: Popis parametru ``historie_vazby``.
-   :param request_user: Popis parametru ``request_user``.
+   :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+   :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+   :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
 
 .. py:function:: get_detail_template_shows(zaznam, user)
 
    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
 
-   :param zaznam: Popis parametru ``zaznam``.
-   :param user: Popis parametru ``user``.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+   :param user: Uživatel, v jehož kontextu se operace provádí.
+   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
 
 .. py:function:: get_required_fields()
 
    Funkce pro získaní dictionary povinných polí podle stavu externího zdroje.
 
-
-   **Argumenty:**
-
-   - ``zaznam`` (*Externí zdroj*): model ExterniZdroj pro který se dané pole počítají.
-   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-   **Návratová hodnota:**
-
-   *required_fields*: list polí.
-
 .. py:function:: save_autor_editor(zaznam, form)
 
    Funkce pro uložení autorů a editorů k externímu zdroji podle toho v jakém pořadí byly zadáni.
 
-   :param zaznam: Popis parametru ``zaznam``.
-   :param form: Popis parametru ``form``.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+   :param form: Formulářová instance zpracovávaná funkcí.

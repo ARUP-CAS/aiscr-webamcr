@@ -14,9 +14,9 @@ def check_if_task_queued(class_name, pk, task_name):
     """
     Ověří if task queued.
 
-    :param class_name: Vstupní hodnota ``class_name`` pro danou operaci.
+    :param class_name: Název nebo typ ``class_name`` používaný pro volbu cílové logiky.
     :param pk: Primární klíč zpracovávaného záznamu.
-    :param task_name: Vstupní hodnota ``task_name`` pro danou operaci.
+    :param task_name: Textový název nebo klíč ``task_name`` používaný v rámci operace.
     """
     try:
         app = Celery("webclient")
@@ -62,9 +62,9 @@ class BaseAmcrModel(models.Model):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return f"{self.pk}"
 
@@ -102,9 +102,9 @@ class ModelWithMetadata(BaseAmcrModel):
         """
         Vytvoří transaction. v aplikaci.
 
-        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-        :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-        :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+        :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
         """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
@@ -125,7 +125,7 @@ class ModelWithMetadata(BaseAmcrModel):
         """
         Metoda k získání vlastního souboru metadat dané verze z Fedory
 
-        :param timestamp: Popis parametru ``timestamp``.
+        :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
         """
         from core.repository_connector import FedoraRepositoryConnector
 
@@ -166,10 +166,10 @@ class ModelWithMetadata(BaseAmcrModel):
         """
         Uloží metadata. v aplikaci.
 
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :param include_files: Vstupní hodnota ``include_files`` pro danou operaci.
-        :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
-        :param skip_container_check: Vstupní hodnota ``skip_container_check`` pro danou operaci.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param include_files: Příznak ``include_files`` určující průběh nebo rozsah zpracování.
+        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+        :param skip_container_check: Příznak ``skip_container_check`` určující průběh nebo rozsah zpracování.
         """
         from core.repository_connector import DryRunFedoraTransaction, FedoraDeletionOnlyTransaction, FedoraTransaction
 
@@ -233,8 +233,8 @@ class ModelWithMetadata(BaseAmcrModel):
         """
         Uloží record deletion record.
 
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :param deleted_by_user: Vstupní hodnota ``deleted_by_user`` pro danou operaci.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param deleted_by_user: Příznak ``deleted_by_user`` určující průběh nebo rozsah zpracování.
         """
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
 
@@ -266,8 +266,8 @@ class ModelWithMetadata(BaseAmcrModel):
         """
         Vrací fedora transaction.
 
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
@@ -283,8 +283,8 @@ class ModelWithMetadata(BaseAmcrModel):
         """
         Provádí operaci record deletion.
 
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
         """
         logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.start")
 
@@ -338,10 +338,10 @@ class ModelWithMetadata(BaseAmcrModel):
         """
         Provádí operaci record ident change.
 
-        :param old_ident_cely: Vstupní hodnota ``old_ident_cely`` pro danou operaci.
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :param new_ident_cely: Vstupní hodnota ``new_ident_cely`` pro danou operaci.
-        :param delete_container: Vstupní hodnota ``delete_container`` pro danou operaci.
+        :param old_ident_cely: Identifikátor ``old_ident_cely`` používaný pro dohledání cílového záznamu.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param new_ident_cely: Identifikátor ``new_ident_cely`` používaný pro dohledání cílového záznamu.
+        :param delete_container: Příznak ``delete_container`` určující průběh nebo rozsah zpracování.
         """
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
@@ -393,10 +393,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
             def process_arch_z(record: ArcheologickyZaznam):
                 """
-                Provádí operaci process arch z.
+                               Provádí operaci process arch z.
 
-                :param record: Vstupní hodnota ``record`` pro danou operaci.
-                :return: Vrací výsledek provedené operace.
+                               :param record: Záznam, který funkce čte nebo upravuje.
+                :return: Výstup funkce odpovídající implementované logice.
                 """
                 for inner_item in record.dokumentacni_jednotky_akce.all():
                     inner_item: DokumentacniJednotka
@@ -428,10 +428,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
                 def save_metadata(record: Dokument):
                     """
-                    Uloží metadata.
+                                       Uloží metadata.
 
-                    :param record: Vstupní hodnota ``record`` pro danou operaci.
-                    :return: Vrací výsledek provedené operace.
+                                       :param record: Záznam, který funkce čte nebo upravuje.
+                    Výsledek provedené změny nad cílovým objektem.
                     """
                     for item in record.casti.all():
                         item: DokumentCast
@@ -448,10 +448,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
                 def save_metadata(record: ExterniZdroj):
                     """
-                    Uloží metadata.
+                                       Uloží metadata.
 
-                    :param record: Vstupní hodnota ``record`` pro danou operaci.
-                    :return: Vrací výsledek provedené operace.
+                                       :param record: Záznam, který funkce čte nebo upravuje.
+                    Výsledek provedené změny nad cílovým objektem.
                     """
                     for item in record.externi_odkazy_zdroje.all():
                         item: ExterniOdkaz
@@ -463,10 +463,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
                 def save_metadata(record: Projekt):
                     """
-                    Uloží metadata.
+                                       Uloží metadata.
 
-                    :param record: Vstupní hodnota ``record`` pro danou operaci.
-                    :return: Vrací výsledek provedené operace.
+                                       :param record: Záznam, který funkce čte nebo upravuje.
+                    Výsledek provedené změny nad cílovým objektem.
                     """
                     for item in record.casti_dokumentu.all():
                         item: DokumentCast
@@ -481,10 +481,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
                 def save_metadata(record: Lokalita):
                     """
-                    Uloží metadata.
+                                       Uloží metadata.
 
-                    :param record: Vstupní hodnota ``record`` pro danou operaci.
-                    :return: Vrací výsledek provedené operace.
+                                       :param record: Záznam, který funkce čte nebo upravuje.
+                    Výsledek provedené změny nad cílovým objektem.
                     """
                     archeologicky_zaznam: ArcheologickyZaznam = record.archeologicky_zaznam
                     process_arch_z(archeologicky_zaznam)
@@ -495,10 +495,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
                 def save_metadata(record: SamostatnyNalez):
                     """
-                    Uloží metadata.
+                                       Uloží metadata.
 
-                    :param record: Vstupní hodnota ``record`` pro danou operaci.
-                    :return: Vrací výsledek provedené operace.
+                                       :param record: Záznam, který funkce čte nebo upravuje.
+                    Výsledek provedené změny nad cílovým objektem.
                     """
                     if record.projekt:
                         record.projekt.save_metadata(fedora_transaction)
@@ -509,10 +509,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
                 def save_metadata(record: Pian):
                     """
-                    Uloží metadata.
+                                       Uloží metadata.
 
-                    :param record: Vstupní hodnota ``record`` pro danou operaci.
-                    :return: Vrací výsledek provedené operace.
+                                       :param record: Záznam, který funkce čte nebo upravuje.
+                    Výsledek provedené změny nad cílovým objektem.
                     """
                     for item in record.dokumentacni_jednotky_pianu.all():
                         item: DokumentacniJednotka
@@ -542,7 +542,7 @@ class ModelWithMetadata(BaseAmcrModel):
         """
         Vrací by ident cely.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         """
         try:
             return cls.objects.get(ident_cely=ident_cely)

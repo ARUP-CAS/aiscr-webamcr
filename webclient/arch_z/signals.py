@@ -33,9 +33,9 @@ def create_arch_z_vazby(sender, instance, **kwargs):
 
     Metoda se volá pred uložením arch záznamu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("arch_z.signals.create_arch_z_vazby.start")
     if instance.pk is None:
@@ -52,9 +52,9 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"pk": instance.pk})
 
@@ -93,10 +93,10 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
 
         def save_metadata(inner_close_transaction=False):
             """
-            Uloží metadata.
+                       Uloží metadata.
 
-            :param inner_close_transaction: Vstupní hodnota ``inner_close_transaction`` pro danou operaci.
-            :return: Vrací výsledek provedené operace.
+                       :param inner_close_transaction: Příznak ``inner_close_transaction`` určující průběh nebo rozsah zpracování.
+            Výsledek provedené změny nad cílovým objektem.
             """
             try:
                 if (
@@ -140,8 +140,8 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
     """
     Aktualizuje akce snapshot.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"pk": instance.pk})
@@ -174,9 +174,9 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
     """
     Funkce pro aktualizaci metadat externího odkazu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
@@ -200,9 +200,9 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_container_and_connections.start",
@@ -232,8 +232,8 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     """
     Odstraní arch z repository update connected records.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(
@@ -246,7 +246,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
         """
         Uloží metadata. v aplikaci.
 
-        :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
+        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
         """
         invalidate_arch_z_related_models()
         try:
@@ -274,9 +274,9 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(
         "arch_z.signals.delete_externi_odkaz_repository_container.start",
@@ -290,7 +290,7 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
         """
         Uloží metadata. v aplikaci.
 
-        :param inner_close_transaction: Vstupní hodnota ``inner_close_transaction`` pro danou operaci.
+        :param inner_close_transaction: Příznak ``inner_close_transaction`` určující průběh nebo rozsah zpracování.
         """
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
             instance.archeologicky_zaznam.save_metadata(fedora_transaction)

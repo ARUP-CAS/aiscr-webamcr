@@ -35,8 +35,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param missing_columns: Vstupní hodnota ``missing_columns`` pro danou operaci.
-      :param excess_columns: Vstupní hodnota ``excess_columns`` pro danou operaci.
+      :param missing_columns: Číselná nebo geometrická hodnota `missing_columns` použitá při výpočtu nebo transformaci.
+      :param excess_columns: Číselná hodnota ``excess_columns`` použitá při výpočtu nebo transformaci.
 
 
 .. py:class:: ImportDataIncorrectStructureContentObjectError
@@ -49,7 +49,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param columns: Vstupní hodnota ``columns`` pro danou operaci.
+      :param columns: Číselná nebo geometrická hodnota `columns` použitá při výpočtu nebo transformaci.
       :param expected_colummns_options: Dodatečné poziční argumenty předané voláním.
 
 
@@ -64,7 +64,7 @@ Třídy
       Inicializuje instanci třídy.
 
       :param missing_value_id: Identifikátor objektu ``missing_value``.
-      :param missing_model_name: Vstupní hodnota ``missing_model_name`` pro danou operaci.
+      :param missing_model_name: Název nebo typ ``missing_model_name`` používaný pro volbu cílové logiky.
 
 
 .. py:class:: ImportDataIntegrityError
@@ -81,8 +81,8 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record_id: Identifikátor objektu ``record``.
-      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param model_name: Název modelu používaný pro cílení operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
 
 
 .. py:class:: ImportDataLimitChoicesError
@@ -96,7 +96,7 @@ Třídy
       Inicializuje instanci třídy.
 
       :param record_id: Identifikátor objektu ``record``.
-      :param limit_choices_to: Vstupní hodnota ``limit_choices_to`` pro danou operaci.
+      :param limit_choices_to: Číselná nebo geometrická hodnota `limit_choices_to` použitá při výpočtu nebo transformaci.
 
 
 .. py:class:: ImportDataHeslarPresnostLimitChoicesError
@@ -122,7 +122,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
+      :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
 
 
 .. py:class:: ImportDataUnsupportedFilesError
@@ -135,7 +135,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param file_names: Vstupní hodnota ``file_names`` pro danou operaci.
+      :param file_names: Cesta, URL nebo název zdroje ``file_names``, ze kterého funkce čte nebo kam zapisuje.
 
 
 .. py:class:: ImportDataIncorrectPrimaryKeyFormatError
@@ -148,7 +148,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param primary_key_value: Vstupní hodnota ``primary_key_value`` pro danou operaci.
+      :param primary_key_value: Textový název nebo klíč ``primary_key_value`` používaný v rámci operace.
 
 
 .. py:class:: BaseImportField
@@ -171,7 +171,7 @@ Třídy
 
       Provádí operaci value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: is_null()
 
@@ -189,8 +189,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: IntegerImportField
@@ -203,8 +203,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: PositiveIntegerImportField
@@ -217,8 +217,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: DecimalImportField
@@ -231,8 +231,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: BooleanImportField
@@ -245,8 +245,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: DateImportField
@@ -263,7 +263,7 @@ Třídy
 
       Provádí operaci value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: serialized_value()
 
@@ -273,8 +273,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: DateTimeImportField
@@ -293,7 +293,7 @@ Třídy
 
       Provádí operaci value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: serialized_value()
 
@@ -303,8 +303,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: DateRangeImportField
@@ -321,8 +321,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: LookupImportField
@@ -335,9 +335,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
-      :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
-      :param limit_choices_to: Vstupní hodnota ``limit_choices_to`` pro danou operaci.
+      :param lookup_model_classes: Název nebo typ ``lookup_model_classes`` používaný pro volbu cílové logiky.
+      :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
+      :param limit_choices_to: Číselná nebo geometrická hodnota `limit_choices_to` použitá při výpočtu nebo transformaci.
 
    .. py:method:: instance_value()
 
@@ -347,15 +347,15 @@ Třídy
 
       Ověří limit choices to.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: _process_value()
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: RuianLookupImportField
@@ -368,7 +368,7 @@ Třídy
 
       Provádí operaci value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: VazbaLookupImportField
@@ -381,16 +381,16 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
-      :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
-      :param read_field_name: Vstupní hodnota ``read_field_name`` pro danou operaci.
+      :param lookup_model_classes: Název nebo typ ``lookup_model_classes`` používaný pro volbu cílové logiky.
+      :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
+      :param read_field_name: Textový název nebo klíč ``read_field_name`` používaný v rámci operace.
 
    .. py:method:: _process_value()
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: GeomImportField
@@ -403,7 +403,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param srid: Vstupní hodnota ``srid`` pro danou operaci.
+      :param srid: Číselná nebo geometrická hodnota `srid` použitá při výpočtu nebo transformaci.
 
    .. py:method:: serialized_value()
 
@@ -413,8 +413,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: GenericForeignKeyImportField
@@ -427,9 +427,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param lookup_model_classes: Vstupní hodnota ``lookup_model_classes`` pro danou operaci.
-      :param lookup_field_name: Vstupní hodnota ``lookup_field_name`` pro danou operaci.
-      :param serialized_attribute: Vstupní hodnota ``serialized_attribute`` pro danou operaci.
+      :param lookup_model_classes: Název nebo typ ``lookup_model_classes`` používaný pro volbu cílové logiky.
+      :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
+      :param serialized_attribute: Příznak ``serialized_attribute`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: serialized_value()
 
@@ -439,8 +439,8 @@ Třídy
 
       Provádí operaci process value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: ImportModelMapper
@@ -455,7 +455,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param value_dict: Vstupní hodnota ``value_dict`` pro danou operaci.
+      :param value_dict: Kolekce nebo datová struktura `value_dict` zpracovávaná touto funkcí.
 
    .. py:method:: get_import_data_mapper_dict()
 
@@ -465,13 +465,13 @@ Třídy
 
       Vrátí třídu mapperu odpovídající zadanému názvu souboru (bez přípony).
 
-      :param file_name: Popis parametru ``file_name``.
+      :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
 
    .. py:method:: get_mapping()
 
       Vrátí slovník mapování polí pomocí metody map_field.
 
-      :param include_primary_key: Popis parametru ``include_primary_key``.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
       :return: Vrací výsledek operace.
 
    .. py:method:: _get_filter_kwargs_primary_key()
@@ -482,36 +482,36 @@ Třídy
 
       Zpracuje primary key.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _parse_primary_key_custom_prefix()
 
       Zpracuje primary key custom prefix.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :param prefix: Vstupní hodnota ``prefix`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: map_field()
 
       Namapuje pole modelu na odpovídající instanci BaseImportField nebo její podtřídy.
 
-      :param field_name: Popis parametru ``field_name``.
+      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
    .. py:method:: is_field_required()
 
       Určí, zda field required.
 
-      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: create_records()
 
       Vytvoří records. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: import_validation()
 
@@ -519,15 +519,15 @@ Třídy
 
       při updatu musí existovat. Vrátí slovník s primárními klíči, nebo vyvolá ImportDataIntegrityError.
 
-      :param performed_action: Popis parametru ``performed_action``.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
       :return: Vrací výsledek operace.
 
    .. py:method:: _check_column_structure()
 
       Ověří column structure.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: map()
@@ -536,37 +536,37 @@ Třídy
 
       Poté vrátí slovník s názvy polí jako klíči a instancemi BaseImportField s načtenými hodnotami jako hodnotami.
 
-      :param performed_action: Popis parametru ``performed_action``.
-      :param instance_values: Popis parametru ``instance_values``.
-      :param serialize: Popis parametru ``serialize``.
-      :param include_primary_key: Popis parametru ``include_primary_key``.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
+      :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
       :return: Vrací výsledek operace.
 
    .. py:method:: check_required_fields()
 
       Ověří required fields.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: map_column_name_to_field_name()
 
       Provádí operaci map column name to field name.
 
-      :param column_name: Vstupní hodnota ``column_name`` pro danou operaci.
+      :param column_name: Textový název nebo klíč ``column_name`` používaný v rámci operace.
 
    .. py:method:: create_relations()
 
       Vytvoří relations. v aplikaci.
 
-      :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+      :param instance: Instance modelu, které se operace týká.
 
    .. py:method:: record_postprocessing()
 
       Provádí operaci record postprocessing.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: GeometryTransformMixin
@@ -581,8 +581,8 @@ Třídy
 
       Transformuje geometries. v aplikaci.
 
-      :param mapping_dict: Vstupní hodnota ``mapping_dict`` pro danou operaci.
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param mapping_dict: Název nebo typ ``mapping_dict`` používaný pro volbu cílové logiky.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
 
 
 .. py:class:: MultipleClassImportModelMapper
@@ -595,26 +595,26 @@ Třídy
 
       Načte validation. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
       Vrací filter kwargs primary key.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: create_records()
 
       Vytvoří records. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: is_field_required()
 
       Určí, zda field required.
 
-      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
@@ -628,7 +628,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: HeslarDataceMapper
@@ -641,7 +641,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: HeslarDokumentTypMaterialRadaMapper
@@ -654,7 +654,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: HeslarHierarchieMapper
@@ -667,7 +667,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: HeslarOdkazMapper
@@ -680,7 +680,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: OrganizaceMapper
@@ -693,7 +693,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: OsobaMapper
@@ -711,17 +711,17 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: map()
 
       Provádí operaci map.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
-      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
+      :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: ProjektKatastrMapper
@@ -734,7 +734,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: ProjektOznamovatelMapper
@@ -747,7 +747,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: SamostatnyNalezMapper
@@ -760,17 +760,17 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: map()
 
       Provádí operaci map.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
-      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
+      :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: ArcheologickyZaznamAkceMapper
@@ -783,21 +783,21 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: map_field()
 
       Provádí operaci map field.
 
-      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
    .. py:method:: record_postprocessing()
 
       Provádí operaci record postprocessing.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: LokalitaMapper
@@ -810,13 +810,13 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: map_field()
 
       Provádí operaci map field.
 
-      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
 
 .. py:class:: AkceVedouciMapper
@@ -829,7 +829,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: ArcheologickyZaznamKatastrMapper
@@ -842,7 +842,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: PianMapper
@@ -855,17 +855,17 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: map()
 
       Provádí operaci map.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
-      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
+      :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: DokumentacniJednotkaMapper
@@ -878,15 +878,15 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: record_postprocessing()
 
       Provádí operaci record postprocessing.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: AdbMapper
@@ -899,7 +899,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: AdbVyskovyBod
@@ -912,7 +912,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: DokumentLetMapper
@@ -925,7 +925,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: DokumentMapper
@@ -938,30 +938,30 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: map_field()
 
       Provádí operaci map field.
 
-      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
    .. py:method:: create_records()
 
       Vytvoří records. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: map()
 
       Provádí operaci map.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
-      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
+      :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: DokumentAutorMapper
@@ -974,7 +974,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: DokumentJazykMapper
@@ -987,7 +987,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: DokumentOsobaMapper
@@ -1000,7 +1000,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: DokumentPosudekMapper
@@ -1013,7 +1013,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: TvarMapper
@@ -1026,7 +1026,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: DokumentCastMapper
@@ -1039,7 +1039,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: NeidentAkceMapper
@@ -1052,7 +1052,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: NeidentAkceVedouciMapper
@@ -1065,7 +1065,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: KomponentaMapper
@@ -1078,7 +1078,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: KomponentaAktivitaMapper
@@ -1091,7 +1091,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: NalezMapper
@@ -1109,7 +1109,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: NalezPredmetMapper
@@ -1122,7 +1122,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: ExterniZdrojMapper
@@ -1135,7 +1135,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: ExterniZdrojAutorMapper
@@ -1148,7 +1148,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: ExterniZdrojEditorMapper
@@ -1161,7 +1161,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: ExterniOdkazMapper
@@ -1174,7 +1174,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: UzivatelMapper
@@ -1187,7 +1187,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: UzivatelNotifikaceProjektMapper
@@ -1200,44 +1200,44 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
       Vrací filter kwargs primary key.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: map_field()
 
       Provádí operaci map field.
 
-      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
+      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
 
    .. py:method:: create_records()
 
       Vytvoří records. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _check_column_structure()
 
       Ověří column structure.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: map()
 
       Provádí operaci map.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
-      :param instance_values: Vstupní hodnota ``instance_values`` pro danou operaci.
-      :param serialize: Vstupní hodnota ``serialize`` pro danou operaci.
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+      :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
+      :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: UzivatelSpolupraceMapper
@@ -1250,7 +1250,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: UzivatelOpravneniMapper
@@ -1263,25 +1263,25 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
       Vrací filter kwargs primary key.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: create_records()
 
       Vytvoří records. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: import_validation()
 
       Načte validation. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
 
 
 .. py:class:: SouborMapper
@@ -1294,7 +1294,7 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: UzivatelNotifikaceMapper
@@ -1307,25 +1307,25 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
       Vrací filter kwargs primary key.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: create_records()
 
       Vytvoří records. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: import_validation()
 
       Načte validation. v aplikaci.
 
-      :param performed_action: Vstupní hodnota ``performed_action`` pro danou operaci.
+      :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
 
 
 .. py:class:: HistorieMapper
@@ -1338,5 +1338,5 @@ Třídy
 
       Vrací mapping. v aplikaci.
 
-      :param include_primary_key: Vstupní hodnota ``include_primary_key`` pro danou operaci.
+      :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
 

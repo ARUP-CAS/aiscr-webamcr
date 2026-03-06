@@ -42,13 +42,8 @@ def create_akce_vedouci_objekt_form(readonly=True):
     """
     Funkce která vrací formulář VB pro formset.
 
-    Args:
-    readonly (boolean): nastavuje formulář na readonly.
-
-    Returns:
-    CreateAkceVedouciObjektForm: django model formulář AkceVedouci
-
-    :param readonly: Popis parametru ``readonly``.
+    :param readonly: Pokud ``True``, pole formuláře jsou pouze pro čtení.
+    :return: Vnitřní ``ModelForm`` pro evidenci vedoucího akce.
     """
 
     class CreateAkceVedouciObjektForm(forms.ModelForm):
@@ -249,7 +244,7 @@ class CustomDateInput(forms.DateField):
         """
         Provádí operaci year only.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return re.fullmatch(r"\d{4}", value)
 
@@ -257,7 +252,7 @@ class CustomDateInput(forms.DateField):
         """
         Vrací date based on year.
 
-        :param year: Vstupní hodnota ``year`` pro danou operaci.
+        :param year: Časový údaj ``year`` použitý při filtrování nebo výpočtu.
         """
         return datetime.date(year, self.year_only_month, self.year_only_day)
 
@@ -265,7 +260,7 @@ class CustomDateInput(forms.DateField):
         """
         Prepis kvůli jinému objektu CustomDateInput.
 
-        :param value: Popis parametru ``value``.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             if isinstance(value, str) and CustomDateInput.year_only(value):
@@ -419,8 +414,8 @@ class CreateAkceForm(forms.ModelForm):
         Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
-        :param required: Vstupní hodnota ``required`` pro danou operaci.
-        :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         uzamknout_specifikace = kwargs.pop("uzamknout_specifikace", False)

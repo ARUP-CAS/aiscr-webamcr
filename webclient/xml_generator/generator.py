@@ -67,7 +67,7 @@ class DocumentGenerator:
         """
         Vrací schema dict.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         from adb.models import Adb
         from arch_z.models import ArcheologickyZaznam
@@ -101,7 +101,7 @@ class DocumentGenerator:
         """
         Vrací schema name.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         type_class_dict = self._get_schema_dict()
         object_class = self.document_object.__class__
@@ -113,8 +113,8 @@ class DocumentGenerator:
         """
         Vytvoří xpath query.
 
-        :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace.
+        :param model_name: Název modelu používaný pro cílení operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         if model_name.lower().endswith("type"):
             model_name = model_name.replace("amcr:", "")
@@ -131,10 +131,10 @@ class DocumentGenerator:
 
     def _parse_schema(self, model_name):
         """
-        Zpracuje schema.
+               Zpracuje schema.
 
-        :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param model_name: Název modelu používaný pro cílení operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         parser = etree.XMLParser()
         tree = etree.parse(self.get_path_to_schema(), parser)
@@ -145,8 +145,8 @@ class DocumentGenerator:
         """
         Vrací prefix.
 
-        :param comment_text: Vstupní hodnota ``comment_text`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if "-" not in comment_text:
             return ""
@@ -160,10 +160,10 @@ class DocumentGenerator:
     @staticmethod
     def _parse_comment(comment_text: str) -> Optional[ParsedComment]:
         """
-        Zpracuje comment.
+               Zpracuje comment.
 
-        :param comment_text: Vstupní hodnota ``comment_text`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         attribute_list = comment_text.split("|")
         attribute_list = [
@@ -181,9 +181,9 @@ class DocumentGenerator:
         """
         Vrací attribute of record.
 
-        :param attribute_name: Vstupní hodnota ``attribute_name`` pro danou operaci.
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
+        :param record: Záznam, který funkce čte nebo upravuje.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         attribute_value = None
         if record is None:
@@ -277,10 +277,10 @@ class DocumentGenerator:
         """
         Vrací attribute of record unbounded.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :param parsed_comment: Vstupní hodnota ``parsed_comment`` pro danou operaci.
-        :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param record: Záznam, který funkce čte nebo upravuje.
+        :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
+        :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         attributes_dict = {}
 
@@ -288,8 +288,8 @@ class DocumentGenerator:
             """
             Vrací attribute. v aplikaci.
 
-            :param record: Vstupní hodnota ``record`` pro danou operaci.
-            :param attribute_name: Vstupní hodnota ``attribute_name`` pro danou operaci.
+            :param record: Záznam, který funkce čte nebo upravuje.
+            :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
             """
             attributes = []
             record_name_split = attribute_name.split(".")
@@ -366,13 +366,13 @@ class DocumentGenerator:
         """
         Vytvoří element.
 
-        :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-        :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-        :param parsed_comment: Vstupní hodnota ``parsed_comment`` pro danou operaci.
-        :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
-        :param id_field_prefix: Vstupní hodnota ``id_field_prefix`` pro danou operaci.
-        :param ref_type: Vstupní hodnota ``ref_type`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace.
+        :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+        :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+        :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
+        :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
+        :param id_field_prefix: Záznam/objekt ``id_field_prefix``, který funkce čte, validuje nebo upravuje.
+        :param ref_type: Název nebo typ ``ref_type`` používaný pro volbu cílové logiky.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         if document_object is None:
             document_object = self.document_object
@@ -411,13 +411,13 @@ class DocumentGenerator:
         """
         Vytvoří many to many ref elements.
 
-        :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-        :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-        :param related_records: Vstupní hodnota ``related_records`` pro danou operaci.
-        :param parsed_comment: Vstupní hodnota ``parsed_comment`` pro danou operaci.
-        :param prefix: Vstupní hodnota ``prefix`` pro danou operaci.
-        :param ref_type: Vstupní hodnota ``ref_type`` pro danou operaci.
-        :return: Vrací nově vytvořený výsledek operace.
+        :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+        :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+        :param related_records: Záznam/objekt ``related_records``, který funkce čte, validuje nebo upravuje.
+        :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
+        :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
+        :param ref_type: Název nebo typ ``ref_type`` používaný pro volbu cílové logiky.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         for i, record in enumerate(related_records["value"]):
             new_sub_element = ET.SubElement(
@@ -454,11 +454,11 @@ class DocumentGenerator:
 
     def _parse_scheme_create_element(self, schema_element, parent_element):
         """
-        Zpracuje scheme create element.
+               Zpracuje scheme create element.
 
-        :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-        :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+               :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if schema_element.__class__.__name__ == "_Element":
             next_element = schema_element.getnext()
@@ -515,12 +515,12 @@ class DocumentGenerator:
 
     def _iterate_unbound_records(self, related_records, schema_element, parent_element):
         """
-        Provádí operaci iterate unbound records.
+               Provádí operaci iterate unbound records.
 
-        :param related_records: Vstupní hodnota ``related_records`` pro danou operaci.
-        :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-        :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param related_records: Záznam/objekt ``related_records``, který funkce čte, validuje nebo upravuje.
+               :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+               :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         child_schema_element = self._parse_schema(schema_element.attrib["type"])
         for obj in related_records["value"]:
@@ -532,13 +532,13 @@ class DocumentGenerator:
         self, schema_element, parent_element, document_object, child_parent_element_name
     ):
         """
-        Zpracuje scheme create nested element.
+               Zpracuje scheme create nested element.
 
-        :param schema_element: Vstupní hodnota ``schema_element`` pro danou operaci.
-        :param parent_element: Vstupní hodnota ``parent_element`` pro danou operaci.
-        :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
-        :param child_parent_element_name: Vstupní hodnota ``child_parent_element_name`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+               :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+               :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
+               :param child_parent_element_name: Textový název nebo klíč ``child_parent_element_name`` používaný v rámci operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         child_parent_element = ET.SubElement(
             parent_element, f"{{{AMCR_NAMESPACE_URL}}}{child_parent_element_name}", nsmap=self._nsmap
@@ -604,7 +604,7 @@ class DocumentGenerator:
         """
         Vrací ref type attribute name.
 
-        :param type_name: Vstupní hodnota ``type_name`` pro danou operaci.
+        :param type_name: Název nebo typ ``type_name`` používaný pro volbu cílové logiky.
         """
         parser = etree.XMLParser()
         type_name = type_name.replace("amcr:", "")
@@ -619,10 +619,10 @@ class DocumentGenerator:
     @staticmethod
     def _replace_redundant_namespaces(xml_string):
         """
-        Provádí operaci replace redundant namespaces.
+               Provádí operaci replace redundant namespaces.
 
-        :param xml_string: Vstupní hodnota ``xml_string`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param xml_string: Cesta, URL nebo název zdroje ``xml_string``, ze kterého funkce čte nebo kam zapisuje.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         pattern = r'\sxmlns:gml="[^"]*"'
         counter = [0]
@@ -631,7 +631,7 @@ class DocumentGenerator:
             """
             Provádí operaci replace.
 
-            :param match: Vstupní hodnota ``match`` pro danou operaci.
+            :param match: Číselná nebo geometrická hodnota `match` použitá při výpočtu nebo transformaci.
             """
             if counter[0] > 0:
                 return ""
@@ -667,7 +667,7 @@ class DocumentGenerator:
         """
         Inicializuje instanci třídy.
 
-        :param document_object: Vstupní hodnota ``document_object`` pro danou operaci.
+        :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
         """
         self.document_object = document_object
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")

@@ -201,9 +201,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return self.ident_cely
 
@@ -221,7 +221,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu zapsaný a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = D_STAV_ZAPSANY
         Historie(
@@ -234,13 +234,13 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @staticmethod
     def set_permanent_identificator(dokument, request, messages, fedora_transaction) -> Optional[JsonResponse]:
         """
-        Nastaví permanent identificator.
+               Nastaví permanent identificator.
 
-        :param dokument: Vstupní hodnota ``dokument`` pro danou operaci.
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param messages: Vstupní hodnota ``messages`` pro danou operaci.
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param messages: Textová zpráva ``messages`` používaná pro hlášení stavu nebo chyby.
+               :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        Výsledek provedené změny nad cílovým objektem.
         """
         from core.message_constants import MAXIMUM_IDENT_DOSAZEN
         from dokument.views import get_detail_json_view
@@ -266,8 +266,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu odeslaný a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param old_ident: Popis parametru ``old_ident``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
         """
         self.stav = D_STAV_ODESLANY
         if old_ident != self.ident_cely:
@@ -286,8 +286,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu archivovaný a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param old_ident: Popis parametru ``old_ident``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
         """
         self.stav = D_STAV_ARCHIVOVANY
         if not self.datum_zverejneni:
@@ -308,9 +308,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Metoda pro vrácení o jeden stav méně a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param new_state: Popis parametru ``new_state``.
-        :param poznamka: Popis parametru ``poznamka``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+        :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
         """
         self.stav = new_state
         Historie(
@@ -396,8 +396,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         Metoda bere pořadoví číslo z db dokument sekvence.
         Metoda zmení i ident připojených souborů.
 
-        :param region: Popis parametru ``region``.
-        :param rada: Popis parametru ``rada``.
+        :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
+        :param rada: Číselná nebo geometrická hodnota `rada` použitá při výpočtu nebo transformaci.
         """
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
@@ -501,9 +501,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     @property
     def thumbnail_image_file(self) -> Soubor | None:
         """
-        Provádí operaci thumbnail image file.
+               Provádí operaci thumbnail image file.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if self.soubory.soubory.count() > 0:
             soubory = [x for x in self.soubory.soubory.all()]
@@ -572,7 +572,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Vrací doi client.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         from pid.client import DigitalObjectIdentifierClient
 
@@ -587,7 +587,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Provádí operaci doi delete.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         if self.doi:
             return self._get_doi_client().delete_record(check_status)
@@ -596,7 +596,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Provádí operaci doi hide.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         if self.doi:
             return self._get_doi_client().hide_record(check_status)
@@ -605,7 +605,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Provádí operaci doi publish.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         return self._get_doi_client().publish_record(check_status)
 
@@ -613,8 +613,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Provádí operaci doi update.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+        :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
         """
         if self.doi:
             return self._get_doi_client().update_record(check_status, reload_record)
@@ -721,9 +721,9 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
     @property
     def initial_projekt(self) -> Projekt | None:
         """
-        Provádí operaci initial projekt.
+               Provádí operaci initial projekt.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if self.initial_projekt_id is not None:
             return Projekt.objects.get(pk=self.initial_projekt_id)
@@ -733,9 +733,9 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         """
         Vytvoří transaction. v aplikaci.
 
-        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-        :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-        :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+        :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
         """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
@@ -872,9 +872,9 @@ class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return "D: " + str(self.dokument) + " - J: " + str(self.jazyk)
 
@@ -915,9 +915,9 @@ class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Mod
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return "D: " + str(self.dokument) + " - P: " + str(self.posudek)
 
@@ -954,9 +954,9 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
         """
         Vytvoří transaction. v aplikaci.
 
-        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-        :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-        :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+        :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
         """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
@@ -1048,9 +1048,9 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return self.ident_cely
 
@@ -1079,9 +1079,9 @@ def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     Funkce pro získaní správného jména souboru.
 
-    :param dokument: Popis parametru ``dokument``.
-    :param filename: Popis parametru ``filename``.
-    :param add_to_index: Popis parametru ``add_to_index``.
+    :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
+    :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
     """
     logger.debug(
         "dokument.models.get_dokument_soubor_name.start",

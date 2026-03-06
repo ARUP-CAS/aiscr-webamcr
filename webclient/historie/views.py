@@ -53,7 +53,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         """
         Potomek může přepsat pro vlastní řazení nebo dodatečné filtry.
 
-        :param qs: Hodnota parametru ``qs`` použitého touto operací.
+        :param qs: Queryset/filtr ``qs`` použitý při výběru záznamů.
         """
         return qs.order_by("datum_zmeny")
 
@@ -61,7 +61,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         """
         Potomek může přepsat a doplnit další hodnoty do contextu.
 
-        :param context: Hodnota parametru ``context`` použitého touto operací.
+        :param context: Kolekce ``context`` zpracovávaná touto funkcí.
         """
         pass
 
@@ -81,7 +81,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         """
         Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
 
-        :param context: Hodnota parametru ``context`` použitého touto operací.
+        :param context: Kolekce ``context`` zpracovávaná touto funkcí.
         """
         return None
 
@@ -91,7 +91,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
 
         metadata historie z Fedory a přidá se druhá tabulka fedora_table.
 
-        :param context: Hodnota parametru ``context`` použitého touto operací.
+        :param context: Kolekce ``context`` zpracovávaná touto funkcí.
         """
         if not hasattr(self, "fedora_model") or self.fedora_model is None:
             return
@@ -155,7 +155,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         """
         Vyrenderuje to response.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         :param response_kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         export_format = self.request.GET.get("_export")
@@ -181,7 +181,7 @@ class ProjektHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse("projekt:detail", args=[context["ident_cely"]]),
@@ -201,7 +201,7 @@ class AkceHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse("arch_z:detail", args=[context["ident_cely"]]),
@@ -220,7 +220,7 @@ class DokumentHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         ident = context["ident_cely"]
         if "3D" in ident:
@@ -239,7 +239,7 @@ class DokumentHistorieListView(HistorieListView):
         """
         Provádí operaci add extra context.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         ident = self.get_lookup_value()
         typ = "knihovna_3d" if "3D" in ident else "dokument"
@@ -258,7 +258,7 @@ class SamostatnyNalezHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse("pas:detail", args=[context["ident_cely"]]),
@@ -279,7 +279,7 @@ class SpolupraceHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse("pas:spoluprace_list"),
@@ -301,7 +301,7 @@ class SouborHistorieListView(HistorieListView):
         """
         Provádí operaci prepare queryset.
 
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         return qs.order_by("-datum_zmeny")
 
@@ -309,7 +309,7 @@ class SouborHistorieListView(HistorieListView):
         """
         Provádí operaci add extra context.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         soubor_id = self.get_lookup_value()
         soubor = get_object_or_404(Soubor, pk=soubor_id)
@@ -328,7 +328,7 @@ class SouborHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         nav = context["back_model"]
         if nav == "Projekt":
@@ -370,7 +370,7 @@ class LokalitaHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse("lokalita:detail", args=[context["ident_cely"]]),
@@ -390,7 +390,7 @@ class UzivatelHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         next_url = self.request.GET.get("next", reverse("uzivatel:update-uzivatel"))
         return {
@@ -411,7 +411,7 @@ class ExterniZdrojHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse("ez:detail", args=[context["ident_cely"]]),
@@ -431,7 +431,7 @@ class PianHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
@@ -451,7 +451,7 @@ class PianLokalitaHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse(
@@ -473,7 +473,7 @@ class AdbHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         return {
             "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),

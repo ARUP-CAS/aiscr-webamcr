@@ -55,8 +55,8 @@ def detail(request, ident_cely):
     """
     Funkce pohledu pro zapsání změny pianu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     dj_ident_cely = request.POST["dj_ident_cely"]
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
@@ -97,8 +97,8 @@ def odpojit(request, dj_ident_cely):
     """
     Funkce pohledu pro odpojení pianu pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param dj_ident_cely: Identifikátor ``dj_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian_djs = DokumentacniJednotka.objects.filter(pian=dj.pian)
@@ -164,8 +164,8 @@ def potvrdit(request, dj_ident_cely):
     """
     Funkce pohledu pro potvrzení pianu pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param dj_ident_cely: Identifikátor ``dj_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
@@ -226,8 +226,8 @@ def create(request, dj_ident_cely):
     """
     Funkce pohledu pro vytvoření pianu.
 
-    :param request: Popis parametru ``request``.
-    :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param dj_ident_cely: Identifikátor ``dj_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     logger.debug("pian.views.create.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
@@ -280,8 +280,8 @@ def mapa_dj(request, ident_cely):
     """
     Funkce ziskej Dj pro Pian
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     logger.debug("pian.views.create.start")
     back = []
@@ -310,8 +310,8 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         """
         Filtruje by permission.
 
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
         """
         qs = qs.annotate(
             historie_zapsat_pian=FilteredRelation(
@@ -341,8 +341,8 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         """
         Provádí operaci add ownership lookup.
 
-        :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         filtered_pian_history = Historie.objects.filter(uzivatel=self.request.user)
         filtered_az_history = Historie.objects.filter(uzivatel=self.request.user)
@@ -371,8 +371,8 @@ class PianPermissionFilterMixin(PermissionFilterMixin):
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         accessibility_key = self.permission_model_lookup + "pristupnost_filter__in"
         accessibilities = Heslar.objects.filter(
@@ -508,6 +508,6 @@ class ImportovatPianView(LoginRequiredMixin, TemplateView):
         """
         Ověří epsg. v aplikaci.
 
-        :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
+        :param epsg: Číselná nebo geometrická hodnota `epsg` použitá při výpočtu nebo transformaci.
         """
         return file_validate_epsg(epsg)

@@ -16,8 +16,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
-      :param choices: Vstupní hodnota ``choices`` pro danou operaci.
+      :param attrs: Kolekce ``attrs`` zpracovávaná touto funkcí.
+      :param choices: Číselná nebo geometrická hodnota `choices` použitá při výpočtu nebo transformaci.
 
 
 .. py:class:: TwoLevelSelectField
@@ -30,14 +30,14 @@ Třídy
 
       Provádí operaci to python.
 
-      :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
+      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
 
    .. py:method:: has_changed()
 
       Určí, zda changed.
 
-      :param initial: Vstupní hodnota ``initial`` pro danou operaci.
-      :param data: Vstupní hodnota ``data`` pro danou operaci.
+      :param initial: Stavová nebo časová hodnota `initial` používaná při rozhodování logiky.
+      :param data: Kolekce ``data`` zpracovávaná touto funkcí.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
@@ -51,20 +51,20 @@ Třídy
 
       Provádí operaci clean.
 
-      :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
+      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
 
    .. py:method:: to_python()
 
       Provádí operaci to python.
 
-      :param selected_value: Vstupní hodnota ``selected_value`` pro danou operaci.
+      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
 
    .. py:method:: has_changed()
 
       Určí, zda changed.
 
-      :param initial: Vstupní hodnota ``initial`` pro danou operaci.
-      :param data: Vstupní hodnota ``data`` pro danou operaci.
+      :param initial: Stavová nebo časová hodnota `initial` používaná při rozhodování logiky.
+      :param data: Kolekce ``data`` zpracovávaná touto funkcí.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
@@ -80,9 +80,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param db_stav: Vstupní hodnota ``db_stav`` pro danou operaci.
-      :param require_confirmation: Vstupní hodnota ``require_confirmation`` pro danou operaci.
-      :param dokument_warnings: Vstupní hodnota ``dokument_warnings`` pro danou operaci.
+      :param db_stav: Stavová hodnota načtená z databáze.
+      :param require_confirmation: Číselná nebo geometrická hodnota `require_confirmation` použitá při výpočtu nebo transformaci.
+      :param dokument_warnings: Doménový objekt `dokument_warnings`, se kterým funkce pracuje.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
@@ -130,7 +130,7 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
-      :param az: Vstupní hodnota ``az`` pro danou operaci.
+      :param az: Číselná nebo geometrická hodnota `az` použitá při výpočtu nebo transformaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -144,7 +144,7 @@ Třídy
 
       Provádí operaci format value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: OdstavkaSystemuForm

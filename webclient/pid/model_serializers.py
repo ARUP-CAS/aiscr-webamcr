@@ -52,7 +52,7 @@ class ModelSerializer(ABC):
         """
         Inicializuje instanci třídy.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         self.record = record
 
@@ -61,7 +61,7 @@ class ModelSerializer(ABC):
         """
         Provádí operaci format date.
 
-        :param date: Vstupní hodnota ``date`` pro danou operaci.
+        :param date: Časový údaj ``date`` použitý při filtrování nebo výpočtu.
         """
         return date.strftime("%Y-%m-%d")
 
@@ -70,7 +70,7 @@ class ModelSerializer(ABC):
         """
         Provádí operaci format date time.
 
-        :param date_time: Vstupní hodnota ``date_time`` pro danou operaci.
+        :param date_time: Časový údaj ``date_time`` použitý při filtrování nebo výpočtu.
         """
         return date_time.strftime("%Y-%m-%dT%H:%M:%S%z")
 
@@ -79,7 +79,7 @@ class ModelSerializer(ABC):
         """
         Vrací creators.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
@@ -88,7 +88,7 @@ class ModelSerializer(ABC):
         """
         Vrací historie queryset.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
@@ -102,7 +102,7 @@ class ModelSerializer(ABC):
         """
         Vrací publication year.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
@@ -110,7 +110,7 @@ class ModelSerializer(ABC):
         """
         Vrací language.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return "cs"
 
@@ -119,7 +119,7 @@ class ModelSerializer(ABC):
         """
         Vrací prefix.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
@@ -128,7 +128,7 @@ class ModelSerializer(ABC):
         """
         Vrací soubory queryset.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
@@ -137,16 +137,16 @@ class ModelSerializer(ABC):
         """
         Vrací title.
 
-        :param language: Vstupní hodnota ``language`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param language: Textový název, klíč nebo zpráva ``language`` používaná v rámci operace.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
     def _serialize_alternate_identifiers(self):
         """
-        Provádí operaci serialize alternate identifiers.
+               Provádí operaci serialize alternate identifiers.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         result = [
             {
@@ -158,9 +158,9 @@ class ModelSerializer(ABC):
 
     def _serialize_contributors(self):
         """
-        Provádí operaci serialize contributors.
+               Provádí operaci serialize contributors.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         result = [
             {
@@ -182,44 +182,44 @@ class ModelSerializer(ABC):
     @abstractmethod
     def _serialize_creators(self):
         """
-        Provádí operaci serialize creators.
+               Provádí operaci serialize creators.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         pass
 
     @abstractmethod
     def _serialize_dates(self):
         """
-        Provádí operaci serialize dates.
+               Provádí operaci serialize dates.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         pass
 
     @abstractmethod
     def _serialize_descriptions(self):
         """
-        Provádí operaci serialize descriptions.
+               Provádí operaci serialize descriptions.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         pass
 
     @abstractmethod
     def _serialize_geolocations(self):
         """
-        Provádí operaci serialize geolocations.
+               Provádí operaci serialize geolocations.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         pass
 
     def _serialize_related_identifiers(self):
         """
-        Provádí operaci serialize related identifiers.
+               Provádí operaci serialize related identifiers.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         result = [
             {
@@ -236,17 +236,17 @@ class ModelSerializer(ABC):
     @abstractmethod
     def _serialize_rightslist(self):
         """
-        Provádí operaci serialize rightslist.
+               Provádí operaci serialize rightslist.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         pass
 
     def _serialize_subjects(self):
         """
-        Provádí operaci serialize subjects.
+               Provádí operaci serialize subjects.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         result = [
             frozenset(
@@ -265,9 +265,9 @@ class ModelSerializer(ABC):
     @abstractmethod
     def _serialize_types(self):
         """
-        Provádí operaci serialize types.
+               Provádí operaci serialize types.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         pass
 
@@ -276,7 +276,7 @@ class ModelSerializer(ABC):
         """
         Vrací formats.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
@@ -373,7 +373,7 @@ class PartialSerializer(ABC):
         """
         Inicializuje instanci třídy.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         self.record = record
 
@@ -384,10 +384,10 @@ class PartialSerializer(ABC):
 
 def convert_geo_location_to_dict(item) -> Dict:
     """
-    Převede geo location to dict.
+       Převede geo location to dict.
 
-    :param item: Vstupní hodnota ``item`` pro danou operaci.
-    :return: Vrací výsledek provedené operace.
+       :param item: Jedna položka zpracovávané kolekce.
+    :return: Výstup funkce odpovídající implementované logice.
     """
     item = dict(item)
     if "geoLocationPoint" in item:
@@ -397,20 +397,20 @@ def convert_geo_location_to_dict(item) -> Dict:
 
 def serialize_ez_creator(autor: Osoba) -> Dict[str, str]:
     """
-    Provádí operaci serialize ez creator.
+       Provádí operaci serialize ez creator.
 
-    :param autor: Vstupní hodnota ``autor`` pro danou operaci.
-    :return: Vrací výsledek provedené operace.
+       :param autor: Číselná nebo geometrická hodnota `autor` použitá při výpočtu nebo transformaci.
+    :return: Výstup funkce odpovídající implementované logice.
     """
     return {"name": autor.vypis_cely, "givenName": autor.jmeno, "familyName": autor.prijmeni, "nameType": "Personal"}
 
 
 def serialize_ez_contributor(contributor: Osoba) -> Dict[str, str]:
     """
-    Provádí operaci serialize ez contributor.
+       Provádí operaci serialize ez contributor.
 
-    :param contributor: Vstupní hodnota ``contributor`` pro danou operaci.
-    :return: Vrací výsledek provedené operace.
+       :param contributor: Číselná nebo geometrická hodnota `contributor` použitá při výpočtu nebo transformaci.
+    :return: Výstup funkce odpovídající implementované logice.
     """
     return {
         "name": contributor.vypis_cely,
@@ -423,12 +423,12 @@ def serialize_ez_contributor(contributor: Osoba) -> Dict[str, str]:
 
 def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool | None = False) -> frozenset:
     """
-    Provádí operaci serialize geom.
+       Provádí operaci serialize geom.
 
-    :param geom: Vstupní hodnota ``geom`` pro danou operaci.
-    :param katastr: Vstupní hodnota ``katastr`` pro danou operaci.
-    :param verejne: Vstupní hodnota ``verejne`` pro danou operaci.
-    :return: Vrací výsledek provedené operace.
+       :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
+       :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
+       :param verejne: Číselná nebo geometrická hodnota `verejne` použitá při výpočtu nebo transformaci.
+    :return: Výstup funkce odpovídající implementované logice.
     """
     serialized_geom = {}
     if geom and verejne:
@@ -453,7 +453,7 @@ def serialize_affiliation(organizace: Organizace):
     """
     Provádí operaci serialize affiliation.
 
-    :param organizace: Vstupní hodnota ``organizace`` pro danou operaci.
+    :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
     """
     serialized_affiliation = {"name": organizace.nazev}
     if organizace.ror:
@@ -467,8 +467,8 @@ def serialize_organizace_contributor(organizace: Organizace, contributor_type: s
     """
     Provádí operaci serialize organizace contributor.
 
-    :param organizace: Vstupní hodnota ``organizace`` pro danou operaci.
-    :param contributor_type: Vstupní hodnota ``contributor_type`` pro danou operaci.
+    :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
+    :param contributor_type: Název nebo typ ``contributor_type`` používaný pro volbu cílové logiky.
     """
     return {
         "name": organizace.nazev,
@@ -493,7 +493,7 @@ def serialize_osoba_identifiers(osoba: Osoba):
     """
     Provádí operaci serialize osoba identifiers.
 
-    :param osoba: Vstupní hodnota ``osoba`` pro danou operaci.
+    :param osoba: Uživatel nebo osoba ``osoba``, v jejímž kontextu se operace provádí.
     """
     result = [
         {
@@ -517,12 +517,12 @@ def serialize_osoba_identifiers(osoba: Osoba):
 
 def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contributor_type: str | None = None) -> Dict:
     """
-    Provádí operaci serialize osoba.
+       Provádí operaci serialize osoba.
 
-    :param osoba: Vstupní hodnota ``osoba`` pro danou operaci.
-    :param organizace: Vstupní hodnota ``organizace`` pro danou operaci.
-    :param contributor_type: Vstupní hodnota ``contributor_type`` pro danou operaci.
-    :return: Vrací výsledek provedené operace.
+       :param osoba: Uživatel nebo osoba ``osoba``, v jejímž kontextu se operace provádí.
+       :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
+       :param contributor_type: Název nebo typ ``contributor_type`` používaný pro volbu cílové logiky.
+    :return: Výstup funkce odpovídající implementované logice.
     """
     serialized_record = {
         "name": osoba.vypis_cely if osoba.pk != OSOBA_ANONYM else ":unkn",
@@ -543,9 +543,9 @@ def serialize_subject(serialized_record, subject_attr="heslo_en", lang="en"):
     """
     Provádí operaci serialize subject.
 
-    :param serialized_record: Vstupní hodnota ``serialized_record`` pro danou operaci.
-    :param subject_attr: Vstupní hodnota ``subject_attr`` pro danou operaci.
-    :param lang: Vstupní hodnota ``lang`` pro danou operaci.
+    :param serialized_record: Příznak ``serialized_record`` určující průběh nebo rozsah zpracování.
+    :param subject_attr: Textový nebo strukturální vstup `subject_attr` používaný při sestavení nebo zpracování obsahu.
+    :param lang: Textová hodnota `lang` používaná pro vyhledání, pojmenování nebo hlášení stavu.
     """
     if serialized_record is None:
         return frozenset()
@@ -564,7 +564,7 @@ def serialize_subjects_komponenty(komp: Komponenta):
     """
     Provádí operaci serialize subjects komponenty.
 
-    :param komp: Vstupní hodnota ``komp`` pro danou operaci.
+    :param komp: Komponenta nebo její serializovaný reprezentant.
     """
     result = [serialize_subject(komp.obdobi)]
     result += [serialize_subject(komp.areal)]
@@ -578,10 +578,10 @@ def serialize_subjects_komponenty(komp: Komponenta):
 
 def serialize_dates_coverage(datace: Heslar) -> frozenset | None:
     """
-    Provádí operaci serialize dates coverage.
+       Provádí operaci serialize dates coverage.
 
-    :param datace: Vstupní hodnota ``datace`` pro danou operaci.
-    :return: Vrací výsledek provedené operace.
+       :param datace: Kolekce ``datace`` zpracovávaná touto funkcí.
+    :return: Výstup funkce odpovídající implementované logice.
     """
     try:
         result = frozenset(
@@ -603,7 +603,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Inicializuje instanci třídy.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         super().__init__(record)
         self.record: Dokument
@@ -612,7 +612,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Vrací creators.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return self.record.dokumentautor_set.all()
 
@@ -620,7 +620,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Vrací historie queryset.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return self.record.historie.historie_set
 
@@ -632,7 +632,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Vrací language.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         jazyk = self.record.jazyky.exclude(pk=JAZYK_NERELEVANTNI).order_by("razeni").first()
         if jazyk is None:
@@ -643,7 +643,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Vrací publication year.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return self.record.rok_vzniku
 
@@ -651,7 +651,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Vrací prefix.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return settings.DOI_PREFIX
 
@@ -659,7 +659,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Vrací soubory queryset.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if self.record.soubory:
             return self.record.soubory.soubory
@@ -668,8 +668,8 @@ class DokumentSerializer(ModelSerializer):
         """
         Vrací title.
 
-        :param language: Vstupní hodnota ``language`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param language: Textový název, klíč nebo zpráva ``language`` používaná v rámci operace.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return {
             "en": f"AMCR {self.get_ident_cely()} – {self.record.typ_dokumentu.heslo_en}",
@@ -678,9 +678,9 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_alternate_identifiers(self):
         """
-        Provádí operaci serialize alternate identifiers.
+               Provádí operaci serialize alternate identifiers.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         alternate_identifiers = super()._serialize_alternate_identifiers()
         if self.record.oznaceni_originalu:
@@ -694,9 +694,9 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_contributors(self):
         """
-        Provádí operaci serialize contributors.
+               Provádí operaci serialize contributors.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         contributors = super()._serialize_contributors()
         if self.record.let and self.record.let.pozorovatel:
@@ -734,17 +734,17 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_creators(self):
         """
-        Provádí operaci serialize creators.
+               Provádí operaci serialize creators.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return [serialize_osoba(author.autor, self.record.organizace) for author in self._get_creators()]
 
     def _serialize_dates(self):
         """
-        Provádí operaci serialize dates.
+               Provádí operaci serialize dates.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         dates = []
         try:
@@ -784,9 +784,9 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_descriptions(self) -> List[Dict]:
         """
-        Provádí operaci serialize descriptions.
+               Provádí operaci serialize descriptions.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         descriptions = []
         if self.record.popis:
@@ -797,9 +797,9 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_geolocations(self):
         """
-        Provádí operaci serialize geolocations.
+               Provádí operaci serialize geolocations.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         geo_locations: List[frozenset] = []
         try:
@@ -845,9 +845,9 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_related_identifiers(self):
         """
-        Provádí operaci serialize related identifiers.
+               Provádí operaci serialize related identifiers.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         related_identifiers = super()._serialize_related_identifiers()
         for soubor in self._get_soubory_queryset().all():
@@ -918,9 +918,9 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_rightslist(self):
         """
-        Provádí operaci serialize rightslist.
+               Provádí operaci serialize rightslist.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         result = []
         if self.record.licence:
@@ -939,9 +939,9 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_subjects(self):
         """
-        Provádí operaci serialize subjects.
+               Provádí operaci serialize subjects.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         serialized_subjects = super()._serialize_subjects()
         serialized_subjects += [serialize_subject(posudek) for posudek in self.record.posudky.all()]
@@ -982,9 +982,9 @@ class DokumentSerializer(ModelSerializer):
 
     def _serialize_types(self) -> dict:
         """
-        Provádí operaci serialize types.
+               Provádí operaci serialize types.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         resource_type_query = self.record.typ_dokumentu.heslar_odkaz.filter(zdroj="DataCite").filter(
             nazev_kodu="resourceTypeGeneral"
@@ -1002,7 +1002,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Vrací formats.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         result = []
         soubory_queryset = self._get_soubory_queryset()
@@ -1021,7 +1021,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Inicializuje instanci třídy.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         super().__init__(record)
         self.record: SamostatnyNalez
@@ -1030,7 +1030,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Vrací creators.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
@@ -1038,7 +1038,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Vrací historie queryset.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return self.record.historie.historie_set
 
@@ -1050,7 +1050,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Vrací soubory queryset.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if self.record.soubory:
             return self.record.soubory.soubory
@@ -1059,7 +1059,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Vrací prefix.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return settings.IGSN_PREFIX
 
@@ -1067,7 +1067,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Vrací publication year.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         publication_year_history = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_SN)
         if publication_year_history.exists():
@@ -1080,8 +1080,8 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Vrací title.
 
-        :param language: Vstupní hodnota ``language`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param language: Textový název, klíč nebo zpráva ``language`` používaná v rámci operace.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return {
             "en": f"AMCR {self.record.ident_cely} – {self.record.druh_nalezu.heslo_en if self.record.druh_nalezu else ''} ({self.record.specifikace.heslo_en if self.record.specifikace else ''}), {self.record.obdobi.heslo_en if self.record.obdobi else ''}",
@@ -1090,9 +1090,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_alternate_identifiers(self):
         """
-        Provádí operaci serialize alternate identifiers.
+               Provádí operaci serialize alternate identifiers.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         alternate_identifiers = super()._serialize_alternate_identifiers()
         if self.record.evidencni_cislo:
@@ -1106,9 +1106,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_contributors(self):
         """
-        Provádí operaci serialize contributors.
+               Provádí operaci serialize contributors.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         contributors = super()._serialize_contributors()
         if self.record.projekt.vedouci_projektu and self.record.projekt.organizace:
@@ -1121,9 +1121,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_creators(self):
         """
-        Provádí operaci serialize creators.
+               Provádí operaci serialize creators.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if self.record.nalezce:
             result = [serialize_osoba(self.record.nalezce, self.record.projekt.organizace)]
@@ -1133,9 +1133,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_dates(self):
         """
-        Provádí operaci serialize dates.
+               Provádí operaci serialize dates.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         dates = []
         if self.record.datum_nalezu:
@@ -1163,9 +1163,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_descriptions(self):
         """
-        Provádí operaci serialize descriptions.
+               Provádí operaci serialize descriptions.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         descriptions = [{"lang": "en", "description": "Collected by field survey.", "descriptionType": "Methods"}]
         if self.record.poznamka:
@@ -1190,9 +1190,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_geolocations(self):
         """
-        Provádí operaci serialize geolocations.
+               Provádí operaci serialize geolocations.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         geo_locations: List[Dict] = []
         if self.record.katastr:
@@ -1206,9 +1206,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_related_identifiers(self):
         """
-        Provádí operaci serialize related identifiers.
+               Provádí operaci serialize related identifiers.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         related_identifiers = super()._serialize_related_identifiers()
         for soubor in self._get_soubory_queryset().all():
@@ -1233,9 +1233,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_rightslist(self):
         """
-        Provádí operaci serialize rightslist.
+               Provádí operaci serialize rightslist.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return [
             {
@@ -1250,9 +1250,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_subjects(self):
         """
-        Provádí operaci serialize subjects.
+               Provádí operaci serialize subjects.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         serialized_subjects = super()._serialize_subjects()
         if self.record.obdobi:
@@ -1272,9 +1272,9 @@ class SamostatnyNalezSerializer(ModelSerializer):
 
     def _serialize_types(self):
         """
-        Provádí operaci serialize types.
+               Provádí operaci serialize types.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return {"resourceType": "archaeological object", "resourceTypeGeneral": "PhysicalObject"}
 
@@ -1282,7 +1282,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Vrací formats.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return []
 
@@ -1294,7 +1294,7 @@ class LokalitaSerializer(ModelSerializer):
         """
         Inicializuje instanci třídy.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         super().__init__(record)
         self.record: Lokalita
@@ -1303,7 +1303,7 @@ class LokalitaSerializer(ModelSerializer):
         """
         Vrací creators.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pass
 
@@ -1315,7 +1315,7 @@ class LokalitaSerializer(ModelSerializer):
         """
         Vrací historie queryset.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return self.record.archeologicky_zaznam.historie.historie_set
 
@@ -1323,15 +1323,15 @@ class LokalitaSerializer(ModelSerializer):
         """
         Vrací prefix.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return settings.IGSN_PREFIX
 
     def _serialize_contributors(self):
         """
-        Provádí operaci serialize contributors.
+               Provádí operaci serialize contributors.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return super()._serialize_contributors()
 
@@ -1339,15 +1339,15 @@ class LokalitaSerializer(ModelSerializer):
         """
         Vrací soubory queryset.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return None
 
     def _serialize_dates(self) -> List[Dict]:
         """
-        Provádí operaci serialize dates.
+               Provádí operaci serialize dates.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         dates: List[Dict] = []
         for date in self.record.archeologicky_zaznam.historie.historie_set.all():
@@ -1375,9 +1375,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_descriptions(self):
         """
-        Provádí operaci serialize descriptions.
+               Provádí operaci serialize descriptions.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         descriptions = [
             {
@@ -1412,7 +1412,7 @@ class LokalitaSerializer(ModelSerializer):
         """
         Vrací externi odkaz query.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return self.record.archeologicky_zaznam.externi_odkazy.filter(
             externi_zdroj__typ__heslar_odkaz__zdroj="DataCite"
@@ -1420,9 +1420,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_geolocations(self):
         """
-        Provádí operaci serialize geolocations.
+               Provádí operaci serialize geolocations.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         geo_locations: List[frozenset] = []
         verejne = self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID
@@ -1443,7 +1443,7 @@ class LokalitaSerializer(ModelSerializer):
         """
         Vrací publication year.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         archivace_history_queryset = self._get_historie_queryset().filter(typ_zmeny=ARCHIVACE_AZ)
         if archivace_history_queryset.exists():
@@ -1454,9 +1454,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_rightslist(self):
         """
-        Provádí operaci serialize rightslist.
+               Provádí operaci serialize rightslist.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return [
             {
@@ -1473,8 +1473,8 @@ class LokalitaSerializer(ModelSerializer):
         """
         Vrací title.
 
-        :param language: Vstupní hodnota ``language`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param language: Textový název, klíč nebo zpráva ``language`` používaná v rámci operace.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return {
             "en": f"AMCR {self.get_ident_cely()} – {self.record.druh.heslo_en} {self.record.nazev * (self.record.archeologicky_zaznam.pristupnost.pk == PRISTUPNOST_ANONYM_ID)}",
@@ -1483,9 +1483,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_alternate_identifiers(self):
         """
-        Provádí operaci serialize alternate identifiers.
+               Provádí operaci serialize alternate identifiers.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         alternate_identifiers = super()._serialize_alternate_identifiers()
         if self.record.archeologicky_zaznam.uzivatelske_oznaceni:
@@ -1499,9 +1499,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_creators(self):
         """
-        Provádí operaci serialize creators.
+               Provádí operaci serialize creators.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         result = [
             {
@@ -1521,9 +1521,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_related_identifiers(self):
         """
-        Provádí operaci serialize related identifiers.
+               Provádí operaci serialize related identifiers.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         related_identifiers = super()._serialize_related_identifiers()
         casti_dokumentu_query = (
@@ -1576,9 +1576,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_related_items(self):
         """
-        Provádí operaci serialize related items.
+               Provádí operaci serialize related items.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         related_items = []
         for externi_odkaz in self._get_externi_odkaz_query():
@@ -1630,9 +1630,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_subjects(self):
         """
-        Provádí operaci serialize subjects.
+               Provádí operaci serialize subjects.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         serialized_subjects = super()._serialize_subjects()
         if self.record.druh:
@@ -1647,9 +1647,9 @@ class LokalitaSerializer(ModelSerializer):
 
     def _serialize_types(self):
         """
-        Provádí operaci serialize types.
+               Provádí operaci serialize types.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return {"resourceType": "archaeological site", "resourceTypeGeneral": "PhysicalObject"}
 
@@ -1657,7 +1657,7 @@ class LokalitaSerializer(ModelSerializer):
         """
         Vrací formats.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return []
 

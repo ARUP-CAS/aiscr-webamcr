@@ -17,7 +17,7 @@ class MLStripper(HTMLParser):
         """
         Ukládá textová data nalezená parserem.
 
-        :param d: Popis parametru ``d``.
+        :param d: Datová struktura zpracovávaná pomocnou funkcí parseru.
         """
         self.text.write(d)
 

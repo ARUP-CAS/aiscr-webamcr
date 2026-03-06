@@ -36,8 +36,8 @@ def merge_heslare(first, second):
     """
     Pomocní funkce pro vytvoření dvoustupňového selectu.
 
-    :param first: Popis parametru ``first``.
-    :param second: Popis parametru ``second``.
+    :param first: Číselná nebo geometrická hodnota `first` použitá při výpočtu nebo transformaci.
+    :param second: Číselná nebo geometrická hodnota `second` použitá při výpočtu nebo transformaci.
     """
     data = [("", "")]
     # logger.debug(get_language())
@@ -67,9 +67,9 @@ def heslar_12(druha, prvni_kat, id=False):
     """
     Funkce pro vytvoření dvoustupňového selectu.
 
-    :param druha: Popis parametru ``druha``.
-    :param prvni_kat: Popis parametru ``prvni_kat``.
-    :param id: Popis parametru ``id``.
+    :param druha: Číselná nebo geometrická hodnota `druha` použitá při výpočtu nebo transformaci.
+    :param prvni_kat: Číselná nebo geometrická hodnota `prvni_kat` použitá při výpočtu nebo transformaci.
+    :param id: Identifikátor ``id`` používaný pro dohledání cílového záznamu.
     """
     druha = (
         Heslar.objects.filter(nazev_heslare=druha)
@@ -88,7 +88,7 @@ def zjisti_katastr_souradnic(request):
     """
     Funkce pohledu pro vrácení katastru podle souradnic.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     nalezene_katastry = RuianKatastr.objects.filter(
         hranice__contains=Point(float(request.GET.get("long", 0)), float(request.GET.get("lat", 0)))
@@ -108,7 +108,7 @@ def zjisti_vychozi_hodnotu(request):
     """
     Funkce pohledu pro zjištení výchozí hodnoty z heslaře.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     try:
         nadrazene = int(request.GET.get("nadrazene"))
@@ -129,7 +129,7 @@ def zjisti_nadrazenou_hodnotu(request):
     """
     Funkce pohledu pro zjištení nadřazené hodnoty z heslaře.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     podrazene = request.GET.get("podrazene", 0)
     i = 0
@@ -207,9 +207,9 @@ def heslar_list(heslo_nazev, filter={}, use_exclude=False):
     """
     Provádí operaci heslar list.
 
-    :param heslo_nazev: Vstupní hodnota ``heslo_nazev`` pro danou operaci.
-    :param filter: Vstupní hodnota ``filter`` pro danou operaci.
-    :param use_exclude: Vstupní hodnota ``use_exclude`` pro danou operaci.
+    :param heslo_nazev: Heslo ``heslo_nazev`` používané při vytváření nebo aktualizaci účtu.
+    :param filter: Queryset/filtr ``filter`` použitý při výběru záznamů.
+    :param use_exclude: Příznak ``use_exclude`` určující průběh nebo rozsah zpracování.
     """
     hesla = Heslar.objects.filter(nazev_heslare=heslo_nazev)
     if use_exclude:

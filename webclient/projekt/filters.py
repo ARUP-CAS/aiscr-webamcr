@@ -98,9 +98,9 @@ class KatastrFilterMixin(FilterSet):
         """
         Metoda pro filtrování podle názvu hlavního a dalších katastrů.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             return queryset.filter(Q(hlavni_katastr__in=value) | Q(katastry__in=value)).distinct()
@@ -110,9 +110,9 @@ class KatastrFilterMixin(FilterSet):
         """
         Metoda pro filtrování podle názvu okresu hlavního a dalších katastrů.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(Q(hlavni_katastr__okres__kraj__in=value) | Q(katastry__okres__kraj__in=value)).distinct()
 
@@ -120,9 +120,9 @@ class KatastrFilterMixin(FilterSet):
         """
         Metoda pro filtrování podle názvu kraje hlavního a dalších katastrů.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)).distinct()
 
@@ -130,9 +130,9 @@ class KatastrFilterMixin(FilterSet):
         """
         Metoda pro filtrování podle popisních údajů.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(lokalizace__icontains=value)
@@ -517,7 +517,7 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
         """
         logger.debug("projekt.filters.AkceFilter.filter_queryset.start")
         queryset = super(ProjektFilter, self).filter_queryset(queryset)
@@ -542,9 +542,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle plánovaného zahájení.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value.start and value.stop:
             rng = DateRange(
@@ -566,9 +566,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle popisních údajů akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(akce__lokalizace_okolnosti__icontains=value)
@@ -582,9 +582,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle pozitivního nálezu akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if "True" in value and "False" in value:
             return queryset.filter(akce__archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False).distinct()
@@ -601,9 +601,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle oblasti projektu.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if OBLAST_CECHY in value and OBLAST_MORAVA in value:
             return queryset
@@ -617,9 +617,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle datumu oznámení od.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(historie__historie__typ_zmeny=OZNAMENI_PROJ).filter(
             historie__historie__datum_zmeny__gte=value
@@ -629,9 +629,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle datumu oznámení do.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(historie__historie__typ_zmeny=OZNAMENI_PROJ).filter(
             historie__historie__datum_zmeny__lte=value
@@ -641,9 +641,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle datumu schválení od.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ).filter(
             historie__historie__datum_zmeny__gte=value
@@ -653,9 +653,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle datumu schválení do.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ).filter(
             historie__historie__datum_zmeny__lte=value
@@ -665,9 +665,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle typu akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(Q(akce__hlavni_typ__in=value) | Q(akce__vedlejsi_typ__in=value)).distinct()
 
@@ -675,9 +675,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle katastru akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             return queryset.filter(
@@ -690,9 +690,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle kraje katastru akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(akce__archeologicky_zaznam__hlavni_katastr__okres__kraj__in=value)
@@ -703,9 +703,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle okresu katastru akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(akce__archeologicky_zaznam__hlavni_katastr__okres__in=value)
@@ -716,9 +716,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle vedoucího akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if not value:
             return queryset
@@ -728,9 +728,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle organizace akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             return queryset.filter(
@@ -743,9 +743,9 @@ class ProjektFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle identu dokumentu.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely__icontains=value)
@@ -787,7 +787,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("projekt.filters.history.divider.label")

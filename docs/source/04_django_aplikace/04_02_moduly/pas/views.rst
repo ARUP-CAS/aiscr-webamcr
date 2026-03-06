@@ -31,7 +31,7 @@ Třídy
 
       Nastaví copy source.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_form_kwargs()
 
@@ -47,19 +47,19 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: form_invalid()
 
       Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu.
 
-      :param form: Popis parametru ``form``.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: handle_geometry()
 
       Zpracuje geometry. v aplikaci.
 
-      :param form_coor: Vstupní hodnota ``form_coor`` pro danou operaci.
+      :param form_coor: Záznam/objekt ``form_coor``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: get()
 
@@ -80,8 +80,8 @@ Třídy
 
       Provádí operaci add ownership lookup.
 
-      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: SamostatnyNalezListView
@@ -98,7 +98,7 @@ Třídy
 
       Provádí operaci rename field for ordering.
 
-      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: get_queryset()
 
@@ -119,7 +119,7 @@ Třídy
 
       Provádí operaci rename field for ordering.
 
-      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: get_queryset()
 
@@ -129,15 +129,15 @@ Třídy
 
       Provádí operaci add ownership lookup.
 
-      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: add_accessibility_lookup()
 
       Provádí operaci add accessibility lookup.
 
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: get_context_data()
 
@@ -210,7 +210,7 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 
 Funkce
@@ -220,127 +220,123 @@ Funkce
 
    Funkce pro získaní potřebného kontextu pro samostatný nález.
 
-   :param sn: Popis parametru ``sn``.
-   :param request: Popis parametru ``request``.
+   :param sn: Číselná nebo geometrická hodnota `sn` použitá při výpočtu nebo transformaci.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: index(request)
 
    Funkce pohledu pro zobrazení domovské stránky samostatného nálezu s navigačními možnostmi.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: detail(request, ident_cely)
 
    Funkce pohledu pro zobrazení detailu samostatného nálezu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: edit(request, ident_cely)
 
    Funkce pohledu pro editaci samostatného nálezu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: edit_ulozeni(request, ident_cely)
 
    Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: vratit(request, ident_cely)
 
    Funkce pohledu pro vrácení stavu samostatného nálezu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: odeslat(request, ident_cely)
 
    Funkce pohledu pro odeslání samostatného nálezu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: potvrdit(request, ident_cely)
 
    Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: archivovat(request, ident_cely)
 
    Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro smazání samostatného nálezu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: zadost(request)
 
    Funkce pohledu pro vytvoření žádosti o spolupráci.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: aktivace(request, pk)
 
    Funkce pohledu pro aktivaci spolupráce pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param pk: Popis parametru ``pk``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: smazat_spolupraci(request, pk)
 
    Funkce pohledu pro smazání spolupráce pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param pk: Popis parametru ``pk``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
    Funkce pro získaní historických datumu.
 
-   :param historie_vazby: Popis parametru ``historie_vazby``.
-   :param request_user: Popis parametru ``request_user``.
+   :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+   :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+   :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
 
 .. py:function:: get_detail_template_shows(sn, user)
 
    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
 
-   :param sn: Popis parametru ``sn``.
-   :param user: Popis parametru ``user``.
+   :param sn: Číselná nebo geometrická hodnota `sn` použitá při výpočtu nebo transformaci.
+   :param user: Uživatel, v jehož kontextu se operace provádí.
+   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
 
 .. py:function:: post_point_position_2_katastre(request)
 
    Funkce pro získaní názvu katastru z bodu.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: post_point_position_2_katastre_with_geom(request)
 
    Funkce pro získaní názvu katastru, geomu z bodu.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: get_required_fields(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu samostatného nálezu.
 
-
-   **Argumenty:**
-
-   - ``zaznam`` (*PAS*): model samostatního nálezu pro který se dané pole počítají.
-   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-   **Návratová hodnota:**
-
-   *required_fields*: list polí.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+   :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+   :return: Seznam názvů polí, která mají být v daném stavu povinná.

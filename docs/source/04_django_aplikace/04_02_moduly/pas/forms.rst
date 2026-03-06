@@ -16,7 +16,7 @@ Třídy
 
       Provádí operaci label from instance.
 
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: PotvrditNalezForm
@@ -30,9 +30,9 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
-      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
-      :param predano_required: Vstupní hodnota ``predano_required`` pro danou operaci.
-      :param predano_hidden: Vstupní hodnota ``predano_hidden`` pro danou operaci.
+      :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
+      :param predano_required: Číselná nebo geometrická hodnota `predano_required` použitá při výpočtu nebo transformaci.
+      :param predano_hidden: Číselná nebo geometrická hodnota `predano_hidden` použitá při výpočtu nebo transformaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -47,11 +47,11 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
-      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :param required: Vstupní hodnota ``required`` pro danou operaci.
-      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
-      :param project_ident: Vstupní hodnota ``project_ident`` pro danou operaci.
+      :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+      :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
+      :param project_ident: Identifikátor ``project_ident`` používaný pro dohledání cílového záznamu.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -95,4 +95,4 @@ Funkce
 
    Funkce pro validaci zadaného emailu uživatele.
 
-   :param email: Popis parametru ``email``.
+   :param email: Uživatel nebo osoba ``email``, v jejímž kontextu se operace provádí.

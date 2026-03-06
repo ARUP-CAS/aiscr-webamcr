@@ -17,8 +17,8 @@ def soubor_get_rozsah(sender, instance, **kwargs):
     """
     Provádí operaci soubor get rozsah.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     if instance.binary_data:
@@ -46,8 +46,8 @@ def soubor_save_update_record_metadata(sender, instance: Soubor, **kwargs):
     """
     Provádí operaci soubor save update record metadata.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(
@@ -81,8 +81,8 @@ def soubor_delete_connections(sender, instance: Soubor, **kwargs):
     """
     Provádí operaci soubor delete connections.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("cron.signals.soubor_delete_connections.start", extra={"instance": instance.pk})
@@ -96,8 +96,8 @@ def soubor_delete_update_metadata(sender, instance: Soubor, **kwargs):
     """
     Provádí operaci soubor delete update metadata.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("cron.signals.soubor_delete_update_metadata.start", extra={"instance": instance.pk})

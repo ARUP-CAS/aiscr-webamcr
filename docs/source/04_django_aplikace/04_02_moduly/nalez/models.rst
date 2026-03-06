@@ -23,7 +23,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_permission_object()
 
@@ -47,7 +47,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_permission_object()
 

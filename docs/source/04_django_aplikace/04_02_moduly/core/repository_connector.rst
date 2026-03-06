@@ -21,11 +21,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param url: Vstupní hodnota ``url`` pro danou operaci.
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
-      :param code: Vstupní hodnota ``code`` pro danou operaci.
-      :param headers: Vstupní hodnota ``headers`` pro danou operaci.
-      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+      :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param code: Aplikační nebo HTTP kód, který funkce převádí na odpověď.
+      :param headers: Textový nebo strukturální vstup `headers` používaný při sestavení nebo zpracování obsahu.
+      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
 
 
 .. py:class:: FedoraUpdatedByAnotherTransactionError
@@ -53,7 +53,7 @@ Třídy
 
       Vrací url without domain.
 
-      :param url: Vstupní hodnota ``url`` pro danou operaci.
+      :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
 
    .. py:method:: url_without_domain()
 
@@ -67,7 +67,7 @@ Třídy
 
       Provádí operaci calculate sha 512.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: size_mb()
 
@@ -81,9 +81,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param url: Vstupní hodnota ``url`` pro danou operaci.
-      :param content: Vstupní hodnota ``content`` pro danou operaci.
-      :param filename: Vstupní hodnota ``filename`` pro danou operaci.
+      :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+      :param content: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
+      :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
 
 
 .. py:class:: FedoraRequestType
@@ -101,37 +101,37 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param transaction: Vstupní hodnota ``transaction`` pro danou operaci.
-      :param skip_container_check: Vstupní hodnota ``skip_container_check`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param transaction: Číselná nebo geometrická hodnota `transaction` použitá při výpočtu nebo transformaci.
+      :param skip_container_check: Příznak ``skip_container_check`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: _get_model_name()
 
       Vrací model name.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _get_creator_rdf_data()
 
       Vrací rdf inset data.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _get_creator()
 
       Vrací creator.
 
-      :param url: Vstupní hodnota ``url`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _update_creator()
 
       Aktualizuje creator.
 
-      :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-      :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
+      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: get_base_url()
 
@@ -141,52 +141,52 @@ Třídy
 
       Vrací request url.
 
-      :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-      :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
+      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: check_container_deleted()
 
       Ověří container deleted.
 
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: check_container_deleted_or_not_exists()
 
       Ověří container deleted or not exists.
 
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+      :param model_name: Název modelu používaný pro cílení operace.
 
    .. py:method:: _get_auth()
 
       Vrací auth.
 
-      :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _send_request()
 
       Odešle request.
 
-      :param url: Vstupní hodnota ``url`` pro danou operaci.
-      :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-      :param headers: Vstupní hodnota ``headers`` pro danou operaci.
-      :param data: Vstupní hodnota ``data`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+      :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
+      :param headers: Textový nebo strukturální vstup `headers` používaný při sestavení nebo zpracování obsahu.
+      :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: _create_container()
 
       Vytvoří container.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: create_link()
 
       Vytvoří link. v aplikaci.
 
-      :param ident_cely_proxy: Vstupní hodnota ``ident_cely_proxy`` pro danou operaci.
+      :param ident_cely_proxy: Identifikátor ``ident_cely_proxy`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: container_exists()
 
@@ -196,7 +196,7 @@ Třídy
 
       Provádí operaci connect deleted container.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: link_exists()
 
@@ -212,7 +212,7 @@ Třídy
 
       Vytvoří binary file container.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _check_binary_file_container()
 
@@ -224,26 +224,26 @@ Třídy
 
       Vygeneruje metadata.
 
-      :return: Vrací nově vytvořený výsledek operace.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: get_metadata()
 
       Vrací metadata. v aplikaci.
 
-      :param update: Vstupní hodnota ``update`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_metadata_historicka()
 
       Metoda varacející konkrétní verzi metadat
 
-      :param timestamp: Popis parametru ``timestamp``.
+      :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
 
    .. py:method:: parse_historie()
 
       Zpracuje historie. v aplikaci.
 
-      :param response_text: Vstupní hodnota ``response_text`` pro danou operaci.
+      :param response_text: Číselná hodnota ``response_text`` použitá při výpočtu nebo transformaci.
 
    .. py:method:: get_historie_metadat()
 
@@ -253,97 +253,97 @@ Třídy
 
       Metoda k získání info o verzích souborů
 
-      :param uuid: Popis parametru ``uuid``.
+      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: save_metadata()
 
       Uloží metadata. v aplikaci.
 
-      :param update: Vstupní hodnota ``update`` pro danou operaci.
+      :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
 
    .. py:method:: save_binary_file()
 
       Uloží binary file.
 
-      :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-      :param content_type: Vstupní hodnota ``content_type`` pro danou operaci.
-      :param file: Vstupní hodnota ``file`` pro danou operaci.
-      :param save_thumbs: Vstupní hodnota ``save_thumbs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+      :param content_type: Název nebo typ ``content_type`` používaný pro volbu cílové logiky.
+      :param file: Soubor nebo cesta k souboru používaná při operaci.
+      :param save_thumbs: Příznak ``save_thumbs`` určující průběh nebo rozsah zpracování.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: __generate_thumb()
 
       Vygeneruje thumb. v aplikaci.
 
-      :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-      :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
-      :param large: Vstupní hodnota ``large`` pro danou operaci.
+      :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+      :param file_content: Cesta, URL nebo název zdroje ``file_content``, ze kterého funkce čte nebo kam zapisuje.
+      :param large: Číselná nebo geometrická hodnota `large` použitá při výpočtu nebo transformaci.
 
    .. py:method:: save_thumbs()
 
       Uloží thumbs. v aplikaci.
 
-      :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-      :param file: Vstupní hodnota ``file`` pro danou operaci.
-      :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-      :param update: Vstupní hodnota ``update`` pro danou operaci.
-      :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
+      :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+      :param file: Soubor nebo cesta k souboru používaná při operaci.
+      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
+      :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: migrate_binary_file()
 
       Provádí operaci migrate binary file.
 
-      :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
-      :param include_content: Vstupní hodnota ``include_content`` pro danou operaci.
-      :param check_if_exists: Vstupní hodnota ``check_if_exists`` pro danou operaci.
-      :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param soubor: Cesta, URL nebo název zdroje ``soubor``, ze kterého funkce čte nebo kam zapisuje.
+      :param include_content: Příznak ``include_content`` určující průběh nebo rozsah zpracování.
+      :param check_if_exists: Příznak ``check_if_exists`` určující průběh nebo rozsah zpracování.
+      :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: get_binary_file()
 
       Vrací binary file.
 
-      :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-      :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-      :param thumb_small: Vstupní hodnota ``thumb_small`` pro danou operaci.
-      :param thumb_large: Vstupní hodnota ``thumb_large`` pro danou operaci.
-      :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      :param thumb_small: Číselná nebo geometrická hodnota `thumb_small` použitá při výpočtu nebo transformaci.
+      :param thumb_large: Číselná nebo geometrická hodnota `thumb_large` použitá při výpočtu nebo transformaci.
+      :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: update_binary_file()
 
       Aktualizuje binary file.
 
-      :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-      :param content_type: Vstupní hodnota ``content_type`` pro danou operaci.
-      :param file: Vstupní hodnota ``file`` pro danou operaci.
-      :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-      :param save_thumbs: Vstupní hodnota ``save_thumbs`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+      :param content_type: Název nebo typ ``content_type`` používaný pro volbu cílové logiky.
+      :param file: Soubor nebo cesta k souboru používaná při operaci.
+      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      :param save_thumbs: Příznak ``save_thumbs`` určující průběh nebo rozsah zpracování.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: delete_binary_file()
 
       Odstraní binary file.
 
-      :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
+      :param soubor: Cesta, URL nebo název zdroje ``soubor``, ze kterého funkce čte nebo kam zapisuje.
 
    .. py:method:: delete_binary_file_completely()
 
       Odstraní binary file completely.
 
-      :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
+      :param soubor: Cesta, URL nebo název zdroje ``soubor``, ze kterého funkce čte nebo kam zapisuje.
 
    .. py:method:: delete_container()
 
       Odstraní container. v aplikaci.
 
-      :param delete_tombstone: Vstupní hodnota ``delete_tombstone`` pro danou operaci.
+      :param delete_tombstone: Příznak ``delete_tombstone`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: _delete_link()
 
       Odstraní link.
 
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
       :return: Vrací výsledek operace odstranění.
 
    .. py:method:: record_deletion()
@@ -354,14 +354,14 @@ Třídy
 
       Provádí operaci record ident change.
 
-      :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-      :param delete_container: Vstupní hodnota ``delete_container`` pro danou operaci.
+      :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      :param delete_container: Příznak ``delete_container`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: generate_thumb_for_single_file()
 
       Vygeneruje thumb for single file.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
 
 
 .. py:class:: FedoraTransactionQueueClosedError
@@ -444,10 +444,7 @@ Třídy
 
       Přidá identifikátor záznamu do množiny dotčených záznamů.
 
-
-      **Argumenty:**
-
-      - ``ident_cely``: identifikátor záznamu (ident_cely)
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 
 .. py:class:: FedoraTransaction
@@ -458,57 +455,41 @@ Třídy
    Při inicializaci vytváří novou transakci ve Fedoře (pokud není předáno
    existující uid). Výsledek transakce se ukládá do Redis pro zobrazení uživateli.
 
-
-   **Argumenty:**
-
-   - ``main_record``: hlavní záznam (ModelWithMetadata), ke kterému se transakce váže
-   - ``transaction_user``: uživatel provádějící transakci
-   - ``success_message``: zpráva zobrazená při úspěšném dokončení
-   - ``error_message``: zpráva zobrazená při chybě
-   - ``uid``: existující UID transakce; pokud není zadáno, vytvoří se nová transakce
-   - ``request``: HTTP request pro předání kontextu
-   - ``suppress_message``: pokud True, neukládá výsledek transakce do Redis
-   - ``redirect_on_error``: pokud True, při chybě provede přesměrování
-   - ``redirect_url``: URL pro přesměrování při chybě
-
-   **Výjimky:**
-
-   *FedoraTransactionNoIDError*: pokud se nepodaří vytvořit transakci nebo získat její UID
-
    **Metody:**
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param main_record: Vstupní hodnota ``main_record`` pro danou operaci.
-      :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-      :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-      :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
-      :param uid: Vstupní hodnota ``uid`` pro danou operaci.
+      :param main_record: Záznam/objekt ``main_record``, který funkce čte, validuje nebo upravuje.
+      :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+      :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+      :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
+      :param uid: Identifikátor `uid` používaný pro dohledání cílového záznamu.
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param suppress_message: Vstupní hodnota ``suppress_message`` pro danou operaci.
-      :param redirect_on_error: Vstupní hodnota ``redirect_on_error`` pro danou operaci.
-      :param redirect_url: Vstupní hodnota ``redirect_url`` pro danou operaci.
+      :param suppress_message: Pokud ``True``, výsledek transakce se neukládá do Redis.
+      :param redirect_on_error: Pokud ``True``, při chybě se použije přesměrování.
+      :param redirect_url: URL pro přesměrování při chybě transakce.
+      :raises FedoraTransactionNoIDError: Pokud se nepodaří vytvořit transakci nebo získat její UID.
 
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: get_transaction_redis_key()
 
       Vrací transaction redis key.
 
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
       :param transaction_user_id: Identifikátor objektu ``transaction_user``.
 
    .. py:method:: _transaction_redis_key()
 
       Provádí operaci transaction redis key.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: status()
 
@@ -518,15 +499,15 @@ Třídy
 
       Uloží transaction result to redis.
 
-      :param result: Vstupní hodnota ``result`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param result: Výsledek transakce určený k uložení do Redis.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: _send_transaction_request()
 
       Odešle transaction request.
 
-      :param operation: Vstupní hodnota ``operation`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param operation: Číselná nebo geometrická hodnota `operation` použitá při výpočtu nebo transformaci.
+      :return: Textová reprezentace UID transakce.
 
    .. py:method:: rollback_transaction()
 
@@ -567,8 +548,5 @@ Třídy
 
       Přidá identifikátor záznamu do množiny dotčených záznamů.
 
-
-      **Argumenty:**
-
-      - ``ident_cely``: identifikátor záznamu (ident_cely)
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 

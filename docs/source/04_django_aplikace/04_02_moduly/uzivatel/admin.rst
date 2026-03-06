@@ -51,15 +51,15 @@ Třídy
       Vrací extra. v aplikaci.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param parent_model: Vstupní hodnota ``parent_model`` pro danou operaci.
-      :param admin_site: Vstupní hodnota ``admin_site`` pro danou operaci.
+      :param parent_model: Název nebo typ ``parent_model`` používaný pro volbu cílové logiky.
+      :param admin_site: Instance administrace předaná při registraci modelu.
 
 
 .. py:class:: PesNotificationTypeInline
@@ -135,7 +135,7 @@ Třídy
       Vrací extra. v aplikaci.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -150,16 +150,16 @@ Třídy
       Určí, zda delete permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: save_model()
 
       Uloží model. v aplikaci.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
-      :param change: Vstupní hodnota ``change`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
+      :param form: Formulářová instance zpracovávaná funkcí.
+      :param change: Číselná nebo geometrická hodnota `change` použitá při výpočtu nebo transformaci.
 
    .. py:method:: user_change_password()
 
@@ -167,21 +167,21 @@ Třídy
 
       :param request: Django HTTP požadavek použitý při zpracování.
       :param id: Identifikátor zpracovávaného záznamu.
-      :param form_url: Vstupní hodnota ``form_url`` pro danou operaci.
+      :param form_url: Cesta, URL nebo název zdroje ``form_url``, ze kterého funkce čte nebo kam zapisuje.
 
    .. py:method:: get_readonly_fields()
 
       Vrací readonly fields.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: render_change_form()
 
       Vyrenderuje change form.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: get_urls()
@@ -208,7 +208,7 @@ Třídy
       Odstraní model. v aplikaci.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: CustomGroupAdmin
@@ -222,7 +222,7 @@ Třídy
       Určí, zda delete permission.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+      :param obj: Objekt, se kterým funkce pracuje.
 
 
 .. py:class:: NotificationsLogAdmin
@@ -258,7 +258,7 @@ Třídy
       Zakáže ruční vytváření záznamů v administraci.
 
       :param request: Django HTTP požadavek.
-      :return: Vždy ``False``.
+      :return: Vždy ```False```.
 
    .. py:method:: has_delete_permission()
 
@@ -266,7 +266,7 @@ Třídy
 
       :param request: Django HTTP požadavek.
       :param obj: Vybraný záznam logu notifikace.
-      :return: Vždy ``False``.
+      :return: Vždy ```False```.
 
    .. py:method:: get_urls()
 

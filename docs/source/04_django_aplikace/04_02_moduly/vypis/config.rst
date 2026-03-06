@@ -10,4 +10,4 @@ Funkce
 
    Vrací config. v aplikaci.
 
-   :param name: Vstupní hodnota ``name`` pro danou operaci.
+   :param name: Název nebo identifikátor používaný v rámci operace.

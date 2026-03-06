@@ -8,7 +8,7 @@ class UserLogFilter(logging.Filter):
         """
         Filtruje hodnotu. v aplikaci.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         from core.log_middleware import LogMiddleware
 

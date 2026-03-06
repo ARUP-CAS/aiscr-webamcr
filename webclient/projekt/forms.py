@@ -91,8 +91,8 @@ class CreateProjektForm(forms.ModelForm):
         Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
-        :param required: Vstupní hodnota ``required`` pro danou operaci.
-        :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         super(CreateProjektForm, self).__init__(*args, **kwargs)
@@ -284,9 +284,9 @@ class EditProjektForm(forms.ModelForm):
         Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
-        :param required: Vstupní hodnota ``required`` pro danou operaci.
-        :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
-        :param edit_fields: Vstupní hodnota ``edit_fields`` pro danou operaci.
+        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
+        :param edit_fields: Záznam/objekt ``edit_fields``, který funkce čte, validuje nebo upravuje.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         super(EditProjektForm, self).__init__(*args, **kwargs)
@@ -851,7 +851,7 @@ class PripojitProjektForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param dok: Vstupní hodnota ``dok`` pro danou operaci.
+        :param dok: Doménový objekt `dok`, se kterým funkce pracuje.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
@@ -913,8 +913,8 @@ class ZadostProjektForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param label: Vstupní hodnota ``label`` pro danou operaci.
-        :param help_text: Vstupní hodnota ``help_text`` pro danou operaci.
+        :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
+        :param help_text: Číselná hodnota ``help_text`` použitá při výpočtu nebo transformaci.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """

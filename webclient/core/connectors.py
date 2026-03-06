@@ -26,7 +26,7 @@ class RedisConnector:
         """
         Vytvoří connection.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         cls.r = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass())
 
@@ -36,7 +36,7 @@ class RedisConnector:
         """
         Vytvoří connection decode.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         cls.r_decode = redis.Redis(
             host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=get_plain_redis_pass(), decode_responses=True
@@ -47,7 +47,7 @@ class RedisConnector:
         """
         Vrací connection. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if not cls.r:
             cls._create_connection()
@@ -58,7 +58,7 @@ class RedisConnector:
         """
         Vrací connection decode.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if not cls.r_decode:
             cls._create_connection_decode()
@@ -69,7 +69,7 @@ class RedisConnector:
         """
         Provádí operaci prepare model for redis.
 
-        :param table: Vstupní hodnota ``table`` pro danou operaci.
+        :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
         """
         columns = table.columns.iterall()
         row = table.rows[0]
@@ -129,17 +129,10 @@ class ClamdNetworkSocket:
         """
         Skenuje buffer na přítomnost virů.
 
-        Args:
-        buff: instance BytesIO se soubory ke skenování
-
-        Returns:
-        dict: {filename: (status, reason)} kde status je 'FOUND' nebo 'OK'
-
-        Raises:
-        ClamdBufferTooLongError: pokud velikost bufferu překročí limity clamd
-        ClamdConnectionError: při problému s komunikací
-
-        :param buff: Popis parametru ``buff``.
+        :param buff: Binární stream (``BytesIO``) se souborem určeným ke kontrole.
+        :return: Slovník ve formátu ``{filename: (status, reason)}`` pro odpověď clamd.
+        :raises ClamdBufferTooLongError: Pokud je stream větší než povolený limit clamd.
+        :raises ClamdConnectionError: Při chybě komunikace se službou clamd.
         """
         try:
             self._init_socket()
@@ -168,10 +161,10 @@ class ClamdNetworkSocket:
 
     def _basic_command(self, command):
         """
-        Provádí operaci basic command.
+               Provádí operaci basic command.
 
-        :param command: Vstupní hodnota ``command`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param command: Textový název, klíč nebo zpráva ``command`` používaná v rámci operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         self._init_socket()
         try:
@@ -189,9 +182,7 @@ class ClamdNetworkSocket:
         Inicializuje socketové připojení k clamd.
 
         Pouze pro interní použití.
-
-        Raises:
-        ClamdConnectionError: pokud se nelze připojit k clamd
+        :raises ClamdConnectionError: Pokud se nelze připojit ke clamd.
         """
         try:
             self.clamd_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -204,12 +195,8 @@ class ClamdNetworkSocket:
     def _error_message(self, exception):
         """
         Formátuje chybovou zprávu pro selhání socketového připojení.
-
-        Args:
-        exception: výjimka socket.error
-
-        Returns:
-        str: formátovaná chybová zpráva
+        :param exception: Zachycená síťová výjimka při navazování spojení.
+        :return: Formátovaná chybová zpráva pro logování.
         """
         # argumenty pro síťovou výjimku mohou být buď (errno, "zpráva")
         # nebo jen "zpráva"
@@ -224,11 +211,11 @@ class ClamdNetworkSocket:
 
     def _send_command(self, cmd, *args):
         """
-        Odešle command.
+               Odešle command.
 
-        :param cmd: Vstupní hodnota ``cmd`` pro danou operaci.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
+               :param args: Dodatečné poziční argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         concat_args = ""
         if args:
@@ -240,12 +227,8 @@ class ClamdNetworkSocket:
     def _recv_response(self):
         """
         Přijme jednořádkovou odpověď od clamd.
-
-        Returns:
-        str: dekódovaný a oříznutý řádek odpovědi
-
-        Raises:
-        ClamdConnectionError: při chybě čtení ze socketu
+        :return: Dekódovaný řádek odpovědi od clamd.
+        :raises ClamdConnectionError: Při chybě čtení ze socketu.
         """
         try:
             with contextlib.closing(self.clamd_socket.makefile("rb")) as f:
@@ -257,15 +240,9 @@ class ClamdNetworkSocket:
     def _parse_response(self, msg):
         """
         Parsuje odpovědi pro příkazy SCAN, CONTSCAN, MULTISCAN a STREAM.
-
-        Args:
-        msg (str): zpráva odpovědi od clamd
-
-        Returns:
-        tuple: (path, virus, status)
-
-        Raises:
-        ClamdResponseError: pokud nelze odpověď parsovat
+        :param msg: Textová odpověď vrácená službou clamd.
+        :return: N-tice ``(path, virus, status)`` extrahovaná z odpovědi.
+        :raises ClamdResponseError: Pokud odpověď nelze naparsovat.
         """
         try:
             return scan_response.match(msg).group("path", "virus", "status")

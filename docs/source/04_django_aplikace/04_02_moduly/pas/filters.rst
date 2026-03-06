@@ -23,39 +23,39 @@ Třídy
 
       Filtruje queryset. v aplikaci.
 
-      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: filter_obdobi()
 
       Metoda pro filtrování podle období.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_druh_nalezu()
 
       Metoda pro filtrování podle druhu nálezu.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_popisne_udaje()
 
       Metoda pro filtrování podle lokalizace, poznámek a evidenčního čísla.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_by_oblast()
 
       Metoda pro filtrování podle oblasti.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: UzivatelSpolupraceFilter
@@ -75,7 +75,7 @@ Třídy
 
       Filtruje queryset. v aplikaci.
 
-      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: SamostatnyNalezFilterFormHelper
@@ -88,7 +88,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
 
 .. py:class:: UzivatelSpolupraceFilterFormHelper
@@ -101,5 +101,5 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 

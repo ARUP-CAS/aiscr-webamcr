@@ -28,7 +28,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: save()
 
@@ -90,7 +90,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
 
 .. py:class:: HeslarOdkaz
@@ -121,7 +121,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: ident_cely()
 
@@ -145,7 +145,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: ident_cely()
 
@@ -169,7 +169,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: ident_cely()
 

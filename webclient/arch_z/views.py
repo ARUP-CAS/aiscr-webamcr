@@ -174,7 +174,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         """
         Metoda pro získaní dalších vedoucích navázaných na akci.
 
-        :param context: Popis parametru ``context``.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         ostatni_vedouci_objekt_formset = inlineformset_factory(
             Akce,
@@ -210,7 +210,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         """
         Metoda pro získaní contextu akci pro template.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         self.check_locality_arch_z_conflict()
@@ -265,7 +265,7 @@ class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateV
         """
         Metoda pro získaní context dat navíc oproti přepisované metóde.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
@@ -282,12 +282,12 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         az = get_object_or_404(ArcheologickyZaznam, ident_cely=self.kwargs["ident_cely"])
@@ -314,7 +314,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
         """
         Metoda pro získaní context dat DJ navíc oproti přepisované metóde, záznam DJ.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         context["active_dj_ident"] = self.get_dokumentacni_jednotka().ident_cely
@@ -342,7 +342,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
         """
         Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření DJ.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         typ_akce = None
@@ -387,7 +387,7 @@ class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRel
         """
         Metoda pro získaní context dat DJ navíc oproti přepisované metóde, pro zobrazení správneho detailu.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         old_adb_post = self.request.session.pop("_old_adb_post", None)
@@ -408,7 +408,7 @@ class KomponentaCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
         """
         Metoda pro získaní context dat navíc oproti přepisované metóde, formulář na vytvoření komponenty.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
@@ -423,12 +423,12 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
@@ -463,7 +463,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
         případně data poslaného chybného formuláře.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         komponenta = self.get_komponenta()
@@ -486,7 +486,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         """
         Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření PIANu.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -535,12 +535,12 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         pian = get_object_or_404(Pian, ident_cely=self.kwargs["pian_ident_cely"])
@@ -560,7 +560,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         """
         Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro editaci PIANu.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -611,7 +611,7 @@ class AdbCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         """
         Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření ADB.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -630,8 +630,8 @@ def edit(request, ident_cely):
     Na začátku se kontroluje, jestli stav není archivovaný.
     Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if zaznam.stav == AZ_STAV_ARCHIVOVANY:
@@ -735,8 +735,8 @@ def odeslat(request, ident_cely):
     Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
     Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     az: ArcheologickyZaznam
@@ -799,8 +799,8 @@ def archivovat(request, ident_cely):
     Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
     Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     logger.debug("arch_z.views.archivovat.start", extra={"ident_cely": ident_cely})
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
@@ -890,8 +890,8 @@ def vratit(request, ident_cely):
     Po POST volání se volá metoda na modelu pro posun stavu zpět.
     Pokud se jedná o projektovou akci, tak se vrací i stav projektu ze stavu uzavřený nebo archivovaný.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
@@ -999,8 +999,8 @@ def zapsat(request, projekt_ident_cely=None):
     Na začátku se kontroluje, jestli jde o vytvoření projektové nebo samostatné akce a zda je možné projektovou akci vytvořit.
     Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
 
-    :param request: Popis parametru ``request``.
-    :param projekt_ident_cely: Popis parametru ``projekt_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param projekt_ident_cely: Identifikátor ``projekt_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     if projekt_ident_cely:
         projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
@@ -1181,8 +1181,8 @@ def smazat(request, ident_cely):
     Na začátku se kontroluje, jestli někdo nezměnil stav akce během smazání.
     Po POST volání se volá metoda na modelu pro smazání akce.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
@@ -1272,9 +1272,9 @@ def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
 
     Funkce volá další funkci pro připojení s parametrem třídou modelu navíc.
 
-    :param request: Popis parametru ``request``.
-    :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
-    :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
+    :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     if proj_ident_cely is not None and az.akce.projekt.ident_cely != proj_ident_cely:
@@ -1293,9 +1293,9 @@ def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
 
     Funkce volá další funkci pro odpojení s parametrem navíc - arch záznamem.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
-    :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely, archeologicky_zaznam=az)
@@ -1312,7 +1312,7 @@ def post_ajax_get_pians(request):
     """
     Vypada nepouzito check s J. Bartos
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     body = json.loads(request.body.decode("utf-8"))
     pians = get_dj_pians_centroid(body["dj_ident_cely"], body["lat"], body["lng"])
@@ -1338,7 +1338,7 @@ def post_akce2kat(request):
     """
     Funkce pohledu pro získaní souradnic katastru akce.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("arch_z.views.post_akce2kat.start", extra={"data": body})
@@ -1382,14 +1382,9 @@ def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní dátumů pro historii.
 
-    Args:
-    historie_vazby (HistorieVazby): model historieVazby dané akce.
-
-    Returns:
-    historie: dictionary dátumů k historii.
-
-    :param historie_vazby: Popis parametru ``historie_vazby``.
-    :param request_user: Popis parametru ``request_user``.
+    :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+    :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+    :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
     """
     request_user: User
     anonymized = request_user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
@@ -1405,22 +1400,11 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
     """
     Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
 
-    Args:
-    archeologicky_zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se dané akce počítají.
-
-    dok_jednotky (DokumentacniJednotka): model DokumentacniJednotka pro který se dané akce počítají.
-
-    user (AuthUser): uživatel pro kterého se dané akce počítají.
-
-    app (string): druh archeologického záznamu ro který se dané akce počítají.
-
-    Returns:
-    historie: dictionary možností pro zobrazení.
-
-    :param archeologicky_zaznam: Popis parametru ``archeologicky_zaznam``.
-    :param dok_jednotky: Popis parametru ``dok_jednotky``.
-    :param user: Popis parametru ``user``.
-    :param app: Popis parametru ``app``.
+    :param archeologicky_zaznam: Záznam/objekt ``archeologicky_zaznam``, který funkce čte, validuje nebo upravuje.
+    :param dok_jednotky: Kolekce ``dok_jednotky`` zpracovávaná touto funkcí.
+    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :param app: Název nebo typ ``app`` používaný pro volbu cílové logiky.
+    :return: Slovník příznaků určujících, které akce se mají v detailu zobrazit.
     """
     show_vratit = check_permissions(p.actionChoices.archz_vratit, user, archeologicky_zaznam.ident_cely)
     show_odeslat = check_permissions(p.actionChoices.archz_odeslat, user, archeologicky_zaznam.ident_cely)
@@ -1501,16 +1485,9 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu arch záznamů.
 
-    Args:
-    zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se dané pole počítají.
-
-    next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-    Returns:
-    required_fields: list polí.
-
-    :param zaznam: Popis parametru ``zaznam``.
-    :param next: Popis parametru ``next``.
+    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+    :return: Seznam názvů polí, která mají být v daném stavu povinná.
     """
     required_fields = []
     if zaznam:
@@ -1538,9 +1515,9 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     """
     Funkce pohledu pro smazání dalšího vedoucího akce.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
-    :param akce_vedouci_id: Popis parametru ``akce_vedouci_id``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param akce_vedouci_id: Identifikátor ``akce_vedouci_id`` používaný pro dohledání cílového záznamu.
     """
     logger.debug("arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely, "pk": akce_vedouci_id})
     zaznam: AkceVedouci = AkceVedouci.objects.get(id=akce_vedouci_id)
@@ -1582,7 +1559,7 @@ class GetAkceOtherKatastrView(LoginRequiredMixin, View, PermissionFilterMixin):
         """
         Trida pohledu pro získaní souradnic dalších katastrů akce.
 
-        :param request: Popis parametru ``request``.
+        :param request: Aktuální HTTP request předaný view/funkci.
         """
         body = json.loads(request.body.decode("utf-8"))
         arch_zaznam = ArcheologickyZaznam.objects.filter(ident_cely=body["akce_ident_cely"])
@@ -1614,7 +1591,7 @@ class AkceIndexView(LoginRequiredMixin, TemplateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = {
             "toolbar_name": _("arch_z.views.akceIndexView.toolbarName"),
@@ -1655,7 +1632,7 @@ class AkceListView(SearchListView):
         """
         Provádí operaci rename field for ordering.
 
-        :param field: Vstupní hodnota ``field`` pro danou operaci.
+        :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
         """
         field = field.replace("-", "")
         return {
@@ -1725,7 +1702,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         az = self.get_archeologicky_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -1742,9 +1719,9 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         """
         Metoda pro vrácení stránky při volání GET.
 
-        :param request: Popis parametru ``request``.
-        :param args: Popis parametru ``args``.
-        :param kwargs: Popis parametru ``kwargs``.
+        :param request: Aktuální HTTP request předaný view/funkci.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
@@ -1764,9 +1741,9 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         Celá událost je zapsaná do historie.
         Uživatel je presmerován na detail akce.
 
-        :param request: Popis parametru ``request``.
-        :param args: Popis parametru ``args``.
-        :param kwargs: Popis parametru ``kwargs``.
+        :param request: Aktuální HTTP request předaný view/funkci.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = self.get_context_data(**kwargs)
         az = context["object"]
@@ -1806,7 +1783,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         az = self.get_archeologicky_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -1823,9 +1800,9 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         """
         Metoda pro vrácení stránky při volání GET s formulářem pro výběr projektu.
 
-        :param request: Popis parametru ``request``.
-        :param args: Popis parametru ``args``.
-        :param kwargs: Popis parametru ``kwargs``.
+        :param request: Aktuální HTTP request předaný view/funkci.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
@@ -1848,9 +1825,9 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         Celá událost je zapsaná do historie.
         Uživatel je presmerován na detail akce.
 
-        :param request: Popis parametru ``request``.
-        :param args: Popis parametru ``args``.
-        :param kwargs: Popis parametru ``kwargs``.
+        :param request: Aktuální HTTP request předaný view/funkci.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = self.get_context_data(**kwargs)
         az = context["object"]
@@ -1900,7 +1877,7 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
         """
         Vrací result label.
 
-        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
         """
         if self.lookup_type == "akce":
             return f"{result.ident_cely} ({result.hlavni_katastr}; {result.akce.hlavni_vedouci}; {result.akce.datum_zahajeni} - {result.akce.datum_ukonceni})"
@@ -1964,7 +1941,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
     :param jednotky: list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
     :param show: dictionary pro zobrazení možnosti uživatele na stránce.
     :param old_adb_post: staré volání CreateADBForm pro správně zobrazení chyb formuláře.
-    :param user: Popis parametru ``user``.
+    :param user: Uživatel, v jehož kontextu se operace provádí.
 
     :return: dictionary kontextu DJ pro správné zobrazení stránky.
     """

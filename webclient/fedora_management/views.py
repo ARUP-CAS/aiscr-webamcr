@@ -20,8 +20,8 @@ class AdminRecordProcessingView(LoginRequiredMixin, View):
         """
         Provádí operaci process record.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         pass
@@ -73,8 +73,8 @@ class ContinueMedataProcessing(AdminRecordProcessingView):
         """
         Provádí operaci process record.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         if record and isinstance(record, ModelWithMetadata) or isinstance(record, User):

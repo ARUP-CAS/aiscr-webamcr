@@ -661,18 +661,9 @@ class BasePostUploadView(View):
         Kontroluje, zda v systému již existuje soubor se stejným SHA-512 hashem.
         Pokud ano, přidá do response_data varovnou zprávu s informací o duplicitě
         včetně identifikátoru záznamu, ke kterému je duplicitní soubor připojen.
-
-        Args:
-        response_data (dict): Slovník s daty odpovědi, do kterého bude přidána zpráva
-        duplikat (QuerySet): QuerySet s duplicitními soubory (Soubor objekty)
-
-        Returns:
-        dict: Upravený response_data slovník s přidanou duplicitní zprávou.
-        Pokud není nalezen žádný duplikát, vrací nezměněný slovník.
-
-        Response Data Keys:
-        duplicate (tuple): Tuple obsahující zprávu o duplicitě ve formátu:
-        "Soubor {original_filename} byl již nahrán k záznamu {parent_ident}. Zpráva..."
+        :param response_data: Slovník s daty odpovědi, který se případně rozšíří o varování.
+        :param duplikat: QuerySet duplicitních souborů podle hashe.
+        :return: Upravený slovník odpovědi (beze změny, pokud duplicita není nalezena).
         """
         if duplikat is not None and duplikat.exists():
             parent_ident = (
@@ -695,19 +686,10 @@ class BasePostUploadView(View):
 
         Pokud byl soubor během uploadu přejmenován (typicky kvůli úpravě přípony
         pro soulad s MIME typem), přidá do response_data informační zprávu.
-
-        Args:
-        response_data (dict): Slovník s daty odpovědi, do kterého bude přidána zpráva
-        renamed (bool): True pokud došlo k přejmenování, False jinak
-        new_name (str): Nový název souboru po přejmenování
-
-        Returns:
-        dict: Upravený response_data slovník s přidanou zprávou o přejmenování.
-        Pokud nedošlo k přejmenování (renamed=False), vrací nezměněný slovník.
-
-        Response Data Keys:
-        file_renamed (tuple): Tuple obsahující zprávu o přejmenování ve formátu:
-        "Soubor {original_filename} byl přejmenován na {new_name}"
+        :param response_data: Slovník s daty odpovědi, který se případně doplní o zprávu.
+        :param renamed: Příznak, zda během uploadu došlo k přejmenování souboru.
+        :param new_name: Nově přidělený název souboru.
+        :return: Upravený slovník odpovědi (beze změny, pokud k přejmenování nedošlo).
         """
         if renamed:
             help_translation = _("core.views.post_upload.renamed.text1")
@@ -721,9 +703,7 @@ class BasePostUploadView(View):
         """
         Vrátí JSON odpověď s chybovou zprávou a HTTP status 500 pro neočekávané chyby
         při zpracování souboru, které nejsou pokryty specifickými error handlery.
-
-        Returns:
-        JsonResponse: JSON odpověď s chybovou zprávou a HTTP status 500
+        :return: JSON odpověď s obecnou chybou a HTTP statusem 500.
         """
         help_translation = _("core.views.post_upload.unknown_error")
         logger.error("core.views.post_upload.unknown_error")
@@ -851,18 +831,11 @@ class NewFileUploadView(BasePostUploadView):
         ověří konzistenci mezi typ_vazby a skutečným typem objektu, zkontroluje
         oprávnění uživatele k nahrání souboru a vygeneruje standardizovaný název
         souboru podle příslušných konvencí.
-
-        Args:
-        request (HttpRequest): HTTP request s informacemi o uživateli
-        ident_cely (str): Úplný identifikátor záznamu (např. "C-202400001")
-        filename (str): Původní název nahrávaného souboru
-        typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
-
-        Returns:
-        tuple | JsonResponse: Při úspěchu vrací tuple (objekt, new_name):
-        - objekt (Projekt|Dokument|SamostatnyNalez): Instance nalezeného záznamu
-        - new_name (str): Vygenerovaný standardizovaný název souboru
-        Při chybě vrací JsonResponse s chybovou zprávou a status kódem 403/500
+        :param request: HTTP request s kontextem aktuálního uživatele.
+        :param ident_cely: Úplný identifikátor cílového záznamu.
+        :param filename: Původní název nahrávaného souboru.
+        :param typ_vazby: Typ vazby (``projekt``, ``dokument``, ``model3d`` nebo ``pas``).
+        :return: Při úspěchu dvojice ``(objekt, new_name)``, jinak ``JsonResponse`` s chybou.
         """
         # Mapování typu vazby na oprávnění akce.
         action_map = {
@@ -1075,16 +1048,11 @@ class UpdateExistingFileUploadView(LoginRequiredMixin, BasePostUploadView):
 
         Na základě typ_vazby ověří, zda je nahrazení souboru povoleno pro daný typ
         záznamu, a zkontroluje oprávnění uživatele pomocí check_permissions.
-
-        Args:
-        request (HttpRequest): HTTP request s informacemi o uživateli
-        typ_vazby (str): Typ vazby - "dokument", "model3d", nebo "pas"
-        ident_cely (str): Úplný identifikátor záznamu
-        file_id (int): Primary key existujícího souboru
-
-        Returns:
-        bool | JsonResponse: True pokud je vše v pořádku,
-        JsonResponse s chybovou zprávou při problému
+        :param request: HTTP request s informacemi o přihlášeném uživateli.
+        :param typ_vazby: Typ vazby (``dokument``, ``model3d`` nebo ``pas``).
+        :param ident_cely: Úplný identifikátor záznamu.
+        :param file_id: Primární klíč nahrazovaného souboru.
+        :return: ``True`` při úspěchu, jinak ``JsonResponse`` s chybovým popisem.
         """
         # Mapování typu vazby na oprávnění akce.
         # Poznámka: projekt není v mapování – nahrazení souborů projektu není povoleno.
@@ -1148,9 +1116,9 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
     """
     Funkce pro získaní jména souboru pro samostatný nález.
 
-    :param find: Hodnota parametru ``find`` použitého touto operací.
-    :param filename: Hodnota parametru ``filename`` použitého touto operací.
-    :param add_to_index: Hodnota parametru ``add_to_index`` použitého touto operací.
+    :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
+    :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
     """
     ident_cely_sanitized = find.ident_cely.replace("-", "")
     files = find.soubory.soubory.filter(nazev__contains=ident_cely_sanitized)
@@ -1363,8 +1331,8 @@ class PermissionFilterMixin:
         """
         Ověří filter permission.
 
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-        :param action: Vstupní hodnota ``action`` pro danou operaci.
+        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param action: Identifikátor akce, která se má provést.
         """
         if action:
             permissions = Permissions.objects.filter(
@@ -1404,8 +1372,8 @@ class PermissionFilterMixin:
         """
         Filtruje by permission.
 
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
         """
         qs = qs.annotate(
             historie_zapsat=FilteredRelation(
@@ -1429,7 +1397,7 @@ class PermissionFilterMixin:
         """
         Provádí operaci add status lookup.
 
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
         """
         filterdoc = {}
         subed_status = re.sub("[a-zA-Z]", "", permission.status)
@@ -1459,8 +1427,8 @@ class PermissionFilterMixin:
         """
         Provádí operaci add ownership lookup.
 
-        :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
@@ -1475,8 +1443,8 @@ class PermissionFilterMixin:
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         accessibility_key = self.permission_model_lookup + "pristupnost__in"
         accessibilities = Heslar.objects.filter(
@@ -1504,7 +1472,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         """
         Vytvoří export výsledků vyhledávání v požadovaném formátu.
 
-        :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
+        :param export_format: Záznam/objekt ``export_format``, který funkce čte, validuje nebo upravuje.
         """
         from redis import Redis
 
@@ -1512,8 +1480,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             """
             Ověří if aborted.
 
-            :param r_inner: Vstupní hodnota ``r_inner`` pro danou operaci.
-            :param key_inner: Vstupní hodnota ``key_inner`` pro danou operaci.
+            :param r_inner: Číselná nebo geometrická hodnota `r_inner` použitá při výpočtu nebo transformaci.
+            :param key_inner: Textový název nebo klíč ``key_inner`` používaný v rámci operace.
             """
             aborted = r_inner.get(key_inner + "_stat") == "-1"
             if aborted:
@@ -1524,10 +1492,10 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             """
             Aktualizuje progress bar.
 
-            :param r_inner: Vstupní hodnota ``r_inner`` pro danou operaci.
-            :param key_inner: Vstupní hodnota ``key_inner`` pro danou operaci.
-            :param new_value: Vstupní hodnota ``new_value`` pro danou operaci.
-            :param message: Vstupní hodnota ``message`` pro danou operaci.
+            :param r_inner: Číselná nebo geometrická hodnota `r_inner` použitá při výpočtu nebo transformaci.
+            :param key_inner: Textový název nebo klíč ``key_inner`` používaný v rámci operace.
+            :param new_value: Číselná nebo geometrická hodnota `new_value` použitá při výpočtu nebo transformaci.
+            :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
             """
             r_inner.set(key_inner, json.dumps({"percent": int(new_value), "text": message}), ex=3600)
             return check_if_aborted(r_inner, key_inner)
@@ -1536,10 +1504,10 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             """
             Provádí operaci file iterator.
 
-            :param content: Vstupní hodnota ``content`` pro danou operaci.
-            :param r: Vstupní hodnota ``r`` pro danou operaci.
-            :param redis_variable_name: Vstupní hodnota ``redis_variable_name`` pro danou operaci.
-            :param chunk_size: Vstupní hodnota ``chunk_size`` pro danou operaci.
+            :param content: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
+            :param r: Číselná nebo geometrická hodnota `r` použitá při výpočtu nebo transformaci.
+            :param redis_variable_name: Textový název nebo klíč ``redis_variable_name`` používaný v rámci operace.
+            :param chunk_size: Číselná nebo geometrická hodnota `chunk_size` použitá při výpočtu nebo transformaci.
             """
             bytes_sent = 0
             file_size = len(content)
@@ -1671,7 +1639,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         """
         Vrací sort params.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         sort_params = self.request.GET.getlist("sort")
         return sort_params
@@ -1741,9 +1709,9 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
         Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
+        :param model_name: Název modelu používaný pro cílení operace.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
         """
         Model = self.MODEL_MAP.get(model_name)
         if Model is None:
@@ -1753,7 +1721,7 @@ class StahnoutDataHistorickaView(LoginRequiredMixin, View):
             """
             Provádí operaci context processor.
 
-            :param content: Vstupní hodnota ``content`` pro danou operaci.
+            :param content: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
             """
             yield content
 
@@ -1789,7 +1757,7 @@ def post_ajax_get_pas_and_pian_limit(request):
     """
     Funkce pohledu pro získaní heatmapy.
 
-    :param request: Hodnota parametru ``request`` použitého touto operací.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     body = json.loads(request.body.decode("utf-8"))
     params = [
@@ -1856,9 +1824,9 @@ def check_soubor_vazba(typ_vazby, ident, id_zaznamu):
     """
     Ověří soubor vazba.
 
-    :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
-    :param ident: Vstupní hodnota ``ident`` pro danou operaci.
-    :param id_zaznamu: Vstupní hodnota ``id_zaznamu`` pro danou operaci.
+    :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+    :param id_zaznamu: Záznam/objekt ``id_zaznamu``, který funkce čte, validuje nebo upravuje.
     """
     if typ_vazby == "model3d" or typ_vazby == "dokument":
         soubor = get_object_or_404(Dokument, ident_cely=ident).soubory.soubory.filter(pk=id_zaznamu)
@@ -1980,7 +1948,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         """
         Provádí operaci form valid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         new_pofile = form.cleaned_data["file"]
         tmp_path = None
@@ -2041,7 +2009,7 @@ class TranslationImportView(FormView, RosettaFileLevelMixinWithBackup):
         """
         Zpracuje uploaded file.
 
-        :param f: Vstupní hodnota ``f`` pro danou operaci.
+        :param f: Pomocný stream/objekt používaný interně funkcí.
         """
         with open(self.po_file_path, "wb+") as destination:
             for chunk in f.chunks():

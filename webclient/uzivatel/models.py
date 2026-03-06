@@ -146,9 +146,9 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
     @cached_property
     def hlavni_role(self) -> Union[Group, None]:
         """
-        Provádí operaci hlavni role.
+               Provádí operaci hlavni role.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         roles = self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
         if roles.count() == 0:
@@ -176,9 +176,9 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         if get_language() == "en":
             return self.user_str_en
@@ -189,7 +189,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         Textová reprezentace uživatele pro tabulky a autocomplete pole.
 
-        :param viewer: Hodnota parametru ``viewer`` použitého touto operací.
+        :param viewer: Uživatel nebo osoba ``viewer``, v jejímž kontextu se operace provádí.
         """
         lang = get_language()
 
@@ -332,8 +332,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         Uloží metadata uživatele do Fedora repozitáře a případně uzavře transakci.
 
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         from core.repository_connector import FedoraTransaction
@@ -377,8 +377,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby.
 
-        :param fedora_transaction: Hodnota parametru ``fedora_transaction`` použitého touto operací.
-        :param close_transaction: Hodnota parametru ``close_transaction`` použitého touto operací.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
         """
         logger.debug("uzivatel.models.User.delete_repository_container.start")
         if fedora_transaction is None and self.active_transaction is not None:
@@ -545,9 +545,9 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         if get_language() == "en":
             if self.nazev_zkraceny_en:
@@ -644,9 +644,9 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return self.vypis_cely
 
@@ -673,7 +673,7 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
         """
         Vrací settings dict.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if self.ident_cely in notification_settings:
             return notification_settings[self.ident_cely]
@@ -682,9 +682,9 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     @property
     def zasilat_neaktivnim(self) -> Optional[str]:
         """
-        Provádí operaci zasilat neaktivnim.
+               Provádí operaci zasilat neaktivnim.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
@@ -693,9 +693,9 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     @property
     def predmet(self) -> Optional[str]:
         """
-        Provádí operaci predmet.
+               Provádí operaci predmet.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
@@ -704,9 +704,9 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     @property
     def cesta_sablony(self) -> Optional[str]:
         """
-        Provádí operaci cesta sablony.
+               Provádí operaci cesta sablony.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         settings_dict = self._get_settings_dict()
         if settings_dict is not None:
@@ -732,9 +732,9 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         try:
             return str(self.NOTIFICATION_GROUPS_NAMES[self.ident_cely])

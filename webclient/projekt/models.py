@@ -213,9 +213,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         if self.ident_cely:
             return self.ident_cely
@@ -232,7 +232,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Odešle ep01. v aplikaci.
 
-        :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
+        :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
         """
         logger.debug("projekt.models.Projekt.send_ep01", extra={"file": rep_bin_file, "ident_cely": self.ident_cely})
         from services.mailer import Mailer
@@ -264,8 +264,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu schvýlený a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param old_ident: Popis parametru ``old_ident``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
         """
         logger.debug(
             "projekt.models.Projekt.set_schvaleny.start",
@@ -296,7 +296,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu zapsaný a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
@@ -306,7 +306,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu prihlásený a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = PROJEKT_STAV_PRIHLASENY
         Historie(
@@ -320,8 +320,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu zahájený v terénu a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param info_text: Popis parametru ``info_text``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param info_text: Číselná hodnota ``info_text`` použitá při výpočtu nebo transformaci.
         """
         self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
         Historie(
@@ -336,8 +336,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu ukončený v terénu a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param info_text: Popis parametru ``info_text``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param info_text: Číselná hodnota ``info_text`` použitá při výpočtu nebo transformaci.
         """
         self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
         Historie(
@@ -352,7 +352,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu uzavřený a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = PROJEKT_STAV_UZAVRENY
         Historie(
@@ -385,7 +385,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
         Součásti je archivace dokumentů a odesláni emailu.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         from services.mailer import Mailer
 
@@ -404,8 +404,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu navržen k zrušení a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param poznamka: Popis parametru ``poznamka``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
         """
         self.stav = PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
         Historie(
@@ -420,9 +420,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu zrušený a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param poznamka: Popis parametru ``poznamka``.
-        :param typ_zmeny: Popis parametru ``typ_zmeny``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
+        :param typ_zmeny: Název nebo typ ``typ_zmeny`` používaný pro volbu cílové logiky.
         """
         typ_zmeny = typ_zmeny if typ_zmeny else RUSENI_PROJ
         self.datum_ukonceni = None
@@ -439,9 +439,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro vrácení stavu zpět a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param new_state: Popis parametru ``new_state``.
-        :param poznamka: Popis parametru ``poznamka``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+        :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
         """
         if self.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
             self.datum_ukonceni = None
@@ -465,8 +465,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu zapsaný ze stavu zrušen nebo navrh na zrušení a uložení změny do historie.
 
-        :param user: Popis parametru ``user``.
-        :param poznamka: Popis parametru ``poznamka``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
         """
         if self.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI:
             zmena = VRACENI_NAVRHU_ZRUSENI
@@ -609,7 +609,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda na nastavení permanentního identu akce z projektu sekvence.
 
-        :param update_repository: Popis parametru ``update_repository``.
+        :param update_repository: Časový údaj ``update_repository`` použitý při filtrování nebo výpočtu.
         """
         logger.debug(
             "projekt.models.projekt.set_permanent_ident_cely.start",
@@ -671,13 +671,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         self, creator: DocumentCreator, fedora_transaction: FedoraTransaction, user=None, check_duplicate=True
     ) -> RepositoryBinaryFile:
         """
-        Uloží document.
+               Uloží document.
 
-        :param creator: Vstupní hodnota ``creator`` pro danou operaci.
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :param check_duplicate: Vstupní hodnota ``check_duplicate`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param creator: Číselná nebo geometrická hodnota `creator` použitá při výpočtu nebo transformaci.
+               :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+               :param user: Uživatel, v jehož kontextu se operace provádí.
+               :param check_duplicate: Příznak ``check_duplicate`` určující průběh nebo rozsah zpracování.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         rep_bin_file: RepositoryBinaryFile = creator.build_document()
         duplikat = Soubor.objects.filter(nazev=rep_bin_file.filename)
@@ -718,7 +718,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda na vytvoření potvrzení o zrušení oznámení.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         :return: Vrací výsledek operace.
         """
         logger.debug(
@@ -738,9 +738,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metoda na vytvoření oznámovací dokumentace.
 
-        :param fedora_transaction: Popis parametru ``fedora_transaction``.
-        :param additional: Popis parametru ``additional``.
-        :param user: Popis parametru ``user``.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param additional: Kolekce nebo datová struktura `additional` zpracovávaná touto funkcí.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         :return: Vrací výsledek operace.
         """
         logger.debug(
@@ -766,7 +766,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Vytvoří expert list.
 
-        :param popup_parametry: Vstupní hodnota ``popup_parametry`` pro danou operaci.
+        :param popup_parametry: Číselná hodnota ``popup_parametry`` použitá při výpočtu nebo transformaci.
         """
         elc = ExpertniListCreator(self, popup_parametry)
         output = elc.build_document()
@@ -787,7 +787,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Nastaví pristupnost. v aplikaci.
 
-        :param fixes: Vstupní hodnota ``fixes`` pro danou operaci.
+        :param fixes: Číselná hodnota ``fixes`` použitá při výpočtu nebo transformaci.
         """
         if self.pk is None:
             self.pristupnost_snapshot = Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID)
@@ -879,9 +879,9 @@ class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return "P: " + str(self.projekt) + " - K: " + str(self.katastr)
 

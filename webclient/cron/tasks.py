@@ -365,7 +365,7 @@ def update_all_redis_snapshots(rewrite_existing=False):
     """
     Aktualizuje all redis snapshots.
 
-    :param rewrite_existing: Vstupní hodnota ``rewrite_existing`` pro danou operaci.
+    :param rewrite_existing: Číselná hodnota ``rewrite_existing`` použitá při výpočtu nebo transformaci.
     """
     logger.debug("cron.tasks.update_all_redis_snapshots.start")
     r = RedisConnector.get_connection()
@@ -406,8 +406,8 @@ def update_single_redis_snapshot(class_name: str, record_pk):
     """
     Aktualizuje single redis snapshot.
 
-    :param class_name: Vstupní hodnota ``class_name`` pro danou operaci.
-    :param record_pk: Vstupní hodnota ``record_pk`` pro danou operaci.
+    :param class_name: Název nebo typ ``class_name`` používaný pro volbu cílové logiky.
+    :param record_pk: Identifikátor ``record_pk`` používaný pro dohledání cílového záznamu.
     """
     r = RedisConnector.get_connection()
     if class_name == "Akce":
@@ -461,8 +461,8 @@ def write_value_to_redis(key, value):
     """
     Zapíše value to redis.
 
-    :param key: Vstupní hodnota ``key`` pro danou operaci.
-    :param value: Vstupní hodnota ``value`` pro danou operaci.
+    :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     redis_connection = RedisConnector.get_connection()
     redis_connection.set(key, value)

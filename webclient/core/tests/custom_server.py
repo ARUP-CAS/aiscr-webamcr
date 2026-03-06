@@ -15,8 +15,8 @@ class WerkzeugServerThread(Thread):
         """
         Inicializuje instanci třídy.
 
-        :param host: Vstupní hodnota ``host`` pro danou operaci.
-        :param port: Vstupní hodnota ``port`` pro danou operaci.
+        :param host: Číselná nebo geometrická hodnota `host` použitá při výpočtu nebo transformaci.
+        :param port: Textová hodnota `port` používaná pro vyhledání, pojmenování nebo hlášení stavu.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         super().__init__()

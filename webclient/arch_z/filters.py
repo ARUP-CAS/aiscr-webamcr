@@ -69,7 +69,7 @@ class NumberRangeWidget(SuffixedMultiWidget):
         """
         Inicializuje instanci třídy.
 
-        :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
+        :param attrs: Kolekce ``attrs`` zpracovávaná touto funkcí.
         """
         widgets = (NumberInput, NumberInput)
         super().__init__(widgets, attrs)
@@ -78,7 +78,7 @@ class NumberRangeWidget(SuffixedMultiWidget):
         """
         Provádí operaci decompress.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             return [value.start, value.stop]
@@ -248,9 +248,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle hlavního i vedlejšího katastru.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             return queryset.filter(
@@ -262,9 +262,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle hlavního i vedlejšího kraje.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__okres__kraj__in=value)
@@ -275,9 +275,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle hlavního i vedlejšího okresu.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__okres__in=value)
@@ -288,9 +288,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle dj_zjisteni.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if "True" in value and "False" in value:
             return queryset.filter(
@@ -308,9 +308,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle poznámky a počtu predmětu.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(
@@ -325,9 +325,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
         """
         Metoda pro filtrování podle poznámky a počtu objektu.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(
@@ -599,9 +599,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování podle typu akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(Q(hlavni_typ__in=value) | Q(vedlejsi_typ__in=value)).distinct()
 
@@ -609,9 +609,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if not value:
             return queryset
@@ -621,9 +621,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(lokalizace_okolnosti__icontains=value)
@@ -637,9 +637,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování mezi projektovými a samostatnými akcemi.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value is None:
             return queryset.filter(~Q(typ=Akce.TYP_AKCE_PROJEKTOVA))
@@ -652,9 +652,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování podle toho či akce má pozitivní DJ.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if "True" not in value and "False" not in value:
             return queryset
@@ -673,9 +673,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování podle popisných údajů ADB.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(archeologicky_zaznam__dokumentacni_jednotky_akce__adb__uzivatelske_oznaceni_sondy__icontains=value)
@@ -689,9 +689,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování podle autorů revize a popisu ADB.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if not value:
             return queryset
@@ -704,9 +704,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování podle roku revize a popisu ADB.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             if value.start is not None and value.stop is not None:
@@ -732,9 +732,9 @@ class AkceFilter(ArchZaznamFilter):
         """
         Filtruje by z range.
 
-        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             if name == "vb_niveleta_od":
@@ -747,7 +747,7 @@ class AkceFilter(ArchZaznamFilter):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
         """
         logger.debug("arch_z.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -810,7 +810,7 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("arch_z.filters.AkceFilterFormHelper.djPian.divider.label")

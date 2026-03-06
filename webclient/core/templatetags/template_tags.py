@@ -23,7 +23,7 @@ def get_message(message):
     """
     Vrátí bezpečně escapovaný text konstanty podle jejího názvu.
 
-    :param message: Popis parametru ``message``.
+    :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
     """
     return mark_safe("'%s'" % str(getattr(mc, message, "Message constant not found")))
 
@@ -35,9 +35,9 @@ class QuerystringNodeMulti(Node):
         """
         Inicializuje instanci třídy.
 
-        :param updates: Vstupní hodnota ``updates`` pro danou operaci.
-        :param removals: Vstupní hodnota ``removals`` pro danou operaci.
-        :param asvar: Vstupní hodnota ``asvar`` pro danou operaci.
+        :param updates: Časový údaj ``updates`` použitý při filtrování nebo výpočtu.
+        :param removals: Kolekce nebo datová struktura `removals` zpracovávaná touto funkcí.
+        :param asvar: Číselná nebo geometrická hodnota `asvar` použitá při výpočtu nebo transformaci.
         """
         super().__init__()
         self.updates = updates
@@ -48,7 +48,7 @@ class QuerystringNodeMulti(Node):
         """
         Vyrenderuje hodnotu. v aplikaci.
 
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         """
         if "request" not in context:
             raise ImproperlyConfigured(context_processor_error_msg % "querystring")
@@ -93,8 +93,8 @@ def querystring_multi(parser, token):
     """
     Provádí operaci querystring multi.
 
-    :param parser: Vstupní hodnota ``parser`` pro danou operaci.
-    :param token: Vstupní hodnota ``token`` pro danou operaci.
+    :param parser: Typová nebo konfigurační hodnota `parser` určující cílovou logiku.
+    :param token: Textový nebo strukturální vstup `token` používaný při sestavení nebo zpracování obsahu.
     """
     bits = token.split_contents()
     tag = bits.pop(0)
@@ -145,7 +145,7 @@ def get_settings(item_group, item_id):
     """
     Vrací settings. v aplikaci.
 
-    :param item_group: Vstupní hodnota ``item_group`` pro danou operaci.
+    :param item_group: Doménový objekt `item_group`, se kterým funkce pracuje.
     :param item_id: Identifikátor objektu ``item``.
     """
     settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
@@ -160,7 +160,7 @@ def message_top(forloop_counter):
     """
     Vypočítá vertikální offset pro vykreslení systémových zpráv.
 
-    :param forloop_counter: Popis parametru ``forloop_counter``.
+    :param forloop_counter: Číselná nebo geometrická hodnota `forloop_counter` použitá při výpočtu nebo transformaci.
     """
     # 65 px je výška jedné zprávy včetně okrajů.
     return forloop_counter * 65 + 15

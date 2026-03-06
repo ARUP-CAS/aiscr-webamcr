@@ -16,7 +16,7 @@ Třídy
 
       Vyrenderuje uzivatel custom.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
 
 
 .. py:class:: SimpleHistoryTable
@@ -34,19 +34,19 @@ Třídy
 
       Vyrenderuje uzivatel. v aplikaci.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
 
    .. py:method:: render_url()
 
       Vyrenderuje url. v aplikaci.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param record: Záznam, který funkce čte nebo upravuje.
 
    .. py:method:: value_url()
 
       Provádí operaci value url.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param record: Záznam, který funkce čte nebo upravuje.
 

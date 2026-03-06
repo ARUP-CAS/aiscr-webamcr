@@ -10,13 +10,13 @@ Funkce
 
    Automatický import stavov projektú do kontextu všech template.
 
-   :param request: Hodnota parametru ``request`` použitého touto operací.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: digi_links_from_settings(request)
 
    Automatický import linkov na digitálni archiv zo settings do kontextov všech template.
 
-   :param request: Hodnota parametru ``request`` použitého touto operací.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: logout_next_url(request)
 
@@ -28,7 +28,7 @@ Funkce
 
    Automatický výpočet a import kontextu potrebného pro správně zobrzazení automatického logoutu na všech stránkach.
 
-   :param request: Hodnota parametru ``request`` použitého touto operací.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: main_shows(request)
 

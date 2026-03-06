@@ -23,8 +23,8 @@ Třídy
 
       Provádí operaci instance geom wkt.
 
-      :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: run_loaded_validation()
 
@@ -38,6 +38,6 @@ Třídy
 
       Metoda pro validaci PIAN pomocí funkce v postgres databázi.
 
-      :param geom: Popis parametru ``geom``.
-      :param epsg: Popis parametru ``epsg``.
+      :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
+      :param epsg: Číselná nebo geometrická hodnota `epsg` použitá při výpočtu nebo transformaci.
 

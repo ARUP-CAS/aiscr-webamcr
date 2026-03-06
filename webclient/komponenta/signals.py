@@ -17,8 +17,8 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
     """
     Provádí operaci komponenta save.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("komponenta.signals.komponenta_save.start", extra={"pk": instance.pk})
@@ -57,8 +57,8 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
     """
     Provádí operaci komponenta delete.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("komponenta.signals.komponenta_delete.start", extra={"pk": instance.pk})
@@ -73,9 +73,9 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
 
         def save_metadata():
             """
-            Uloží metadata.
+                       Uloží metadata.
 
-            :return: Vrací výsledek provedené operace.
+            Výsledek provedené změny nad cílovým objektem.
             """
             if isinstance(navazany_objekt, DokumentCast):
                 navazany_objekt.dokument.save_metadata(fedora_transaction, skip_container_check=True)

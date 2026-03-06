@@ -12,8 +12,8 @@ def soubor_update_metadata(sender, instance: Historie, **kwargs):
     """
     Provádí operaci soubor update metadata.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("historie.signals.soubor_update_metadata.start")

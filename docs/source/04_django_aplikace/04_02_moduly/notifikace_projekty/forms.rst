@@ -30,7 +30,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param pes_object_count: Vstupní hodnota ``pes_object_count`` pro danou operaci.
+      :param pes_object_count: Záznam/objekt ``pes_object_count``, který funkce čte, validuje nebo upravuje.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
@@ -57,5 +57,5 @@ Funkce
 
    Funkce která vrací formulář hlídacího psa pro formset.
 
-   :param not_readonly: Popis parametru ``not_readonly``.
-   :param model_typ: Popis parametru ``model_typ``.
+   :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+   :param model_typ: Název nebo typ ``model_typ`` používaný pro volbu cílové logiky.

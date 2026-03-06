@@ -10,22 +10,22 @@ Funkce
 
    Provádí operaci verify doi.
 
-   :param doi: Vstupní hodnota ``doi`` pro danou operaci.
+   :param doi: Textová hodnota `doi` používaná pro vyhledání, pojmenování nebo hlášení stavu.
 
 .. py:function:: verify_orcid(orcid)
 
    Provádí operaci verify orcid.
 
-   :param orcid: Vstupní hodnota ``orcid`` pro danou operaci.
+   :param orcid: Číselná nebo geometrická hodnota `orcid` použitá při výpočtu nebo transformaci.
 
 .. py:function:: verify_ror(ror)
 
    Provádí operaci verify ror.
 
-   :param ror: Vstupní hodnota ``ror`` pro danou operaci.
+   :param ror: Textová hodnota `ror` používaná pro vyhledání, pojmenování nebo hlášení stavu.
 
 .. py:function:: verify_wikidata(wikidata)
 
    Provádí operaci verify wikidata.
 
-   :param wikidata: Vstupní hodnota ``wikidata`` pro danou operaci.
+   :param wikidata: Kolekce ``wikidata`` zpracovávaná touto funkcí.

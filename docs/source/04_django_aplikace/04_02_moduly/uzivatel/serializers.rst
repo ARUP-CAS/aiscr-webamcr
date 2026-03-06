@@ -16,11 +16,11 @@ Třídy
 
       Metoda pro správně vrácení hodnot o osobe.
 
-      :param obj: Popis parametru ``obj``.
+      :param obj: Objekt, se kterým funkce pracuje.
 
    .. py:method:: to_representation()
 
       Override reprezentace do dict pro správně zobrazení label.
 
-      :param instance: Popis parametru ``instance``.
+      :param instance: Instance modelu, které se operace týká.
 

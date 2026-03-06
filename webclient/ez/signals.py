@@ -19,9 +19,9 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 
     Metoda se volá pred uložením záznamu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("ez.signals.create_ez_vazby.start", extra={"ident_cely": instance.ident_cely})
     if instance.pk is None:
@@ -42,8 +42,8 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
     """
     Provádí operaci externi zdroj save metadata.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
@@ -66,8 +66,8 @@ def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **
     """
     Odstraní externi zdroj repository container.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(

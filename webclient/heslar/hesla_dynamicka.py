@@ -12,7 +12,7 @@ def get_settings(item_group, item_id):
     """
     Vrací settings. v aplikaci.
 
-    :param item_group: Vstupní hodnota ``item_group`` pro danou operaci.
+    :param item_group: Doménový objekt `item_group`, se kterým funkce pracuje.
     :param item_id: Identifikátor objektu ``item``.
     """
     try:
@@ -28,10 +28,10 @@ def get_id_from_database(table, heslo, ident_cely, heslarDB) -> int:
     """
     Vrátí ID položky hesláře podle mapování nebo výchozího identifikátoru.
 
-    :param table: Popis parametru ``table``.
-    :param heslo: Popis parametru ``heslo``.
-    :param ident_cely: Popis parametru ``ident_cely``.
-    :param heslarDB: Popis parametru ``heslarDB``.
+    :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
+    :param heslo: Heslo ``heslo`` používané při vytváření nebo aktualizaci účtu.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param heslarDB: Číselná nebo geometrická hodnota `heslarDB` použitá při výpočtu nebo transformaci.
     :return: Vrací výsledek operace.
     """
     try:
@@ -53,10 +53,10 @@ def load_constants(model, constant_name, CONSTANTS, COMPOSITE_CONSTANTS={}):
     """
     Načte constants. v aplikaci.
 
-    :param model: Vstupní hodnota ``model`` pro danou operaci.
-    :param constant_name: Vstupní hodnota ``constant_name`` pro danou operaci.
-    :param CONSTANTS: Vstupní hodnota ``CONSTANTS`` pro danou operaci.
-    :param COMPOSITE_CONSTANTS: Vstupní hodnota ``COMPOSITE_CONSTANTS`` pro danou operaci.
+    :param model: Název nebo typ ``model`` používaný pro volbu cílové logiky.
+    :param constant_name: Textový název nebo klíč ``constant_name`` používaný v rámci operace.
+    :param CONSTANTS: Mapa základních konstant používaných při inicializaci hesláře.
+    :param COMPOSITE_CONSTANTS: Mapa složených konstant používaných při inicializaci hesláře.
     """
     heslarDB = get_settings("constants", constant_name)
     missing_keys = set(heslarDB.keys()) - set(CONSTANTS.keys())

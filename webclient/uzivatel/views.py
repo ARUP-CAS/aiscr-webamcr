@@ -80,7 +80,7 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         """
         Vrací result label.
 
-        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
         """
         return result.display_name(viewer=self.request.user)
 
@@ -111,8 +111,8 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         return qs
 
@@ -120,8 +120,8 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         """
         Provádí operaci add ownership lookup.
 
-        :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         return Q()
 
@@ -135,7 +135,7 @@ class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySe
         """
         Vrací result label.
 
-        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
         """
         return result.display_name()
 
@@ -153,7 +153,7 @@ def create_osoba(request):
     """
     Funkce pohledu pro vytvoření osoby.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     if request.method == "POST":
         form = OsobaForm(request.POST)
@@ -217,7 +217,7 @@ class UserRegistrationView(RegistrationView):
         """
         Odešle activation email.
 
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         try:
             super().send_activation_email(user)
@@ -270,7 +270,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         """
         Vrací object. v aplikaci.
 
-        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
         """
         user_pk = self.request.user.pk
         return User.objects.get(pk=user_pk)
@@ -297,11 +297,11 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def _change_password(self, request, request_data):
         """
-        Provádí operaci change password.
+               Provádí operaci change password.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param request_data: Vstupní hodnota ``request_data`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param request_data: Kolekce ``request_data`` zpracovávaná touto funkcí.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         form = UpdatePasswordSettings(request_data, instance=self.request.user, prefix="pass")
         if form.is_valid():
@@ -328,8 +328,8 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         """
         Provádí operaci invalid form context.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
-        :param form_tag: Vstupní hodnota ``form_tag`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form_tag: Záznam/objekt ``form_tag``, který funkce čte, validuje nebo upravuje.
         """
         self.object = None
         context = self.get_context_data()
@@ -394,7 +394,7 @@ def update_notifications(request):
     """
     Funkce pohledu pro editaci notifikací.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     from services.mailer import NOTIFICATION_GROUPS
 
@@ -424,12 +424,12 @@ class UserActivationView(ActivationView):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return super().dispatch(request, *args, **kwargs)
 
@@ -437,7 +437,7 @@ class UserActivationView(ActivationView):
         """
         Provádí operaci activate.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         username = form.cleaned_data["activation_key"]
         user = self.get_user(username)
@@ -474,12 +474,12 @@ class UserPasswordResetView(PasswordResetView):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return super().dispatch(request, *args, **kwargs)
 
@@ -492,12 +492,12 @@ class TokenAuthenticationBearer(TokenAuthentication):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
-        Provádí operaci dispatch.
+               Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-        :return: Vrací výsledek provedené operace.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param args: Dodatečné poziční argumenty předané voláním.
+               :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return super().dispatch(request, *args, **kwargs)
 
@@ -505,7 +505,7 @@ class TokenAuthenticationBearer(TokenAuthentication):
         """
         Provádí operaci authenticate credentials.
 
-        :param key: Vstupní hodnota ``key`` pro danou operaci.
+        :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
         """
         model = self.get_model()
         try:
@@ -533,9 +533,9 @@ class MyXMLRenderer(BaseRenderer):
         """
         Renders `data` into serialized XML.
 
-        :param data: Popis parametru ``data``.
-        :param accepted_media_type: Popis parametru ``accepted_media_type``.
-        :param renderer_context: Popis parametru ``renderer_context``.
+        :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+        :param accepted_media_type: Název nebo typ ``accepted_media_type`` používaný pro volbu cílové logiky.
+        :param renderer_context: Kolekce ``renderer_context`` zpracovávaná touto funkcí.
         """
         return data
 
@@ -558,7 +558,7 @@ class GetUserInfo(APIView):
         Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param format: Vstupní hodnota ``format`` pro danou operaci.
+        :param format: Záznam/objekt ``format``, který funkce čte, validuje nebo upravuje.
         """
         user = request.user
         return Response(user.metadata)
@@ -567,7 +567,7 @@ class GetUserInfo(APIView):
         """
         Zpracuje exception. v aplikaci.
 
-        :param exc: Vstupní hodnota ``exc`` pro danou operaci.
+        :param exc: Číselná hodnota ``exc`` použitá při výpočtu nebo transformaci.
         """
         self.is_exception = True
         return super().handle_exception(exc)
@@ -577,7 +577,7 @@ class GetUserInfo(APIView):
         Provádí operaci perform content negotiation.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param force: Vstupní hodnota ``force`` pro danou operaci.
+        :param force: Číselná nebo geometrická hodnota `force` použitá při výpočtu nebo transformaci.
         """
         try:
             self.is_exception
@@ -590,7 +590,7 @@ class GetUserInfo(APIView):
         Provádí operaci finalize response.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param response: Vstupní hodnota ``response`` pro danou operaci.
+        :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """

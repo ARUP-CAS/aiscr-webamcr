@@ -79,7 +79,7 @@ def reader_and_capture(pipe):
     """
     Provádí operaci reader and capture.
 
-    :param pipe: Vstupní hodnota ``pipe`` pro danou operaci.
+    :param pipe: Stream (pipe), ze kterého se průběžně čte výstup podprocesu.
     """
     while True:
         line = pipe.readline()
@@ -93,7 +93,7 @@ def filelog(pipe):
     """
     Provádí operaci filelog.
 
-    :param pipe: Vstupní hodnota ``pipe`` pro danou operaci.
+    :param pipe: Stream (pipe), ze kterého se průběžně čte výstup podprocesu.
     """
     with open("/vol/web/selenium_test/test.log", "a") as file:
         while True:

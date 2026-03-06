@@ -19,9 +19,9 @@ def create_pian_vazby(sender, instance, **kwargs):
 
     Metoda se volá pred uložením záznamu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("pian.signals.create_pian_vazby.start")
     if instance.pk is None:
@@ -39,9 +39,9 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
 
     Metoda se volá pred uložením záznamu.
 
-    :param sender: Popis parametru ``sender``.
-    :param instance: Popis parametru ``instance``.
-    :param kwargs: Popis parametru ``kwargs``.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("pian.signals.pian_save_metadata.start", extra={"instance": instance.ident_cely})
     if not instance.suppress_signal:
@@ -71,8 +71,8 @@ def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, *
     """
     Provádí operaci samostatny nalez okres delete repository container.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(

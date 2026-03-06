@@ -59,7 +59,7 @@ class LokalitaIndexView(LoginRequiredMixin, TemplateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         context = {
             "toolbar_name": _("ez.views.lokalitaIndexView.toolbarName"),
@@ -101,7 +101,7 @@ class LokalitaListView(SearchListView):
         """
         Provádí operaci rename field for ordering.
 
-        :param field: Vstupní hodnota ``field`` pro danou operaci.
+        :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
         """
         field = field.replace("-", "")
         return {
@@ -185,7 +185,7 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         """
         Metoda pro získaní contextu akci pro template.
 
-        :param kwargs: Popis parametru ``kwargs``.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
@@ -244,7 +244,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci form valid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         logger.debug("lokalita.views.LokalitaCreateView.form_valid.start")
         form_az = CreateArchZForm(self.request.POST)
@@ -283,7 +283,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci form invalid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         logger.debug("main form is invalid")
@@ -353,7 +353,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form valid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         logger.debug("Lokalita.EditForm is valid")
         form_az = CreateArchZForm(self.request.POST, instance=self.object.archeologicky_zaznam)
@@ -376,7 +376,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form invalid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("main form is invalid")
@@ -708,16 +708,9 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu lokality.
 
-    Args:
-    zaznam (Lokalita): model Lokalita pro který se dané pole počítají.
-
-    next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-    Returns:
-    required_fields: list polí.
-
-    :param zaznam: Popis parametru ``zaznam``.
-    :param next: Popis parametru ``next``.
+    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+    :return: Seznam názvů polí, která mají být v daném stavu povinná.
     """
     required_fields = []
     if zaznam:

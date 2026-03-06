@@ -35,8 +35,8 @@ def zapsat(request, dj_ident_cely):
     Pred uložením do DB se vytvoří relace na DB, nový ident celý je vygenerovaný a sm5 je přidané.
     Po úspešném uložení je uživatel presměrován na pohled detailu DJ.
 
-    :param request: Popis parametru ``request``.
-    :param dj_ident_cely: Popis parametru ``dj_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param dj_ident_cely: Identifikátor ``dj_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     logger.debug("adb.views.zapsat.start", extra={"ident_cely": dj_ident_cely})
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
@@ -81,8 +81,8 @@ def smazat(request, ident_cely):
 
     Po úspešném smazání je uživatel presměrován na pohled detailu DJ.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     adb = get_object_or_404(Adb, ident_cely=ident_cely)
     if request.method == "POST":
@@ -122,8 +122,8 @@ def smazat_vb(request, ident_cely):
 
     Po úspešném smazání je uživatel presměrován na next_url z requestu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     vyskovy_bod = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
     vyskovy_bod: VyskovyBod

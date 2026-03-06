@@ -18,11 +18,11 @@ class ExpertniListCreator(DocumentCreator):
     @staticmethod
     def _utf16_decimals(char, chunk_size=2):
         """
-        Provádí operaci utf16 decimals.
+               Provádí operaci utf16 decimals.
 
-        :param char: Vstupní hodnota ``char`` pro danou operaci.
-        :param chunk_size: Vstupní hodnota ``chunk_size`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param char: Číselná nebo geometrická hodnota `char` použitá při výpočtu nebo transformaci.
+               :param chunk_size: Číselná nebo geometrická hodnota `chunk_size` použitá při výpočtu nebo transformaci.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         encoded_char = char.encode("utf-16-be")
         # Převede každých `chunk_size` bajtů na celé číslo.
@@ -37,10 +37,10 @@ class ExpertniListCreator(DocumentCreator):
     @staticmethod
     def _convert_text(text):
         """
-        Převede text.
+               Převede text.
 
-        :param text: Vstupní hodnota ``text`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param text: Číselná hodnota ``text`` použitá při výpočtu nebo transformaci.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if text is None or len(str(text)) == 0:
             return ""
@@ -51,10 +51,10 @@ class ExpertniListCreator(DocumentCreator):
     @staticmethod
     def _format_akce_str(akce):
         """
-        Provádí operaci format akce str.
+               Provádí operaci format akce str.
 
-        :param akce: Vstupní hodnota ``akce`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param akce: Doménový objekt `akce`, se kterým funkce pracuje.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if akce.hlavni_typ is not None and akce.vedlejsi_typ is not None:
             return f"{akce.hlavni_typ}; {akce.vedlejsi_typ}"
@@ -65,10 +65,10 @@ class ExpertniListCreator(DocumentCreator):
     @classmethod
     def _format_akce(cls, akce_all):
         """
-        Provádí operaci format akce.
+               Provádí operaci format akce.
 
-        :param akce_all: Vstupní hodnota ``akce_all`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param akce_all: Doménový objekt `akce_all`, se kterým funkce pracuje.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if akce_all.count() > 0:
             akce_list = [cls._format_akce_str(akce) for akce in akce_all if akce.hlavni_typ is not None]
@@ -80,7 +80,7 @@ class ExpertniListCreator(DocumentCreator):
         """
         Vrací vysledek text.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if self.popup_parametry["vysledek"] == "pozitivni":
             text = """Potvrzujeme, že došlo ke splnění oznamovací povinnosti a bylo umožněno provést na dotčeném \n\
@@ -101,7 +101,7 @@ class ExpertniListCreator(DocumentCreator):
         """
         Vrací typ vyzkumu text.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         from projekt.forms import TYP_VYZKUMU_CHOICES
 
@@ -111,7 +111,7 @@ class ExpertniListCreator(DocumentCreator):
         """
         Vygeneruje text.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         result = StyleSheet()
         normal_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22))
@@ -314,10 +314,10 @@ class ExpertniListCreator(DocumentCreator):
     @staticmethod
     def _open_file(name):
         """
-        Provádí operaci open file.
+               Provádí operaci open file.
 
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param name: Název nebo identifikátor používaný v rámci operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         return open(name, "w")
 
@@ -325,7 +325,7 @@ class ExpertniListCreator(DocumentCreator):
         """
         Sestaví document. v aplikaci.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         self._generate_text()
         output = io.StringIO()
@@ -339,8 +339,8 @@ class ExpertniListCreator(DocumentCreator):
         """
         Inicializuje instanci třídy.
 
-        :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
-        :param popup_parametry: Vstupní hodnota ``popup_parametry`` pro danou operaci.
+        :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+        :param popup_parametry: Číselná hodnota ``popup_parametry`` použitá při výpočtu nebo transformaci.
         """
         from projekt.models import Projekt
 

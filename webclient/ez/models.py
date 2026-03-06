@@ -98,9 +98,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         if self.ident_cely:
             return self.ident_cely
@@ -111,7 +111,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         """
         Metoda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = EZ_STAV_ODESLANY
         historie_poznamka = self.check_set_permanent_ident()
@@ -128,9 +128,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         """
         Metoda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
 
-        :param user: Popis parametru ``user``.
-        :param new_state: Popis parametru ``new_state``.
-        :param poznamka: Popis parametru ``poznamka``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+        :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
         """
         self.stav = new_state
         Historie(
@@ -147,7 +147,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
         Pokud je ident dočasný nahrazení identem stálým.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
 
         self.stav = EZ_STAV_POTVRZENY
@@ -177,7 +177,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         """
         Metoda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = EZ_STAV_ZAPSANY
         Historie(

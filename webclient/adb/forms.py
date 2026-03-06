@@ -21,7 +21,7 @@ class AdbReadOnlyTextInput(forms.TextInput):
         """
         Provádí operaci format value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value:
             osoba_query = Osoba.objects.filter(pk=value)
@@ -111,8 +111,10 @@ class CreateADBForm(forms.ModelForm):
     def __init__(self, *args, readonly=False, **kwargs):
         """
         Init metoda pro vytvoření formuláře.
-        Args:
-        readonly (boolean): nastavuje formulář na readonly.
+
+        :param args: Dodatečné poziční argumenty předané konstruktoru formuláře.
+        :param readonly: Pokud ``True``, formulář se vykreslí jen pro čtení.
+        :param kwargs: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
         """
         super(CreateADBForm, self).__init__(*args, **kwargs)
         self.fields["uzivatelske_oznaceni_sondy"].required = False
@@ -212,7 +214,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
     :param pian: objekt PIAN.
     :param niveleta: niveleta objekt.
     :param not_readonly: nastavuje formulář na readonly.
-    
+
     :return: django model formulář VB.
     """
 
@@ -270,11 +272,8 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         def _has_initial_values(self):
             """
             Metoda, která vrací, zda má formulář vyplněné initial hodnoty.
-            Args:
-            pian (pian): objekt PIAN.
-            niveleta (niveleta): niveleta objekt
-            Returns:
-            has_initial_values: boolean, zda formulář má initial hodnotu, nebo ne.
+
+            :return: ``True``, pokud data odpovídají pouze implicitně předvyplněným hodnotám.
             """
             cleaned_data = self.cleaned_data
             has_initial_values = False
@@ -316,7 +315,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             """
             Metoda, která ukládá formulář do modelu; je zde zakomponována metoda na vyplnění initial hodnoty.
 
-            :param commit: Popis parametru ``commit``.
+            :param commit: Pokud ``True``, změny se uloží do databáze.
             """
             if self._has_initial_values():
                 return None
@@ -325,8 +324,9 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         def __init__(self, *args, **kwargs):
             """
             Init metoda pro vytvoření formuláře.
-            Args:
-            not_readonly (boolean): nastavuje formulář na readonly.
+
+            :param args: Dodatečné poziční argumenty předané konstruktoru formuláře.
+            :param kwargs: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
             """
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
             self.fields["ident_cely"].required = False

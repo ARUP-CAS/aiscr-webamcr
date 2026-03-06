@@ -16,5 +16,5 @@ Třídy
 
       Filtruje hodnotu. v aplikaci.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
 

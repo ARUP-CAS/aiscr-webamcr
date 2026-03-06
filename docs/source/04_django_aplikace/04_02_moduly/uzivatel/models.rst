@@ -23,7 +23,7 @@ Třídy
 
       Provádí operaci hlavni role.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: user_str()
 
@@ -37,13 +37,13 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: display_name()
 
       Textová reprezentace uživatele pro tabulky a autocomplete pole.
 
-      :param viewer: Hodnota parametru ``viewer`` použitého touto operací.
+      :param viewer: Uživatel nebo osoba ``viewer``, v jejímž kontextu se operace provádí.
 
    .. py:method:: moje_spolupracujici_organizace()
 
@@ -87,16 +87,16 @@ Třídy
 
       Uloží metadata uživatele do Fedora repozitáře a případně uzavře transakci.
 
-      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-      :param close_transaction: Vstupní hodnota ``close_transaction`` pro danou operaci.
+      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+      :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: record_deletion()
 
       Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby.
 
-      :param fedora_transaction: Hodnota parametru ``fedora_transaction`` použitého touto operací.
-      :param close_transaction: Hodnota parametru ``close_transaction`` použitého touto operací.
+      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+      :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: can_see_users_details()
 
@@ -149,7 +149,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_nazev()
 
@@ -173,7 +173,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
 
 .. py:class:: UserNotificationType
@@ -186,25 +186,25 @@ Třídy
 
       Vrací settings dict.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: zasilat_neaktivnim()
 
       Provádí operaci zasilat neaktivnim.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: predmet()
 
       Provádí operaci predmet.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: cesta_sablony()
 
       Provádí operaci cesta sablony.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: is_groups()
 
@@ -216,7 +216,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
 
 .. py:class:: NotificationsLog

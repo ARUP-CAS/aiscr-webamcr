@@ -29,33 +29,33 @@ Třídy
 
       Metoda pro filtrování podle názvu hlavního a dalších katastrů.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filtr_katastr_kraj()
 
       Metoda pro filtrování podle názvu okresu hlavního a dalších katastrů.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filtr_katastr_okres()
 
       Metoda pro filtrování podle názvu kraje hlavního a dalších katastrů.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_popisne_udaje()
 
       Metoda pro filtrování podle popisních údajů.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: ProjektFilter
@@ -68,127 +68,127 @@ Třídy
 
       Filtruje queryset. v aplikaci.
 
-      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: filter_planovane_zahajeni()
 
       Metoda pro filtrování podle plánovaného zahájení.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_popisne_udaje_akce()
 
       Metoda pro filtrování podle popisních údajů akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_has_positive_find()
 
       Metoda pro filtrování podle pozitivního nálezu akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_by_oblast()
 
       Metoda pro filtrování podle oblasti projektu.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_announced_after()
 
       Metoda pro filtrování podle datumu oznámení od.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_announced_before()
 
       Metoda pro filtrování podle datumu oznámení do.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_approved_after()
 
       Metoda pro filtrování podle datumu schválení od.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_approved_before()
 
       Metoda pro filtrování podle datumu schválení do.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_akce_typ()
 
       Metoda pro filtrování podle typu akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filtr_akce_katastr()
 
       Metoda pro filtrování podle katastru akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filtr_akce_katastr_kraj()
 
       Metoda pro filtrování podle kraje katastru akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filtr_akce_katastr_okres()
 
       Metoda pro filtrování podle okresu katastru akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filtr_akce_vedouci()
 
       Metoda pro filtrování podle vedoucího akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filtr_akce_organizace()
 
       Metoda pro filtrování podle organizace akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filtr_dokumenty_ident()
 
       Metoda pro filtrování podle identu dokumentu.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: __init__()
 
@@ -208,5 +208,5 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 

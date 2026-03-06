@@ -44,9 +44,9 @@ Funkce
 
    Provádí operaci add section data.
 
-   :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-   :param section: Vstupní hodnota ``section`` pro danou operaci.
-   :param fields: Vstupní hodnota ``fields`` pro danou operaci.
-   :param sections_data: Vstupní hodnota ``sections_data`` pro danou operaci.
-   :param iterator: Vstupní hodnota ``iterator`` pro danou operaci.
-   :param user: Vstupní hodnota ``user`` pro danou operaci.
+   :param instance: Instance modelu, které se operace týká.
+   :param section: Doménový objekt `section`, se kterým funkce pracuje.
+   :param fields: Záznam/objekt ``fields``, který funkce čte, validuje nebo upravuje.
+   :param sections_data: Kolekce ``sections_data`` zpracovávaná touto funkcí.
+   :param iterator: Číselná nebo geometrická hodnota `iterator` použitá při výpočtu nebo transformaci.
+   :param user: Uživatel, v jehož kontextu se operace provádí.

@@ -25,23 +25,11 @@ def save_single_file_from_storage_impl(
     Tato funkce načte soubor z lokálního úložiště, provede kontroly (MIME type, antivirus),
     a uloží jej do Fedora repozitáře včetně aktualizace metadat v databázi.
 
-    Args:
-        record: Instance modelu Soubor nebo jeho primární klíč
-        storage_path: Cesta k adresáři se soubory
-        save_thumbs: Zda generovat náhledy pro obrazové soubory
-        disable_antivirus: Zda přeskočit antivirovou kontrolu
-
-    Raises:
-        core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje
-
-    Příklad:
-        >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
-        >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
-
-    :param record_par: Hodnota parametru ``record_par`` použitého touto operací.
-    :param storage_path: Hodnota parametru ``storage_path`` použitého touto operací.
-    :param save_thumbs: Hodnota parametru ``save_thumbs`` použitého touto operací.
-    :param disable_antivirus: Hodnota parametru ``disable_antivirus`` použitého touto operací.
+    :param record_par: Záznam/objekt ``record_par``, který funkce čte, validuje nebo upravuje.
+    :param storage_path: Cesta, URL nebo název zdroje ``storage_path``, ze kterého funkce čte nebo kam zapisuje.
+    :param save_thumbs: Příznak ``save_thumbs`` určující průběh nebo rozsah zpracování.
+    :param disable_antivirus: Číselná nebo geometrická hodnota `disable_antivirus` použitá při výpočtu nebo transformaci.
+        :raises core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje.
     """
     from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
     from xml_generator.models import ModelWithMetadata
@@ -64,8 +52,8 @@ def save_single_file_from_storage_impl(
         """
         Najde soubor v adresáři podle čísla v názvu.
 
-        :param directory: Popis parametru ``directory``.
-        :param number: Popis parametru ``number``.
+        :param directory: Cílový adresář, ve kterém se hledá soubor.
+        :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
         """
         for inner_file in os.listdir(directory):
             filename, _ = os.path.splitext(inner_file)

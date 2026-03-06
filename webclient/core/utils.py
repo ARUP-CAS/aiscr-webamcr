@@ -41,7 +41,7 @@ def file_validate_epsg(epsg):
     """
     Provádí operaci file validate epsg.
 
-    :param epsg: Vstupní hodnota ``epsg`` pro danou operaci.
+    :param epsg: Číselná nebo geometrická hodnota `epsg` použitá při výpočtu nebo transformaci.
     """
     if epsg == "4326":
         return True
@@ -55,7 +55,7 @@ def balanced_parentheses(expression):
     """
     Provádí operaci balanced parentheses.
 
-    :param expression: Vstupní hodnota ``expression`` pro danou operaci.
+    :param expression: Číselná hodnota ``expression`` použitá při výpočtu nebo transformaci.
     """
     stack = 0
     for char in expression:
@@ -89,7 +89,7 @@ def validate_and_split_geometry(geom):
     """
     Funkce pro validaci řetězce s WKT geometrií.
 
-    :param geom: Popis parametru ``geom``.
+    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
     """
 
     new_rows = []
@@ -180,7 +180,7 @@ def get_mime_type(file_name):
     """
     Funkce pro získaní mime typu pro soubor.
 
-    :param file_name: Popis parametru ``file_name``.
+    :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
     """
     mime_type = mimetypes.guess_type(file_name)[0]
     # Podle RFC 4180 je MIME typ CSV `text/csv`.
@@ -193,7 +193,7 @@ def get_cadastre_from_point(point):
     """
     Funkce pro získaní katastru z bodu geomu.
 
-    :param point: Popis parametru ``point``.
+    :param point: Doménový objekt `point`, se kterým funkce pracuje.
     """
     query = (
         "select id, nazev from public.ruian_katastr where "
@@ -215,7 +215,7 @@ def get_cadastre_from_point_with_geometry(point):
     """
     Funkce pro získaní katastru s geometrií z bodu geomu.
 
-    :param point: Popis parametru ``point``.
+    :param point: Doménový objekt `point`, se kterým funkce pracuje.
     """
     query = (
         "select id, nazev,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
@@ -242,7 +242,8 @@ def get_all_pians_with_akce(ident_cely):
     """
     Funkce pro získaní všech pianů s akci.
 
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     query = """
         (SELECT A.id,
@@ -310,8 +311,8 @@ def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
     """
     Funkce pro update katastru u akce podle katastrálního území.
 
-    :param ident_cely: Popis parametru ``ident_cely``.
-    :param katastr: Popis parametru ``katastr``.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
     """
     akce_ident_cely = ident_cely.split("-D")[0]
 
@@ -328,8 +329,8 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
     """
     Funkce pro update katastru u akce a lokalit.
 
-    :param dj: Popis parametru ``dj``.
-    :param fedora_transaction: Popis parametru ``fedora_transaction``.
+    :param dj: Doménový objekt `dj`, se kterým funkce pracuje.
+    :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:
@@ -358,8 +359,8 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
 
-    :param katastr: Popis parametru ``katastr``.
-    :param akce_ident_cely: Popis parametru ``akce_ident_cely``.
+    :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
+    :param akce_ident_cely: Identifikátor ``akce_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "ident_cely": akce_ident_cely})
     query = (
@@ -431,9 +432,9 @@ def get_dj_pians_centroid(ident_cely, lat, lng):
     """
     Funkce pro získaní pianů s DJ podle ident_cely DJ a souradnic.
 
-    :param ident_cely: Popis parametru ``ident_cely``.
-    :param lat: Popis parametru ``lat``.
-    :param lng: Popis parametru ``lng``.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param lat: Číselná nebo geometrická hodnota `lat` použitá při výpočtu nebo transformaci.
+    :param lng: Číselná nebo geometrická hodnota `lng` použitá při výpočtu nebo transformaci.
     """
     query = (
         "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj from public.pian pian "
@@ -454,10 +455,10 @@ def get_num_pians_from_envelope(left, bottom, right, top):
     """
     Funkce pro získaní počtu pianů ze čtverce.
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
     """
     query = "select count(*) from public.pian pian where " "pian.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
     try:
@@ -477,11 +478,12 @@ def get_dj_pians_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pianů ze čtverce.
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     query = (
         "select pian.id,pian.ident_cely,"
@@ -515,7 +517,8 @@ def get_project_geom(ident_cely):
 
     Bez pristupnosti
 
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     from django.db.models import Q
     from projekt.models import Projekt
@@ -536,12 +539,12 @@ def get_num_projects_from_envelope(left, bottom, right, top, stavy, request):
 
     Bez pristupnosti
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param stavy: Popis parametru ``stavy``.
-    :param request: Popis parametru ``request``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param stavy: Číselná hodnota ``stavy`` použitá při výpočtu nebo transformaci.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -572,12 +575,12 @@ def get_projects_from_envelope(left, bottom, right, top, stavy, request):
 
     Bez pristupnosti
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param stavy: Popis parametru ``stavy``.
-    :param request: Popis parametru ``request``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param stavy: Číselná hodnota ``stavy`` použitá při výpočtu nebo transformaci.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -610,11 +613,12 @@ def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pas projekt ze čtverce.
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     from django.db.models import Q
     from pas.models import SamostatnyNalez
@@ -639,11 +643,12 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
 
     Funkce pro získaní pianů projektu ze čtverce.
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     from arch_z.models import Akce
     from dj.models import DokumentacniJednotka
@@ -681,11 +686,11 @@ def get_3d_from_envelope(left, bottom, right, top, request):
     Funkce pro získaní 3d ze čtverce.
     Bez pristupnosti
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param request: Popis parametru ``request``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     from core.views import PermissionFilterMixin
     from django.contrib.gis.geos import Polygon
@@ -716,11 +721,11 @@ def get_num_pass_from_envelope(left, bottom, right, top, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pas]
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param request: Popis parametru ``request``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     from core.models import Permissions as p
     from core.views import PermissionFilterMixin
@@ -752,8 +757,8 @@ def get_pas_from_envelope(bounds, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pas]
 
-    :param bounds: Popis parametru ``bounds``.
-    :param request: Popis parametru ``request``.
+    :param bounds: Doménový objekt `bounds`, se kterým funkce pracuje.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     from core.models import Permissions as p
     from core.views import PermissionFilterMixin
@@ -793,9 +798,9 @@ def get_pian_from_envelope(bounds, zoom, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pian]
 
-    :param bounds: Popis parametru ``bounds``.
-    :param zoom: Popis parametru ``zoom``.
-    :param request: Popis parametru ``request``.
+    :param bounds: Doménový objekt `bounds`, se kterým funkce pracuje.
+    :param zoom: Číselná nebo geometrická hodnota `zoom` použitá při výpočtu nebo transformaci.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
 
     from core.constants import PIAN_POTVRZEN, ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
@@ -846,8 +851,8 @@ def get_dj_akce_for_pian(pian_ident_cely, request):
     """
     Funkce pro pro ziskani dj/akce pro pian_ident_cely
 
-    :param pian_ident_cely: Popis parametru ``pian_ident_cely``.
-    :param request: Popis parametru ``request``.
+    :param pian_ident_cely: Identifikátor ``pian_ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     from core.views import PermissionFilterMixin
     from django.db.models import Q
@@ -876,7 +881,7 @@ def dictfetchall(cursor):
     """
     Return all rows from a cursor as a dict
 
-    :param cursor: Popis parametru ``cursor``.
+    :param cursor: Číselná nebo geometrická hodnota `cursor` použitá při výpočtu nebo transformaci.
     """
     columns = [col[0] for col in cursor.description]
     return [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -886,11 +891,11 @@ def get_heatmap_pian(left, bottom, right, top, zoom):
     """
     Funkce pro získaní heat mapy pianů ze čtverce.
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param zoom: Popis parametru ``zoom``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param zoom: Číselná nebo geometrická hodnota `zoom` použitá při výpočtu nebo transformaci.
     """
     query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pian_l2"
     query_zoom = (
@@ -917,11 +922,11 @@ def get_heatmap_pas(left, bottom, right, top, zoom):
     """
     Funkce pro získaní heat mapy pass ze čtverce.
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param zoom: Popis parametru ``zoom``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param zoom: Číselná nebo geometrická hodnota `zoom` použitá při výpočtu nebo transformaci.
     """
     query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pas_l2"
     query_zoom = (
@@ -948,11 +953,11 @@ def get_heatmap_project(left, bottom, right, top, zoom):
     """
     Funkce pro získaní heat mapy projektů ze čtverce.
 
-    :param left: Popis parametru ``left``.
-    :param bottom: Popis parametru ``bottom``.
-    :param right: Popis parametru ``right``.
-    :param top: Popis parametru ``top``.
-    :param zoom: Popis parametru ``zoom``.
+    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
+    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
+    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
+    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param zoom: Číselná nebo geometrická hodnota `zoom` použitá při výpočtu nebo transformaci.
     """
     query = "select count*30 as pocet, ST_AsGeoJSON(st_centroid) as geom_geojson from amcr_heat_projekt_l2"
     query_zoom = (
@@ -979,8 +984,8 @@ def get_message(az, message):
     """
     Funkce pro získaní textu správy podle záznamu.
 
-    :param az: Popis parametru ``az``.
-    :param message: Popis parametru ``message``.
+    :param az: Číselná nebo geometrická hodnota `az` použitá při výpočtu nebo transformaci.
+    :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
     """
     return str(
         getattr(
@@ -1010,8 +1015,8 @@ class SearchTable(ColumnShiftTableBootstrap4):
         """
         Metoda pro správně zobrazení náhledu souboru.
 
-        :param value: Popis parametru ``value``.
-        :param record: Popis parametru ``record``.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         from pas.models import SamostatnyNalez
 
@@ -1050,10 +1055,10 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
     language code
 
-    :param lang: Popis parametru ``lang``.
-    :param project_apps: Popis parametru ``project_apps``.
-    :param django_apps: Popis parametru ``django_apps``.
-    :param third_party_apps: Popis parametru ``third_party_apps``.
+    :param lang: Textová hodnota `lang` používaná pro vyhledání, pojmenování nebo hlášení stavu.
+    :param project_apps: Název nebo typ ``project_apps`` používaný pro volbu cílové logiky.
+    :param django_apps: Název nebo typ ``django_apps`` používaný pro volbu cílové logiky.
+    :param third_party_apps: Název nebo typ ``third_party_apps`` používaný pro volbu cílové logiky.
     """
 
     paths = []
@@ -1164,9 +1169,9 @@ def replace_last(source_string, old, new):
     """
     Provádí operaci replace last.
 
-    :param source_string: Vstupní hodnota ``source_string`` pro danou operaci.
-    :param old: Vstupní hodnota ``old`` pro danou operaci.
-    :param new: Vstupní hodnota ``new`` pro danou operaci.
+    :param source_string: Textový nebo strukturální vstup `source_string` používaný při sestavení nebo zpracování obsahu.
+    :param old: Číselná nebo geometrická hodnota `old` použitá při výpočtu nebo transformaci.
+    :param new: Nová hodnota porovnávaná nebo nastavovaná oproti původnímu stavu.
     """
     index = source_string.rfind(old)
     if index != -1:
@@ -1193,7 +1198,7 @@ class SessionIdentifier:
         Vygeneruje session key.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         if "session_uuid" not in request.session:
             request.session["session_uuid"] = str(uuid.uuid4())  # Vytvoří unikátní ID
@@ -1208,8 +1213,8 @@ class SessionIdentifier:
         """
         Nastaví ident. v aplikaci.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
         """
         old_ident_cely = self.get_ident()
         if old_ident_cely != ident_cely:
@@ -1224,8 +1229,8 @@ class SessionIdentifier:
         """
         Provádí operaci add file reference.
 
-        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
-        :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+        :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+        :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
         """
         files = cache.get(f"{self.cache_key}_files", set())
         files.add(ident)
@@ -1235,7 +1240,7 @@ class SessionIdentifier:
         """
         Provádí operaci file exists.
 
-        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+        :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
         """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
@@ -1246,7 +1251,7 @@ class SessionIdentifier:
         """
         Provádí operaci remove file reference.
 
-        :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+        :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
         """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
@@ -1262,8 +1267,8 @@ class SessionIdentifier:
         """
         Nastaví project ownership.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :param timeout: Vstupní hodnota ``timeout`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
         """
         from core.connectors import RedisConnector
 
@@ -1275,13 +1280,8 @@ class SessionIdentifier:
         """
         Ověří, zda anonymní uživatel vlastní daný projekt.
 
-        Args:
-        ident_cely: identifikátor projektu
-
-        Returns:
-        bool: True pokud uživatel vlastní projekt, jinak False
-
-        :param ident_cely: Popis parametru ``ident_cely``.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
         """
         from core.connectors import RedisConnector
 

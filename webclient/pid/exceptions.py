@@ -11,9 +11,9 @@ class DoiWriteError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param status_code: Vstupní hodnota ``status_code`` pro danou operaci.
-        :param response_text: Vstupní hodnota ``response_text`` pro danou operaci.
-        :param request_url: Vstupní hodnota ``request_url`` pro danou operaci.
+        :param status_code: Stavová nebo časová hodnota `status_code` používaná při rozhodování logiky.
+        :param response_text: Číselná hodnota ``response_text`` použitá při výpočtu nebo transformaci.
+        :param request_url: Cesta, URL nebo název zdroje ``request_url``, ze kterého funkce čte nebo kam zapisuje.
         """
         message = f"Request to {request_url} failed with status {status_code} and response: {response_text}."
         super().__init__(message)

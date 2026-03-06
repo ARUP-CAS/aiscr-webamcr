@@ -46,9 +46,9 @@ def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro editaci dokumentační jednotky a ADB.
 
-    :param request: Popis parametru ``request``.
-    :param typ_vazby: Popis parametru ``typ_vazby``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     logger.debug("dj.views.detail.start")
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
@@ -229,8 +229,8 @@ def zapsat(request, arch_z_ident_cely):
     """
     Funkce pohledu pro vytvoření dokumentační jednotky.
 
-    :param request: Popis parametru ``request``.
-    :param arch_z_ident_cely: Popis parametru ``arch_z_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     form = CreateDJForm(request.POST)
@@ -272,8 +272,8 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání dokumentační jednotky.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
@@ -323,7 +323,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Vrací zaznam. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(

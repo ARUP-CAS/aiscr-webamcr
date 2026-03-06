@@ -165,7 +165,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Provádí operaci initial pristupnost.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         self._initial_pristupnost = value
 
@@ -186,7 +186,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Metoda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = SN_ZAPSANY
         Historie(
@@ -200,9 +200,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Metoda pro vrácení o jeden stav méně a uložení změny do historie pro samostatný nález.
 
-        :param user: Popis parametru ``user``.
-        :param new_state: Popis parametru ``new_state``.
-        :param poznamka: Popis parametru ``poznamka``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+        :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
         """
         self.stav = new_state
         Historie(
@@ -217,7 +217,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Metoda pro nastavení stavu odeslaný a uložení změny do historie pro samostatný nález.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = SN_ODESLANY
         Historie(
@@ -231,7 +231,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Metoda pro nastavení stavu potvrzený a uložení změny do historie pro samostatný nález.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = SN_POTVRZENY
         Historie(
@@ -245,7 +245,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Metoda pro nastavení stavu archivovaný a uložení změny do historie pro samostatný nález.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = SN_ARCHIVOVANY
         Historie(
@@ -380,9 +380,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         if self.ident_cely:
             return self.ident_cely
@@ -428,7 +428,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Vrací igsn client.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         from pid.client import DigitalObjectIdentifierClient
 
@@ -443,7 +443,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Provádí operaci igsn delete.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         if self.igsn:
             return self._get_igsn_client().delete_record(check_status)
@@ -452,7 +452,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Provádí operaci igsn hide.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         if self.igsn:
             return self._get_igsn_client().hide_record(check_status)
@@ -461,7 +461,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Provádí operaci igsn publish.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         return self._get_igsn_client().publish_record(check_status)
 
@@ -469,8 +469,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         Provádí operaci igsn update.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+        :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
         """
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
@@ -532,7 +532,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         Metoda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = SPOLUPRACE_AKTIVNI
         Historie(
@@ -546,8 +546,8 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         Metoda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
 
-        :param user: Popis parametru ``user``.
-        :param duvod: Popis parametru ``duvod``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param duvod: Textový důvod prováděné operace.
         """
         self.stav = SPOLUPRACE_NEAKTIVNI
         Historie(
@@ -588,9 +588,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
 

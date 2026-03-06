@@ -24,7 +24,7 @@ class HistorieTable(ColumnShiftTableBootstrap4):
         """
         Vyrenderuje uzivatel custom.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         if not record.uzivatel:
             return ""
@@ -83,7 +83,7 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         """
         Vyrenderuje uzivatel. v aplikaci.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         uzivatel = User.objects.filter(ident_cely=record["uzivatel"]).first()
         if uzivatel is None:
@@ -94,8 +94,8 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         """
         Vyrenderuje url. v aplikaci.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         return format_html(
             '<a href="{}" class="btn-sm" target="_blank">'
@@ -108,8 +108,8 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         """
         Provádí operaci value url.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         return f"{settings.SITE_URL}{record['url']}"
 

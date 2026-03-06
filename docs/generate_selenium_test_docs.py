@@ -524,8 +524,8 @@ def _render(all_docs: List[TestDoc]) -> str:
 
         Zajišťuje dílčí aplikační logiku pro tento modul.
 
-        :param t: Vstupní hodnota používaná při zpracování.
-        :return: Výsledek odpovídající účelu volání.
+        :param t: Hodnota předaná callbacku pro převod nebo formátování.
+        :return: Výsledek odpovídající logice volání této funkce.
         """
         return (t.test_no is None, t.test_no if t.test_no is not None else 999999, t.summary.lower())
 

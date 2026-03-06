@@ -22,7 +22,7 @@ class PermissionMiddleware:
         """
         Inicializuje instanci třídy.
 
-        :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
         """
         self.get_response = get_response
 
@@ -39,10 +39,10 @@ class PermissionMiddleware:
         """
         Metoda pro kontrolu oprvávnení pro každý view.
 
-        :param request: Popis parametru ``request``.
-        :param view_func: Popis parametru ``view_func``.
-        :param view_args: Popis parametru ``view_args``.
-        :param view_kwargs: Popis parametru ``view_kwargs``.
+        :param request: Aktuální HTTP request předaný view/funkci.
+        :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+        :param view_args: Dodatečné argumenty předané voláním.
+        :param view_kwargs: Dodatečné argumenty předané voláním.
         """
         from core.models import Permissions
 
@@ -88,7 +88,7 @@ class ErrorMiddleware:
         """
         Inicializuje instanci třídy.
 
-        :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
         """
         self.get_response = get_response
 
@@ -106,7 +106,7 @@ class ErrorMiddleware:
         Provádí operaci process exception.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param exception: Vstupní hodnota ``exception`` pro danou operaci.
+        :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
         """
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
@@ -126,7 +126,7 @@ class StatusMessageMiddleware:
         """
         Inicializuje instanci třídy.
 
-        :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
         """
         self.get_response = get_response
         r = RedisConnector()
@@ -143,12 +143,12 @@ class StatusMessageMiddleware:
 
     def _show_message(self, value, request, redis_key):
         """
-        Provádí operaci show message.
+               Provádí operaci show message.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param redis_key: Vstupní hodnota ``redis_key`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param request: Django HTTP požadavek použitý při zpracování.
+               :param redis_key: Textový název nebo klíč ``redis_key`` používaný v rámci operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         value = int(value.decode("utf-8"))
         if value == FedoraTransactionResult.COMMITED.value:
@@ -180,9 +180,9 @@ class StatusMessageMiddleware:
         Provádí operaci process view.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
-        :param view_args: Vstupní hodnota ``view_args`` pro danou operaci.
-        :param view_kwargs: Vstupní hodnota ``view_kwargs`` pro danou operaci.
+        :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+        :param view_args: Dodatečné argumenty předané voláním.
+        :param view_kwargs: Dodatečné argumenty předané voláním.
         """
         regex_result = self.pattern.findall(request.path)
         for item in regex_result:

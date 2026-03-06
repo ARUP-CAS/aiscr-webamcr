@@ -38,10 +38,10 @@ Třídy
 
       Vytvoří Fedora transakci pro ADB záznam a vrátí ji volajícímu.
 
-      :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-      :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-      :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
-      :param main_record: Vstupní hodnota ``main_record`` pro danou operaci.
+      :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+      :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+      :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
+      :param main_record: Záznam/objekt ``main_record``, který funkce čte, validuje nebo upravuje.
 
 
 .. py:class:: VyskovyBod
@@ -56,16 +56,16 @@ Třídy
 
       Metoda na nastavení geomu (souřadnic).
 
-      :param northing: Hodnota parametru ``northing`` použitého touto operací.
-      :param easting: Hodnota parametru ``easting`` použitého touto operací.
-      :param niveleta: Hodnota parametru ``niveleta`` použitého touto operací.
+      :param northing: Číselná hodnota ``northing`` použitá při výpočtu nebo transformaci.
+      :param easting: Číselná hodnota ``easting`` použitá při výpočtu nebo transformaci.
+      :param niveleta: Výšková hodnota (Z) ukládaná do geometrie bodu.
 
    .. py:method:: save()
 
       Override save metody na nastavení ident celý pokud je prázdny.
 
-      :param args: Hodnota parametru ``args`` použitého touto operací.
-      :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: __init__()
 
@@ -94,12 +94,6 @@ Funkce
 
    Obsahuje test na přetečení hodnot.
 
-
-   **Argumenty:**
-
-   - ``adb`` (*adb*): adb objekt pro získaní základu identu.
-   - ``offset`` (*int*): offset k připočtení k poslednímu VB
-
-   **Návratová hodnota:**
-
-   *string*: nový ident celý
+   :param adb: Záznam/objekt ``adb``, který funkce čte, validuje nebo upravuje.
+   :param offset: Posun přičtený k poslednímu pořadí výškového bodu.
+   :return: Vrací vypočtený identifikátor výškového bodu.

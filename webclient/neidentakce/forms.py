@@ -81,7 +81,7 @@ class NeidentAkceForm(forms.ModelForm):
         Inicializuje instanci třídy.
 
         :param args: Dodatečné poziční argumenty předané voláním.
-        :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         super(NeidentAkceForm, self).__init__(*args, **kwargs)

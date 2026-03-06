@@ -19,8 +19,8 @@ def get_test_secret(setting, default_value=None):
     """
     Vrací test secret.
 
-    :param setting: Vstupní hodnota ``setting`` pro danou operaci.
-    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
+    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
     """
     file_test_path = (
         "/run/secrets/test_conf"

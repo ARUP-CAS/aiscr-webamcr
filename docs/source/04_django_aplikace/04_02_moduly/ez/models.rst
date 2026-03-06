@@ -20,21 +20,21 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: set_odeslany()
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: set_vraceny()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
 
-      :param user: Popis parametru ``user``.
-      :param new_state: Popis parametru ``new_state``.
-      :param poznamka: Popis parametru ``poznamka``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+      :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
 
    .. py:method:: set_potvrzeny()
 
@@ -42,13 +42,13 @@ Třídy
 
       Pokud je ident dočasný nahrazení identem stálým.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: set_zapsany()
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: get_permission_object()
 

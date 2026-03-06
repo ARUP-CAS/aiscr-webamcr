@@ -16,8 +16,8 @@ Třídy
 
       Provádí operaci process record.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param result: Vstupní hodnota ``result`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: get()
@@ -38,7 +38,7 @@ Třídy
 
       Provádí operaci process record.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param result: Vstupní hodnota ``result`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 

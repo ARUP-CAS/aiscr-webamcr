@@ -23,7 +23,7 @@ Třídy
 
       Provádí operaci navazany objekt.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: Soubor
@@ -48,8 +48,8 @@ Třídy
 
       Odstraní záznam objektu.
 
-      :param using: Vstupní hodnota ``using`` pro danou operaci.
-      :param keep_parents: Vstupní hodnota ``keep_parents`` pro danou operaci.
+      :param using: Alias databázového spojení použitý při operaci.
+      :param keep_parents: Číselná nebo geometrická hodnota `keep_parents` použitá při výpočtu nebo transformaci.
 
    .. py:method:: __init__()
 
@@ -62,7 +62,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: create_soubor_vazby()
 
@@ -76,97 +76,91 @@ Třídy
 
       Vrací repository content.
 
-      :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-      :param thumb_small: Vstupní hodnota ``thumb_small`` pro danou operaci.
-      :param thumb_large: Vstupní hodnota ``thumb_large`` pro danou operaci.
-      :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      :param thumb_small: Číselná nebo geometrická hodnota `thumb_small` použitá při výpočtu nebo transformaci.
+      :param thumb_large: Číselná nebo geometrická hodnota `thumb_large` použitá při výpočtu nebo transformaci.
+      :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: zaznamenej_nahrani()
 
       Metoda pro zapsáni vytvoření souboru do historie.
 
-      :param user: Popis parametru ``user``.
-      :param file_name: Popis parametru ``file_name``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
 
    .. py:method:: zaznamenej_nahrani_nove_verze()
 
       Metoda pro zapsáni nahrání nové verze souboru do historie.
 
-      :param user: Popis parametru ``user``.
-      :param nazev: Popis parametru ``nazev``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param nazev: Číselná nebo geometrická hodnota `nazev` použitá při výpočtu nebo transformaci.
 
    .. py:method:: get_file_extension_by_mime()
 
       Vrací file extension by mime.
 
-      :param file: Vstupní hodnota ``file`` pro danou operaci.
+      :param file: Soubor nebo cesta k souboru používaná při operaci.
 
    .. py:method:: get_thumb_icon()
 
       Vrací thumb icon.
 
-      :param file: Vstupní hodnota ``file`` pro danou operaci.
+      :param file: Soubor nebo cesta k souboru používaná při operaci.
 
    .. py:method:: get_mime_types()
 
       Vrací mime types.
 
-      :param file: Vstupní hodnota ``file`` pro danou operaci.
-      :param check_archive: Vstupní hodnota ``check_archive`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param file: Soubor nebo cesta k souboru používaná při operaci.
+      :param check_archive: Příznak ``check_archive`` určující průběh nebo rozsah zpracování.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: remove_gps_data()
 
       Provádí operaci remove gps data.
 
-      :param bytes_io: Vstupní hodnota ``bytes_io`` pro danou operaci.
+      :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
       :return: Vrací výsledek operace odstranění.
 
    .. py:method:: check_mime_for_url()
 
       Ověří mime for url.
 
-      :param file: Vstupní hodnota ``file`` pro danou operaci.
-      :param source_url: Vstupní hodnota ``source_url`` pro danou operaci.
+      :param file: Soubor nebo cesta k souboru používaná při operaci.
+      :param source_url: Cesta, URL nebo název zdroje ``source_url``, ze kterého funkce čte nebo kam zapisuje.
 
    .. py:method:: check_antivirus()
 
       Zkontroluje soubor na přítomnost virů pomocí ClamAV.
 
-
-      **Argumenty:**
-
-      - ``bytes_io``: souborový objekt ke skenování
-
-      **Návratová hodnota:**
-
-      *AntivirusCheckResult*: výsledek kontroly
+      :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
+      :return: Výsledek antivirové kontroly (`PASSES`, `VIRUS_FOUND`, `CHECK_FAILED` nebo `SKIPPED`).
 
    .. py:method:: _create_file_response()
 
       Vytvoří file response.
 
-      :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
-      :return: Vrací nově vytvořený výsledek operace.
+      :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: large_thumbnail()
 
       Provádí operaci large thumbnail.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: small_thumbnail()
 
       Provádí operaci small thumbnail.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: content_file_response()
 
       Provádí operaci content file response.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: getMock()
 
@@ -180,7 +174,7 @@ Třídy
 
       Metoda k získání vlastního souboru dané verze z Fedory
 
-      :param timestamp: Popis parametru ``timestamp``.
+      :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
       :return: Vrací výsledek operace.
 
 
@@ -203,7 +197,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
 
 .. py:class:: Permissions
@@ -216,9 +210,9 @@ Třídy
 
       Ověří concrete permission.
 
-      :param user: Vstupní hodnota ``user`` pro danou operaci.
-      :param ident: Vstupní hodnota ``ident`` pro danou operaci.
-      :param typ: Vstupní hodnota ``typ`` pro danou operaci.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+      :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
 
    .. py:method:: check_base()
 
@@ -232,7 +226,7 @@ Třídy
 
       Ověří ownership. v aplikaci.
 
-      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
+      :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
 
    .. py:method:: check_accessibility()
 
@@ -263,13 +257,13 @@ Funkce
 
    Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
 
-   :param instance: Popis parametru ``instance``.
-   :param filename: Popis parametru ``filename``.
+   :param instance: Instance modelu, které se operace týká.
+   :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
 
 .. py:function:: check_permissions(action, user, ident)
 
    Ověří permissions. v aplikaci.
 
-   :param action: Vstupní hodnota ``action`` pro danou operaci.
-   :param user: Vstupní hodnota ``user`` pro danou operaci.
-   :param ident: Vstupní hodnota ``ident`` pro danou operaci.
+   :param action: Identifikátor akce, která se má provést.
+   :param user: Uživatel, v jehož kontextu se operace provádí.
+   :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.

@@ -23,7 +23,7 @@ Třídy
 
       Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: AkceTable
@@ -36,8 +36,8 @@ Třídy
 
       Provádí operaci order vedouci organizace.
 
-      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
-      :param is_descending: Vstupní hodnota ``is_descending`` pro danou operaci.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param is_descending: Příznak ``is_descending`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: __init__()
 

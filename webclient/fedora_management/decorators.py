@@ -13,25 +13,25 @@ def handle_fedora_error(view_func=None, additional_exceptions=tuple()):
     """
     Zpracuje fedora error.
 
-    :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
-    :param additional_exceptions: Vstupní hodnota ``additional_exceptions`` pro danou operaci.
+    :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+    :param additional_exceptions: Číselná hodnota ``additional_exceptions`` použitá při výpočtu nebo transformaci.
     """
 
     def decorator(func):
         """
         Provádí operaci decorator.
 
-        :param func: Vstupní hodnota ``func`` pro danou operaci.
+        :param func: Funkce, která je obalena nebo volána wrapperem.
         """
 
         @wraps(func)
         def _wrapped(*args, **kwargs):
             """
-            Provádí operaci wrapped.
+                       Provádí operaci wrapped.
 
-            :param args: Dodatečné poziční argumenty předané voláním.
-            :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-            :return: Vrací výsledek provedené operace.
+                       :param args: Dodatečné poziční argumenty předané voláním.
+                       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+            :return: Výstup funkce odpovídající implementované logice.
             """
             try:
                 return func(*args, **kwargs)

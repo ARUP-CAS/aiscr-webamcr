@@ -16,15 +16,15 @@ Třídy
 
       Provádí operaci encode sha1 hash.
 
-      :param sha1_hash: Vstupní hodnota ``sha1_hash`` pro danou operaci.
-      :param salt: Vstupní hodnota ``salt`` pro danou operaci.
-      :param iterations: Vstupní hodnota ``iterations`` pro danou operaci.
+      :param sha1_hash: Číselná nebo geometrická hodnota `sha1_hash` použitá při výpočtu nebo transformaci.
+      :param salt: Parametr `salt` používaný při výpočtu hashe hesla.
+      :param iterations: Parametr `iterations` používaný při výpočtu hashe hesla.
 
    .. py:method:: encode()
 
       Provádí operaci encode.
 
-      :param password: Vstupní hodnota ``password`` pro danou operaci.
-      :param salt: Vstupní hodnota ``salt`` pro danou operaci.
-      :param iterations: Vstupní hodnota ``iterations`` pro danou operaci.
+      :param password: Heslo ``password`` používané při vytváření nebo aktualizaci účtu.
+      :param salt: Parametr `salt` používaný při výpočtu hashe hesla.
+      :param iterations: Parametr `iterations` používaný při výpočtu hashe hesla.
 

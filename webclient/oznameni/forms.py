@@ -26,7 +26,7 @@ class DateRangeField(forms.DateField):
         """
         Provádí operaci to python.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if isinstance(value, DateRange):
             return value
@@ -56,7 +56,7 @@ class DateRangeWidget(forms.TextInput):
         """
         Provádí operaci format value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value == "" or value is None:
             return None

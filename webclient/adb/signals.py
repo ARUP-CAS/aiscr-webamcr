@@ -15,9 +15,9 @@ def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     """
     Provádí operaci adb save metadata.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-    :param created: Vstupní hodnota ``created`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
+    :param created: Příznak, zda byla instance právě vytvořena.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(
@@ -45,8 +45,8 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
     """
     Provádí operaci vyskovy bod save metadata.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug(
@@ -72,8 +72,8 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     """
     Provádí operaci adb delete repository container.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
@@ -100,8 +100,8 @@ def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwar
     """
     Provádí operaci vyskovy bod delete repository container.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})

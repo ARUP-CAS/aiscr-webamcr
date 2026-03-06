@@ -179,20 +179,9 @@ Třídy
       Kontroluje, zda v systému již existuje soubor se stejným SHA-512 hashem.
       Pokud ano, přidá do response_data varovnou zprávu s informací o duplicitě
       včetně identifikátoru záznamu, ke kterému je duplicitní soubor připojen.
-
-
-      **Argumenty:**
-
-      - ``response_data`` (*dict*): Slovník s daty odpovědi, do kterého bude přidána zpráva
-      - ``duplikat`` (*QuerySet*): QuerySet s duplicitními soubory (Soubor objekty)
-
-      **Návratová hodnota:**
-
-      *dict*: Upravený response_data slovník s přidanou duplicitní zprávou.
-
-      **Klíče odpovědi:**
-
-      - ``duplicate`` (*tuple*): Tuple obsahující zprávu o duplicitě ve formátu:
+      :param response_data: Slovník s daty odpovědi, který se případně rozšíří o varování.
+      :param duplikat: QuerySet duplicitních souborů podle hashe.
+      :return: Upravený slovník odpovědi (beze změny, pokud duplicita není nalezena).
 
    .. py:method:: _append_rename_message()
 
@@ -200,31 +189,16 @@ Třídy
 
       Pokud byl soubor během uploadu přejmenován (typicky kvůli úpravě přípony
       pro soulad s MIME typem), přidá do response_data informační zprávu.
-
-
-      **Argumenty:**
-
-      - ``response_data`` (*dict*): Slovník s daty odpovědi, do kterého bude přidána zpráva
-      - ``renamed`` (*bool*): True pokud došlo k přejmenování, False jinak
-      - ``new_name`` (*str*): Nový název souboru po přejmenování
-
-      **Návratová hodnota:**
-
-      *dict*: Upravený response_data slovník s přidanou zprávou o přejmenování.
-
-      **Klíče odpovědi:**
-
-      - ``file_renamed`` (*tuple*): Tuple obsahující zprávu o přejmenování ve formátu:
+      :param response_data: Slovník s daty odpovědi, který se případně doplní o zprávu.
+      :param renamed: Příznak, zda během uploadu došlo k přejmenování souboru.
+      :param new_name: Nově přidělený název souboru.
+      :return: Upravený slovník odpovědi (beze změny, pokud k přejmenování nedošlo).
 
    .. py:method:: _unknown_error_response()
 
       Vrátí JSON odpověď s chybovou zprávou a HTTP status 500 pro neočekávané chyby
       při zpracování souboru, které nejsou pokryty specifickými error handlery.
-
-
-      **Návratová hodnota:**
-
-      *JsonResponse*: JSON odpověď s chybovou zprávou a HTTP status 500
+      :return: JSON odpověď s obecnou chybou a HTTP statusem 500.
 
 
 .. py:class:: NewFileUploadView
@@ -271,18 +245,11 @@ Třídy
       ověří konzistenci mezi typ_vazby a skutečným typem objektu, zkontroluje
       oprávnění uživatele k nahrání souboru a vygeneruje standardizovaný název
       souboru podle příslušných konvencí.
-
-
-      **Argumenty:**
-
-      - ``request`` (*HttpRequest*): HTTP request s informacemi o uživateli
-      - ``ident_cely`` (*str*): Úplný identifikátor záznamu (např. "C-202400001")
-      - ``filename`` (*str*): Původní název nahrávaného souboru
-      - ``typ_vazby`` (*str*): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
-
-      **Návratová hodnota:**
-
-      *tuple | JsonResponse*: Při úspěchu vrací tuple (objekt, new_name):
+      :param request: HTTP request s kontextem aktuálního uživatele.
+      :param ident_cely: Úplný identifikátor cílového záznamu.
+      :param filename: Původní název nahrávaného souboru.
+      :param typ_vazby: Typ vazby (``projekt``, ``dokument``, ``model3d`` nebo ``pas``).
+      :return: Při úspěchu dvojice ``(objekt, new_name)``, jinak ``JsonResponse`` s chybou.
 
 
 .. py:class:: UpdateExistingFileUploadView
@@ -326,18 +293,11 @@ Třídy
 
       Na základě typ_vazby ověří, zda je nahrazení souboru povoleno pro daný typ
       záznamu, a zkontroluje oprávnění uživatele pomocí check_permissions.
-
-
-      **Argumenty:**
-
-      - ``request`` (*HttpRequest*): HTTP request s informacemi o uživateli
-      - ``typ_vazby`` (*str*): Typ vazby - "dokument", "model3d", nebo "pas"
-      - ``ident_cely`` (*str*): Úplný identifikátor záznamu
-      - ``file_id`` (*int*): Primary key existujícího souboru
-
-      **Návratová hodnota:**
-
-      *bool | JsonResponse*: True pokud je vše v pořádku,
+      :param request: HTTP request s informacemi o přihlášeném uživateli.
+      :param typ_vazby: Typ vazby (``dokument``, ``model3d`` nebo ``pas``).
+      :param ident_cely: Úplný identifikátor záznamu.
+      :param file_id: Primární klíč nahrazovaného souboru.
+      :return: ``True`` při úspěchu, jinak ``JsonResponse`` s chybovým popisem.
 
 
 .. py:class:: ExportMixinDate
@@ -364,35 +324,35 @@ Třídy
 
       Ověří filter permission.
 
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :param action: Vstupní hodnota ``action`` pro danou operaci.
+      :param qs: Vstupní queryset, který má být dále zpracován.
+      :param action: Identifikátor akce, která se má provést.
 
    .. py:method:: filter_by_permission()
 
       Filtruje by permission.
 
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :param qs: Vstupní queryset, který má být dále zpracován.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
 
    .. py:method:: add_status_lookup()
 
       Provádí operaci add status lookup.
 
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
 
    .. py:method:: add_ownership_lookup()
 
       Provádí operaci add ownership lookup.
 
-      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: add_accessibility_lookup()
 
       Provádí operaci add accessibility lookup.
 
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: SearchListView
@@ -405,7 +365,7 @@ Třídy
 
       Vytvoří export výsledků vyhledávání v požadovaném formátu.
 
-      :param export_format: Vstupní hodnota ``export_format`` pro danou operaci.
+      :param export_format: Záznam/objekt ``export_format``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: init_translations()
 
@@ -415,7 +375,7 @@ Třídy
 
       Vrací sort params.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
@@ -447,9 +407,9 @@ Třídy
       Vrací výsledek operace.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-      :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
+      :param model_name: Název modelu používaný pro cílení operace.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+      :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
 
 
 .. py:class:: CheckUserAuthentication
@@ -531,7 +491,7 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: get_context_data()
 
@@ -543,7 +503,7 @@ Třídy
 
       Zpracuje uploaded file.
 
-      :param f: Vstupní hodnota ``f`` pro danou operaci.
+      :param f: Pomocný stream/objekt používaný interně funkcí.
 
 
 .. py:class:: TranslationFileListWithBackupView
@@ -713,9 +673,9 @@ Funkce
 
    Funkce pro získaní jména souboru pro samostatný nález.
 
-   :param find: Hodnota parametru ``find`` použitého touto operací.
-   :param filename: Hodnota parametru ``filename`` použitého touto operací.
-   :param add_to_index: Hodnota parametru ``add_to_index`` použitého touto operací.
+   :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
+   :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+   :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
 
 .. py:function:: get_projekt_soubor_name(projekt, file_name)
 
@@ -748,12 +708,12 @@ Funkce
 
    Funkce pohledu pro získaní heatmapy.
 
-   :param request: Hodnota parametru ``request`` použitého touto operací.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: check_soubor_vazba(typ_vazby, ident, id_zaznamu)
 
    Ověří soubor vazba.
 
-   :param typ_vazby: Vstupní hodnota ``typ_vazby`` pro danou operaci.
-   :param ident: Vstupní hodnota ``ident`` pro danou operaci.
-   :param id_zaznamu: Vstupní hodnota ``id_zaznamu`` pro danou operaci.
+   :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+   :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+   :param id_zaznamu: Záznam/objekt ``id_zaznamu``, který funkce čte, validuje nebo upravuje.

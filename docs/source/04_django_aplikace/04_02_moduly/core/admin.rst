@@ -21,46 +21,46 @@ Třídy
       Jednotlivé texty z modelu se ukladají do textú prekladů a template.
       Po uložení se restartuje wsgi pro načítaní nových prekladů.
 
-      :param request: Popis parametru ``request``.
-      :param obj: Popis parametru ``obj``.
-      :param form: Popis parametru ``form``.
-      :param change: Popis parametru ``change``.
+      :param request: Aktuální HTTP request předaný view/funkci.
+      :param obj: Objekt, se kterým funkce pracuje.
+      :param form: Formulářová instance zpracovávaná funkcí.
+      :param change: Číselná nebo geometrická hodnota `change` použitá při výpočtu nebo transformaci.
 
    .. py:method:: has_module_permission()
 
       Metoda pro určení práv na modul odstávky.
 
-      :param request: Popis parametru ``request``.
+      :param request: Aktuální HTTP request předaný view/funkci.
 
    .. py:method:: has_view_permission()
 
       Metoda pro určení práv na videní odstávky.
 
-      :param request: Popis parametru ``request``.
-      :param obj: Popis parametru ``obj``.
-      :param args: Popis parametru ``args``.
+      :param request: Aktuální HTTP request předaný view/funkci.
+      :param obj: Objekt, se kterým funkce pracuje.
+      :param args: Dodatečné poziční argumenty předané voláním.
 
    .. py:method:: has_add_permission()
 
       Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
 
-      :param request: Popis parametru ``request``.
-      :param args: Popis parametru ``args``.
+      :param request: Aktuální HTTP request předaný view/funkci.
+      :param args: Dodatečné poziční argumenty předané voláním.
 
    .. py:method:: has_change_permission()
 
       Metoda pro určení práv pro úpravu odstávky.
 
-      :param request: Popis parametru ``request``.
-      :param obj: Popis parametru ``obj``.
-      :param args: Popis parametru ``args``.
+      :param request: Aktuální HTTP request předaný view/funkci.
+      :param obj: Objekt, se kterým funkce pracuje.
+      :param args: Dodatečné poziční argumenty předané voláním.
 
    .. py:method:: file_handler()
 
       Pomocní metoda pro úpravu template zobrazených během odstávky.
 
-      :param language: Popis parametru ``language``.
-      :param form: Popis parametru ``form``.
+      :param language: Textový název, klíč nebo zpráva ``language`` používaná v rámci operace.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
 
 .. py:class:: CustomAdminSettingsAdmin
@@ -79,8 +79,8 @@ Třídy
       Provádí operaci changelist view.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_urls()
 
@@ -90,19 +90,19 @@ Třídy
 
       Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
 
-      :param request: Popis parametru ``request``.
+      :param request: Aktuální HTTP request předaný view/funkci.
 
    .. py:method:: import_success()
 
       Metoda view pro zobrazení tabulky s výsledkom importu.
 
-      :param request: Popis parametru ``request``.
+      :param request: Aktuální HTTP request předaný view/funkci.
 
    .. py:method:: reload_permissions()
 
       Metoda view pro automatický import oprávnění z csv v gitu a zobrazení výsledků importu.
 
-      :param request: Popis parametru ``request``.
+      :param request: Aktuální HTTP request předaný view/funkci.
 
 
 .. py:class:: PermissionSkipAdmin
@@ -116,8 +116,8 @@ Třídy
       Provádí operaci changelist view.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param extra_context: Vstupní hodnota ``extra_context`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_urls()
 
@@ -127,32 +127,32 @@ Třídy
 
       Metoda pro validaci importovaného excelu a jeho úpravu.
 
-      :param sheet: Popis parametru ``sheet``.
+      :param sheet: Záznam/objekt ``sheet``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: import_skip_file()
 
       Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
 
-      :param request: Popis parametru ``request``.
+      :param request: Aktuální HTTP request předaný view/funkci.
 
    .. py:method:: check_save_row()
 
       Ověří save row.
 
-      :param row: Vstupní hodnota ``row`` pro danou operaci.
+      :param row: Záznam/objekt ``row``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: import_skip_success()
 
       Metoda view pro zobrazení tabulky s výsledkom importu.
 
-      :param request: Popis parametru ``request``.
+      :param request: Aktuální HTTP request předaný view/funkci.
 
    .. py:method:: export_as_csv()
 
       Exportuje as csv.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: FedoraCustomAdminSite
@@ -165,9 +165,9 @@ Třídy
 
       Načte file.
 
-      :param uploaded_file: Vstupní hodnota ``uploaded_file`` pro danou operaci.
-      :param context: Vstupní hodnota ``context`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param uploaded_file: Cesta, URL nebo název zdroje ``uploaded_file``, ze kterého funkce čte nebo kam zapisuje.
+      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: update_doi()
 
@@ -185,7 +185,7 @@ Třídy
 
       Creates a view for importing data from a zip file.
 
-      :param request: Popis parametru ``request``.
+      :param request: Aktuální HTTP request předaný view/funkci.
 
    .. py:method:: get_urls()
 

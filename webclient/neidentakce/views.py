@@ -76,7 +76,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form valid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return super().form_valid(form)
@@ -85,7 +85,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form invalid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"error": form.errors})

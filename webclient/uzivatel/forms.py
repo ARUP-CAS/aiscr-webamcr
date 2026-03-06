@@ -441,12 +441,12 @@ class UserPasswordResetForm(PasswordResetForm):
         """
         Send a django.core.mail.EmailMultiAlternatives to `to_email`.
 
-        :param subject_template_name: Popis parametru ``subject_template_name``.
-        :param email_template_name: Popis parametru ``email_template_name``.
-        :param context: Popis parametru ``context``.
-        :param from_email: Popis parametru ``from_email``.
-        :param to_email: Popis parametru ``to_email``.
-        :param html_email_template_name: Popis parametru ``html_email_template_name``.
+        :param subject_template_name: Cesta, URL nebo název zdroje ``subject_template_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param email_template_name: Cesta, URL nebo název zdroje ``email_template_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
+        :param from_email: Uživatel nebo osoba ``from_email``, v jejímž kontextu se operace provádí.
+        :param to_email: Uživatel nebo osoba ``to_email``, v jejímž kontextu se operace provádí.
+        :param html_email_template_name: Cesta, URL nebo název zdroje ``html_email_template_name``, ze kterého funkce čte nebo kam zapisuje.
         """
         subject = loader.render_to_string(subject_template_name, context)
         # Předmět e-mailu *nesmí* obsahovat znaky nového řádku.

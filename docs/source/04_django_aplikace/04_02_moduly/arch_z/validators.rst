@@ -10,4 +10,4 @@ Funkce
 
    Metoda pro validaci dátumu měsíc do budoucnosti.
 
-   :param value: Popis parametru ``value``.
+   :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.

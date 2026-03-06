@@ -11,8 +11,8 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
         """
         Inicializuje instanci třídy.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
-        :param attrs: Vstupní hodnota ``attrs`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param attrs: Kolekce ``attrs`` zpracovávaná touto funkcí.
         """
         if attrs is None:
             attrs = {}
@@ -24,7 +24,7 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
         """
         Provádí operaci format value.
 
-        :param value: Vstupní hodnota ``value`` pro danou operaci.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return str(self.value)
 
@@ -36,8 +36,8 @@ class AutocompleteSelect2WidgetMixin(Select2WidgetMixin):
         """
         Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy.
 
-        :param args: Popis parametru ``args``.
-        :param kwargs: Popis parametru ``kwargs``.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         attrs = super(AutocompleteSelect2WidgetMixin, self).build_attrs(*args, **kwargs)
         attrs.setdefault("data-placeholder", _("core.widgets.AutocompleteSelect2WidgetMixin.data-placeholder"))

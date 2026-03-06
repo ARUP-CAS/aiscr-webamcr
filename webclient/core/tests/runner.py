@@ -30,7 +30,7 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
         """
         Pokud je showAll zapnuto, zapíše číslo testu do výstupu a poté zavolá implementaci předka.
 
-        :param test: Popis parametru ``test``.
+        :param test: Test case nebo testovací objekt, se kterým runner pracuje.
         """
 
         if True:  # self.showAll:
@@ -64,7 +64,7 @@ class CustomTextTestRunner(unittest.runner.TextTestRunner):
         """
         Spustí hodnotu. v aplikaci.
 
-        :param test: Vstupní hodnota ``test`` pro danou operaci.
+        :param test: Test case nebo testovací objekt, se kterým runner pracuje.
         """
 
         self.test_case_count = test.countTestCases()
@@ -72,9 +72,9 @@ class CustomTextTestRunner(unittest.runner.TextTestRunner):
 
     def _makeResult(self):
         """
-        Provádí operaci makeResult.
+               Provádí operaci makeResult.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
 
         result = super(CustomTextTestRunner, self)._makeResult()

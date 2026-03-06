@@ -60,7 +60,7 @@ class OznameniZapsatView(OznameniView):
 
         V prvém kroku uživatel zadává údaje a v druhém je potvrzuje a případně uploaduje soubory.
 
-        :param request: Popis parametru ``request``.
+        :param request: Aktuální HTTP request předaný view/funkci.
         """
         logger.debug("oznameni.views.index.start")
         if "oznamovatel" in request.POST:
@@ -308,8 +308,8 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci oznamovatele.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     oznameni = projekt.oznamovatel
@@ -344,7 +344,7 @@ def post_poi2kat(request):
     """
     Funkce pohledu pro získaní katastru podle bodu pro oznámení.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)

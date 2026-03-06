@@ -10,8 +10,8 @@ Funkce
 
    Vrací next sequence.
 
-   :param sequence_name: Vstupní hodnota ``sequence_name`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.
+   :param sequence_name: Textový název nebo klíč ``sequence_name`` používaný v rámci operace.
+   :return: Načtená data odpovídající zadaným vstupům.
 
 .. py:function:: get_temporary_project_ident(region)
 
@@ -20,7 +20,7 @@ Funkce
    Logika složení je: "X-" + region (M nebo C) + "-" + 9místné číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
    Příklad: "X-M-000001234"
 
-   :param region: Popis parametru ``region``.
+   :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
    :return: Vrací výsledek operace.
 
 .. py:function:: get_project_event_ident(project)
@@ -31,15 +31,15 @@ Funkce
    Při překročení maxima čísla sekvence (99999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A"
 
-   :param project: Popis parametru ``project``.
+   :param project: Doménový objekt `project`, se kterým funkce pracuje.
    :return: Vrací výsledek operace.
 
 .. py:function:: get_dokument_rada(typ, material)
 
    Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
 
-   :param typ: Popis parametru ``typ``.
-   :param material: Popis parametru ``material``.
+   :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
+   :param material: Číselná nebo geometrická hodnota `material` použitá při výpočtu nebo transformaci.
 
 .. py:function:: get_temp_dokument_ident(rada, region)
 
@@ -48,8 +48,8 @@ Funkce
    Logika složení je: "X-" + region (M nebo C) + "-" + řada (TX/DD/3D) + "-" 9místné číslo (ID ze sekvence dokument_xident_seq doplněné na 9 číslic nulami)
    Příklad: "X-M-TX-000000034"
 
-   :param rada: Popis parametru ``rada``.
-   :param region: Popis parametru ``region``.
+   :param rada: Číselná nebo geometrická hodnota `rada` použitá při výpočtu nebo transformaci.
+   :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
 
 .. py:function:: get_cast_dokumentu_ident(dokument)
 
@@ -59,7 +59,7 @@ Funkce
    Při překročení maxima DJ u dokumentu (999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-DD-202100034-D001"
 
-   :param dokument: Popis parametru ``dokument``.
+   :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
    :return: Vrací výsledek operace.
 
 .. py:function:: get_dj_ident(event)
@@ -70,7 +70,7 @@ Funkce
    Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-D01"
 
-   :param event: Popis parametru ``event``.
+   :param event: Název nebo typ události použité pro výpočet identifikátoru.
    :return: Vrací výsledek operace.
 
 .. py:function:: get_komponenta_ident(zaznam, fedora_transaction)
@@ -81,15 +81,15 @@ Funkce
    Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
 
-   :param zaznam: Popis parametru ``zaznam``.
-   :param fedora_transaction: Popis parametru ``fedora_transaction``.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+   :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
    :return: Vrací výsledek operace.
 
 .. py:function:: get_sm_from_point(point)
 
    Metoda pro získání kladu sm5 pro pian z bodu.
 
-   :param point: Popis parametru ``point``.
+   :param point: Doménový objekt `point`, se kterým funkce pracuje.
 
 .. py:function:: get_temporary_pian_ident(zm50)
 
@@ -98,7 +98,7 @@ Funkce
    Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 9 místní číslo ze sekvence pian_xident_seq doplněno na 9 číslic.
    Příklad: "N-1224-000123456"
 
-   :param zm50: Popis parametru ``zm50``.
+   :param zm50: Číselná nebo geometrická hodnota `zm50` použitá při výpočtu nebo transformaci.
    :return: Vrací výsledek operace.
 
 .. py:function:: get_sn_ident(projekt)
@@ -109,7 +109,7 @@ Funkce
    Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-N00001"
 
-   :param projekt: Popis parametru ``projekt``.
+   :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
    :return: Vrací výsledek operace.
 
 .. py:function:: get_adb_ident(pian)
@@ -120,7 +120,7 @@ Funkce
    Při překročení maxima sekvence u ADB (999999) se uživateli na web vrátí chybová hláška.
    Příklad: "ADB-PRAH43-000012"
 
-   :param pian: Popis parametru ``pian``.
+   :param pian: Doménový objekt `pian`, se kterým funkce pracuje.
    :return: Vrací výsledek operace.
 
 .. py:function:: get_temp_lokalita_ident(typ, region)
@@ -131,8 +131,8 @@ Funkce
 
    Příklad: "X-M-L000123456"
 
-   :param typ: Popis parametru ``typ``.
-   :param region: Popis parametru ``region``.
+   :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
+   :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
 
 .. py:function:: get_temp_akce_ident(region)
 
@@ -142,7 +142,7 @@ Funkce
 
    Příklad: "X-M-9000123456A"
 
-   :param region: Popis parametru ``region``.
+   :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
 
 .. py:function:: get_temp_ez_ident()
 
@@ -156,8 +156,8 @@ Funkce
 
    Vrací next sequence integrity check.
 
-   :param object_class: Vstupní hodnota ``object_class`` pro danou operaci.
-   :return: Vrací načtená data odpovídající vstupním parametrům.
+   :param object_class: Název nebo typ ``object_class`` používaný pro volbu cílové logiky.
+   :return: Načtená data odpovídající zadaným vstupům.
 
 .. py:function:: get_heslar_ident()
 
@@ -179,4 +179,4 @@ Funkce
 
    Funkce pro získaní záznamu podle ident cely.
 
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.

@@ -43,7 +43,7 @@ class DigitalObjectIdentifierClient:
         """
         Ověří response status.
 
-        :param response: Vstupní hodnota ``response`` pro danou operaci.
+        :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
         :return: Vrací výsledek ověření nebo validačního pravidla.
         """
         if not str(response.status_code).startswith("2"):
@@ -65,7 +65,7 @@ class DigitalObjectIdentifierClient:
         """
         Zjistí, zda záznam v DataCite existuje.
 
-        :param check_status: Popis parametru ``check_status``.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         response = requests.get(self.get_record_url(), auth=self.auth)
         if str(response.status_code).startswith("5") and check_status:
@@ -83,7 +83,7 @@ class DigitalObjectIdentifierClient:
         """
         Skryje/smaže záznam v DataCite podle serializovaného payloadu.
 
-        :param check_status: Popis parametru ``check_status``.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.delete_record.start",
@@ -108,7 +108,7 @@ class DigitalObjectIdentifierClient:
         """
         Provádí operaci hide record.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.hide_record.start",
@@ -133,7 +133,7 @@ class DigitalObjectIdentifierClient:
         """
         Publikuje záznam v DataCite, případně jej nejdříve vytvoří.
 
-        :param check_status: Popis parametru ``check_status``.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.check_record_exists.publish_record",
@@ -157,8 +157,8 @@ class DigitalObjectIdentifierClient:
         """
         Aktualizuje record. v aplikaci.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+        :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
         """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.update_record.start",

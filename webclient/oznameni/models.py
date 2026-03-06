@@ -22,9 +22,9 @@ class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return self.odpovedna_osoba + " (" + self.email + ")"
 

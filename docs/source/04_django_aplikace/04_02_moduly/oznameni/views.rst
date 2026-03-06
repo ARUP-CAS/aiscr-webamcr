@@ -33,7 +33,7 @@ Třídy
 
       V prvém kroku uživatel zadává údaje a v druhém je potvrzuje a případně uploaduje soubory.
 
-      :param request: Popis parametru ``request``.
+      :param request: Aktuální HTTP request předaný view/funkci.
 
    .. py:method:: get()
 
@@ -110,11 +110,11 @@ Funkce
 
    Funkce pohledu pro editaci oznamovatele.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: post_poi2kat(request)
 
    Funkce pohledu pro získaní katastru podle bodu pro oznámení.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.

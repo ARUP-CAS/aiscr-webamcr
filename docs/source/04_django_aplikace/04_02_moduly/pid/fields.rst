@@ -22,13 +22,13 @@ Třídy
 
       Vrací initial value from instance.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: _set_initial_values()
 
       Nastaví initial values.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: DoiAutocompleteField
@@ -41,13 +41,13 @@ Třídy
 
       Provádí operaci valid value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: validate()
 
       Validuje hodnotu. v aplikaci.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: OrcidAutocompleteField
@@ -60,25 +60,25 @@ Třídy
 
       Vrací initial value from instance.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: prepare_value()
 
       Provádí operaci prepare value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: valid_value()
 
       Provádí operaci valid value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: validate()
 
       Validuje hodnotu. v aplikaci.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: RorAutocompleteField
@@ -91,13 +91,13 @@ Třídy
 
       Provádí operaci valid value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: validate()
 
       Validuje hodnotu. v aplikaci.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: WikiDataAutocompleteField
@@ -110,23 +110,23 @@ Třídy
 
       Vrací initial value from instance.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: prepare_value()
 
       Provádí operaci prepare value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: valid_value()
 
       Provádí operaci valid value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: validate()
 
       Validuje hodnotu. v aplikaci.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 

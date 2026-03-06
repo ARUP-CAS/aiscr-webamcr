@@ -23,7 +23,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_absolute_url()
 
@@ -37,39 +37,39 @@ Třídy
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: set_permanent_identificator()
 
       Nastaví permanent identificator.
 
-      :param dokument: Vstupní hodnota ``dokument`` pro danou operaci.
+      :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param messages: Vstupní hodnota ``messages`` pro danou operaci.
-      :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param messages: Textová zpráva ``messages`` používaná pro hlášení stavu nebo chyby.
+      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+      Výsledek provedené změny nad cílovým objektem.
 
    .. py:method:: set_odeslany()
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie.
 
-      :param user: Popis parametru ``user``.
-      :param old_ident: Popis parametru ``old_ident``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: set_archivovany()
 
       Metoda pro nastavení stavu archivovaný a uložení změny do historie.
 
-      :param user: Popis parametru ``user``.
-      :param old_ident: Popis parametru ``old_ident``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: set_vraceny()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie.
 
-      :param user: Popis parametru ``user``.
-      :param new_state: Popis parametru ``new_state``.
-      :param poznamka: Popis parametru ``poznamka``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+      :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
 
    .. py:method:: check_pred_odeslanim()
 
@@ -102,8 +102,8 @@ Třídy
       Metoda bere pořadoví číslo z db dokument sekvence.
       Metoda zmení i ident připojených souborů.
 
-      :param region: Popis parametru ``region``.
-      :param rada: Popis parametru ``rada``.
+      :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
+      :param rada: Číselná nebo geometrická hodnota `rada` použitá při výpočtu nebo transformaci.
 
    .. py:method:: set_datum_zverejneni()
 
@@ -129,7 +129,7 @@ Třídy
 
       Provádí operaci thumbnail image file.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: large_thumbnail()
 
@@ -155,7 +155,7 @@ Třídy
 
       Vrací doi client.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: doi_exists()
 
@@ -165,26 +165,26 @@ Třídy
 
       Provádí operaci doi delete.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: doi_hide()
 
       Provádí operaci doi hide.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: doi_publish()
 
       Provádí operaci doi publish.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: doi_update()
 
       Provádí operaci doi update.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-      :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+      :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: doi_url()
 
@@ -222,15 +222,15 @@ Třídy
 
       Provádí operaci initial projekt.
 
-      :return: Vrací výsledek provedené operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: create_transaction()
 
       Vytvoří transaction. v aplikaci.
 
-      :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-      :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-      :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+      :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+      :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+      :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
 
    .. py:method:: dokument_doi()
 
@@ -257,7 +257,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
 
 .. py:class:: DokumentOsoba
@@ -275,7 +275,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
 
 .. py:class:: Tvar
@@ -295,9 +295,9 @@ Třídy
 
       Vytvoří transaction. v aplikaci.
 
-      :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-      :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-      :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
+      :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+      :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+      :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: DokumentSekvence
@@ -315,7 +315,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: save()
 
@@ -336,6 +336,6 @@ Funkce
 
    Funkce pro získaní správného jména souboru.
 
-   :param dokument: Popis parametru ``dokument``.
-   :param filename: Popis parametru ``filename``.
-   :param add_to_index: Popis parametru ``add_to_index``.
+   :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
+   :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+   :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.

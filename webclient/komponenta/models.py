@@ -157,7 +157,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
         """
         Vytvoří transaction. v aplikaci.
 
-        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
         """
         from core.repository_connector import FedoraTransaction
 

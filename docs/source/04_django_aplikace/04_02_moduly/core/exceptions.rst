@@ -16,8 +16,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param pian: Vstupní hodnota ``pian`` pro danou operaci.
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param pian: Doménový objekt `pian`, se kterým funkce pracuje.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: MaximalIdentNumberError
@@ -30,8 +30,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param number: Vstupní hodnota ``number`` pro danou operaci.
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: DJNemaPianError
@@ -44,8 +44,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param dj: Vstupní hodnota ``dj`` pro danou operaci.
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param dj: Doménový objekt `dj`, se kterým funkce pracuje.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: NelzeZjistitRaduError
@@ -58,7 +58,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: NeocekavanaRadaError
@@ -71,7 +71,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: WrongSheetError
@@ -84,7 +84,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: NeznamaGeometrieError
@@ -97,7 +97,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: UnexpectedDataRelations
@@ -110,7 +110,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: MaximalEventCount
@@ -123,8 +123,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param number: Vstupní hodnota ``number`` pro danou operaci.
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: WrongCSVError
@@ -137,7 +137,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: ZaznamSouborNotmatching
@@ -150,7 +150,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 
 
 .. py:class:: StateChangedError
@@ -163,5 +163,5 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Vstupní hodnota ``message`` pro danou operaci.
+      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
 

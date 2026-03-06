@@ -10,15 +10,15 @@ Funkce
 
    Funkce pohledu pro smazání nálezu předmětu nebo objektu pomocí modalu.
 
-   :param request: Popis parametru ``request``.
-   :param typ_vazby: Popis parametru ``typ_vazby``.
-   :param typ: Popis parametru ``typ``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+   :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: edit_nalez(request, typ_vazby, komp_ident_cely)
 
    Funkce pohledu pro zapsání editace nálezu předmětu a objektu.
 
-   :param request: Popis parametru ``request``.
-   :param typ_vazby: Popis parametru ``typ_vazby``.
-   :param komp_ident_cely: Popis parametru ``komp_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+   :param komp_ident_cely: Identifikátor ``komp_ident_cely`` používaný pro dohledání cílového záznamu.

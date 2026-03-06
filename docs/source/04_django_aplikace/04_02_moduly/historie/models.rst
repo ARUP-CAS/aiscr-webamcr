@@ -23,13 +23,13 @@ Třídy
 
       Vrátí textovou reprezentaci uživatele v anonymizované nebo plné podobě.
 
-      :param anonymized: Popis parametru ``anonymized``.
+      :param anonymized: Číselná hodnota ``anonymized`` použitá při výpočtu nebo transformaci.
 
    .. py:method:: save_record_deletion_record()
 
       Uloží record deletion record.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
 
    .. py:method:: set_snapshots()
 
@@ -48,15 +48,15 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_last_transaction_date()
 
       Vrátí datum a uživatele poslední transakce požadovaného typu.
 
-      :param transaction_type: Popis parametru ``transaction_type``.
-      :param anonymized: Popis parametru ``anonymized``.
-      :param user_protected: Popis parametru ``user_protected``.
+      :param transaction_type: Název nebo typ ``transaction_type`` používaný pro volbu cílové logiky.
+      :param anonymized: Číselná hodnota ``anonymized`` použitá při výpočtu nebo transformaci.
+      :param user_protected: Příznak ``user_protected`` určující průběh nebo rozsah zpracování.
       :return: Vrací výsledek operace.
 
    .. py:method:: navazany_objekt()

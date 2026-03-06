@@ -90,7 +90,7 @@ class Mailer:
         """
         Provádí operaci strip tags.
 
-        :param html: Vstupní hodnota ``html`` pro danou operaci.
+        :param html: Číselná nebo geometrická hodnota `html` použitá při výpočtu nebo transformaci.
         """
         s = MLStripper()
         s.feed(html)
@@ -101,11 +101,11 @@ class Mailer:
         cls, notification_type: "uzivatel.models.UserNotificationType", user: "uzivatel.models.User"
     ):
         """
-        Provádí operaci notification should be sent.
+               Provádí operaci notification should be sent.
 
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+               :param user: Uživatel, v jehož kontextu se operace provádí.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         result = False
         if notification_type.ident_cely in ALWAYS_ACTIVE:
@@ -143,11 +143,11 @@ class Mailer:
         cls, notification_type: "uzivatel.models.UserNotificationType", user: "uzivatel.models.User"
     ):
         """
-        Provádí operaci notification was sent.
+               Provádí operaci notification was sent.
 
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+               :param user: Uživatel, v jehož kontextu se operace provádí.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         notification_log = user.notification_log_items.filter(notification_type=notification_type).first()
         logger.debug(
@@ -169,15 +169,15 @@ class Mailer:
         log_user=None,
     ):
         """
-        Provádí operaci log notification.
+               Provádí operaci log notification.
 
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :param receiver_object: Vstupní hodnota ``receiver_object`` pro danou operaci.
-        :param receiver_address: Vstupní hodnota ``receiver_address`` pro danou operaci.
-        :param status: Vstupní hodnota ``status`` pro danou operaci.
-        :param exception: Vstupní hodnota ``exception`` pro danou operaci.
-        :param log_user: Vstupní hodnota ``log_user`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+               :param receiver_object: Záznam/objekt ``receiver_object``, který funkce čte, validuje nebo upravuje.
+               :param receiver_address: Číselná nebo geometrická hodnota `receiver_address` použitá při výpočtu nebo transformaci.
+               :param status: Stavová nebo časová hodnota `status` používaná při rozhodování logiky.
+               :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
+               :param log_user: Uživatel nebo osoba ``log_user``, v jejímž kontextu se operace provádí.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         user_object = log_user if log_user else receiver_object
         try:
@@ -226,16 +226,16 @@ class Mailer:
         """
         Odešle hodnotu. v aplikaci.
 
-        :param subject: Vstupní hodnota ``subject`` pro danou operaci.
-        :param to: Vstupní hodnota ``to`` pro danou operaci.
-        :param html_content: Vstupní hodnota ``html_content`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :param from_email: Vstupní hodnota ``from_email`` pro danou operaci.
-        :param attachment: Vstupní hodnota ``attachment`` pro danou operaci.
-        :param log_user: Vstupní hodnota ``log_user`` pro danou operaci.
-        :param reply_to: Vstupní hodnota ``reply_to`` pro danou operaci.
-        :param cc: Vstupní hodnota ``cc`` pro danou operaci.
+        :param subject: Textový nebo strukturální vstup `subject` používaný při sestavení nebo zpracování obsahu.
+        :param to: Číselná nebo geometrická hodnota `to` použitá při výpočtu nebo transformaci.
+        :param html_content: Textový nebo strukturální vstup `html_content` používaný při sestavení nebo zpracování obsahu.
+        :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param from_email: Uživatel nebo osoba ``from_email``, v jejímž kontextu se operace provádí.
+        :param attachment: Číselná nebo geometrická hodnota `attachment` použitá při výpočtu nebo transformaci.
+        :param log_user: Uživatel nebo osoba ``log_user``, v jejímž kontextu se operace provádí.
+        :param reply_to: Číselná hodnota ``reply_to`` použitá při výpočtu nebo transformaci.
+        :param cc: Seznam adresátů v kopii (CC) pro odesílaný e-mail.
         """
         if "@" in to:
             plain_text = cls.__strip_tags(html_content)
@@ -279,7 +279,7 @@ class Mailer:
         """
         Odešle eu02. v aplikaci.
 
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         IDENT_CELY = "E-U-02"
         logger.debug("services.mailer.send_eu02", extra={"ident_cely": IDENT_CELY})
@@ -304,7 +304,7 @@ class Mailer:
         """
         Odešle eu03. v aplikaci.
 
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         IDENT_CELY = "E-U-03"
         logger.debug("services.mailer.send_eu03", extra={"ident_cely": IDENT_CELY})
@@ -318,7 +318,7 @@ class Mailer:
         """
         Odešle eu04. v aplikaci.
 
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         IDENT_CELY = "E-U-04"
         logger.debug("services.mailer.send_eu04", extra={"ident_cely": IDENT_CELY})
@@ -353,8 +353,8 @@ class Mailer:
         """
         Odešle eu06. v aplikaci.
 
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :param groups: Vstupní hodnota ``groups`` pro danou operaci.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param groups: Číselná nebo geometrická hodnota `groups` použitá při výpočtu nebo transformaci.
         """
         IDENT_CELY = "E-U-06"
         logger.debug("services.mailer.send_eu06", extra={"ident_cely": IDENT_CELY})
@@ -379,7 +379,7 @@ class Mailer:
         """
         Odešle eu07. v aplikaci.
 
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         :param request: Django HTTP požadavek použitý při zpracování.
         """
         IDENT_CELY = "E-U-07"
@@ -402,11 +402,11 @@ class Mailer:
     @classmethod
     def _send_notification_for_project(cls, project, notification_type):
         """
-        Odešle notification for project.
+               Odešle notification for project.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param project: Doménový objekt `project`, se kterým funkce pracuje.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         from projekt.models import Projekt
         from uzivatel.models import User
@@ -438,11 +438,11 @@ class Mailer:
     @classmethod
     def _send_notification_for_projects(cls, projects, notification_type):
         """
-        Odešle notification for projects.
+               Odešle notification for projects.
 
-        :param projects: Vstupní hodnota ``projects`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param projects: Doménový objekt `projects`, se kterým funkce pracuje.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         logger.debug(
             "services.mailer._send_notification_for_projects",
@@ -480,8 +480,8 @@ class Mailer:
         """
         Odešle ev01. v aplikaci.
 
-        :param zaznam: Vstupní hodnota ``zaznam`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
+        :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
         """
         IDENT_CELY = "E-V-01"
         logger.debug("services.mailer.send_ev01", extra={"ident_cely": IDENT_CELY})
@@ -522,12 +522,12 @@ class Mailer:
         user: "uzivatel.models.User" = None,
     ):
         """
-        Odešle a.
+               Odešle a.
 
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param obj: Objekt, se kterým funkce pracuje.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+               :param user: Uživatel, v jehož kontextu se operace provádí.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         subject = notification_type.predmet.format(ident_cely=obj.ident_cely)
         if isinstance(obj, projekt.models.Projekt):
@@ -568,8 +568,8 @@ class Mailer:
         """
         Odešle ea01. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         IDENT_CELY = "E-A-01"
         logger.debug("services.mailer.send_ea01", extra={"ident_cely": IDENT_CELY})
@@ -583,7 +583,7 @@ class Mailer:
         """
         Odešle ea02. v aplikaci.
 
-        :param arch_z: Vstupní hodnota ``arch_z`` pro danou operaci.
+        :param arch_z: Doménový objekt `arch_z`, se kterým funkce pracuje.
         """
         IDENT_CELY = "E-A-02"
         logger.debug("services.mailer.send_ea02", extra={"ident_cely": IDENT_CELY})
@@ -593,11 +593,11 @@ class Mailer:
     @classmethod
     def _send_e(cls, project, notification_type):
         """
-        Odešle e.
+               Odešle e.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param project: Doménový objekt `project`, se kterým funkce pracuje.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
@@ -620,7 +620,7 @@ class Mailer:
         """
         Odešle eo01. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
         """
         IDENT_CELY = "E-O-01"
         logger.debug("services.mailer.send_eo01", extra={"ident_cely": IDENT_CELY})
@@ -632,7 +632,7 @@ class Mailer:
         """
         Odešle eo02. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
         """
         IDENT_CELY = "E-O-02"
         logger.debug("services.mailer.send_eo02", extra={"ident_cely": IDENT_CELY})
@@ -642,12 +642,12 @@ class Mailer:
     @classmethod
     def _send_ep01(cls, project, notification_type, rep_bin_file=None):
         """
-        Odešle ep01.
+               Odešle ep01.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param project: Doménový objekt `project`, se kterým funkce pracuje.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+               :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
@@ -711,8 +711,8 @@ class Mailer:
         """
         Odešle ep01a. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
         """
         IDENT_CELY = "E-P-01a"
         logger.debug("services.mailer.send_ep01a", extra={"ident_cely": IDENT_CELY})
@@ -724,8 +724,8 @@ class Mailer:
         """
         Odešle ep01b. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
         """
         IDENT_CELY = "E-P-01b"
         logger.debug("services.mailer.send_ep01b", extra={"ident_cely": IDENT_CELY})
@@ -737,8 +737,8 @@ class Mailer:
         """
         Odešle ep02. v aplikaci.
 
-        :param psi: Vstupní hodnota ``psi`` pro danou operaci.
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
+        :param psi: Číselná nebo geometrická hodnota `psi` použitá při výpočtu nebo transformaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
         """
         IDENT_CELY = "E-P-02"
         while project.ident_cely.startswith("X-"):
@@ -768,11 +768,11 @@ class Mailer:
     @classmethod
     def _send_ep03(cls, project, notification_type):
         """
-        Odešle ep03.
+               Odešle ep03.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param project: Doménový objekt `project`, se kterým funkce pracuje.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
@@ -805,7 +805,7 @@ class Mailer:
         """
         Odešle ep03a. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
         """
         IDENT_CELY = "E-P-03a"
         logger.debug("services.mailer.send_ep03a", extra={"ident_cely": IDENT_CELY})
@@ -817,7 +817,7 @@ class Mailer:
         """
         Odešle ep03b. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
         """
         IDENT_CELY = "E-P-03b"
         logger.debug("services.mailer.send_ep03b", extra={"ident_cely": IDENT_CELY})
@@ -829,9 +829,9 @@ class Mailer:
         """
         Odešle ep07. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         IDENT_CELY = "E-P-07"
         logger.debug("services.mailer.send_ep07", extra={"ident_cely": IDENT_CELY})
@@ -864,8 +864,8 @@ class Mailer:
         """
         Odešle ep04. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
         """
         IDENT_CELY = "E-P-04"
         logger.debug("services.mailer.send_ep04", extra={"ident_cely": IDENT_CELY})
@@ -899,7 +899,7 @@ class Mailer:
         """
         Odešle ep05. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
         """
         IDENT_CELY = "E-P-05"
         logger.debug(
@@ -936,8 +936,8 @@ class Mailer:
         """
         Vrací ep06 attachment.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         project_files = project.soubory.soubory.filter(
             nazev__startswith=f"{ZruseniPDFCreator.FILENAME_PREFIX}_{project.ident_cely}", nazev__endswith=".pdf"
@@ -970,13 +970,13 @@ class Mailer:
     @classmethod
     def _send_ep06(cls, project, notification_type, reason, rep_bin_file=None):
         """
-        Odešle ep06.
+               Odešle ep06.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
-        :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param project: Doménový objekt `project`, se kterým funkce pracuje.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+               :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
+               :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         oznameni = Historie.objects.filter(
@@ -1011,9 +1011,9 @@ class Mailer:
         """
         Odešle ep06a. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
-        :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
+        :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
         """
         IDENT_CELY = "E-P-06a"
         logger.debug("services.mailer.send_ep06a", extra={"ident_cely": IDENT_CELY})
@@ -1025,9 +1025,9 @@ class Mailer:
         """
         Odešle ep06b. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
-        :param rep_bin_file: Vstupní hodnota ``rep_bin_file`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
+        :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
         """
         IDENT_CELY = "E-P-06b"
         logger.debug("services.mailer.send_ep06b", extra={"ident_cely": IDENT_CELY})
@@ -1037,12 +1037,12 @@ class Mailer:
     @classmethod
     def _send_en01_02(cls, projekt_ident_list, notification_type, send_to):
         """
-        Odešle en01 02.
+               Odešle en01 02.
 
-        :param projekt_ident_list: Vstupní hodnota ``projekt_ident_list`` pro danou operaci.
-        :param notification_type: Vstupní hodnota ``notification_type`` pro danou operaci.
-        :param send_to: Vstupní hodnota ``send_to`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param projekt_ident_list: Identifikátor ``projekt_ident_list`` používaný pro dohledání cílového záznamu.
+               :param notification_type: Název nebo typ ``notification_type`` používaný pro volbu cílové logiky.
+               :param send_to: Číselná nebo geometrická hodnota `send_to` použitá při výpočtu nebo transformaci.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         subject = notification_type.predmet
         context = {
@@ -1059,8 +1059,8 @@ class Mailer:
         """
         Odešle en01. v aplikaci.
 
-        :param send_to: Vstupní hodnota ``send_to`` pro danou operaci.
-        :param projekt_ident_list: Vstupní hodnota ``projekt_ident_list`` pro danou operaci.
+        :param send_to: Číselná nebo geometrická hodnota `send_to` použitá při výpočtu nebo transformaci.
+        :param projekt_ident_list: Identifikátor ``projekt_ident_list`` používaný pro dohledání cílového záznamu.
         """
         IDENT_CELY = "E-N-01"
         logger.debug("services.mailer.send_en01", extra={"ident_cely": IDENT_CELY})
@@ -1072,8 +1072,8 @@ class Mailer:
         """
         Odešle en02. v aplikaci.
 
-        :param send_to: Vstupní hodnota ``send_to`` pro danou operaci.
-        :param projekt_ident_list: Vstupní hodnota ``projekt_ident_list`` pro danou operaci.
+        :param send_to: Číselná nebo geometrická hodnota `send_to` použitá při výpočtu nebo transformaci.
+        :param projekt_ident_list: Identifikátor ``projekt_ident_list`` používaný pro dohledání cílového záznamu.
         """
         IDENT_CELY = "E-N-02"
         logger.debug("services.mailer.send_en02", extra={"ident_cely": IDENT_CELY})
@@ -1085,8 +1085,8 @@ class Mailer:
         """
         Odešle en03 en04.
 
-        :param samostatny_nalez: Vstupní hodnota ``samostatny_nalez`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
+        :param samostatny_nalez: Číselná hodnota ``samostatny_nalez`` použitá při výpočtu nebo transformaci.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
         """
         logger.debug("services.mailer.send_en03_en04")
         if samostatny_nalez.stav == SN_ODESLANY:
@@ -1127,9 +1127,9 @@ class Mailer:
         """
         Odešle en05. v aplikaci.
 
-        :param email_to: Vstupní hodnota ``email_to`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param email_to: Uživatel nebo osoba ``email_to``, v jejímž kontextu se operace provádí.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         :param spoluprace_id: Identifikátor objektu ``spoluprace``.
         """
         IDENT_CELY = "E-N-05"
@@ -1159,7 +1159,7 @@ class Mailer:
         """
         Odešle en06. v aplikaci.
 
-        :param cooperation: Vstupní hodnota ``cooperation`` pro danou operaci.
+        :param cooperation: Uživatel nebo osoba `cooperation`, v jejímž kontextu se operace provádí.
         """
         IDENT_CELY = "E-N-06"
         logger.debug("services.mailer.send_en06", extra={"ident_cely": IDENT_CELY})
@@ -1188,8 +1188,8 @@ class Mailer:
         """
         Odešle en07. v aplikaci.
 
-        :param cooperation: Vstupní hodnota ``cooperation`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
+        :param cooperation: Uživatel nebo osoba `cooperation`, v jejímž kontextu se operace provádí.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
         """
         IDENT_CELY = "E-N-07"
         logger.debug("services.mailer.send_en07", extra={"ident_cely": IDENT_CELY})
@@ -1229,7 +1229,7 @@ class Mailer:
         """
         Odešle ek01. v aplikaci.
 
-        :param document: Vstupní hodnota ``document`` pro danou operaci.
+        :param document: Doménový objekt `document`, se kterým funkce pracuje.
         """
         IDENT_CELY = "E-K-01"
         logger.debug("services.mailer.send_ek01", extra={"ident_cely": IDENT_CELY})
@@ -1257,8 +1257,8 @@ class Mailer:
         """
         Odešle ek02. v aplikaci.
 
-        :param document: Vstupní hodnota ``document`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
+        :param document: Doménový objekt `document`, se kterým funkce pracuje.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
         """
         IDENT_CELY = "E-K-02"
         logger.debug("services.mailer.send_ek02", extra={"ident_cely": IDENT_CELY})
@@ -1291,7 +1291,7 @@ class Mailer:
         """
         Vrací en01 data.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         invalidate_model(SamostatnyNalez)
         now = timezone.now()
@@ -1330,7 +1330,7 @@ class Mailer:
         """
         Vrací en02 data.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -1368,9 +1368,9 @@ class Mailer:
         """
         Odešle ep08. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         IDENT_CELY = "E-P-08"
         logger.debug("services.mailer.send_ep08", extra={"ident_cely": IDENT_CELY})
@@ -1393,10 +1393,10 @@ class Mailer:
         """
         Odešle ep09. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param info_text: Vstupní hodnota ``info_text`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :param kraje_s_emailem: Vstupní hodnota ``kraje_s_emailem`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param info_text: Číselná hodnota ``info_text`` použitá při výpočtu nebo transformaci.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param kraje_s_emailem: Uživatel nebo osoba ``kraje_s_emailem``, v jejímž kontextu se operace provádí.
         """
         IDENT_CELY = "E-P-09"
         logger.debug("services.mailer.send_ep09", extra={"ident_cely": IDENT_CELY})
@@ -1426,10 +1426,10 @@ class Mailer:
         """
         Odešle ep10. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param info_text: Vstupní hodnota ``info_text`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
-        :param kraje_s_emailem: Vstupní hodnota ``kraje_s_emailem`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param info_text: Číselná hodnota ``info_text`` použitá při výpočtu nebo transformaci.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param kraje_s_emailem: Uživatel nebo osoba ``kraje_s_emailem``, v jejímž kontextu se operace provádí.
         """
         IDENT_CELY = "E-P-10"
         logger.debug("services.mailer.send_ep10", extra={"ident_cely": IDENT_CELY})
@@ -1459,9 +1459,9 @@ class Mailer:
         """
         Odešle ep11. v aplikaci.
 
-        :param project: Vstupní hodnota ``project`` pro danou operaci.
-        :param reason: Vstupní hodnota ``reason`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param project: Doménový objekt `project`, se kterým funkce pracuje.
+        :param reason: Textová zpráva ``reason`` používaná pro hlášení stavu nebo chyby.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         :param request: Django HTTP požadavek použitý při zpracování.
         """
         IDENT_CELY = "E-P-11"

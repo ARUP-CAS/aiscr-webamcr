@@ -16,7 +16,7 @@ Třídy
 
       Provádí operaci format value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: CreateADBForm
@@ -29,9 +29,9 @@ Třídy
 
       Init metoda pro vytvoření formuláře.
 
-      **Argumenty:**
-
-      - ``readonly`` (*boolean*): nastavuje formulář na readonly.
+      :param args: Dodatečné poziční argumenty předané konstruktoru formuláře.
+      :param readonly: Pokud ``True``, formulář se vykreslí jen pro čtení.
+      :param kwargs: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
 
 
 .. py:class:: VyskovyBodFormSetHelper

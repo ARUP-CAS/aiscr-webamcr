@@ -29,8 +29,8 @@ def create_pes_form(not_readonly=True, model_typ=None):
     """
     Funkce která vrací formulář hlídacího psa pro formset.
 
-    :param not_readonly: Popis parametru ``not_readonly``.
-    :param model_typ: Popis parametru ``model_typ``.
+    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+    :param model_typ: Název nebo typ ``model_typ`` používaný pro volbu cílové logiky.
     """
 
     class PesForm(forms.ModelForm):
@@ -125,7 +125,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
             """
             Uloží změny objektu.
 
-            :param commit: Vstupní hodnota ``commit`` pro danou operaci.
+            :param commit: Pokud ``True``, změny se uloží do databáze.
             """
             instance = super(PesForm, self).save(commit=False)
             if self.admin_app:
@@ -199,7 +199,7 @@ class PesNotificationsForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param pes_object_count: Vstupní hodnota ``pes_object_count`` pro danou operaci.
+        :param pes_object_count: Záznam/objekt ``pes_object_count``, který funkce čte, validuje nebo upravuje.
         :param args: Dodatečné poziční argumenty předané voláním.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """

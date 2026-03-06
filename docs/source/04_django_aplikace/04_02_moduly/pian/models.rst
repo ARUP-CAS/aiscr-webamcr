@@ -38,7 +38,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_absolute_url()
 
@@ -68,20 +68,20 @@ Třídy
 
       Metoda pro nastavení stavu vymezený.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: set_potvrzeny()
 
       Metoda pro nastavení stavu potvrzený.
 
-      :param user: Popis parametru ``user``.
-      :param old_ident: Popis parametru ``old_ident``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: zaznamenej_zapsani()
 
       Metoda pro uložení změny do historie pro pianu.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
 
 .. py:class:: Kladyzm
@@ -101,11 +101,11 @@ Funkce
 
    Funkce pro vytvoření pianu v DB podle katastru.
 
-   :param katastr: Popis parametru ``katastr``.
-   :param fedora_transaction: Popis parametru ``fedora_transaction``.
+   :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
+   :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
 
 .. py:function:: get_ZM_from_point(point)
 
    Vrací ZM from point.
 
-   :param point: Vstupní hodnota ``point`` pro danou operaci.
+   :param point: Doménový objekt `point`, se kterým funkce pracuje.

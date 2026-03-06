@@ -10,13 +10,10 @@ Funkce
 
    Omezí přístup k pohledu pouze na vybrané hlavní uživatelské role.
 
-
-   **Argumenty:**
-
-   - ``allowed_groups``: Seznam ID rolí, které mohou pohled vykonat.
+   :param allowed_groups: Typová nebo konfigurační hodnota `allowed_groups` určující cílovou logiku.
 
 .. py:function:: odstavka_in_progress(view_func)
 
    Při aktivní odstávce vrátí stránku údržby namísto cílového pohledu.
 
-   :param view_func: Popis parametru ``view_func``.
+   :param view_func: View funkce obalená dekorátorem nebo middlewarem.

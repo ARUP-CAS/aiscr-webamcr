@@ -16,8 +16,8 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
-      :param value: Popis parametru ``value``.
-      :param record: Popis parametru ``record``.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param record: Záznam, který funkce čte nebo upravuje.
 
    .. py:method:: __init__()
 
@@ -37,10 +37,10 @@ Třídy
 
       Vyrenderuje hodnotu. v aplikaci.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param table: Vstupní hodnota ``table`` pro danou operaci.
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param bound_column: Číselná nebo geometrická hodnota `bound_column` použitá při výpočtu nebo transformaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -54,10 +54,10 @@ Třídy
 
       Vyrenderuje hodnotu. v aplikaci.
 
-      :param record: Vstupní hodnota ``record`` pro danou operaci.
-      :param table: Vstupní hodnota ``table`` pro danou operaci.
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
-      :param bound_column: Vstupní hodnota ``bound_column`` pro danou operaci.
+      :param record: Záznam, který funkce čte nebo upravuje.
+      :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param bound_column: Číselná nebo geometrická hodnota `bound_column` použitá při výpočtu nebo transformaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 

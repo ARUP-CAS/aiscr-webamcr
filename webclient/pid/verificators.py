@@ -12,7 +12,7 @@ def verify_doi(doi):
     """
     Provádí operaci verify doi.
 
-    :param doi: Vstupní hodnota ``doi`` pro danou operaci.
+    :param doi: Textová hodnota `doi` používaná pro vyhledání, pojmenování nebo hlášení stavu.
     """
     encoded_doi = quote(doi)
     response = requests.get(f"{DOI_API_URL}{encoded_doi}")
@@ -23,7 +23,7 @@ def verify_orcid(orcid):
     """
     Provádí operaci verify orcid.
 
-    :param orcid: Vstupní hodnota ``orcid`` pro danou operaci.
+    :param orcid: Číselná nebo geometrická hodnota `orcid` použitá při výpočtu nebo transformaci.
     """
     headers = {"Accept": "application/json"}
     response = requests.get(f"{ORCID_API_URL}{orcid}", headers=headers)
@@ -34,7 +34,7 @@ def verify_ror(ror):
     """
     Provádí operaci verify ror.
 
-    :param ror: Vstupní hodnota ``ror`` pro danou operaci.
+    :param ror: Textová hodnota `ror` používaná pro vyhledání, pojmenování nebo hlášení stavu.
     """
     response = requests.get(f"{ROR_API_URL}{ror}")
     return response.status_code == 200
@@ -44,7 +44,7 @@ def verify_wikidata(wikidata):
     """
     Provádí operaci verify wikidata.
 
-    :param wikidata: Vstupní hodnota ``wikidata`` pro danou operaci.
+    :param wikidata: Kolekce ``wikidata`` zpracovávaná touto funkcí.
     """
     if wikidata.startswith("https://www.wikidata.org/entity/"):
         wikidata = wikidata.replace("https://www.wikidata.org/entity/", "")

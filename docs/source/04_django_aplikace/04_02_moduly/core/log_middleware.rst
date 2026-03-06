@@ -19,7 +19,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
 
    .. py:method:: __call__()
 

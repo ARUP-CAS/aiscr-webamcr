@@ -20,21 +20,21 @@ Třídy
 
       Spustí hodnotu. v aplikaci.
 
-      :param docfile: Vstupní hodnota ``docfile`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param docfile: Cesta, URL nebo název zdroje ``docfile``, ze kterého funkce čte nebo kam zapisuje.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: validate_and_prepare_csv()
 
       Metoda pro validaci importovaného csv.
 
-      :param csv_sheet: Popis parametru ``csv_sheet``.
+      :param csv_sheet: Záznam/objekt ``csv_sheet``, který funkce čte, validuje nebo upravuje.
       :return: Vrací výsledek operace.
 
    .. py:method:: validate_and_prepare_sheet()
 
       Metoda pro validaci importovaného excelu a jeho úpravu.
 
-      :param sheet: Popis parametru ``sheet``.
+      :param sheet: Záznam/objekt ``sheet``, který funkce čte, validuje nebo upravuje.
       :return: Vrací výsledek operace.
 
    .. py:method:: find_missing_urls()
@@ -81,6 +81,6 @@ Třídy
 
       Metoda pro kontrolu správneho zadáni statusu v excelu.
 
-      :param cell: Popis parametru ``cell``.
+      :param cell: Číselná nebo geometrická hodnota `cell` použitá při výpočtu nebo transformaci.
       :return: Vrací výsledek operace.
 

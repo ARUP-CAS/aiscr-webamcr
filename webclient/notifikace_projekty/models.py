@@ -21,9 +21,9 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return str(self.content_object)
 

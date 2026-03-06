@@ -16,7 +16,7 @@ Třídy
 
       Provádí operaci clean.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: CoordinatesDokumentForm
@@ -35,9 +35,9 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
-      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
-      :param required: Vstupní hodnota ``required`` pro danou operaci.
-      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
+      :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+      :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -52,10 +52,10 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
-      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
-      :param required: Vstupní hodnota ``required`` pro danou operaci.
-      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
-      :param can_edit_datum_zverejneni: Vstupní hodnota ``can_edit_datum_zverejneni`` pro danou operaci.
+      :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
+      :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+      :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
+      :param can_edit_datum_zverejneni: Číselná nebo geometrická hodnota `can_edit_datum_zverejneni` použitá při výpočtu nebo transformaci.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -70,9 +70,9 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
-      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
-      :param required: Vstupní hodnota ``required`` pro danou operaci.
-      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
+      :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+      :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -87,9 +87,9 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
-      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
-      :param required: Vstupní hodnota ``required`` pro danou operaci.
-      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
+      :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+      :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
@@ -103,7 +103,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param ident_zaznam: Vstupní hodnota ``ident_zaznam`` pro danou operaci.
+      :param ident_zaznam: Identifikátor ``ident_zaznam`` používaný pro dohledání cílového záznamu.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
@@ -118,7 +118,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
+      :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
@@ -165,4 +165,4 @@ Funkce
 
    Pomocí ní je možné předat výběr formuláři.
 
-   :param not_readonly: Popis parametru ``not_readonly``.
+   :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.

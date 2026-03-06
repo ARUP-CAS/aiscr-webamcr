@@ -35,8 +35,8 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         """
         Vrací table columns.
 
-        :param table: Vstupní hodnota ``table`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         elements = table.find_elements(By.TAG_NAME, "th")
         return [e.find_element(By.TAG_NAME, "a").text for e in elements]
@@ -45,9 +45,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         """
         Ověří column hiding.
 
-        :param element_id_initial: Vstupní hodnota ``element_id_initial`` pro danou operaci.
-        :param column_header_text: Vstupní hodnota ``column_header_text`` pro danou operaci.
-        :param initial: Vstupní hodnota ``initial`` pro danou operaci.
+        :param element_id_initial: Záznam/objekt ``element_id_initial``, který funkce čte, validuje nebo upravuje.
+        :param column_header_text: Číselná hodnota ``column_header_text`` použitá při výpočtu nebo transformaci.
+        :param initial: Stavová nebo časová hodnota `initial` používaná při rozhodování logiky.
         :return: Vrací výsledek ověření nebo validačního pravidla.
         """
         logger.info(
@@ -526,10 +526,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         """
         Provádí operaci ProjektZapsat.
 
-        :param date_from: Vstupní hodnota ``date_from`` pro danou operaci.
-        :param date_to: Vstupní hodnota ``date_to`` pro danou operaci.
-        :param telefon: Vstupní hodnota ``telefon`` pro danou operaci.
-        :param css_selector: Vstupní hodnota ``css_selector`` pro danou operaci.
+        :param date_from: Časový údaj ``date_from`` použitý při filtrování nebo výpočtu.
+        :param date_to: Časový údaj ``date_to`` použitý při filtrování nebo výpočtu.
+        :param telefon: Textová hodnota `telefon` používaná pro vyhledání, pojmenování nebo hlášení stavu.
+        :param css_selector: Číselná nebo geometrická hodnota `css_selector` použitá při výpočtu nebo transformaci.
         """
         self.login()
         self.go_to_form()

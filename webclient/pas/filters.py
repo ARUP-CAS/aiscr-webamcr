@@ -281,7 +281,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
         """
         logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -306,9 +306,9 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Metoda pro filtrování podle období.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(obdobi__in=value)
 
@@ -316,9 +316,9 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Metoda pro filtrování podle druhu nálezu.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(druh_nalezu__in=value)
 
@@ -326,9 +326,9 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Metoda pro filtrování podle lokalizace, poznámek a evidenčního čísla.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(lokalizace__icontains=value) | Q(poznamka__icontains=value) | Q(evidencni_cislo__icontains=value)
@@ -338,9 +338,9 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Metoda pro filtrování podle oblasti.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         if value == OBLAST_CECHY:
             return queryset.filter(ident_cely__contains="C-")
@@ -439,7 +439,7 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
         """
         logger.debug("pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -469,7 +469,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.samostatnyNalezFilterFormHelper.history.divider.label")
@@ -532,7 +532,7 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.UzivatelSpolupraceFilterFormHelper.history.divider.label")

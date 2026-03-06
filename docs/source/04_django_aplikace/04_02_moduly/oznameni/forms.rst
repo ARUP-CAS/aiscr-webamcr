@@ -16,7 +16,7 @@ Třídy
 
       Provádí operaci to python.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: DateRangeWidget
@@ -29,7 +29,7 @@ Třídy
 
       Provádí operaci format value.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: OznamovatelForm

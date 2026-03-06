@@ -36,7 +36,7 @@ Třídy
 
       Vrací igsn client.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: igsn_exists()
 
@@ -46,26 +46,26 @@ Třídy
 
       Provádí operaci igsn delete.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: igsn_hide()
 
       Provádí operaci igsn hide.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: igsn_publish()
 
       Provádí operaci igsn publish.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: igsn_update()
 
       Provádí operaci igsn update.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-      :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+      :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: igsn_url()
 
@@ -75,5 +75,5 @@ Třídy
 
       Vrací by ident cely.
 
-      :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 

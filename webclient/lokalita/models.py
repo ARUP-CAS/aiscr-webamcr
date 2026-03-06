@@ -106,7 +106,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         """
         Vrací igsn client.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         from pid.client import DigitalObjectIdentifierClient
 
@@ -121,7 +121,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         """
         Provádí operaci igsn delete.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         if self.igsn:
             return self._get_igsn_client().delete_record(check_status)
@@ -130,7 +130,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         """
         Provádí operaci igsn hide.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         if self.igsn:
             return self._get_igsn_client().hide_record(check_status)
@@ -139,7 +139,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         """
         Provádí operaci igsn publish.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
         """
         return self._get_igsn_client().publish_record(check_status)
 
@@ -147,8 +147,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         """
         Provádí operaci igsn update.
 
-        :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-        :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+        :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
         """
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
@@ -163,7 +163,7 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         """
         Vrací by ident cely.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         """
         try:
             return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)

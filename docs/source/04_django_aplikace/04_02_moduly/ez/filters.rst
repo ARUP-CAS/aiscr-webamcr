@@ -16,31 +16,31 @@ Třídy
 
       Filtruje queryset. v aplikaci.
 
-      :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: filter_popisne_udaje()
 
       Metoda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_akce_ident()
 
       Metoda pro filtrování podle identu celý akce.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: filter_lokalita_ident()
 
       Metoda pro filtrování podle identu celý lokality.
 
-      :param queryset: Popis parametru ``queryset``.
-      :param name: Popis parametru ``name``.
-      :param value: Popis parametru ``value``.
+      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param name: Název nebo identifikátor používaný v rámci operace.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: __init__()
 
@@ -60,5 +60,5 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 

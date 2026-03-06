@@ -155,9 +155,9 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
@@ -254,7 +254,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu vymezený.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         self.stav = PIAN_NEPOTVRZEN
         self.zaznamenej_zapsani(user)
@@ -263,8 +263,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu potvrzený.
 
-        :param user: Popis parametru ``user``.
-        :param old_ident: Popis parametru ``old_ident``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
         """
         self.stav = PIAN_POTVRZEN
         Historie(
@@ -276,7 +276,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         Metoda pro uložení změny do historie pro pianu.
 
-        :param user: Popis parametru ``user``.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()
@@ -321,8 +321,8 @@ def vytvor_pian(katastr, fedora_transaction):
     """
     Funkce pro vytvoření pianu v DB podle katastru.
 
-    :param katastr: Popis parametru ``katastr``.
-    :param fedora_transaction: Popis parametru ``fedora_transaction``.
+    :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
+    :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
     """
     zm10, zm50 = get_ZM_from_point(katastr.definicni_bod)
     if zm10 is None:
@@ -362,7 +362,7 @@ def get_ZM_from_point(point):
     """
     Vrací ZM from point.
 
-    :param point: Vstupní hodnota ``point`` pro danou operaci.
+    :param point: Doménový objekt `point`, se kterým funkce pracuje.
     """
     try:
         zm10s = list(Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=point))

@@ -38,11 +38,11 @@ class FedoraError(Exception):
         """
         Inicializuje instanci třídy.
 
-        :param url: Vstupní hodnota ``url`` pro danou operaci.
-        :param message: Vstupní hodnota ``message`` pro danou operaci.
-        :param code: Vstupní hodnota ``code`` pro danou operaci.
-        :param headers: Vstupní hodnota ``headers`` pro danou operaci.
-        :param fedora_transaction: Vstupní hodnota ``fedora_transaction`` pro danou operaci.
+        :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+        :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+        :param code: Aplikační nebo HTTP kód, který funkce převádí na odpověď.
+        :param headers: Textový nebo strukturální vstup `headers` používaný při sestavení nebo zpracování obsahu.
+        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
         """
         self.url = url
         self.message = message
@@ -81,7 +81,7 @@ class RepositoryBinaryFile:
         """
         Vrací url without domain.
 
-        :param url: Vstupní hodnota ``url`` pro danou operaci.
+        :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
         """
         return "/".join(url.split("/")[3:])
 
@@ -99,7 +99,7 @@ class RepositoryBinaryFile:
         """
         Provádí operaci calculate sha 512.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Textová reprezentace UID transakce.
         """
         data = self.content.read()
         sha_512 = hashlib.sha512(data).hexdigest()
@@ -121,9 +121,9 @@ class RepositoryBinaryFile:
         """
         Inicializuje instanci třídy.
 
-        :param url: Vstupní hodnota ``url`` pro danou operaci.
-        :param content: Vstupní hodnota ``content`` pro danou operaci.
-        :param filename: Vstupní hodnota ``filename`` pro danou operaci.
+        :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+        :param content: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
+        :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
         """
         self.url = url
         self.content = content
@@ -192,9 +192,9 @@ class FedoraRepositoryConnector:
         """
         Inicializuje instanci třídy.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
-        :param transaction: Vstupní hodnota ``transaction`` pro danou operaci.
-        :param skip_container_check: Vstupní hodnota ``skip_container_check`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
+        :param transaction: Číselná nebo geometrická hodnota `transaction` použitá při výpočtu nebo transformaci.
+        :param skip_container_check: Příznak ``skip_container_check`` určující průběh nebo rozsah zpracování.
         """
         from core.models import ModelWithMetadata
         from uzivatel.models import User
@@ -226,7 +226,7 @@ class FedoraRepositoryConnector:
         """
         Vrací model name.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         class_name = self.record.__class__.__name__
         return {
@@ -251,7 +251,7 @@ class FedoraRepositoryConnector:
         """
         Vrací rdf inset data.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         return f"""PREFIX dcterms: <http://purl.org/dc/terms/>
 DELETE WHERE {{ <> dcterms:creator ?oldCreator .}};
@@ -261,8 +261,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vrací creator.
 
-        :param url: Vstupní hodnota ``url`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         headers = {"Accept": "text/turtle"}
         r = self._send_request(url, FedoraRequestType.GET_METADATA, headers=headers)
@@ -296,10 +296,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Aktualizuje creator.
 
-        :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-        :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+        :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
+        :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :return: Textová reprezentace UID transakce.
         """
         url = self._get_request_url(request_type, uuid=uuid, ident_cely=ident_cely)
         existing_creator = self._get_creator(url, only_uri=True)
@@ -323,10 +323,10 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vrací request url.
 
-        :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-        :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
+        :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         base_url = self.get_base_url()
         if request_type == FedoraRequestType.CREATE_CONTAINER:
@@ -430,7 +430,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Ověří container deleted.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         """
         result = self._send_request(f"{self.get_base_url()}/record/{ident_cely}", FedoraRequestType.GET_CONTAINER)
         regex = re.compile(r"dcterms:type *\"deleted\" *;")
@@ -441,8 +441,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Ověří container deleted or not exists.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
-        :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param model_name: Název modelu používaný pro cílení operace.
         """
         logger.debug("core_repository_connector.check_container_is_deleted.start", extra={"ident_cely": ident_cely})
 
@@ -450,8 +450,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             """
             Odešle request. v aplikaci.
 
-            :param url: Vstupní hodnota ``url`` pro danou operaci.
-            :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
+            :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+            :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
             """
             auth = cls._get_auth(request_type)
             response = requests.get(url, auth=auth, verify=False)
@@ -499,8 +499,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vrací auth.
 
-        :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         if request_type in (
             FedoraRequestType.DELETE_CONTAINER,
@@ -519,11 +519,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Odešle request.
 
-        :param url: Vstupní hodnota ``url`` pro danou operaci.
-        :param request_type: Vstupní hodnota ``request_type`` pro danou operaci.
-        :param headers: Vstupní hodnota ``headers`` pro danou operaci.
-        :param data: Vstupní hodnota ``data`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+        :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+        :param request_type: Název nebo typ ``request_type`` používaný pro volbu cílové logiky.
+        :param headers: Textový nebo strukturální vstup `headers` používaný při sestavení nebo zpracování obsahu.
+        :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+        :return: Textová reprezentace UID transakce.
         """
         extra = {"info": url, "request_type": request_type, "transaction": self.transaction_uid}
         if isinstance(data, str) and len(data) < 1000:
@@ -686,7 +686,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vytvoří container.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         logger.debug(
             "core_repository_connector._create_container.start",
@@ -710,7 +710,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vytvoří link. v aplikaci.
 
-        :param ident_cely_proxy: Vstupní hodnota ``ident_cely_proxy`` pro danou operaci.
+        :param ident_cely_proxy: Identifikátor ``ident_cely_proxy`` používaný pro dohledání cílového záznamu.
         """
         logger.debug(
             "core_repository_connector._create_link.start",
@@ -755,7 +755,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Provádí operaci connect deleted container.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Textová reprezentace UID transakce.
         """
         logger.debug(
             "core_repository_connector._connect_deleted_container.start",
@@ -826,7 +826,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vytvoří binary file container.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         logger.debug(
             "core_repository_connector._create_binary_file_container.start",
@@ -869,7 +869,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vygeneruje metadata.
 
-        :return: Vrací nově vytvořený výsledek operace.
+        :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         logger.debug(
             "core_repository_connector._generate_metadata.start",
@@ -888,8 +888,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vrací metadata. v aplikaci.
 
-        :param update: Vstupní hodnota ``update`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         logger.debug(
             "core_repository_connector.get_metadata.start",
@@ -908,7 +908,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Metoda varacející konkrétní verzi metadat
 
-        :param timestamp: Popis parametru ``timestamp``.
+        :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
         """
         url = self._get_request_url(FedoraRequestType.GET_METADATA_HISTORIE)
         response = self._send_request(f"{url}/{timestamp}", FedoraRequestType.GET_METADATA_HISTORIE)
@@ -918,7 +918,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Zpracuje historie. v aplikaci.
 
-        :param response_text: Vstupní hodnota ``response_text`` pro danou operaci.
+        :param response_text: Číselná hodnota ``response_text`` použitá při výpočtu nebo transformaci.
         """
         result = []
         for line in response_text.splitlines():
@@ -962,7 +962,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Metoda k získání info o verzích souborů
 
-        :param uuid: Popis parametru ``uuid``.
+        :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
         """
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT_HISTORIE, uuid=uuid)
         response = self._send_request(
@@ -978,7 +978,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Uloží metadata. v aplikaci.
 
-        :param update: Vstupní hodnota ``update`` pro danou operaci.
+        :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
         """
         logger.debug(
             "core_repository_connector.save_metadata.start",
@@ -1023,11 +1023,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Uloží binary file.
 
-        :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-        :param content_type: Vstupní hodnota ``content_type`` pro danou operaci.
-        :param file: Vstupní hodnota ``file`` pro danou operaci.
-        :param save_thumbs: Vstupní hodnota ``save_thumbs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+        :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param content_type: Název nebo typ ``content_type`` používaný pro volbu cílové logiky.
+        :param file: Soubor nebo cesta k souboru používaná při operaci.
+        :param save_thumbs: Příznak ``save_thumbs`` určující průběh nebo rozsah zpracování.
+        :return: Textová reprezentace UID transakce.
         """
         logger.debug(
             "core_repository_connector.save_binary_file.start",
@@ -1066,9 +1066,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vygeneruje thumb. v aplikaci.
 
-        :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-        :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
-        :param large: Vstupní hodnota ``large`` pro danou operaci.
+        :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param file_content: Cesta, URL nebo název zdroje ``file_content``, ze kterého funkce čte nebo kam zapisuje.
+        :param large: Číselná nebo geometrická hodnota `large` použitá při výpočtu nebo transformaci.
         """
         logger.debug("core_repository_connector.__generate_thumb.start", extra={"file": file_name, "large": large})
 
@@ -1076,8 +1076,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             """
             Provádí operaci resize image.
 
-            :param image: Vstupní hodnota ``image`` pro danou operaci.
-            :param large_inner: Vstupní hodnota ``large_inner`` pro danou operaci.
+            :param image: Obrázek nebo obrazová data předaná k dalšímu zpracování.
+            :param large_inner: Číselná nebo geometrická hodnota `large_inner` použitá při výpočtu nebo transformaci.
             """
             image = Image.open(image)
             image = ImageOps.exif_transpose(image)
@@ -1092,9 +1092,9 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
             """
             Vygeneruje thumb from icon.
 
-            :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-            :param file_content: Vstupní hodnota ``file_content`` pro danou operaci.
-            :param large: Vstupní hodnota ``large`` pro danou operaci.
+            :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+            :param file_content: Cesta, URL nebo název zdroje ``file_content``, ze kterého funkce čte nebo kam zapisuje.
+            :param large: Číselná nebo geometrická hodnota `large` použitá při výpočtu nebo transformaci.
             """
             from core.models import Soubor
 
@@ -1147,11 +1147,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Uloží thumbs. v aplikaci.
 
-        :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-        :param file: Vstupní hodnota ``file`` pro danou operaci.
-        :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-        :param update: Vstupní hodnota ``update`` pro danou operaci.
-        :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
+        :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param file: Soubor nebo cesta k souboru používaná při operaci.
+        :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+        :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
+        :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
         """
         logger.debug(
             "core_repository_connector._save_thumb.start",
@@ -1248,11 +1248,11 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Provádí operaci migrate binary file.
 
-        :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
-        :param include_content: Vstupní hodnota ``include_content`` pro danou operaci.
-        :param check_if_exists: Vstupní hodnota ``check_if_exists`` pro danou operaci.
-        :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+        :param soubor: Cesta, URL nebo název zdroje ``soubor``, ze kterého funkce čte nebo kam zapisuje.
+        :param include_content: Příznak ``include_content`` určující průběh nebo rozsah zpracování.
+        :param check_if_exists: Příznak ``check_if_exists`` určující průběh nebo rozsah zpracování.
+        :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+        :return: Textová reprezentace UID transakce.
         """
         from core.models import Soubor
 
@@ -1313,12 +1313,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Vrací binary file.
 
-        :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-        :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-        :param thumb_small: Vstupní hodnota ``thumb_small`` pro danou operaci.
-        :param thumb_large: Vstupní hodnota ``thumb_large`` pro danou operaci.
-        :param timestamp: Vstupní hodnota ``timestamp`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+        :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+        :param thumb_small: Číselná nebo geometrická hodnota `thumb_small` použitá při výpočtu nebo transformaci.
+        :param thumb_large: Číselná nebo geometrická hodnota `thumb_large` použitá při výpočtu nebo transformaci.
+        :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         logger.debug(
             "core_repository_connector.get_binary_file.start",
@@ -1373,12 +1373,12 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Aktualizuje binary file.
 
-        :param file_name: Vstupní hodnota ``file_name`` pro danou operaci.
-        :param content_type: Vstupní hodnota ``content_type`` pro danou operaci.
-        :param file: Vstupní hodnota ``file`` pro danou operaci.
-        :param uuid: Vstupní hodnota ``uuid`` pro danou operaci.
-        :param save_thumbs: Vstupní hodnota ``save_thumbs`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+        :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param content_type: Název nebo typ ``content_type`` používaný pro volbu cílové logiky.
+        :param file: Soubor nebo cesta k souboru používaná při operaci.
+        :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+        :param save_thumbs: Příznak ``save_thumbs`` určující průběh nebo rozsah zpracování.
+        :return: Textová reprezentace UID transakce.
         """
         logger.debug(
             "core_repository_connector.update_binary_file.start",
@@ -1411,7 +1411,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Odstraní binary file.
 
-        :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
+        :param soubor: Cesta, URL nebo název zdroje ``soubor``, ze kterého funkce čte nebo kam zapisuje.
         """
         from core.models import Soubor
 
@@ -1447,7 +1447,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Odstraní binary file completely.
 
-        :param soubor: Vstupní hodnota ``soubor`` pro danou operaci.
+        :param soubor: Cesta, URL nebo název zdroje ``soubor``, ze kterého funkce čte nebo kam zapisuje.
         """
         logger.debug(
             "core_repository_connector.delete_binary_file_completely.start",
@@ -1471,7 +1471,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Odstraní container. v aplikaci.
 
-        :param delete_tombstone: Vstupní hodnota ``delete_tombstone`` pro danou operaci.
+        :param delete_tombstone: Příznak ``delete_tombstone`` určující průběh nebo rozsah zpracování.
         """
         self._delete_link()
         logger.debug(
@@ -1492,7 +1492,7 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         """
         Odstraní link.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         :return: Vrací výsledek operace odstranění.
         """
         logger.debug(
@@ -1550,8 +1550,8 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
         """
         Provádí operaci record ident change.
 
-        :param ident_cely_old: Vstupní hodnota ``ident_cely_old`` pro danou operaci.
-        :param delete_container: Vstupní hodnota ``delete_container`` pro danou operaci.
+        :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+        :param delete_container: Příznak ``delete_container`` určující průběh nebo rozsah zpracování.
         """
         logger.debug(
             "core_repository_connector.record_ident_change.start",
@@ -1632,7 +1632,7 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
         """
         Vygeneruje thumb for single file.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         from core.models import Soubor
         from xml_generator.models import ModelWithMetadata
@@ -1744,10 +1744,7 @@ class DryRunFedoraTransaction(BaseFedoraTransaction):
         """
         Přidá identifikátor záznamu do množiny dotčených záznamů.
 
-        Args:
-        ident_cely: identifikátor záznamu (ident_cely)
-
-        :param ident_cely: Popis parametru ``ident_cely``.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         """
         self.updated_ident_cely.add(ident_cely)
 
@@ -1759,20 +1756,6 @@ class FedoraTransaction(BaseFedoraTransaction):
     Zapouzdřuje vytvoření, commit a rollback transakce v Fedora repozitáři.
     Při inicializaci vytváří novou transakci ve Fedoře (pokud není předáno
     existující uid). Výsledek transakce se ukládá do Redis pro zobrazení uživateli.
-
-    Args:
-    main_record: hlavní záznam (ModelWithMetadata), ke kterému se transakce váže
-    transaction_user: uživatel provádějící transakci
-    success_message: zpráva zobrazená při úspěšném dokončení
-    error_message: zpráva zobrazená při chybě
-    uid: existující UID transakce; pokud není zadáno, vytvoří se nová transakce
-    request: HTTP request pro předání kontextu
-    suppress_message: pokud True, neukládá výsledek transakce do Redis
-    redirect_on_error: pokud True, při chybě provede přesměrování
-    redirect_url: URL pro přesměrování při chybě
-
-    Raises:
-    FedoraTransactionNoIDError: pokud se nepodaří vytvořit transakci nebo získat její UID
     """
 
     def __init__(
@@ -1791,15 +1774,16 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         Inicializuje instanci třídy.
 
-        :param main_record: Vstupní hodnota ``main_record`` pro danou operaci.
-        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-        :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-        :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
-        :param uid: Vstupní hodnota ``uid`` pro danou operaci.
+        :param main_record: Záznam/objekt ``main_record``, který funkce čte, validuje nebo upravuje.
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+        :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
+        :param uid: Identifikátor `uid` používaný pro dohledání cílového záznamu.
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param suppress_message: Vstupní hodnota ``suppress_message`` pro danou operaci.
-        :param redirect_on_error: Vstupní hodnota ``redirect_on_error`` pro danou operaci.
-        :param redirect_url: Vstupní hodnota ``redirect_url`` pro danou operaci.
+        :param suppress_message: Pokud ``True``, výsledek transakce se neukládá do Redis.
+        :param redirect_on_error: Pokud ``True``, při chybě se použije přesměrování.
+        :param redirect_url: URL pro přesměrování při chybě transakce.
+                :raises FedoraTransactionNoIDError: Pokud se nepodaří vytvořit transakci nebo získat její UID.
         """
         super().__init__()
         from uzivatel.models import User
@@ -1826,7 +1810,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Textová reprezentace UID transakce.
         """
         return self.uid
 
@@ -1835,7 +1819,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         Vrací transaction redis key.
 
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         :param transaction_user_id: Identifikátor objektu ``transaction_user``.
         """
         return f"fedora-transaction-result-{ident_cely}-{transaction_user_id}"
@@ -1845,7 +1829,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         Provádí operaci transaction redis key.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Textová reprezentace UID transakce.
         """
         return self.get_transaction_redis_key(self.main_record.ident_cely, self.transaction_user.id)
 
@@ -1858,8 +1842,8 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         Uloží transaction result to redis.
 
-        :param result: Vstupní hodnota ``result`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+        :param result: Výsledek transakce určený k uložení do Redis.
+        :return: Textová reprezentace UID transakce.
         """
         if self.main_record and self.transaction_user and not self.suppress_message:
             r = RedisConnector()
@@ -1874,8 +1858,8 @@ class FedoraTransaction(BaseFedoraTransaction):
         """
         Odešle transaction request.
 
-        :param operation: Vstupní hodnota ``operation`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+        :param operation: Číselná nebo geometrická hodnota `operation` použitá při výpočtu nebo transformaci.
+        :return: Textová reprezentace UID transakce.
         """
         logger.debug(
             "core_repository_connector.FedoraTransaction.commit_transaction.start", extra={"transaction": self.uid}
@@ -2050,9 +2034,6 @@ class FedoraDeletionOnlyTransaction(FedoraTransaction):
         """
         Přidá identifikátor záznamu do množiny dotčených záznamů.
 
-        Args:
-        ident_cely: identifikátor záznamu (ident_cely)
-
-        :param ident_cely: Popis parametru ``ident_cely``.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         """
         self.updated_ident_cely.add(ident_cely)

@@ -123,10 +123,10 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         """
         Vytvoří Fedora transakci pro ADB záznam a vrátí ji volajícímu.
 
-        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
-        :param success_message: Vstupní hodnota ``success_message`` pro danou operaci.
-        :param error_message: Vstupní hodnota ``error_message`` pro danou operaci.
-        :param main_record: Vstupní hodnota ``main_record`` pro danou operaci.
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
+        :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
+        :param main_record: Záznam/objekt ``main_record``, který funkce čte, validuje nebo upravuje.
         """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
@@ -143,16 +143,8 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
 
     Obsahuje test na přetečení hodnot.
 
-    Args:
-        adb (adb): adb objekt pro získaní základu identu.
-
-        offset (int): offset k připočtení k poslednímu VB
-
-    Returns:
-        string: nový ident celý
-
-    :param adb: Hodnota parametru ``adb`` použitého touto operací.
-    :param offset: Hodnota parametru ``offset`` použitého touto operací.
+    :param adb: Záznam/objekt ``adb``, který funkce čte, validuje nebo upravuje.
+    :param offset: Posun přičtený k poslednímu pořadí výškového bodu.
     :return: Vrací vypočtený identifikátor výškového bodu.
     """
     MAXIMAL_VYSKOVY_BOD: int = 9999
@@ -197,9 +189,9 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         """
         Metoda na nastavení geomu (souřadnic).
 
-        :param northing: Hodnota parametru ``northing`` použitého touto operací.
-        :param easting: Hodnota parametru ``easting`` použitého touto operací.
-        :param niveleta: Hodnota parametru ``niveleta`` použitého touto operací.
+        :param northing: Číselná hodnota ``northing`` použitá při výpočtu nebo transformaci.
+        :param easting: Číselná hodnota ``easting`` použitá při výpočtu nebo transformaci.
+        :param niveleta: Výšková hodnota (Z) ukládaná do geometrie bodu.
         """
 
         logger.debug(
@@ -219,8 +211,8 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         """
         Override save metody na nastavení ident celý pokud je prázdny.
 
-        :param args: Hodnota parametru ``args`` použitého touto operací.
-        :param kwargs: Hodnota parametru ``kwargs`` použitého touto operací.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)

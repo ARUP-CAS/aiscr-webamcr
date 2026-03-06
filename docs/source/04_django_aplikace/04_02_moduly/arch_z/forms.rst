@@ -41,19 +41,19 @@ Třídy
 
       Provádí operaci year only.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: get_date_based_on_year()
 
       Vrací date based on year.
 
-      :param year: Vstupní hodnota ``year`` pro danou operaci.
+      :param year: Časový údaj ``year`` použitý při filtrování nebo výpočtu.
 
    .. py:method:: to_python()
 
       Prepis kvůli jinému objektu CustomDateInput.
 
-      :param value: Popis parametru ``value``.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
 
 .. py:class:: StartDateInput
@@ -81,8 +81,8 @@ Třídy
       Inicializuje instanci třídy.
 
       :param args: Dodatečné poziční argumenty předané voláním.
-      :param required: Vstupní hodnota ``required`` pro danou operaci.
-      :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+      :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+      :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: clean_odlozena_nz()
@@ -118,11 +118,5 @@ Funkce
 
    Funkce která vrací formulář VB pro formset.
 
-
-   **Argumenty:**
-
-   - ``readonly`` (*boolean*): nastavuje formulář na readonly.
-
-   **Návratová hodnota:**
-
-   *CreateAkceVedouciObjektForm*: django model formulář AkceVedouci
+   :param readonly: Pokud ``True``, pole formuláře jsou pouze pro čtení.
+   :return: Vnitřní ``ModelForm`` pro evidenci vedoucího akce.

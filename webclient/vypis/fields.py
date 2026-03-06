@@ -25,7 +25,7 @@ def get_model(name):
     """
     Vrací model. v aplikaci.
 
-    :param name: Vstupní hodnota ``name`` pro danou operaci.
+    :param name: Název nebo identifikátor používaný v rámci operace.
     """
     models = {
         "tvary": Tvar,
@@ -55,7 +55,7 @@ def get_gml(geom):
     """
     Vrací gml. v aplikaci.
 
-    :param geom: Vstupní hodnota ``geom`` pro danou operaci.
+    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
     """
     try:
         with transaction.atomic(), connection.cursor() as cursor:
@@ -70,7 +70,7 @@ def get_wkt(geom):
     """
     Vrací wkt. v aplikaci.
 
-    :param geom: Vstupní hodnota ``geom`` pro danou operaci.
+    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
     """
     with connection.cursor() as cursor:
         cursor.execute("SELECT ST_AsText(ST_GeomFromText(%s))", [geom.wkt])
@@ -86,15 +86,15 @@ class SimpleSectionTemplateName:
         """
         Inicializuje instanci třídy.
 
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
+        :param name: Název nebo identifikátor používaný v rámci operace.
         """
         self.name = name
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return self.name
 
@@ -102,7 +102,7 @@ class SimpleSectionTemplateName:
         """
         Vrací name. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         return self.name
 
@@ -110,8 +110,8 @@ class SimpleSectionTemplateName:
         """
         Vrací permission. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         return True
 
@@ -123,9 +123,9 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         """
         Inicializuje instanci třídy.
 
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
-        :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-        :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         """
         super().__init__(name)
         self.accessor = accessor
@@ -135,7 +135,7 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         """
         Vrací name. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
@@ -152,7 +152,7 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Vrací name. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
@@ -169,8 +169,8 @@ class OznamovatelSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Vrací permission. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         return get_show_oznamovatel(instance, user)
 
@@ -182,25 +182,25 @@ class Field:
         """
         Inicializuje instanci třídy.
 
-        :param label: Vstupní hodnota ``label`` pro danou operaci.
-        :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
+        :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
+        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
         """
         self.label = label
         self.accessor = accessor
 
     def __repr__(self):
         """
-        Vrací reprezentaci objektu pro ladění.
+               Vrací reprezentaci objektu pro ladění.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return f"Field(label={self.label}, accessor={self.accessor})"
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return self.label
 
@@ -208,8 +208,8 @@ class Field:
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         value = getattr(instance, self.accessor)
         if isinstance(value, date) and value:
@@ -230,9 +230,9 @@ class SouborField(Field):
         """
         Inicializuje instanci třídy.
 
-        :param label: Vstupní hodnota ``label`` pro danou operaci.
-        :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-        :param key_name: Vstupní hodnota ``key_name`` pro danou operaci.
+        :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
+        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param key_name: Textový název nebo klíč ``key_name`` používaný v rámci operace.
         """
         super().__init__(label, accessor)
         self.key_name = key_name
@@ -241,8 +241,8 @@ class SouborField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         soubor = getattr(instance, self.accessor)
         if soubor:
@@ -264,8 +264,8 @@ class SouborDownloadField(SouborField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         accessor = getattr(instance, self.accessor)
         if accessor:
@@ -290,8 +290,8 @@ class Model3dKomponentaField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         return getattr(instance.casti.first().komponenty.komponenty.first(), self.accessor)
 
@@ -303,8 +303,8 @@ class Model3dKomponentaAktivityField(Model3dKomponentaField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         related_manager = super().get_value(instance, user)
         return "; ".join([str(v) for v in related_manager.all()])
@@ -317,8 +317,8 @@ class ChooseField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         for accessor in self.accessor:
             value = getattr(instance, accessor)
@@ -334,8 +334,8 @@ class StatusField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         return getattr(instance, self.accessor)()
 
@@ -347,8 +347,8 @@ class ZjisteniField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         if getattr(instance, self.accessor) is not None:
             if getattr(instance, self.accessor):
@@ -365,9 +365,9 @@ class ForeignField(Field):
         """
         Inicializuje instanci třídy.
 
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
-        :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-        :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         """
         super().__init__(name, accessor)
         self.foreign_key = foreign_key
@@ -376,8 +376,8 @@ class ForeignField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         accessors = self.accessor.split("__")
         new_instance = ""
@@ -402,8 +402,8 @@ class GeomGmlField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         geom = getattr(instance, self.accessor)
         if geom:
@@ -418,8 +418,8 @@ class GeomWktField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         geom = getattr(instance, self.accessor)
         if geom:
@@ -434,8 +434,8 @@ class ForeignGeomGmlField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         try:
             geom = getattr(getattr(instance, self.foreign_key), self.accessor)
@@ -453,8 +453,8 @@ class ForeignGeomWktField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         try:
             geom = getattr(getattr(instance, self.foreign_key), self.accessor)
@@ -472,8 +472,8 @@ class ManyToManyField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         related_manager = getattr(instance, self.accessor)
         return "; ".join([str(v) for v in related_manager.all()])
@@ -486,8 +486,8 @@ class ForeignManyToManyField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         if getattr(instance, self.foreign_key, False):
             related_manager = getattr(getattr(instance, self.foreign_key), self.accessor)
@@ -502,8 +502,8 @@ class DoubleField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         values = []
         for accessor in self.accessor:
@@ -525,8 +525,8 @@ class DoubleFieldNum(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         values = []
         for accessor in self.accessor:
@@ -545,8 +545,8 @@ class ForeignDoubleField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         if getattr(instance, self.foreign_key, False):
             values = []
@@ -566,8 +566,8 @@ class ForeignDoubleFieldNum(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         if getattr(instance, self.foreign_key, False):
             values = []
@@ -587,11 +587,11 @@ class RepeatableField(ForeignField):
         """
         Inicializuje instanci třídy.
 
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
-        :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-        :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-        :param template_name: Vstupní hodnota ``template_name`` pro danou operaci.
-        :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+        :param template_name: Cesta, URL nebo název zdroje ``template_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param model_name: Název modelu používaný pro cílení operace.
         """
         super().__init__(name, accessor, foreign_key)
         self.template_name = template_name
@@ -601,7 +601,7 @@ class RepeatableField(ForeignField):
         """
         Vrací related manager.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         if self.model_name:
             return get_model(self.foreign_key).objects.filter(**{self.model_name: instance})
@@ -611,8 +611,8 @@ class RepeatableField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         related_manager = self.get_related_manager(instance)
         data = {
@@ -640,8 +640,8 @@ class VbRepeatableField(RepeatableField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         related_manager = self.get_related_manager(instance)
         data = {
@@ -670,7 +670,7 @@ class HistorieRepeatableField(RepeatableField):
         """
         Vrací related manager.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         return Historie.objects.filter(**{"vazba": instance.historie})
 
@@ -678,8 +678,8 @@ class HistorieRepeatableField(RepeatableField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         related_manager = self.get_related_manager(instance)
         data = {
@@ -714,7 +714,7 @@ class RepeatableSectionField(RepeatableField):
         """
         Vrací sections. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         related_manager = (
             get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance}).order_by("ident_cely")
@@ -727,8 +727,8 @@ class RepeatableSectionField(RepeatableField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
-        :param user: Vstupní hodnota ``user`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
+        :param user: Uživatel, v jehož kontextu se operace provádí.
         """
         related_manager = get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance})
         data = {
@@ -752,9 +752,9 @@ class SectionField(Field):
         """
         Inicializuje instanci třídy.
 
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
-        :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-        :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         """
         super().__init__(name, accessor)
         self.foreign_key = foreign_key
@@ -767,10 +767,10 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Inicializuje instanci třídy.
 
-        :param name: Vstupní hodnota ``name`` pro danou operaci.
-        :param accessor: Vstupní hodnota ``accessor`` pro danou operaci.
-        :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-        :param model_name: Vstupní hodnota ``model_name`` pro danou operaci.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+        :param model_name: Název modelu používaný pro cílení operace.
         """
         super().__init__(name, accessor, foreign_key)
         self.model_name = model_name
@@ -779,7 +779,7 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Vrací sections. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         related_manager = (
             get_model(self.foreign_key).objects.filter(**{self.model_name: instance}).order_by("ident_cely")
@@ -792,7 +792,7 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Vrací name. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         if len(self.accessor) > 2:
             new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{getattr(instance, self.accessor[1])}"
@@ -810,7 +810,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
         """
         Vrací sections. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         related_manager = get_model(self.foreign_key).objects.filter(**{"vazba": instance.soubory}).order_by("pk")
         if related_manager.count() > 0:
@@ -821,7 +821,7 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
         """
         Vrací name. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
         if getattr(instance, self.accessor[-1]):
@@ -836,7 +836,7 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         """
         Vrací name. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         obdobi = getattr(instance, self.accessor[1])
         jistota = getattr(instance, self.accessor[2])
@@ -870,8 +870,8 @@ class SubSectionField:
         """
         Inicializuje instanci třídy.
 
-        :param config: Vstupní hodnota ``config`` pro danou operaci.
-        :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
+        :param config: Konfigurační slovník používaný pro sestavení výstupu.
+        :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         """
         self.config = config
         self.foreign_key = foreign_key
@@ -884,7 +884,7 @@ class SubSectionField:
         """
         Vrací instance. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         if self.foreign_key:
             try:
@@ -901,7 +901,7 @@ class NeidentAkceSubSectionField(SubSectionField):
         """
         Vrací instance. v aplikaci.
 
-        :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+        :param instance: Instance modelu, které se operace týká.
         """
         try:
             neident_akce = NeidentAkce.objects.get(dokument_cast=instance)
@@ -914,7 +914,7 @@ def get_historie_config(label_key):
     """
     Vrací historie config.
 
-    :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
+    :param label_key: Textový název nebo klíč ``label_key`` používaný v rámci operace.
     """
     return {
         "section_name": SimpleSectionTemplateName(label_key),
@@ -935,8 +935,8 @@ class HistorieSubSectionField(SubSectionField):
         """
         Inicializuje instanci třídy.
 
-        :param foreign_key: Vstupní hodnota ``foreign_key`` pro danou operaci.
-        :param label_key: Vstupní hodnota ``label_key`` pro danou operaci.
+        :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+        :param label_key: Textový název nebo klíč ``label_key`` používaný v rámci operace.
         """
         self.label_key = label_key
         self.foreign_key = foreign_key

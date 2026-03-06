@@ -20,7 +20,7 @@ Třídy
 
       Ověří response status.
 
-      :param response: Vstupní hodnota ``response`` pro danou operaci.
+      :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
       :return: Vrací výsledek ověření nebo validačního pravidla.
 
    .. py:method:: get_record_url()
@@ -31,30 +31,30 @@ Třídy
 
       Zjistí, zda záznam v DataCite existuje.
 
-      :param check_status: Popis parametru ``check_status``.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: delete_record()
 
       Skryje/smaže záznam v DataCite podle serializovaného payloadu.
 
-      :param check_status: Popis parametru ``check_status``.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: hide_record()
 
       Provádí operaci hide record.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: publish_record()
 
       Publikuje záznam v DataCite, případně jej nejdříve vytvoří.
 
-      :param check_status: Popis parametru ``check_status``.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: update_record()
 
       Aktualizuje record. v aplikaci.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-      :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+      :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
 

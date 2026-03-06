@@ -129,7 +129,7 @@ def get_container_content(container_path):
     """Vrátí HTTP status a seznam členů (`ldp:contains`) kontejneru.
 
     :param container_path: URL kontejneru, jehož obsah se načítá.
-    :return: Dvojice ``(status_code, members)``.
+    :return: Dvojice ```(status_code, members)```.
     """
     headers = {}
     response = requests.get(container_path, auth=AUTH, headers=headers, timeout=10)

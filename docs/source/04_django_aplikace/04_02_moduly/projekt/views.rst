@@ -44,15 +44,15 @@ Třídy
 
       Provádí operaci add ownership lookup.
 
-      :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
    .. py:method:: add_accessibility_lookup()
 
       Provádí operaci add accessibility lookup.
 
-      :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: ProjektListView
@@ -100,7 +100,7 @@ Třídy
 
       Vrací result label.
 
-      :param result: Vstupní hodnota ``result`` pro danou operaci.
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
 
    .. py:method:: get_queryset()
 
@@ -110,7 +110,7 @@ Třídy
 
       Ověří filter permission.
 
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+      :param qs: Vstupní queryset, který má být dále zpracován.
 
 
 .. py:class:: ProjectTableRowView
@@ -136,8 +136,8 @@ Třídy
 
       Vrací existing record.
 
-      :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
@@ -250,26 +250,26 @@ Funkce
 
    Funkce pohledu pro zobrazení indexu s navigací projektu.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: detail(request, ident_cely)
 
    Funkce pohledu pro zobrazení detailu projektu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: post_ajax_get_projects_limit(request)
 
    Funkce pohledu pro získaní heatmapy projektu.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: post_ajax_get_project_one(request)
 
    Funkce pohledu pro získaní geometrie projektu.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: create(request)
 
@@ -277,171 +277,155 @@ Funkce
 
    Funkce pohledu pro vytvoření projektu.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: edit(request, ident_cely)
 
    Funkce pohledu pro editaci projektu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro smazání projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: schvalit(request, ident_cely)
 
    Funkce pohledu pro schválení projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: prihlasit(request, ident_cely)
 
    Funkce pohledu pro přihlášení projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: zahajit_v_terenu(request, ident_cely)
 
    Funkce pohledu pro zahájení v terenu projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: ukoncit_v_terenu(request, ident_cely)
 
    Funkce pohledu pro ukončení v terenu projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: uzavrit(request, ident_cely)
 
    Funkce pohledu pro uzavření projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: archivovat(request, ident_cely)
 
    Funkce pohledu pro archivaci projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: navrhnout_ke_zruseni(request, ident_cely)
 
    Funkce pohledu pro navržení projektu ke zrušení pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: zrusit(request, ident_cely)
 
    Funkce pohledu pro zrušení projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: vratit(request, ident_cely)
 
    Funkce pohledu pro vrácení projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: vratit_navrh_zruseni(request, ident_cely)
 
    Funkce pohledu pro vrácení návrhu na zrušení projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: odpojit_dokument(request, ident_cely, proj_ident_cely)
 
    Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
-   :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+   :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: pripojit_dokument(request, proj_ident_cely)
 
    Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: generovat_oznameni(request, ident_cely)
 
    Funkce pohledu pro generování oznámení projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: generovat_expertni_list(request, ident_cely)
 
    Funkce pohledu pro generování expertního listu projektu pomoci modalu.
 
-   :param request: Popis parametru ``request``.
-   :param ident_cely: Popis parametru ``ident_cely``.
+   :param request: Aktuální HTTP request předaný view/funkci.
+   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
    Funkce pro získaní dátumů pro historii.
 
-
-   **Argumenty:**
-
-   - ``historie_vazby`` (*HistorieVazby*): model historieVazby daného projektu.
-
-   **Návratová hodnota:**
-
-   *historie*: dictionary dátumů k historii.
+   :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+   :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+   :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
 
 .. py:function:: get_detail_template_shows(projekt, user)
 
    Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
 
-
-   **Argumenty:**
-
-   - ``projekt`` (*Projekt*): model projekt pro který se dané akce počítají.
-   - ``user`` (*AuthUser*): uživatel pro kterého se dané akce počítají.
-
-   **Návratová hodnota:**
-
-   *show*: dictionary možností pro zobrazení.
+   :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+   :param user: Uživatel, v jehož kontextu se operace provádí.
+   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
 
 .. py:function:: get_show_oznamovatel(projekt, user)
 
    Vrací show oznamovatel.
 
-   :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
-   :param user: Vstupní hodnota ``user`` pro danou operaci.
+   :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+   :param user: Uživatel, v jehož kontextu se operace provádí.
+   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
 
 .. py:function:: get_required_fields(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu projektu.
 
-
-   **Argumenty:**
-
-   - ``zaznam`` (*Projekt*): model projekt pro který se dané pole počítají.
-   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-   **Návratová hodnota:**
-
-   *required_fields*: list polí.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+   :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+   :return: Seznam názvů polí, která mají být v daném stavu povinná.
 
 .. py:function:: katastr_text_to_id(request)
 
    Funkce podlehu pro získaní ID katastru podle názvu katastru.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.

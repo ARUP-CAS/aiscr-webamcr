@@ -79,39 +79,39 @@ Funkce
 
    Pomocní funkce pro vytvoření dvoustupňového selectu.
 
-   :param first: Popis parametru ``first``.
-   :param second: Popis parametru ``second``.
+   :param first: Číselná nebo geometrická hodnota `first` použitá při výpočtu nebo transformaci.
+   :param second: Číselná nebo geometrická hodnota `second` použitá při výpočtu nebo transformaci.
 
 .. py:function:: heslar_12(druha, prvni_kat, id)
 
    Funkce pro vytvoření dvoustupňového selectu.
 
-   :param druha: Popis parametru ``druha``.
-   :param prvni_kat: Popis parametru ``prvni_kat``.
-   :param id: Popis parametru ``id``.
+   :param druha: Číselná nebo geometrická hodnota `druha` použitá při výpočtu nebo transformaci.
+   :param prvni_kat: Číselná nebo geometrická hodnota `prvni_kat` použitá při výpočtu nebo transformaci.
+   :param id: Identifikátor ``id`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: zjisti_katastr_souradnic(request)
 
    Funkce pohledu pro vrácení katastru podle souradnic.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: zjisti_vychozi_hodnotu(request)
 
    Funkce pohledu pro zjištení výchozí hodnoty z heslaře.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: zjisti_nadrazenou_hodnotu(request)
 
    Funkce pohledu pro zjištení nadřazené hodnoty z heslaře.
 
-   :param request: Popis parametru ``request``.
+   :param request: Aktuální HTTP request předaný view/funkci.
 
 .. py:function:: heslar_list(heslo_nazev, filter, use_exclude)
 
    Provádí operaci heslar list.
 
-   :param heslo_nazev: Vstupní hodnota ``heslo_nazev`` pro danou operaci.
-   :param filter: Vstupní hodnota ``filter`` pro danou operaci.
-   :param use_exclude: Vstupní hodnota ``use_exclude`` pro danou operaci.
+   :param heslo_nazev: Heslo ``heslo_nazev`` používané při vytváření nebo aktualizaci účtu.
+   :param filter: Queryset/filtr ``filter`` použitý při výběru záznamů.
+   :param use_exclude: Příznak ``use_exclude`` určující průběh nebo rozsah zpracování.

@@ -203,7 +203,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         """
         Vrací zaznam. v aplikaci.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         id = self.kwargs.get("pk")
         return get_object_or_404(
@@ -215,7 +215,7 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         """
         Vrací object identification.
 
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         pes: Pes = self.get_zaznam()
         object = pes.content_object

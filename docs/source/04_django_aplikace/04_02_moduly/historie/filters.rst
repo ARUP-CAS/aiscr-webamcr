@@ -22,6 +22,6 @@ Třídy
 
       Filtruje hodnotu. v aplikaci.
 
-      :param qs: Vstupní hodnota ``qs`` pro danou operaci.
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param qs: Vstupní queryset, který má být dále zpracován.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 

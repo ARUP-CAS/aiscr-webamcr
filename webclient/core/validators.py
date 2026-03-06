@@ -17,7 +17,7 @@ def validate_phone_number(number):
     """
     Validátor pro ověření telefonního čísla na správny formát.
 
-    :param number: Popis parametru ``number``.
+    :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
     """
     regex_tel = re.compile(r"[\s\d\+\-\(+\)]+")
     if not regex_tel.fullmatch(number):
@@ -37,7 +37,7 @@ def validate_date_min_1600(value):
     """
     Validuje date min 1600.
 
-    :param value: Vstupní hodnota ``value`` pro danou operaci.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     min_date = datetime(1600, 1, 1).date()
     if isinstance(value, DateRange):

@@ -16,7 +16,9 @@ Udrzovat zmeny male, bezpecne a snadno reviewovatelne v souladu s projektovymi p
 
 ## Doporucene dovednosti
 
-- _placeholder_
+- `doc` - pro kontrolu a upravy dokumentacnich artefaktu, kdy zalezi na formatu.
+- `gh-fix-ci` - kdyz je potreba rychle dohledat a opravit chyby z CI.
+- `gh-address-comments` - pri zapracovani review pripominek z PR.
 
 ## Rychly kontext repozitare
 
@@ -49,8 +51,22 @@ Udrzovat zmeny male, bezpecne a snadno reviewovatelne v souladu s projektovymi p
   - `flake8` dle `.flake8`
 - Docstringy:
   - U verejnych trid/funkci/metod drzet projektovy style guide.
-  - Pouzivat `:param:` a `:return:` kde dava smysl.
+  - Pouzivat Sphinx styl (`:param:`, `:return:`, `:raises:`) kde dava smysl.
+  - Nepouzivat Google-sekce `Args:`, `Returns:`, `Raises:`.
+  - Udrzovat popisy konkretni vuci realnemu chovani kodu (ne obecne sablony typu "vstupni hodnota").
+  - Nezdvojovat informace: pokud je pouzit Sphinx blok, nepsat paralelni Google blok se stejnym obsahem.
   - Hook `method-docstring-style-reminder` je neblokujici, ale varovani brat vazne.
+
+## Docstring review checklist
+
+Pri hromadnych upravach docstringu proved:
+
+1. Vyhledani zbytkoveho Google stylu:
+   - `Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'`
+2. Vyhledani generickych formulaci:
+   - `Select-String -Pattern 'Popis parametru|Návratová hodnota funkce|Vstupní hodnota'`
+3. Kontrolu, ze popis odpovida kontextu funkce (parametry i return typ/chovani).
+4. Kontrolu, ze nejsou duplicitni bloky se stejnym obsahem.
 
 ## Generovane artefakty a dokumentace
 
@@ -99,3 +115,5 @@ Vysledek overeni vzdy strucne popsat v PR/summary (`co bylo spusteno`, `co prosl
 - CI muze automaticky vytvorit PR s opravami formatovani/generovanych souboru
 
 Agent ma preferovat takove zmeny, ktere timto pipeline projdou bez manualnich zasahu.
+
+

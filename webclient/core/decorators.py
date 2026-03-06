@@ -13,10 +13,7 @@ def allowed_user_groups(allowed_groups):
     """
     Omezí přístup k pohledu pouze na vybrané hlavní uživatelské role.
 
-    Args:
-    allowed_groups: Seznam ID rolí, které mohou pohled vykonat.
-
-    :param allowed_groups: Popis parametru ``allowed_groups``.
+    :param allowed_groups: Typová nebo konfigurační hodnota `allowed_groups` určující cílovou logiku.
     """
 
     @wraps(allowed_groups)
@@ -26,12 +23,12 @@ def allowed_user_groups(allowed_groups):
         @wraps(func)
         def _arguments_wrapper(request, *args, **kwargs):
             """
-            Provádí operaci arguments wrapper.
+                       Provádí operaci arguments wrapper.
 
-            :param request: Django HTTP požadavek použitý při zpracování.
-            :param args: Dodatečné poziční argumenty předané voláním.
-            :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-            :return: Vrací výsledek provedené operace.
+                       :param request: Django HTTP požadavek použitý při zpracování.
+                       :param args: Dodatečné poziční argumenty předané voláním.
+                       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+            :return: Výstup funkce odpovídající implementované logice.
             """
             hlavni_role = request.user.hlavni_role
             if hlavni_role.id not in allowed_groups:
@@ -47,7 +44,7 @@ def odstavka_in_progress(view_func):
     """
     Při aktivní odstávce vrátí stránku údržby namísto cílového pohledu.
 
-    :param view_func: Popis parametru ``view_func``.
+    :param view_func: View funkce obalená dekorátorem nebo middlewarem.
     """
 
     @wraps(view_func)
@@ -55,9 +52,9 @@ def odstavka_in_progress(view_func):
         """
         Rozhodne, zda vrátit stránku odstávky, nebo vykonat původní pohled.
 
-        :param request: Popis parametru ``request``.
-        :param args: Popis parametru ``args``.
-        :param kwargs: Popis parametru ``kwargs``.
+        :param request: Aktuální HTTP request předaný view/funkci.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         maintenance = get_set_maintenance_in_cache()
         if maintenance:

@@ -19,7 +19,7 @@ def remove_orphans(files_in_database):
     """
     Provádí operaci remove orphans.
 
-    :param files_in_database: Vstupní hodnota ``files_in_database`` pro danou operaci.
+    :param files_in_database: Cesta, URL nebo název zdroje ``files_in_database``, ze kterého funkce čte nebo kam zapisuje.
     """
     for path, subdirs, files in os.walk(MEDIA_ROOT):
         for name in files:

@@ -67,10 +67,10 @@ class PianCreateForm(forms.ModelForm):
 
     def _instance_geom_wkt(self, field_name):
         """
-        Provádí operaci instance geom wkt.
+               Provádí operaci instance geom wkt.
 
-        :param field_name: Vstupní hodnota ``field_name`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         g = getattr(self.instance, field_name, None)
         if not g:
@@ -125,8 +125,8 @@ class PianCreateForm(forms.ModelForm):
         """
         Metoda pro validaci PIAN pomocí funkce v postgres databázi.
 
-        :param geom: Popis parametru ``geom``.
-        :param epsg: Popis parametru ``epsg``.
+        :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
+        :param epsg: Číselná nebo geometrická hodnota `epsg` použitá při výpočtu nebo transformaci.
         """
         c = connections["urgent"].cursor()
         logger.debug("pian.forms.validate_geom.start")

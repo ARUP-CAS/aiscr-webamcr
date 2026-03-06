@@ -125,7 +125,7 @@ class UserNotificationTypeInline(admin.TabularInline):
         Vrací extra. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+        :param obj: Objekt, se kterým funkce pracuje.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         extra = 1  # Výchozí hodnota je 0.
@@ -142,8 +142,8 @@ class UserNotificationTypeInline(admin.TabularInline):
         """
         Inicializuje instanci třídy.
 
-        :param parent_model: Vstupní hodnota ``parent_model`` pro danou operaci.
-        :param admin_site: Vstupní hodnota ``admin_site`` pro danou operaci.
+        :param parent_model: Název nebo typ ``parent_model`` používaný pro volbu cílové logiky.
+        :param admin_site: Instance administrace předaná při registraci modelu.
         """
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
 
@@ -264,7 +264,7 @@ class PesUserNotificationTypeInline(admin.TabularInline):
         Vrací extra. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+        :param obj: Objekt, se kterým funkce pracuje.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         extra = 1  # Výchozí hodnota je 0.
@@ -360,7 +360,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+        :param obj: Objekt, se kterým funkce pracuje.
         """
         if obj:
             if Historie.objects.filter(uzivatel=obj).count() > 1000:
@@ -372,9 +372,9 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         Uloží model. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
-        :param change: Vstupní hodnota ``change`` pro danou operaci.
+        :param obj: Objekt, se kterým funkce pracuje.
+        :param form: Formulářová instance zpracovávaná funkcí.
+        :param change: Číselná nebo geometrická hodnota `change` použitá při výpočtu nebo transformaci.
         """
         fedora_transaction = FedoraTransaction()
         user = request.user
@@ -514,7 +514,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
         :param request: Django HTTP požadavek použitý při zpracování.
         :param id: Identifikátor zpracovávaného záznamu.
-        :param form_url: Vstupní hodnota ``form_url`` pro danou operaci.
+        :param form_url: Cesta, URL nebo název zdroje ``form_url``, ze kterého funkce čte nebo kam zapisuje.
         """
         if request.method == "POST":
             user = self.get_object(request, unquote(id))
@@ -532,7 +532,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         Vrací readonly fields.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+        :param obj: Objekt, se kterým funkce pracuje.
         """
         fields = super().get_readonly_fields(request, obj)
         if obj:
@@ -545,7 +545,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         Vyrenderuje change form.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param context: Vstupní hodnota ``context`` pro danou operaci.
+        :param context: Kontextová data používaná při serializaci nebo renderování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         object_id = request.resolver_match.kwargs.get("object_id")
@@ -633,7 +633,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         Odstraní model. v aplikaci.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+        :param obj: Objekt, se kterým funkce pracuje.
         """
         with transaction.atomic():
             pes_set = obj.pes_set.all()
@@ -652,7 +652,7 @@ class CustomGroupAdmin(admin.ModelAdmin):
         Určí, zda delete permission.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+        :param obj: Objekt, se kterým funkce pracuje.
         """
         if obj is not None:
             obj: Group
@@ -726,7 +726,7 @@ class NotificationsLogAdmin(admin.ModelAdmin):
         Zakáže ruční vytváření záznamů v administraci.
 
         :param request: Django HTTP požadavek.
-        :return: Vždy ``False``.
+        :return: Vždy ```False```.
         """
         return False
 
@@ -736,7 +736,7 @@ class NotificationsLogAdmin(admin.ModelAdmin):
 
         :param request: Django HTTP požadavek.
         :param obj: Vybraný záznam logu notifikace.
-        :return: Vždy ``False``.
+        :return: Vždy ```False```.
         """
         return False
 

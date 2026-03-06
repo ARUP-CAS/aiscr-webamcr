@@ -55,12 +55,12 @@ class CreateKomponentaForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param obdobi_choices: Vstupní hodnota ``obdobi_choices`` pro danou operaci.
-        :param areal_choices: Vstupní hodnota ``areal_choices`` pro danou operaci.
+        :param obdobi_choices: Číselná nebo geometrická hodnota `obdobi_choices` použitá při výpočtu nebo transformaci.
+        :param areal_choices: Doménový objekt `areal_choices`, se kterým funkce pracuje.
         :param args: Dodatečné poziční argumenty předané voláním.
-        :param readonly: Vstupní hodnota ``readonly`` pro danou operaci.
-        :param required: Vstupní hodnota ``required`` pro danou operaci.
-        :param required_next: Vstupní hodnota ``required_next`` pro danou operaci.
+        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
+        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
+        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
         :param kwargs: Dodatečné pojmenované argumenty předané voláním.
         """
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)

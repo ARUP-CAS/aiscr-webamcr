@@ -87,7 +87,7 @@ def extract_url_patterns(urls_file: Path) -> Tuple[Optional[str], List[Dict[str,
     """Extrahujte vzory URL ze souboru urls.py.
 
     :param urls_file: Cesta k souboru urls.py.
-    :return: Každý url_pattern je slovník s klíči: ``pattern``, ``view``, ``name``
+    :return: Každý url_pattern je slovník s klíči: ``pattern``, ``view``, ```name```
     """
     try:
         with open(urls_file, "r", encoding="utf-8") as f:
@@ -128,7 +128,7 @@ def parse_path_call(node: ast.AST) -> Optional[Dict[str, str]]:
     """Analyzuje volání path() nebo re_path() a extrahuje informace o vzoru URL.
 
     :param node: uzel AST představující volání path().
-    :return: ``dict: {'pattern': str, 'view': str, 'name': str} or None``
+    :return: ```dict: {'pattern': str, 'view': str, 'name': str} or None```
     """
     if not isinstance(node, ast.Call):
         return None
@@ -264,7 +264,7 @@ def extract_signals(signals_file: Path) -> List[Dict[str, str]]:
     """Extrahuje přijímače signálu ze souboru signals.py.
 
     :param signals_file: Cesta k souboru signals.py.
-    :return: Seznam slovníků informací o signálech s klíči: ``function``, ``signal_type``, ``sender``, ``weak``
+    :return: Seznam slovníků informací o signálech s klíči: ``function``, ``signal_type``, ``sender``, ```weak```
     """
     try:
         with open(signals_file, "r", encoding="utf-8") as f:
@@ -296,7 +296,7 @@ def parse_receiver_decorator(decorator: ast.Call, function_name: str) -> Optiona
 
     :param decorator: AST Volací uzel představující @receiver()
     :param function_name: Název dekorované funkce
-    :return: ``dict: {'function': str, 'signal_type': str, 'sender': str, 'weak': str} or None``
+    :return: ```dict: {'function': str, 'signal_type': str, 'sender': str, 'weak': str} or None```
     """
     if len(decorator.args) == 0:
         return None
@@ -413,7 +413,7 @@ def extract_permissions(models_file: Path) -> List[str]:
     """Extrahuje možnosti akcí z třídy Permissions v models.py.
 
     :param models_file: Cesta k souboru models.py.
-    :return: Seznam názvů akcí (např. ``adb_smazat``, ``vb_smazat``)
+    :return: Seznam názvů akcí (např. ``adb_smazat``, ```vb_smazat```)
     """
     try:
         with open(models_file, "r", encoding="utf-8") as f:
@@ -541,8 +541,8 @@ def generate_permissions_rst() -> bool:
 def clean_comment_value(value: str) -> str:
     """Odstraní obalové uvozovky/závorky z hodnoty komentáře.
 
-    :param value: Hodnota parametru ``value``.
-    :return: Návratová hodnota funkce.
+    :param value: Číselná nebo geometrická hodnota `value` použitá při výpočtu nebo transformaci.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     cleaned = value.strip()
     if cleaned.startswith('"') and cleaned.endswith('"'):
@@ -555,8 +555,8 @@ def clean_comment_value(value: str) -> str:
 def parse_comment_values(comment_text: str) -> Tuple[str, str]:
     """Vrátí mapované hodnoty získané z inline komentáře XSD.
 
-    :param comment_text: Hodnota parametru ``comment_text``.
-    :return: Návratová hodnota funkce.
+    :param comment_text: Číselná hodnota ``comment_text`` použitá při výpočtu nebo transformaci.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     if not comment_text:
         return "", ""
@@ -574,9 +574,9 @@ def parse_comment_values(comment_text: str) -> Tuple[str, str]:
 def get_following_comment(parent: ET.Element, element: ET.Element) -> str:
     """Najde první uzel komentáře bezprostředně za daným elementem.
 
-    :param parent: Hodnota parametru ``parent``.
-    :param element: Hodnota parametru ``element``.
-    :return: Návratová hodnota funkce.
+    :param parent: Číselná nebo geometrická hodnota `parent` použitá při výpočtu nebo transformaci.
+    :param element: Záznam/objekt ``element``, který funkce čte, validuje nebo upravuje.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     siblings = list(parent)
     for index, node in enumerate(siblings):
@@ -590,8 +590,8 @@ def get_following_comment(parent: ET.Element, element: ET.Element) -> str:
 def collect_choice_element_names(choice_element: ET.Element) -> List[str]:
     """Shromáždí názvy všech uzlů xs:element uvnitř bloku choice.
 
-    :param choice_element: Hodnota parametru ``choice_element``.
-    :return: Návratová hodnota funkce.
+    :param choice_element: Záznam/objekt ``choice_element``, který funkce čte, validuje nebo upravuje.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     names: List[str] = []
     for child in choice_element:
@@ -605,8 +605,8 @@ def collect_choice_element_names(choice_element: ET.Element) -> List[str]:
 def format_choice_note(names: List[str]) -> str:
     """Naformátuje poznámku popisující možnosti uvnitř elementu choice.
 
-    :param names: Hodnota parametru ``names``.
-    :return: Návratová hodnota funkce.
+    :param names: Kolekce ``names`` zpracovávaná touto funkcí.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     options = [name for name in names if name]
     if len(options) < 2:
@@ -623,9 +623,9 @@ def extract_elements_from_parent(
 ) -> List[Dict[str, str]]:
     """Rekurzivně extrahuje definice elementů a zaznamená kontext choice, pokud existuje.
 
-    :param parent: Hodnota parametru ``parent``.
-    :param choice_context: Hodnota parametru ``choice_context``.
-    :return: Návratová hodnota funkce.
+    :param parent: Číselná nebo geometrická hodnota `parent` použitá při výpočtu nebo transformaci.
+    :param choice_context: Kolekce ``choice_context`` zpracovávaná touto funkcí.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     rows: List[Dict[str, str]] = []
 
@@ -656,8 +656,8 @@ def extract_elements_from_parent(
 def extract_elements_from_complex_type(complex_type: ET.Element) -> List[Dict[str, str]]:
     """Extrahuje řádky elementů z definice complexType.
 
-    :param complex_type: Hodnota parametru ``complex_type``.
-    :return: Návratová hodnota funkce.
+    :param complex_type: Název nebo typ ``complex_type`` používaný pro volbu cílové logiky.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     rows: List[Dict[str, str]] = []
     for child in complex_type:
@@ -669,8 +669,8 @@ def extract_elements_from_complex_type(complex_type: ET.Element) -> List[Dict[st
 def extract_model_mappings(schema_root: ET.Element) -> List[Dict[str, str]]:
     """Načte mapování z volby elementu amcr do řádků Model -> ComplexType.
 
-    :param schema_root: Hodnota parametru ``schema_root``.
-    :return: Návratová hodnota funkce.
+    :param schema_root: Cesta, URL nebo název zdroje ``schema_root``, ze kterého funkce čte nebo kam zapisuje.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     ns = {"xs": "http://www.w3.org/2001/XMLSchema"}
     mappings: List[Dict[str, str]] = []
@@ -707,7 +707,7 @@ def extract_django_command_info(command_file: Path) -> Dict[str, str]:
     """Extrahuje informace o dokumentaci ze souboru příkazů pro správu Django.
 
     :param command_file: Cesta k příkazovému souboru.
-    :return: ``dict: {'name': str, 'help': str, 'docstring': str, 'arguments': list}``
+    :return: ```dict: {'name': str, 'help': str, 'docstring': str, 'arguments': list}```
     """
     try:
         with open(command_file, "r", encoding="utf-8") as f:
@@ -763,7 +763,7 @@ def extract_command_arguments(add_arguments_node: ast.FunctionDef) -> List[Dict[
     """Extrahuje definice argumentů z metody add_arguments.
 
     :param add_arguments_node: AST uzel metody add_arguments.
-    :return: Seznam slovníků s informacemi o argumentech s klíči: ``name``, ``type``, ``help``, ``default``
+    :return: Seznam slovníků s informacemi o argumentech s klíči: ``name``, ``type``, ``help``, ```default```
     """
     arguments = []
 
@@ -983,7 +983,7 @@ def generate_management_commands_rst() -> bool:
 def generate_export_structure_rst() -> bool:
     """Vygeneruje docs/source/05_integrace/export_structure.rst ze souboru amcr.xsd.
 
-    :return: Návratová hodnota funkce.
+    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     global changes_detected
     xsd_file = project_root / "webclient/xml_generator/definitions/amcr.xsd"

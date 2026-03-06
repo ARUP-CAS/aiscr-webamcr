@@ -20,7 +20,7 @@ Třídy
 
       Provádí operaci initial pristupnost.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
 
    .. py:method:: save()
 
@@ -33,33 +33,33 @@ Třídy
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: set_vracen()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie pro samostatný nález.
 
-      :param user: Popis parametru ``user``.
-      :param new_state: Popis parametru ``new_state``.
-      :param poznamka: Popis parametru ``poznamka``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+      :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
 
    .. py:method:: set_odeslany()
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie pro samostatný nález.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: set_potvrzeny()
 
       Metoda pro nastavení stavu potvrzený a uložení změny do historie pro samostatný nález.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: set_archivovany()
 
       Metoda pro nastavení stavu archivovaný a uložení změny do historie pro samostatný nález.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: get_absolute_url()
 
@@ -101,7 +101,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_permission_object()
 
@@ -131,7 +131,7 @@ Třídy
 
       Vrací igsn client.
 
-      :return: Vrací načtená data odpovídající vstupním parametrům.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: igsn_exists()
 
@@ -141,26 +141,26 @@ Třídy
 
       Provádí operaci igsn delete.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: igsn_hide()
 
       Provádí operaci igsn hide.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: igsn_publish()
 
       Provádí operaci igsn publish.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
 
    .. py:method:: igsn_update()
 
       Provádí operaci igsn update.
 
-      :param check_status: Vstupní hodnota ``check_status`` pro danou operaci.
-      :param reload_record: Vstupní hodnota ``reload_record`` pro danou operaci.
+      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+      :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: igsn_url()
 
@@ -188,14 +188,14 @@ Třídy
 
       Metoda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
 
-      :param user: Popis parametru ``user``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
 
    .. py:method:: set_neaktivni()
 
       Metoda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
 
-      :param user: Popis parametru ``user``.
-      :param duvod: Popis parametru ``duvod``.
+      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param duvod: Textový důvod prováděné operace.
 
    .. py:method:: check_pred_aktivaci()
 
@@ -213,7 +213,7 @@ Třídy
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Vrací výsledek provedené operace.
+      Textová reprezentace objektu.
 
    .. py:method:: get_create_user()
 

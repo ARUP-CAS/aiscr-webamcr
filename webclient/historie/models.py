@@ -161,7 +161,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         """
         Vrátí textovou reprezentaci uživatele v anonymizované nebo plné podobě.
 
-        :param anonymized: Popis parametru ``anonymized``.
+        :param anonymized: Číselná hodnota ``anonymized`` použitá při výpočtu nebo transformaci.
         """
         if anonymized:
             return f"{self.uzivatel.ident_cely} ({self.uzivatel.organizace})"
@@ -173,7 +173,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         """
         Uloží record deletion record.
 
-        :param record: Vstupní hodnota ``record`` pro danou operaci.
+        :param record: Záznam, který funkce čte nebo upravuje.
         """
         logger.debug("history.models.save_record_deletion_record.start")
         from arch_z.models import ArcheologickyZaznam
@@ -252,9 +252,9 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
 
     def __str__(self):
         """
-        Vrací textovou reprezentaci objektu.
+               Vrací textovou reprezentaci objektu.
 
-        :return: Vrací výsledek provedené operace.
+        Textová reprezentace objektu.
         """
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
@@ -262,9 +262,9 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         """
         Vrátí datum a uživatele poslední transakce požadovaného typu.
 
-        :param transaction_type: Popis parametru ``transaction_type``.
-        :param anonymized: Popis parametru ``anonymized``.
-        :param user_protected: Popis parametru ``user_protected``.
+        :param transaction_type: Název nebo typ ``transaction_type`` používaný pro volbu cílové logiky.
+        :param anonymized: Číselná hodnota ``anonymized`` použitá při výpočtu nebo transformaci.
+        :param user_protected: Příznak ``user_protected`` určující průběh nebo rozsah zpracování.
         :return: Vrací výsledek operace.
         """
         resp = {}

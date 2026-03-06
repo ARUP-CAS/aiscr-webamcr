@@ -48,7 +48,7 @@ class LetAdmin(DokumentWithMetadataAdmin):
         Vrací readonly fields.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Vstupní hodnota ``obj`` pro danou operaci.
+        :param obj: Objekt, se kterým funkce pracuje.
         """
         if obj:  # editace existujícího objektu
             return self.readonly_fields + ("ident_cely",)

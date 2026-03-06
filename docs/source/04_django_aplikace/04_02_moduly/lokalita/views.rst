@@ -16,7 +16,7 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
-      :param kwargs: Popis parametru ``kwargs``.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
 
 .. py:class:: LokalitaListView
@@ -33,7 +33,7 @@ Třídy
 
       Provádí operaci rename field for ordering.
 
-      :param field: Vstupní hodnota ``field`` pro danou operaci.
+      :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
 
    .. py:method:: get_queryset()
 
@@ -72,7 +72,7 @@ Třídy
 
       Metoda pro získaní contextu akci pro template.
 
-      :param kwargs: Popis parametru ``kwargs``.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
 
    .. py:method:: get_shows()
 
@@ -95,13 +95,13 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: form_invalid()
 
       Provádí operaci form invalid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: get()
 
@@ -136,13 +136,13 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: form_invalid()
 
       Provádí operaci form invalid.
 
-      :param form: Vstupní hodnota ``form`` pro danou operaci.
+      :param form: Formulářová instance zpracovávaná funkcí.
 
    .. py:method:: get()
 
@@ -324,12 +324,6 @@ Funkce
 
    Funkce pro získaní dictionary povinných polí podle stavu lokality.
 
-
-   **Argumenty:**
-
-   - ``zaznam`` (*Lokalita*): model Lokalita pro který se dané pole počítají.
-   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-   **Návratová hodnota:**
-
-   *required_fields*: list polí.
+   :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+   :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+   :return: Seznam názvů polí, která mají být v daném stavu povinná.

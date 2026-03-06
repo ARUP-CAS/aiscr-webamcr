@@ -122,7 +122,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní hodnota ``queryset`` pro danou operaci.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
         """
         logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -147,9 +147,9 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             Q(nazev__icontains=value)
@@ -166,9 +166,9 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle identu celý akce.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
@@ -179,9 +179,9 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle identu celý lokality.
 
-        :param queryset: Popis parametru ``queryset``.
-        :param name: Popis parametru ``name``.
-        :param value: Popis parametru ``value``.
+        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
         """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
@@ -230,7 +230,7 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("ez.filters.history.divider.label")

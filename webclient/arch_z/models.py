@@ -788,7 +788,7 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         """
         Vytvoří a vrátí Fedora transakci pro práci s externím odkazem.
 
-        :param transaction_user: Vstupní hodnota ``transaction_user`` pro danou operaci.
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
         """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User

@@ -17,8 +17,8 @@ def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
     """
     Odstraní nalez objekt.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("nalez.signals.delete_nalez_objekt.start", extra={"pk": instance.pk})
@@ -71,8 +71,8 @@ def delete_nalez_predmet(sender, instance: NalezObjekt, **kwargs):
     """
     Odstraní nalez predmet.
 
-    :param sender: Vstupní hodnota ``sender`` pro danou operaci.
-    :param instance: Vstupní hodnota ``instance`` pro danou operaci.
+    :param sender: Třída modelu, která signal vyvolala.
+    :param instance: Instance modelu, které se operace týká.
     :param kwargs: Dodatečné pojmenované argumenty předané voláním.
     """
     logger.debug("nalez.signals.delete_nalez_predmet.start", extra={"pk": instance.pk})

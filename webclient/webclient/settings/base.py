@@ -13,8 +13,8 @@ def get_secret(setting, default_value=None):
     """
     Vrací tajnou hodnotu ze settings nebo dodanou výchozí hodnotu.
 
-    :param setting: Vstupní hodnota ``setting`` pro danou operaci.
-    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
+    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
     """
     file_path = (
         "/run/secrets/db_conf"
@@ -43,8 +43,8 @@ def get_mail_secret(setting, default_value=None):
     """
     Vrací mail secret.
 
-    :param setting: Vstupní hodnota ``setting`` pro danou operaci.
-    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
+    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
     """
     file_mail_path = (
         "/run/secrets/mail_conf"
@@ -71,7 +71,7 @@ def get_plain_redis_pass(default_value=""):
     """
     Vrací plain redis pass.
 
-    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
     """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
@@ -84,7 +84,7 @@ def get_redis_pass(default_value=""):
     """
     Vrací redis pass.
 
-    :param default_value: Vstupní hodnota ``default_value`` pro danou operaci.
+    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
     """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
@@ -297,7 +297,7 @@ def rosetta_translation_rights(user):
     """
     Provádí operaci rosetta translation rights.
 
-    :param user: Vstupní hodnota ``user`` pro danou operaci.
+    :param user: Uživatel, v jehož kontextu se operace provádí.
     """
     from core.constants import ROLE_UPRAVA_TEXTU
 

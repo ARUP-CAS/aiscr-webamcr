@@ -149,7 +149,7 @@ def index(request):
     """
     Funkce pohledu pro zobrazení indexu s navigací projektu.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     return render(request, "projekt/index.html")
 
@@ -161,8 +161,8 @@ def detail(request, ident_cely):
     """
     Funkce pohledu pro zobrazení detailu projektu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     context = {"warnings": request.session.pop("temp_data", None)}
     projekt = get_object_or_404(
@@ -215,7 +215,7 @@ def post_ajax_get_projects_limit(request):
     """
     Funkce pohledu pro získaní heatmapy projektu.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     body = json.loads(request.body.decode("utf-8"))
     vrstvy_map = {"p1": [1], "p2": [2], "p3": [3], "p46": [4, 5, 6], "p78": [7, 8]}
@@ -265,7 +265,7 @@ def post_ajax_get_project_one(request):
     """
     Funkce pohledu pro získaní geometrie projektu.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     body = json.loads(request.body.decode("utf-8"))
     pians = get_project_geom(
@@ -360,7 +360,7 @@ def create(request):
 
     Funkce pohledu pro vytvoření projektu.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     logger.debug("projekt.views.create.start")
     required_fields = get_required_fields()
@@ -464,8 +464,8 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci projektu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     required_fields = get_required_fields(projekt)
@@ -559,8 +559,8 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if check_stav_changed(request, projekt):
@@ -603,8 +603,8 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
         """
         Provádí operaci add ownership lookup.
 
-        :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         if ownership == Permissions.ownershipChoices.our:
             return Q(**{"organizace": self.request.user.organizace})
@@ -615,8 +615,8 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         accessibility_key = "pristupnost_snapshot__in"
         accessibilities = Heslar.objects.filter(
@@ -697,8 +697,8 @@ def schvalit(request, ident_cely):
     """
     Funkce pohledu pro schválení projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     logger.debug("projekt.views.schvalit.start", extra={"ident_cely": ident_cely})
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -771,8 +771,8 @@ def prihlasit(request, ident_cely):
     """
     Funkce pohledu pro přihlášení projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAPSANY:
@@ -835,8 +835,8 @@ def zahajit_v_terenu(request, ident_cely):
     """
     Funkce pohledu pro zahájení v terenu projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_PRIHLASENY:
@@ -896,8 +896,8 @@ def ukoncit_v_terenu(request, ident_cely):
     """
     Funkce pohledu pro ukončení v terenu projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
@@ -948,8 +948,8 @@ def uzavrit(request, ident_cely):
     """
     Funkce pohledu pro uzavření projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
@@ -1035,8 +1035,8 @@ def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
@@ -1122,8 +1122,8 @@ def navrhnout_ke_zruseni(request, ident_cely):
     """
     Funkce pohledu pro navržení projektu ke zrušení pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
@@ -1186,8 +1186,8 @@ def zrusit(request, ident_cely):
     """
     Funkce pohledu pro zrušení projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
@@ -1256,8 +1256,8 @@ def vratit(request, ident_cely):
     """
     Funkce pohledu pro vrácení projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
@@ -1301,8 +1301,8 @@ def vratit_navrh_zruseni(request, ident_cely):
     """
     Funkce pohledu pro vrácení návrhu na zrušení projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
 
@@ -1351,9 +1351,9 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
     """
     Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
-    :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     proj = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
@@ -1379,8 +1379,8 @@ def pripojit_dokument(request, proj_ident_cely):
     """
     Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param proj_ident_cely: Popis parametru ``proj_ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
     """
     proj = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
@@ -1398,8 +1398,8 @@ def generovat_oznameni(request, ident_cely):
     """
     Funkce pohledu pro generování oznámení projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     logger.debug(
         "projekt.views.generovat_oznameni.start",
@@ -1451,8 +1451,8 @@ def generovat_expertni_list(request, ident_cely):
     """
     Funkce pohledu pro generování expertního listu projektu pomoci modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -1470,14 +1470,9 @@ def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní dátumů pro historii.
 
-    Args:
-    historie_vazby (HistorieVazby): model historieVazby daného projektu.
-
-    Returns:
-    historie: dictionary dátumů k historii.
-
-    :param historie_vazby: Popis parametru ``historie_vazby``.
-    :param request_user: Popis parametru ``request_user``.
+    :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+    :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+    :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
     """
     request_user: User
     anonymized = request_user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
@@ -1510,16 +1505,9 @@ def get_detail_template_shows(projekt, user):
     """
     Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
 
-    Args:
-    projekt (Projekt): model projekt pro který se dané akce počítají.
-
-    user (AuthUser): uživatel pro kterého se dané akce počítají.
-
-    Returns:
-    show: dictionary možností pro zobrazení.
-
-    :param projekt: Popis parametru ``projekt``.
-    :param user: Popis parametru ``user``.
+    :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
     """
     show_oznamovatel = get_show_oznamovatel(projekt, user)
 
@@ -1595,8 +1583,9 @@ def get_show_oznamovatel(projekt, user):
     """
     Vrací show oznamovatel.
 
-    :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
-    :param user: Vstupní hodnota ``user`` pro danou operaci.
+    :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
     """
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
         if user.is_archiver_or_more:
@@ -1635,16 +1624,9 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu projektu.
 
-    Args:
-    zaznam (Projekt): model projekt pro který se dané pole počítají.
-
-    next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-    Returns:
-    required_fields: list polí.
-
-    :param zaznam: Popis parametru ``zaznam``.
-    :param next: Popis parametru ``next``.
+    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+    :return: Seznam názvů polí, která mají být v daném stavu povinná.
     """
     required_fields = []
     if zaznam:
@@ -1681,7 +1663,7 @@ def katastr_text_to_id(request):
     """
     Funkce podlehu pro získaní ID katastru podle názvu katastru.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     hlavni_katastr: str = request.POST.get("hlavni_katastr")
     if hlavni_katastr is None or hlavni_katastr.strip() == "":
@@ -1712,7 +1694,7 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
         """
         Vrací result label.
 
-        :param result: Vstupní hodnota ``result`` pro danou operaci.
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
         """
         return f"{result.ident_cely} ({result.hlavni_katastr}; {result.vedouci_projektu})"
 
@@ -1747,7 +1729,7 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
         """
         Ověří filter permission.
 
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         permissions = Permissions.objects.filter(
             main_role=self.request.user.hlavni_role,
@@ -1787,8 +1769,8 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         """
         Vrací existing record.
 
-        :param projekt: Vstupní hodnota ``projekt`` pro danou operaci.
-        :return: Vrací načtená data odpovídající vstupním parametrům.
+        :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+        :return: Načtená data odpovídající zadaným vstupům.
         """
         historie_objects = Historie.objects.filter(vazba=projekt.historie, typ_zmeny=OZNAMENI_PROJ_MANUALNI)
         if historie_objects.exists():

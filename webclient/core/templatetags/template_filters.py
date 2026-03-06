@@ -22,7 +22,7 @@ def url_to_classes(value):
     """
     Provádí operaci url to classes.
 
-    :param value: Vstupní hodnota ``value`` pro danou operaci.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     if value == "/":
         return "app-home"
@@ -37,7 +37,7 @@ def katastry_to_list(value):
     """
     Vrátí seznam katastrů ve formátu odděleném středníkem.
 
-    :param value: Popis parametru ``value``.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     value = [str(i) for i in value]
     display = "; ".join(value)
@@ -49,7 +49,7 @@ def hesla_to_list(value):
     """
     Spojí hodnoty hesel do řetězce odděleného čárkami.
 
-    :param value: Popis parametru ``value``.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     list_hesla = ", ".join(value.values_list("heslo", flat=True))
     return list_hesla
@@ -60,7 +60,7 @@ def autori_ordered_list(value):
     """
     Vrátí autory externího zdroje v definovaném pořadí.
 
-    :param value: Popis parametru ``value``.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     return "; ".join(
         Osoba.objects.filter(externizdrojautor__externi_zdroj=value)
@@ -74,7 +74,7 @@ def render_daterange(value):
     """
     Naformátuje PostgreSQL DateRange do čitelné textové podoby.
 
-    :param value: Popis parametru ``value``.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     if value == "" or value is None:
         return None
@@ -96,8 +96,8 @@ def last_x_letters(value, x):
     """
     Vrátí posledních ``x`` znaků ze vstupního řetězce.
 
-    :param value: Popis parametru ``value``.
-    :param x: Popis parametru ``x``.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param x: Číselná hodnota ``x`` použitá při výpočtu nebo transformaci.
     """
     if len(value) > x:
         return value[-x:]
@@ -110,8 +110,8 @@ def ifinlist(widget_optgroups, list):
     """
     Vrátí popisky voleb, jejichž hodnota je v předaném seznamu.
 
-    :param widget_optgroups: Popis parametru ``widget_optgroups``.
-    :param list: Popis parametru ``list``.
+    :param widget_optgroups: Textový nebo strukturální vstup `widget_optgroups` používaný při sestavení nebo zpracování obsahu.
+    :param list: Kolekce ``list`` zpracovávaná touto funkcí.
     """
     string = ""
     for group_name, group_choices, group_index in widget_optgroups:
@@ -129,7 +129,7 @@ def check_if_none(value):
     """
     Vrátí prázdný řetězec, pokud je hodnota None nebo prázdná.
 
-    :param value: Popis parametru ``value``.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     if value:
         return value
@@ -142,7 +142,7 @@ def get_katastr_name(value):
     """
     Vrací katastr name.
 
-    :param value: Vstupní hodnota ``value`` pro danou operaci.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     if isinstance(value, list):
         katastre = RuianKatastr.objects.filter(pk__in=value)
@@ -161,7 +161,7 @@ def true_false(value):
     """
     Vrátí lokalizovaný text pro hodnotu ano/ne.
 
-    :param value: Popis parametru ``value``.
+    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
     """
     if value and value is True:
         return _("core.template_filters.true_false.true.label")
@@ -174,7 +174,7 @@ def get_osoby_name(widget):
     """
     Vrátí seznam osob vybraných ve widgetu jako text.
 
-    :param widget: Popis parametru ``widget``.
+    :param widget: Textový nebo strukturální vstup `widget` používaný při sestavení nebo zpracování obsahu.
     """
     list_hesla = ""
     if not widget["value"] or widget["value"] == [""]:
@@ -216,8 +216,8 @@ def get_value_from_heslar(nazev_heslare, hodnota):
     """
     Vrací value from heslar.
 
-    :param nazev_heslare: Vstupní hodnota ``nazev_heslare`` pro danou operaci.
-    :param hodnota: Vstupní hodnota ``hodnota`` pro danou operaci.
+    :param nazev_heslare: Číselná nebo geometrická hodnota `nazev_heslare` použitá při výpočtu nebo transformaci.
+    :param hodnota: Číselná nebo geometrická hodnota `hodnota` použitá při výpočtu nebo transformaci.
     """
     values = {
         ("externi_zdroj_typ", "kniha"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_KNIHA,

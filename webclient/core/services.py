@@ -34,10 +34,10 @@ class PermissionService:
 
     def run(self, docfile: InMemoryUploadedFile) -> tuple[pd.DataFrame, list[str]]:
         """
-        Spustí hodnotu. v aplikaci.
+               Spustí hodnotu. v aplikaci.
 
-        :param docfile: Vstupní hodnota ``docfile`` pro danou operaci.
-        :return: Vrací výsledek provedené operace.
+               :param docfile: Cesta, URL nebo název zdroje ``docfile``, ze kterého funkce čte nebo kam zapisuje.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         if docfile.name and docfile.name.lower().endswith(".csv"):
             sheet = pd.read_csv(docfile)
@@ -84,7 +84,7 @@ class PermissionService:
         """
         Metoda pro validaci importovaného csv.
 
-        :param csv_sheet: Popis parametru ``csv_sheet``.
+        :param csv_sheet: Záznam/objekt ``csv_sheet``, který funkce čte, validuje nebo upravuje.
         :return: Vrací výsledek operace.
         """
         expected = [
@@ -118,7 +118,7 @@ class PermissionService:
         """
         Metoda pro validaci importovaného excelu a jeho úpravu.
 
-        :param sheet: Popis parametru ``sheet``.
+        :param sheet: Záznam/objekt ``sheet``, který funkce čte, validuje nebo upravuje.
         :return: Vrací výsledek operace.
         """
         if (
@@ -322,7 +322,7 @@ class PermissionService:
         """
         Metoda pro kontrolu správneho zadáni statusu v excelu.
 
-        :param cell: Popis parametru ``cell``.
+        :param cell: Číselná nebo geometrická hodnota `cell` použitá při výpočtu nebo transformaci.
         :return: Vrací výsledek operace.
         """
         return bool(re.fullmatch(r"(<|>|)[A-Z]{1,2}\d{1}", cell) or re.fullmatch(r"\D{1,2}\d{1}-\D{1,2}\d{1}", cell))

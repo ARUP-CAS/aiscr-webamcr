@@ -16,7 +16,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
 
    .. py:method:: __call__()
 
@@ -28,10 +28,10 @@ Třídy
 
       Metoda pro kontrolu oprvávnení pro každý view.
 
-      :param request: Popis parametru ``request``.
-      :param view_func: Popis parametru ``view_func``.
-      :param view_args: Popis parametru ``view_args``.
-      :param view_kwargs: Popis parametru ``view_kwargs``.
+      :param request: Aktuální HTTP request předaný view/funkci.
+      :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+      :param view_args: Dodatečné argumenty předané voláním.
+      :param view_kwargs: Dodatečné argumenty předané voláním.
 
 
 .. py:class:: ErrorMiddleware
@@ -44,7 +44,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
 
    .. py:method:: __call__()
 
@@ -57,7 +57,7 @@ Třídy
       Provádí operaci process exception.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param exception: Vstupní hodnota ``exception`` pro danou operaci.
+      :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
 
 
 .. py:class:: StatusMessageMiddleware
@@ -70,7 +70,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param get_response: Vstupní hodnota ``get_response`` pro danou operaci.
+      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
 
    .. py:method:: __call__()
 
@@ -82,17 +82,17 @@ Třídy
 
       Provádí operaci show message.
 
-      :param value: Vstupní hodnota ``value`` pro danou operaci.
+      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param redis_key: Vstupní hodnota ``redis_key`` pro danou operaci.
-      :return: Vrací výsledek provedené operace.
+      :param redis_key: Textový název nebo klíč ``redis_key`` používaný v rámci operace.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: process_view()
 
       Provádí operaci process view.
 
       :param request: Django HTTP požadavek použitý při zpracování.
-      :param view_func: Vstupní hodnota ``view_func`` pro danou operaci.
-      :param view_args: Vstupní hodnota ``view_args`` pro danou operaci.
-      :param view_kwargs: Vstupní hodnota ``view_kwargs`` pro danou operaci.
+      :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+      :param view_args: Dodatečné argumenty předané voláním.
+      :param view_kwargs: Dodatečné argumenty předané voláním.
 

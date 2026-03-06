@@ -84,8 +84,8 @@ def get_detail_context(sn, request):
     """
     Funkce pro získaní potřebného kontextu pro samostatný nález.
 
-    :param sn: Popis parametru ``sn``.
-    :param request: Popis parametru ``request``.
+    :param sn: Číselná nebo geometrická hodnota `sn` použitá při výpočtu nebo transformaci.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     context = {"sn": sn}
     context["form"] = CreateSamostatnyNalezForm(instance=sn, readonly=True, user=request.user)
@@ -106,7 +106,7 @@ def index(request):
     """
     Funkce pohledu pro zobrazení domovské stránky samostatného nálezu s navigačními možnostmi.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     return render(request, "pas/index.html")
 
@@ -156,9 +156,9 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
 
     def _set_copy_source(self):
         """
-        Nastaví copy source.
+               Nastaví copy source.
 
-        :return: Vrací výsledek provedené operace.
+        :return: Výstup funkce odpovídající implementované logice.
         """
         copy_source = SamostatnyNalez.objects.get(ident_cely=self.kwargs["ident_cely"])
         copy_source.id = None
@@ -204,7 +204,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci form valid.
 
-        :param form: Vstupní hodnota ``form`` pro danou operaci.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         form_coor = CoordinatesDokumentForm(self.request.POST)
         sn = form.save(commit=False)
@@ -250,7 +250,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu.
 
-        :param form: Popis parametru ``form``.
+        :param form: Formulářová instance zpracovávaná funkcí.
         """
         logger.info("pas.views.create.form_invalid", extra={"error": form.errors})
         messages.error(self.request, FORM_NOT_VALID)
@@ -260,7 +260,7 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Zpracuje geometry. v aplikaci.
 
-        :param form_coor: Vstupní hodnota ``form_coor`` pro danou operaci.
+        :param form_coor: Záznam/objekt ``form_coor``, který funkce čte, validuje nebo upravuje.
         """
         geom = None
         geom_sjtsk = None
@@ -308,8 +308,8 @@ def detail(request, ident_cely):
     """
     Funkce pohledu pro zobrazení detailu samostatného nálezu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     context = {"warnings": request.session.pop("temp_data", None)}
     sn = get_object_or_404(
@@ -348,8 +348,8 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci samostatného nálezu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav == SN_ARCHIVOVANY:
@@ -437,8 +437,8 @@ def edit_ulozeni(request, ident_cely):
     """
     Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
@@ -490,8 +490,8 @@ def vratit(request, ident_cely):
     """
     Funkce pohledu pro vrácení stavu samostatného nálezu pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     sn: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
@@ -546,8 +546,8 @@ def odeslat(request, ident_cely):
     """
     Funkce pohledu pro odeslání samostatného nálezu pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     sn: SamostatnyNalez = get_object_or_404(
         SamostatnyNalez.objects.select_related(
@@ -608,8 +608,8 @@ def potvrdit(request, ident_cely):
     """
     Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_ODESLANY:
@@ -661,8 +661,8 @@ def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     sn: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_POTVRZENY:
@@ -724,8 +724,8 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         """
         Provádí operaci add ownership lookup.
 
-        :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
@@ -768,7 +768,7 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         """
         Provádí operaci rename field for ordering.
 
-        :param field: Vstupní hodnota ``field`` pro danou operaci.
+        :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
         """
         field = field.replace("-", "")
         return {
@@ -815,8 +815,8 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání samostatného nálezu pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param ident_cely: Popis parametru ``ident_cely``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
     """
     nalez: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if check_stav_changed(request, nalez):
@@ -872,7 +872,7 @@ def zadost(request):
     """
     Funkce pohledu pro vytvoření žádosti o spolupráci.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     if request.method == "POST":
         logger.debug("pas.views.zadost.start")
@@ -977,7 +977,7 @@ class UzivatelSpolupraceListView(SearchListView):
         """
         Provádí operaci rename field for ordering.
 
-        :param field: Vstupní hodnota ``field`` pro danou operaci.
+        :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
         """
         field = field.replace("-", "")
         return {
@@ -1015,8 +1015,8 @@ class UzivatelSpolupraceListView(SearchListView):
         """
         Provádí operaci add ownership lookup.
 
-        :param ownership: Vstupní hodnota ``ownership`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         filtered_my = Q(spolupracovnik=self.request.user)
         if ownership == p.ownershipChoices.our:
@@ -1029,8 +1029,8 @@ class UzivatelSpolupraceListView(SearchListView):
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Vstupní hodnota ``permission`` pro danou operaci.
-        :param qs: Vstupní hodnota ``qs`` pro danou operaci.
+        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+        :param qs: Vstupní queryset, který má být dále zpracován.
         """
         return qs
 
@@ -1060,8 +1060,8 @@ def aktivace(request, pk):
     """
     Funkce pohledu pro aktivaci spolupráce pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param pk: Popis parametru ``pk``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
@@ -1219,8 +1219,8 @@ def smazat_spolupraci(request, pk):
     """
     Funkce pohledu pro smazání spolupráce pomocí modalu.
 
-    :param request: Popis parametru ``request``.
-    :param pk: Popis parametru ``pk``.
+    :param request: Aktuální HTTP request předaný view/funkci.
+    :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
@@ -1265,8 +1265,9 @@ def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
 
-    :param historie_vazby: Popis parametru ``historie_vazby``.
-    :param request_user: Popis parametru ``request_user``.
+    :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+    :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+    :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
     """
     anonymized = request_user.hlavni_role.pk not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
@@ -1282,8 +1283,9 @@ def get_detail_template_shows(sn, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
 
-    :param sn: Popis parametru ``sn``.
-    :param user: Popis parametru ``user``.
+    :param sn: Číselná nebo geometrická hodnota `sn` použitá při výpočtu nebo transformaci.
+    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
     """
     show_arch_links = sn.stav == SN_ARCHIVOVANY
     show = {
@@ -1311,7 +1313,7 @@ def post_point_position_2_katastre(request):
     """
     Funkce pro získaní názvu katastru z bodu.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("pas.views.post_point_position_2_katastre", extra={"data": body})
@@ -1333,7 +1335,7 @@ def post_point_position_2_katastre_with_geom(request):
     """
     Funkce pro získaní názvu katastru, geomu z bodu.
 
-    :param request: Popis parametru ``request``.
+    :param request: Aktuální HTTP request předaný view/funkci.
     """
     body = json.loads(request.body.decode("utf-8"))
     [katastr_name, katastr_db, katastr_geom] = get_cadastre_from_point_with_geometry(Point(body["x1"], body["x2"]))
@@ -1354,16 +1356,9 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu samostatného nálezu.
 
-    Args:
-    zaznam (PAS): model samostatního nálezu pro který se dané pole počítají.
-
-    next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-    Returns:
-    required_fields: list polí.
-
-    :param zaznam: Popis parametru ``zaznam``.
-    :param next: Popis parametru ``next``.
+    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+    :return: Seznam názvů polí, která mají být v daném stavu povinná.
     """
     required_fields = []
     if zaznam:
@@ -1400,7 +1395,7 @@ class ProjektPasTableView(LoginRequiredMixin, View):
         Vrací výsledek operace.
 
         :param request: Django HTTP požadavek použitý při zpracování.
-        :param ident_cely: Vstupní hodnota ``ident_cely`` pro danou operaci.
+        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
         """
         projekt = Projekt.objects.get(ident_cely=ident_cely)
         qs = (
