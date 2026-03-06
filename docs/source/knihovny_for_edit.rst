@@ -52,3 +52,12 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
 @licence_table
+
+Ostatní knihovny a závislosti
+-------------------------------
+
+Použité JavaScript knihovny a Docker image jsou uvedeny v samostatné části dokumentace.
+
+:doc:`Docker image <12_zavislosti/docker_images>`.
+:doc:`JavaScript knihovny <12_zavislosti/javascript_knihovny>`.
+
