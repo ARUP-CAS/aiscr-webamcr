@@ -5,11 +5,12 @@ import time
 
 from core.setting_models import CustomAdminSettings
 from django.urls import Resolver404, resolve
-from heslar.hesla_dynamicka import ADMIN_USER
 from uzivatel.models import User
 
 log_request_data = threading.local()
-logger = logging.getLogger("request.timer")
+logger = logging.getLogger(__name__)
+
+_ANONYMOUS = None
 
 
 def get_slow_request_settings():
@@ -24,10 +25,18 @@ def get_slow_request_settings():
         return 2.0
 
 
-# práh pro „pomalé“ požadavky (v sekundách)
+# práh pro "pomalé" požadavky (v sekundách)
 SLOW_REQUEST_THRESHOLD = get_slow_request_settings()
 
-ANONYMOUS = User.objects.filter(pk=ADMIN_USER).first().ident_cely
+
+def _get_anonymous():
+    global _ANONYMOUS
+    if _ANONYMOUS is None:
+        from heslar.hesla_dynamicka import ADMIN_USER
+
+        user = User.objects.filter(pk=ADMIN_USER).first()
+        _ANONYMOUS = user.ident_cely if user else "anonymous"
+    return _ANONYMOUS
 
 
 def _resolve_view_info(request) -> dict:
@@ -82,7 +91,7 @@ class LogMiddleware:
         start = time.monotonic()
         log_request_data.url = request.get_full_path()
         log_request_data.user_id = (
-            request.user.ident_cely if request.user.is_authenticated else ANONYMOUS
+            request.user.ident_cely if request.user.is_authenticated else _get_anonymous()
         )  # slouží také pro zaznamenání ve Fedoře
         try:
             response = self.get_response(request)
@@ -133,4 +142,7 @@ class LogMiddleware:
 
         :return: Vrací výsledek volání ``getattr()``.
         """
-        return getattr(log_request_data, "user_id", ANONYMOUS)
+        try:
+            return getattr(log_request_data, "user_id", _get_anonymous())
+        except Exception:
+            return None

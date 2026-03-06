@@ -52,6 +52,10 @@ Funkce
 
    :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, float.
 
+.. py:function:: _get_anonymous()
+
+   Popis není k dispozici.
+
 .. py:function:: _resolve_view_info(request)
 
    Vrátí dict s informacemi o view: view_name, view_module, kwargs.
