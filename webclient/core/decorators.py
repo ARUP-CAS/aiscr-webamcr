@@ -13,6 +13,9 @@ def allowed_user_groups(allowed_groups):
     """
     Omezí přístup k pohledu pouze na vybrané hlavní uživatelské role.
 
+    Na vstupe je list povolených uživatelských skupin.
+    Jestli uživatel nemá jesnou z daných skupin jako hlavní tak funkce vráti exception PermissionError a nezobrazí formulár.
+
     :param allowed_groups: Parametr ``allowed_groups`` slouží jako vstup pro logiku funkce ``allowed_user_groups``.
 
         :return: Vrací proměnná ``_method_wrapper``.
