@@ -77,7 +77,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/activate_uzivatel")
 
-        # Vytvoření uživatele administrátora
+        # Vytvoření uživatele v administraci
         time = self.getTime()
         self.goToAddress("/admin/uzivatel/user/add/")
         self.ElementSendKeys(By.ID, "id_email", "jan.havrlant2@centrum.cz")
@@ -96,7 +96,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/create_uzivatel_admin")
 
-        # Úprava uživatele administrátora
+        # Úprava uživatele v administraci
         time = self.getTime()
         pk = User.objects.filter(email="jan.havrlant2@centrum.cz").first().pk
         self.goToAddress(f"/admin/uzivatel/user/{pk}/change/")
@@ -105,7 +105,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/update_uzivatel_admin")
 
-        # Úprava hesla administrátora
+        # Úprava hesla v administraci
         time = self.getTime()
         self.goToAddress(f"/admin/uzivatel/user/{pk}/password/")
         self.ElementSendKeys(By.ID, "id_password1", "te0s0t002")
@@ -114,7 +114,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/update_heslo_admin")
 
-        # Smazání notifikace administrátora
+        # Smazání notifikace v administraci
         time = self.getTime()
         self.goToAddress(f"/admin/uzivatel/user/{pk}/change/")
         self.ElementClick(By.ID, "id_User_notification_types-0-DELETE")
@@ -122,7 +122,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/delete_notifikace_admin")
 
-        # Úprava notifikace administrátora
+        # Úprava notifikace v administraci
         time = self.getTime()
         self.goToAddress(f"/admin/uzivatel/user/{pk}/change/")
         self.ElementClick(By.CSS_SELECTOR, "#id_User_notification_types-0-usernotificationtype > option:nth-child(2)")
@@ -130,7 +130,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/update_notifikace_admin")
 
-        # Vytvoření notifikace administrátora
+        # Vytvoření notifikace v administraci
         time = self.getTime()
         self.goToAddress(f"/admin/uzivatel/user/{pk}/change/")
         self.ElementClick(By.CSS_SELECTOR, "#id_User_notification_types-5-usernotificationtype > option:nth-child(3)")
@@ -138,7 +138,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/create_notifikace_admin")
 
-        # Vytvoření PES administrátora
+        # Vytvoření PES v administraci
         time = self.getTime()
         self.goToAddress(f"/admin/uzivatel/user/{pk}/change/")
         self.ElementClick(By.ID, "id_User_notification_types-2-0-usernotificationtype")
@@ -149,7 +149,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/create_pes_admin")
 
-        # Úprava PES administrátora
+        # Úprava PES v administraci
         time = self.getTime()
         self.goToAddress(f"/admin/uzivatel/user/{pk}/change/")
         self.ElementClick(By.ID, "id_pes_set-0-object_id")
@@ -158,7 +158,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, ".submit-row > .default")
         self.check_fedora_change(time, "uzivatel/tests/resources/test_148/update_pes_admin")
 
-        # Smazání PES administrátora
+        # Smazání PES v administraci
         time = self.getTime()
         self.goToAddress(f"/admin/uzivatel/user/{pk}/change/")
         self.ElementClick(By.ID, "id_pes_set-0-DELETE")
