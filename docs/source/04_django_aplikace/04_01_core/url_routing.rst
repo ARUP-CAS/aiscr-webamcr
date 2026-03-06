@@ -147,6 +147,9 @@ CORE
    * - ``download_thumbnail``
      - ``soubor/stahnout-nahled/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
      - ``views.DownloadThumbnailSmall.as_view()``
+   * - ``download_thumbnail_DZ``
+     - ``soubor/stahnout-nahled-DZ/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
+     - ``views.DownloadThumbnailDZ.as_view()``
    * - ``download_thumbnail_large``
      - ``soubor/stahnout-nahled-velky/<str:typ_vazby>/<str:ident_cely>/<int:pk>``
      - ``views.DownloadThumbnailLarge.as_view()``

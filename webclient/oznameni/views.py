@@ -206,6 +206,7 @@ class OznameniDokumentaceView(OznameniView):
                 "oznameni.views.index.second_part.end",
                 extra={"ident_cely": request.POST["ident_cely"], "transaction": fedora_transaction.uid},
             )
+            self.session_identifier.clear_cached_files()
             return redirect("oznameni:index3", ident_cely=projekt.ident_cely)
         raise PermissionDenied
 
