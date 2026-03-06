@@ -55,13 +55,8 @@ Funkce
 
    Funkce která vrací formulář VB pro formset.
 
+   :param pian: objekt PIAN.
+   :param niveleta: niveleta objekt.
+   :param not_readonly: nastavuje formulář na readonly.
 
-   **Argumenty:**
-
-   - ``pian`` (*pian*): objekt PIAN.
-   - ``niveleta`` (*niveleta*): niveleta objekt.
-   - ``not_readonly`` (*boolean*): nastavuje formulář na readonly.
-
-   **Návratová hodnota:**
-
-   *CreateVysovyBodForm*: django model formulář VB
+   :return: django model formulář VB.

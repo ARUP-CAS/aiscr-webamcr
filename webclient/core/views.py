@@ -369,6 +369,17 @@ class DownloadThumbnailDZ(View):
     """
 
     def get(self, request, typ_vazby, ident_cely, pk, *args, **kwargs) -> FileResponse | HttpResponse:
+        """
+        Vrátí miniaturu souboru z dočasného uploadu po kontrole oprávnění a vazby.
+
+        :param request: Django HTTP požadavek.
+        :param typ_vazby: Typ vazby souboru na doménový záznam.
+        :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
+        :param pk: Primární klíč souboru.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Odpověď s miniaturou souboru.
+        """
         if not request.session.get("session_uuid"):
             raise PermissionDenied
         session_identifier = SessionIdentifier(request)
@@ -469,6 +480,14 @@ class UpdateFileView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
+        """
+        Inicializuje identifikaci session pro práci s cache nahraných souborů.
+
+        :param request: Django HTTP požadavek.
+        :param args: Dodatečné poziční argumenty předané voláním.
+        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :return: Výsledek standardního zpracování dispatch.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         self.session_identifier = SessionIdentifier(request)
         self.session_identifier.set_ident(ident_cely)

@@ -682,12 +682,24 @@ class NotificationsLogAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     def created(self, obj):
+        """
+        Vrátí datum a čas vytvoření záznamu ve formátu pro administraci.
+
+        :param obj: Záznam logu notifikace.
+        :return: Formátovaný datum a čas vytvoření.
+        """
         return localtime(obj.created_at).strftime("%d.%m.%Y %H:%M:%S")
 
     created.short_description = "Created at"
     created.admin_order_field = "created_at"
 
     def status_colored(self, obj):
+        """
+        Vrátí barevně zvýrazněný stav odeslání notifikace.
+
+        :param obj: Záznam logu notifikace.
+        :return: HTML reprezentace stavu notifikace.
+        """
         colors = {
             "OK": "#2e7d32",
             "ERR": "#c62828",
@@ -700,15 +712,40 @@ class NotificationsLogAdmin(admin.ModelAdmin):
     status_colored.admin_order_field = "status"
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Nastaví všechna pole modelu jako read-only v detailu záznamu.
+
+        :param request: Django HTTP požadavek.
+        :param obj: Upravovaný záznam logu notifikace.
+        :return: Seznam názvů polí určených pouze ke čtení.
+        """
         return [f.name for f in self.model._meta.fields]
 
     def has_add_permission(self, request):
+        """
+        Zakáže ruční vytváření záznamů v administraci.
+
+        :param request: Django HTTP požadavek.
+        :return: Vždy ``False``.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Zakáže mazání záznamů logu notifikací.
+
+        :param request: Django HTTP požadavek.
+        :param obj: Vybraný záznam logu notifikace.
+        :return: Vždy ``False``.
+        """
         return False
 
     def get_urls(self):
+        """
+        Přidá vlastní URL pro odeslání testovacího emailu z administrace.
+
+        :return: Seznam URL vzorů pro tento admin.
+        """
         urls = super().get_urls()
         custom_urls = [
             path(
@@ -720,6 +757,12 @@ class NotificationsLogAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def test_email_view(self, request):
+        """
+        Zobrazí a zpracuje formulář pro odeslání testovacího emailu.
+
+        :param request: Django HTTP požadavek.
+        :return: Odpověď s formulářem a výsledkem odeslání.
+        """
         if not request.user.has_perm("uzivatel.send_test_email"):
             raise PermissionDenied
 

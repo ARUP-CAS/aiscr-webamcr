@@ -14,20 +14,6 @@ Třídy
 
    .. py:method:: get()
 
-
-.. py:class:: DownloadThumbnailDZ
-
-   Třída pohledu pro nahrání miniatury do DropZone při obnovení stránky.
-
-   **Metody:**
-
-      Připraví binární obsah obrázku před odesláním klientovi.
-
-      :param file_content: Obsah souboru načtený z repository.
-      :return: Upravený nebo původní obsah obrázku.
-
-   .. py:method:: get()
-
       Vrátí požadovaný soubor nebo jeho náhled po ověření vazby k záznamu.
 
       :param request: Django HTTP požadavek.
@@ -37,6 +23,25 @@ Třídy
       :param args: Dodatečné poziční argumenty předané voláním.
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
       :return: Odpověď s obsahem souboru, náhledem nebo redirect při chybě vazby.
+
+
+.. py:class:: DownloadThumbnailDZ
+
+   Třída pohledu pro nahrání miniatury do DropZone při obnovení stránky.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+      Vrátí miniaturu souboru z dočasného uploadu po kontrole oprávnění a vazby.
+
+      :param request: Django HTTP požadavek.
+      :param typ_vazby: Typ vazby souboru na doménový záznam.
+      :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
+      :param pk: Primární klíč souboru.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Odpověď s miniaturou souboru.
 
 
 .. py:class:: DownloadThumbnailSmall
@@ -76,8 +81,15 @@ Třídy
       Vrací context data.
 
       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
-      
+
    .. py:method:: dispatch()
+
+      Inicializuje identifikaci session pro práci s cache nahraných souborů.
+
+      :param request: Django HTTP požadavek.
+      :param args: Dodatečné poziční argumenty předané voláním.
+      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :return: Výsledek standardního zpracování dispatch.
 
 
 .. py:class:: UploadFileView

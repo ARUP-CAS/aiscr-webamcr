@@ -552,15 +552,11 @@ Funkce
 
    Funkce pro získaní dictionary contextu dokumentační jednotky.
 
+   :param app: druh archeologického záznamu ro který se daný context počítá.
+   :param jednotka: model DokumentacniJednotka pro který se daný context počítá.
+   :param jednotky: list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
+   :param show: dictionary pro zobrazení možnosti uživatele na stránce.
+   :param old_adb_post: staré volání CreateADBForm pro správně zobrazení chyb formuláře.
+   :param user: Popis parametru ``user``.
 
-   **Argumenty:**
-
-   - ``app`` (*string*): druh archeologického záznamu ro který se daný context počítá.
-   - ``jednotka`` (*DokumentacniJednotka*): model DokumentacniJednotka pro který se daný context počítá.
-   - ``jednotky`` (*DokumentacniJednotka*): list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
-   - ``show`` (*dictionary*): dictionary pro zobrazení možnosti uživatele na stránce.
-   - ``old_adb_post`` (*CreateADBForm*): staré volání CreateADBForm pro správně zobrazení chyb formuláře.
-
-   **Návratová hodnota:**
-
-   *dj_form_detail*: dictionary kontextu DJ pro správné zobrazení stránky.
+   :return: dictionary kontextu DJ pro správné zobrazení stránky.

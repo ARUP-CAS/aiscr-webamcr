@@ -169,14 +169,6 @@ Třídy
       :param id: Identifikátor zpracovávaného záznamu.
       :param form_url: Vstupní hodnota ``form_url`` pro danou operaci.
 
-   .. py:method:: log_deletion()
-
-      Provádí operaci log deletion.
-
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param object: Vstupní hodnota ``object`` pro danou operaci.
-      :param object_repr: Vstupní hodnota ``object_repr`` pro danou operaci.
-
    .. py:method:: get_readonly_fields()
 
       Vrací readonly fields.
@@ -232,6 +224,7 @@ Třídy
       :param request: Django HTTP požadavek použitý při zpracování.
       :param obj: Vstupní hodnota ``obj`` pro danou operaci.
 
+
 .. py:class:: NotificationsLogAdmin
 
    Admin panel pro kontrolu odeslaných mailů s možností poslat testovací mail.
@@ -240,15 +233,51 @@ Třídy
 
    .. py:method:: created()
 
+      Vrátí datum a čas vytvoření záznamu ve formátu pro administraci.
+
+      :param obj: Záznam logu notifikace.
+      :return: Formátovaný datum a čas vytvoření.
+
    .. py:method:: status_colored()
+
+      Vrátí barevně zvýrazněný stav odeslání notifikace.
+
+      :param obj: Záznam logu notifikace.
+      :return: HTML reprezentace stavu notifikace.
 
    .. py:method:: get_readonly_fields()
 
+      Nastaví všechna pole modelu jako read-only v detailu záznamu.
+
+      :param request: Django HTTP požadavek.
+      :param obj: Upravovaný záznam logu notifikace.
+      :return: Seznam názvů polí určených pouze ke čtení.
+
    .. py:method:: has_add_permission()
+
+      Zakáže ruční vytváření záznamů v administraci.
+
+      :param request: Django HTTP požadavek.
+      :return: Vždy ``False``.
 
    .. py:method:: has_delete_permission()
 
+      Zakáže mazání záznamů logu notifikací.
+
+      :param request: Django HTTP požadavek.
+      :param obj: Vybraný záznam logu notifikace.
+      :return: Vždy ``False``.
+
    .. py:method:: get_urls()
 
+      Přidá vlastní URL pro odeslání testovacího emailu z administrace.
+
+      :return: Seznam URL vzorů pro tento admin.
+
    .. py:method:: test_email_view()
+
+      Zobrazí a zpracuje formulář pro odeslání testovacího emailu.
+
+      :param request: Django HTTP požadavek.
+      :return: Odpověď s formulářem a výsledkem odeslání.
 
