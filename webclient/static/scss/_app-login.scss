@@ -1,8 +1,8 @@
 // --- LOGIN ---
 
 &.app-accounts {
-  background-color: $app-sidebar-bg;
-  background-image: url('img/login-bg.svg');
+  //background-color: $app-sidebar-bg;
+  background-image: url('img/login-bg-light.svg');
   background-repeat: no-repeat;
   background-size: calc(45% - 100px);
   background-position: center 100px;
@@ -15,12 +15,18 @@
     padding-top: 50px;
     padding-bottom: 50px;
 
+    .card.login-card {
+      border: 2px solid #d2d2d24f !important;
+      border-radius: 8px;
+    }
+
     .app-logo {
       @extend .mb-4, .d-flex;
       width: 100%;
       max-width: 450px;
       margin-left: auto;
       margin-right: auto;
+      filter: invert(0.9);
     }
 
     h1 {
@@ -38,7 +44,7 @@
 
       form {
         ul {
-          @extend .text-left;
+          @extend .text-start;
         }
 
         input {
@@ -69,18 +75,55 @@
         }
       }
 
-      .app-flags {
-        button {
-          text-decoration: unset;
+      .app-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0;
+        justify-content: center;
+
+        .app-control-btn {
           background: transparent;
           border: 0;
+          padding: 0.5rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
 
-          &:not(.app-active) {
-            @extend .app-flag-inactive;
+          .material-icons {
+            font-size: 1.25rem;
           }
 
-          &:first-child {
-            margin-right: .5rem;
+          &:hover {
+            filter: opacity(0.7);
+          }
+        }
+
+        .app-flags {
+          display: flex;
+          gap: 0.5rem;
+
+          button {
+            text-decoration: unset;
+            background: transparent;
+            border: 0;
+            padding: 0.5rem;
+            cursor: pointer;
+
+            &:not(.app-active) {
+              @extend .app-flag-inactive;
+            }
+
+            &:first-child {
+              margin-right: .5rem;
+            }
+
+            &:hover {
+              filter: grayscale(100%);
+              -webkit-filter: grayscale(100%);
+              opacity: 80%;
+            }
           }
         }
       }
@@ -89,6 +132,7 @@
     .app-col-desc {
       .app-inner {
         margin-top: 30px;
+        background-color: #d2d2d24f;
 
         @media #{$gt-md} {
           height: 100%;
@@ -103,11 +147,10 @@
 
         .card {
           @extend .bg-transparent, .w-100;
-          color: $app-login-desc-color;
           text-align: left;
 
           .card-body {
-            @extend .p-0, .pr-3;
+            @extend .p-0, .pe-3 !optional;
 
             h3 {
               @extend .app-heading-thin;

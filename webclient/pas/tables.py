@@ -152,7 +152,7 @@ class SamostatnyNalezTable(SearchTable):
                 ),
             )
             return format_html(
-                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" '
+                '<img src="{}" class="image-nahled" data-bs-toggle="modal" data-bs-target="#soubor-modal" '
                 'loading="lazy" data-fullsrc="{}" style="opacity:0" onload="this.style.opacity=100">',
                 thumbnail_url,
                 thumbnail_large_url,
