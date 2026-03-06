@@ -290,6 +290,26 @@ Funkce
    :param mode: Režim generování (``autodoc`` nebo ``explicit``).
    :return: True, pokud byl vygenerován alespoň jeden soubor.
 
+.. py:function:: get_script_language(script_name)
+
+   Vrátí jazyk pro zvýraznění syntaxe podle přípony souboru.
+
+.. py:function:: get_script_doc_name(script_name)
+
+   Vrátí bezpečný název RST souboru pro skript.
+
+.. py:function:: generate_rst_for_project_script(source_file, output_dir)
+
+   Vygeneruje RST dokumentaci pro jeden soubor v adresáři scripts/.
+
+.. py:function:: generate_project_scripts_index_rst(toctree_entries, output_dir)
+
+   Vygeneruje index.rst pro skripty v adresáři scripts/.
+
+.. py:function:: generate_project_scripts_docs()
+
+   Vygeneruje RST dokumentaci pro soubory v ``scripts/``.
+
 .. py:function:: build_docs()
 
    Vytvoří HTML dokumentaci pomocí Sphinx.

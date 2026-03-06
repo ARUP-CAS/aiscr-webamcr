@@ -37,6 +37,8 @@ project_root = docs_dir.parent
 webclient_dir = project_root / "webclient"
 output_base_dir = docs_dir / "source/04_django_aplikace/04_02_moduly"
 docs_scripts_output_dir = docs_dir / "source/03_vyvoj/dokumentacni_skripty"
+project_scripts_dir = project_root / "scripts"
+project_scripts_output_dir = docs_dir / "source/03_vyvoj/projektove_skripty"
 XS_NS = "{http://www.w3.org/2001/XMLSchema}"
 
 # Files to skip
@@ -1947,6 +1949,118 @@ def generate_docs_scripts_docs(mode: str = "autodoc") -> bool:
     return len(generated_files) > 0
 
 
+def get_script_language(script_name: str) -> str:
+    """Vrátí jazyk pro zvýraznění syntaxe podle přípony souboru."""
+    suffix = Path(script_name).suffix.lower()
+    if suffix == ".sh":
+        return "bash"
+    if suffix == ".py":
+        return "python"
+    if suffix == ".ini":
+        return "ini"
+    if suffix == ".txt":
+        return "text"
+    return "text"
+
+
+def get_script_doc_name(script_name: str) -> str:
+    """Vrátí bezpečný název RST souboru pro skript."""
+    return re.sub(r"[^a-zA-Z0-9]+", "_", script_name).strip("_").lower()
+
+
+def generate_rst_for_project_script(source_file: Path, output_dir: Path) -> bool:
+    """Vygeneruje RST dokumentaci pro jeden soubor v adresáři scripts/."""
+    global changes_detected
+    doc_name = get_script_doc_name(source_file.name)
+    output_file = output_dir / f"{doc_name}.rst"
+    language = get_script_language(source_file.name)
+
+    rst_content = f"""Skript {source_file.name}
+================{'=' * len(source_file.name)}
+
+Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``.
+
+.. literalinclude:: ../../../../scripts/{source_file.name}
+   :language: {language}
+   :linenos:
+"""
+
+    try:
+        if check_content_changed(rst_content, output_file):
+            changes_detected = True
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(rst_content)
+
+        print(f"    ✓ {output_file.name}")
+        return True
+    except Exception as e:
+        print(f"    ✗ Error generating RST for project script {source_file.name}: {e}")
+        return False
+
+
+def generate_project_scripts_index_rst(toctree_entries: List[str], output_dir: Path) -> bool:
+    """Vygeneruje index.rst pro skripty v adresáři scripts/."""
+    global changes_detected
+    index_file = output_dir / "index.rst"
+
+    index_content = """Projektové skripty
+=================
+
+Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``scripts/``.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Obsah:
+
+"""
+
+    for entry in sorted(toctree_entries):
+        index_content += f"   {entry}\n"
+
+    try:
+        if check_content_changed(index_content, index_file):
+            changes_detected = True
+        with open(index_file, "w", encoding="utf-8") as f:
+            f.write(index_content)
+        print("    ✓ index.rst")
+        return True
+    except Exception as e:
+        print(f"    ✗ Error updating project scripts index.rst: {e}")
+        return False
+
+
+def generate_project_scripts_docs() -> bool:
+    """Vygeneruje RST dokumentaci pro soubory v ``scripts/``."""
+    output_dir = project_scripts_output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("\nGenerating documentation for scripts/* files")
+    print(f"Source: {project_scripts_dir}")
+    print(f"Output: {output_dir}")
+
+    if not project_scripts_dir.exists() or not project_scripts_dir.is_dir():
+        print("  ⊝ scripts/ directory not found")
+        return False
+
+    generated_entries = []
+    script_files = sorted([f for f in project_scripts_dir.iterdir() if f.is_file() and not f.name.startswith(".")])
+    if not script_files:
+        print("  ⊝ No files found in scripts/")
+        return False
+
+    for source_file in script_files:
+        doc_name = get_script_doc_name(source_file.name)
+        if generate_rst_for_project_script(source_file, output_dir):
+            generated_entries.append(doc_name)
+
+    if generated_entries:
+        generate_project_scripts_index_rst(generated_entries, output_dir)
+
+    print(f"  Generated: {len(generated_entries)}, Skipped: {len(script_files) - len(generated_entries)}")
+    return len(generated_entries) > 0
+
+
 def build_docs() -> bool:
     """Vytvoří HTML dokumentaci pomocí Sphinx.
 
@@ -1998,6 +2112,9 @@ def main() -> None:
 
     # Generate RST files for docs/*.py scripts
     generate_docs_scripts_docs(mode=args.mode)
+
+    # Generate RST files for scripts/* files
+    generate_project_scripts_docs()
 
     # Generate URL routing documentation
     generate_url_routing_rst()
