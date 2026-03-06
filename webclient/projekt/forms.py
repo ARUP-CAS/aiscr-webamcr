@@ -303,7 +303,7 @@ class EditProjektForm(forms.ModelForm):
                         '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-4 input-osoba",
+                css_class="col-sm-4 input-osoba form-group",
             )
         self.helper.layout = Layout(
             Div(
@@ -510,7 +510,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
                             '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                         ),
                     ),
-                    css_class="col-sm-4 input-osoba",
+                    css_class="col-sm-4 input-osoba form-group",
                 ),
                 Div("organizace", css_class="col-sm-4"),
                 Div("uzivatelske_oznaceni", css_class="col-sm-4"),

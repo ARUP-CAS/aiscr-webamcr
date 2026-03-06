@@ -149,14 +149,7 @@ class AkceProjektoveAkce(AkceTestClass):
         # ArcheologickyZaznam.filter(ident_cely="C-202401502A")
         count_old = DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely="C-202401502A").count()
 
-        self.ElementClick(By.CSS_SELECTOR, ".btn > .mr-1")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_stav .filter-option-inner-inner")
-        self.ElementClick(
-            By.XPATH, "//span[contains(.,'" + _("projekt.models.projekt.states.zahajenVTerenu.label") + "')]"
-        )
-        self.ElementClick(By.ID, "buttonVybrat")
-        self.ElementClick(By.LINK_TEXT, "C-202401502")
-
+        self.goToAddress("/projekt/detail/C-202401502")
         self.ElementClick(By.CSS_SELECTOR, ".app-ident-cely > a")
         self.ElementClick(By.CSS_SELECTOR, "#button-add-dj > .material-icons")
         # self.ElementClick(By.CSS_SELECTOR, ".bs-placeholder")
@@ -1928,7 +1921,7 @@ class AkceSamostatneAkce(AkceTestClass):
         # self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
         # self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-39 > .text")
 
-        with WaitForPageLoad(self.driver):
+        with WaitForPageLoad(self.driver, 5):
             self.ElementClick(By.ID, "createCompotSubmitButton")
 
         count_new = Komponenta.objects.filter(
@@ -2045,7 +2038,7 @@ class AkceSamostatneAkce(AkceTestClass):
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("dž")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
 
-        self.ElementClick(By.CSS_SELECTOR, ".dropup .filter-option-inner-inner")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_X-C-9000000003A-K001_p-0-specifikace .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("keramika")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys(Keys.ENTER)
 

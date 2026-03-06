@@ -116,13 +116,26 @@
   padding: 0;
 }
 
-.input-osoba .form-group .input-group-append .input-group-text {
+.input-osoba .mb-3#div_id_vedouci_projektu .input-group {
+  flex-wrap: nowrap;
+
+  .dropdown-menu.show {
+    width: inherit;
+  }
+
+  .input-group-text .btn {
+    height: 1.5rem !important;
+    margin-bottom: unset !important;
+  }
+}
+
+.input-osoba .mb-3 .input-group-text {
   padding-left: 0rem !important;
   padding-right: 0rem !important;
   border: 0px solid #ced4da;
 }
 
-.input-osoba .input-group-append .input-group-text {
+.input-osoba .input-group .input-group-text {
   padding-left: 0rem !important;
   padding-right: 0rem !important;
   border: 0px solid #ced4da;
@@ -130,6 +143,12 @@
 
 .input-osoba .input-group small {
   grid-column: span 3;
+}
+
+.input-group-text {
+  i::before {
+    vertical-align: bottom;
+  }
 }
 
 table {
@@ -174,22 +193,32 @@ table {
   }
 }
 
-.formset-table form table tbody tr div small {
+.formset-table form table tbody tr div .small {
 
   display: none
 }
 
-.formset-table form table tbody tr:last-child div small {
+.formset-table form table tbody tr:last-child div .small {
 
   display: inherit
 }
 
-.formset-table table tbody tr div small {
+.formset-table table tbody tr div .small {
 
   display: none
 }
 
-.formset-table table tbody tr:last-child div small {
+.formset-table table tbody tr:last-child div .small {
+
+  display: inherit
+}
+
+.formset-table table tbody tr div.small {
+
+  display: none
+}
+
+.formset-table table tbody tr:last-child div.small {
 
   display: inherit
 }
@@ -203,6 +232,15 @@ table {
   //min-width: unset !important; commented because there was bug, which sent Juraj by skype
   min-width: 100% !important;
   max-width: 100% !important;
+  font-size: 0.875rem;
+
+  .select2-search__field {
+    font-size: 0.875rem !important;
+  }
+
+  .select2-selection__choice {
+    font-size: 0.875rem;
+  }
 
   .select2-selection--multiple {
     height: $app-form-control-fix-height !important;
@@ -217,7 +255,7 @@ table {
       @extend .p-0;
 
       ul {
-        @extend .pr-0;
+        @extend .pe-0 !optional;
         line-height: 1;
         margin-top: 1px;
       }
@@ -243,7 +281,7 @@ table {
 
 // date range picker
 .app-daterangepicker {
-  .form-group {
+  fieldset {
     &>div {
       @extend .d-flex;
       font-size: 0;
@@ -290,7 +328,7 @@ form {
   }
 }
 
-.form-group {
+.form-group:not(.form-login) {
   margin-bottom: $app-form-group-mg-bottom;
 
   label {
@@ -299,19 +337,57 @@ form {
     margin-bottom: $app-form-label-mg-bottom;
   }
 
+  .input-group:not(.has-validation)> :not(:last-child):not(.dropdown-toggle):not(.dropdown-menu):not(.form-floating) .select2-selection {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
   .form-check-label {
     font-weight: normal;
   }
 
-  .input-group-append {
-    cursor: pointer;
+  .input-group-text {
+    border-radius: 0rem 0.25rem 0.25rem 0rem !important;
+    max-height: 1.5rem;
+    width: 24px !important;
+    position: relative;
+    grid-column: 3;
+    margin-left: 0px !important;
+    padding: 0 !important;
+    background-color: transparent;
+    border-color: transparent;
 
-    .input-group-text {
-      @extend .pt-0, .pb-0, .pl-1, .pr-1;
+    .btn {
+      padding: 0 !important;
+      margin-left: -.125rem !important;
+      margin-bottom: -.125rem !important;
+      height: 1.625rem !important;
+      --bs-btn-border-radius: 0rem 0.25rem 0.25rem 0rem !important;
 
       .material-icons {
-        @include setIcon(18);
+        @include setIcon(22);
       }
+    }
+
+  }
+
+  .input-group:has(#other_cadastre_id) .input-group-text {
+    background-color: #c8cacd;
+    justify-content: center;
+
+    .material-icons {
+      font-size: 16px;
+      align-content: center;
+      cursor: pointer;
+    }
+  }
+
+  .input-group .input-group-text {
+    @extend .pt-0, .pb-0, .ps-1, .pe-1 !optional;
+    border-radius: 0rem 0.25rem 0.25rem 0rem !important;
+
+    .material-icons {
+      @include setIcon(22);
     }
   }
 
@@ -331,7 +407,7 @@ form {
   }
 
   textarea.textarea.form-control {
-    padding-top: 0;
+    padding-top: 0.25rem;
     padding-bottom: 0;
   }
 }
@@ -460,6 +536,7 @@ a.dropdown-item {
 
 .bootstrap-select {
   max-width: 100% !important;
+  width: 100% !important;
 }
 
 .app-card-cast-dokumentu {
@@ -514,14 +591,14 @@ input.coordInput {
 }
 
 .custom-edit-coord-marker {
-	width: 12px;
-	height: 12px;
-	background-color: white;
-	border: 1px solid #666;
-	background: #fff;
-	border-radius: 2px;
-	opacity: 0.6;
-	box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border: 1px solid #666;
+  background: #fff;
+  border-radius: 2px;
+  opacity: 0.6;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 .pagination-range {
@@ -642,22 +719,25 @@ input.coordInput {
   @extend .d-flex, .flex-column, .h-100;
 
   &.app-entity-historie {
+
     //height: 92% !important;
     .fedora-table {
-        table-layout: auto !important;
+      table-layout: auto !important;
 
     }
 
     .col-stahnout {
-        width: 0 !important;    
-        white-space: nowrap;
-        text-align: center;
-        min-width: 0px !important;
-        th {
-          color: white !important;
-        }
-     
+      width: 0 !important;
+      white-space: nowrap;
+      text-align: center;
+      min-width: 0px !important;
+
+      th {
+        color: white !important;
+      }
+
     }
+
     th.col-stahnout {
       color: white !important;
     }
@@ -751,7 +831,7 @@ input.coordInput {
                   @extend .d-flex;
 
                   &:before {
-                    @extend .mr-1;
+                    @extend .me-1 !optional;
                     font-family: "Material Icons";
                     color: $white;
                   }
@@ -976,16 +1056,33 @@ input.coordInput {
       border-color: #ffc107 !important;
     }
   }
+
+  &:disabled,
+  &[readonly] {
+    background-color: #e9ecef;
+    // iOS fix for unreadable disabled content; see https://github.com/twbs/bootstrap/issues/11655.
+    opacity: 1;
+  }
 }
 
 // line height for select2
+.select2-container .select2-selection--single {
+  height: unset !important;
+
+  .select2-selection__rendered {
+    line-height: 1.5rem !important;
+  }
+}
+
 .select2-container--default .select2-selection--single .select2-selection__rendered {
-  line-height: inherit !important;
+  line-height: 1.5rem !important;
+  font-size: 0.875rem;
 }
 
 .select2multiple .select2-selection__rendered {
   height: 1.5rem !important;
   overflow-y: auto !important;
+  font-size: 0.875rem;
 }
 
 .select2-container .select2-selection--multiple .select2-selection__rendered {
@@ -1044,7 +1141,7 @@ span.badge-span .badge {
     display: grid;
     grid-template-columns: 0 auto 15%;
 
-    .input-group-append {
+    .input-group-text {
       position: relative;
       grid-column: 3;
 
@@ -1075,4 +1172,30 @@ h6 {
 
 .select2-selection__clear {
   display: none;
+}
+
+.form-label {
+  font-weight: bold;
+  font-size: 0.875rem;
+  margin-bottom: 0.1rem;
+}
+
+.btn-secondary {
+  --bs-btn-color: #fff;
+}
+
+.form-select {
+  padding: 0;
+  --bs-form-select-bg-img: none;
+  height: 1.5rem;
+}
+
+.form-select:disabled,
+.form-select[readonly] {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.select2-container--open {
+  z-index: 1100;
 }

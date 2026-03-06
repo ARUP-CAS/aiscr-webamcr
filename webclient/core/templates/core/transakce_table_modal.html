@@ -10,8 +10,7 @@
     {% endif %}
     <div class="modal-header">
       <h5 class="modal-title">{{ title }} {{ object.ident_cely }}</h5>
-      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
       </button>
     </div>
     {% if warnings %}
@@ -77,7 +76,7 @@
     {% endif %}
     <input name="next" type="hidden" value="{{ request.GET.next }}">
     <div class="modal-footer">
-      <button type="button" class="btn btn-default" data-dismiss="modal">{% translate "core.templates.transakce_table_modal.closeButton.text" %}</button>
+      <button type="button" class="btn btn-default" data-bs-dismiss="modal">{% translate "core.templates.transakce_table_modal.closeButton.text" %}</button>
       <button type="submit" class="btn btn-primary" id="submit-btn">
         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="loader-spinner" style="display: none"></span>
         {{ button }}</button>

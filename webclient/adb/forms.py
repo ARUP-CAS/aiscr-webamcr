@@ -151,7 +151,7 @@ class CreateADBForm(forms.ModelForm):
                                 '<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                             ),
                         ),
-                        css_class="col-sm-2 input-osoba select2-input",
+                        css_class="col-sm-2 input-osoba select2-input form-group",
                     ),
                     # Div("autor_popisu", css_class="col-sm-2"),
                     Div("rok_popisu", css_class="col-sm-2"),
@@ -162,7 +162,7 @@ class CreateADBForm(forms.ModelForm):
                                 '<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                             ),
                         ),
-                        css_class="col-sm-2 input-osoba select2-input",
+                        css_class="col-sm-2 input-osoba select2-input form-group",
                     ),
                     # Div("autor_revize", css_class="col-sm-2"),
                     Div("rok_revize", css_class="col-sm-2"),

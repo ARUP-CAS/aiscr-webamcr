@@ -9,20 +9,19 @@
   </div>
   <div class="col-12 col-md-8 app-right">
     <div class="row">
-      <div class="col mt-3">
+      <div class="col mt-3 aru-praha">
         <a href="{{ ARU_PRAHA }}" title="{% trans 'oznameni.templates.oznameni.header.img.praha.title' %}"
            target="_blank" rel="noopener noreferrer">
           <img src="{% static 'img/logo-arup-cs.png' %}" alt=""/>
         </a>
       </div>
-      <div class="col mt-3">
+      <div class="col mt-3 aru-brno">
         <a href="{{ ARU_BRNO }}" title="{% trans 'oznameni.templates.oznameni.header.img.brno.title' %}" target="_blank"
            rel="noopener noreferrer">
           <img src="{% static 'img/logo-arub-cs.png' %}" alt=""/>
         </a>
       </div>
-      <div class="col mt-3">
-        <div class="nav-item app-flags">
+      <div class="col mt-3 nav-item app-flags">
           {% get_current_language as LANGUAGE_CODE %}
           <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
             <img src="{% static 'img/flag-cs.svg' %}" alt="" class="app-flag" />
@@ -30,7 +29,11 @@
           <button id="english" class="nav-link {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
             <img src="{% static 'img/flag-en.svg' %}" alt="" class="app-flag" />
           </button>
-        </div>
+      </div>
+      <div class="col mt-3 nav-item app-theme-toggle">
+        <button class="app-theme-toggle" id="theme-toggle-btn" title="{% trans 'templates.registration.login.toggleTheme.title' %}">
+          <span class="material-icons">dark_mode</span>
+        </button>
       </div>
     </div>
   </div>
