@@ -202,8 +202,8 @@ class ClamdNetworkSocket:
         :param exception: Zachycená síťová výjimka při navazování spojení.
         :return: Formátovaná chybová zpráva pro logování.
         """
-        # argumenty pro síťovou výjimku mohou být buď (errno, "zpráva")
-        # nebo jen "zpráva"
+        # argumenty pro socket.error mohou být buď (errno, "message")
+        # nebo jen "message"
         if len(exception.args) == 1:
             return "Error connecting to {host}:{port}. {msg}.".format(
                 host=self.host, port=self.port, msg=exception.args[0]
@@ -216,6 +216,8 @@ class ClamdNetworkSocket:
     def _send_command(self, cmd, *args):
         """
                Odešle command.
+
+               Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
 
                :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
                :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
