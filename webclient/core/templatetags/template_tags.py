@@ -101,7 +101,7 @@ def querystring_multi(parser, token):
     Vytvoří URL (obsahující pouze dotazový řetězec [včetně „?“]) odvozený
     z dotazového řetězce aktuální URL, a to jeho aktualizací pomocí zadaných
     klíčových argumentů.
-    
+
     Příklad (předpokládejme, že URL je „/abc/?gender=male&name=Brad“):
     # {% querystring „name“=„abc“ „age“=15 %}
     ?name=abc&gender=male&age=15
