@@ -321,11 +321,7 @@ class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMi
 
 
 class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilterMixin):
-    """
-    @jiri-bartos presunuto z post_ajax_get_project_pas_limit
-
-    Trida pohledu pro získaní heatmapy pianu.
-    """
+    """Trida pohledu pro získaní heatmapy pianu."""
 
     def post(self, request):
         """
@@ -368,8 +364,6 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
 @require_http_methods(["GET", "POST"])
 def create(request):
     """
-    @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
-
     Funkce pohledu pro vytvoření projektu.
 
     :param request: Parametr ``request`` se předává do volání ``katastr_text_to_id()``, ``CreateProjektForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
