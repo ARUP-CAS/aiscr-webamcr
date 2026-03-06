@@ -30,6 +30,10 @@ Funkce
 
    Popis není k dispozici.
 
+.. py:function:: _get_anonymous()
+
+   Popis není k dispozici.
+
 .. py:function:: _resolve_view_info(request)
 
    Vrátí dict s informacemi o view: view_name, view_module, kwargs.
