@@ -1,0 +1,149 @@
+# Metadata for Docker images used in the project.
+#
+# Fields per entry:
+#   image         - Base image name without tag (lookup key). Use ${...} form for variable images.
+#   verze_override - If set, skip docker-compose version lookup and use this string directly.
+#                    Use for images referenced by compose variables (${amcr_image} etc.)
+#   display_name  - Optional: override the Image column in the RST table (e.g. for dual-name entries).
+#   licence       - Licence string. Overrides any value fetched from Docker Hub.
+#   odkaz         - URL. Overrides any value fetched from Docker Hub.
+#   popis         - Czech description shown in the RST table (always manual).
+
+images:
+  - image: "${amcr_image}"
+    verze_override: "proměnná"
+    licence: "MIT License"
+    odkaz: "https://github.com/OSGeo/gdal/pkgs/container/gdal"
+    popis: >-
+      Vlastní image aplikace AMCR postavená na bázi GDAL. Obsahuje Django aplikaci
+      a všechny potřebné závislosti pro provoz webové aplikace.
+
+  - image: "${proxy_image}"
+    verze_override: "proměnná"
+    licence: "BSD 2 License"
+    odkaz: "https://github.com/nginxinc/docker-nginx"
+    popis: >-
+      Vlastní image Nginx proxy serveru založená na nginxinc/nginx-unprivileged.
+      Zajišťuje reverzní proxy a servování statických souborů.
+
+  - image: "${redis_image}"
+    verze_override: "proměnná / latest"
+    display_name: "${redis_image} / aiscr/webamcr-redis:latest"
+    licence: "RSALv2, SSPLv1"
+    odkaz: "https://github.com/redis/redis"
+    popis: >-
+      Vlastní Redis image založená na oficiálním Redis image. Používá se pro
+      ukládání cache a jako message broker pro Celery.
+
+  - image: "postgis/postgis"
+    # Version comes from Dockerfile-DB (FROM postgis/postgis:16-3.4)
+    licence: "MIT License"
+    odkaz: "https://github.com/postgis/docker-postgis"
+    popis: >-
+      PostgreSQL databáze s PostGIS rozšířením pro geografická data.
+      Používá se pro lokální vývoj a testování.
+
+  - image: "postgres"
+    licence: "PostgreSQL License"
+    odkaz: "https://github.com/docker-library/postgres"
+    popis: >-
+      PostgreSQL databáze pro Fedora repository. Používá se jako databázový
+      backend pro Fedora Commons.
+
+  - image: "eeacms/rsync"
+    licence: ""
+    odkaz: "https://github.com/eea/eea.docker.rsync"
+    popis: >-
+      Image pro synchronizaci souborů pomocí rsync. Používá se pro zálohování
+      lokalizačních souborů.
+
+  - image: "oliver006/redis_exporter"
+    licence: "MIT license"
+    odkaz: "https://github.com/oliver006/redis_exporter"
+    popis: >-
+      Exportér metrik pro Redis pro Prometheus monitoring. Shromažďuje metriky
+      o výkonu Redis instance.
+
+  - image: "danihodovic/celery-exporter"
+    licence: "MIT license"
+    odkaz: "https://github.com/danihodovic/celery-exporter"
+    popis: >-
+      Exportér metrik pro Celery úlohy pro Prometheus. Monitoruje stav a výkon
+      asynchronních úloh.
+
+  - image: "grafana/grafana-enterprise"
+    licence: "AGPL-3.0 License"
+    odkaz: "https://github.com/grafana/grafana"
+    popis: >-
+      Grafana Enterprise pro vizualizaci metrik a monitoringu. Poskytuje
+      dashboardy pro sledování výkonu aplikace.
+
+  - image: "prom/prometheus"
+    licence: "Apache-2.0 License"
+    odkaz: "https://github.com/prometheus/prometheus"
+    popis: >-
+      Prometheus pro sběr a ukládání metrik. Slouží jako centrální systém
+      pro monitoring aplikace a infrastruktury.
+
+  - image: "docker.elastic.co/logstash/logstash"
+    licence: "SSPL, Elastic License 2.0, Apache License 2.0"
+    odkaz: "https://github.com/elastic/logstash"
+    popis: >-
+      Logstash pro zpracování a transformaci logů. Zajišťuje parsování
+      a indexování logů do Elasticsearch.
+
+  - image: "docker.elastic.co/elasticsearch/elasticsearch"
+    licence: "SSPL, Elastic License 2.0, Apache License 2.0"
+    odkaz: "https://github.com/elastic/elasticsearch"
+    popis: >-
+      Elasticsearch pro fulltextové vyhledávání a analýzu logů. Ukládá
+      a indexuje logy aplikace.
+
+  - image: "docker.elastic.co/kibana/kibana"
+    licence: "SSPL, Elastic License 2.0, Apache License 2.0"
+    odkaz: "https://github.com/elastic/kibana"
+    popis: >-
+      Kibana pro vizualizaci a analýzu logů z Elasticsearch. Poskytuje webové
+      rozhraní pro prohlížení a vyhledávání v logech.
+
+  - image: "selenium/standalone-chromium"
+    licence: "Apache License 2.0"
+    odkaz: "https://github.com/SeleniumHQ/docker-selenium"
+    popis: >-
+      Selenium standalone Chromium pro automatizované testování. Používá se
+      pro end-to-end testy webové aplikace.
+
+  - image: "gcr.io/cadvisor/cadvisor"
+    licence: "Apache License 2.0"
+    odkaz: "https://github.com/google/cadvisor"
+    popis: >-
+      cAdvisor pro monitorování využití zdrojů kontejnerů. Shromažďuje metriky
+      o CPU, paměti a síti.
+
+  - image: "prometheuscommunity/postgres-exporter"
+    licence: "Apache-2.0 License"
+    odkaz: "https://github.com/prometheus-community/postgres_exporter"
+    popis: >-
+      Exportér metrik pro PostgreSQL databázi pro Prometheus. Monitoruje výkon
+      a stav databázových operací.
+
+  - image: "dpage/pgadmin4"
+    licence: "PostgreSQL License"
+    odkaz: "https://github.com/pgadmin-org/pgadmin4"
+    popis: >-
+      pgAdmin4 webové rozhraní pro správu PostgreSQL databází. Používá se
+      pro lokální vývoj a správu databáze.
+
+  - image: "memcached"
+    licence: "BSD License"
+    odkaz: "https://github.com/docker-library/memcached"
+    popis: >-
+      Memcached pro ukládání cache v paměti. Používá se pro zrychlení aplikace
+      pomocí cache vrstvy.
+
+  - image: "fcrepo/fcrepo"
+    licence: "Apache-2.0 License"
+    odkaz: "https://github.com/fcrepo/fcrepo"
+    popis: >-
+      Fedora Commons Repository pro ukládání digitálních objektů. Slouží jako
+      digitální repozitář pro archivaci dat.

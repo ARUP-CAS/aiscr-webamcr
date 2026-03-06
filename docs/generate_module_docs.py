@@ -1913,6 +1913,396 @@ def build_docs() -> bool:
         return False
 
 
+def _fetch_dockerhub_odkaz(image: str) -> str:
+    """
+    Fetch source URL for a Docker Hub image (best-effort, no auth).
+
+    Args:
+        image: Base image name, e.g. "grafana/grafana-enterprise"
+
+    Returns:
+        Source URL string, or empty string on failure or unsupported registry
+    """
+    import json as _json
+    import urllib.request
+
+    # Only attempt for docker.io images (no registry prefix)
+    if "/" not in image or image.startswith("docker.elastic.co") or image.startswith("gcr.io"):
+        return ""
+
+    parts = image.split("/")
+    if len(parts) != 2:
+        return ""
+
+    namespace, name = parts
+    url = f"https://hub.docker.com/v2/repositories/{namespace}/{name}/"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = _json.loads(resp.read().decode())
+        if data.get("source"):
+            return data["source"]
+        if data.get("full_description"):
+            import re as _re
+
+            m = _re.search(r"https://github\.com/[\w\-]+/[\w\-\.]+", data["full_description"])
+            if m:
+                return m.group(0)
+        return ""
+    except Exception:
+        return ""
+
+
+def _parse_compose_versions(project_root: Path) -> Dict[str, str]:
+    """
+    Parse all docker-compose*.yml files and Dockerfile-DB in project_root
+    for image: directives. Returns dict mapping base image name to full tag.
+
+    Priority: docker-compose.yml / docker-compose-proxy.yml (production) first,
+    then other files.
+    """
+    import re as _re
+
+    # Production files first so their versions win
+    priority_files = ["docker-compose.yml", "docker-compose-proxy.yml"]
+    all_compose = sorted(project_root.glob("docker-compose*.yml"))
+    ordered = []
+    for name in priority_files:
+        p = project_root / name
+        if p in all_compose:
+            ordered.append(p)
+    for p in all_compose:
+        if p not in ordered:
+            ordered.append(p)
+
+    versions: Dict[str, str] = {}
+    image_re = _re.compile(r"^\s+image:\s*(.+)")
+
+    for compose_file in ordered:
+        try:
+            text = compose_file.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for line in text.splitlines():
+            m = image_re.match(line)
+            if not m:
+                continue
+            full_tag = m.group(1).strip()
+            # Skip variable images like ${amcr_image}
+            if full_tag.startswith("${") or full_tag.startswith("docker.io/library/test_"):
+                continue
+            if ":" in full_tag:
+                base = full_tag.rsplit(":", 1)[0]
+            else:
+                base = full_tag
+            # Only store first occurrence (priority order respected)
+            if base not in versions:
+                versions[base] = full_tag
+
+    # Also parse Dockerfile-DB for FROM directives
+    dockerfile_db = project_root / "Dockerfile-DB"
+    if dockerfile_db.exists():
+        from_re = _re.compile(r"^FROM\s+(\S+)")
+        for line in dockerfile_db.read_text(encoding="utf-8").splitlines():
+            m = from_re.match(line)
+            if m:
+                full_tag = m.group(1).strip()
+                if ":" in full_tag:
+                    base = full_tag.rsplit(":", 1)[0]
+                else:
+                    base = full_tag
+                if base not in versions:
+                    versions[base] = full_tag
+
+    return versions
+
+
+def generate_docker_images_rst() -> bool:
+    """
+    Generate Docker images table for docker_images.rst.
+
+    Reads image metadata from docs/docker_images_meta.yaml (Popis, Licence override,
+    Odkaz override), extracts versions from all docker-compose*.yml files and
+    Dockerfile-DB, and optionally fetches homepage from Docker Hub API.
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    global changes_detected
+
+    output_file = docs_dir / "source/12_zavislosti/docker_images.rst"
+    meta_file = docs_dir / "docker_images_meta.yaml"
+
+    print("\n  Generating Docker images documentation")
+    print(f"  Output: {output_file}")
+
+    if not meta_file.exists():
+        print(f"  ⊝ {meta_file} not found, skipping")
+        return False
+
+    try:
+        import yaml
+    except ImportError:
+        print("  ⊝ PyYAML not available, skipping (pip install pyyaml)")
+        return False
+
+    with open(meta_file, "r", encoding="utf-8") as f:
+        meta_data = yaml.safe_load(f)
+
+    images_meta: List[Dict[str, str]] = meta_data.get("images", [])
+    if not images_meta:
+        print("  ⊝ No image entries found in docker_images_meta.yaml")
+        return False
+
+    # Parse versions from docker-compose files
+    versions = _parse_compose_versions(project_root)
+
+    # Cache for Docker Hub fetches
+    hub_cache: Dict[str, str] = {}
+
+    # Build content blocks
+    PAGE_TITLE = "Docker images\n=============\n\n"
+
+    def _build_image_block(entry: Dict[str, str]) -> List[str]:
+        image_key = entry.get("image", "")
+        display_name = entry.get("display_name", image_key)
+
+        verze_override = entry.get("verze_override", "")
+        if verze_override:
+            verze = verze_override
+        else:
+            full_tag = versions.get(image_key, "")
+            verze = full_tag.rsplit(":", 1)[-1] if ":" in full_tag else ("latest" if full_tag else "")
+
+        licence = entry.get("licence", "")
+        odkaz = entry.get("odkaz", "")
+        popis = entry.get("popis", "")
+
+        if not odkaz and not image_key.startswith("${"):
+            if image_key not in hub_cache:
+                hub_cache[image_key] = _fetch_dockerhub_odkaz(image_key)
+            odkaz = hub_cache[image_key]
+
+        lines: List[str] = []
+        lines.append(display_name)
+        lines.append("~" * len(display_name))
+        lines.append("")
+        lines.append(f"- **Verze:** {verze}" if verze else "- **Verze:**")
+        lines.append(f"- **Licence:** {licence}" if licence else "- **Licence:**")
+        lines.append(f"- **Odkaz:** {odkaz}" if odkaz else "- **Odkaz:**")
+        if popis:
+            lines.append("")
+            lines.append(popis)
+        lines.append("")
+        return lines
+
+    custom_images = [e for e in images_meta if e.get("image", "").startswith("${")]
+    generic_images = [e for e in images_meta if not e.get("image", "").startswith("${")]
+
+    content_lines: List[str] = []
+
+    # Section 1: custom images
+    content_lines += [
+        "Vlastní image",
+        "-------------",
+        "",
+        "Tyto image jsou vyvíjeny vývojovým týmem aplikace a jsou specifické pro provoz AMCR.",
+        "",
+    ]
+    for entry in custom_images:
+        content_lines += _build_image_block(entry)
+
+    # Section 2: third-party images
+    content_lines += [
+        "Generické image",
+        "---------------",
+        "",
+        "Tyto image jsou standardní open-source image používané pro provoz podpůrných služeb.",
+        "",
+    ]
+    for entry in generic_images:
+        content_lines += _build_image_block(entry)
+
+    new_content = PAGE_TITLE + "\n".join(content_lines) + "\n"
+
+    if check_content_changed(new_content, output_file):
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(new_content, encoding="utf-8")
+        print(f"  ✓ Updated {output_file.name} with {len(images_meta)} Docker images")
+        changes_detected = True
+    else:
+        print(f"  ⊝ {output_file.name} unchanged")
+
+    return True
+
+
+def generate_js_libraries_rst() -> bool:
+    """
+    Generate Node.js JavaScript libraries table for javascript_knihovny.rst.
+
+    Reads package.json for the list of dependencies and their versions,
+    then looks up licenses from package-lock.json and node_modules/<pkg>/package.json.
+    Inserts a new list-table at the top of the file (before any existing content).
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    global changes_detected
+    output_file = docs_dir / "source/12_zavislosti/javascript_knihovny.rst"
+    package_json_file = project_root / "package.json"
+    package_lock_file = project_root / "package-lock.json"
+
+    print("\n  Generating Node.js JavaScript libraries documentation")
+    print(f"  Output: {output_file}")
+
+    if not package_json_file.exists():
+        print(f"  ⊝ {package_json_file} not found, skipping")
+        return False
+
+    import json
+
+    with open(package_json_file, "r", encoding="utf-8") as f:
+        pkg = json.load(f)
+
+    dependencies: Dict[str, str] = pkg.get("dependencies", {})
+    if not dependencies:
+        print("  ⊝ No dependencies found in package.json")
+        return False
+
+    # Load licenses from package-lock.json (lockfileVersion 3 uses "packages" key)
+    lock_licenses: Dict[str, str] = {}
+    if package_lock_file.exists():
+        with open(package_lock_file, "r", encoding="utf-8") as f:
+            lock = json.load(f)
+        for key, info in lock.get("packages", {}).items():
+            if key.startswith("node_modules/"):
+                name = key[len("node_modules/") :]
+                if "license" in info:
+                    lock_licenses[name] = info["license"]
+
+    # Build rows: name, version, license, homepage
+    rows: List[Tuple[str, str, str, str]] = []
+    for name, version in sorted(dependencies.items()):
+        license_val = lock_licenses.get(name, "")
+        homepage = ""
+
+        # Try node_modules/<name>/package.json for missing data
+        nm_pkg = project_root / "node_modules" / name / "package.json"
+        if nm_pkg.exists():
+            with open(nm_pkg, "r", encoding="utf-8") as f:
+                nm_data = json.load(f)
+            if not license_val:
+                license_val = nm_data.get("license", "")
+            homepage = nm_data.get("homepage", "")
+            if not homepage:
+                repo = nm_data.get("repository", {})
+                if isinstance(repo, dict):
+                    homepage = repo.get("url", "")
+                elif isinstance(repo, str):
+                    homepage = repo
+            # Normalize git+https:// URLs
+            if homepage.startswith("git+"):
+                homepage = homepage[4:]
+            if homepage.endswith(".git"):
+                homepage = homepage[:-4]
+
+        rows.append((name, version, license_val, homepage))
+
+    # Build RST table
+    table_lines = [
+        "Knihovny instalované pomocí Node.js",
+        "------------------------------------",
+        "",
+        ".. list-table:: Knihovny v jazyce Javascript instalované pomocí Node.js",
+        "   :widths: 25 25 25 25",
+        "   :header-rows: 1",
+        "",
+        "   * - Název knihovny",
+        "     - Verze",
+        "     - Licence",
+        "     - Odkaz",
+    ]
+    for name, version, license_val, homepage in rows:
+        table_lines.append(f"   * - {name}")
+        table_lines.append(f"     - {version}")
+        table_lines.append(f"     - {license_val}")
+        table_lines.append(f"     - {homepage}")
+
+    table_lines.append("")
+
+    # Read existing file content
+    existing_content = ""
+    if output_file.exists():
+        with open(output_file, "r", encoding="utf-8") as f:
+            existing_content = f.read()
+
+    # The file starts with the page title line(s); insert table after the title underline
+    lines = existing_content.splitlines(keepends=True)
+    insert_after = 0
+    for i, line in enumerate(lines):
+        if i > 0 and set(line.strip()) <= {"=", "-", "~", "^"} and line.strip():
+            insert_after = i + 1
+            break
+
+    # Strip any existing node.js table block (between the marker comment and next section)
+    # to allow idempotent regeneration — find and remove old generated table
+    MARKER_START = "Knihovny instalované pomocí Node.js\n"
+    if MARKER_START in existing_content:
+        # Find the block and remove it
+        start_idx = existing_content.index(MARKER_START)
+        # Find the next top-level section (line starting a new RST section after the table)
+        rest = existing_content[start_idx:]
+        rest_lines = rest.splitlines(keepends=True)
+        end_offset = len(rest)
+        for j, rl in enumerate(rest_lines):
+            if j == 0:
+                continue
+            # Detect next RST section: a line of ===/--- after a non-empty line
+            if (
+                j >= 2
+                and set(rest_lines[j].strip()) <= {"=", "-", "~", "^"}
+                and rest_lines[j].strip()
+                and rest_lines[j - 1].strip()
+                and not rest_lines[j - 1].strip().startswith(" ")
+                and not rest_lines[j - 1].strip().startswith("*")
+                and not rest_lines[j - 1].strip().startswith("-")
+            ):
+                # Found next section heading — remove up to the line before it
+                end_offset = sum(len(line) for line in rest_lines[: j - 1])
+                break
+        existing_content = existing_content[:start_idx] + existing_content[start_idx + end_offset :]
+        lines = existing_content.splitlines(keepends=True)
+        insert_after = 0
+        for i, line in enumerate(lines):
+            if i > 0 and set(line.strip()) <= {"=", "-", "~", "^"} and line.strip():
+                insert_after = i + 1
+                break
+
+    # Compose new content: title + blank line(s) + new table + rest
+    before = "".join(lines[:insert_after])
+    after = "".join(lines[insert_after:])
+
+    # Ensure a blank line between title and table, and between table and rest
+    if not before.endswith("\n\n"):
+        before = before.rstrip("\n") + "\n\n"
+    table_block = "\n".join(table_lines) + "\n"
+    if after and not after.startswith("\n"):
+        after = "\n" + after
+
+    new_content = before + table_block + after
+
+    if check_content_changed(new_content, output_file):
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(new_content)
+        print(f"  ✓ Updated {output_file.name} with {len(rows)} Node.js packages")
+        changes_detected = True
+    else:
+        print(f"  ⊝ {output_file.name} unchanged")
+
+    return True
+
+
 def main() -> None:
     """Main function to run the documentation generator."""
     parser = argparse.ArgumentParser(description="Generate Sphinx documentation for Django modules in webclient/")
@@ -1946,6 +2336,12 @@ def main() -> None:
 
     # Generate export structure documentation
     generate_export_structure_rst()
+
+    # Generate Docker images documentation
+    generate_docker_images_rst()
+
+    # Generate Node.js JavaScript libraries documentation
+    generate_js_libraries_rst()
 
     # Build documentation if requested
     if args.build:
