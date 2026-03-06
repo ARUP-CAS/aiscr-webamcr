@@ -11,6 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 def check_status():
+    """Ověří status. v aplikaci.
+
+    :return: Vrací n-tici.
+    """
     io_out = StringIO()
     io_out_db = StringIO()
     try:
@@ -24,7 +28,16 @@ def check_status():
 
 
 class HealthCheckView(IPWhitelistMixin, View):
+    """Implementuje komponentu ``HealthCheckView`` v rámci aplikace."""
+
     def get(self, request):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         status = "healthy"
         r_code, msg, msg_db = check_status()
         status = ("healthy", 200) if r_code == 0 else ("unhealthy", 500)

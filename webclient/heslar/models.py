@@ -15,11 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
-    """
-    Class pro db model heslar.
-    """
+    """Databázový model hesláře."""
 
-    # TextFields should be changed to CharField if no long text is expected to be written in
+    # Zvažte změnu na CharField, pokud se neočekává dlouhý text.
     ident_cely = models.TextField(unique=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
         "HeslarNazev", models.RESTRICT, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")
@@ -36,17 +34,31 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def dokument_typ_material_rada(self):
+        """Provádí operaci dokument typ material rada.
+
+        :return: Vrací výsledek volání ``filter()``.
+        """
         return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):
+        """Provádí operaci podrazena hesla.
+
+        :return: Vrací výsledek volání ``filter()``.
+        """
         return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
 
     @property
     def nadrazena_hesla(self):
+        """Provádí operaci nadrazena hesla.
+
+        :return: Vrací výsledek volání ``filter()``.
+        """
         return HeslarHierarchie.objects.filter(heslo_podrazene=self)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar"
         unique_together = (
             ("nazev_heslare", "zkratka"),
@@ -57,6 +69,13 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
         verbose_name_plural = "Heslář"
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        """
         if get_language() == "en":
             if self.heslo_en:
                 return self.heslo_en
@@ -71,6 +90,14 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
                 return ""
 
     def save(self, *args, **kwargs):
+        """
+        Uloží změny objektu.
+
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``self._state.adding and (not FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'heslar'))``.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         super().save(*args, **kwargs)
@@ -81,9 +108,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
 
 class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
-    """
-    Class pro db model heslar datace.
-    """
+    """Databázový model datace hesláře."""
 
     obdobi = models.OneToOneField(
         Heslar,
@@ -101,10 +126,18 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
     poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.HeslarDatace.poznamka"))
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_datace"
         verbose_name_plural = "Heslář datace"
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(HeslarDatace, self).__init__(*args, **kwargs)
         try:
             self.initial_obdobi = self.obdobi
@@ -115,9 +148,7 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
 
 
 class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
-    """
-    Class pro db model heslar dokument typ materialu.
-    """
+    """Databázový model vazby typu dokumentu, materiálu a řady."""
 
     dokument_rada = models.ForeignKey(
         Heslar,
@@ -145,11 +176,19 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_dokument_typ_material_rada"
         unique_together = (("dokument_typ", "dokument_material"),)
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(HeslarDokumentTypMaterialRada, self).__init__(*args, **kwargs)
         self.initial_dokument_rada = self.dokument_rada
         self.initial_dokument_typ = self.dokument_typ
@@ -158,9 +197,7 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
 
 
 class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
-    """
-    Class pro db model heslar hierarchie.
-    """
+    """Databázový model hierarchie hesláře."""
 
     TYP_CHOICES = [
         ("podřízenost", _("heslar.models.HeslarHierarchie.TYP_CHOICES.podrizenost")),
@@ -185,6 +222,8 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_hierarchie"
         unique_together = (("heslo_podrazene", "heslo_nadrazene", "typ"),)
         verbose_name_plural = "Heslář hierarchie"
@@ -196,6 +235,12 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         ]
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(HeslarHierarchie, self).__init__(*args, **kwargs)
         if self.pk:
             self.initial_heslo_podrazene = self.heslo_podrazene
@@ -207,25 +252,30 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
 
 
 class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
-    """
-    Class pro db model heslar nazev.
-    """
+    """Databázový model názvu hesláře."""
 
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.HeslarNazev.nazev"))
     povolit_zmeny = models.BooleanField(default=True, verbose_name=_("heslar.models.HeslarNazev.povolit_zmeny"))
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
+        """
         return self.nazev
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_nazev"
         verbose_name_plural = "Heslář název"
 
 
 class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
-    """
-    Class pro db model heslar odkaz.
-    """
+    """Databázový model odkazu hesláře."""
 
     SKOS_MAPPING_RELATION_CHOICES = [
         ("skos:closeMatch", _("heslar.models.HeslarOdkaz.skos_mapping_relation_choices.skos_closeMatch")),
@@ -254,10 +304,18 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     scheme_uri = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "heslar_odkaz"
         verbose_name_plural = "Heslář odkaz"
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(HeslarOdkaz, self).__init__(*args, **kwargs)
         if self.pk:
             logger.debug(self.heslo)
@@ -268,9 +326,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
 
 
 class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadata):
-    """
-    Class pro db model ruian katastr.
-    """
+    """Databázový model katastru RÚIAN."""
 
     okres = models.ForeignKey(
         "RuianOkres",
@@ -289,24 +345,49 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def pian_ident_cely(self):
+        """Provádí operaci pian ident cely.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        """
         if self.pian is not None:
             return self.pian.ident_cely
         else:
             return ""
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "ruian_katastr"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian katastry"
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"{self.nazev} ({self.okres.nazev}; {self.kod})"
 
     @property
     def ident_cely(self):
+        """Provádí operaci ident cely.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
+        """
+        Uloží změny objektu.
+
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_katastr')``.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -318,9 +399,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
 
 class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
-    """
-    Class pro db model ruian kraj.
-    """
+    """Databázový model kraje RÚIAN."""
 
     nazev = models.CharField(unique=True, max_length=100, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
@@ -333,18 +412,39 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     email = models.CharField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.email"), max_length=254)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "ruian_kraj"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian kraje"
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
+        """
         return self.nazev
 
     @property
     def ident_cely(self):
+        """Provádí operaci ident cely.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
+        """
+        Uloží změny objektu.
+
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_kraj')``.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -356,9 +456,7 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
 
 
 class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
-    """
-    Class pro db model ruian okres.
-    """
+    """Databázový model okresu RÚIAN."""
 
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianOkres.nazev"))
     kraj = models.ForeignKey(
@@ -373,18 +471,39 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
     hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "ruian_okres"
         ordering = ["nazev"]
         verbose_name_plural = "Ruian okresy"
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
+        """
         return self.nazev
 
     @property
     def ident_cely(self):
+        """Provádí operaci ident cely.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
+        """
+        Uloží změny objektu.
+
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_okres')``.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(

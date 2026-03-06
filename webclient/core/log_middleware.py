@@ -14,6 +14,10 @@ _ANONYMOUS = None
 
 
 def get_slow_request_settings():
+    """Vrací slow request settings.
+
+    :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, float.
+    """
     try:
         settings_query = CustomAdminSettings.objects.filter(item_group="settings", item_id="variables")
         return json.loads(settings_query.last().value)["SLOW_REQUEST_THRESHOLD"]
@@ -36,8 +40,10 @@ def _get_anonymous():
 
 
 def _resolve_view_info(request) -> dict:
-    """
-    Vrátí dict s informacemi o view: view_name, view_module, kwargs.
+    """Vrátí dict s informacemi o view: view_name, view_module, kwargs.
+
+    :param request: Parametr ``request`` předává se do volání ``resolve()``, pracuje se s atributy ``path_info``.
+    :return: Vrací hodnotu typu ``dict`` (slovník).
     """
     try:
         match = resolve(request.path_info)
@@ -59,15 +65,29 @@ def _resolve_view_info(request) -> dict:
 
 class LogMiddleware:
     """
-    Middleware, který:
+    Middleware, který: v aplikaci.
+
     - ukládá do thread-local: url, user_id
     - měří duration a zapisuje strukturovaný log po odpovědi
     """
 
     def __init__(self, get_response):
+        """
+        Inicializuje instanci třídy.
+
+        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        """
         self.get_response = get_response
 
     def __call__(self, request):
+        """
+        Provádí operaci call.
+
+        :param request: Parametr ``request`` předává se do volání ``get_response()``, ``_resolve_view_info()``, pracuje se s atributy ``get_full_path``, ``user``.
+
+            :return: Vrací proměnná ``response``.
+            :raises Exception: Vyvolá se při zpracování zachycené výjimky typu ``Exception``.
+        """
         start = time.monotonic()
         log_request_data.url = request.get_full_path()
         log_request_data.user_id = (
@@ -110,10 +130,18 @@ class LogMiddleware:
 
     @staticmethod
     def get_request_url():
+        """Vrací request url.
+
+        :return: Vrací výsledek volání ``getattr()``.
+        """
         return getattr(log_request_data, "url", None)
 
     @staticmethod
     def get_user_id():
+        """Vrací user id.
+
+        :return: Vrací výsledek volání ``getattr()``.
+        """
         try:
             return getattr(log_request_data, "user_id", _get_anonymous())
         except Exception:

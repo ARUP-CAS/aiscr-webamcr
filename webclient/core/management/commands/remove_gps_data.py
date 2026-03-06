@@ -19,31 +19,36 @@ class Command(BaseCommand):
     CSV soubor musí obsahovat sloupec "record" s cestami k souborům.
 
     Argumenty:
-        - csv_file: Cesta k CSV souboru se seznamem souborů
+    - csv_file: Cesta k CSV souboru se seznamem souborů
 
     Formát CSV souboru::
 
-        record
-        /path/to/image1.jpg
-        /path/to/image2.jpg
-        /path/to/image3.jpg
+    record
+    /path/to/image1.jpg
+    /path/to/image2.jpg
+    /path/to/image3.jpg
 
     Poznámka:
-        - Pouze soubory, které mají GPS data, budou aktualizovány
-        - Pro každou aktualizaci se zaznamená nová verze souboru
+    - Pouze soubory, které mají GPS data, budou aktualizovány
+    - Pro každou aktualizaci se zaznamená nová verze souboru
 
     Příklady použití:
 
-        Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
-        proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
+    Hostitelský adresář ``/home/migrace`` je v Docker YAML namapovaný na ``/vol/data-migrace``,
+    proto se uvnitř kontejneru používá cesta ``/vol/data-migrace``::
 
-            python manage.py remove_gps_data /vol/data-migrace/files_with_gps.csv
-            python manage.py remove_gps_data /vol/data-migrace/images.csv
+    python manage.py remove_gps_data /vol/data-migrace/files_with_gps.csv
+    python manage.py remove_gps_data /vol/data-migrace/images.csv
     """
 
     help = _("core.management.commands.remove_gps_data.Command.help")
 
     def add_arguments(self, parser):
+        """
+        Provádí operaci add arguments.
+
+        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        """
         parser.add_argument(
             "csv_file",
             type=str,
@@ -51,6 +56,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """
+        Zpracuje hodnotu. v aplikaci.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        """
         csv_file = options["csv_file"]
 
         logger.debug(
@@ -63,7 +74,7 @@ class Command(BaseCommand):
         from uzivatel.models import User
         from xml_generator.models import ModelWithMetadata
 
-        # Get admin user
+        # Načte administrátorského uživatele pro systémové změny.
         try:
             admin_user = User.objects.get(pk=ADMIN_USER)
         except User.DoesNotExist:
@@ -76,7 +87,7 @@ class Command(BaseCommand):
             )
             return
 
-        # Read CSV file
+        # Načte vstupní CSV se seznamem dokumentů.
         try:
             sheet = pd.read_csv(csv_file, sep=",")
         except Exception as e:
@@ -117,7 +128,7 @@ class Command(BaseCommand):
                 rep_bin_file = conn.get_binary_file(record.repository_uuid)
                 if rep_bin_file:
                     rep_bin_file_new = Soubor.remove_gps_data(rep_bin_file.content)
-                    # Check if GPS data was actually removed (file content changed)
+                    # Ověří, zda byla GPS data opravdu odstraněna (změnil se obsah souboru).
                     if rep_bin_file_new is not rep_bin_file.content:
                         rep_bin_file = conn.update_binary_file(
                             record.nazev, record.mimetype, rep_bin_file_new, record.repository_uuid
@@ -168,7 +179,7 @@ class Command(BaseCommand):
                     )
                 )
 
-        # Final newline after progress indicator
+        # Závěrečný nový řádek po indikátoru průběhu.
         self.stdout.write("")
 
         logger.debug(

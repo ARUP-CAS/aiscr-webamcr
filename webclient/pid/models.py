@@ -1,1 +1,1 @@
-# Create your models here.
+"""Datové modely aplikace PID."""

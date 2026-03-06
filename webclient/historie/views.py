@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
     """
-    Třida pohledu pro zobrazení historie záznamu.
+    Třída pohledu pro zobrazení historie záznamu.
+
     Třída se dědí pro jednotlivá historie.
     """
 
@@ -36,7 +37,7 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     model = Historie
     template_name = "historie/historie_list.html"
     export_name = "export_historie_"
-    table_pagination = {"per_page": 25}  # defaultní počet záznamů v tabulce historie
+    table_pagination = {"per_page": 25}  # Výchozí počet záznamů v tabulce historie.
 
     context_typ = None  # např. "samostatny_nalez"
     lookup_kwarg = "ident_cely"  # URL parametr obsahující identifikátor
@@ -45,18 +46,36 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     fedora_lookup = "ident_cely"
 
     def get_lookup_value(self):
-        """Vrátí hodnotu z URL podle lookup_kwarg."""
+        """Vrátí hodnotu z URL podle lookup_kwarg.
+
+        :return: Vrací vybranou hodnotu z kolekce.
+        """
         return self.kwargs[self.lookup_kwarg]
 
     def prepare_queryset(self, qs):
-        """Potomek může přepsat pro vlastní řazení nebo dodatečné filtry."""
+        """
+        Potomek může přepsat pro vlastní řazení nebo dodatečné filtry.
+
+        :param qs: Queryset/filtr ``qs`` použitý při výběru záznamů.
+
+            :return: Vrací výsledek volání ``order_by()``.
+        """
         return qs.order_by("datum_zmeny")
 
     def add_extra_context(self, context):
-        """Potomek může přepsat a doplnit další hodnoty do contextu."""
+        """
+        Potomek může přepsat a doplnit další hodnoty do contextu.
+
+        :param context: Kolekce ``context`` zpracovávaná touto funkcí.
+        """
         pass
 
     def get_queryset(self):
+        """Vrací queryset historie po aplikaci výchozího řazení a filtrů.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, proměnná ``qs``.
+        :raises ValueError: Vyvolá se při splnění podmínky ``not self.queryset_filter``.
+        """
         if not self.use_history_table:
             return self.model.objects.none()
         if not self.queryset_filter:
@@ -68,13 +87,20 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         return qs
 
     def get_header_config(self, context):
-        """Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}"""
+        """
+        Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
+
+        :param context: Kolekce ``context`` zpracovávaná touto funkcí.
+        """
         return None
 
     def add_fedora_history(self, context):
         """
         Pokud potomek definuje fedora_model, automaticky se načte
+
         metadata historie z Fedory a přidá se druhá tabulka fedora_table.
+
+        :param context: Kolekce ``context`` zpracovávaná touto funkcí.
         """
         if not hasattr(self, "fedora_model") or self.fedora_model is None:
             return
@@ -94,17 +120,31 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         if not fedora_data:
             return
         fedora_table = FedoraHistorieTable(fedora_data, prefix="fed-")
-        per_page = int(self.request.GET.get("fed-per_page", 25))  # defaultní počet záznamů v tabulce Fedora historie
+        per_page = int(self.request.GET.get("fed-per_page", 25))  # Výchozí počet záznamů v tabulce Fedora historie.
         RequestConfig(self.request, paginate={"per_page": per_page}).configure(fedora_table)
 
         context["fedora_table"] = fedora_table
 
     def get_table(self, **kwargs):
+        """
+        Vrací tabulku historie naplněnou připraveným querysetem.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_table()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``get_table()``.
+        """
         if not self.use_history_table:
             return None
         return super().get_table(**kwargs)
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         if not self.use_history_table:
             self.table_class = None
         context = super().get_context_data(**kwargs)
@@ -125,28 +165,41 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         return context
 
     def render_to_response(self, context, **response_kwargs):
+        """
+        Vyrenderuje to response.
+
+        :param context: Parametr ``context`` se předává do volání ``render_to_response()``, pracuje se s atributy ``get``, vstupuje do návratové hodnoty.
+        :param response_kwargs: Parametr ``response_kwargs`` se předává do volání ``render_to_response()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render_to_response()``, výsledek volání ``response()``.
+        """
         export_format = self.request.GET.get("_export")
         export_table = self.request.GET.get("export_table")
         if export_format and export_table == "fedora":
             fedora_table = context.get("fedora_table")
             if fedora_table is None:
                 return super().render_to_response(context, **response_kwargs)
-            # export tabulky Fedora historie
+            # Export tabulky Fedora historie.
             exporter = TableExport(export_format, fedora_table)
             return exporter.response(filename=self.get_export_filename(export_format, "export_fedora_historie_"))
         return super().render_to_response(context, **response_kwargs)
 
 
 class ProjektHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie projektu.
-    """
+    """Třída pohledu pro zobrazení historie projektu."""
 
     context_typ = "projekt"
     queryset_filter = "vazba__projekt_historie__ident_cely"
     fedora_model = Projekt
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse("projekt:detail", args=[context["ident_cely"]]),
             "icon": "dynamic_feed",
@@ -155,15 +208,20 @@ class ProjektHistorieListView(HistorieListView):
 
 
 class AkceHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie akcií.
-    """
+    """Třída pohledu pro zobrazení historie akcí."""
 
     context_typ = "akce"
     queryset_filter = "vazba__archeologickyzaznam__ident_cely"
     fedora_model = ArcheologickyZaznam
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse("arch_z:detail", args=[context["ident_cely"]]),
             "icon": "brush",
@@ -172,14 +230,19 @@ class AkceHistorieListView(HistorieListView):
 
 
 class DokumentHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie dokumentů.
-    """
+    """Třida pohledu pro zobrazení historie dokumentů."""
 
     queryset_filter = "vazba__dokument_historie__ident_cely"
     fedora_model = Dokument
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+            :return: Vrací slovník.
+        """
         ident = context["ident_cely"]
         if "3D" in ident:
             return {
@@ -194,6 +257,11 @@ class DokumentHistorieListView(HistorieListView):
         }
 
     def add_extra_context(self, context):
+        """
+        Provádí operaci add extra context.
+
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``add_extra_context``.
+        """
         ident = self.get_lookup_value()
         typ = "knihovna_3d" if "3D" in ident else "dokument"
         context["typ"] = typ
@@ -201,15 +269,20 @@ class DokumentHistorieListView(HistorieListView):
 
 
 class SamostatnyNalezHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie samostatných nálezů.
-    """
+    """Třida pohledu pro zobrazení historie samostatných nálezů."""
 
     context_typ = "samostatny_nalez"
     queryset_filter = "vazba__sn_historie__ident_cely"
     fedora_model = SamostatnyNalez
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse("pas:detail", args=[context["ident_cely"]]),
             "icon": "location_on",
@@ -218,9 +291,7 @@ class SamostatnyNalezHistorieListView(HistorieListView):
 
 
 class SpolupraceHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie spolupráce.
-    """
+    """Třida pohledu pro zobrazení historie spolupráce."""
 
     context_typ = "spoluprace"
     context_entity = "samostatny_nalez"
@@ -228,6 +299,13 @@ class SpolupraceHistorieListView(HistorieListView):
     queryset_filter = "vazba__spoluprace_historie__pk"
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse("pas:spoluprace_list"),
             "icon": "location_on",
@@ -236,9 +314,7 @@ class SpolupraceHistorieListView(HistorieListView):
 
 
 class SouborHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie souborů.
-    """
+    """Třida pohledu pro zobrazení historie souborů."""
 
     context_typ = "soubor"
     lookup_kwarg = "soubor_id"
@@ -247,9 +323,21 @@ class SouborHistorieListView(HistorieListView):
     fedora_lookup = "pk"
 
     def prepare_queryset(self, qs):
+        """
+        Provádí operaci prepare queryset.
+
+        :param qs: Parametr ``qs`` pracuje se s atributy ``order_by``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``order_by()``.
+        """
         return qs.order_by("-datum_zmeny")
 
     def add_extra_context(self, context):
+        """
+        Provádí operaci add extra context.
+
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``add_extra_context``.
+        """
         soubor_id = self.get_lookup_value()
         soubor = get_object_or_404(Soubor, pk=soubor_id)
         context["projekt"] = getattr(soubor.vazba, "projekt_souboru", None)
@@ -264,6 +352,13 @@ class SouborHistorieListView(HistorieListView):
                 context["back_model"] = "SamostatnyNalez"
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: slovník, None.
+        """
         nav = context["back_model"]
         if nav == "Projekt":
             return {
@@ -294,15 +389,20 @@ class SouborHistorieListView(HistorieListView):
 
 
 class LokalitaHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie lokalit.
-    """
+    """Třida pohledu pro zobrazení historie lokalit."""
 
     context_typ = "lokalita"
     queryset_filter = "vazba__archeologickyzaznam__ident_cely"
     fedora_model = ArcheologickyZaznam
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse("lokalita:detail", args=[context["ident_cely"]]),
             "icon": "tour",
@@ -311,15 +411,20 @@ class LokalitaHistorieListView(HistorieListView):
 
 
 class UzivatelHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie uživatele.
-    """
+    """Třida pohledu pro zobrazení historie uživatele."""
 
     context_typ = "uzivatel"
     queryset_filter = "vazba__uzivatelhistorievazba__ident_cely"
     fedora_model = User
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+            :return: Vrací slovník.
+        """
         next_url = self.request.GET.get("next", reverse("uzivatel:update-uzivatel"))
         return {
             "url": next_url,
@@ -329,15 +434,20 @@ class UzivatelHistorieListView(HistorieListView):
 
 
 class ExterniZdrojHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie externích zdrojů.
-    """
+    """Třida pohledu pro zobrazení historie externích zdrojů."""
 
     context_typ = "ext_zdroj"
     queryset_filter = "vazba__externizdroj__ident_cely"
     fedora_model = ExterniZdroj
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse("ez:detail", args=[context["ident_cely"]]),
             "icon": "menu_book",
@@ -346,15 +456,20 @@ class ExterniZdrojHistorieListView(HistorieListView):
 
 
 class PianHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie Pianu.
-    """
+    """Třida pohledu pro zobrazení historie Pianu."""
 
     use_history_table = False
     fedora_model = Pian
     context_typ = "akce"
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
             "icon": "brush",
@@ -363,15 +478,20 @@ class PianHistorieListView(HistorieListView):
 
 
 class PianLokalitaHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie Pianu.
-    """
+    """Třida pohledu pro zobrazení historie Pianu."""
 
     use_history_table = False
     fedora_model = Pian
     context_typ = "lokalita"
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse(
                 "lokalita:detail-dj", args=[self.kwargs["lokalita_ident_cely"], self.kwargs["dj_ident_cely"]]
@@ -382,15 +502,20 @@ class PianLokalitaHistorieListView(HistorieListView):
 
 
 class AdbHistorieListView(HistorieListView):
-    """
-    Třida pohledu pro zobrazení historie ADB.
-    """
+    """Třida pohledu pro zobrazení historie ADB."""
 
     use_history_table = False
     fedora_model = Adb
     context_typ = "akce"
 
     def get_header_config(self, context):
+        """
+        Vrací header config.
+
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+            :return: Vrací slovník.
+        """
         return {
             "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
             "icon": "brush",

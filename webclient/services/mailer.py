@@ -83,8 +83,17 @@ ALWAYS_ACTIVE = [
 
 
 class Mailer:
+    """Implementuje komponentu ``Mailer`` v rámci aplikace."""
+
     @classmethod
     def __strip_tags(cls, html):
+        """
+        Provádí operaci strip tags.
+
+        :param html: Parametr ``html`` se předává do volání ``feed()``.
+
+            :return: Vrací výsledek volání ``get_data()``.
+        """
         s = MLStripper()
         s.feed(html)
         return s.get_data()
@@ -93,6 +102,13 @@ class Mailer:
     def _notification_should_be_sent(
         cls, notification_type: "uzivatel.models.UserNotificationType", user: "uzivatel.models.User"
     ):
+        """
+               Provádí operaci notification should be sent.
+
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``zasilat_neaktivnim``, ovlivňuje větvení podmínek.
+               :param user: Parametr ``user`` se předává do volání ``debug()``, pracuje se s atributy ``notification_types``, ``is_active``, ovlivňuje větvení podmínek.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         result = False
         if notification_type.ident_cely in ALWAYS_ACTIVE:
             notification_is_enabled = True
@@ -128,6 +144,13 @@ class Mailer:
     def _notification_was_sent(
         cls, notification_type: "uzivatel.models.UserNotificationType", user: "uzivatel.models.User"
     ):
+        """
+               Provádí operaci notification was sent.
+
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``filter()``, ``debug()``, pracuje se s atributy ``ident_cely``.
+               :param user: Parametr ``user`` se předává do volání ``debug()``, pracuje se s atributy ``notification_log_items``.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         notification_log = user.notification_log_items.filter(notification_type=notification_type).first()
         logger.debug(
             "services.mailer._notification_was_sent",
@@ -147,6 +170,17 @@ class Mailer:
         exception,
         log_user=None,
     ):
+        """
+               Provádí operaci log notification.
+
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``NotificationsLog()``, ``debug()``.
+               :param receiver_object: Parametr ``receiver_object`` slouží jako vstup pro logiku funkce ``_log_notification``.
+               :param receiver_address: Parametr ``receiver_address`` se předává do volání ``NotificationsLog()``, ``debug()``.
+               :param status: Stavová nebo časová hodnota `status` používaná při rozhodování logiky.
+               :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
+               :param log_user: Uživatel nebo osoba ``log_user``, v jejímž kontextu se operace provádí.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         user_object = log_user if log_user else receiver_object
         try:
             uzivatel.models.User.objects.get(pk=user_object.pk)
@@ -191,6 +225,20 @@ class Mailer:
         reply_to=None,
         cc=None,
     ):
+        """
+        Odešle hodnotu. v aplikaci.
+
+        :param subject: Textový nebo strukturální vstup `subject` používaný při sestavení nebo zpracování obsahu.
+        :param to: Parametr ``to`` se předává do volání ``EmailMultiAlternatives()``, ``info()``, ovlivňuje větvení podmínek.
+        :param html_content: Textový nebo strukturální vstup `html_content` používaný při sestavení nebo zpracování obsahu.
+        :param notification_type: Parametr ``notification_type`` předává se do volání ``_log_notification()``.
+        :param user: Parametr ``user`` se předává do volání ``_log_notification()``.
+        :param from_email: Uživatel nebo osoba ``from_email``, v jejímž kontextu se operace provádí.
+        :param attachment: Parametr ``attachment`` se předává do volání ``info()``, ``getattr()``, pracuje se s atributy ``filename``, ``content``, ovlivňuje větvení podmínek.
+        :param log_user: Uživatel nebo osoba ``log_user``, v jejímž kontextu se operace provádí.
+        :param reply_to: Číselná hodnota ``reply_to`` použitá při výpočtu nebo transformaci.
+        :param cc: Seznam adresátů v kopii (CC) pro odesílaný e-mail.
+        """
         if "@" in to:
             plain_text = cls.__strip_tags(html_content)
             email = EmailMultiAlternatives(subject, plain_text, from_email, [to], reply_to=reply_to, cc=cc)
@@ -230,6 +278,11 @@ class Mailer:
 
     @classmethod
     def send_eu02(cls, user: "uzivatel.models.User"):
+        """
+        Odešle eu02. v aplikaci.
+
+        :param user: Parametr ``user`` se předává do volání ``render_to_string()``, ``__send()``, pracuje se s atributy ``ident_cely``, ``first_name``.
+        """
         IDENT_CELY = "E-U-02"
         logger.debug("services.mailer.send_eu02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -250,6 +303,11 @@ class Mailer:
 
     @classmethod
     def send_eu03(cls, user: "uzivatel.models.User"):
+        """
+        Odešle eu03. v aplikaci.
+
+        :param user: Parametr ``user`` se předává do volání ``_notification_was_sent()``, ``__send()``, pracuje se s atributy ``email``, ovlivňuje větvení podmínek.
+        """
         IDENT_CELY = "E-U-03"
         logger.debug("services.mailer.send_eu03", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -259,6 +317,11 @@ class Mailer:
 
     @classmethod
     def send_eu04(cls, user: "uzivatel.models.User"):
+        """
+        Odešle eu04. v aplikaci.
+
+        :param user: Parametr ``user`` se předává do volání ``render_to_string()``, ``__send()``, pracuje se s atributy ``ident_cely``, ``first_name``.
+        """
         IDENT_CELY = "E-U-04"
         logger.debug("services.mailer.send_eu04", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -289,6 +352,12 @@ class Mailer:
 
     @classmethod
     def send_eu06(cls, user: "uzivatel.models.User", groups):
+        """
+        Odešle eu06. v aplikaci.
+
+        :param user: Parametr ``user`` se předává do volání ``_notification_should_be_sent()``, ``__send()``, pracuje se s atributy ``email``, ovlivňuje větvení podmínek.
+        :param groups: Parametr ``groups`` se předává do volání ``debug()``, ``join()``, ovlivňuje větvení podmínek.
+        """
         IDENT_CELY = "E-U-06"
         logger.debug("services.mailer.send_eu06", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -309,6 +378,12 @@ class Mailer:
 
     @classmethod
     def send_eu07(cls, user: "uzivatel.models.User", request):
+        """
+        Odešle eu07. v aplikaci.
+
+        :param user: Parametr ``user`` se předává do volání ``format()``, ``build_absolute_uri()``, pracuje se s atributy ``ident_cely``, ``id``.
+        :param request: Parametr ``request`` pracuje se s atributy ``build_absolute_uri``.
+        """
         IDENT_CELY = "E-U-07"
         logger.debug("services.mailer.send_eu07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -328,6 +403,13 @@ class Mailer:
 
     @classmethod
     def _send_notification_for_project(cls, project, notification_type):
+        """
+               Odešle notification for project.
+
+               :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``historie``, ``ident_cely``.
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``_notification_should_be_sent()``, ``render_to_string()``, pracuje se s atributy ``predmet``, ``cesta_sablony``, ovlivňuje větvení podmínek.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         from projekt.models import Projekt
         from uzivatel.models import User
 
@@ -357,6 +439,13 @@ class Mailer:
 
     @classmethod
     def _send_notification_for_projects(cls, projects, notification_type):
+        """
+               Odešle notification for projects.
+
+               :param projects: Parametr ``projects`` předává se do volání ``debug()``, pracuje se s atributy ``count``.
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``debug()``, ``_send_notification_for_project()``.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         logger.debug(
             "services.mailer._send_notification_for_projects",
             extra={"notification_type": notification_type, "count": projects.count()},
@@ -366,6 +455,7 @@ class Mailer:
 
     @classmethod
     def send_enz01(cls):
+        """Odešle enz01. v aplikaci."""
         today_plus_90_days = (datetime.now() + timedelta(days=90)).date()
         IDENT_CELY = "E-NZ-01"
         logger.debug("services.mailer.send_enz01", extra={"ident_cely": IDENT_CELY})
@@ -377,6 +467,7 @@ class Mailer:
 
     @classmethod
     def send_enz02(cls):
+        """Odešle enz02. v aplikaci."""
         today_minus_1_day = (datetime.now() - timedelta(days=1)).date()
         IDENT_CELY = "E-NZ-02"
         logger.debug("services.mailer.send_enz02", extra={"ident_cely": IDENT_CELY})
@@ -388,6 +479,12 @@ class Mailer:
 
     @classmethod
     def send_ev01(cls, zaznam: "arch_z.models.ArcheologickyZaznam", reason):
+        """
+        Odešle ev01. v aplikaci.
+
+        :param zaznam: Parametr ``zaznam`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``hlavni_katastr``.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        """
         IDENT_CELY = "E-V-01"
         logger.debug("services.mailer.send_ev01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -426,6 +523,14 @@ class Mailer:
         notification_type,
         user: "uzivatel.models.User" = None,
     ):
+        """
+               Odešle a.
+
+               :param obj: Parametr ``obj`` předává se do volání ``format()``, ``isinstance()``, pracuje se s atributy ``ident_cely``, ``CHOICES``, ovlivňuje větvení podmínek.
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``render_to_string()``, ``_notification_should_be_sent()``, pracuje se s atributy ``predmet``, ``cesta_sablony``, ovlivňuje větvení podmínek.
+               :param user: Parametr ``user`` se předává do volání ``_notification_should_be_sent()``, ``__send()``, pracuje se s atributy ``email``, ovlivňuje větvení podmínek.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         subject = notification_type.predmet.format(ident_cely=obj.ident_cely)
         if isinstance(obj, projekt.models.Projekt):
             state = obj.CHOICES[obj.stav][1]
@@ -462,6 +567,12 @@ class Mailer:
 
     @classmethod
     def send_ea01(cls, project: "projekt.models.Projekt", user: "uzivatel.models.User"):
+        """
+        Odešle ea01. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_a()``, pracuje se s atributy ``historie``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``send_ea01``.
+        """
         IDENT_CELY = "E-A-01"
         logger.debug("services.mailer.send_ea01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -471,6 +582,11 @@ class Mailer:
 
     @classmethod
     def send_ea02(cls, arch_z: "arch_z.models.ArcheologickyZaznam"):
+        """
+        Odešle ea02. v aplikaci.
+
+        :param arch_z: Parametr ``arch_z`` předává se do volání ``_send_a()``.
+        """
         IDENT_CELY = "E-A-02"
         logger.debug("services.mailer.send_ea02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -478,6 +594,13 @@ class Mailer:
 
     @classmethod
     def _send_e(cls, project, notification_type):
+        """
+               Odešle e.
+
+               :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``podnet``.
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``render_to_string()``, ``__send()``, pracuje se s atributy ``predmet``, ``cesta_sablony``.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
             notification_type.cesta_sablony,
@@ -496,6 +619,11 @@ class Mailer:
 
     @classmethod
     def send_eo01(cls, project: "projekt.models.Projekt"):
+        """
+        Odešle eo01. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_e()``.
+        """
         IDENT_CELY = "E-O-01"
         logger.debug("services.mailer.send_eo01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -503,6 +631,11 @@ class Mailer:
 
     @classmethod
     def send_eo02(cls, project: "projekt.models.Projekt"):
+        """
+        Odešle eo02. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_e()``.
+        """
         IDENT_CELY = "E-O-02"
         logger.debug("services.mailer.send_eo02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -510,6 +643,14 @@ class Mailer:
 
     @classmethod
     def _send_ep01(cls, project, notification_type, rep_bin_file=None):
+        """
+               Odešle ep01.
+
+               :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``podnet``, ovlivňuje větvení podmínek.
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``render_to_string()``, ``debug()``, pracuje se s atributy ``predmet``, ``cesta_sablony``.
+               :param rep_bin_file: Parametr ``rep_bin_file`` se předává do volání ``isinstance()``, ovlivňuje větvení podmínek.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
             notification_type.cesta_sablony,
@@ -569,6 +710,12 @@ class Mailer:
 
     @classmethod
     def send_ep01a(cls, project: "projekt.models.Projekt", rep_bin_file=None):
+        """
+        Odešle ep01a. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_ep01()``.
+        :param rep_bin_file: Parametr ``rep_bin_file`` se předává do volání ``_send_ep01()``.
+        """
         IDENT_CELY = "E-P-01a"
         logger.debug("services.mailer.send_ep01a", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -576,6 +723,12 @@ class Mailer:
 
     @classmethod
     def send_ep01b(cls, project: "projekt.models.Projekt", rep_bin_file=None):
+        """
+        Odešle ep01b. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_ep01()``.
+        :param rep_bin_file: Parametr ``rep_bin_file`` se předává do volání ``_send_ep01()``.
+        """
         IDENT_CELY = "E-P-01b"
         logger.debug("services.mailer.send_ep01b", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -583,6 +736,12 @@ class Mailer:
 
     @classmethod
     def send_ep02(cls, psi, project):
+        """
+        Odešle ep02. v aplikaci.
+
+        :param psi: Parametr ``psi`` slouží jako vstup pro logiku funkce ``send_ep02``.
+        :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``refresh_from_db``.
+        """
         IDENT_CELY = "E-P-02"
         while project.ident_cely.startswith("X-"):
             project.refresh_from_db()
@@ -610,6 +769,13 @@ class Mailer:
 
     @classmethod
     def _send_ep03(cls, project, notification_type):
+        """
+               Odešle ep03.
+
+               :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``podnet``, ovlivňuje větvení podmínek.
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``render_to_string()``, ``__send()``, pracuje se s atributy ``predmet``, ``cesta_sablony``.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(
             notification_type.cesta_sablony,
@@ -638,6 +804,11 @@ class Mailer:
 
     @classmethod
     def send_ep03a(cls, project: "projekt.models.Projekt"):
+        """
+        Odešle ep03a. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_ep03()``.
+        """
         IDENT_CELY = "E-P-03a"
         logger.debug("services.mailer.send_ep03a", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -645,6 +816,11 @@ class Mailer:
 
     @classmethod
     def send_ep03b(cls, project: "projekt.models.Projekt"):
+        """
+        Odešle ep03b. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_ep03()``.
+        """
         IDENT_CELY = "E-P-03b"
         logger.debug("services.mailer.send_ep03b", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -652,6 +828,13 @@ class Mailer:
 
     @classmethod
     def send_ep07(cls, project: "projekt.models.Projekt", reason, user):
+        """
+        Odešle ep07. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``organizace``, ovlivňuje větvení podmínek.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        :param user: Parametr ``user`` se předává do volání ``__send()``, pracuje se s atributy ``email``.
+        """
         IDENT_CELY = "E-P-07"
         logger.debug("services.mailer.send_ep07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -680,6 +863,12 @@ class Mailer:
 
     @classmethod
     def send_ep04(cls, project: "projekt.models.Projekt", reason):
+        """
+        Odešle ep04. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``hlavni_katastr``.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        """
         IDENT_CELY = "E-P-04"
         logger.debug("services.mailer.send_ep04", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -709,6 +898,11 @@ class Mailer:
 
     @classmethod
     def send_ep05(cls, project: "projekt.models.Projekt"):
+        """
+        Odešle ep05. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``debug()``, ``format()``, pracuje se s atributy ``ident_cely``, ``hlavni_katastr``.
+        """
         IDENT_CELY = "E-P-05"
         logger.debug(
             "services.mailer.send_ep05", extra={"ident_cely": IDENT_CELY, "project_ident_cely": project.ident_cely}
@@ -741,6 +935,12 @@ class Mailer:
 
     @classmethod
     def _get_ep06_attachment(cls, project) -> RepositoryBinaryFile | None:
+        """
+        Vrací ep06 attachment.
+
+        :param project: Parametr ``project`` předává se do volání ``filter()``, ``debug()``, pracuje se s atributy ``soubory``, ``ident_cely``.
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         project_files = project.soubory.soubory.filter(
             nazev__startswith=f"{ZruseniPDFCreator.FILENAME_PREFIX}_{project.ident_cely}", nazev__endswith=".pdf"
         )
@@ -771,6 +971,15 @@ class Mailer:
 
     @classmethod
     def _send_ep06(cls, project, notification_type, reason, rep_bin_file=None):
+        """
+               Odešle ep06.
+
+               :param project: Parametr ``project`` předává se do volání ``format()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``has_oznamovatel``, ovlivňuje větvení podmínek.
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``render_to_string()``, ``__send()``, pracuje se s atributy ``predmet``, ``cesta_sablony``.
+               :param reason: Parametr ``reason`` slouží jako vstup pro logiku funkce ``_send_ep06``.
+               :param rep_bin_file: Parametr ``rep_bin_file`` se předává do volání ``__send()``.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         oznameni = Historie.objects.filter(
             vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=OZNAMENI_PROJ
@@ -801,6 +1010,13 @@ class Mailer:
 
     @classmethod
     def send_ep06a(cls, project: "projekt.models.Projekt", reason, rep_bin_file=None):
+        """
+        Odešle ep06a. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_ep06()``.
+        :param reason: Parametr ``reason`` předává se do volání ``_send_ep06()``.
+        :param rep_bin_file: Parametr ``rep_bin_file`` se předává do volání ``_send_ep06()``.
+        """
         IDENT_CELY = "E-P-06a"
         logger.debug("services.mailer.send_ep06a", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -808,6 +1024,13 @@ class Mailer:
 
     @classmethod
     def send_ep06b(cls, project: "projekt.models.Projekt", reason, rep_bin_file=None):
+        """
+        Odešle ep06b. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``_send_ep06()``.
+        :param reason: Parametr ``reason`` předává se do volání ``_send_ep06()``.
+        :param rep_bin_file: Parametr ``rep_bin_file`` se předává do volání ``_send_ep06()``.
+        """
         IDENT_CELY = "E-P-06b"
         logger.debug("services.mailer.send_ep06b", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -815,6 +1038,14 @@ class Mailer:
 
     @classmethod
     def _send_en01_02(cls, projekt_ident_list, notification_type, send_to):
+        """
+               Odešle en01 02.
+
+               :param projekt_ident_list: Identifikátor ``projekt_ident_list`` používaný pro dohledání cílového záznamu.
+               :param notification_type: Parametr ``notification_type`` předává se do volání ``render_to_string()``, ``_notification_should_be_sent()``, pracuje se s atributy ``predmet``, ``cesta_sablony``, ovlivňuje větvení podmínek.
+               :param send_to: Parametr ``send_to`` se předává do volání ``get()``, ``__send()``.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         subject = notification_type.predmet
         context = {
             "title": subject,
@@ -827,6 +1058,12 @@ class Mailer:
 
     @classmethod
     def send_en01(cls, send_to, projekt_ident_list):
+        """
+        Odešle en01. v aplikaci.
+
+        :param send_to: Parametr ``send_to`` se předává do volání ``_send_en01_02()``.
+        :param projekt_ident_list: Identifikátor ``projekt_ident_list`` používaný pro dohledání cílového záznamu.
+        """
         IDENT_CELY = "E-N-01"
         logger.debug("services.mailer.send_en01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -834,6 +1071,12 @@ class Mailer:
 
     @classmethod
     def send_en02(cls, send_to, projekt_ident_list):
+        """
+        Odešle en02. v aplikaci.
+
+        :param send_to: Parametr ``send_to`` se předává do volání ``_send_en01_02()``.
+        :param projekt_ident_list: Identifikátor ``projekt_ident_list`` používaný pro dohledání cílového záznamu.
+        """
         IDENT_CELY = "E-N-02"
         logger.debug("services.mailer.send_en02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -841,6 +1084,12 @@ class Mailer:
 
     @classmethod
     def send_en03_en04(cls, samostatny_nalez: "pas.models.SamostatnyNalez", reason):
+        """
+        Odešle en03 en04.
+
+        :param samostatny_nalez: Číselná hodnota ``samostatny_nalez`` použitá při výpočtu nebo transformaci.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        """
         logger.debug("services.mailer.send_en03_en04")
         if samostatny_nalez.stav == SN_ODESLANY:
             look_for_stav = f"SN{SN_ODESLANY}{SN_POTVRZENY}"
@@ -877,6 +1126,14 @@ class Mailer:
 
     @classmethod
     def send_en05(cls, email_to, reason, user: "uzivatel.models.User", spoluprace_id):
+        """
+        Odešle en05. v aplikaci.
+
+        :param email_to: Uživatel nebo osoba ``email_to``, v jejímž kontextu se operace provádí.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        :param user: Parametr ``user`` se předává do volání ``render_to_string()``, ``_notification_should_be_sent()``, pracuje se s atributy ``ident_cely``, ``first_name``, ovlivňuje větvení podmínek.
+        :param spoluprace_id: Identifikátor objektu ``spoluprace``.
+        """
         IDENT_CELY = "E-N-05"
         logger.debug("services.mailer.send_en05", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -901,6 +1158,11 @@ class Mailer:
 
     @classmethod
     def send_en06(cls, cooperation: "pas.models.UzivatelSpoluprace"):
+        """
+        Odešle en06. v aplikaci.
+
+        :param cooperation: Uživatel nebo osoba `cooperation`, v jejímž kontextu se operace provádí.
+        """
         IDENT_CELY = "E-N-06"
         logger.debug("services.mailer.send_en06", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -925,6 +1187,12 @@ class Mailer:
 
     @classmethod
     def send_en07(cls, cooperation: "pas.models.UzivatelSpoluprace", reason):
+        """
+        Odešle en07. v aplikaci.
+
+        :param cooperation: Uživatel nebo osoba `cooperation`, v jejímž kontextu se operace provádí.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        """
         IDENT_CELY = "E-N-07"
         logger.debug("services.mailer.send_en07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -960,6 +1228,11 @@ class Mailer:
 
     @classmethod
     def send_ek01(cls, document: "dokument.models.Dokument"):
+        """
+        Odešle ek01. v aplikaci.
+
+        :param document: Parametr ``document`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``historie``.
+        """
         IDENT_CELY = "E-K-01"
         logger.debug("services.mailer.send_ek01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -983,6 +1256,12 @@ class Mailer:
 
     @classmethod
     def send_ek02(cls, document: "dokument.models.Dokument", reason):
+        """
+        Odešle ek02. v aplikaci.
+
+        :param document: Parametr ``document`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``STATES``.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        """
         IDENT_CELY = "E-K-02"
         logger.debug("services.mailer.send_ek02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1011,6 +1290,11 @@ class Mailer:
 
     @staticmethod
     def get_en01_data() -> Dict:
+        """
+        Vrací en01 data.
+
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         invalidate_model(SamostatnyNalez)
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -1045,6 +1329,11 @@ class Mailer:
 
     @staticmethod
     def get_en02_data() -> Dict:
+        """
+        Vrací en02 data.
+
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         now = timezone.now()
         midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
         previous_midnight = midnight + timedelta(days=-1)
@@ -1078,6 +1367,13 @@ class Mailer:
 
     @classmethod
     def send_ep08(cls, project: "projekt.models.Projekt", reason, user):
+        """
+        Odešle ep08. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        :param user: Parametr ``user`` se předává do volání ``render_to_string()``, ``__send()``, pracuje se s atributy ``email``.
+        """
         IDENT_CELY = "E-P-08"
         logger.debug("services.mailer.send_ep08", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1096,6 +1392,14 @@ class Mailer:
 
     @classmethod
     def send_ep09(cls, project: "projekt.models.Projekt", info_text, user, kraje_s_emailem):
+        """
+        Odešle ep09. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``katastry``.
+        :param info_text: Číselná hodnota ``info_text`` použitá při výpočtu nebo transformaci.
+        :param user: Parametr ``user`` se předává do volání ``__send()``, pracuje se s atributy ``email``.
+        :param kraje_s_emailem: Uživatel nebo osoba ``kraje_s_emailem``, v jejímž kontextu se operace provádí.
+        """
         IDENT_CELY = "E-P-09"
         logger.debug("services.mailer.send_ep09", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1121,6 +1425,14 @@ class Mailer:
 
     @classmethod
     def send_ep10(cls, project: "projekt.models.Projekt", info_text, user, kraje_s_emailem):
+        """
+        Odešle ep10. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``format()``, ``render_to_string()``, pracuje se s atributy ``ident_cely``, ``katastry``.
+        :param info_text: Číselná hodnota ``info_text`` použitá při výpočtu nebo transformaci.
+        :param user: Parametr ``user`` se předává do volání ``__send()``, pracuje se s atributy ``email``.
+        :param kraje_s_emailem: Uživatel nebo osoba ``kraje_s_emailem``, v jejímž kontextu se operace provádí.
+        """
         IDENT_CELY = "E-P-10"
         logger.debug("services.mailer.send_ep10", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -1146,6 +1458,14 @@ class Mailer:
 
     @classmethod
     def send_ep11(cls, project: "projekt.models.Projekt", reason, user, request):
+        """
+        Odešle ep11. v aplikaci.
+
+        :param project: Parametr ``project`` předává se do volání ``format()``, ``build_absolute_uri()``, pracuje se s atributy ``ident_cely``.
+        :param reason: Parametr ``reason`` předává se do volání ``render_to_string()``.
+        :param user: Parametr ``user`` se předává do volání ``render_to_string()``, ``__send()``, pracuje se s atributy ``email``.
+        :param request: Parametr ``request`` pracuje se s atributy ``build_absolute_uri``.
+        """
         IDENT_CELY = "E-P-11"
         logger.debug("services.mailer.send_ep11", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)

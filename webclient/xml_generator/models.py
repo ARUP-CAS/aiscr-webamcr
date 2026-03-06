@@ -11,6 +11,15 @@ UPDATE_REDIS_SNAPSHOT = 20
 
 
 def check_if_task_queued(class_name, pk, task_name):
+    """
+    Ověří if task queued.
+
+    :param class_name: Parametr ``class_name`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
+    :param pk: Primární klíč zpracovávaného záznamu.
+    :param task_name: Textový název nebo klíč ``task_name`` používaný v rámci operace.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    """
     try:
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
@@ -46,29 +55,48 @@ def check_if_task_queued(class_name, pk, task_name):
 
 
 class BaseAmcrModel(models.Model):
-    """
-    Základní model pro všechny modely v aplikaci.
-    """
+    """Základní model pro všechny modely v aplikaci."""
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         abstract = True
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"{self.pk}"
 
     @property
     def get_ident_cely_link(self):
+        """Vrací ident cely link.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         if hasattr(self, "get_absolute_url") and hasattr(self, "ident_cely"):
             return f"<a href='{self.get_absolute_url()}' target='_blank'>{self.ident_cely}</a>"
 
 
 class ModelWithMetadata(BaseAmcrModel):
+    """Implementuje komponentu ``ModelWithMetadata`` v rámci aplikace."""
+
     IDENT_PREFIX = None
     SEQUENCE_NAME = None
 
     ident_cely = models.TextField(unique=True)
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         self.suppress_signal = False
         self.deleted_by_user = None
         self.active_transaction = None
@@ -78,6 +106,15 @@ class ModelWithMetadata(BaseAmcrModel):
         super(ModelWithMetadata, self).__init__(*args, **kwargs)
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
+        """
+        Vytvoří transaction. v aplikaci.
+
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+        :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
+
+            :return: Vrací atribut objektu.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -87,6 +124,10 @@ class ModelWithMetadata(BaseAmcrModel):
 
     @property
     def metadata(self):
+        """Provádí operaci metadata.
+
+        :return: Vrací výsledek volání ``get_metadata()``.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         connector = FedoraRepositoryConnector(self)
@@ -95,6 +136,10 @@ class ModelWithMetadata(BaseAmcrModel):
     def get_metadata_historicka(self, timestamp):
         """
         Metoda k získání vlastního souboru metadat dané verze z Fedory
+
+        :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
+
+            :return: Vrací výsledek volání ``get_metadata_historicka()``.
         """
         from core.repository_connector import FedoraRepositoryConnector
 
@@ -102,8 +147,9 @@ class ModelWithMetadata(BaseAmcrModel):
         return connector.get_metadata_historicka(timestamp)
 
     def get_historicke_verze(self):
-        """
-        Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
+        """Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
+
+        :return: Vrací proměnná ``results``.
         """
         from core.repository_connector import FedoraRepositoryConnector
         from core.utils import get_timezone
@@ -134,6 +180,14 @@ class ModelWithMetadata(BaseAmcrModel):
     def save_metadata(
         self, fedora_transaction=None, include_files=False, close_transaction=False, skip_container_check=False
     ):
+        """
+        Uloží metadata. v aplikaci.
+
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``isinstance()``, pracuje se s atributy ``add_updated_ident_cely``, ``uid``, ovlivňuje větvení podmínek.
+        :param include_files: Parametr ``include_files`` ovlivňuje větvení podmínek.
+        :param close_transaction: Parametr ``close_transaction`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
+        :param skip_container_check: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``save_metadata``.
+        """
         from core.repository_connector import DryRunFedoraTransaction, FedoraDeletionOnlyTransaction, FedoraTransaction
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
@@ -193,6 +247,12 @@ class ModelWithMetadata(BaseAmcrModel):
         )
 
     def save_record_deletion_record(self, fedora_transaction, deleted_by_user=None):
+        """
+        Uloží record deletion record.
+
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``save_metadata()``.
+        :param deleted_by_user: Parametr ``deleted_by_user`` ovlivňuje větvení podmínek.
+        """
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
 
         from arch_z.models import ArcheologickyZaznam
@@ -220,6 +280,14 @@ class ModelWithMetadata(BaseAmcrModel):
             self.deletion_record_saved = True
 
     def _get_fedora_transaction(self, fedora_transaction):
+        """
+        Vrací fedora transaction.
+
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :return: Načtená data odpovídající zadaným vstupům.
+
+            :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
+        """
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
@@ -231,6 +299,12 @@ class ModelWithMetadata(BaseAmcrModel):
         return fedora_transaction
 
     def record_deletion(self, fedora_transaction=None, close_transaction=False):
+        """
+        Provádí operaci record deletion.
+
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``FedoraRepositoryConnector()``, pracuje se s atributy ``mark_transaction_as_closed``.
+        :param close_transaction: Parametr ``close_transaction`` ovlivňuje větvení podmínek.
+        """
         logger.debug("xml_generator.models.ModelWithMetadata.record_deletion.start")
 
         fedora_transaction = self._get_fedora_transaction(fedora_transaction)
@@ -280,6 +354,16 @@ class ModelWithMetadata(BaseAmcrModel):
             fedora_transaction.mark_transaction_as_closed()
 
     def record_ident_change(self, old_ident_cely, fedora_transaction=None, new_ident_cely=None, delete_container=True):
+        """
+        Provádí operaci record ident change.
+
+        :param old_ident_cely: Identifikátor ``old_ident_cely`` používaný pro dohledání cílového záznamu.
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``debug()``, ``isinstance()``, pracuje se s atributy ``uid``, ``post_commit_tasks``, ovlivňuje větvení podmínek.
+        :param new_ident_cely: Identifikátor ``new_ident_cely`` používaný pro dohledání cílového záznamu.
+        :param delete_container: Parametr ``delete_container`` předává se do volání ``record_ident_change()``.
+
+            :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
+        """
         if fedora_transaction is None and self.active_transaction is not None:
             fedora_transaction = self.active_transaction
         elif fedora_transaction is None and self.active_transaction is None:
@@ -329,6 +413,12 @@ class ModelWithMetadata(BaseAmcrModel):
             from projekt.models import Projekt
 
             def process_arch_z(record: ArcheologickyZaznam):
+                """
+                               Provádí operaci process arch z.
+
+                               :param record: Parametr ``record`` pracuje se s atributy ``dokumentacni_jednotky_akce``, ``casti_dokumentu``.
+                :return: Výstup funkce odpovídající implementované logice.
+                """
                 for inner_item in record.dokumentacni_jednotky_akce.all():
                     inner_item: DokumentacniJednotka
                     try:
@@ -358,6 +448,12 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Dokument):
 
                 def save_metadata(record: Dokument):
+                    """
+                                       Uloží metadata.
+
+                                       :param record: Parametr ``record`` pracuje se s atributy ``casti``, ``let``, ovlivňuje větvení podmínek.
+                    Výsledek provedené změny nad cílovým objektem.
+                    """
                     for item in record.casti.all():
                         item: DokumentCast
                         if item.archeologicky_zaznam:
@@ -372,6 +468,12 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, ExterniZdroj):
 
                 def save_metadata(record: ExterniZdroj):
+                    """
+                                       Uloží metadata.
+
+                                       :param record: Parametr ``record`` pracuje se s atributy ``externi_odkazy_zdroje``.
+                    Výsledek provedené změny nad cílovým objektem.
+                    """
                     for item in record.externi_odkazy_zdroje.all():
                         item: ExterniOdkaz
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -381,6 +483,12 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Projekt):
 
                 def save_metadata(record: Projekt):
+                    """
+                                       Uloží metadata.
+
+                                       :param record: Parametr ``record`` pracuje se s atributy ``casti_dokumentu``, ``samostatne_nalezy``.
+                    Výsledek provedené změny nad cílovým objektem.
+                    """
                     for item in record.casti_dokumentu.all():
                         item: DokumentCast
                         item.dokument.save_metadata(fedora_transaction)
@@ -393,6 +501,12 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Lokalita):
 
                 def save_metadata(record: Lokalita):
+                    """
+                                       Uloží metadata.
+
+                                       :param record: Parametr ``record`` pracuje se s atributy ``archeologicky_zaznam``.
+                    Výsledek provedené změny nad cílovým objektem.
+                    """
                     archeologicky_zaznam: ArcheologickyZaznam = record.archeologicky_zaznam
                     process_arch_z(archeologicky_zaznam)
 
@@ -401,6 +515,12 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, SamostatnyNalez):
 
                 def save_metadata(record: SamostatnyNalez):
+                    """
+                                       Uloží metadata.
+
+                                       :param record: Parametr ``record`` pracuje se s atributy ``projekt``, ovlivňuje větvení podmínek.
+                    Výsledek provedené změny nad cílovým objektem.
+                    """
                     if record.projekt:
                         record.projekt.save_metadata(fedora_transaction)
 
@@ -409,6 +529,12 @@ class ModelWithMetadata(BaseAmcrModel):
             elif isinstance(self, Pian):
 
                 def save_metadata(record: Pian):
+                    """
+                                       Uloží metadata.
+
+                                       :param record: Parametr ``record`` pracuje se s atributy ``dokumentacni_jednotky_pianu``.
+                    Výsledek provedené změny nad cílovým objektem.
+                    """
                     for item in record.dokumentacni_jednotky_pianu.all():
                         item: DokumentacniJednotka
                         item.archeologicky_zaznam.save_metadata(fedora_transaction)
@@ -434,10 +560,19 @@ class ModelWithMetadata(BaseAmcrModel):
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
+        """
+        Vrací by ident cely.
+
+        :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+        """
         try:
             return cls.objects.get(ident_cely=ident_cely)
         except Exception:
             return None
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         abstract = True

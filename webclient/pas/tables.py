@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class SamostatnyNalezTable(SearchTable):
-    """
-    Class pro definování tabulky pro samostatný nález použitých pro zobrazení přehledu nálezu a exportu.
-    """
+    """Definuje tabulku samostatných nálezů pro přehled i export."""
 
     ident_cely = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.ident_cely.label"), linkify=True)
     igsn = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.igsn.label"), default="")
@@ -79,6 +77,8 @@ class SamostatnyNalezTable(SearchTable):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = SamostatnyNalez
         fields = (
             "nahled",
@@ -131,6 +131,11 @@ class SamostatnyNalezTable(SearchTable):
     def render_nahled(self, value, record):
         """
         Metoda pro správně zobrazení náhledu souboru.
+
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+        :param record: Parametr ``record`` předává se do volání ``reverse()``, pracuje se s atributy ``nahled_soubor``, ``ident_cely``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
         """
         soubor = record.nahled_soubor
         if soubor is not None:
@@ -160,11 +165,30 @@ class SamostatnyNalezTable(SearchTable):
         return ""
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(SamostatnyNalezTable, self).__init__(*args, **kwargs)
 
 
 class AktivaceDeaktivaceColumn(tables.TemplateColumn):
+    """Implementuje komponentu ``AktivaceDeaktivaceColumn`` v rámci aplikace."""
+
     def render(self, record, table, value, bound_column, **kwargs):
+        """
+        Vyrenderuje hodnotu. v aplikaci.
+
+        :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``aktivni``, ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+        :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
+        """
         if not hasattr(table, "request"):
             return ""
         if record.aktivni:
@@ -178,7 +202,20 @@ class AktivaceDeaktivaceColumn(tables.TemplateColumn):
 
 
 class smazatColumn(tables.TemplateColumn):
+    """Implementuje komponentu ``smazatColumn`` v rámci aplikace."""
+
     def render(self, record, table, value, bound_column, **kwargs):
+        """
+        Vyrenderuje hodnotu. v aplikaci.
+
+        :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+        :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
+        """
         if not hasattr(table, "request"):
             return ""
         if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user, record.id):
@@ -188,9 +225,7 @@ class smazatColumn(tables.TemplateColumn):
 
 
 class UzivatelSpolupraceTable(SearchTable):
-    """
-    Class pro definování tabulky pro uživatelskou spolupráci použitých pro zobrazení přehledu spoluprác a exportu.
-    """
+    """Definuje tabulku uživatelských spoluprací pro přehled i export."""
 
     stav = tables.Column(verbose_name="Stav", default="")
     vedouci = tables.Column(
@@ -246,6 +281,8 @@ class UzivatelSpolupraceTable(SearchTable):
     app = "spoluprace"
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = UzivatelSpoluprace
         fields = (
             "stav",
@@ -266,10 +303,17 @@ class UzivatelSpolupraceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):
-        """
-        Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
+        """Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
+
+        :return: Vrací str.
         """
         return ""

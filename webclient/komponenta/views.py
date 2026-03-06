@@ -55,7 +55,13 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, typ_vazby, ident_cely):
     """
-    Funkce pohledu pro zapsání editace komponenty.
+    Zpracuje uložení editace komponenty a souvisejících nálezových formulářů.
+
+    :param request: HTTP požadavek s daty editace komponenty.
+    :param typ_vazby: Typ vazby, který určuje návratovou URL po uložení.
+    :param ident_cely: Identifikátor upravované komponenty.
+
+        :return: Vrací proměnná ``response``.
     """
     komponenta: Komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     fedora_transaction = FedoraTransaction(komponenta, request.user, suppress_message=True)
@@ -164,7 +170,13 @@ def detail(request, typ_vazby, ident_cely):
 @require_http_methods(["POST"])
 def zapsat(request, typ_vazby, dj_ident_cely):
     """
-    Funkce pohledu pro zapsání vytvořeni komponenty.
+    Vytvoří novou komponentu pro dokumentační jednotku nebo část dokumentu.
+
+    :param request: HTTP požadavek obsahující data nově zakládané komponenty.
+    :param typ_vazby: Typ vazby určující, zda jde o dokument nebo dokumentační jednotku.
+    :param dj_ident_cely: Identifikátor cílové dokumentační jednotky nebo části dokumentu.
+
+        :return: Vrací proměnná ``response``.
     """
     dj = None
     cast = None
@@ -194,7 +206,7 @@ def zapsat(request, typ_vazby, dj_ident_cely):
                 komponenta.komponenta_vazby = cast.komponenty
             komponenta.close_active_transaction_when_finished = True
             komponenta.save()
-            form.save_m2m()  # this must be called to store komponenta_aktivity
+            form.save_m2m()  # Toto je nutné zavolat pro uložení `komponenta_aktivity`.
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         if dj:
@@ -243,7 +255,13 @@ def zapsat(request, typ_vazby, dj_ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, typ_vazby, ident_cely):
     """
-    Funkce pohledu pro smazání komponenty pomoci modalu.
+    Odstraní komponentu a vrátí cílovou URL pro následný redirect.
+
+    :param request: HTTP požadavek; při POST provádí vlastní smazání komponenty.
+    :param typ_vazby: Typ vazby předaný URL konfigurací.
+    :param ident_cely: Identifikátor mazané komponenty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     dj = None
