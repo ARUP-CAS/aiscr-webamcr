@@ -278,7 +278,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "actionSubmitBtn")
         self.check_fedora_change(time, "projekt/tests/resources/test_145/zmena_pristupnosti_akce")
 
-        # Smazání projektuové akce
+        # Smazání projektové akce
         time = self.getTime()
         self.ElementClick(By.ID, "otherOptions")
         self.ElementClick(By.ID, "akce-smazat")
@@ -395,7 +395,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_146/create_projekt_pruzkum")
         ident = self.driver.current_url.split("/")[-1]
 
-        # Vytvoření dokumentační části
+        # Vytvoření části dokumentu
         self.createFedoraRecord("C-202209999", "archivar")
         self.goToAddress("/id/C-202209999")
         time = self.getTime()
@@ -447,7 +447,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_146/zmena_pristupnosti")
         PAS_ident = self.driver.current_url.split("/")[-1]
 
-        # Smazání dokumentační části
+        # Smazání části dokumentu
         time = self.getTime()
         self.goToAddress("/id/C-202209999")
         self.ElementClick(By.ID, f"dokument-odpojit-{doc_ident}")
@@ -497,7 +497,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         self.check_fedora_change(time, "projekt/tests/resources/test_146/recreate_PAS")
         self.check_fedora_delete(["model/deleted/member/M-202302810-N00001"])
 
-        # Vytvoření existující dokumentační části
+        # Vytvoření existující části dokumentu
         self.createFedoraRecord("C-202114070", "archivar")
         self.createFedoraRecord("M-TX-194300151", "archivar")
         self.uploadFileToFedora(534769, "projekt/tests/resources/test.pdf", "archivar")
