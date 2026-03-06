@@ -1,6 +1,8 @@
 JavaScript knihovny
 ===================
 
+.. BEGIN GENERATED NODEJS LIBRARIES
+
 Knihovny instalované pomocí Node.js
 ------------------------------------
 
@@ -72,6 +74,11 @@ Knihovny instalované pomocí Node.js
      - 4.1.1
      - MIT
      - 
+
+.. END GENERATED NODEJS LIBRARIES
+
+
+
 
 
 Knihovny vkládané jako statické soubory
