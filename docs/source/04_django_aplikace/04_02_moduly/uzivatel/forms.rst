@@ -104,3 +104,8 @@ Třídy
 
    Popis není k dispozici.
 
+
+.. py:class:: TestEmailForm
+
+   Formulář pro odeslání testovacího mailu v administraci.
+
