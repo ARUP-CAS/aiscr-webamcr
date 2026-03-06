@@ -101,6 +101,7 @@ from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pian.models import Kladyzm, Pian, vytvor_pian
 from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import Organizace, Osoba, User, UserNotificationType
+from xml_generator.models import ModelWithMetadata
 
 
 @dataclass
@@ -285,6 +286,21 @@ class ImportDataIncorrectPrimaryKeyFormatError(ImportDataError):
         super().__init__(
             "{} {}".format(
                 _("core_admin.ImportDataIncorrectPrimaryKeyFormatError.message"),
+                primary_key_value,
+            )
+        )
+
+
+class ImportDataActiveUserCannotBeDeleted(ImportDataError):
+    """
+    Výjimka vyvolaná při snaze o smazání aktivního uživatele
+    """
+
+    def __init__(self, primary_key_value):
+        self.primary_key_value = primary_key_value
+        super().__init__(
+            "{} {}".format(
+                _("core_admin.ImportDataActiveUserCannotBeDeleted.message"),
                 primary_key_value,
             )
         )
@@ -914,7 +930,7 @@ class ImportModelMapper(ABC):
             ]
         return []
 
-    def import_validation(self, performed_action) -> dict | None:
+    def import_validation(self, performed_action, *args, **kwargs) -> dict | None:
         """
         Provede validaci na základě primárního klíče. Při insertu záznam nesmí existovat,
         při updatu musí existovat. Vrátí slovník s primárními klíči, nebo vyvolá ImportDataIntegrityError.
@@ -1040,7 +1056,10 @@ class ImportModelMapper(ABC):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record) -> list:
-        return []
+        if isinstance(record, ModelWithMetadata):
+            return [record]
+        else:
+            return []
 
     @staticmethod
     def get_record_history(record):
@@ -1068,7 +1087,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
     foreign_key_fields = tuple()
     classes = tuple()
 
-    def import_validation(self, performed_action):
+    def import_validation(self, performed_action, *args, **kwargs):
         if (
             performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
             and self.value_dict.get("ident_cely")
@@ -1242,6 +1261,10 @@ class HeslarOdkazMapper(ImportModelMapper):
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["heslo"] = LookupImportField(Heslar)
         return field_mapping
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: HeslarOdkaz) -> list:
+        return [record.heslo]
 
 
 class OrganizaceMapper(ImportModelMapper):
@@ -1447,11 +1470,11 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: SamostatnyNalez) -> list:
-        return [record.projekt]
+        return [record, record.projekt]
 
     @staticmethod
     def get_record_history(record: SamostatnyNalez):
-        return record.projekt
+        return record
 
 
 class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
@@ -1530,12 +1553,13 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record) -> list:
+        record_list = [record]
         if isinstance(record, ArcheologickyZaznam):
-            return [record.akce.projekt]
-        return []
+            record_list += [record.akce.projekt]
+        return record_list
 
     @staticmethod
-    def get_record_history(record: SamostatnyNalez):
+    def get_record_history(record: Akce | ArcheologickyZaznam):
         if isinstance(record, ArcheologickyZaznam):
             return record
 
@@ -1598,8 +1622,9 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         return mapping_dict.get(field_name, BaseImportField())
 
     @staticmethod
-    def get_record_history(record: Lokalita):
-        return record.archeologicky_zaznam
+    def get_record_history(record: ArcheologickyZaznam | Lokalita):
+        if isinstance(record, Lokalita):
+            return record.archeologicky_zaznam
 
 
 class AkceVedouciMapper(ImportModelMapper):
@@ -1620,6 +1645,10 @@ class AkceVedouciMapper(ImportModelMapper):
     @staticmethod
     def get_record_history(record: AkceVedouci):
         return record.akce.archeologicky_zaznam
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: AkceVedouci) -> list:
+        return [record.akce.archeologicky_zaznam]
 
 
 class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
@@ -1703,7 +1732,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
 
     @staticmethod
     def get_record_history(record: DokumentacniJednotka):
-        return record.pian
+        return record.archeologicky_zaznam
 
 
 class AdbMapper(ImportModelMapper):
@@ -1736,7 +1765,7 @@ class AdbMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Adb) -> list:
-        return [record.dokumentacni_jednotka.archeologicky_zaznam]
+        return [record, record.dokumentacni_jednotka.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: Adb):
@@ -1759,7 +1788,7 @@ class AdbVyskovyBod(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: VyskovyBod) -> list:
-        return [record.adb.dokumentacni_jednotka.archeologicky_zaznam]
+        return [record.adb, record.adb.dokumentacni_jednotka.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: VyskovyBod):
@@ -2368,6 +2397,14 @@ class UzivatelMapper(ImportModelMapper):
     def get_record_history(record: User):
         return record
 
+    def import_validation(self, performed_action, user_id) -> dict | None:
+        if (
+            performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE
+            and User.objects.get(pk=user_id).ident_cely == self.value_dict["ident_cely"]
+        ):
+            raise ImportDataActiveUserCannotBeDeleted(self.value_dict["ident_cely"])
+        return super().import_validation(performed_action)
+
 
 class UzivatelNotifikaceProjektMapper(ImportModelMapper):
     """Mapper pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN)."""
@@ -2468,7 +2505,7 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
 
     @staticmethod
     def get_record_history(record: UzivatelSpoluprace):
-        return record.vedouci
+        return record
 
 
 class UzivatelOpravneniMapper(ImportModelMapper):
@@ -2489,12 +2526,16 @@ class UzivatelOpravneniMapper(ImportModelMapper):
     def create_records(self, performed_action):
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
-    def import_validation(self, performed_action):
+    def import_validation(self, *args, **kwargs):
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod
     def get_record_history(record: User):
         return record
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: User) -> list:
+        return [record]
 
 
 class SouborMapper(ImportModelMapper):
@@ -2538,8 +2579,16 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
     def create_records(self, performed_action):
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
-    def import_validation(self, performed_action):
+    def import_validation(self, *args, **kwargs):
         return self._get_filter_kwargs_primary_key()
+
+    @staticmethod
+    def get_record_history(record: User):
+        return record
+
+    @staticmethod
+    def _get_updated_ident_cely_record_list(record: User) -> list:
+        return [record]
 
 
 class HistorieMapper(ImportModelMapper):

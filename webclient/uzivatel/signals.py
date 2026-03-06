@@ -158,16 +158,20 @@ def send_account_confirmed_email(sender, instance: User, created):
 
 
 @receiver(pre_delete, sender=User, weak=False)
-def delete_user_connections(sender, instance, *args, **kwargs):
+def delete_user_connections(sender, instance: User, *args, **kwargs):
     logger.debug("uzivatel.signals.delete_user_connections.start", extra={"ident_cely": instance.ident_cely})
     instance.deleted_by_user = User.objects.filter(ident_cely=LogMiddleware.get_user_id()).first()
     Historie.save_record_deletion_record(record=instance)
+    transaction_created = False
     if instance.active_transaction:
         fedora_transaction = instance.active_transaction
     else:
         fedora_transaction = FedoraTransaction()
         instance.active_transaction = fedora_transaction
+        transaction_created = True
     instance.save_metadata(fedora_transaction)
+    if transaction_created:
+        instance.close_active_transaction_when_finished = True
     logger.debug(
         "uzivatel.signals.delete_user_connections.end",
         extra={"ident_cely": instance.ident_cely},

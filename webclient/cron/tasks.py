@@ -534,8 +534,8 @@ def run_data_import(job_id, user_id):
                                 record.groups.remove(group)
                             else:
                                 continue
-                            updated_ident_cely_set.add(record.ident_cely)
-                            updated_history_dict[record.ident_cely].append(
+                            updated_ident_cely_set.add(mapper_class.updated_ident_cely_set(record))
+                            updated_history_dict[mapper_class.get_record_history(record).ident_cely].append(
                                 mapper_class.get_file_name_for_mapper(mapper_class)
                             )
                         elif mapper_class == UzivatelNotifikaceMapper:
@@ -557,12 +557,8 @@ def run_data_import(job_id, user_id):
                                 record.notification_types.remove(group)
                             else:
                                 continue
-                            if performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE:
-                                record_db = mapper_class.load_record_from_db(record)
-                                if record_db:
-                                    updated_ident_cely_set |= mapper_class.updated_ident_cely_set(record_db)
-                            updated_ident_cely_set.add(record.ident_cely)
-                            updated_history_dict[record.ident_cely].append(
+                            updated_ident_cely_set.add(mapper_class.updated_ident_cely_set(record))
+                            updated_history_dict[mapper_class.get_record_history(record).ident_cely].append(
                                 mapper_class.get_file_name_for_mapper(mapper_class)
                             )
                         else:

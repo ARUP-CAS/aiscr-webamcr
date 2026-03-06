@@ -108,6 +108,15 @@ Třídy
    .. py:method:: __init__()
 
 
+.. py:class:: ImportDataActiveUserCannotBeDeleted
+
+   Výjimka vyvolaná při snaze o smazání aktivního uživatele
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+
 .. py:class:: BaseImportField
 
    Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -436,6 +445,8 @@ Třídy
 
    .. py:method:: get_mapping()
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
 
 .. py:class:: OrganizaceMapper
 
@@ -546,6 +557,8 @@ Třídy
    .. py:method:: get_mapping()
 
    .. py:method:: get_record_history()
+
+   .. py:method:: _get_updated_ident_cely_record_list()
 
 
 .. py:class:: ArcheologickyZaznamKatastrMapper
@@ -862,6 +875,8 @@ Třídy
 
    .. py:method:: get_record_history()
 
+   .. py:method:: import_validation()
+
 
 .. py:class:: UzivatelNotifikaceProjektMapper
 
@@ -915,6 +930,8 @@ Třídy
 
    .. py:method:: get_record_history()
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
 
 .. py:class:: SouborMapper
 
@@ -942,6 +959,10 @@ Třídy
    .. py:method:: create_records()
 
    .. py:method:: import_validation()
+
+   .. py:method:: get_record_history()
+
+   .. py:method:: _get_updated_ident_cely_record_list()
 
 
 .. py:class:: HistorieMapper

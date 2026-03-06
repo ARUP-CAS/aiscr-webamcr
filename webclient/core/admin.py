@@ -632,7 +632,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
                                     mapper = mapper_class(row.to_dict())
                                     record = mapper.map(performed_action, serialize=True, include_primary_key=True)
                                     mapper.check_required_fields(performed_action)
-                                    primary_key = mapper.import_validation(performed_action)
+                                    primary_key = mapper.import_validation(performed_action, request.user.pk)
                                     LookupImportField.records += mapper.create_records(performed_action)
                                     record["__file_name"] = file_name
                                 except ImportDataIntegrityError as err:
