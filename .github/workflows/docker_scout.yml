@@ -31,7 +31,7 @@ jobs:
 
       # Authenticate to the container registry
       - name: Authenticate to registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.DOCKER_HUB_USER }}
