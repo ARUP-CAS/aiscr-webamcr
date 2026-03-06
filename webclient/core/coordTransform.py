@@ -44,7 +44,6 @@ def convertToJTSK(longitude, latitude, height=0):
     if not isinstance(longitude, (int, float)) or not isinstance(latitude, (int, float)):
         return [None, None]
     if latitude < 40 or latitude > 60 or longitude < 5 or longitude > 25:
-        # vrátí x, y
         raise Exception(f"convertToJTSK coordinates are out of range: longitude {longitude} latitude {latitude} ")
     else:
         [latitude, longitude] = wgs84_to_bessel(latitude, longitude, height)
