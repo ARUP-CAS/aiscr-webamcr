@@ -16,15 +16,17 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: render_nahled()
 
       Metoda pro správně zobrazení náhledu souboru.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+      :param record: Parametr ``record`` předává se do volání ``len()``, ``reverse()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
 
 
 .. py:class:: DokumentTable
@@ -37,13 +39,15 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+      :param record: Parametr ``record`` předává se do volání ``hasattr()``, ``len()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 

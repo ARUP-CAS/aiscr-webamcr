@@ -151,8 +151,8 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.suppress_signal = False
@@ -162,6 +162,8 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         Vrátí textovou reprezentaci uživatele v anonymizované nebo plné podobě.
 
         :param anonymized: Číselná hodnota ``anonymized`` použitá při výpočtu nebo transformaci.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         if anonymized:
             return f"{self.uzivatel.ident_cely} ({self.uzivatel.organizace})"
@@ -173,7 +175,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         """
         Uloží record deletion record.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` předává se do volání ``hasattr()``, ``isinstance()``, pracuje se s atributy ``deleted_by_user``, ``history_vazba``, ovlivňuje větvení podmínek.
         """
         logger.debug("history.models.save_record_deletion_record.start")
         from arch_z.models import ArcheologickyZaznam
@@ -255,6 +257,8 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací výsledek volání ``format()``.
         """
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
@@ -262,9 +266,9 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         """
         Vrátí datum a uživatele poslední transakce požadovaného typu.
 
-        :param transaction_type: Název nebo typ ``transaction_type`` používaný pro volbu cílové logiky.
+        :param transaction_type: Parametr ``transaction_type`` předává se do volání ``isinstance()``, ``filter()``, ovlivňuje větvení podmínek.
         :param anonymized: Číselná hodnota ``anonymized`` použitá při výpočtu nebo transformaci.
-        :param user_protected: Příznak ``user_protected`` určující průběh nebo rozsah zpracování.
+        :param user_protected: Parametr ``user_protected`` ovlivňuje větvení podmínek.
         :return: Vrací výsledek operace.
         """
         resp = {}
@@ -286,7 +290,10 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
 
     @property
     def navazany_objekt(self):
-        """Vrátí objekt navázaný na danou vazbu historie."""
+        """Vrátí objekt navázaný na danou vazbu historie.
+
+        :return: Vrací atribut objektu.
+        """
         if hasattr(self, "projekt_historie"):
             return self.projekt_historie
         elif hasattr(self, "dokument_historie"):

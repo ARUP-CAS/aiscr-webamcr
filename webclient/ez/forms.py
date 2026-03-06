@@ -142,11 +142,11 @@ class ExterniZdrojForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``, ``DoiAutocompleteField()``.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(ExterniZdrojForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -274,9 +274,9 @@ class ExterniOdkazForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param type_arch: Název nebo typ ``type_arch`` používaný pro volbu cílové logiky.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param type_arch: Parametr ``type_arch`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(ExterniOdkazForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -290,10 +290,10 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
         """
         Inicializuje instanci třídy.
 
-        :param type_arch: Název nebo typ ``type_arch`` používaný pro volbu cílové logiky.
-        :param dok: Doménový objekt `dok`, se kterým funkce pracuje.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param type_arch: Parametr ``type_arch`` předává se do volání ``ChoiceField()``, ``AutocompleteListSelect2()``, ovlivňuje větvení podmínek.
+        :param dok: Parametr ``dok`` ovlivňuje větvení podmínek.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False
@@ -344,8 +344,8 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
         self.fields["paginace"].required = False

@@ -23,7 +23,9 @@ def get_message(message):
     """
     Vrátí bezpečně escapovaný text konstanty podle jejího názvu.
 
-    :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+    :param message: Parametr ``message`` předává se do volání ``mark_safe()``, ``str()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``mark_safe()``.
     """
     return mark_safe("'%s'" % str(getattr(mc, message, "Message constant not found")))
 
@@ -37,7 +39,7 @@ class QuerystringNodeMulti(Node):
 
         :param updates: Časový údaj ``updates`` použitý při filtrování nebo výpočtu.
         :param removals: Kolekce nebo datová struktura `removals` zpracovávaná touto funkcí.
-        :param asvar: Číselná nebo geometrická hodnota `asvar` použitá při výpočtu nebo transformaci.
+        :param asvar: Parametr ``asvar`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         super().__init__()
         self.updates = updates
@@ -48,7 +50,10 @@ class QuerystringNodeMulti(Node):
         """
         Vyrenderuje hodnotu. v aplikaci.
 
-        :param context: Kontextová data používaná při serializaci nebo renderování.
+        :param context: Parametr ``context`` se předává do volání ``dict()``, ``resolve()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: str, proměnná ``value``.
+            :raises ImproperlyConfigured: Vyvolá se při splnění podmínky ``'request' not in context``.
         """
         if "request" not in context:
             raise ImproperlyConfigured(context_processor_error_msg % "querystring")
@@ -93,8 +98,11 @@ def querystring_multi(parser, token):
     """
     Provádí operaci querystring multi.
 
-    :param parser: Typová nebo konfigurační hodnota `parser` určující cílovou logiku.
+    :param parser: Parametr ``parser`` předává se do volání ``token_kwargs()``, pracuje se s atributy ``compile_filter``.
     :param token: Textový nebo strukturální vstup `token` používaný při sestavení nebo zpracování obsahu.
+
+        :return: Vrací výsledek volání ``QuerystringNodeMulti()``.
+        :raises TemplateSyntaxError: Vyvolá se při splnění podmínky ``bits and bits.pop(0) != 'without'``.
     """
     bits = token.split_contents()
     tag = bits.pop(0)
@@ -122,7 +130,10 @@ def querystring_multi(parser, token):
 # Vrátí informaci o zapnutém režimu údržby.
 @register.simple_tag
 def get_maintenance():
-    """Vrací maintenance. v aplikaci."""
+    """Vrací maintenance. v aplikaci.
+
+    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    """
     if get_set_maintenance_in_cache():
         return True
     return False
@@ -130,13 +141,19 @@ def get_maintenance():
 
 @register.simple_tag
 def get_server_domain():
-    """Vrátí doménu používanou pro e-mailové odkazy."""
+    """Vrátí doménu používanou pro e-mailové odkazy.
+
+    :return: Vrací atribut objektu.
+    """
     return settings.EMAIL_SERVER_DOMAIN_NAME
 
 
 @register.simple_tag
 def get_site_url():
-    """Vrátí základní URL adresu aplikace."""
+    """Vrátí základní URL adresu aplikace.
+
+    :return: Vrací atribut objektu.
+    """
     return settings.SITE_URL
 
 
@@ -145,8 +162,10 @@ def get_settings(item_group, item_id):
     """
     Vrací settings. v aplikaci.
 
-    :param item_group: Doménový objekt `item_group`, se kterým funkce pracuje.
+    :param item_group: Parametr ``item_group`` předává se do volání ``filter()``, ``error()``.
     :param item_id: Identifikátor objektu ``item``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
     """
     settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
     if settings_query.count() > 0:
@@ -160,7 +179,9 @@ def message_top(forloop_counter):
     """
     Vypočítá vertikální offset pro vykreslení systémových zpráv.
 
-    :param forloop_counter: Číselná nebo geometrická hodnota `forloop_counter` použitá při výpočtu nebo transformaci.
+    :param forloop_counter: Parametr ``forloop_counter`` vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování.
     """
     # 65 px je výška jedné zprávy včetně okrajů.
     return forloop_counter * 65 + 15
@@ -168,11 +189,17 @@ def message_top(forloop_counter):
 
 @register.simple_tag
 def get_datetime_now():
-    """Vrátí aktuální datum a čas ve formátu používaném v šablonách."""
+    """Vrátí aktuální datum a čas ve formátu používaném v šablonách.
+
+    :return: Vrací výsledek volání ``strftime()``.
+    """
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 @register.simple_tag
 def get_test_env():
-    """Vrátí příznak testovacího prostředí."""
+    """Vrátí příznak testovacího prostředí.
+
+    :return: Vrací atribut objektu.
+    """
     return settings.TEST_ENV

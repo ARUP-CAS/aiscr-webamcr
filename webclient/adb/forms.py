@@ -21,7 +21,9 @@ class AdbReadOnlyTextInput(forms.TextInput):
         """
         Provádí operaci format value.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
         """
         if value:
             osoba_query = Osoba.objects.filter(pk=value)
@@ -198,8 +200,8 @@ class VyskovyBodFormSetHelper(FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
@@ -305,6 +307,8 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         def is_valid(self):
             """
             Metoda, která vrací, zda je formulář správně vyplněn; je zde zakomponována metoda na vyplnění initial hodnoty.
+
+                :return: Vrací hodnotu podle větve zpracování, typicky: bool, proměnná ``parent_is_valid``.
             """
             parent_is_valid = super().is_valid()
             if self._has_initial_values():
@@ -316,6 +320,8 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             Metoda, která ukládá formulář do modelu; je zde zakomponována metoda na vyplnění initial hodnoty.
 
             :param commit: Pokud ``True``, změny se uloží do databáze.
+
+                :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``save()``.
             """
             if self._has_initial_values():
                 return None

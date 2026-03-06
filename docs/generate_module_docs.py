@@ -541,7 +541,7 @@ def generate_permissions_rst() -> bool:
 def clean_comment_value(value: str) -> str:
     """Odstraní obalové uvozovky/závorky z hodnoty komentáře.
 
-    :param value: Číselná nebo geometrická hodnota `value` použitá při výpočtu nebo transformaci.
+    :param value: Parametr ``value`` pracuje se s atributy ``strip``.
     :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     cleaned = value.strip()
@@ -574,8 +574,8 @@ def parse_comment_values(comment_text: str) -> Tuple[str, str]:
 def get_following_comment(parent: ET.Element, element: ET.Element) -> str:
     """Najde první uzel komentáře bezprostředně za daným elementem.
 
-    :param parent: Číselná nebo geometrická hodnota `parent` použitá při výpočtu nebo transformaci.
-    :param element: Záznam/objekt ``element``, který funkce čte, validuje nebo upravuje.
+    :param parent: Parametr ``parent`` se předává do volání ``list()``.
+    :param element: Parametr ``element`` ovlivňuje větvení podmínek.
     :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     siblings = list(parent)
@@ -590,7 +590,7 @@ def get_following_comment(parent: ET.Element, element: ET.Element) -> str:
 def collect_choice_element_names(choice_element: ET.Element) -> List[str]:
     """Shromáždí názvy všech uzlů xs:element uvnitř bloku choice.
 
-    :param choice_element: Záznam/objekt ``choice_element``, který funkce čte, validuje nebo upravuje.
+    :param choice_element: Parametr ``choice_element`` slouží jako vstup pro logiku funkce ``collect_choice_element_names``.
     :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     names: List[str] = []
@@ -623,7 +623,7 @@ def extract_elements_from_parent(
 ) -> List[Dict[str, str]]:
     """Rekurzivně extrahuje definice elementů a zaznamená kontext choice, pokud existuje.
 
-    :param parent: Číselná nebo geometrická hodnota `parent` použitá při výpočtu nebo transformaci.
+    :param parent: Parametr ``parent`` se předává do volání ``get_following_comment()``.
     :param choice_context: Kolekce ``choice_context`` zpracovávaná touto funkcí.
     :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
@@ -656,7 +656,7 @@ def extract_elements_from_parent(
 def extract_elements_from_complex_type(complex_type: ET.Element) -> List[Dict[str, str]]:
     """Extrahuje řádky elementů z definice complexType.
 
-    :param complex_type: Název nebo typ ``complex_type`` používaný pro volbu cílové logiky.
+    :param complex_type: Parametr ``complex_type`` slouží jako vstup pro logiku funkce ``extract_elements_from_complex_type``.
     :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     rows: List[Dict[str, str]] = []
@@ -669,7 +669,7 @@ def extract_elements_from_complex_type(complex_type: ET.Element) -> List[Dict[st
 def extract_model_mappings(schema_root: ET.Element) -> List[Dict[str, str]]:
     """Načte mapování z volby elementu amcr do řádků Model -> ComplexType.
 
-    :param schema_root: Cesta, URL nebo název zdroje ``schema_root``, ze kterého funkce čte nebo kam zapisuje.
+    :param schema_root: Parametr ``schema_root`` pracuje se s atributy ``find``.
     :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
     """
     ns = {"xs": "http://www.w3.org/2001/XMLSchema"}
@@ -1257,11 +1257,20 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
     }
 
     def is_section_keyword(text: str) -> bool:
-        """Ověří, zda text odpovídá klíčovému slovu sekce."""
+        """Ověří, zda text odpovídá klíčovému slovu sekce.
+
+        :param text: Parametr ``text`` vstupuje do návratové hodnoty.
+        :return: Vrací hodnotu typu ``bool`` podle vyhodnocení podmínek.
+        """
         return text in all_section_keywords
 
     def is_custom_section(text: str, line_index: int) -> bool:
-        """Ověří, zda text vypadá jako vlastní hlavička sekce (končí dvojtečkou a má obsah níže)."""
+        """Ověří, zda text vypadá jako vlastní hlavička sekce (končí dvojtečkou a má obsah níže).
+
+        :param text: Parametr ``text`` pracuje se s atributy ``endswith``, ovlivňuje větvení podmínek.
+        :param line_index: Parametr ``line_index`` ovlivňuje větvení podmínek.
+        :return: Vrací hodnotu typu ``bool`` podle vyhodnocení podmínek.
+        """
         if not text.endswith(":"):
             return False
         # Nesmí to být známá sekce.
@@ -1275,7 +1284,11 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
         return False
 
     def translate_section(section_name: str) -> str:
-        """Přelokládá název sekce do češtiny."""
+        """Přelokládá název sekce do češtiny.
+
+        :param section_name: Parametr ``section_name`` pracuje se s atributy ``rstrip``.
+        :return: Vrací hodnotu typu ``str`` (výsledek volání ``get()``).
+        """
         name_without_colon = section_name.rstrip(":")
         return section_translations.get(name_without_colon, name_without_colon)
 
@@ -1950,7 +1963,11 @@ def generate_docs_scripts_docs(mode: str = "autodoc") -> bool:
 
 
 def get_script_language(script_name: str) -> str:
-    """Vrátí jazyk pro zvýraznění syntaxe podle přípony souboru."""
+    """Vrátí jazyk pro zvýraznění syntaxe podle přípony souboru.
+
+    :param script_name: Parametr ``script_name`` předává se do volání ``Path()``.
+    :return: Vrací hodnotu typu ``str`` (str).
+    """
     suffix = Path(script_name).suffix.lower()
     if suffix == ".sh":
         return "bash"
@@ -1964,12 +1981,21 @@ def get_script_language(script_name: str) -> str:
 
 
 def get_script_doc_name(script_name: str) -> str:
-    """Vrátí bezpečný název RST souboru pro skript."""
+    """Vrátí bezpečný název RST souboru pro skript.
+
+    :param script_name: Parametr ``script_name`` předává se do volání ``sub()``, vstupuje do návratové hodnoty.
+    :return: Vrací hodnotu typu ``str`` (výsledek volání ``lower()``).
+    """
     return re.sub(r"[^a-zA-Z0-9]+", "_", script_name).strip("_").lower()
 
 
 def generate_rst_for_project_script(source_file: Path, output_dir: Path) -> bool:
-    """Vygeneruje RST dokumentaci pro jeden soubor v adresáři scripts/."""
+    """Vygeneruje RST dokumentaci pro jeden soubor v adresáři scripts/.
+
+    :param source_file: Parametr ``source_file`` předává se do volání ``get_script_doc_name()``, ``get_script_language()``, pracuje se s atributy ``name``.
+    :param output_dir: Parametr ``output_dir`` slouží jako vstup pro logiku funkce ``generate_rst_for_project_script``.
+    :return: Vrací hodnotu typu ``bool`` podle vyhodnocení podmínek.
+    """
     global changes_detected
     doc_name = get_script_doc_name(source_file.name)
     output_file = output_dir / f"{doc_name}.rst"
@@ -2000,7 +2026,12 @@ Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``.
 
 
 def generate_project_scripts_index_rst(toctree_entries: List[str], output_dir: Path) -> bool:
-    """Vygeneruje index.rst pro skripty v adresáři scripts/."""
+    """Vygeneruje index.rst pro skripty v adresáři scripts/.
+
+    :param toctree_entries: Parametr ``toctree_entries`` předává se do volání ``sorted()``.
+    :param output_dir: Parametr ``output_dir`` slouží jako vstup pro logiku funkce ``generate_project_scripts_index_rst``.
+    :return: Vrací hodnotu typu ``bool`` podle vyhodnocení podmínek.
+    """
     global changes_detected
     index_file = output_dir / "index.rst"
 
@@ -2031,7 +2062,10 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
 
 
 def generate_project_scripts_docs() -> bool:
-    """Vygeneruje RST dokumentaci pro soubory v ``scripts/``."""
+    """Vygeneruje RST dokumentaci pro soubory v ``scripts/``.
+
+    :return: Vrací hodnotu typu ``bool`` podle vyhodnocení podmínek.
+    """
     output_dir = project_scripts_output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 

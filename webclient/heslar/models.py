@@ -34,17 +34,26 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def dokument_typ_material_rada(self):
-        """Provádí operaci dokument typ material rada."""
+        """Provádí operaci dokument typ material rada.
+
+        :return: Vrací výsledek volání ``filter()``.
+        """
         return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):
-        """Provádí operaci podrazena hesla."""
+        """Provádí operaci podrazena hesla.
+
+        :return: Vrací výsledek volání ``filter()``.
+        """
         return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
 
     @property
     def nadrazena_hesla(self):
-        """Provádí operaci nadrazena hesla."""
+        """Provádí operaci nadrazena hesla.
+
+        :return: Vrací výsledek volání ``filter()``.
+        """
         return HeslarHierarchie.objects.filter(heslo_podrazene=self)
 
     class Meta:
@@ -64,6 +73,8 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
         """
         if get_language() == "en":
             if self.heslo_en:
@@ -82,8 +93,10 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
         """
         Uloží změny objektu.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``self._state.adding and (not FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'heslar'))``.
         """
         from core.repository_connector import FedoraRepositoryConnector
 
@@ -122,8 +135,8 @@ class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(HeslarDatace, self).__init__(*args, **kwargs)
         try:
@@ -173,8 +186,8 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(HeslarDokumentTypMaterialRada, self).__init__(*args, **kwargs)
         self.initial_dokument_rada = self.dokument_rada
@@ -225,8 +238,8 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(HeslarHierarchie, self).__init__(*args, **kwargs)
         if self.pk:
@@ -249,6 +262,8 @@ class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.nazev
 
@@ -298,8 +313,8 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(HeslarOdkaz, self).__init__(*args, **kwargs)
         if self.pk:
@@ -330,7 +345,10 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def pian_ident_cely(self):
-        """Provádí operaci pian ident cely."""
+        """Provádí operaci pian ident cely.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        """
         if self.pian is not None:
             return self.pian.ident_cely
         else:
@@ -348,20 +366,27 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         return f"{self.nazev} ({self.okres.nazev}; {self.kod})"
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely."""
+        """Provádí operaci ident cely.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
         """
         Uloží změny objektu.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_katastr')``.
         """
         from core.repository_connector import FedoraRepositoryConnector
 
@@ -398,20 +423,27 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely."""
+        """Provádí operaci ident cely.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
         """
         Uloží změny objektu.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_kraj')``.
         """
         from core.repository_connector import FedoraRepositoryConnector
 
@@ -450,20 +482,27 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely."""
+        """Provádí operaci ident cely.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"ruian-{self.kod}"
 
     def save(self, *args, **kwargs):
         """
         Uloží změny objektu.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_okres')``.
         """
         from core.repository_connector import FedoraRepositoryConnector
 

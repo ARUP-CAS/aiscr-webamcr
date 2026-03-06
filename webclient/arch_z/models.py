@@ -192,6 +192,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         Akce má připojený dokument typu nálezová správa nebo je akce typu nz.
 
         Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
+
+            :return: Vrací proměnná ``result``.
         """
         result = []
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -280,6 +282,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         všechny pripojené dokumenty jsou archivované.
 
         všechny DJ mají potvrzený pian
+
+            :return: Vrací n-tici.
         """
         result = self.check_pred_odeslanim()
         doc_result = []
@@ -302,7 +306,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         return result, doc_result
 
     def set_lokalita_permanent_ident_cely(self):
-        """Metoda pro nastavení permanentního identifikátoru lokality ze sekvence lokalit."""
+        """Metoda pro nastavení permanentního identifikátoru lokality ze sekvence lokalit.
+
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
+        """
         MAXIMUM: int = 9999999
         region = self.hlavni_katastr.okres.kraj.rada_id
         typ = self.lokalita.typ_lokality
@@ -379,6 +386,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         Vrátí detail URL archeologického záznamu nebo jeho dokumentační jednotky.
 
         :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
+
+            :return: Vrací výsledek volání ``reverse()``.
         """
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if dj_ident_cely is None:
@@ -396,22 +405,33 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         Vrátí redirect odpověď na detail archeologického záznamu.
 
         :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
+
+            :return: Vrací výsledek volání ``redirect()``.
         """
         return redirect(self.get_absolute_url(dj_ident_cely))
 
     def __str__(self):
-        """Metoda vrátí str reprezentaci modelu ident_cely."""
+        """Metoda vrátí str reprezentaci modelu ident_cely.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        """
         if self.ident_cely:
             return self.ident_cely
         else:
             return "[ident_cely not yet assigned]"
 
     def get_permission_object(self):
-        """Vrací permission object."""
+        """Vrací permission object.
+
+        :return: Vrací proměnná ``self``.
+        """
         return self
 
     def get_create_user(self):
-        """Vrací create user."""
+        """Vrací create user.
+
+        :return: Vrací n-tici.
+        """
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel,)
         except Exception as e:
@@ -419,14 +439,20 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return ()
 
     def get_create_org(self):
-        """Vrací create org."""
+        """Vrací create org.
+
+        :return: Vrací n-tici.
+        """
         if self.get_create_user():
             return (self.get_create_user()[0].organizace,)
         else:
             return ()
 
     def check_set_permanent_ident(self):
-        """Ověří set permanent ident."""
+        """Ověří set permanent ident.
+
+        :return: Vrací proměnná ``poznamka_historie``.
+        """
         poznamka_historie = None
         old_ident = None
         ident_change_recorded = False
@@ -454,15 +480,18 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         self.initial_stav = self.stav
 
     @property
     def initial_casti_dokumentu(self):
-        """Vrátí ID navázaných částí dokumentu v okamžiku načtení instance."""
+        """Vrátí ID navázaných částí dokumentu v okamžiku načtení instance.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values_list()``, seznam.
+        """
         try:
             return self.casti_dokumentu.all().values_list("id", flat=True)
         except ValueError:
@@ -470,7 +499,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
 
     @property
     def initial_pristupnost(self):
-        """Vrátí původní hodnotu přístupnosti záznamu."""
+        """Vrátí původní hodnotu přístupnosti záznamu.
+
+        :return: Vrací atribut objektu.
+        """
         if hasattr(self, "_initial_pristupnost"):
             return self._initial_pristupnost
         if hasattr(self, "pristupnost"):
@@ -492,8 +524,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         Uloží změny objektu.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
         """
         if self.pk is not None:
             previous = ArcheologickyZaznam.objects.get(pk=self.pk)
@@ -645,8 +677,8 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.initial_projekt_id = self.projekt_id
@@ -656,7 +688,10 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def initial_projekt(self):
-        """Vrátí původní projekt navázaný při inicializaci instance."""
+        """Vrátí původní projekt navázaný při inicializaci instance.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+        """
         from projekt.models import Projekt
 
         if self.initial_projekt_id is not None:
@@ -664,16 +699,25 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         return None
 
     def get_absolute_url(self):
-        """Vrátí URL detailu archeologického záznamu navázaného na akci."""
+        """Vrátí URL detailu archeologického záznamu navázaného na akci.
+
+        :return: Vrací výsledek volání ``reverse()``.
+        """
         return reverse("arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely})
 
     def vedouci_organizace(self):
-        """Vrátí seznam vedoucích organizací akce jako text."""
+        """Vrátí seznam vedoucích organizací akce jako text.
+
+        :return: Vrací výsledek volání ``join()``.
+        """
         return ", ".join([str(x.organizace) for x in self.akcevedouci_set.all()])
 
     @cached_property
     def vedouci(self):
-        """Vrátí textový seznam vedoucích osob navázaných na akci."""
+        """Vrátí textový seznam vedoucích osob navázaných na akci.
+
+        :return: Vrací výsledek volání ``join()``.
+        """
         return ", ".join([str(x.vedouci) for x in self.akcevedouci_set.all()])
 
     def set_snapshots(self):
@@ -692,13 +736,19 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     @property
     def redis_snapshot_id(self):
-        """Sestaví klíč Redis snapshotu pro seznam akci."""
+        """Sestaví klíč Redis snapshotu pro seznam akci.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         from arch_z.views import AkceListView
 
         return f"{AkceListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Připraví data akce pro uložení snapshotu do Redis cache."""
+        """Připraví data akce pro uložení snapshotu do Redis cache.
+
+        :return: Vrací n-tici.
+        """
         from arch_z.tables import AkceTable
 
         data = Akce.objects.filter(archeologicky_zaznam=self)
@@ -719,6 +769,8 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         Vrátí instanci akce podle identifikátoru archeologického záznamu.
 
         :param ident_cely: Identifikátor archeologického záznamu.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
         """
         try:
             return cls.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
@@ -741,11 +793,17 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
         ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
 
     def __str__(self):
-        """Metoda vrátí str reprezentaci modelu vedouci."""
+        """Metoda vrátí str reprezentaci modelu vedouci.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"{self.vedouci.vypis_cely} ({self.organizace})"
 
     def vypis_name(self):
-        """Metoda vrátí str reprezentaci modelu vedouci pro vypis."""
+        """Metoda vrátí str reprezentaci modelu vedouci pro vypis.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"{self.vedouci.vypis_cely} ({self.organizace.get_nazev()})"
 
 
@@ -775,8 +833,8 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.suppress_signal_arch_z = False
@@ -789,6 +847,8 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         Vytvoří a vrátí Fedora transakci pro práci s externím odkazem.
 
         :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+
+            :return: Vrací atribut objektu.
         """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
@@ -803,6 +863,9 @@ def get_akce_ident(region):
     Vygeneruje nový permanentní identifikátor akce pro zadaný region.
 
     :param region: Identifikátor regionu použitého jako prefix sekvence akcí.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
     """
     MAXIMUM: int = 999999
     try:

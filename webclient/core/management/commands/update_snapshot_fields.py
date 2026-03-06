@@ -29,8 +29,8 @@ class Command(BaseCommand):
         """
         Zpracuje hodnotu. v aplikaci.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param options: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
         """
         logger.debug("core.management.commands.update_snapshot_fields.start")
         update_snapshot_fields()

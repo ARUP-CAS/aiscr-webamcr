@@ -16,15 +16,17 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+      :param record: Parametr ``record`` předává se do volání ``reverse()``, pracuje se s atributy ``nahled_soubor``, ``ident_cely``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: AktivaceDeaktivaceColumn
@@ -37,11 +39,13 @@ Třídy
 
       Vyrenderuje hodnotu. v aplikaci.
 
-      :param record: Záznam, který funkce čte nebo upravuje.
-      :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-      :param bound_column: Číselná nebo geometrická hodnota `bound_column` použitá při výpočtu nebo transformaci.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``aktivni``, ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+      :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
 
 
 .. py:class:: smazatColumn
@@ -54,11 +58,13 @@ Třídy
 
       Vyrenderuje hodnotu. v aplikaci.
 
-      :param record: Záznam, který funkce čte nebo upravuje.
-      :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-      :param bound_column: Číselná nebo geometrická hodnota `bound_column` použitá při výpočtu nebo transformaci.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+      :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
 
 
 .. py:class:: UzivatelSpolupraceTable
@@ -71,10 +77,12 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: get_all_idents()
 
       Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
+
+      :return: Vrací str.
 

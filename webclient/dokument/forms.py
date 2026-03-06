@@ -47,7 +47,9 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
         """
         Provádí operaci clean.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``clean()``, ``debug()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací proměnná ``qs``.
         """
         qs = super().clean(value)
         if value:
@@ -223,11 +225,11 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
-        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
@@ -465,12 +467,12 @@ class EditDokumentForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
-        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-        :param can_edit_datum_zverejneni: Číselná nebo geometrická hodnota `can_edit_datum_zverejneni` použitá při výpočtu nebo transformaci.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param can_edit_datum_zverejneni: Parametr ``can_edit_datum_zverejneni`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
@@ -633,11 +635,11 @@ class CreateModelDokumentForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
-        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
@@ -735,11 +737,11 @@ class CreateModelExtraDataForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
-        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
@@ -776,8 +778,8 @@ class PripojitDokumentForm(forms.Form):
         Inicializuje instanci třídy.
 
         :param ident_zaznam: Identifikátor ``ident_zaznam`` používaný pro dohledání cílového záznamu.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PripojitDokumentForm, self).__init__(*args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
@@ -815,9 +817,9 @@ class DokumentCastForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(DokumentCastForm, self).__init__(*args, **kwargs)
 
@@ -844,8 +846,8 @@ class DokumentCastCreateForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(DokumentCastCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -859,6 +861,8 @@ def create_tvar_form(not_readonly=True):
     Pomocí ní je možné předat výběr formuláři.
 
     :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací proměnná ``TvarForm``.
     """
 
     class TvarForm(forms.ModelForm):
@@ -892,8 +896,8 @@ def create_tvar_form(not_readonly=True):
             """
             Inicializuje instanci třídy.
 
-            :param args: Dodatečné poziční argumenty předané voláním.
-            :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+            :param args: Parametr ``args`` se předává do volání ``__init__()``.
+            :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
             """
             super(TvarForm, self).__init__(*args, **kwargs)
             if not not_readonly:
@@ -918,8 +922,8 @@ class TvarFormSetHelper(FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"

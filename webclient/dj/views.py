@@ -46,9 +46,11 @@ def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro editaci dokumentační jednotky a ADB.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``create_transaction()``, ``CreateDJForm()``, pracuje se s atributy ``user``, ``POST``, ovlivňuje větvení podmínek.
+    :param typ_vazby: Parametr ``typ_vazby`` slouží jako vstup pro logiku funkce ``detail``.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``CreateDJForm()``.
+
+        :return: Vrací proměnná ``response``.
     """
     logger.debug("dj.views.detail.start")
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
@@ -229,8 +231,10 @@ def zapsat(request, arch_z_ident_cely):
     """
     Funkce pohledu pro vytvoření dokumentační jednotky.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``CreateDJForm()``, ``add_message()``, pracuje se s atributy ``POST``, ``user``.
     :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací proměnná ``redirect``.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     form = CreateDJForm(request.POST)
@@ -272,8 +276,10 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání dokumentační jednotky.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``create_transaction()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``warning()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     dj: DokumentacniJednotka = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
@@ -335,7 +341,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
         """
         zaznam = self.get_zaznam()
         form = ChangeKatastrForm(initial={"katastr": zaznam.archeologicky_zaznam.hlavni_katastr})
@@ -352,9 +360,11 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací výsledek volání ``render_to_response()``.
         """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
@@ -364,9 +374,11 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``ChangeKatastrForm()``, ``create_transaction()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         zaznam: DokumentacniJednotka = self.get_zaznam()
         form = ChangeKatastrForm(data=request.POST)

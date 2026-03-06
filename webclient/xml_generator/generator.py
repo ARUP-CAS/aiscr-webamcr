@@ -126,7 +126,10 @@ class DocumentGenerator:
 
     @staticmethod
     def get_path_to_schema():
-        """Vrací path to schema."""
+        """Vrací path to schema.
+
+        :return: Vrací výsledek volání ``join()``.
+        """
         return os.path.join("xml_generator/definitions/", AMCR_XSD_FILENAME)
 
     def _parse_schema(self, model_name):
@@ -182,7 +185,7 @@ class DocumentGenerator:
         Vrací attribute of record.
 
         :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` předává se do volání ``getattr()``, ``isinstance()``, pracuje se s atributy ``__class__``, ``pk``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Načtená data odpovídající zadaným vstupům.
         """
         attribute_value = None
@@ -277,9 +280,9 @@ class DocumentGenerator:
         """
         Vrací attribute of record unbounded.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
-        :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
-        :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
+        :param record: Parametr ``record`` předává se do volání ``get_attribute()``.
+        :param parsed_comment: Parametr ``parsed_comment`` se předává do volání ``get_attribute()``, pracuje se s atributy ``value_field_name``, ``attribute_field_names``, ovlivňuje větvení podmínek.
+        :param schema_element: Parametr ``schema_element`` slouží jako vstup pro logiku funkce ``_get_attribute_of_record_unbounded``.
         :return: Načtená data odpovídající zadaným vstupům.
         """
         attributes_dict = {}
@@ -288,8 +291,10 @@ class DocumentGenerator:
             """
             Vrací attribute. v aplikaci.
 
-            :param record: Záznam, který funkce čte nebo upravuje.
+            :param record: Parametr ``record`` předává se do volání ``getattr()``, ``isinstance()``, ovlivňuje větvení podmínek.
             :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
+
+                :return: Vrací proměnná ``attributes``.
             """
             attributes = []
             record_name_split = attribute_name.split(".")
@@ -366,12 +371,12 @@ class DocumentGenerator:
         """
         Vytvoří element.
 
-        :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
-        :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
-        :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
-        :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
-        :param id_field_prefix: Záznam/objekt ``id_field_prefix``, který funkce čte, validuje nebo upravuje.
-        :param ref_type: Název nebo typ ``ref_type`` používaný pro volbu cílové logiky.
+        :param schema_element: Parametr ``schema_element`` se předává do volání ``SubElement()``, pracuje se s atributy ``attrib``.
+        :param parent_element: Parametr ``parent_element`` předává se do volání ``SubElement()``.
+        :param parsed_comment: Parametr ``parsed_comment`` se předává do volání ``_get_attribute_of_record()``, pracuje se s atributy ``value_field_name``, ``attribute_field_names``, ovlivňuje větvení podmínek.
+        :param document_object: Parametr ``document_object`` předává se do volání ``_get_attribute_of_record()``, ovlivňuje větvení podmínek.
+        :param id_field_prefix: Parametr ``id_field_prefix`` ovlivňuje větvení podmínek.
+        :param ref_type: Parametr ``ref_type`` předává se do volání ``get_ref_type_attribute_name()``, ovlivňuje větvení podmínek.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         if document_object is None:
@@ -411,12 +416,12 @@ class DocumentGenerator:
         """
         Vytvoří many to many ref elements.
 
-        :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
-        :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
-        :param related_records: Záznam/objekt ``related_records``, který funkce čte, validuje nebo upravuje.
-        :param parsed_comment: Číselná nebo geometrická hodnota `parsed_comment` použitá při výpočtu nebo transformaci.
+        :param schema_element: Parametr ``schema_element`` se předává do volání ``SubElement()``, pracuje se s atributy ``attrib``.
+        :param parent_element: Parametr ``parent_element`` předává se do volání ``SubElement()``.
+        :param related_records: Parametr ``related_records`` předává se do volání ``enumerate()``.
+        :param parsed_comment: Parametr ``parsed_comment`` se předává do volání ``len()``, pracuje se s atributy ``attribute_field_names``, ovlivňuje větvení podmínek.
         :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
-        :param ref_type: Název nebo typ ``ref_type`` používaný pro volbu cílové logiky.
+        :param ref_type: Parametr ``ref_type`` předává se do volání ``get_ref_type_attribute_name()``, ovlivňuje větvení podmínek.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         for i, record in enumerate(related_records["value"]):
@@ -456,8 +461,8 @@ class DocumentGenerator:
         """
                Zpracuje scheme create element.
 
-               :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
-               :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+               :param schema_element: Parametr ``schema_element`` se předává do volání ``_create_element()``, ``_parse_schema()``, pracuje se s atributy ``__class__``, ``getnext``, ovlivňuje větvení podmínek.
+               :param parent_element: Parametr ``parent_element`` předává se do volání ``_create_element()``, ``_parse_scheme_create_nested_element()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         if schema_element.__class__.__name__ == "_Element":
@@ -517,9 +522,9 @@ class DocumentGenerator:
         """
                Provádí operaci iterate unbound records.
 
-               :param related_records: Záznam/objekt ``related_records``, který funkce čte, validuje nebo upravuje.
-               :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
-               :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
+               :param related_records: Parametr ``related_records`` slouží jako vstup pro logiku funkce ``_iterate_unbound_records``.
+               :param schema_element: Parametr ``schema_element`` se předává do volání ``_parse_schema()``, ``_parse_scheme_create_nested_element()``, pracuje se s atributy ``attrib``.
+               :param parent_element: Parametr ``parent_element`` předává se do volání ``_parse_scheme_create_nested_element()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         child_schema_element = self._parse_schema(schema_element.attrib["type"])
@@ -534,9 +539,9 @@ class DocumentGenerator:
         """
                Zpracuje scheme create nested element.
 
-               :param schema_element: Cesta, URL nebo název zdroje ``schema_element``, ze kterého funkce čte nebo kam zapisuje.
-               :param parent_element: Záznam/objekt ``parent_element``, který funkce čte, validuje nebo upravuje.
-               :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
+               :param schema_element: Parametr ``schema_element`` slouží jako vstup pro logiku funkce ``_parse_scheme_create_nested_element``.
+               :param parent_element: Parametr ``parent_element`` předává se do volání ``SubElement()``.
+               :param document_object: Parametr ``document_object`` předává se do volání ``_create_element()``, ``_get_attribute_of_record()``.
                :param child_parent_element_name: Textový název nebo klíč ``child_parent_element_name`` používaný v rámci operace.
         :return: Výstup funkce odpovídající implementované logice.
         """
@@ -604,7 +609,9 @@ class DocumentGenerator:
         """
         Vrací ref type attribute name.
 
-        :param type_name: Název nebo typ ``type_name`` používaný pro volbu cílové logiky.
+        :param type_name: Parametr ``type_name`` předává se do volání ``get()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         parser = etree.XMLParser()
         type_name = type_name.replace("amcr:", "")
@@ -621,7 +628,7 @@ class DocumentGenerator:
         """
                Provádí operaci replace redundant namespaces.
 
-               :param xml_string: Cesta, URL nebo název zdroje ``xml_string``, ze kterého funkce čte nebo kam zapisuje.
+               :param xml_string: Parametr ``xml_string`` se předává do volání ``sub()``, ``fromstring()``, pracuje se s atributy ``decode``, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
         """
         pattern = r'\sxmlns:gml="[^"]*"'
@@ -631,7 +638,9 @@ class DocumentGenerator:
             """
             Provádí operaci replace.
 
-            :param match: Číselná nebo geometrická hodnota `match` použitá při výpočtu nebo transformaci.
+            :param match: Parametr ``match`` pracuje se s atributy ``group``, vstupuje do návratové hodnoty.
+
+                :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``group()``.
             """
             if counter[0] > 0:
                 return ""
@@ -645,7 +654,10 @@ class DocumentGenerator:
         return xml_string
 
     def generate_document(self):
-        """Vygeneruje document. v aplikaci."""
+        """Vygeneruje document. v aplikaci.
+
+        :return: Vrací proměnná ``xml_string``.
+        """
         self.document_root.attrib["{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"] = SCHEMA_LOCATION
         parent_element = ET.SubElement(
             self.document_root, f"{{{AMCR_NAMESPACE_URL}}}{self._get_schema_name()}", nsmap=self._nsmap
@@ -667,7 +679,7 @@ class DocumentGenerator:
         """
         Inicializuje instanci třídy.
 
-        :param document_object: Záznam/objekt ``document_object``, který funkce čte, validuje nebo upravuje.
+        :param document_object: Parametr ``document_object`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         self.document_object = document_object
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")

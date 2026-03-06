@@ -54,6 +54,8 @@ Třídy
 
       Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
 
+      :return: Vrací proměnná ``result``.
+
    .. py:method:: check_pred_archivaci()
 
       Metoda pro kontrolu prerekvizit před archivací:
@@ -64,9 +66,13 @@ Třídy
 
       všechny DJ mají potvrzený pian
 
+      :return: Vrací n-tici.
+
    .. py:method:: set_lokalita_permanent_ident_cely()
 
       Metoda pro nastavení permanentního identifikátoru lokality ze sekvence lokalit.
+
+      :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
 
    .. py:method:: _set_connected_records_ident()
 
@@ -87,46 +93,64 @@ Třídy
 
       :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
 
+      :return: Vrací výsledek volání ``reverse()``.
+
    .. py:method:: get_redirect()
 
       Vrátí redirect odpověď na detail archeologického záznamu.
 
       :param dj_ident_cely: Identifikátor dokumentační jednotky pro detail DJ varianty.
 
+      :return: Vrací výsledek volání ``redirect()``.
+
    .. py:method:: __str__()
 
       Metoda vrátí str reprezentaci modelu ident_cely.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
+      :return: Vrací proměnná ``self``.
+
    .. py:method:: get_create_user()
 
       Vrací create user.
+
+      :return: Vrací n-tici.
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
+      :return: Vrací n-tici.
+
    .. py:method:: check_set_permanent_ident()
 
       Ověří set permanent ident.
+
+      :return: Vrací proměnná ``poznamka_historie``.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: initial_casti_dokumentu()
 
       Vrátí ID navázaných částí dokumentu v okamžiku načtení instance.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values_list()``, seznam.
+
    .. py:method:: initial_pristupnost()
 
       Vrátí původní hodnotu přístupnosti záznamu.
+
+      :return: Vrací atribut objektu.
 
    .. py:method:: initial_pristupnost()
 
@@ -138,8 +162,8 @@ Třídy
 
       Uloží změny objektu.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``save()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
    .. py:method:: igsn_lokalita_hide()
 
@@ -182,24 +206,32 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: initial_projekt()
 
       Vrátí původní projekt navázaný při inicializaci instance.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+
    .. py:method:: get_absolute_url()
 
       Vrátí URL detailu archeologického záznamu navázaného na akci.
+
+      :return: Vrací výsledek volání ``reverse()``.
 
    .. py:method:: vedouci_organizace()
 
       Vrátí seznam vedoucích organizací akce jako text.
 
+      :return: Vrací výsledek volání ``join()``.
+
    .. py:method:: vedouci()
 
       Vrátí textový seznam vedoucích osob navázaných na akci.
+
+      :return: Vrací výsledek volání ``join()``.
 
    .. py:method:: set_snapshots()
 
@@ -209,15 +241,21 @@ Třídy
 
       Sestaví klíč Redis snapshotu pro seznam akci.
 
+      :return: Vrací hodnotu podle větve zpracování.
+
    .. py:method:: generate_redis_snapshot()
 
       Připraví data akce pro uložení snapshotu do Redis cache.
+
+      :return: Vrací n-tici.
 
    .. py:method:: get_by_ident_cely()
 
       Vrátí instanci akce podle identifikátoru archeologického záznamu.
 
       :param ident_cely: Identifikátor archeologického záznamu.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 
 
 .. py:class:: AkceVedouci
@@ -230,9 +268,13 @@ Třídy
 
       Metoda vrátí str reprezentaci modelu vedouci.
 
+      :return: Vrací hodnotu podle větve zpracování.
+
    .. py:method:: vypis_name()
 
       Metoda vrátí str reprezentaci modelu vedouci pro vypis.
+
+      :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: ExterniOdkaz
@@ -245,14 +287,16 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: create_transaction()
 
       Vytvoří a vrátí Fedora transakci pro práci s externím odkazem.
 
       :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: LokalitaSekvence
@@ -273,3 +317,6 @@ Funkce
    Vygeneruje nový permanentní identifikátor akce pro zadaný region.
 
    :param region: Identifikátor regionu použitého jako prefix sekvence akcí.
+
+   :return: Vrací hodnotu podle větve zpracování.
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.

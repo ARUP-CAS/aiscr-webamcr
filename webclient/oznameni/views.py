@@ -41,9 +41,11 @@ class OznameniView(View):
         """
         Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, ``dispatch()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, pracuje se s atributy ``pop``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``dispatch()``.
         """
         self.session_identifier = SessionIdentifier(request)
         self.ident_cely = kwargs.pop("ident_cely", None)
@@ -60,7 +62,10 @@ class OznameniZapsatView(OznameniView):
 
         V prvém kroku uživatel zadává údaje a v druhém je potvrzuje a případně uploaduje soubory.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` se předává do volání ``OznamovatelForm()``, ``ProjektOznameniForm()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+            :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
         """
         logger.debug("oznameni.views.index.start")
         if "oznamovatel" in request.POST:
@@ -145,7 +150,10 @@ class OznameniZapsatView(OznameniView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``render()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekty``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
         """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
@@ -206,7 +214,10 @@ class OznameniDokumentaceView(OznameniView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``debug()``, ``get()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``redirect()``.
+            :raises PermissionDenied: Vyvolá se v konkrétních chybových větvích této funkce.
         """
         if "ident_cely" in request.POST:
             logger.debug("oznameni.views.index.second_part.start", extra={"ident_cely": request.POST["ident_cely"]})
@@ -233,7 +244,10 @@ class OznameniDokumentaceView(OznameniView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekt``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
         """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
@@ -273,7 +287,10 @@ class OznameniPotvrzeniView(OznameniView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not projekty``; nebo při splnění podmínky ``cache_project is not None and self.ident_cely == cache_project``.
         """
         if self.ident_cely:
             cache_project = self.session_identifier.get_ident()
@@ -308,8 +325,11 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci oznamovatele.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``OznamovatelProjektForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+        :raises PermissionDenied: Vyvolá se při splnění podmínky ``projekt.stav == PROJEKT_STAV_ARCHIVOVANY``.
     """
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     oznameni = projekt.oznamovatel
@@ -344,7 +364,9 @@ def post_poi2kat(request):
     """
     Funkce pohledu pro získaní katastru podle bodu pro oznámení.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
@@ -366,7 +388,9 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
         """
         ident_cely = self.kwargs.get("ident_cely")
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -384,9 +408,11 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``check_stav_changed()``, ovlivňuje větvení podmínek.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
@@ -402,9 +428,11 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``check_stav_changed()``, ``OznamovatelProjektForm()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]

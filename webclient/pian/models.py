@@ -87,15 +87,18 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.update_all_azs = True
 
     @property
     def pristupnost_pom(self):
-        """Provádí operaci pristupnost pom."""
+        """Provádí operaci pristupnost pom.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
+        """
         try:
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
             pristupnosti_ids = set()
@@ -113,7 +116,10 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     @property
     def pristupnost(self):
-        """Provádí operaci pristupnost."""
+        """Provádí operaci pristupnost.
+
+        :return: Vrací atribut objektu.
+        """
         return self.pristupnost_pom
 
     def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
@@ -122,6 +128,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
         :param added_pristupnost_id: Identifikátor objektu ``added_pristupnost``.
         :param skip_zaznam_id: Identifikátor objektu ``skip_zaznam``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
         """
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         pristupnosti_ids = set()
@@ -158,6 +166,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
@@ -165,7 +175,9 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         Vrací absolute url.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_absolute_url()``, výsledek volání ``reverse()``.
         """
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
         if dok_jednotky:
@@ -179,11 +191,17 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return reverse("core:home")
 
     def get_permission_object(self):
-        """Vrací permission object."""
+        """Vrací permission object.
+
+        :return: Vrací proměnná ``self``.
+        """
         return self
 
     def get_create_user(self):
-        """Vrací create user."""
+        """Vrací create user.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``my_list``, n-tici.
+        """
         try:
             my_list = []
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -200,7 +218,10 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Vrací create org."""
+        """Vrací create org.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``our_list``, n-tici.
+        """
         try:
             our_list = []
             dok_jednotky = self.dokumentacni_jednotky_pianu.all()
@@ -223,6 +244,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         Metoda pro nastavení permanentního identifikátoru pro PIAN.
 
         Metoda vrátí identifikátor podle sekvence PIAN.
+
+            :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence < maximum``.
         """
         katastr = True if self.presnost.zkratka == "4" else False
         maximum: int = 999999 if katastr else 899999
@@ -254,7 +277,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu vymezený.
 
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param user: Parametr ``user`` se předává do volání ``zaznamenej_zapsani()``.
         """
         self.stav = PIAN_NEPOTVRZEN
         self.zaznamenej_zapsani(user)
@@ -263,7 +286,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         Metoda pro nastavení stavu potvrzený.
 
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param user: Parametr ``user`` se předává do volání ``Historie()``.
         :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
         """
         self.stav = PIAN_POTVRZEN
@@ -276,7 +299,7 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
         """
         Metoda pro uložení změny do historie pro pianu.
 
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param user: Parametr ``user`` se předává do volání ``Historie()``.
         """
         Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()
@@ -321,8 +344,12 @@ def vytvor_pian(katastr, fedora_transaction):
     """
     Funkce pro vytvoření pianu v DB podle katastru.
 
-    :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
-    :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+    :param katastr: Parametr ``katastr`` předává se do volání ``get_ZM_from_point()``, pracuje se s atributy ``definicni_bod``, ``hranice``.
+    :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``vytvor_pian``.
+
+        :return: Vrací proměnná ``pian``.
+        :raises Exception: Vyvolá se s textem "zm10s.not_found"; nebo s textem "zm50s.not_found".
+        :raises ObjectDoesNotExist: Vyvolá se při zpracování zachycené výjimky typu ``ObjectDoesNotExist``.
     """
     zm10, zm50 = get_ZM_from_point(katastr.definicni_bod)
     if zm10 is None:
@@ -362,7 +389,9 @@ def get_ZM_from_point(point):
     """
     Vrací ZM from point.
 
-    :param point: Doménový objekt `point`, se kterým funkce pracuje.
+    :param point: Parametr ``point`` předává se do volání ``list()``, ``filter()``.
+
+        :return: Vrací n-tici.
     """
     try:
         zm10s = list(Kladyzm.objects.filter(kategorie=KLADYZM10).filter(the_geom__contains=point))

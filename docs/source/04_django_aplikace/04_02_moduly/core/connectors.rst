@@ -40,7 +40,9 @@ Třídy
 
       Provádí operaci prepare model for redis.
 
-      :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
+      :param table: Parametr ``table`` pracuje se s atributy ``columns``, ``rows``.
+
+      :return: Vrací proměnná ``data``.
 
 
 .. py:class:: ClamdError
@@ -94,6 +96,8 @@ Třídy
       :param command: Textový název, klíč nebo zpráva ``command`` používaná v rámci operace.
       :return: Výstup funkce odpovídající implementované logice.
 
+      :raises ClamdResponseError: Vyvolá se při splnění podmínky ``len(response) > 1``.
+
    .. py:method:: _init_socket()
 
       Inicializuje socketové připojení k clamd.
@@ -112,7 +116,7 @@ Třídy
       Odešle command.
 
       :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
-      :param args: Dodatečné poziční argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _recv_response()

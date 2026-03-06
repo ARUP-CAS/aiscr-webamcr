@@ -16,25 +16,29 @@ Třídy
 
       Metoda pro získaní absolut url záznamu podle identu.
 
+      :return: Vrací výsledek volání ``reverse()``.
+
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+
    .. py:method:: set_odeslany()
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_vraceny()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
       :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
-      :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
+      :param poznamka: Parametr ``poznamka`` se předává do volání ``Historie()``.
 
    .. py:method:: set_potvrzeny()
 
@@ -42,25 +46,31 @@ Třídy
 
       Pokud je ident dočasný nahrazení identem stálým.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_zapsany()
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
+      :return: Vrací proměnná ``self``.
+
    .. py:method:: get_create_user()
 
       Vrací create user.
 
+      :return: Vrací n-tici.
+
    .. py:method:: get_create_org()
 
       Vrací create org.
+
+      :return: Vrací n-tici.
 
    .. py:method:: set_snapshots()
 
@@ -70,13 +80,19 @@ Třídy
 
       Provádí operaci redis snapshot id.
 
+      :return: Vrací hodnotu podle větve zpracování.
+
    .. py:method:: generate_redis_snapshot()
 
       Vygeneruje redis snapshot.
 
+      :return: Vrací n-tici.
+
    .. py:method:: check_set_permanent_ident()
 
       Ověří set permanent ident.
+
+      :return: Vrací proměnná ``historie_poznamka``.
 
 
 .. py:class:: ExterniZdrojAutor
@@ -89,6 +105,8 @@ Třídy
 
       Vrací osoba. v aplikaci.
 
+      :return: Vrací atribut objektu.
+
 
 .. py:class:: ExterniZdrojEditor
 
@@ -99,6 +117,8 @@ Třídy
    .. py:method:: get_osoba()
 
       Vrací osoba. v aplikaci.
+
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: ExterniZdrojSekvence
@@ -114,3 +134,6 @@ Funkce
    Funkce pro výpočet ident celý pro externí zdroj.
 
    Funkce vrátí pro permanentní ident ID podle sekvence externího zdroje.
+
+   :return: Vrací hodnotu podle větve zpracování.
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.

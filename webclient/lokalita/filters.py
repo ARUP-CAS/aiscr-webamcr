@@ -59,7 +59,9 @@ class LokalitaFilter(ArchZaznamFilter):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
         """
         logger.debug("lokalita.filters.LokalitaFilter.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -90,9 +92,11 @@ class LokalitaFilter(ArchZaznamFilter):
         """
         Metoda pro filtrování podle názvu, popisu, uživatelského označení a poznámek.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(nazev__icontains=value)
@@ -115,8 +119,8 @@ class LokalitaFilter(ArchZaznamFilter):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(LokalitaFilter, self).__init__(*args, **kwargs)
         self.helper = LokalitaFilterFormHelper()
@@ -131,7 +135,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
         """
         dj_pian_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("lokalita.filters.djPian.divider.label")

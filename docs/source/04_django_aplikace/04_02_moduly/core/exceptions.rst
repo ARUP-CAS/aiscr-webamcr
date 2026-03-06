@@ -16,8 +16,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param pian: Doménový objekt `pian`, se kterým funkce pracuje.
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param pian: Parametr ``pian`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: MaximalIdentNumberError
@@ -30,8 +30,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param number: Parametr ``number`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: DJNemaPianError
@@ -44,8 +44,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param dj: Doménový objekt `dj`, se kterým funkce pracuje.
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param dj: Parametr ``dj`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: NelzeZjistitRaduError
@@ -58,7 +58,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: NeocekavanaRadaError
@@ -71,7 +71,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: WrongSheetError
@@ -84,7 +84,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: NeznamaGeometrieError
@@ -97,7 +97,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: UnexpectedDataRelations
@@ -110,7 +110,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: MaximalEventCount
@@ -123,8 +123,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param number: Parametr ``number`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: WrongCSVError
@@ -137,7 +137,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: ZaznamSouborNotmatching
@@ -150,7 +150,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: StateChangedError
@@ -163,5 +163,5 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 

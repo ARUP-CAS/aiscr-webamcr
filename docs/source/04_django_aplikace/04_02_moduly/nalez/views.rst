@@ -10,15 +10,19 @@ Funkce
 
    Funkce pohledu pro smazání nálezu předmětu nebo objektu pomocí modalu.
 
-   :param request: Aktuální HTTP request předaný view/funkci.
-   :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
-   :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
-   :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+   :param request: Parametr ``request`` se předává do volání ``FedoraTransaction()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param typ_vazby: Parametr ``typ_vazby`` slouží jako vstup pro logiku funkce ``smazat_nalez``.
+   :param typ: Parametr ``typ`` ovlivňuje větvení podmínek.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
+
+   :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``response``, výsledek volání ``render()``.
 
 .. py:function:: edit_nalez(request, typ_vazby, komp_ident_cely)
 
    Funkce pohledu pro zapsání editace nálezu předmětu a objektu.
 
-   :param request: Aktuální HTTP request předaný view/funkci.
-   :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+   :param request: Parametr ``request`` se předává do volání ``NalezObjektFormset()``, ``NalezPredmetFormset()``, pracuje se s atributy ``POST``, ``user``.
+   :param typ_vazby: Parametr ``typ_vazby`` slouží jako vstup pro logiku funkce ``edit_nalez``.
    :param komp_ident_cely: Identifikátor ``komp_ident_cely`` používaný pro dohledání cílového záznamu.
+
+   :return: Vrací proměnná ``response``.

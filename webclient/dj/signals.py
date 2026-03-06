@@ -24,10 +24,10 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
 
     Metoda se volá po uložením DJ.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param created: Příznak, zda byla instance právě vytvořena.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_dokumentacni_jednotka``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param created: Parametr ``created`` ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_dokumentacni_jednotka``.
     """
     logger.debug("dj.signals.save_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     if instance.suppress_signal:
@@ -104,7 +104,7 @@ def save_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, 
         """
         Provádí operaci arch z save metadata.
 
-        :param inner_close_transaction: Příznak ``inner_close_transaction`` určující průběh nebo rozsah zpracování.
+        :param inner_close_transaction: Parametr ``inner_close_transaction`` ovlivňuje větvení podmínek.
         """
         instance.archeologicky_zaznam.save_metadata(fedora_transaction)
         if inner_close_transaction:
@@ -131,9 +131,9 @@ def pre_delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **k
     """
     Provádí operaci pre delete dokumentacni jednotka.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``pre_delete_dokumentacni_jednotka``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``pre_delete_dokumentacni_jednotka``.
     """
     logger.debug("dj.signals.pre_delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction
@@ -175,9 +175,9 @@ def delete_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, **kwarg
     """
     Odstraní dokumentacni jednotka.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_dokumentacni_jednotka``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_dokumentacni_jednotka``.
     """
     logger.debug("dj.signals.delete_dokumentacni_jednotka.start", extra={"ident_cely": instance.ident_cely})
     if instance.suppress_signal:

@@ -17,7 +17,10 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
 
     @staticmethod
     def oznameni_projektu(self):
-        """Provádí operaci oznameni projektu."""
+        """Provádí operaci oznameni projektu.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")
         self.ElementClick(By.ID, "id_oznamovatel")

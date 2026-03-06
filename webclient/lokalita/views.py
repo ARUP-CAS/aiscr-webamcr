@@ -59,7 +59,9 @@ class LokalitaIndexView(LoginRequiredMixin, TemplateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = {
             "toolbar_name": _("ez.views.lokalitaIndexView.toolbarName"),
@@ -101,7 +103,9 @@ class LokalitaListView(SearchListView):
         """
         Provádí operaci rename field for ordering.
 
-        :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
+        :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         field = field.replace("-", "")
         return {
@@ -123,7 +127,10 @@ class LokalitaListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci."""
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací výsledek volání ``check_filter_permission()``.
+        """
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -146,7 +153,9 @@ class LokalitaListView(SearchListView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["toolbar_icon"] = "tour"
@@ -165,16 +174,21 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``render_to_response()``.
         """
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
     def get_archeologicky_zaznam(self):
-        """Metoda pro získaní akce z db."""
+        """Metoda pro získaní akce z db.
+
+        :return: Vrací atribut objektu.
+        """
         return self.object.archeologicky_zaznam
 
     def check_locality_arch_z_conflict(self):
@@ -185,7 +199,9 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         """
         Metoda pro získaní contextu akci pro template.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
@@ -197,7 +213,10 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         return context
 
     def get_shows(self):
-        """Vrací shows. v aplikaci."""
+        """Vrací shows. v aplikaci.
+
+        :return: Vrací výsledek volání ``get_detail_template_shows()``.
+        """
         return get_detail_template_shows(
             self.get_object().archeologicky_zaznam,
             self.get_jednotky(),
@@ -217,7 +236,9 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         logger.debug("context is called")
@@ -244,7 +265,9 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci form valid.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, pracuje se s atributy ``save``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``form_valid()``.
         """
         logger.debug("lokalita.views.LokalitaCreateView.form_valid.start")
         form_az = CreateArchZForm(self.request.POST)
@@ -283,7 +306,9 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci form invalid.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``form_invalid()``.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         logger.debug("main form is invalid")
@@ -295,9 +320,11 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         return super().get(request, *args, **kwargs)
 
@@ -306,9 +333,11 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``post()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``post()``.
         """
         return super().post(request, *args, **kwargs)
 
@@ -325,7 +354,9 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         required_fields = get_required_fields()
@@ -353,7 +384,9 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form valid.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``form_valid()``.
         """
         logger.debug("Lokalita.EditForm is valid")
         form_az = CreateArchZForm(self.request.POST, instance=self.object.archeologicky_zaznam)
@@ -376,7 +409,9 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         """
         Provádí operaci form invalid.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``form_invalid()``.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("main form is invalid")
@@ -388,9 +423,11 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         return super().get(request, *args, **kwargs)
 
@@ -399,9 +436,11 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``post()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``post()``.
         """
         return super().post(request, *args, **kwargs)
 
@@ -422,7 +461,9 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["dj_form_create"] = CreateDJForm(typ_arch_z=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
@@ -440,9 +481,11 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         """
         Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         az = self.get_object().archeologicky_zaznam
@@ -459,7 +502,10 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_dokumentacni_jednotka(self):
-        """Vrací dokumentacni jednotka."""
+        """Vrací dokumentacni jednotka.
+
+        :return: Vrací proměnná ``object``.
+        """
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug(
             "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
@@ -472,7 +518,9 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["dj_ident_cely"] = self.get_dokumentacni_jednotka().ident_cely
@@ -488,7 +536,9 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = get_dj_form_detail(
@@ -506,7 +556,9 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
@@ -518,9 +570,11 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         return super().get(request, *args, **kwargs)
 
@@ -534,9 +588,11 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         komponenta = get_object_or_404(Komponenta, ident_cely=self.kwargs["komponenta_ident_cely"])
@@ -553,7 +609,10 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
-        """Vrací komponenta. v aplikaci."""
+        """Vrací komponenta. v aplikaci.
+
+        :return: Vrací proměnná ``object``.
+        """
         dj_ident_cely = self.kwargs["komponenta_ident_cely"]
         object = get_object_or_404(Komponenta, ident_cely=dj_ident_cely)
         return object
@@ -562,7 +621,9 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         komponenta = self.get_komponenta()
@@ -584,7 +645,9 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["pian_form_create"] = PianCreateForm()
@@ -594,9 +657,12 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``get()``, ``str()``, pracuje se s atributy ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
+            :raises Exception: Vyvolá se s textem "lokalita.views.LokalitaPianCreateView.get.label_not_found"; nebo s textem "lokalita.views.LokalitaPianCreateView.get.transormation_error".
         """
         context = self.get_context_data(**kwargs)
         if "index" in self.request.GET and "label" in self.request.GET:
@@ -633,9 +699,11 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``dispatch()``.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
         pian = get_object_or_404(Pian, ident_cely=self.kwargs["pian_ident_cely"])
@@ -652,7 +720,10 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_pian(self):
-        """Vrací pian. v aplikaci."""
+        """Vrací pian. v aplikaci.
+
+        :return: Vrací výsledek volání ``get_object_or_404()``.
+        """
         pian_ident_cely = self.kwargs["pian_ident_cely"]
         return get_object_or_404(Pian, ident_cely=pian_ident_cely)
 
@@ -660,7 +731,9 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         self.pian = self.get_pian()
@@ -672,9 +745,13 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``get()``, ``str()``, pracuje se s atributy ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``self.pian == PIAN_POTVRZEN``.
+            :raises Exception: Vyvolá se s textem "lokalita.views.LokalitaPianUpdateView.get.label_not_found"; nebo s textem "lokalita.views.LokalitaPianUpdateView.get.transormation_error".
         """
         context = self.get_context_data(**kwargs)
         if self.pian == PIAN_POTVRZEN:
@@ -708,7 +785,7 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu lokality.
 
-    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param zaznam: Parametr ``zaznam`` pracuje se s atributy ``stav``, ovlivňuje větvení podmínek.
     :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
     :return: Seznam názvů polí, která mají být v daném stavu povinná.
     """

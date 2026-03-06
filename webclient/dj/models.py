@@ -57,7 +57,10 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
-        """Metoda pro získání absolutní URL archeologického záznamu pro dokumentační jednotku."""
+        """Metoda pro získání absolutní URL archeologického záznamu pro dokumentační jednotku.
+
+        :return: Vrací výsledek volání ``reverse()``.
+        """
         if self.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             return reverse("arch_z:detail-dj", args=[self.archeologicky_zaznam.ident_cely, self.ident_cely])
         else:
@@ -65,11 +68,17 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     @property
     def ident_cely_safe(self):
-        """Provádí operaci ident cely safe."""
+        """Provádí operaci ident cely safe.
+
+        :return: Vrací výsledek volání ``replace()``.
+        """
         return self.ident_cely.replace("-", "_")
 
     def has_adb(self):
-        """Metoda pro ověření, jestli dokumentační jednotka má ADB."""
+        """Metoda pro ověření, jestli dokumentační jednotka má ADB.
+
+        :return: Vrací proměnná ``has_adb``.
+        """
         has_adb = False
         try:
             has_adb = self.adb is not None
@@ -78,15 +87,18 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         return has_adb
 
     def get_permission_object(self):
-        """Vrací permission object."""
+        """Vrací permission object.
+
+        :return: Vrací atribut objektu.
+        """
         return self.archeologicky_zaznam
 
     def __init__(self, *args, **kwargs):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(DokumentacniJednotka, self).__init__(*args, **kwargs)
         self.initial_pian_id = self.pian_id
@@ -98,7 +110,10 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     @property
     def initial_pian(self):
-        """Vrátí objekt Pian na základě initial_pian_id (líné načtení)."""
+        """Vrátí objekt Pian na základě initial_pian_id (líné načtení).
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+        """
         if self.initial_pian_id is not None:
             try:
                 return Pian.objects.get(pk=self.initial_pian_id)

@@ -17,6 +17,9 @@ class CustomUserManager(BaseUserManager):
         :param email: Uživatel nebo osoba ``email``, v jejímž kontextu se operace provádí.
         :param password: Heslo ``password`` používané při vytváření nebo aktualizaci účtu.
         :param extra_fields: Kolekce ``extra_fields`` zpracovávaná touto funkcí.
+
+            :return: Vrací proměnná ``user``.
+            :raises ValueError: Vyvolá se při splnění podmínky ``not email``.
         """
         if not email:
             raise ValueError(_("uzivatel.managers.createUser.email.error"))
@@ -33,6 +36,9 @@ class CustomUserManager(BaseUserManager):
         :param email: Uživatel nebo osoba ``email``, v jejímž kontextu se operace provádí.
         :param password: Heslo ``password`` používané při vytváření nebo aktualizaci účtu.
         :param extra_fields: Kolekce ``extra_fields`` zpracovávaná touto funkcí.
+
+            :return: Vrací výsledek volání ``create_user()``.
+            :raises ValueError: Vyvolá se při splnění podmínky ``extra_fields.get('is_staff') is not True``; nebo při splnění podmínky ``extra_fields.get('is_superuser') is not True``.
         """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)

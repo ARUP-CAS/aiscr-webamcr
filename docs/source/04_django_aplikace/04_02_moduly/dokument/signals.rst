@@ -60,7 +60,7 @@ Funkce
 
    :param sender: Model, který signal vyvolal.
    :param instance: Uložená instance části dokumentu.
-   :param created: Příznak, zda byla část dokumentu právě vytvořena.
+   :param created: Parametr ``created`` ovlivňuje větvení podmínek.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
 .. py:function:: dokument_cast_save_metadata_delete(sender, instance)
@@ -77,7 +77,7 @@ Funkce
 
    :param sender: Model, který signal vyvolal.
    :param instance: Uložená instance tvaru.
-   :param created: Příznak, zda byl tvar právě vytvořen.
+   :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``tvar_save``.
    :param kwargs: Dodatečné argumenty předané Django signalem.
 
 .. py:function:: tvar_delete(sender, instance)

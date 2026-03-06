@@ -6,7 +6,10 @@ class FormWithOrcid:
     """Implementuje komponentu ``FormWithOrcid`` v rámci aplikace."""
 
     def clean_orcid(self):
-        """Provádí operaci clean orcid."""
+        """Provádí operaci clean orcid.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         data = self.cleaned_data["orcid"]
         return "https://orcid.org/" + data if len(data) > 0 else None
 
@@ -15,7 +18,10 @@ class FormWithWikidata:
     """Implementuje komponentu ``FormWithWikidata`` v rámci aplikace."""
 
     def clean_wikidata(self):
-        """Provádí operaci clean wikidata."""
+        """Provádí operaci clean wikidata.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         data = self.cleaned_data["wikidata"]
         return "https://www.wikidata.org/entity/" + data if len(data) > 0 else None
 

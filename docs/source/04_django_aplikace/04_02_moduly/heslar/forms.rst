@@ -16,8 +16,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: HeslarOdkazForm
@@ -30,8 +30,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: OsobaAdminForm
@@ -44,8 +44,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: OrganizaceAdminForm
@@ -58,6 +58,6 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 

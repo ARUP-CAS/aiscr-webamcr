@@ -20,7 +20,10 @@ def get_test_secret(setting, default_value=None):
     Vrací test secret.
 
     :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
-    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
+    :param default_value: Parametr ``default_value`` se předává do volání ``get()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``get()``.
+        :raises ImproperlyConfigured: Vyvolá se při zpracování zachycené výjimky typu ``KeyError``.
     """
     file_test_path = (
         "/run/secrets/test_conf"

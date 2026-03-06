@@ -10,10 +10,14 @@ Funkce
 
    Validátor pro ověření telefonního čísla na správny formát.
 
-   :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
+   :param number: Parametr ``number`` se předává do volání ``fullmatch()``, ``info()``, ovlivňuje větvení podmínek.
+
+   :raises ValidationError: Vyvolá se při splnění podmínky ``not regex_tel.fullmatch(number)``; nebo při zpracování zachycené výjimky typu ``Exception``.
 
 .. py:function:: validate_date_min_1600(value)
 
    Validuje date min 1600.
 
-   :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+   :param value: Parametr ``value`` předává se do volání ``isinstance()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek.
+
+   :raises ValidationError: Vyvolá se při splnění podmínky ``value.lower <= min_date``; nebo při splnění podmínky ``value.upper <= min_date``.

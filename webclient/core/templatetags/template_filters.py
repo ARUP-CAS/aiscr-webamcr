@@ -22,7 +22,9 @@ def url_to_classes(value):
     """
     Provádí operaci url to classes.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` pracuje se s atributy ``endswith``, ``replace``, ovlivňuje větvení podmínek.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: str, proměnná ``classes``.
     """
     if value == "/":
         return "app-home"
@@ -37,7 +39,9 @@ def katastry_to_list(value):
     """
     Vrátí seznam katastrů ve formátu odděleném středníkem.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` předává se do volání ``join()``.
+
+        :return: Vrací proměnná ``display``.
     """
     value = [str(i) for i in value]
     display = "; ".join(value)
@@ -49,7 +53,9 @@ def hesla_to_list(value):
     """
     Spojí hodnoty hesel do řetězce odděleného čárkami.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` předává se do volání ``join()``, pracuje se s atributy ``values_list``.
+
+        :return: Vrací proměnná ``list_hesla``.
     """
     list_hesla = ", ".join(value.values_list("heslo", flat=True))
     return list_hesla
@@ -60,7 +66,9 @@ def autori_ordered_list(value):
     """
     Vrátí autory externího zdroje v definovaném pořadí.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` předává se do volání ``join()``, ``filter()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``join()``.
     """
     return "; ".join(
         Osoba.objects.filter(externizdrojautor__externi_zdroj=value)
@@ -74,7 +82,9 @@ def render_daterange(value):
     """
     Naformátuje PostgreSQL DateRange do čitelné textové podoby.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
     """
     if value == "" or value is None:
         return None
@@ -96,8 +106,10 @@ def last_x_letters(value, x):
     """
     Vrátí posledních ``x`` znaků ze vstupního řetězce.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param x: Číselná hodnota ``x`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, proměnná ``value``.
     """
     if len(value) > x:
         return value[-x:]
@@ -112,6 +124,8 @@ def ifinlist(widget_optgroups, list):
 
     :param widget_optgroups: Textový nebo strukturální vstup `widget_optgroups` používaný při sestavení nebo zpracování obsahu.
     :param list: Kolekce ``list`` zpracovávaná touto funkcí.
+
+        :return: Vrací proměnná ``string``.
     """
     string = ""
     for group_name, group_choices, group_index in widget_optgroups:
@@ -129,7 +143,9 @@ def check_if_none(value):
     """
     Vrátí prázdný řetězec, pokud je hodnota None nebo prázdná.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``value``, str.
     """
     if value:
         return value
@@ -142,7 +158,9 @@ def get_katastr_name(value):
     """
     Vrací katastr name.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``filter()``, ovlivňuje větvení podmínek.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``list_hesla``, výsledek volání ``str()``.
     """
     if isinstance(value, list):
         katastre = RuianKatastr.objects.filter(pk__in=value)
@@ -161,7 +179,9 @@ def true_false(value):
     """
     Vrátí lokalizovaný text pro hodnotu ano/ne.
 
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+
+        :return: Vrací výsledek volání ``_()``.
     """
     if value and value is True:
         return _("core.template_filters.true_false.true.label")
@@ -175,6 +195,8 @@ def get_osoby_name(widget):
     Vrátí seznam osob vybraných ve widgetu jako text.
 
     :param widget: Textový nebo strukturální vstup `widget` používaný při sestavení nebo zpracování obsahu.
+
+        :return: Vrací proměnná ``list_hesla``.
     """
     list_hesla = ""
     if not widget["value"] or widget["value"] == [""]:
@@ -216,8 +238,10 @@ def get_value_from_heslar(nazev_heslare, hodnota):
     """
     Vrací value from heslar.
 
-    :param nazev_heslare: Číselná nebo geometrická hodnota `nazev_heslare` použitá při výpočtu nebo transformaci.
-    :param hodnota: Číselná nebo geometrická hodnota `hodnota` použitá při výpočtu nebo transformaci.
+    :param nazev_heslare: Parametr ``nazev_heslare`` se předává do volání ``error()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param hodnota: Parametr ``hodnota`` se předává do volání ``error()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, str.
     """
     values = {
         ("externi_zdroj_typ", "kniha"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_KNIHA,

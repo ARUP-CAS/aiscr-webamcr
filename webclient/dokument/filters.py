@@ -73,7 +73,10 @@ class SouborTypFilter(MultipleChoiceFilter):
 
     @property
     def field(self):
-        """Provádí operaci field."""
+        """Provádí operaci field.
+
+        :return: Vrací atribut objektu.
+        """
         qs = self.model._default_manager.distinct()
         qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
         self.extra["choices"] = [(o, o) for o in qs if o is not None]
@@ -91,7 +94,7 @@ class HistorieFilter(FilterSet):
         """
         Nastaví filter fields.
 
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param user: Parametr ``user`` pracuje se s atributy ``hlavni_role``, ovlivňuje větvení podmínek.
         """
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
             self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
@@ -316,7 +319,9 @@ class Model3DFilter(HistorieFilter, FilterSet):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
         """
         logger.debug("dokument.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -341,9 +346,11 @@ class Model3DFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle popisu, poznámky, odkazu a poznámek v objektech a předmětech.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -358,9 +365,11 @@ class Model3DFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle roku revize a popisu ADB.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_roky``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if value:
             if value.start is not None and value.stop is not None:
@@ -382,9 +391,11 @@ class Model3DFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle roku revize a popisu ADB.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_roky_range``.
+        :param value: Parametr ``value`` pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek.
+
+            :return: Vrací proměnná ``queryset``.
         """
         if value:
             if value.start is not None:
@@ -414,8 +425,8 @@ class Model3DFilter(HistorieFilter, FilterSet):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
         """
         super(Model3DFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
@@ -512,7 +523,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("dokument.filters.model3DFilterFormHelper.historyDivider.label")
@@ -974,9 +985,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle územní príslušnosti.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_uzemni_prislusnost``.
+        :param value: Parametr ``value`` předává se do volání ``debug()``, ``reduce()``.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         logger.debug("dokument.filters.DokumentFilter.filter_uzemni_prislusnost", extra={"value": value})
         query = reduce(operator.or_, (Q(ident_cely__contains=item) for item in value))
@@ -986,9 +999,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regiónu a události.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -1004,9 +1019,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle poznámky a počtu predmětu.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_predmet_pozn_pocet``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
@@ -1017,9 +1034,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle poznámky a počtu objektu.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_objekt_pozn_pocet``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
@@ -1030,9 +1049,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle jistoty.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``distinct``, ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_jistota``.
+        :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if "True" in value and "False" in value:
             return queryset.distinct()
@@ -1047,9 +1068,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle neident akce.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_neident_poznamka``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(casti__neident_akce__poznamka__icontains=value)
@@ -1062,9 +1085,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle letu.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_let_poznamka``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(let__typ_letounu__icontains=value)
@@ -1077,9 +1102,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle id AZ.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_id_AZ``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(Q(casti__archeologicky_zaznam__ident_cely__icontains=value)).distinct()
 
@@ -1087,9 +1114,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle id projektu.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_id_projekt``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(Q(casti__projekt__ident_cely__icontains=value)).distinct()
 
@@ -1097,9 +1126,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle existence neident akce.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_neident_akce``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             akce = NeidentAkce.objects.filter(dokument_cast=models.OuterRef("pk"))
@@ -1118,9 +1149,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle existence komponenty.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_komponenty``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             komponenty = Komponenta.objects.filter(komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
@@ -1138,9 +1171,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle existence nálezu.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_nalezy``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             objekty = NalezObjekt.objects.filter(komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
@@ -1165,9 +1200,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle existence tvaru.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``distinct``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_tvary``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             tvar = Tvar.objects.filter(dokument=models.OuterRef("pk"))
@@ -1183,9 +1220,11 @@ class DokumentFilter(Model3DFilter):
         """
         Metoda pro filtrování podle existence souboru.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``distinct``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_soubory``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             soubor = Soubor.objects.filter(vazba__dokument_souboru=models.OuterRef("pk"))
@@ -1201,8 +1240,8 @@ class DokumentFilter(Model3DFilter):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(DokumentFilter, self).__init__(*args, **kwargs)
         self.helper = DokumentFilterFormHelper()
@@ -1217,7 +1256,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("dokument.filters.dokumentFilterFormHelper.historyDivider.label")

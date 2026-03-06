@@ -29,8 +29,10 @@ class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
         """
         Provádí operaci metadata.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``metadata``.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``metadata``.
+
+            :return: Vrací proměnná ``response``.
         """
         metadata = obj.metadata
 
@@ -72,8 +74,10 @@ class HeslarNazevAdmin(admin.ModelAdmin):
         """
         Určí, zda add permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 
@@ -81,8 +85,10 @@ class HeslarNazevAdmin(admin.ModelAdmin):
         """
         Určí, zda delete permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 
@@ -90,8 +96,10 @@ class HeslarNazevAdmin(admin.ModelAdmin):
         """
         Určí, zda change permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 
@@ -109,12 +117,14 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
         """
         Vyrenderuje change form.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param context: Kontextová data používaná při serializaci nebo renderování.
-        :param add: Příznak, zda se formulář/objekt vytváří v režimu přidání.
-        :param change: Číselná nebo geometrická hodnota `change` použitá při výpočtu nebo transformaci.
-        :param form_url: Cesta, URL nebo název zdroje ``form_url``, ze kterého funkce čte nebo kam zapisuje.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` předává se do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+        :param context: Parametr ``context`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+        :param add: Parametr ``add`` předává se do volání ``render_change_form()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param change: Parametr ``change`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+        :param form_url: Parametr ``form_url`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` předává se do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``render_change_form()``.
         """
         if add:
             context["adminform"].form.fields["nazev_heslare"].queryset = HeslarNazev.objects.filter(povolit_zmeny=True)
@@ -124,8 +134,10 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
         """
         Určí, zda change permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` předává se do volání ``has_change_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` předává se do volání ``has_change_permission()``, pracuje se s atributy ``nazev_heslare``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_change_permission()``.
         """
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
@@ -135,8 +147,10 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
         """
         Vrací readonly fields.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``pk``, ovlivňuje větvení podmínek.
+
+            :return: Vrací n-tici.
         """
         if obj is not None and obj.pk is not None:
             return "ident_cely", "nazev_heslare"
@@ -147,8 +161,10 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
         """
         Určí, zda delete permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``nazev_heslare``, ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
         """
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
@@ -170,8 +186,10 @@ class HeslarDataceAdmin(admin.ModelAdmin):
         """
         Vrací readonly fields.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
+        :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, seznam.
         """
         if obj:  # Znamená to, že jde o úpravu existujícího záznamu.
             return ("obdobi",)
@@ -182,7 +200,9 @@ class HeslarDataceAdmin(admin.ModelAdmin):
         """
         Provádí operaci obdobi ident cely.
 
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``obdobi``, vstupuje do návratové hodnoty.
+
+            :return: Vrací atribut objektu.
         """
         return obj.obdobi.ident_cely
 
@@ -212,8 +232,10 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
         """
         Určí, zda add permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 
@@ -221,8 +243,10 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
         """
         Určí, zda delete permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 
@@ -230,8 +254,10 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
         """
         Určí, zda change permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 
@@ -250,7 +276,9 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
         """
         Provádí operaci heslo ident cely.
 
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``heslo``, vstupuje do návratové hodnoty.
+
+            :return: Vrací atribut objektu.
         """
         return obj.heslo.ident_cely
 
@@ -274,7 +302,9 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
         """
         Provádí operaci heslo podrazene ident cely.
 
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``heslo_podrazene``, vstupuje do návratové hodnoty.
+
+            :return: Vrací atribut objektu.
         """
         return obj.heslo_podrazene.ident_cely
 
@@ -314,8 +344,8 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         self.wiki_data_available = None
         super().__init__(*args, **kwargs)
@@ -324,8 +354,10 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
         """
         Určí, zda delete permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
         """
         if obj is not None:
             return not obj.has_connections
@@ -335,8 +367,10 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
         """
         Vrací fields. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_fields``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``get_fields``.
+
+            :return: Vrací výsledek volání ``tuple()``.
         """
         fields = list(self.fields)
         if self.wiki_data_available is None:
@@ -416,8 +450,10 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
         """
         Určí, zda delete permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
         """
         if obj is not None:
             return not obj.has_connections
@@ -431,8 +467,10 @@ class HeslarRuianAdmin(ObjectWithMetadataAdmin):
         """
         Určí, zda add permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 
@@ -440,8 +478,10 @@ class HeslarRuianAdmin(ObjectWithMetadataAdmin):
         """
         Určí, zda delete permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 
@@ -449,8 +489,10 @@ class HeslarRuianAdmin(ObjectWithMetadataAdmin):
         """
         Určí, zda change permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return False
 

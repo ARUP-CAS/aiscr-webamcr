@@ -16,6 +16,8 @@ Třídy
 
       Provádí operaci clean orcid.
 
+      :return: Vrací hodnotu podle větve zpracování.
+
 
 .. py:class:: FormWithWikidata
 
@@ -26,6 +28,8 @@ Třídy
    .. py:method:: clean_wikidata()
 
       Provádí operaci clean wikidata.
+
+      :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: UpdateDocumentObjectIdentifierFileForm

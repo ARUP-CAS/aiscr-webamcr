@@ -24,7 +24,9 @@ class HistorieTable(ColumnShiftTableBootstrap4):
         """
         Vyrenderuje uzivatel custom.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` pracuje se s atributy ``uzivatel``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``display_name()``.
         """
         if not record.uzivatel:
             return ""
@@ -83,7 +85,9 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         """
         Vyrenderuje uzivatel. v aplikaci.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``display_name()``.
         """
         uzivatel = User.objects.filter(ident_cely=record["uzivatel"]).first()
         if uzivatel is None:
@@ -94,8 +98,10 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         """
         Vyrenderuje url. v aplikaci.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_url``.
+        :param record: Parametr ``record`` předává se do volání ``format_html()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``format_html()``.
         """
         return format_html(
             '<a href="{}" class="btn-sm" target="_blank">'
@@ -108,8 +114,10 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         """
         Provádí operaci value url.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``value_url``.
+        :param record: Parametr ``record`` vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         return f"{settings.SITE_URL}{record['url']}"
 

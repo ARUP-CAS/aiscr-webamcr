@@ -16,13 +16,15 @@ Třídy
 
       Vrátí požadovaný soubor nebo jeho náhled po ověření vazby k záznamu.
 
-      :param request: Django HTTP požadavek.
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek.
       :param typ_vazby: Typ vazby souboru na doménový záznam.
       :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
       :param pk: Primární klíč souboru.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
       :return: Odpověď s obsahem souboru, náhledem nebo redirect při chybě vazby.
+
+      :raises Http404: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: DownloadThumbnailDZ
@@ -35,13 +37,16 @@ Třídy
 
       Vrátí miniaturu souboru z dočasného uploadu po kontrole oprávnění a vazby.
 
-      :param request: Django HTTP požadavek.
+      :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, pracuje se s atributy ``session``, ovlivňuje větvení podmínek.
       :param typ_vazby: Typ vazby souboru na doménový záznam.
       :param ident_cely: Identifikátor záznamu, ke kterému soubor patří.
       :param pk: Primární klíč souboru.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
       :return: Odpověď s miniaturou souboru.
+
+      :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.session.get('session_uuid')``; nebo při splnění podmínky ``cache_ident is None or ident_cely != cache_ident or (not file_can_download)``.
+      :raises Http404: Vyvolá se v konkrétních chybových větvích této funkce.
 
 
 .. py:class:: DownloadThumbnailSmall
@@ -64,31 +69,37 @@ Třídy
 
       Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``error()``, ``get()``, pracuje se s atributy ``GET``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``get()``.
 
    .. py:method:: post()
 
       Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` pracuje se s atributy ``GET``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``redirect()``.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: dispatch()
 
       Inicializuje identifikaci session pro práci s cache nahraných souborů.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, ``dispatch()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
       :return: Výsledek standardního zpracování dispatch.
 
 
@@ -102,27 +113,35 @@ Třídy
 
       Načte doménový záznam, ke kterému se budou soubory nahrávat.
 
+      :return: Vrací výsledek volání ``get_object_or_404()``.
+
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: dispatch()
 
       Provádí operaci dispatch.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, ``dispatch()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``dispatch()``.
 
    .. py:method:: post()
 
       Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``post``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``redirect()``.
 
 
 .. py:class:: BasePostUploadView
@@ -155,9 +174,11 @@ Třídy
 
       Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``warning()``, ``handle_upload()``, pracuje se s atributy ``POST``, ``FILES``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``handle_upload()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``handle_upload()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``_unknown_error_response()``, výsledek volání ``JsonResponse()``, výsledek volání ``handle_upload()``.
 
    .. py:method:: handle_upload()
 
@@ -165,7 +186,7 @@ Třídy
 
       Potomci implementují vlastní workflow nahrání po úspěšné validaci souboru.
 
-      :param request: Django HTTP požadavek s kontextem uživatele a session.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``handle_upload``.
       :param soubor: Nahraný soubor z requestu připravený k uložení.
       :param soubor_data: Binární obsah souboru v objektu ``BytesIO``.
       :param args: Dodatečné poziční argumenty z URL dispatcheru.
@@ -190,7 +211,7 @@ Třídy
       Pokud byl soubor během uploadu přejmenován (typicky kvůli úpravě přípony
       pro soulad s MIME typem), přidá do response_data informační zprávu.
       :param response_data: Slovník s daty odpovědi, který se případně doplní o zprávu.
-      :param renamed: Příznak, zda během uploadu došlo k přejmenování souboru.
+      :param renamed: Parametr ``renamed`` ovlivňuje větvení podmínek.
       :param new_name: Nově přidělený název souboru.
       :return: Upravený slovník odpovědi (beze změny, pokud k přejmenování nedošlo).
 
@@ -236,6 +257,8 @@ Třídy
       :param soubor_data: Binární obsah souboru.
       :param args: Dodatečné poziční argumenty z URL.
       :param kwargs: Klíčové argumenty včetně ``ident_cely`` a ``typ_vazby``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, proměnná ``resolved``.
 
    .. py:method:: _resolve_object_and_name()
 
@@ -287,6 +310,8 @@ Třídy
       :raises Http404: Pokud soubor s daným ``file_id`` neexistuje.
       :raises ZaznamSouborNotmatching: Pokud soubor nepatří k uvedenému záznamu.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``permission_check``, výsledek volání ``JsonResponse()``, výsledek volání ``_unknown_error_response()``.
+
    .. py:method:: _check_update_permissions()
 
       Zkontroluje platnost typu vazby a oprávnění uživatele k nahrazení souboru.
@@ -313,6 +338,8 @@ Třídy
       :param export_format: Cílový formát exportu (např. ``csv``, ``xlsx``).
       :param export_name: Volitelný základ názvu; pokud není zadán, použije ``self.export_name``.
 
+      :return: Vrací výsledek volání ``format()``.
+
 
 .. py:class:: PermissionFilterMixin
 
@@ -324,35 +351,45 @@ Třídy
 
       Ověří filter permission.
 
-      :param qs: Vstupní queryset, který má být dále zpracován.
+      :param qs: Parametr ``qs`` předává se do volání ``filter_by_permission()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param action: Identifikátor akce, která se má provést.
+
+      :return: Vrací proměnná ``qs``.
 
    .. py:method:: filter_by_permission()
 
       Filtruje by permission.
 
-      :param qs: Vstupní queryset, který má být dále zpracován.
-      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+      :param qs: Parametr ``qs`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``annotate``, ``none``, vstupuje do návratové hodnoty.
+      :param permission: Parametr ``permission`` předává se do volání ``filter()``, ``add_status_lookup()``, pracuje se s atributy ``base``, ``status``, ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, proměnná ``qs``.
 
    .. py:method:: add_status_lookup()
 
       Provádí operaci add status lookup.
 
-      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
+      :param permission: Parametr ``permission`` předává se do volání ``sub()``, pracuje se s atributy ``status``.
+
+      :return: Vrací proměnná ``filterdoc``.
 
    .. py:method:: add_ownership_lookup()
 
       Provádí operaci add ownership lookup.
 
       :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
-      :param qs: Vstupní queryset, který má být dále zpracován.
+      :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
+
+      :return: Vrací výsledek volání ``Q()``.
 
    .. py:method:: add_accessibility_lookup()
 
       Provádí operaci add accessibility lookup.
 
-      :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
-      :param qs: Vstupní queryset, který má být dále zpracován.
+      :param permission: Parametr ``permission`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``accessibility``, vstupuje do návratové hodnoty.
+      :param qs: Parametr ``qs`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``filter()``.
 
 
 .. py:class:: SearchListView
@@ -365,7 +402,9 @@ Třídy
 
       Vytvoří export výsledků vyhledávání v požadovaném formátu.
 
-      :param export_format: Záznam/objekt ``export_format``, který funkce čte, validuje nebo upravuje.
+      :param export_format: Parametr ``export_format`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponse()``, proměnná ``response``.
 
    .. py:method:: init_translations()
 
@@ -381,19 +420,25 @@ Třídy
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get_queryset()
 
       Vrací queryset výsledků vyhledávání podle zadaných filtrů.
 
+      :return: Vrací proměnná ``qs``.
+
    .. py:method:: get()
 
       Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``get()``.
 
 
 .. py:class:: StahnoutDataHistorickaView
@@ -406,10 +451,13 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
       :param model_name: Název modelu používaný pro cílení operace.
-      :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``.
       :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
+
+      :return: Vrací proměnná ``response``.
+      :raises Http404: Vyvolá se při splnění podmínky ``Model is None``.
 
 
 .. py:class:: CheckUserAuthentication
@@ -422,9 +470,11 @@ Třídy
 
       Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``JsonResponse()``, pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ReadTempValueView
@@ -437,7 +487,9 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
+      :param request: Parametr ``request`` pracuje se s atributy ``GET``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: DeleteTempValueView
@@ -450,7 +502,9 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
+      :param request: Parametr ``request`` pracuje se s atributy ``GET``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: AbortDownloadUpdateTempValueView
@@ -463,7 +517,9 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
+      :param request: Parametr ``request`` pracuje se s atributy ``GET``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: RosettaFileLevelMixinWithBackup
@@ -480,6 +536,9 @@ Třídy
 
       Pokud soubor neexistuje, vyvolá chybu 404.
 
+      :return: Vrací proměnná ``path``.
+      :raises Http404: Vyvolá se při zpracování zachycené výjimky typu ``IndexError``.
+
 
 .. py:class:: TranslationImportView
 
@@ -491,13 +550,17 @@ Třídy
 
       Provádí operaci form valid.
 
-      :param form: Formulářová instance zpracovávaná funkcí.
+      :param form: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
+
+      :return: Vrací výsledek volání ``redirect()``.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: handle_uploaded_file()
 
@@ -516,7 +579,9 @@ Třídy
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
 
 .. py:class:: TranslationFormWithBackupView
@@ -529,7 +594,9 @@ Třídy
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
 
 .. py:class:: TranslationFileDownloadBackup
@@ -542,9 +609,11 @@ Třídy
 
       Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``response``, výsledek volání ``HttpResponseRedirect()``.
 
 
 .. py:class:: TranslationFileSmazatBackup
@@ -557,17 +626,21 @@ Třídy
 
       Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+      :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
       Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``post``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: PrometheusMetricsView
@@ -580,9 +653,11 @@ Třídy
 
       Zobrazí formulář nahrazení souboru po kontrole vazby souboru k záznamu.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``ExportToDjangoView()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+      :return: Vrací výsledek volání ``ExportToDjangoView()``.
 
 
 .. py:class:: ApplicationRestartView
@@ -595,9 +670,12 @@ Třídy
 
       Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
 
-      :param request: Django HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` pracuje se s atributy ``user``, ``META``, ovlivňuje větvení podmínek.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``redirect()``.
+      :raises PermissionDenied: Vyvolá se při splnění podmínky ``request.user.hlavni_role.id != ROLE_ADMIN_ID``.
 
 
 .. py:class:: DataImportProgress
@@ -610,8 +688,11 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
+      :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
 
 
 .. py:class:: DataImportStop
@@ -624,8 +705,11 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
+      :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
 
 
 .. py:class:: DataImportStart
@@ -638,8 +722,11 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``delay()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
+      :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
 
 
 Funkce
@@ -651,6 +738,8 @@ Funkce
 
    :param request: HTTP požadavek aktuálního uživatele.
 
+   :return: Vrací výsledek volání ``render()``.
+
 .. py:function:: delete_file_DZ(request, typ_vazby, ident_cely, pk)
 
    Smaže soubor nahraný přes dropzone včetně záznamu v databázi i ve Fedora úložišti.
@@ -659,6 +748,8 @@ Funkce
    :param typ_vazby: Typ vazby souboru na doménový objekt (např. dokument, projekt, PAS).
    :param ident_cely: Identifikátor záznamu, ke kterému je soubor navázán.
    :param pk: Primární klíč mazaného souboru.
+
+   :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: delete_file(request, typ_vazby, ident_cely, pk)
 
@@ -669,13 +760,17 @@ Funkce
    :param ident_cely: Identifikátor záznamu, u kterého se soubor odstraňuje.
    :param pk: Primární klíč mazaného souboru.
 
+   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+
 .. py:function:: get_finds_soubor_name(find, filename, add_to_index)
 
    Funkce pro získaní jména souboru pro samostatný nález.
 
    :param find: Textový název, klíč nebo výraz ``find`` používaný v rámci operace.
-   :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+   :param filename: Parametr ``filename`` se předává do volání ``splitext()``, ``warning()``, vstupuje do návratové hodnoty.
    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+
+   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
 
 .. py:function:: get_projekt_soubor_name(projekt, file_name)
 
@@ -684,36 +779,49 @@ Funkce
    :param projekt: Projekt, ke kterému se soubor nahrává.
    :param file_name: Původní název nahrávaného souboru.
 
+   :return: Vrací hodnotu podle větve zpracování, typicky: bool, hodnotu podle větve zpracování.
+
 .. py:function:: check_stav_changed(request, zaznam)
 
    Ověří, zda se stav záznamu mezitím změnil oproti hodnotě odeslané ve formuláři.
 
-   :param request: Django HTTP požadavek s daty odeslaného formuláře.
+   :param request: Parametr ``request`` předává se do volání ``CheckStavNotChangedForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek.
    :param zaznam: Ukládaný záznam, jehož stav se porovnává.
+
+   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 .. py:function:: redirect_ident_view(request, ident_cely)
 
    Přesměruje uživatele na detail záznamu nalezeného podle identifikátoru.
 
-   :param request: Django HTTP požadavek.
+   :param request: Parametr ``request`` předává se do volání ``redirect()``, ``get_absolute_url()``, vstupuje do návratové hodnoty.
    :param ident_cely: Hledaný identifikátor záznamu.
+
+   :return: Vrací výsledek volání ``redirect()``.
 
 .. py:function:: prolong_session(request)
 
    Vrátí zbývající čas relace pro AJAX prodloužení přihlášení.
 
-   :param request: Django HTTP požadavek aktuálního uživatele.
+   :param request: Parametr ``request`` předává se do volání ``seconds_until_idle_time_end()``.
+
+   :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: post_ajax_get_pas_and_pian_limit(request)
 
    Funkce pohledu pro získaní heatmapy.
 
-   :param request: Aktuální HTTP request předaný view/funkci.
+   :param request: Parametr ``request`` se předává do volání ``loads()``, ``get_pas_from_envelope()``, pracuje se s atributy ``body``.
+
+   :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: check_soubor_vazba(typ_vazby, ident, id_zaznamu)
 
    Ověří soubor vazba.
 
-   :param typ_vazby: Název nebo typ ``typ_vazby`` používaný pro volbu cílové logiky.
+   :param typ_vazby: Parametr ``typ_vazby`` ovlivňuje větvení podmínek.
    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-   :param id_zaznamu: Záznam/objekt ``id_zaznamu``, který funkce čte, validuje nebo upravuje.
+   :param id_zaznamu: Parametr ``id_zaznamu`` předává se do volání ``filter()``.
+
+   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+   :raises ZaznamSouborNotmatching: Vyvolá se při splnění podmínky ``soubor.count() > 0``.

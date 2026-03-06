@@ -11,7 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 def check_status():
-    """Ověří status. v aplikaci."""
+    """Ověří status. v aplikaci.
+
+    :return: Vrací n-tici.
+    """
     io_out = StringIO()
     io_out_db = StringIO()
     try:
@@ -31,7 +34,9 @@ class HealthCheckView(IPWhitelistMixin, View):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         status = "healthy"
         r_code, msg, msg_db = check_status()

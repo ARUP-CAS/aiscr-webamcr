@@ -40,8 +40,8 @@ class Command(BaseCommand):
         """
         Zpracuje argumenty příkazu a zkontroluje konzistenci vlastností PIAN.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param options: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
         """
         from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
         from heslar.models import Heslar

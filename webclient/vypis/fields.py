@@ -25,7 +25,9 @@ def get_model(name):
     """
     Vrací model. v aplikaci.
 
-    :param name: Název nebo identifikátor používaný v rámci operace.
+    :param name: Parametr ``name`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``get()``.
     """
     models = {
         "tvary": Tvar,
@@ -55,7 +57,9 @@ def get_gml(geom):
     """
     Vrací gml. v aplikaci.
 
-    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
+    :param geom: Parametr ``geom`` předává se do volání ``execute()``, pracuje se s atributy ``wkt``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, None.
     """
     try:
         with transaction.atomic(), connection.cursor() as cursor:
@@ -70,7 +74,9 @@ def get_wkt(geom):
     """
     Vrací wkt. v aplikaci.
 
-    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
+    :param geom: Parametr ``geom`` předává se do volání ``execute()``, pracuje se s atributy ``wkt``.
+
+        :return: Vrací vybranou hodnotu z kolekce.
     """
     with connection.cursor() as cursor:
         cursor.execute("SELECT ST_AsText(ST_GeomFromText(%s))", [geom.wkt])
@@ -86,7 +92,7 @@ class SimpleSectionTemplateName:
         """
         Inicializuje instanci třídy.
 
-        :param name: Název nebo identifikátor používaný v rámci operace.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         self.name = name
 
@@ -95,6 +101,8 @@ class SimpleSectionTemplateName:
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.name
 
@@ -102,7 +110,9 @@ class SimpleSectionTemplateName:
         """
         Vrací name. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` slouží jako vstup pro logiku funkce ``get_name``.
+
+            :return: Vrací atribut objektu.
         """
         return self.name
 
@@ -110,8 +120,10 @@ class SimpleSectionTemplateName:
         """
         Vrací permission. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` slouží jako vstup pro logiku funkce ``get_permission``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return True
 
@@ -123,8 +135,8 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         """
         Inicializuje instanci třídy.
 
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param name: Parametr ``name`` předává se do volání ``__init__()``.
+        :param accessor: Parametr ``accessor`` slouží jako vstup pro logiku funkce ``__init__``.
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         """
         super().__init__(name)
@@ -135,7 +147,9 @@ class SectionNameWithAccessor(SimpleSectionTemplateName):
         """
         Vrací name. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
         """
         if self.foreign_key:
             if getattr(instance, self.foreign_key):
@@ -152,7 +166,9 @@ class PianSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Vrací name. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
         """
         if getattr(instance, self.foreign_key):
             pian = getattr(instance, self.foreign_key)
@@ -169,8 +185,10 @@ class OznamovatelSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Vrací permission. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``get_show_oznamovatel()``, vstupuje do návratové hodnoty.
+        :param user: Parametr ``user`` se předává do volání ``get_show_oznamovatel()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get_show_oznamovatel()``.
         """
         return get_show_oznamovatel(instance, user)
 
@@ -183,7 +201,7 @@ class Field:
         Inicializuje instanci třídy.
 
         :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
-        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param accessor: Parametr ``accessor`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         self.label = label
         self.accessor = accessor
@@ -193,6 +211,8 @@ class Field:
                Vrací reprezentaci objektu pro ladění.
 
         Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         return f"Field(label={self.label}, accessor={self.accessor})"
 
@@ -201,6 +221,8 @@ class Field:
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.label
 
@@ -208,8 +230,10 @@ class Field:
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``strftime()``, hodnotu podle větve zpracování, výsledek volání ``getattr()``.
         """
         value = getattr(instance, self.accessor)
         if isinstance(value, date) and value:
@@ -219,7 +243,10 @@ class Field:
         return getattr(instance, self.accessor)
 
     def get_label(self):
-        """Vrací label. v aplikaci."""
+        """Vrací label. v aplikaci.
+
+        :return: Vrací atribut objektu.
+        """
         return self.label
 
 
@@ -231,7 +258,7 @@ class SouborField(Field):
         Inicializuje instanci třídy.
 
         :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
-        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param key_name: Textový název nebo klíč ``key_name`` používaný v rámci operace.
         """
         super().__init__(label, accessor)
@@ -241,8 +268,10 @@ class SouborField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``reverse()``, pracuje se s atributy ``vazba``, ``id``, vstupuje do návratové hodnoty.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``reverse()``, None.
         """
         soubor = getattr(instance, self.accessor)
         if soubor:
@@ -264,8 +293,10 @@ class SouborDownloadField(SouborField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``reverse()``, pracuje se s atributy ``vazba``, ``id``, vstupuje do návratové hodnoty.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: slovník, None.
         """
         accessor = getattr(instance, self.accessor)
         if accessor:
@@ -290,8 +321,10 @@ class Model3dKomponentaField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, pracuje se s atributy ``casti``, vstupuje do návratové hodnoty.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací výsledek volání ``getattr()``.
         """
         return getattr(instance.casti.first().komponenty.komponenty.first(), self.accessor)
 
@@ -303,8 +336,10 @@ class Model3dKomponentaAktivityField(Model3dKomponentaField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``get_value()``.
+        :param user: Parametr ``user`` se předává do volání ``get_value()``.
+
+            :return: Vrací výsledek volání ``join()``.
         """
         related_manager = super().get_value(instance, user)
         return "; ".join([str(v) for v in related_manager.all()])
@@ -317,8 +352,10 @@ class ChooseField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``mark_safe()``, None.
         """
         for accessor in self.accessor:
             value = getattr(instance, accessor)
@@ -334,8 +371,10 @@ class StatusField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací výsledek volání funkce.
         """
         return getattr(instance, self.accessor)()
 
@@ -347,8 +386,10 @@ class ZjisteniField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``_()``, výsledek volání funkce.
         """
         if getattr(instance, self.accessor) is not None:
             if getattr(instance, self.accessor):
@@ -365,8 +406,8 @@ class ForeignField(Field):
         """
         Inicializuje instanci třídy.
 
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param name: Parametr ``name`` předává se do volání ``__init__()``.
+        :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         """
         super().__init__(name, accessor)
@@ -376,8 +417,10 @@ class ForeignField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací výsledek volání ``mark_safe()``.
         """
         accessors = self.accessor.split("__")
         new_instance = ""
@@ -402,8 +445,10 @@ class GeomGmlField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_gml()``, None.
         """
         geom = getattr(instance, self.accessor)
         if geom:
@@ -418,8 +463,10 @@ class GeomWktField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_wkt()``, None.
         """
         geom = getattr(instance, self.accessor)
         if geom:
@@ -434,8 +481,10 @@ class ForeignGeomGmlField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_gml()``, None.
         """
         try:
             geom = getattr(getattr(instance, self.foreign_key), self.accessor)
@@ -453,8 +502,10 @@ class ForeignGeomWktField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_wkt()``, None.
         """
         try:
             geom = getattr(getattr(instance, self.foreign_key), self.accessor)
@@ -472,8 +523,10 @@ class ManyToManyField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací výsledek volání ``join()``.
         """
         related_manager = getattr(instance, self.accessor)
         return "; ".join([str(v) for v in related_manager.all()])
@@ -486,8 +539,10 @@ class ForeignManyToManyField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
         """
         if getattr(instance, self.foreign_key, False):
             related_manager = getattr(getattr(instance, self.foreign_key), self.accessor)
@@ -502,8 +557,10 @@ class DoubleField(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
         """
         values = []
         for accessor in self.accessor:
@@ -525,8 +582,10 @@ class DoubleFieldNum(Field):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
         """
         values = []
         for accessor in self.accessor:
@@ -545,8 +604,10 @@ class ForeignDoubleField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
         """
         if getattr(instance, self.foreign_key, False):
             values = []
@@ -566,8 +627,10 @@ class ForeignDoubleFieldNum(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
         """
         if getattr(instance, self.foreign_key, False):
             values = []
@@ -587,10 +650,10 @@ class RepeatableField(ForeignField):
         """
         Inicializuje instanci třídy.
 
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param name: Parametr ``name`` předává se do volání ``__init__()``.
+        :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
-        :param template_name: Cesta, URL nebo název zdroje ``template_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param template_name: Parametr ``template_name`` slouží jako vstup pro logiku funkce ``__init__``.
         :param model_name: Název modelu používaný pro cílení operace.
         """
         super().__init__(name, accessor, foreign_key)
@@ -601,7 +664,9 @@ class RepeatableField(ForeignField):
         """
         Vrací related manager.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``_meta``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         if self.model_name:
             return get_model(self.foreign_key).objects.filter(**{self.model_name: instance})
@@ -611,8 +676,10 @@ class RepeatableField(ForeignField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``get_related_manager()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``data``, None.
         """
         related_manager = self.get_related_manager(instance)
         data = {
@@ -640,8 +707,10 @@ class VbRepeatableField(RepeatableField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``get_related_manager()``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``data``, None.
         """
         related_manager = self.get_related_manager(instance)
         data = {
@@ -670,7 +739,9 @@ class HistorieRepeatableField(RepeatableField):
         """
         Vrací related manager.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``historie``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return Historie.objects.filter(**{"vazba": instance.historie})
 
@@ -678,8 +749,10 @@ class HistorieRepeatableField(RepeatableField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``get_related_manager()``.
+        :param user: Parametr ``user`` se předává do volání ``uzivatel_protected()``, pracuje se s atributy ``hlavni_role``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``data``, None.
         """
         related_manager = self.get_related_manager(instance)
         data = {
@@ -707,14 +780,19 @@ class RepeatableSectionField(RepeatableField):
     """Implementuje komponentu ``RepeatableSectionField`` v rámci aplikace."""
 
     def get_label(self):
-        """Vrací label. v aplikaci."""
+        """Vrací label. v aplikaci.
+
+        :return: Vrací výsledek volání ``get_label()``.
+        """
         return super().get_label()
 
     def get_sections(self, instance):
         """
         Vrací sections. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``_meta``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``related_manager``, None.
         """
         related_manager = (
             get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance}).order_by("ident_cely")
@@ -727,8 +805,10 @@ class RepeatableSectionField(RepeatableField):
         """
         Vrací value. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``_meta``.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``data``, None.
         """
         related_manager = get_model(self.foreign_key).objects.filter(**{instance._meta.model_name: instance})
         data = {
@@ -752,8 +832,8 @@ class SectionField(Field):
         """
         Inicializuje instanci třídy.
 
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param name: Parametr ``name`` předává se do volání ``__init__()``.
+        :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         """
         super().__init__(name, accessor)
@@ -767,8 +847,8 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Inicializuje instanci třídy.
 
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param accessor: Číselná nebo geometrická hodnota `accessor` použitá při výpočtu nebo transformaci.
+        :param name: Parametr ``name`` předává se do volání ``__init__()``.
+        :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
         :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
         :param model_name: Název modelu používaný pro cílení operace.
         """
@@ -779,7 +859,9 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Vrací sections. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``filter()``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``related_manager``, None.
         """
         related_manager = (
             get_model(self.foreign_key).objects.filter(**{self.model_name: instance}).order_by("ident_cely")
@@ -792,7 +874,9 @@ class RepeatableSectionNameWithAccessor(SectionNameWithAccessor):
         """
         Vrací name. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
         if len(self.accessor) > 2:
             new_name = f"{self.name}&nbsp;{getattr(instance, self.accessor[0])}&nbsp;-&nbsp;{getattr(instance, self.accessor[1])}"
@@ -810,7 +894,9 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
         """
         Vrací sections. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``soubory``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``related_manager``, None.
         """
         related_manager = get_model(self.foreign_key).objects.filter(**{"vazba": instance.soubory}).order_by("pk")
         if related_manager.count() > 0:
@@ -821,7 +907,9 @@ class SouboryRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAccessor
         """
         Vrací name. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
         """
         new_name = f"{self.name} {getattr(instance, self.accessor[0])}"
         if getattr(instance, self.accessor[-1]):
@@ -836,7 +924,9 @@ class KomponentaRepeatableSectionNameWithAccessor(RepeatableSectionNameWithAcces
         """
         Vrací name. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         obdobi = getattr(instance, self.accessor[1])
         jistota = getattr(instance, self.accessor[2])
@@ -877,14 +967,19 @@ class SubSectionField:
         self.foreign_key = foreign_key
 
     def get_config(self):
-        """Vrací config. v aplikaci."""
+        """Vrací config. v aplikaci.
+
+        :return: Vrací atribut objektu.
+        """
         return self.config
 
     def get_instance(self, instance):
         """
         Vrací instance. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``getattr()``, None, proměnná ``instance``.
         """
         if self.foreign_key:
             try:
@@ -901,7 +996,9 @@ class NeidentAkceSubSectionField(SubSectionField):
         """
         Vrací instance. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``get()``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``neident_akce``, None.
         """
         try:
             neident_akce = NeidentAkce.objects.get(dokument_cast=instance)
@@ -915,6 +1012,8 @@ def get_historie_config(label_key):
     Vrací historie config.
 
     :param label_key: Textový název nebo klíč ``label_key`` používaný v rámci operace.
+
+        :return: Vrací slovník.
     """
     return {
         "section_name": SimpleSectionTemplateName(label_key),
@@ -942,5 +1041,8 @@ class HistorieSubSectionField(SubSectionField):
         self.foreign_key = foreign_key
 
     def get_config(self):
-        """Vrací config. v aplikaci."""
+        """Vrací config. v aplikaci.
+
+        :return: Vrací výsledek volání ``get_historie_config()``.
+        """
         return get_historie_config(self.label_key)

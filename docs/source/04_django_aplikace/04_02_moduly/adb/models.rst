@@ -23,25 +23,31 @@ Třídy
 
       Vrací absolute url.
 
+      :return: Vrací výsledek volání ``get_absolute_url()``.
+
    .. py:method:: get_permission_object()
 
       Vrací permission object.
+
+      :return: Vrací výsledek volání ``get_permission_object()``.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: create_transaction()
 
       Vytvoří Fedora transakci pro ADB záznam a vrátí ji volajícímu.
 
       :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
-      :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
-      :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
-      :param main_record: Záznam/objekt ``main_record``, který funkce čte, validuje nebo upravuje.
+      :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+      :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
+      :param main_record: Parametr ``main_record`` předává se do volání ``FedoraTransaction()``.
+
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: VyskovyBod
@@ -64,20 +70,27 @@ Třídy
 
       Override save metody na nastavení ident celý pokud je prázdny.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``save()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
    .. py:method:: __init__()
 
       Override init metody pro úpravu souřadnic.
 
+      :param args: Parametr ``args`` předává se do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` předává se do volání ``__init__()``.
+
    .. py:method:: get_absolute_url()
 
       Vrací absolute url.
 
+      :return: Vrací výsledek volání ``get_absolute_url()``.
+
    .. py:method:: get_permission_object()
 
       Vrací permission object.
+
+      :return: Vrací výsledek volání ``get_permission_object()``.
 
 
 .. py:class:: AdbSekvence
@@ -94,6 +107,8 @@ Funkce
 
    Obsahuje test na přetečení hodnot.
 
-   :param adb: Záznam/objekt ``adb``, který funkce čte, validuje nebo upravuje.
+   :param adb: Parametr ``adb`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``, vstupuje do návratové hodnoty.
    :param offset: Posun přičtený k poslednímu pořadí výškového bodu.
    :return: Vrací vypočtený identifikátor výškového bodu.
+
+   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``vyskove_body.count() <= MAXIMAL_VYSKOVY_BOD + offset``.

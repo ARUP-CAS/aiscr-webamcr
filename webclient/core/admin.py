@@ -68,10 +68,10 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Jednotlivé texty z modelu se ukladají do textú prekladů a template.
         Po uložení se restartuje wsgi pro načítaní nových prekladů.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
-        :param obj: Objekt, se kterým funkce pracuje.
-        :param form: Formulářová instance zpracovávaná funkcí.
-        :param change: Číselná nebo geometrická hodnota `change` použitá při výpočtu nebo transformaci.
+        :param request: Parametr ``request`` se předává do volání ``int()``, ``utime()``, pracuje se s atributy ``environ``.
+        :param obj: Parametr ``obj`` předává se do volání ``save_model()``.
+        :param form: Parametr ``form`` se předává do volání ``file_handler()``, ``save_model()``, pracuje se s atributy ``cleaned_data``.
+        :param change: Parametr ``change`` se předává do volání ``save_model()``.
         """
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
@@ -113,7 +113,9 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         Metoda pro určení práv na modul odstávky.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
@@ -121,9 +123,11 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         Metoda pro určení práv na videní odstávky.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
-        :param obj: Objekt, se kterým funkce pracuje.
-        :param args: Dodatečné poziční argumenty předané voláním.
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_view_permission``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_view_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
@@ -131,8 +135,10 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
-        :param args: Dodatečné poziční argumenty předané voláním.
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         if OdstavkaSystemu.objects.count() > 0:
             return False
@@ -142,9 +148,11 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         """
         Metoda pro určení práv pro úpravu odstávky.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
-        :param obj: Objekt, se kterým funkce pracuje.
-        :param args: Dodatečné poziční argumenty předané voláním.
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
@@ -153,7 +161,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Pomocní metoda pro úpravu template zobrazených během odstávky.
 
         :param language: Textový název, klíč nebo zpráva ``language`` používaná v rámci operace.
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``replace_with()``, pracuje se s atributy ``cleaned_data``.
         """
         with open("/vol/web/nginx/data/" + language + "/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
@@ -194,14 +202,17 @@ class PermissionAdmin(admin.ModelAdmin):
         """
                Provádí operaci changelist view.
 
-               :param request: Django HTTP požadavek použitý při zpracování.
+               :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
                :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
         :return: Výstup funkce odpovídající implementované logice.
         """
         return super().changelist_view(request, {"import_list": True})
 
     def get_urls(self):
-        """Metoda pri definici dodatečných url."""
+        """Metoda pri definici dodatečných url.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         urls = super().get_urls()
         my_urls = [
             path("import_file/", self.admin_site.admin_view(self.import_file), name="import_permissions"),
@@ -222,7 +233,9 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, pracuje se s atributy ``method``, ``FILES``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         model = self.model
         opts = model._meta
@@ -283,7 +296,9 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metoda view pro zobrazení tabulky s výsledkom importu.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` se předává do volání ``each_context()``, ``message_user()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         json_table = cache.get("import_json_results")
         missing_urls = cache.get("import_missing_results")
@@ -320,7 +335,9 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metoda view pro automatický import oprávnění z csv v gitu a zobrazení výsledků importu.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         with open("core/resources/uzivatelska_prava.csv", "rb") as f:
             permission_file = SimpleUploadedFile(
@@ -377,14 +394,17 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         """
                Provádí operaci changelist view.
 
-               :param request: Django HTTP požadavek použitý při zpracování.
+               :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
                :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
         :return: Výstup funkce odpovídající implementované logice.
         """
         return super().changelist_view(request, {"import_skip_list": True})
 
     def get_urls(self):
-        """Metoda pri definici dodatečných url."""
+        """Metoda pri definici dodatečných url.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         urls = super().get_urls()
         my_urls = [
             path(
@@ -402,7 +422,10 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         """
         Metoda pro validaci importovaného excelu a jeho úpravu.
 
-        :param sheet: Záznam/objekt ``sheet``, který funkce čte, validuje nebo upravuje.
+        :param sheet: Parametr ``sheet`` pracuje se s atributy ``columns``, ovlivňuje větvení podmínek.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+            :raises WrongCSVError: Vyvolá se při splnění podmínky ``not sheet.columns[0] == 'IDENT_CELY' or not sheet.columns[1] == 'IDENT_LIST'``.
         """
         if not sheet.columns[0] == "IDENT_CELY" or not sheet.columns[1] == "IDENT_LIST":
             raise WrongCSVError
@@ -412,7 +435,9 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         """
         Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, pracuje se s atributy ``method``, ``FILES``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         model = self.model
         opts = model._meta
@@ -471,7 +496,9 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         """
         Ověří save row.
 
-        :param row: Záznam/objekt ``row``, který funkce čte, validuje nebo upravuje.
+        :param row: Parametr ``row`` předává se do volání ``create()``, ``get()``, pracuje se s atributy ``iloc``.
+
+            :return: Vrací str.
         """
         try:
             PermissionsSkip.objects.create(
@@ -487,7 +514,9 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         """
         Metoda view pro zobrazení tabulky s výsledkom importu.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` se předává do volání ``each_context()``, ``message_user()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         json_table = cache.get("import_json_results")
         cache.delete("import_json_results")
@@ -521,8 +550,10 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         """
         Exportuje as csv.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``export_as_csv``.
+        :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``export_as_csv``.
+
+            :return: Vrací proměnná ``response``.
         """
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=opravneni_override.csv"
@@ -545,8 +576,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
         """
         Načte file.
 
-        :param uploaded_file: Cesta, URL nebo název zdroje ``uploaded_file``, ze kterého funkce čte nebo kam zapisuje.
-        :param context: Kontextová data používaná při serializaci nebo renderování.
+        :param uploaded_file: Parametr ``uploaded_file`` se předává do volání ``read_csv()``, ``read_excel()``, pracuje se s atributy ``content_type``, ovlivňuje větvení podmínek.
+        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``_read_file``.
         :return: Načtená data odpovídající zadaným vstupům.
         """
         sheet = None
@@ -583,7 +614,9 @@ class FedoraCustomAdminSite(admin.AdminSite):
         """
         Aktualizuje doi. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``TemplateResponse()``.
         """
         context = {
             "app_list": self.get_app_list(request),
@@ -610,7 +643,9 @@ class FedoraCustomAdminSite(admin.AdminSite):
         """
         Aktualizuje metadata file upload.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``TemplateResponse()``.
         """
         context = {
             "app_list": self.get_app_list(request),
@@ -635,14 +670,18 @@ class FedoraCustomAdminSite(admin.AdminSite):
         """
         Creates a view for importing data from a zip file.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` se předává do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``TemplateResponse()``.
+            :raises ImportDataUnsupportedFilesError: Vyvolá se při splnění podmínky ``not normalized_imported_file_names.issubset(allowed_file_names)``.
+            :raises ImportDataUnsupportedFileError: Vyvolá se při splnění podmínky ``mapper_class``.
         """
 
         def normalize_file_name(name: str) -> str:
             """
                        Provádí operaci normalize file name.
 
-                       :param name: Název nebo identifikátor používaný v rámci operace.
+                       :param name: Parametr ``name`` pracuje se s atributy ``split``, ``strip``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
             :return: Výstup funkce odpovídající implementované logice.
             """
             if "/" in name:
@@ -705,6 +744,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
                                                                :param pk: Primární klíč zpracovávaného záznamu.
                                 Zpracovaná hodnota po validaci nebo transformaci.
+
+                                    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, výsledek volání ``str()``.
                                 """
                                 if isinstance(pk, dict):
                                     return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
@@ -800,7 +841,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
     def get_urls(
         self,
     ):
-        """Vrací urls. v aplikaci."""
+        """Vrací urls. v aplikaci.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return [
             path(
                 "update-metadata/",

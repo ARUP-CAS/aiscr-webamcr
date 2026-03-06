@@ -13,8 +13,8 @@ class BooleanValueColumn(tables.columns.Column):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
         self.value_labels = kwargs.pop("value_labels", None)
         super(BooleanValueColumn, self).__init__(*args, **kwargs)
@@ -23,7 +23,9 @@ class BooleanValueColumn(tables.columns.Column):
         """
         Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``bool()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, str.
         """
         value = [x for x in self.value_labels if x[0] == bool(value)]
         if len(value) > 0:
@@ -143,8 +145,10 @@ class AkceTable(SearchTable):
         """
         Provádí operaci order vedouci organizace.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param is_descending: Příznak ``is_descending`` určující průběh nebo rozsah zpracování.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``annotate``, vstupuje do návratové hodnoty.
+        :param is_descending: Parametr ``is_descending`` předává se do volání ``order_by()``.
+
+            :return: Vrací n-tici.
         """
         queryset = queryset.annotate(
             vedouci_organizace__nazev_zkraceny=StringAgg(
@@ -220,11 +224,14 @@ class AkceTable(SearchTable):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(AkceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):
-        """Vrátí seznam identifikátorů archeologických záznamů pro akci."""
+        """Vrátí seznam identifikátorů archeologických záznamů pro akci.
+
+        :return: Vrací výsledek volání ``join()``.
+        """
         return ",".join([record.record.archeologicky_zaznam.ident_cely for record in self.paginated_rows])

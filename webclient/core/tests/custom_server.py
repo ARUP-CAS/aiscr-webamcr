@@ -15,9 +15,9 @@ class WerkzeugServerThread(Thread):
         """
         Inicializuje instanci třídy.
 
-        :param host: Číselná nebo geometrická hodnota `host` použitá při výpočtu nebo transformaci.
+        :param host: Parametr ``host`` slouží jako vstup pro logiku funkce ``__init__``.
         :param port: Textová hodnota `port` používaná pro vyhledání, pojmenování nebo hlášení stavu.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         super().__init__()
         self.host = host
@@ -58,7 +58,10 @@ class WerkzeugServerThread(Thread):
         pass
 
     def get_free_port(self):
-        """Vrací free port."""
+        """Vrací free port.
+
+        :return: Vrací proměnná ``port``.
+        """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(("127.0.0.1", 0))  # Bind na port 0, což znamená "najdi volný port"
             s.listen(1)  # Spustí naslouchání na tomto portu

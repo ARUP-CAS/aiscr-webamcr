@@ -16,8 +16,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: __str__()
 
@@ -25,9 +25,13 @@ Třídy
 
       Textová reprezentace objektu.
 
+      :return: Vrací atribut objektu.
+
    .. py:method:: get_absolute_url()
 
       Metoda pro získaní absolut url záznamu podle typu dokumentu.
+
+      :return: Vrací výsledek volání ``reverse()``.
 
    .. py:method:: set_doi()
 
@@ -37,39 +41,41 @@ Třídy
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_permanent_identificator()
 
       Nastaví permanent identificator.
 
-      :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param messages: Textová zpráva ``messages`` používaná pro hlášení stavu nebo chyby.
-      :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+      :param dokument: Parametr ``dokument`` předává se do volání ``get_dokument_rada()``, ``set_permanent_ident_cely()``, pracuje se s atributy ``ident_cely``, ``typ_dokumentu``.
+      :param request: Parametr ``request`` předává se do volání ``add_message()``.
+      :param messages: Parametr ``messages`` předává se do volání ``add_message()``, pracuje se s atributy ``add_message``, ``SUCCESS``.
+      :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``rollback_transaction``.
       Výsledek provedené změny nad cílovým objektem.
+
+      :return: Vrací hodnotu typu ``Optional[JsonResponse]`` (výsledek volání ``JsonResponse()``).
 
    .. py:method:: set_odeslany()
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
       :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: set_archivovany()
 
       Metoda pro nastavení stavu archivovaný a uložení změny do historie.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
       :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
 
    .. py:method:: set_vraceny()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
       :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
-      :param poznamka: Číselná nebo geometrická hodnota `poznamka` použitá při výpočtu nebo transformaci.
+      :param poznamka: Parametr ``poznamka`` se předává do volání ``Historie()``.
 
    .. py:method:: check_pred_odeslanim()
 
@@ -81,19 +87,28 @@ Třídy
 
       Dokument má aspoň jeden dokument.
 
+      :return: Vrací proměnná ``result``.
+
    .. py:method:: check_pred_archivaci()
 
       Metoda na kontrolu prerekvizit pred archivací:
 
       kontrola jako před odesláním
 
+      :return: Vrací proměnná ``result``.
+
    .. py:method:: has_extra_data()
 
       Metoda na zjištení že dokument má extra data.
 
+      :return: Vrací proměnná ``has_extra_data``.
+
    .. py:method:: get_komponenta()
 
       Metoda na získaní všech komponent dokumentu.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, None.
+      :raises UnexpectedDataRelations: Vyvolá se s textem "Neleze ziskat komponentu modelu 3D.".
 
    .. py:method:: set_permanent_ident_cely()
 
@@ -102,8 +117,10 @@ Třídy
       Metoda bere pořadoví číslo z db dokument sekvence.
       Metoda zmení i ident připojených souborů.
 
-      :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
-      :param rada: Číselná nebo geometrická hodnota `rada` použitá při výpočtu nebo transformaci.
+      :param region: Parametr ``region`` se předává do volání ``get()``, ``create()``.
+      :param rada: Parametr ``rada`` se předává do volání ``get()``, ``create()``, pracuje se s atributy ``zkratka``.
+
+      :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
 
    .. py:method:: set_datum_zverejneni()
 
@@ -113,17 +130,25 @@ Třídy
 
       Vrací permission object.
 
+      :return: Vrací proměnná ``self``.
+
    .. py:method:: get_create_user()
 
       Vrací create user.
+
+      :return: Vrací n-tici.
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
+      :return: Vrací n-tici.
+
    .. py:method:: thumbnail_image()
 
       Provádí operaci thumbnail image.
+
+      :return: Vrací atribut objektu.
 
    .. py:method:: thumbnail_image_file()
 
@@ -135,9 +160,13 @@ Třídy
 
       Provádí operaci large thumbnail.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
+
    .. py:method:: small_thumbnail()
 
       Provádí operaci small thumbnail.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
 
    .. py:method:: set_snapshots()
 
@@ -147,9 +176,13 @@ Třídy
 
       Provádí operaci redis snapshot id.
 
+      :return: Vrací hodnotu podle větve zpracování.
+
    .. py:method:: generate_redis_snapshot()
 
       Vygeneruje redis snapshot.
+
+      :return: Vrací n-tici.
 
    .. py:method:: _get_doi_client()
 
@@ -161,34 +194,46 @@ Třídy
 
       Provádí operaci doi exists.
 
+      :return: Vrací výsledek volání ``check_record_exists()``.
+
    .. py:method:: doi_delete()
 
       Provádí operaci doi delete.
 
-      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+      :param check_status: Parametr ``check_status`` předává se do volání ``delete_record()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``delete_record()``.
 
    .. py:method:: doi_hide()
 
       Provádí operaci doi hide.
 
-      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+      :param check_status: Parametr ``check_status`` předává se do volání ``hide_record()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``hide_record()``.
 
    .. py:method:: doi_publish()
 
       Provádí operaci doi publish.
 
-      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+      :param check_status: Parametr ``check_status`` předává se do volání ``publish_record()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``publish_record()``.
 
    .. py:method:: doi_update()
 
       Provádí operaci doi update.
 
-      :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
-      :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
+      :param check_status: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
+      :param reload_record: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``update_record()``.
 
    .. py:method:: doi_url()
 
       Provádí operaci doi url.
+
+      :return: Vrací výsledek volání ``get_record_url()``.
 
 
 .. py:class:: DokumentCast
@@ -201,16 +246,20 @@ Třídy
 
       Metoda pro získaní absolut url.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_absolute_url()``, výsledek volání ``reverse()``.
+
    .. py:method:: get_permission_object()
 
       Vrací permission object.
+
+      :return: Vrací výsledek volání ``get_permission_object()``.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: initial_archeologicky_zaznam()
 
@@ -229,12 +278,16 @@ Třídy
       Vytvoří transaction. v aplikaci.
 
       :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
-      :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
-      :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
+      :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+      :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
+
+      :return: Vrací atribut objektu.
 
    .. py:method:: dokument_doi()
 
       Provádí operaci dokument doi.
+
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: DokumentExtraData
@@ -259,6 +312,8 @@ Třídy
 
       Textová reprezentace objektu.
 
+      :return: Vrací hodnotu podle větve zpracování.
+
 
 .. py:class:: DokumentOsoba
 
@@ -277,6 +332,8 @@ Třídy
 
       Textová reprezentace objektu.
 
+      :return: Vrací hodnotu podle větve zpracování.
+
 
 .. py:class:: Tvar
 
@@ -288,16 +345,18 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: create_transaction()
 
       Vytvoří transaction. v aplikaci.
 
       :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
-      :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
-      :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
+      :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+      :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
+
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: DokumentSekvence
@@ -317,16 +376,22 @@ Třídy
 
       Textová reprezentace objektu.
 
+      :return: Vrací atribut objektu.
+
    .. py:method:: save()
 
       Uloží změny objektu.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``save()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+      :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'let')``.
 
    .. py:method:: get_absolute_url()
 
       Vrací absolute url.
+
+      :return: Vrací výsledek volání ``reverse()``.
 
 
 Funkce
@@ -336,6 +401,8 @@ Funkce
 
    Funkce pro získaní správného jména souboru.
 
-   :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
-   :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+   :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
+   :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+
+   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.

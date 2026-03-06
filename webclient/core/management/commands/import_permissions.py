@@ -35,8 +35,8 @@ class Command(BaseCommand):
         """
         Zpracuje hodnotu. v aplikaci.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param options: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
         """
         logger.debug("core.management.commands.import_permissions.start")
         with open("core/resources/uzivatelska_prava.csv", "rb") as f:

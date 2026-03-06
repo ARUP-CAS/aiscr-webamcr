@@ -36,7 +36,7 @@ class PermissionService:
         """
                Spustí hodnotu. v aplikaci.
 
-               :param docfile: Cesta, URL nebo název zdroje ``docfile``, ze kterého funkce čte nebo kam zapisuje.
+               :param docfile: Parametr ``docfile`` se předává do volání ``read_csv()``, ``read_excel()``, pracuje se s atributy ``name``, ovlivňuje větvení podmínek.
         :return: Výstup funkce odpovídající implementované logice.
         """
         if docfile.name and docfile.name.lower().endswith(".csv"):
@@ -84,7 +84,7 @@ class PermissionService:
         """
         Metoda pro validaci importovaného csv.
 
-        :param csv_sheet: Záznam/objekt ``csv_sheet``, který funkce čte, validuje nebo upravuje.
+        :param csv_sheet: Parametr ``csv_sheet`` pracuje se s atributy ``columns``, vstupuje do návratové hodnoty.
         :return: Vrací výsledek operace.
         :raises WrongCSVError: Pokud CSV neodpovídá očekávané struktuře sloupců.
         """
@@ -119,7 +119,7 @@ class PermissionService:
         """
         Metoda pro validaci importovaného excelu a jeho úpravu.
 
-        :param sheet: Záznam/objekt ``sheet``, který funkce čte, validuje nebo upravuje.
+        :param sheet: Parametr ``sheet`` pracuje se s atributy ``columns``, ``iloc``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Vrací výsledek operace.
         :raises WrongSheetError: Pokud list neodpovídá očekávanému formátu importní šablony.
         """
@@ -324,7 +324,7 @@ class PermissionService:
         """
         Metoda pro kontrolu správneho zadáni statusu v excelu.
 
-        :param cell: Číselná nebo geometrická hodnota `cell` použitá při výpočtu nebo transformaci.
+        :param cell: Parametr ``cell`` se předává do volání ``bool()``, ``fullmatch()``, vstupuje do návratové hodnoty.
         :return: Vrací výsledek operace.
         """
         return bool(re.fullmatch(r"(<|>|)[A-Z]{1,2}\d{1}", cell) or re.fullmatch(r"\D{1,2}\d{1}-\D{1,2}\d{1}", cell))

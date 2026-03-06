@@ -52,8 +52,8 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
@@ -74,8 +74,8 @@ class UserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(UserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
@@ -107,7 +107,9 @@ class UserNotificationTypeInline(admin.TabularInline):
         """
         Vrací queryset. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_queryset()``.
+
+            :return: Vrací proměnná ``queryset``.
         """
         logger.debug(self.model._default_manager)
         queryset = super(UserNotificationTypeInline, self).get_queryset(request)
@@ -124,9 +126,11 @@ class UserNotificationTypeInline(admin.TabularInline):
         """
         Vrací extra. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_extra``.
+        :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_extra``.
+
+            :return: Vrací proměnná ``extra``.
         """
         extra = 1  # Výchozí hodnota je 0.
         if not obj:  # pouze při vytváření nového záznamu
@@ -142,7 +146,7 @@ class UserNotificationTypeInline(admin.TabularInline):
         """
         Inicializuje instanci třídy.
 
-        :param parent_model: Název nebo typ ``parent_model`` používaný pro volbu cílové logiky.
+        :param parent_model: Parametr ``parent_model`` předává se do volání ``__init__()``.
         :param admin_site: Instance administrace předaná při registraci modelu.
         """
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
@@ -160,7 +164,9 @@ class PesNotificationTypeInline(admin.TabularInline):
         """
         Vrací queryset. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_queryset()``.
+
+            :return: Vrací proměnná ``queryset``.
         """
         queryset = super(PesNotificationTypeInline, self).get_queryset(request)
         queryset = queryset.filter(content_type__model=self.model_type)
@@ -204,8 +210,8 @@ class PesUserNotificationTypeInlineForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PesUserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields["usernotificationtype"].queryset = UserNotificationType.objects.filter(
@@ -222,8 +228,8 @@ class PesUserNotificationTypeInlineFormset(forms.models.BaseInlineFormSet):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PesUserNotificationTypeInlineFormset, self).__init__(*args, **kwargs)
         if not self.instance.pk and not self.data:
@@ -252,7 +258,9 @@ class PesUserNotificationTypeInline(admin.TabularInline):
         """
         Vrací queryset. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_queryset()``.
+
+            :return: Vrací proměnná ``queryset``.
         """
         logger.debug(self.model._default_manager)
         queryset = super(PesUserNotificationTypeInline, self).get_queryset(request)
@@ -263,9 +271,11 @@ class PesUserNotificationTypeInline(admin.TabularInline):
         """
         Vrací extra. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_extra``.
+        :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_extra``.
+
+            :return: Vrací proměnná ``extra``.
         """
         extra = 1  # Výchozí hodnota je 0.
         if not obj:  # pouze při vytváření nového záznamu
@@ -359,8 +369,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         """
         Určí, zda delete permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+        :param obj: Parametr ``obj`` předává se do volání ``filter()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         if obj:
             if Historie.objects.filter(uzivatel=obj).count() > 1000:
@@ -371,10 +383,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         """
         Uloží model. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
-        :param form: Formulářová instance zpracovávaná funkcí.
-        :param change: Číselná nebo geometrická hodnota `change` použitá při výpočtu nebo transformaci.
+        :param request: Parametr ``request`` předává se do volání ``save_model()``, pracuje se s atributy ``user``.
+        :param obj: Parametr ``obj`` předává se do volání ``debug()``, ``get()``, pracuje se s atributy ``created_from_admin_panel``, ``active_transaction``, ovlivňuje větvení podmínek.
+        :param form: Parametr ``form`` se předává do volání ``save_model()``, ``len()``, pracuje se s atributy ``cleaned_data``, ``changed_data``, ovlivňuje větvení podmínek.
+        :param change: Parametr ``change`` se předává do volání ``debug()``, ``save_model()``.
         """
         fedora_transaction = FedoraTransaction()
         user = request.user
@@ -512,9 +524,11 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         """
         Provádí operaci user change password.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_object()``, ``change_password_form()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :param id: Identifikátor zpracovávaného záznamu.
-        :param form_url: Cesta, URL nebo název zdroje ``form_url``, ze kterého funkce čte nebo kam zapisuje.
+        :param form_url: Parametr ``form_url`` se předává do volání ``user_change_password()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``user_change_password()``.
         """
         if request.method == "POST":
             user = self.get_object(request, unquote(id))
@@ -531,8 +545,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         """
         Vrací readonly fields.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` předává se do volání ``get_readonly_fields()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+        :param obj: Parametr ``obj`` předává se do volání ``get_readonly_fields()``, pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``fields``.
         """
         fields = super().get_readonly_fields(request, obj)
         if obj:
@@ -544,9 +560,11 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         """
         Vyrenderuje change form.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param context: Kontextová data používaná při serializaci nebo renderování.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``render_change_form()``, pracuje se s atributy ``resolver_match``, vstupuje do návratové hodnoty.
+        :param context: Parametr ``context`` se předává do volání ``render_change_form()``, pracuje se s atributy ``update``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``render_change_form()``.
         """
         object_id = request.resolver_match.kwargs.get("object_id")
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
@@ -563,7 +581,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         return super().render_change_form(request, context, **kwargs)
 
     def get_urls(self):
-        """Vrací urls. v aplikaci."""
+        """Vrací urls. v aplikaci.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         urls = super().get_urls()
         custom_urls = [
             path(
@@ -579,6 +600,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         Vrací histore related records.
 
         :param object_id: Identifikátor objektu ``object``.
+
+            :return: Vrací n-tici.
         """
         if User.objects.filter(pk=object_id).exists():
             uzivatel = User.objects.get(pk=object_id)
@@ -593,10 +616,12 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         """
         Odstraní history records.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_object()``, ``each_context()``, pracuje se s atributy ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :param object_id: Identifikátor objektu ``object``.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``delete_history_records``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_history_records``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``TemplateResponse()``, výsledek volání ``HttpResponseRedirect()``.
         """
         user_account_history, user_account_other_records = self.get_histore_related_records(object_id)
         obj: User = self.get_object(request, object_id)
@@ -632,8 +657,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         """
         Odstraní model. v aplikaci.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` předává se do volání ``delete_model()``.
+        :param obj: Parametr ``obj`` předává se do volání ``delete_model()``, pracuje se s atributy ``pes_set``.
         """
         with transaction.atomic():
             pes_set = obj.pes_set.all()
@@ -651,8 +676,10 @@ class CustomGroupAdmin(admin.ModelAdmin):
         """
         Určí, zda delete permission.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` předává se do volání ``filter()``, pracuje se s atributy ``pk``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
         """
         if obj is not None:
             obj: Group
@@ -715,7 +742,7 @@ class NotificationsLogAdmin(admin.ModelAdmin):
         """
         Nastaví všechna pole modelu jako read-only v detailu záznamu.
 
-        :param request: Django HTTP požadavek.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
         :param obj: Upravovaný záznam logu notifikace.
         :return: Seznam názvů polí určených pouze ke čtení.
         """
@@ -725,7 +752,7 @@ class NotificationsLogAdmin(admin.ModelAdmin):
         """
         Zakáže ruční vytváření záznamů v administraci.
 
-        :param request: Django HTTP požadavek.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
         :return: Vždy ```False```.
         """
         return False
@@ -734,7 +761,7 @@ class NotificationsLogAdmin(admin.ModelAdmin):
         """
         Zakáže mazání záznamů logu notifikací.
 
-        :param request: Django HTTP požadavek.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
         :param obj: Vybraný záznam logu notifikace.
         :return: Vždy ```False```.
         """
@@ -760,8 +787,10 @@ class NotificationsLogAdmin(admin.ModelAdmin):
         """
         Zobrazí a zpracuje formulář pro odeslání testovacího emailu.
 
-        :param request: Django HTTP požadavek.
+        :param request: Parametr ``request`` předává se do volání ``TestEmailForm()``, ``success()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Odpověď s formulářem a výsledkem odeslání.
+
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.has_perm('uzivatel.send_test_email')``.
         """
         if not request.user.has_perm("uzivatel.send_test_email"):
             raise PermissionDenied

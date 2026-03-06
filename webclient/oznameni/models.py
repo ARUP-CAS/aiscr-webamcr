@@ -25,6 +25,8 @@ class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         return self.odpovedna_osoba + " (" + self.email + ")"
 

@@ -10,4 +10,7 @@ Funkce
 
    Metoda pro validaci dátumu měsíc do budoucnosti.
 
-   :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+   :param value: Parametr ``value`` ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+   :return: Vrací proměnná ``value``.
+   :raises forms.ValidationError: Vyvolá se při splnění podmínky ``value > datetime.date.today() + datetime.timedelta(days=30)``.

@@ -62,7 +62,7 @@ Funkce
 
    Aktualizuje single redis snapshot.
 
-   :param class_name: Název nebo typ ``class_name`` používaný pro volbu cílové logiky.
+   :param class_name: Parametr ``class_name`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
    :param record_pk: Identifikátor ``record_pk`` používaný pro dohledání cílového záznamu.
 
 .. py:function:: update_materialized_views()
@@ -74,7 +74,9 @@ Funkce
    Zapíše value to redis.
 
    :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-   :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+   :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
+
+   :return: Vrací n-tici.
 
 .. py:function:: call_digiarchiv_update_task()
 
@@ -86,3 +88,5 @@ Funkce
 
    :param job_id: Identifikátor objektu ``job``.
    :param user_id: Identifikátor objektu ``user``.
+
+   :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".

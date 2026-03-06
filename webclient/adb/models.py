@@ -96,19 +96,25 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         db_table = "adb"
 
     def get_absolute_url(self):
-        """Vrací absolute url."""
+        """Vrací absolute url.
+
+        :return: Vrací výsledek volání ``get_absolute_url()``.
+        """
         return self.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
-        """Vrací permission object."""
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.dokumentacni_jednotka.get_permission_object()
 
     def __init__(self, *args, **kwargs):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(Adb, self).__init__(*args, **kwargs)
         try:
@@ -124,9 +130,11 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
         Vytvoří Fedora transakci pro ADB záznam a vrátí ji volajícímu.
 
         :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
-        :param success_message: Textová zpráva ``success_message`` používaná pro hlášení stavu nebo chyby.
-        :param error_message: Textová zpráva ``error_message`` používaná pro hlášení stavu nebo chyby.
-        :param main_record: Záznam/objekt ``main_record``, který funkce čte, validuje nebo upravuje.
+        :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+        :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
+        :param main_record: Parametr ``main_record`` předává se do volání ``FedoraTransaction()``.
+
+            :return: Vrací atribut objektu.
         """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
@@ -143,9 +151,11 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
 
     Obsahuje test na přetečení hodnot.
 
-    :param adb: Záznam/objekt ``adb``, který funkce čte, validuje nebo upravuje.
+    :param adb: Parametr ``adb`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``, vstupuje do návratové hodnoty.
     :param offset: Posun přičtený k poslednímu pořadí výškového bodu.
     :return: Vrací vypočtený identifikátor výškového bodu.
+
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``vyskove_body.count() <= MAXIMAL_VYSKOVY_BOD + offset``.
     """
     MAXIMAL_VYSKOVY_BOD: int = 9999
     last_digit_count = 4
@@ -211,15 +221,19 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         """
         Override save metody na nastavení ident celý pokud je prázdny.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
         """
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
         super(VyskovyBod, self).save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
-        """Override init metody pro úpravu souřadnic."""
+        """Override init metody pro úpravu souřadnic.
+
+        :param args: Parametr ``args`` předává se do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` předává se do volání ``__init__()``.
+        """
         super(VyskovyBod, self).__init__(*args, **kwargs)
         self.northing = None
         self.easting = None
@@ -245,11 +259,17 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), BaseAmcrModel):
         ]
 
     def get_absolute_url(self):
-        """Vrací absolute url."""
+        """Vrací absolute url.
+
+        :return: Vrací výsledek volání ``get_absolute_url()``.
+        """
         return self.adb.dokumentacni_jednotka.get_absolute_url()
 
     def get_permission_object(self):
-        """Vrací permission object."""
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.adb.get_permission_object()
 
 

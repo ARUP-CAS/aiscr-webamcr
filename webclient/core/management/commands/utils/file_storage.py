@@ -25,10 +25,10 @@ def save_single_file_from_storage_impl(
     Tato funkce načte soubor z lokálního úložiště, provede kontroly (MIME type, antivirus),
     a uloží jej do Fedora repozitáře včetně aktualizace metadat v databázi.
 
-    :param record_par: Záznam/objekt ``record_par``, který funkce čte, validuje nebo upravuje.
-    :param storage_path: Cesta, URL nebo název zdroje ``storage_path``, ze kterého funkce čte nebo kam zapisuje.
-    :param save_thumbs: Příznak ``save_thumbs`` určující průběh nebo rozsah zpracování.
-    :param disable_antivirus: Číselná nebo geometrická hodnota `disable_antivirus` použitá při výpočtu nebo transformaci.
+    :param record_par: Parametr ``record_par`` předává se do volání ``isinstance()``, ``get()``, ovlivňuje větvení podmínek.
+    :param storage_path: Parametr ``storage_path`` se předává do volání ``find_matching_file()``, ``warning()``.
+    :param save_thumbs: Parametr ``save_thumbs`` předává se do volání ``update_binary_file()``, ``save_binary_file()``.
+    :param disable_antivirus: Parametr ``disable_antivirus`` ovlivňuje větvení podmínek.
         :raises core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje.
     """
     from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
@@ -53,7 +53,9 @@ def save_single_file_from_storage_impl(
         Najde soubor v adresáři podle čísla v názvu.
 
         :param directory: Cílový adresář, ve kterém se hledá soubor.
-        :param number: Číselná nebo geometrická hodnota `number` použitá při výpočtu nebo transformaci.
+        :param number: Parametr ``number`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
         """
         for inner_file in os.listdir(directory):
             filename, _ = os.path.splitext(inner_file)

@@ -30,7 +30,9 @@ def create_pes_form(not_readonly=True, model_typ=None):
     Funkce která vrací formulář hlídacího psa pro formset.
 
     :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
-    :param model_typ: Název nebo typ ``model_typ`` používaný pro volbu cílové logiky.
+    :param model_typ: Parametr ``model_typ`` slouží jako vstup pro logiku funkce ``create_pes_form``.
+
+        :return: Vrací proměnná ``PesForm``.
     """
 
     class PesForm(forms.ModelForm):
@@ -48,8 +50,8 @@ def create_pes_form(not_readonly=True, model_typ=None):
             """
             Inicializuje instanci třídy.
 
-            :param args: Dodatečné poziční argumenty předané voláním.
-            :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+            :param args: Parametr ``args`` se předává do volání ``__init__()``.
+            :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
             """
             super(PesForm, self).__init__(*args, **kwargs)
             self.model_typ = model_typ
@@ -126,6 +128,8 @@ def create_pes_form(not_readonly=True, model_typ=None):
             Uloží změny objektu.
 
             :param commit: Pokud ``True``, změny se uloží do databáze.
+
+                :return: Vrací proměnná ``instance``.
             """
             instance = super(PesForm, self).save(commit=False)
             if self.admin_app:
@@ -142,8 +146,10 @@ def create_pes_form(not_readonly=True, model_typ=None):
             """
             Provádí operaci clean.
 
-            :param args: Dodatečné poziční argumenty předané voláním.
-            :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+            :param args: Parametr ``args`` se předává do volání ``clean()``.
+            :param kwargs: Parametr ``kwargs`` se předává do volání ``clean()``.
+
+                :raises forms.ValidationError: Vyvolá se při splnění podmínky ``duplicates.exists()``.
             """
             super().clean(*args, **kwargs)
             # Načte hodnoty a zkontroluje duplicity.
@@ -169,8 +175,8 @@ class PesFormSetHelper(FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
@@ -199,9 +205,9 @@ class PesNotificationsForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param pes_object_count: Záznam/objekt ``pes_object_count``, který funkce čte, validuje nebo upravuje.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param pes_object_count: Parametr ``pes_object_count`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -209,7 +215,10 @@ class PesNotificationsForm(forms.ModelForm):
         self.pes_object_count = pes_object_count
 
     def clean(self):
-        """Provádí operaci clean."""
+        """Provádí operaci clean.
+
+        :return: Vrací proměnná ``cleaned_data``.
+        """
         cleaned_data = super().clean()
         if self.pes_object_count == 0 or not cleaned_data.get("notification_types"):
             self.add_error(
@@ -222,7 +231,10 @@ class PesInlineFormSet(forms.BaseInlineFormSet):
     """Implementuje komponentu ``PesInlineFormSet`` v rámci aplikace."""
 
     def count_non_empty_forms(self):
-        """Provádí operaci count non empty forms."""
+        """Provádí operaci count non empty forms.
+
+        :return: Vrací proměnná ``non_empty_count``.
+        """
         non_empty_count = 0
         for form in self.forms:
             if any(field_value for field_value in form.cleaned_data.values()):

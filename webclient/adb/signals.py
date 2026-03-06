@@ -15,10 +15,10 @@ def adb_save_metadata(sender, instance: Adb, created, **kwargs):
     """
     Provádí operaci adb save metadata.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param created: Příznak, zda byla instance právě vytvořena.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``adb_save_metadata``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param created: Parametr ``created`` ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``adb_save_metadata``.
     """
     logger.debug(
         "adb.signals.adb_save_metadata.start",
@@ -45,9 +45,9 @@ def vyskovy_bod_save_metadata(sender, instance: VyskovyBod, **kwargs):
     """
     Provádí operaci vyskovy bod save metadata.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``vyskovy_bod_save_metadata``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``vyskovy_bod_save_metadata``.
     """
     logger.debug(
         "adb.signals.vyskovy_bod_save_metadata.start",
@@ -72,9 +72,9 @@ def adb_delete_repository_container(sender, instance: Adb, **kwargs):
     """
     Provádí operaci adb delete repository container.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``adb_delete_repository_container``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``adb_delete_repository_container``.
     """
     logger.debug("adb.signals.adb_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     invalidate_arch_z_related_models()
@@ -100,9 +100,9 @@ def vyskovy_bod_delete_repository_container(sender, instance: VyskovyBod, **kwar
     """
     Provádí operaci vyskovy bod delete repository container.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``vyskovy_bod_delete_repository_container``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``vyskovy_bod_delete_repository_container``.
     """
     logger.debug("adb.signals.vyskovy_bod_delete_repository_container.start", extra={"ident_cely": instance.ident_cely})
     fedora_transaction = instance.active_transaction

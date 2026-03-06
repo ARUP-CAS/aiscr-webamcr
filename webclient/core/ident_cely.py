@@ -51,7 +51,7 @@ def get_temporary_project_ident(region: str) -> str:
     Logika složení je: "X-" + region (M nebo C) + "-" + 9místné číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
     Příklad: "X-M-000001234"
 
-    :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
+    :param region: Parametr ``region`` vstupuje do návratové hodnoty.
     :return: Vrací výsledek operace.
     """
     id_number = f"{get_next_sequence('projekt_xident_seq'):09}"
@@ -66,8 +66,10 @@ def get_project_event_ident(project: Projekt) -> Optional[str]:
     Při překročení maxima čísla sekvence (99999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A"
 
-    :param project: Doménový objekt `project`, se kterým funkce pracuje.
+    :param project: Parametr ``project`` pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :return: Vrací výsledek operace.
+
+        :raises MaximalEventCount: Vyvolá se při splnění podmínky ``len(idents) < MAXIMAL_PROJECT_EVENTS``.
     """
     MAXIMAL_PROJECT_EVENTS: int = 26
     if project.ident_cely:
@@ -98,8 +100,11 @@ def get_dokument_rada(typ, material):
     """
     Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
 
-    :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
-    :param material: Číselná nebo geometrická hodnota `material` použitá při výpočtu nebo transformaci.
+    :param typ: Parametr ``typ`` předává se do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
+    :param material: Parametr ``material`` se předává do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
+
+        :return: Vrací atribut objektu.
+        :raises NelzeZjistitRaduError: Vyvolá se při splnění podmínky ``len(instances) == 1``.
     """
     instances = HeslarDokumentTypMaterialRada.objects.filter(dokument_typ=typ, dokument_material=material)
     if len(instances) == 1:
@@ -122,8 +127,10 @@ def get_temp_dokument_ident(rada, region):
     Logika složení je: "X-" + region (M nebo C) + "-" + řada (TX/DD/3D) + "-" 9místné číslo (ID ze sekvence dokument_xident_seq doplněné na 9 číslic nulami)
     Příklad: "X-M-TX-000000034"
 
-    :param rada: Číselná nebo geometrická hodnota `rada` použitá při výpočtu nebo transformaci.
-    :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
+    :param rada: Parametr ``rada`` se předává do volání ``str()``.
+    :param region: Parametr ``region`` se předává do volání ``str()``.
+
+        :return: Vrací hodnotu podle větve zpracování.
     """
     sequence = f"{get_next_sequence('dokument_xident_seq'):09}"
     prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + rada + "-")
@@ -138,8 +145,10 @@ def get_cast_dokumentu_ident(dokument: Dokument) -> str:
     Při překročení maxima DJ u dokumentu (999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-DD-202100034-D001"
 
-    :param dokument: Doménový objekt `dokument`, se kterým funkce pracuje.
+    :param dokument: Parametr ``dokument`` pracuje se s atributy ``casti``, ``ident_cely``.
     :return: Vrací výsledek operace.
+
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMUM``.
     """
     MAXIMUM: int = 999
     last_digit_count = 3
@@ -166,8 +175,10 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
     Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-D01"
 
-    :param event: Název nebo typ události použité pro výpočet identifikátoru.
+    :param event: Parametr ``event`` pracuje se s atributy ``dokumentacni_jednotky_akce``, ``ident_cely``.
     :return: Vrací výsledek operace.
+
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_EVENT_DJS``.
     """
     MAXIMAL_EVENT_DJS: int = 99
     dj_last_digit_count = 2
@@ -192,9 +203,11 @@ def get_komponenta_ident(zaznam, fedora_transaction: FedoraTransaction) -> str:
     Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
 
-    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
-    :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+    :param zaznam: Parametr ``zaznam`` předává se do volání ``isinstance()``, pracuje se s atributy ``dokumentacni_jednotky_akce``, ``casti``, ovlivňuje větvení podmínek.
+    :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``get_komponenta_ident``.
     :return: Vrací výsledek operace.
+
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_KOMPONENTAS``.
     """
     MAXIMAL_KOMPONENTAS: int = 999
     last_digit_count = 3
@@ -233,7 +246,10 @@ def get_sm_from_point(point):
     """
     Metoda pro získání kladu sm5 pro pian z bodu.
 
-    :param point: Doménový objekt `point`, se kterým funkce pracuje.
+    :param point: Parametr ``point`` předává se do volání ``filter()``, ``PianNotInKladysm5Error()``.
+
+        :return: Vrací proměnná ``mapovy_list``.
+        :raises PianNotInKladysm5Error: Vyvolá se při splnění podmínky ``mapovy_list.count() == 1``.
     """
     mapovy_list = Kladysm5.objects.filter(geom__contains=point)
     if mapovy_list.count() == 1:
@@ -250,7 +266,7 @@ def get_temporary_pian_ident(zm50) -> str:
     Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 9 místní číslo ze sekvence pian_xident_seq doplněno na 9 číslic.
     Příklad: "N-1224-000123456"
 
-    :param zm50: Číselná nebo geometrická hodnota `zm50` použitá při výpočtu nebo transformaci.
+    :param zm50: Parametr ``zm50`` se předává do volání ``str()``, pracuje se s atributy ``cislo``.
     :return: Vrací výsledek operace.
     """
     prefix = "N-" + str(zm50.cislo).replace("-", "").zfill(4) + "-"
@@ -266,8 +282,10 @@ def get_sn_ident(projekt: Projekt) -> str:
     Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
     Příklad: "M-202100034A-N00001"
 
-    :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+    :param projekt: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``.
     :return: Vrací výsledek operace.
+
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_FINDS``.
     """
     MAXIMAL_FINDS: int = 99999
     last_digit_count = 5
@@ -291,8 +309,11 @@ def get_adb_ident(pian: Pian) -> str:
     Při překročení maxima sekvence u ADB (999999) se uživateli na web vrátí chybová hláška.
     Příklad: "ADB-PRAH43-000012"
 
-    :param pian: Doménový objekt `pian`, se kterým funkce pracuje.
+    :param pian: Parametr ``pian`` předává se do volání ``isinstance()``, ``Centroid()``, pracuje se s atributy ``geom``, ovlivňuje větvení podmínek.
     :return: Vrací výsledek operace.
+
+        :raises NeznamaGeometrieError: Vyvolá se při splnění podmínky ``isinstance(pian.geom, Polygon)``.
+        :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence < MAXIMAL_ADBS``.
     """
     MAXIMAL_ADBS: int = 999999
     point = None
@@ -341,8 +362,10 @@ def get_temp_lokalita_ident(typ, region):
 
     Příklad: "X-M-L000123456"
 
-    :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
-    :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
+    :param typ: Parametr ``typ`` předává se do volání ``str()``.
+    :param region: Parametr ``region`` se předává do volání ``str()``.
+
+        :return: Vrací hodnotu podle větve zpracování.
     """
     prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-" + typ)
     sequence = f"{get_next_sequence('lokalita_xident_seq'):09}"
@@ -357,7 +380,9 @@ def get_temp_akce_ident(region):
 
     Příklad: "X-M-9000123456A"
 
-    :param region: Číselná nebo geometrická hodnota `region` použitá při výpočtu nebo transformaci.
+    :param region: Parametr ``region`` se předává do volání ``str()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``str()``.
     """
     id_number = f"{get_next_sequence('akce_xident_seq'):09}"
     return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + id_number + "A")
@@ -370,6 +395,8 @@ def get_temp_ez_ident():
     Logika složení je: "X-BIB" + 9 místní číslo ze sekvence externi_zdroj_xident_seq doplněno na 9 číslic.
 
     Příklad: "X-BIB-000123456"
+
+        :return: Vrací výsledek volání ``str()``.
     """
     id_number = f"{get_next_sequence('externi_zdroj_xident_seq'):09}"
     return str(IDENTIFIKATOR_DOCASNY_PREFIX + "BIB-" + id_number)
@@ -379,7 +406,7 @@ def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Ty
     """
     Vrací next sequence integrity check.
 
-    :param object_class: Název nebo typ ``object_class`` používaný pro volbu cílové logiky.
+    :param object_class: Parametr ``object_class`` předává se do volání ``get_next_sequence()``, pracuje se s atributy ``IDENT_PREFIX``, ``SEQUENCE_NAME``, ovlivňuje větvení podmínek.
     :return: Načtená data odpovídající zadaným vstupům.
     """
     while True:
@@ -389,22 +416,34 @@ def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Ty
 
 
 def get_heslar_ident():
-    """Metoda pro výpočet identu hesláře."""
+    """Metoda pro výpočet identu hesláře.
+
+    :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+    """
     return get_next_sequence_integrity_check(Heslar)
 
 
 def get_uzivatel_ident():
-    """Metoda pro výpočet identu uživatele."""
+    """Metoda pro výpočet identu uživatele.
+
+    :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+    """
     return get_next_sequence_integrity_check(User)
 
 
 def get_organizace_ident():
-    """Metoda pro výpočet identu organizce."""
+    """Metoda pro výpočet identu organizce.
+
+    :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+    """
     return get_next_sequence_integrity_check(Organizace)
 
 
 def get_osoba_ident():
-    """Metoda pro výpočet identu osoby."""
+    """Metoda pro výpočet identu osoby.
+
+    :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+    """
     return get_next_sequence_integrity_check(Osoba)
 
 
@@ -412,7 +451,9 @@ def get_record_from_ident(ident_cely):
     """
     Funkce pro získaní záznamu podle ident cely.
 
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``bool()``, ``fullmatch()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_object_or_404()``, None.
     """
     from dokument.models import Dokument
     from pas.models import SamostatnyNalez

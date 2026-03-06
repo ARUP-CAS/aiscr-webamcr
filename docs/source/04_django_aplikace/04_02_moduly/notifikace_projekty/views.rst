@@ -16,7 +16,9 @@ Třídy
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
 
 .. py:class:: PesCreateView
@@ -29,9 +31,11 @@ Třídy
 
       Obsluhuje HTTP metodu POST.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``PesFormset()``, ``PesNotificationsForm()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``redirect()``.
 
 
 .. py:class:: PesSmazatView
@@ -56,21 +60,27 @@ Třídy
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` předává se do volání ``filter()``, ``add_message()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 

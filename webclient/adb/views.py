@@ -35,8 +35,11 @@ def zapsat(request, dj_ident_cely):
     Pred uložením do DB se vytvoří relace na DB, nový ident celý je vygenerovaný a sm5 je přidané.
     Po úspešném uložení je uživatel presměrován na pohled detailu DJ.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``CreateADBForm()``, ``add_message()``, pracuje se s atributy ``POST``, ``user``.
     :param dj_ident_cely: Identifikátor ``dj_ident_cely`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací výsledek volání ``redirect()``.
+        :raises DJNemaPianError: Vyvolá se při splnění podmínky ``not dj.pian``.
     """
     logger.debug("adb.views.zapsat.start", extra={"ident_cely": dj_ident_cely})
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
@@ -81,8 +84,10 @@ def smazat(request, ident_cely):
 
     Po úspešném smazání je uživatel presměrován na pohled detailu DJ.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``create_transaction()``, ``render()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``warning()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``response``, výsledek volání ``render()``.
     """
     adb = get_object_or_404(Adb, ident_cely=ident_cely)
     if request.method == "POST":
@@ -122,8 +127,10 @@ def smazat_vb(request, ident_cely):
 
     Po úspešném smazání je uživatel presměrován na next_url z requestu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``FedoraTransaction()``, ``render()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``warning()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``response``, výsledek volání ``render()``.
     """
     vyskovy_bod = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
     vyskovy_bod: VyskovyBod

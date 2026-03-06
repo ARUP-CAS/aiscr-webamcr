@@ -28,7 +28,11 @@ class DigitalObjectIdentifierClient:
     }
 
     def __init__(self, record):
-        """Inicializuje klienta podle typu předaného doménového záznamu."""
+        """Inicializuje klienta podle typu předaného doménového záznamu.
+
+        :param record: Parametr ``record`` předává se do volání ``type()``.
+        :raises ValueError: Vyvolá se při splnění podmínky ``record_type in self.record_serializer_map``.
+        """
         self.record = record
         record_type = type(record)
         if record_type in self.record_serializer_map:
@@ -45,6 +49,8 @@ class DigitalObjectIdentifierClient:
 
         :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
         :return: Vrací výsledek ověření nebo validačního pravidla.
+
+            :raises DoiWriteError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
         """
         if not str(response.status_code).startswith("2"):
             logger.error(
@@ -58,14 +64,20 @@ class DigitalObjectIdentifierClient:
             raise DoiWriteError(response.status_code, response.text, response.url)
 
     def get_record_url(self):
-        """Vrátí URL detailu záznamu v DataCite."""
+        """Vrátí URL detailu záznamu v DataCite.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"{DATACITE_URL.rstrip('/')}/{self.serializer._get_prefix()}/{self.serializer.get_ident_cely()}"
 
     def check_record_exists(self, check_status=True):
         """
         Zjistí, zda záznam v DataCite existuje.
 
-        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+        :param check_status: Parametr ``check_status`` ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``startswith()``.
+            :raises DoiConnectionError: Vyvolá se při splnění podmínky ``str(response.status_code).startswith('5') and check_status``.
         """
         response = requests.get(self.get_record_url(), auth=self.auth)
         if str(response.status_code).startswith("5") and check_status:
@@ -83,7 +95,10 @@ class DigitalObjectIdentifierClient:
         """
         Skryje/smaže záznam v DataCite podle serializovaného payloadu.
 
-        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+        :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``json()``.
+            :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
         """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.delete_record.start",
@@ -108,7 +123,10 @@ class DigitalObjectIdentifierClient:
         """
         Provádí operaci hide record.
 
-        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+        :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``json()``.
+            :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
         """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.hide_record.start",
@@ -133,7 +151,10 @@ class DigitalObjectIdentifierClient:
         """
         Publikuje záznam v DataCite, případně jej nejdříve vytvoří.
 
-        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
+        :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``json()``.
+            :raises DoiNoTransactionError: Vyvolá se při splnění podmínky ``not isinstance(self.record, Lokalita) and (not hasattr(self.record, 'active_transaction'))``.
         """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.check_record_exists.publish_record",
@@ -157,8 +178,10 @@ class DigitalObjectIdentifierClient:
         """
         Aktualizuje record. v aplikaci.
 
-        :param check_status: Příznak ``check_status`` určující průběh nebo rozsah zpracování.
-        :param reload_record: Záznam/objekt ``reload_record``, který funkce čte, validuje nebo upravuje.
+        :param check_status: Parametr ``check_status`` předává se do volání ``check_record_exists()``, ovlivňuje větvení podmínek.
+        :param reload_record: Parametr ``reload_record`` ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``json()``.
         """
         logger.debug(
             "doi.client.DigitalObjectIdentifierClient.update_record.start",

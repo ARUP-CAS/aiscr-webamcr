@@ -6,7 +6,10 @@ import sys
 
 
 def main():
-    """Provádí operaci main."""
+    """Provádí operaci main.
+
+    :raises ImportError: Vyvolá se s textem "Couldn't import Django. Are you sure it's installed and available on your PYTHONPATH environment variable? Did you forge".
+    """
     if os.getenv("DJANGO_SETTINGS_MODULE") is None:
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings")
     try:

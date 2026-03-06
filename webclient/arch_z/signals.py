@@ -33,9 +33,9 @@ def create_arch_z_vazby(sender, instance, **kwargs):
 
     Metoda se volá pred uložením arch záznamu.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_arch_z_vazby``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``str()``, pracuje se s atributy ``pk``, ``historie``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_arch_z_vazby``.
     """
     logger.debug("arch_z.signals.create_arch_z_vazby.start")
     if instance.pk is None:
@@ -52,9 +52,9 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_arch_z_metadata``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``evaluate_pristupnost_change()``, pracuje se s atributy ``pk``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_arch_z_metadata``.
     """
     logger.debug("arch_z.signals.create_arch_z_metadata.start", extra={"pk": instance.pk})
 
@@ -95,7 +95,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
             """
                        Uloží metadata.
 
-                       :param inner_close_transaction: Příznak ``inner_close_transaction`` určující průběh nebo rozsah zpracování.
+                       :param inner_close_transaction: Parametr ``inner_close_transaction`` předává se do volání ``save_metadata()``.
             Výsledek provedené změny nad cílovým objektem.
             """
             try:
@@ -140,9 +140,9 @@ def update_akce_snapshot(sender, instance: Akce, **kwargs):
     """
     Aktualizuje akce snapshot.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``update_akce_snapshot``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``check_if_task_queued()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``update_akce_snapshot``.
     """
     logger.debug("arch_z.signals.update_akce_snapshot.start", extra={"pk": instance.pk})
     if not check_if_task_queued("Akce", instance.pk, "update_single_redis_snapshot"):
@@ -174,9 +174,9 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
     """
     Funkce pro aktualizaci metadat externího odkazu.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_externi_odkaz_metadata``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_externi_odkaz_metadata``.
     """
     logger.debug("arch_z.signals.create_externi_odkaz_metadata.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
@@ -200,9 +200,9 @@ def delete_arch_z_repository_container_and_connections(sender, instance: Archeol
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_arch_z_repository_container_and_connections``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``dokumentacni_jednotky_akce``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_arch_z_repository_container_and_connections``.
     """
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_container_and_connections.start",
@@ -232,9 +232,9 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
     """
     Odstraní arch z repository update connected records.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_arch_z_repository_update_connected_records``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_arch_z_repository_update_connected_records``.
     """
     logger.debug(
         "arch_z.signals.delete_arch_z_repository_update_connected_records.start",
@@ -246,7 +246,7 @@ def delete_arch_z_repository_update_connected_records(sender, instance: Archeolo
         """
         Uloží metadata. v aplikaci.
 
-        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+        :param close_transaction: Parametr ``close_transaction`` předává se do volání ``record_deletion()``.
         """
         invalidate_arch_z_related_models()
         try:
@@ -274,9 +274,9 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
     """
     Funkce pro aktualizaci metadat archeologického záznamu.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_externi_odkaz_repository_container``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal_arch_z``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_externi_odkaz_repository_container``.
     """
     logger.debug(
         "arch_z.signals.delete_externi_odkaz_repository_container.start",
@@ -290,7 +290,7 @@ def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **
         """
         Uloží metadata. v aplikaci.
 
-        :param inner_close_transaction: Příznak ``inner_close_transaction`` určující průběh nebo rozsah zpracování.
+        :param inner_close_transaction: Parametr ``inner_close_transaction`` ovlivňuje větvení podmínek.
         """
         if instance.suppress_signal_arch_z is False and instance.archeologicky_zaznam is not None:
             instance.archeologicky_zaznam.save_metadata(fedora_transaction)

@@ -17,7 +17,7 @@ Třídy
       Inicializuje instanci třídy.
 
       :param attrs: Kolekce ``attrs`` zpracovávaná touto funkcí.
-      :param choices: Číselná nebo geometrická hodnota `choices` použitá při výpočtu nebo transformaci.
+      :param choices: Parametr ``choices`` se předává do volání ``__init__()``.
 
 
 .. py:class:: TwoLevelSelectField
@@ -31,6 +31,8 @@ Třídy
       Provádí operaci to python.
 
       :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 
    .. py:method:: has_changed()
 
@@ -53,11 +55,15 @@ Třídy
 
       :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, výsledek volání ``clean()``.
+
    .. py:method:: to_python()
 
       Provádí operaci to python.
 
       :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 
    .. py:method:: has_changed()
 
@@ -81,14 +87,17 @@ Třídy
       Inicializuje instanci třídy.
 
       :param db_stav: Stavová hodnota načtená z databáze.
-      :param require_confirmation: Číselná nebo geometrická hodnota `require_confirmation` použitá při výpočtu nebo transformaci.
-      :param dokument_warnings: Doménový objekt `dokument_warnings`, se kterým funkce pracuje.
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param require_confirmation: Parametr ``require_confirmation`` ovlivňuje větvení podmínek.
+      :param dokument_warnings: Parametr ``dokument_warnings`` předává se do volání ``append()``, ``HTML()``, ovlivňuje větvení podmínek.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: clean()
 
       Provádí operaci clean.
+
+      :return: Vrací proměnná ``cleaned_data``.
+      :raises forms.ValidationError: Vyvolá se s textem "State_changed".
 
 
 .. py:class:: VratitForm
@@ -101,8 +110,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: VratitFormDokument
@@ -115,8 +124,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: VratitFormAZ
@@ -129,9 +138,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param az: Číselná nebo geometrická hodnota `az` použitá při výpočtu nebo transformaci.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param az: Parametr ``az`` se předává do volání ``filter()``, pracuje se s atributy ``stav``, ``ident_cely``, ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: DecimalTextWideget
@@ -144,7 +153,9 @@ Třídy
 
       Provádí operaci format value.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``localize_input()``, ``str()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``localize_input()``, výsledek volání ``str()``.
 
 
 .. py:class:: OdstavkaSystemuForm
@@ -159,8 +170,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: PermissionImportForm
@@ -183,6 +194,9 @@ Třídy
 
       Provádí operaci clean.
 
+      :return: Vrací proměnná ``cleaned_data``.
+      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``error_list``.
+
 
 .. py:class:: TransaltionImportForm
 
@@ -193,6 +207,9 @@ Třídy
    .. py:method:: clean()
 
       Provádí operaci clean.
+
+      :return: Vrací proměnná ``cleaned_data``.
+      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``file.size < 1000``; nebo při splnění podmínky ``file.name.split('.')[-1] != 'po'``.
 
 
 .. py:class:: ImportDataAdminForm

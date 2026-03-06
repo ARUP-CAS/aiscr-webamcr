@@ -14,9 +14,9 @@ def pes_save(sender, instance: Pes, **kwargs):
     """
     Provádí operaci pes save.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``pes_save``.
+    :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``on_commit()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``pes_save``.
     """
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()
@@ -32,9 +32,9 @@ def pes_delete(sender, instance: Pes, **kwargs):
     """
     Provádí operaci pes delete.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``pes_delete``.
+    :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``on_commit()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``pes_delete``.
     """
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()

@@ -122,7 +122,9 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
         """
         logger.debug("ez.filters.ExterniZdrojFilter.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -147,9 +149,11 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             Q(nazev__icontains=value)
@@ -166,9 +170,11 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle identu celý akce.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_akce_ident``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
@@ -179,9 +185,11 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Metoda pro filtrování podle identu celý lokality.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_lokalita_ident``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
@@ -212,8 +220,8 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
         """
         user: User = kwargs.get("request").user
         super(ExterniZdrojFilter, self).__init__(*args, **kwargs)
@@ -230,7 +238,7 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("ez.filters.history.divider.label")

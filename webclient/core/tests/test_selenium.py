@@ -60,9 +60,11 @@ class LocalResolver(etree.Resolver):
         """
         Provádí operaci resolve.
 
-        :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
+        :param url: Parametr ``url`` ovlivňuje větvení podmínek.
         :param id: Identifikátor zpracovávaného záznamu.
-        :param context: Kontextová data používaná při serializaci nebo renderování.
+        :param context: Parametr ``context`` se předává do volání ``resolve_filename()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``resolve_filename()``, None.
         """
         if url == "http://www.w3.org/2001/03/xml.xsd":
             local_path = "xml_generator/definitions/xml.xsd"
@@ -88,12 +90,18 @@ class WaitForPageLoad:
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
 
     def page_has_loaded(self):
-        """Provádí operaci page has loaded."""
+        """Provádí operaci page has loaded.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         new_page = self.browser.find_element(By.TAG_NAME, "html")
         return new_page.id != self.old_page.id
 
     def page_is_ready(self):
-        """Provádí operaci page is ready."""
+        """Provádí operaci page is ready.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         page_state = self.browser.execute_script("return document.readyState;")
         return page_state == "complete"
 
@@ -101,7 +109,7 @@ class WaitForPageLoad:
         """
         Ukončí kontextový manager a provede úklid.
 
-        :param _: Dodatečné poziční argumenty předané voláním.
+        :param _: Parametr ``_`` slouží jako vstup pro logiku funkce ``__exit__``.
         """
         self.wait_for(self.page_has_loaded)
         self.wait_for(self.page_is_ready)
@@ -111,6 +119,8 @@ class WaitForPageLoad:
         Provádí operaci wait for.
 
         :param condition_function: Filtrační vstup `condition_function` použitý při výběru záznamů.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         start_time = time.time()
         while time.time() < start_time + self.wait_time:
@@ -150,7 +160,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Provádí operaci setUpClass."""
+        """Provádí operaci setUpClass.
+
+        :raises RuntimeError: Vyvolá se při splnění podmínky ``cls.server_thread.error``.
+        """
         super().setUpClass()
         cls.server_thread.is_ready.wait()
         if cls.server_thread.error:
@@ -164,7 +177,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def _create_server_thread(cls, connections_override):
-        """Vytvoření vlastního serverového vlákna"""
+        """Vytvoření vlastního serverového vlákna
+
+        :param connections_override: Parametr ``connections_override`` slouží jako vstup pro logiku funkce ``_create_server_thread``.
+        :return: Vrací výsledek volání ``WerkzeugServerThread()``.
+        """
         return WerkzeugServerThread(host=cls.host, port=cls.port)
 
     @classmethod
@@ -219,7 +236,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Vrací container content.
 
-        :param container_path: Cesta, URL nebo název zdroje ``container_path``, ze kterého funkce čte nebo kam zapisuje.
+        :param container_path: Parametr ``container_path`` se předává do volání ``get()``.
+
+            :return: Vrací proměnná ``members``.
         """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
@@ -239,8 +258,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Uloží container content.
 
-        :param container_path: Cesta, URL nebo název zdroje ``container_path``, ze kterého funkce čte nebo kam zapisuje.
-        :param path: Cesta, URL nebo název zdroje ``path``, ze kterého funkce čte nebo kam zapisuje.
+        :param container_path: Parametr ``container_path`` se předává do volání ``get()``, ``str()``, pracuje se s atributy ``split``.
+        :param path: Parametr ``path`` se předává do volání ``open()``, ``xml_to_string_bez_ignorovanych_z_textu()``.
+
+            :return: Vrací proměnná ``members``.
         """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
@@ -294,6 +315,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
         :param bin1: První binární vstup použitý při porovnání.
         :param bin2: Druhý binární vstup použitý při porovnání.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         try:
             img1 = Image.open(BytesIO(bin1)).convert("RGBA")
@@ -311,8 +334,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Ověří container content.
 
-        :param container_path: Cesta, URL nebo název zdroje ``container_path``, ze kterého funkce čte nebo kam zapisuje.
-        :param path: Cesta, URL nebo název zdroje ``path``, ze kterého funkce čte nebo kam zapisuje.
+        :param container_path: Parametr ``container_path`` se předává do volání ``get()``, ``str()``, pracuje se s atributy ``split``.
+        :param path: Parametr ``path`` se předává do volání ``open()``, ``porovnej_xml_bez_ignorovanych()``.
+
+            :return: Vrací proměnná ``members``.
         """
         headers = {}
         response = requests.get(container_path, auth=self.auth, headers=headers)
@@ -378,7 +403,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Provádí operaci purge container.
 
-        :param container_path: Cesta, URL nebo název zdroje ``container_path``, ze kterého funkce čte nebo kam zapisuje.
+        :param container_path: Parametr ``container_path`` se předává do volání ``delete()``.
         """
         response = requests.delete(container_path + "/fcr:tombstone", auth=self.auth)
         if not str(response.status_code).startswith("2"):
@@ -391,7 +416,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Odstraní zadaný kontejner ve Fedora repozitáři pro účely testu.
 
-        :param container_path: Cesta, URL nebo název zdroje ``container_path``, ze kterého funkce čte nebo kam zapisuje.
+        :param container_path: Parametr ``container_path`` se předává do volání ``delete()``.
         """
         response = requests.delete(container_path, auth=self.auth)
         if not str(response.status_code).startswith("2"):
@@ -404,8 +429,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Provádí operaci wipe Fedora dir.
 
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param deep: Příznak, zda má funkce provést hlubší rekurzivní porovnání.
+        :param name: Parametr ``name`` předává se do volání ``get_container_content()``.
+        :param deep: Parametr ``deep`` předává se do volání ``wipe_Fedora_dir()``, ovlivňuje větvení podmínek.
         """
         mem = self.get_container_content(name)
         for item in mem:
@@ -418,7 +443,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         Provádí operaci find files.
 
         :param directory: Číselná hodnota ``directory`` použitá při výpočtu nebo transformaci.
-        :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+        :param filename: Parametr ``filename`` se předává do volání ``append()``, ``join()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací proměnná ``matches``.
         """
         matches = []
         for root, _, files in os.walk(directory):
@@ -430,9 +457,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Odstraní tombstone záznamy vytvořené během testovacího běhu.
 
-        :param url: Cesta, URL nebo název zdroje ``url``, ze kterého funkce čte nebo kam zapisuje.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param dir: Číselná nebo geometrická hodnota `dir` použitá při výpočtu nebo transformaci.
+        :param url: Parametr ``url`` se předává do volání ``purge_container()``.
+        :param name: Parametr ``name`` ovlivňuje větvení podmínek.
+        :param dir: Parametr ``dir`` se předává do volání ``find_files()``.
         """
         results = self.find_files(dir, "fcr-root.json")
         for res in results:
@@ -448,7 +475,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         Uloží fedora change.
 
         :param time: Časový údaj ``time`` použitý při filtrování nebo výpočtu.
-        :param path: Cesta, URL nebo název zdroje ``path``, ze kterého funkce čte nebo kam zapisuje.
+        :param path: Parametr ``path`` se předává do volání ``makedirs()``, ``open()``.
         """
         headers = {}
         response = requests.get(
@@ -476,7 +503,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         Ověří fedora change.
 
         :param time: Časový údaj ``time`` použitý při filtrování nebo výpočtu.
-        :param path: Cesta, URL nebo název zdroje ``path``, ze kterého funkce čte nebo kam zapisuje.
+        :param path: Parametr ``path`` se předává do volání ``save_fedora_change()``, ``makedirs()``, pracuje se s atributy ``rsplit``.
         """
         if os.name == "nt":
             self.wait(1.5)
@@ -511,7 +538,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Ověří fedora delete.
 
-        :param records: Záznam/objekt ``records``, který funkce čte, validuje nebo upravuje.
+        :param records: Parametr ``records`` slouží jako vstup pro logiku funkce ``check_fedora_delete``.
         """
         headers = {}
         for item in records:
@@ -569,9 +596,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Provádí operaci assertIn2.
 
-        :param member1: Číselná nebo geometrická hodnota `member1` použitá při výpočtu nebo transformaci.
-        :param member2: Číselná nebo geometrická hodnota `member2` použitá při výpočtu nebo transformaci.
-        :param container: Číselná nebo geometrická hodnota `container` použitá při výpočtu nebo transformaci.
+        :param member1: Parametr ``member1`` se předává do volání ``safe_repr()``, ovlivňuje větvení podmínek.
+        :param member2: Parametr ``member2`` se předává do volání ``safe_repr()``, ovlivňuje větvení podmínek.
+        :param container: Parametr ``container`` pracuje se s atributy ``current_url``.
         :param msg: Text zprávy používaný při asertu, logování nebo parsování.
         """
         container_result = container.current_url
@@ -628,7 +655,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         result = self._outcome.result
 
         def has_issue():
-            """Určí, zda issue."""
+            """Určí, zda issue.
+
+            :return: Vrací výsledek volání ``any()``.
+            """
             return any(t is self and exc for t, exc in (result.errors + result.failures))
 
         # Pokud test zatím OK a máme JS chyby => přidej FAILURE
@@ -700,7 +730,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Provádí operaci wait.
 
-        :param interval: Číselná nebo geometrická hodnota `interval` použitá při výpočtu nebo transformaci.
+        :param interval: Parametr ``interval`` se předává do volání ``sleep()``.
         """
         time.sleep(interval)
 
@@ -710,9 +740,11 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
         :param condition_function: Filtrační vstup `condition_function` použitý při výběru záznamů.
         :param by: Číselná hodnota ``by`` použitá při výpočtu nebo transformaci.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``condition_function()``, ovlivňuje větvení podmínek.
         :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
         :param poll: Textová hodnota `poll` používaná pro vyhledání, pojmenování nebo hlášení stavu.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         end = time.time() + timeout
         while time.time() < end:
@@ -730,7 +762,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         Provádí operaci findElement.
 
         :param by: Číselná hodnota ``by`` použitá při výpočtu nebo transformaci.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ``find_elements()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         try:
             return len(self.driver.find_elements(by, value)) > 0
@@ -742,7 +776,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         Provádí operaci ElementIsClickable.
 
         :param by: Číselná hodnota ``by`` použitá při výpočtu nebo transformaci.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``find_element()``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         try:
             element = self.driver.find_element(by, value)
@@ -755,7 +791,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         Provádí operaci ElementClick.
 
         :param by: Číselná hodnota ``by`` použitá při výpočtu nebo transformaci.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``wait_for()``, ``warning()``, ovlivňuje větvení podmínek.
+
+            :raises Exception: Vyvolá se s textem "ElementClickError"; nebo s textem "ElementIsNotClickableError".
         """
         if not self.wait_for(self.findElement, by, value):
             logger.warning("BaseSeleniumTestClass.ElementClick.elementNotFound", extra={"filed": by, "value": value})
@@ -784,8 +822,10 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         Provádí operaci ElementSendKeys.
 
         :param by: Číselná hodnota ``by`` použitá při výpočtu nebo transformaci.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``wait_for()``, ``warning()``.
         :param keys: Textový název nebo klíč ``keys`` používaný v rámci operace.
+
+            :raises Exception: Vyvolá se s textem "ElementSendKeysError".
         """
         res = self.wait_for(self.findElement, by, value)
         if res is False:
@@ -819,7 +859,7 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Provádí operaci clickAt.
 
-        :param el: Číselná nebo geometrická hodnota `el` použitá při výpočtu nebo transformaci.
+        :param el: Parametr ``el`` se předává do volání ``move_to_element_with_offset()``.
         :param position_x: Číselná hodnota ``position_x`` použitá při výpočtu nebo transformaci.
         :param position_y: Číselná hodnota ``position_y`` použitá při výpočtu nebo transformaci.
         """
@@ -832,8 +872,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Provádí operaci clickAtMapCoord.
 
-        :param lon: Číselná nebo geometrická hodnota `lon` použitá při výpočtu nebo transformaci.
-        :param lat: Číselná nebo geometrická hodnota `lat` použitá při výpočtu nebo transformaci.
+        :param lon: Parametr ``lon`` se předává do volání ``execute_script()``.
+        :param lat: Parametr ``lat`` se předává do volání ``execute_script()``.
         """
         self.driver.execute_script(f"""
  window.getToday = function() {{
@@ -859,7 +899,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
                Provádí operaci username.
 
-               :param type: Název nebo typ ``type`` používaný pro volbu cílové logiky.
+               :param type: Parametr ``type`` vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
         """
         return USERS[type]["USERNAME"]
@@ -868,8 +908,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
                Provádí operaci password.
 
-               :param sel: Číselná nebo geometrická hodnota `sel` použitá při výpočtu nebo transformaci.
-               :param type: Název nebo typ ``type`` používaný pro volbu cílové logiky.
+               :param sel: Parametr ``sel`` slouží jako vstup pro logiku funkce ``_password``.
+               :param type: Parametr ``type`` vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
         """
         return USERS[type]["PASSWORD"]
@@ -890,7 +930,7 @@ return new Date('2025-06-28T12:00:00Z');}};
                Provádí operaci fill text field.
 
                :param field_id: Identifikátor objektu ``field``.
-               :param field_value: Záznam/objekt ``field_value``, který funkce čte, validuje nebo upravuje.
+               :param field_value: Parametr ``field_value`` předává se do volání ``send_keys()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         self.driver.find_element(By.ID, field_id).click()
@@ -901,7 +941,7 @@ return new Date('2025-06-28T12:00:00Z');}};
                Provádí operaci select map point.
 
                :param field_id: Identifikátor objektu ``field``.
-               :param click_count: Číselná nebo geometrická hodnota `click_count` použitá při výpočtu nebo transformaci.
+               :param click_count: Parametr ``click_count`` se předává do volání ``range()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         for _ in range(click_count):
@@ -912,7 +952,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
                Provádí operaci select radion group item.
 
-               :param item_order: Číselná nebo geometrická hodnota `item_order` použitá při výpočtu nebo transformaci.
+               :param item_order: Parametr ``item_order`` se předává do volání ``find_element()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         self.driver.find_element(
@@ -950,7 +990,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci login.
 
-        :param type: Název nebo typ ``type`` používaný pro volbu cílové logiky.
+        :param type: Parametr ``type`` předává se do volání ``send_keys()``, ``_username()``.
         """
         self.goToAddress()
         with WaitForPageLoad(self.driver):
@@ -978,9 +1018,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Metoda nahraje soubor do Dropzone.
 
-        :param file_path: Cesta, URL nebo název zdroje ``file_path``, ze kterého funkce čte nebo kam zapisuje.
-        :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
-        :param mime: Cesta, URL nebo název zdroje ``mime``, ze kterého funkce čte nebo kam zapisuje.
+        :param file_path: Parametr ``file_path`` se předává do volání ``open()``.
+        :param file_name: Parametr ``file_name`` se předává do volání ``execute_async_script()``.
+        :param mime: Parametr ``mime`` se předává do volání ``execute_async_script()``.
+
+            :raises AssertionError: Vyvolá se při splnění podmínky ``result.get('status') != 'success'``.
         """
         with open(file_path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("ascii")
@@ -1090,8 +1132,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci createFedoraRecord.
 
-        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
-        :param user_name: Příznak ``user_name`` určující průběh nebo rozsah zpracování.
+        :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_record_from_ident()``, ``debug()``.
+        :param user_name: Parametr ``user_name`` předává se do volání ``get()``, ``_username()``.
         """
         try:
             record = get_record_from_ident(ident_cely)
@@ -1117,9 +1159,9 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Nahraje do Fedory testovací soubor
 
-        :param record: Záznam/objekt ``record``, který funkce čte, validuje nebo upravuje.
-        :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
-        :param user_name: Příznak ``user_name`` určující průběh nebo rozsah zpracování.
+        :param record: Parametr ``record`` předává se do volání ``get()``, ``save_binary_file()``, pracuje se s atributy ``vazba``, ``active_transaction``.
+        :param filename: Parametr ``filename`` se předává do volání ``open()``.
+        :param user_name: Parametr ``user_name`` předává se do volání ``get()``, ``_username()``.
         """
         user = User.objects.get(email=self._username(user_name))
         record = Soubor.objects.get(pk=record)
@@ -1163,7 +1205,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Rekurzivně odstraní UUID z textů a atributů XML elementu.
 
-        :param element: Záznam/objekt ``element``, který funkce čte, validuje nebo upravuje.
+        :param element: Parametr ``element`` předává se do volání ``sub()``, pracuje se s atributy ``text``, ``tail``, ovlivňuje větvení podmínek.
         """
         # Nahraď v textu
         if element.text:
@@ -1186,7 +1228,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         podle obsahu (pomocí _element_klic).
         Nezasahuje do pořadí různých typů elementů, čímž zachovává validitu vůči XSD.
 
-        :param element: Záznam/objekt ``element``, který funkce čte, validuje nebo upravuje.
+        :param element: Parametr ``element`` předává se do volání ``len()``, ``append()``.
         """
         # Nejprve rekurze
         for child in element:
@@ -1216,7 +1258,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
                Provádí operaci element klic.
 
-               :param elem: Číselná nebo geometrická hodnota `elem` použitá při výpočtu nebo transformaci.
+               :param elem: Parametr ``elem`` se předává do volání ``append()``, pracuje se s atributy ``tag``, ``text``, ovlivňuje větvení podmínek.
         :return: Výstup funkce odpovídající implementované logice.
         """
         hodnoty = [elem.tag]
@@ -1235,8 +1277,8 @@ return new Date('2025-06-28T12:00:00Z');}};
 
         Nezávislé na konkrétní verzi namespace.
 
-        :param element: Záznam/objekt ``element``, který funkce čte, validuje nebo upravuje.
-        :param element_name: Záznam/objekt ``element_name``, který funkce čte, validuje nebo upravuje.
+        :param element: Parametr ``element`` pracuje se s atributy ``tag``, ``text``, ovlivňuje větvení podmínek.
+        :param element_name: Parametr ``element_name`` předává se do volání ``startswith()``, ``nahrad_element_id_rekurzivne()``, ovlivňuje větvení podmínek.
         """
         # Zjisti namespace prefix 'amcr' z tagu
         if element.tag.endswith("id") and "}" in element.tag:
@@ -1252,9 +1294,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci xml to string bez ignorovanych z textu.
 
-        :param xml_text: Cesta, URL nebo název zdroje ``xml_text``, ze kterého funkce čte nebo kam zapisuje.
+        :param xml_text: Parametr ``xml_text`` se předává do volání ``fromstring()``.
         :param ignorovane_tagy: Číselná hodnota ``ignorovane_tagy`` použitá při výpočtu nebo transformaci.
-        :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+        :param filename: Parametr ``filename`` se předává do volání ``error()``.
+
+            :return: Vrací proměnná ``text``.
         """
         parser = etree.XMLParser(remove_blank_text=True)
         root = etree.fromstring(xml_text, parser)
@@ -1289,10 +1333,12 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Porovná dva XML soubory po odstranění ignorovaných tagů.
 
-        :param vzorovy_soubor: Cesta, URL nebo název zdroje ``vzorovy_soubor``, ze kterého funkce čte nebo kam zapisuje.
-        :param vystupni_soubor: Cesta, URL nebo název zdroje ``vystupni_soubor``, ze kterého funkce čte nebo kam zapisuje.
+        :param vzorovy_soubor: Parametr ``vzorovy_soubor`` se předává do volání ``xml_to_string_bez_ignorovanych_z_textu()``.
+        :param vystupni_soubor: Parametr ``vystupni_soubor`` se předává do volání ``xml_to_string_bez_ignorovanych_z_textu()``.
         :param ignorovane_tagy: Číselná hodnota ``ignorovane_tagy`` použitá při výpočtu nebo transformaci.
-        :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+        :param filename: Parametr ``filename`` se předává do volání ``xml_to_string_bez_ignorovanych_z_textu()``.
+
+            :return: Vrací proměnná ``res``.
         """
         vzor = self.xml_to_string_bez_ignorovanych_z_textu(vzorovy_soubor, ignorovane_tagy, filename)
         vystup = self.xml_to_string_bez_ignorovanych_z_textu(vystupni_soubor, ignorovane_tagy, filename)
@@ -1308,8 +1354,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Najde nejběžnější základní URI (hostname + prefix) v grafu a nahradí ho za `nova_base_uri`.
 
-        :param graf: Záznam/objekt ``graf``, který funkce čte, validuje nebo upravuje.
-        :param nova_base_uri: Číselná nebo geometrická hodnota `nova_base_uri` použitá při výpočtu nebo transformaci.
+        :param graf: Parametr ``graf`` předává se do volání ``list()``, pracuje se s atributy ``remove``, ``add``.
+        :param nova_base_uri: Parametr ``nova_base_uri`` se předává do volání ``URIRef()``, ``replace()``.
         """
         uri_counter = {}
 
@@ -1360,7 +1406,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci odstran predikaty.
 
-        :param graf: Záznam/objekt ``graf``, který funkce čte, validuje nebo upravuje.
+        :param graf: Parametr ``graf`` předává se do volání ``list()``, pracuje se s atributy ``namespace_manager``, ``triples``.
         :param predikaty_k_ignoru: Číselná hodnota ``predikaty_k_ignoru`` použitá při výpočtu nebo transformaci.
         """
         for pred, typ in predikaty_k_ignoru.items():
@@ -1389,7 +1435,7 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Projde RDF graf a nahradí výskyty UUID v URIRef i Literal hodnotách.
 
-        :param graf: Záznam/objekt ``graf``, který funkce čte, validuje nebo upravuje.
+        :param graf: Parametr ``graf`` předává se do volání ``list()``, pracuje se s atributy ``remove``, ``add``.
         """
         nove_triples = []
 
@@ -1415,9 +1461,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci porovnej rdf obsah.
 
-        :param aktualni_rdf: Číselná nebo geometrická hodnota `aktualni_rdf` použitá při výpočtu nebo transformaci.
+        :param aktualni_rdf: Parametr ``aktualni_rdf`` se předává do volání ``parse()``.
         :param ocekavany_rdf: Číselná hodnota ``ocekavany_rdf`` použitá při výpočtu nebo transformaci.
         :param ignorovat_predikaty: Číselná hodnota ``ignorovat_predikaty`` použitá při výpočtu nebo transformaci.
+
+            :return: Vrací proměnná ``res``.
         """
         g1 = Graph()
         g1.parse(data=aktualni_rdf, format="turtle")
@@ -1450,8 +1498,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci uprav rdf pred ulozenim.
 
-        :param rdf_input: Číselná nebo geometrická hodnota `rdf_input` použitá při výpočtu nebo transformaci.
+        :param rdf_input: Parametr ``rdf_input`` se předává do volání ``parse()``.
         :param ignorovat_predikaty: Číselná hodnota ``ignorovat_predikaty`` použitá při výpočtu nebo transformaci.
+
+            :return: Vrací výsledek volání ``encode()``.
         """
         g = Graph()
         g.parse(data=rdf_input, format="turtle")
@@ -1476,6 +1526,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         Najde nejčastější base URI ve všech string hodnotách (např. http://.../rest/)
 
         :param vsechny_retezce: Číselná hodnota ``vsechny_retezce`` použitá při výpočtu nebo transformaci.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: None, vybranou hodnotu z kolekce.
         """
         prefixy = []
         for s in vsechny_retezce:
@@ -1494,6 +1546,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         Rekurzivně sesbírá všechny stringy z JSON dat.
 
         :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+
+            :return: Vrací proměnná ``hodnoty``.
         """
         hodnoty = []
         if isinstance(data, dict):
@@ -1513,6 +1567,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         :param data: JSON struktura (slovník, seznam nebo skalární hodnota) určená k úpravě.
         :param puvodni_base: Původní prefix URI, který se má ve stringových hodnotách nahradit.
         :param nova_base: Nový prefix URI, kterým se původní hodnota nahradí.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, výsledek volání ``replace()``, proměnná ``data``.
         """
         if isinstance(data, dict):
             return {k: self.nahrad_base_uri_v_json(v, puvodni_base, nova_base) for k, v in data.items()}
@@ -1529,6 +1585,8 @@ return new Date('2025-06-28T12:00:00Z');}};
 
         :param data: JSON struktura, ve které se má automaticky detekovat base URI.
         :param nova_base: Náhradní base URI použitá při přepisu nalezeného prefixu.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``nahrad_base_uri_v_json()``, proměnná ``data``.
         """
         vsechny_str = self.sesbiraj_retezce(data)
         puvodni_base = self.najdi_base_uri(vsechny_str)
@@ -1542,6 +1600,8 @@ return new Date('2025-06-28T12:00:00Z');}};
 
         :param data: JSON struktura, ve které se mají odstranit vybrané klíče.
         :param klice_k_ignoraci: Seznam klíčů, které mají být z výsledku odstraněny.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``data``.
         """
         if isinstance(data, dict):
             return {k: self.odstran_klice(v, klice_k_ignoraci) for k, v in data.items() if k not in klice_k_ignoraci}
@@ -1555,6 +1615,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         Rekurzivně seřadí seznamy (pokud to jde) a klíče ve slovnících.
 
         :param data: JSON struktura určená k normalizaci před porovnáním.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, výsledek volání ``sorted()``, proměnná ``normalizovane``.
         """
         if isinstance(data, dict):
             return {k: self.normalizuj_json(v) for k, v in sorted(data.items())}
@@ -1575,6 +1637,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         Rekurzivně nahradí UUID ve stringových hodnotách JSON objektu za placeholder.
 
         :param data: JSON struktura obsahující hodnoty s UUID identifikátory.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, výsledek volání ``sub()``, proměnná ``data``.
         """
         if isinstance(data, dict):
             return {k: self.odstran_uuid(v) for k, v in data.items()}
@@ -1589,8 +1653,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci json uprav pro porovnani.
 
-        :param json_text: Cesta, URL nebo název zdroje ``json_text``, ze kterého funkce čte nebo kam zapisuje.
-        :param klice_k_ignoraci: Číselná nebo geometrická hodnota `klice_k_ignoraci` použitá při výpočtu nebo transformaci.
+        :param json_text: Parametr ``json_text`` se předává do volání ``loads()``.
+        :param klice_k_ignoraci: Parametr ``klice_k_ignoraci`` se předává do volání ``odstran_klice()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací proměnná ``json_obj``.
         """
         json_obj = json.loads(json_text)
         if klice_k_ignoraci:
@@ -1604,9 +1670,11 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci porovnej json rovnost.
 
-        :param vzor_json_text: Cesta, URL nebo název zdroje ``vzor_json_text``, ze kterého funkce čte nebo kam zapisuje.
-        :param vystup_json_text: Cesta, URL nebo název zdroje ``vystup_json_text``, ze kterého funkce čte nebo kam zapisuje.
-        :param klice_k_ignoraci: Číselná nebo geometrická hodnota `klice_k_ignoraci` použitá při výpočtu nebo transformaci.
+        :param vzor_json_text: Parametr ``vzor_json_text`` se předává do volání ``json_uprav_pro_porovnani()``.
+        :param vystup_json_text: Parametr ``vystup_json_text`` se předává do volání ``json_uprav_pro_porovnani()``, ``error()``.
+        :param klice_k_ignoraci: Parametr ``klice_k_ignoraci`` se předává do volání ``json_uprav_pro_porovnani()``.
+
+            :return: Vrací proměnná ``res``.
         """
         json_vzor = self.json_uprav_pro_porovnani(vzor_json_text, klice_k_ignoraci)
         json_vystup = self.json_uprav_pro_porovnani(vystup_json_text, klice_k_ignoraci)
@@ -1620,7 +1688,10 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def getTime(self):
-        """Provádí operaci getTime."""
+        """Provádí operaci getTime.
+
+        :return: Vrací proměnná ``t``.
+        """
         if os.name == "nt":
             self.wait(1.5)
         t = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")

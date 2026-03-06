@@ -54,6 +54,8 @@ Udrzovat zmeny male, bezpecne a snadno reviewovatelne v souladu s projektovymi p
   - Pouzivat Sphinx styl (`:param:`, `:return:`, `:raises:`) kde dava smysl.
   - Nepouzivat Google-sekce `Args:`, `Returns:`, `Raises:`.
   - Udrzovat popisy konkretni vuci realnemu chovani kodu (ne obecne sablony typu "vstupni hodnota").
+  - U `:return:` a `:raises:` vzdy popsat konkretni chovani podle implementace (typ/navratove vetve, podminky vyvolani vyjimky), ne genericke formulace.
+  - U `:param:` vzdy popsat vyznam konkretniho parametru v kontextu funkce/metody (jak ovlivnuje chovani), ne genericke formulace.
   - Nezdvojovat informace: pokud je pouzit Sphinx blok, nepsat paralelni Google blok se stejnym obsahem.
   - Hook `method-docstring-style-reminder` je neblokujici, ale varovani brat vazne.
 
@@ -64,7 +66,7 @@ Pri hromadnych upravach docstringu proved:
 1. Vyhledani zbytkoveho Google stylu:
    - `Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'`
 2. Vyhledani generickych formulaci:
-   - `Select-String -Pattern 'Popis parametru|Návratová hodnota funkce|Vstupní hodnota'`
+   - `Select-String -Pattern 'Popis parametru|Návratová hodnota funkce|Vstupní hodnota|Hodnota parametru|Pokud během zpracování nastane chyba|Raised when processing fails'`
 3. Kontrolu, ze popis odpovida kontextu funkce (parametry i return typ/chovani).
 4. Kontrolu, ze nejsou duplicitni bloky se stejnym obsahem.
 
@@ -86,8 +88,15 @@ Pravidla:
 
 Minimalne:
 
-1. `python -m compileall -q webclient`
+1. `.\\.venv\\Scripts\\python.exe -m compileall -q webclient`
 2. `pre-commit run --all-files`
+
+### Preferovana varianta Pythonu
+
+Pro vsechny kontrolni skripty a testy preferuj interpreter z lokalniho virtualniho prostredi:
+
+- `.\.venv\Scripts\python.exe`
+- teprve pokud `.venv` neni dostupne, pouzij `python`/`python3`/`py`
 
 Dle typu zmen:
 
@@ -134,5 +143,3 @@ Pri kontrole vyznamu popisu Selenium testu proti vetvi `test` proved:
 - CI muze automaticky vytvorit PR s opravami formatovani/generovanych souboru
 
 Agent ma preferovat takove zmeny, ktere timto pipeline projdou bez manualnich zasahu.
-
-

@@ -29,7 +29,9 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Metoda pro správně vrácení hodnot o osobe.
 
-        :param obj: Objekt, se kterým funkce pracuje.
+        :param obj: Parametr ``obj`` předává se do volání ``str()``, pracuje se s atributy ``osoba``, vstupuje do návratové hodnoty.
+
+            :return: Vrací slovník.
         """
         return {"value": str(obj.osoba) if obj.osoba else None, "idRef": obj.osoba.ident_cely if obj.osoba else ""}
 
@@ -37,7 +39,9 @@ class UserSerializer(serializers.ModelSerializer):
         """
         Override reprezentace do dict pro správně zobrazení label.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``get_attribute()``.
+
+            :return: Vrací proměnná ``ret``.
         """
         ret = OrderedDict()
         fields = self._readable_fields

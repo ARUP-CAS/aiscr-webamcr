@@ -20,7 +20,13 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
     """Rozšíření třídy TextTestResult s podporou číslování testovacích případů."""
 
     def __init__(self, stream, descriptions, verbosity):
-        """Inicializuje generátor čísel testů a poté zavolá implementaci předka."""
+        """Inicializuje generátor čísel testů a poté zavolá implementaci předka.
+
+        :param stream: Parametr ``stream`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
+        :param descriptions: Parametr ``descriptions`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
+        :param verbosity: Parametr ``verbosity`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
+        :return: Vrací výsledek volání ``__init__()``.
+        """
 
         self.test_numbers = itertools.count(1)
 
@@ -31,6 +37,8 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
         Pokud je showAll zapnuto, zapíše číslo testu do výstupu a poté zavolá implementaci předka.
 
         :param test: Test case nebo testovací objekt, se kterým runner pracuje.
+
+            :return: Vrací výsledek volání ``startTest()``.
         """
 
         if True:  # self.showAll:
@@ -45,7 +53,12 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
         return super(CustomTextTestResult, self).startTest(test)
 
     def _exc_info_to_string(self, err, test):
-        """Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu."""
+        """Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu.
+
+        :param err: Parametr ``err`` předává se do volání ``_exc_info_to_string()``.
+        :param test: Parametr ``test`` předává se do volání ``_exc_info_to_string()``, ``format()``, pracuje se s atributy ``progress_index``.
+        :return: Vrací proměnná ``info``.
+        """
 
         info = super(CustomTextTestResult, self)._exc_info_to_string(err, test)
 
@@ -65,6 +78,8 @@ class CustomTextTestRunner(unittest.runner.TextTestRunner):
         Spustí hodnotu. v aplikaci.
 
         :param test: Test case nebo testovací objekt, se kterým runner pracuje.
+
+            :return: Vrací výsledek volání ``run()``.
         """
 
         self.test_case_count = test.countTestCases()
@@ -89,8 +104,8 @@ class AMCRSeleniumTestRunner(BaseRunner):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(AMCRSeleniumTestRunner, self).__init__(*args, **kwargs)
         self.test_runner = CustomTextTestRunner
@@ -99,8 +114,10 @@ class AMCRSeleniumTestRunner(BaseRunner):
         """
         Provádí operaci setup databases.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``setup_databases()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``setup_databases()``.
+
+            :return: Vrací proměnná ``temp_return``.
         """
         self.keepdb = True
         temp_return = super().setup_databases(*args, **kwargs)
@@ -112,7 +129,7 @@ class AMCRSeleniumTestRunner(BaseRunner):
         """
         Provádí operaci teardown databases.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``teardown_databases``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``teardown_databases``.
         """
         pass

@@ -221,7 +221,7 @@ def dokument_cast_save_metadata_save(sender, instance: DokumentCast, created, **
 
     :param sender: Model, který signal vyvolal.
     :param instance: Uložená instance části dokumentu.
-    :param created: Příznak, zda byla část dokumentu právě vytvořena.
+    :param created: Parametr ``created`` ovlivňuje větvení podmínek.
     :param kwargs: Dodatečné argumenty předané Django signalem.
     """
     extra = {"pk": instance.pk, "custom_created": created}
@@ -316,7 +316,7 @@ def tvar_save(sender, instance: Tvar, created, **kwargs):
 
     :param sender: Model, který signal vyvolal.
     :param instance: Uložená instance tvaru.
-    :param created: Příznak, zda byl tvar právě vytvořen.
+    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``tvar_save``.
     :param kwargs: Dodatečné argumenty předané Django signalem.
     """
     logger.debug("dokument.signals.tvar_save.start", extra={"pk": instance.pk})

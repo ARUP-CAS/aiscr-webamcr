@@ -16,7 +16,9 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 Funkce
@@ -25,3 +27,5 @@ Funkce
 .. py:function:: check_status()
 
    Ověří status. v aplikaci.
+
+   :return: Vrací n-tici.

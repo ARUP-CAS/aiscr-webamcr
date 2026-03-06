@@ -25,7 +25,9 @@ def get_or_create_transaction(instance):
     """
     Vrací or create transaction.
 
-    :param instance: Instance modelu, které se operace týká.
+    :param instance: Parametr ``instance`` pracuje se s atributy ``active_transaction``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, výsledek volání ``FedoraTransaction()``.
     """
     if instance.active_transaction:
         return instance.active_transaction
@@ -38,9 +40,11 @@ def save_ident_cely(sender, instance: Heslar, **kwargs):
     """
     Funkce pro uložení metadat hesláře.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_ident_cely``.
+    :param instance: Parametr ``instance`` předává se do volání ``check_container_deleted_or_not_exists()``, ``debug()``, pracuje se s atributy ``ident_cely``, ``pk``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_ident_cely``.
+
+        :raises Exception: Vyvolá se při splnění podmínky ``not FedoraRepositoryConnector.check_container_deleted_or_not_exists(instance.ident_cely, 'heslar')``.
     """
     logger.debug("heslo.signals.save_ident_cely.start")
     if not instance.ident_cely and not instance.pk:
@@ -56,9 +60,9 @@ def save_metadata_heslar(sender, instance: Heslar, **kwargs):
     """
     Funkce pro uložení metadat hesláře.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_heslar``.
+    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_heslar``.
     """
     logger.debug("heslo.signals.save_metadata_heslar.start")
     if not instance.suppress_signal:
@@ -74,9 +78,9 @@ def save_metadata_katastr(sender, instance: RuianKatastr, **kwargs):
     """
     Funkce pro uložení metadat katastru.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_katastr``.
+    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_katastr``.
     """
     logger.debug("heslo.signals.save_metadata_katastr.start")
     if not instance.suppress_signal:
@@ -92,9 +96,9 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
     """
     Funkce pro uložení metadat kraje.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_kraj``.
+    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_kraj``.
     """
     logger.debug("heslo.signals.save_metadata_kraj.start")
     if not instance.suppress_signal:
@@ -110,9 +114,9 @@ def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
     """
     Uloží metadata okres.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_okres``.
+    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_okres``.
     """
     logger.debug("heslo.signals.save_metadata_okres.start")
     if not instance.suppress_signal:
@@ -128,10 +132,10 @@ def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, created,
     """
     Funkce pro uložení metadat heslář - hierarchie.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param created: Příznak, zda byla instance právě vytvořena.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_hierarchie``.
+    :param instance: Parametr ``instance`` pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_hierarchie``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_hierarchie``.
     """
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.start")
 
@@ -166,10 +170,10 @@ def save_metadata_heslar_datace(sender, instance: HeslarDatace, created, **kwarg
     """
     Funkce pro uložení metadat heslář - hierarchie.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param created: Příznak, zda byla instance právě vytvořena.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_datace``.
+    :param instance: Parametr ``instance`` pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_datace``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_datace``.
     """
     logger.debug("heslo.signals.save_metadata_heslar_hierarchie.start")
     if not instance.suppress_signal:
@@ -201,10 +205,10 @@ def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDoku
     """
     Funkce pro uložení metadat heslář - hierarchie.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param created: Příznak, zda byla instance právě vytvořena.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_dokument_typ_material_rada``.
+    :param instance: Parametr ``instance`` pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param created: Parametr ``created`` ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_dokument_typ_material_rada``.
     """
     logger.debug("heslo.signals.save_metadata_heslar_dokument_typ_material_rada.start")
     if not instance.suppress_signal:
@@ -234,10 +238,10 @@ def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs)
     """
     Funkce pro uložení metadat heslář - odkaz.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param created: Příznak, zda byla instance právě vytvořena.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_odkaz``.
+    :param instance: Parametr ``instance`` pracuje se s atributy ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_odkaz``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_heslar_odkaz``.
     """
     logger.debug("heslo.signals.save_metadata_heslar_odkaz.start")
     if not instance.suppress_signal:
@@ -273,9 +277,9 @@ def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
     """
     Provádí operaci heslar delete repository container.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``heslar_delete_repository_container``.
+    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``heslar_delete_repository_container``.
     """
     logger.debug("heslo.signals.heslar_delete_repository_container.start")
     fedora_transaction = FedoraTransaction()
@@ -291,9 +295,9 @@ def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **
     """
     Provádí operaci ruian katastr delete repository container.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``ruian_katastr_delete_repository_container``.
+    :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``ruian_katastr_delete_repository_container``.
     """
     logger.debug("heslo.signals.ruian_katastr_delete_repository_container.start")
     fedora_transaction = get_or_create_transaction(instance)
@@ -309,9 +313,9 @@ def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs
     """
     Provádí operaci ruian kraj delete repository container.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``ruian_kraj_delete_repository_container``.
+    :param instance: Parametr ``instance`` předává se do volání ``get_or_create_transaction()``, ``on_commit()``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``ruian_kraj_delete_repository_container``.
     """
     logger.debug("heslo.signals.ruian_kraj_delete_repository_container.start")
     fedora_transaction = get_or_create_transaction(instance)
@@ -327,9 +331,9 @@ def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwar
     """
     Provádí operaci ruian okres delete repository container.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``ruian_okres_delete_repository_container``.
+    :param instance: Parametr ``instance`` slouží jako vstup pro logiku funkce ``ruian_okres_delete_repository_container``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``ruian_okres_delete_repository_container``.
     """
     logger.debug("heslo.signals.ruian_okres_delete_repository_container.start")
 
@@ -350,9 +354,9 @@ def delete_uppdate_related_heslar_hierarchie(sender, instance: HeslarHierarchie,
     """
     Funkce pro uložení metadat navázaného hesláře při smazání heslář - hierarchie.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_hierarchie``.
+    :param instance: Parametr ``instance`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_hierarchie``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_hierarchie``.
     """
     logger.debug("heslo.signals.delete_uppdate_related_heslar_hierarchie.start")
     fedora_transaction = FedoraTransaction()
@@ -374,9 +378,9 @@ def delete_uppdate_related_heslar_dokument_typ_material_rada(sender, instance: H
     """
     Funkce pro uložení metadat navázaného hesláře při smazání heslář - dokument typ materiál řada.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_dokument_typ_material_rada``.
+    :param instance: Parametr ``instance`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_dokument_typ_material_rada``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_dokument_typ_material_rada``.
     """
     logger.debug("heslo.signals.delete_uppdate_related_heslar_dokument_typ_material_rada.start")
     fedora_transaction = FedoraTransaction()
@@ -399,9 +403,9 @@ def delete_uppdate_related_heslar_odkaz(sender, instance: HeslarOdkaz, **kwargs)
     """
     Funkce pro uložení metadat navázaného hesláře při smazání heslář - odkaz.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_odkaz``.
+    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_odkaz``.
     """
     logger.debug("heslo.signals.delete_uppdate_related_heslar_odkaz.start")
     fedora_transaction = FedoraTransaction()
@@ -417,9 +421,9 @@ def delete_uppdate_related_heslar_datace(sender, instance: HeslarDatace, **kwarg
     """
     Funkce pro uložení metadat navázaného hesláře při smazání heslář - datace.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_datace``.
+    :param instance: Parametr ``instance`` pracuje se s atributy ``obdobi``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_uppdate_related_heslar_datace``.
     """
     logger.debug("heslo.signals.delete_uppdate_related_heslar_datace.start")
     fedora_transaction = FedoraTransaction()

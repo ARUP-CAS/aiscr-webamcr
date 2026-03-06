@@ -26,7 +26,10 @@ class DateRangeField(forms.DateField):
         """
         Provádí operaci to python.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``isinstance()``, pracuje se s atributy ``split``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``value``, výsledek volání ``DateRange()``.
+            :raises ValidationError: Vyvolá se při splnění podmínky ``from_date is None or to_date is None``; nebo při zpracování zachycené výjimky typu ``Exception``.
         """
         if isinstance(value, DateRange):
             return value
@@ -56,7 +59,9 @@ class DateRangeWidget(forms.TextInput):
         """
         Provádí operaci format value.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
         """
         if value == "" or value is None:
             return None
@@ -119,8 +124,8 @@ class OznamovatelForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
         self.uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         required = kwargs.pop("required", True)
@@ -206,15 +211,18 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
     )
 
     def clean_send_mail(self):
-        """Provádí operaci clean send mail."""
+        """Provádí operaci clean send mail.
+
+        :return: Vrací výsledek volání ``get()``.
+        """
         return self.cleaned_data.get("send_mail", False)
 
     def __init__(self, *args, **kwargs):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         if "send_mail" in self.data and self.data["send_mail"] == "":
@@ -299,8 +307,8 @@ class ProjektOznameniForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
         change = kwargs.pop("change", False)
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)

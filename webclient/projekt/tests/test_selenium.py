@@ -35,7 +35,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         """
         Vrací table columns.
 
-        :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
+        :param table: Parametr ``table`` pracuje se s atributy ``find_elements``.
         :return: Načtená data odpovídající zadaným vstupům.
         """
         elements = table.find_elements(By.TAG_NAME, "th")
@@ -45,7 +45,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         """
         Ověří column hiding.
 
-        :param element_id_initial: Záznam/objekt ``element_id_initial``, který funkce čte, validuje nebo upravuje.
+        :param element_id_initial: Parametr ``element_id_initial`` předává se do volání ``info()``, ``find_element()``, ovlivňuje větvení podmínek.
         :param column_header_text: Číselná hodnota ``column_header_text`` použitá při výpočtu nebo transformaci.
         :param initial: Stavová nebo časová hodnota `initial` používaná při rozhodování logiky.
         :return: Vrací výsledek ověření nebo validačního pravidla.
@@ -529,7 +529,9 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         :param date_from: Časový údaj ``date_from`` použitý při filtrování nebo výpočtu.
         :param date_to: Časový údaj ``date_to`` použitý při filtrování nebo výpočtu.
         :param telefon: Textová hodnota `telefon` používaná pro vyhledání, pojmenování nebo hlášení stavu.
-        :param css_selector: Číselná nebo geometrická hodnota `css_selector` použitá při výpočtu nebo transformaci.
+        :param css_selector: Parametr ``css_selector`` slouží jako vstup pro logiku funkce ``ProjektZapsat``.
+
+            :return: Vrací seznam.
         """
         self.login()
         self.go_to_form()

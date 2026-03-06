@@ -31,7 +31,7 @@ class ApiView(autocomplete.Select2ListView):
         """
         Inicializuje instanci třídy.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(**kwargs)
 
@@ -53,7 +53,7 @@ class ApiView(autocomplete.Select2ListView):
                Uloží value to cache.
 
                :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``set()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         cls.r.set(f"{cls.CACHE_PREFIX}_{key}", value)
@@ -64,7 +64,7 @@ class ApiView(autocomplete.Select2ListView):
         Provádí operaci api call.
 
         :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Příznak ``use_cache`` určující průběh nebo rozsah zpracování.
+        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
         """
         pass
 
@@ -72,9 +72,11 @@ class ApiView(autocomplete.Select2ListView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         if self.q:
             results = self.get_list()
@@ -88,11 +90,16 @@ class ApiView(autocomplete.Select2ListView):
         Provádí operaci autocomplete results.
 
         :param results: Kolekce ``results`` zpracovávaná touto funkcí.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         return [dict(id=x, text=y) for x, y in results]
 
     def get_list(self):
-        """Vrací list. v aplikaci."""
+        """Vrací list. v aplikaci.
+
+        :return: Vrací výsledek volání ``api_call()``.
+        """
         return self.api_call(self.q)
 
 
@@ -198,7 +205,9 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
         Provádí operaci api call.
 
         :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Příznak ``use_cache`` určující průběh nebo rozsah zpracování.
+        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+
+            :return: Vrací proměnná ``results``.
         """
         results = cls._api_call_cross_ref_doi(q)
         if not results:
@@ -221,7 +230,9 @@ class OrcidAutocompleteView(ApiView):
         Provádí operaci api call.
 
         :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Příznak ``use_cache`` určující průběh nebo rozsah zpracování.
+        :param use_cache: Parametr ``use_cache`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: seznam, proměnná ``result_list``.
         """
         if use_cache:
             cached_value = cls._get_value_from_cache(q)
@@ -263,7 +274,9 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
         Provádí operaci api call.
 
         :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Příznak ``use_cache`` určující průběh nebo rozsah zpracování.
+        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+
+            :return: Vrací proměnná ``result_list``.
         """
         params = {
             "query": q,
@@ -303,7 +316,9 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
         Provádí operaci api call.
 
         :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
-        :param use_cache: Příznak ``use_cache`` určující průběh nebo rozsah zpracování.
+        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: seznam, proměnná ``result_list``.
         """
         if not q:
             return []
@@ -366,9 +381,9 @@ class ContinuePidProcessing(AdminRecordProcessingView):
         """
                Provádí operaci perform client action.
 
-               :param record: Záznam, který funkce čte nebo upravuje.
+               :param record: Parametr ``record`` předává se do volání ``isinstance()``, pracuje se s atributy ``save``, ``lokalita``, ovlivňuje větvení podmínek.
                :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
-               :param publish_callable_method: Číselná nebo geometrická hodnota `publish_callable_method` použitá při výpočtu nebo transformaci.
+               :param publish_callable_method: Parametr ``publish_callable_method`` slouží jako vstup pro logiku funkce ``_perform_client_action``.
                :param set_callable_method: Kolekce ``set_callable_method`` zpracovávaná touto funkcí.
         :return: Výstup funkce odpovídající implementované logice.
         """
@@ -391,9 +406,11 @@ class ContinuePidProcessing(AdminRecordProcessingView):
         """
         Provádí operaci process record.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``_perform_client_action()``, pracuje se s atributy ``active_transaction``, ``doi``, ovlivňuje větvení podmínek.
         :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
+
+            :return: Vrací proměnná ``result``.
         """
         fedora_transaction = FedoraTransaction()
         record.active_transaction = fedora_transaction

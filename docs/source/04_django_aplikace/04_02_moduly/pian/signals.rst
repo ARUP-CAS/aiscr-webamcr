@@ -12,9 +12,9 @@ Funkce
 
    Metoda se volá pred uložením záznamu.
 
-   :param sender: Třída modelu, která signal vyvolala.
-   :param instance: Instance modelu, které se operace týká.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_pian_vazby``.
+   :param instance: Parametr ``instance`` pracuje se s atributy ``pk``, ``historie``, ovlivňuje větvení podmínek.
+   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_pian_vazby``.
 
 .. py:function:: pian_save_metadata(sender, instance)
 
@@ -22,14 +22,14 @@ Funkce
 
    Metoda se volá pred uložením záznamu.
 
-   :param sender: Třída modelu, která signal vyvolala.
-   :param instance: Instance modelu, které se operace týká.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``pian_save_metadata``.
+   :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``save_metadata()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
+   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``pian_save_metadata``.
 
 .. py:function:: samostatny_nalez_okres_delete_repository_container(sender, instance)
 
    Provádí operaci samostatny nalez okres delete repository container.
 
-   :param sender: Třída modelu, která signal vyvolala.
-   :param instance: Instance modelu, které se operace týká.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``samostatny_nalez_okres_delete_repository_container``.
+   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
+   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``samostatny_nalez_okres_delete_repository_container``.

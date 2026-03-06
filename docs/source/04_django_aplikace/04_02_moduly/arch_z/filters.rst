@@ -22,7 +22,9 @@ Třídy
 
       Provádí operaci decompress.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací seznam.
 
 
 .. py:class:: NumberRangeField
@@ -45,56 +47,68 @@ Třídy
 
       Metoda pro filtrování podle hlavního i vedlejšího katastru.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_katastr``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``distinct()``, proměnná ``queryset``.
 
    .. py:method:: filtr_katastr_kraj()
 
       Metoda pro filtrování podle hlavního i vedlejšího kraje.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_katastr_kraj``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filtr_katastr_okres()
 
       Metoda pro filtrování podle hlavního i vedlejšího okresu.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_katastr_okres``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filter_dj_zjisteni()
 
       Metoda pro filtrování podle dj_zjisteni.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_dj_zjisteni``.
+      :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filter_predmet_pozn_pocet()
 
       Metoda pro filtrování podle poznámky a počtu predmětu.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_predmet_pozn_pocet``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filter_objekt_pozn_pocet()
 
       Metoda pro filtrování podle poznámky a počtu objektu.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_objekt_pozn_pocet``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
 
 
 .. py:class:: AkceFilter
@@ -107,86 +121,106 @@ Třídy
 
       Metoda pro filtrování podle typu akce.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_akce_typ``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filtr_vedouci()
 
       Metoda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_vedouci``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``queryset``, výsledek volání ``distinct()``.
 
    .. py:method:: filter_popisne_udaje()
 
       Metoda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filtr_zahrnout_projektove()
 
       Metoda pro filtrování mezi projektovými a samostatnými akcemi.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_zahrnout_projektove``.
+      :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
 
    .. py:method:: filter_has_positive_find()
 
       Metoda pro filtrování podle toho či akce má pozitivní DJ.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_has_positive_find``.
+      :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``queryset``, výsledek volání ``distinct()``.
 
    .. py:method:: filter_adb_popisne_udaje()
 
       Metoda pro filtrování podle popisných údajů ADB.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_adb_popisne_udaje``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filtr_adb_autori()
 
       Metoda pro filtrování podle autorů revize a popisu ADB.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_adb_autori``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``queryset``, výsledek volání ``distinct()``.
 
    .. py:method:: filter_adb_roky()
 
       Metoda pro filtrování podle roku revize a popisu ADB.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_adb_roky``.
+      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``distinct()``.
 
    .. py:method:: filter_by_z_range()
 
       Filtruje by z range.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
-      :param name: Název nebo identifikátor používaný v rámci operace.
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``extra``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` ovlivňuje větvení podmínek.
+      :param value: Parametr ``value`` předává se do volání ``extra()``, ovlivňuje větvení podmínek.
+
+      :return: Vrací proměnná ``queryset``.
 
    .. py:method:: filter_queryset()
 
       Filtruje queryset. v aplikaci.
 
-      :param queryset: Vstupní queryset, který má být dále zpracován.
+      :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+      :return: Vrací proměnná ``queryset``.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: AkceFilterFormHelper
@@ -199,5 +233,5 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param form: Formulářová instance zpracovávaná funkcí.
+      :param form: Parametr ``form`` se předává do volání ``__init__()``.
 

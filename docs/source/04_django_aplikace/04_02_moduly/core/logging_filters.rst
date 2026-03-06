@@ -16,5 +16,7 @@ Třídy
 
       Filtruje hodnotu. v aplikaci.
 
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param record: Parametr ``record`` pracuje se s atributy ``url``, ``user_id``.
+
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 

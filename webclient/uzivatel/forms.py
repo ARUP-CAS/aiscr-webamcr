@@ -75,8 +75,8 @@ class AuthUserCreationForm(RegistrationForm, FormWithOrcid):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``, pracuje se s atributy ``get``.
         """
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -138,8 +138,8 @@ class AuthUserCreationFormWithRecaptcha(AuthUserCreationForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(AuthUserCreationFormWithRecaptcha, self).__init__(*args, **kwargs)
         if settings.SKIP_RECAPTCHA:
@@ -169,8 +169,8 @@ class AuthUserChangeForm(forms.ModelForm, FormWithOrcid):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -239,8 +239,8 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.fields["organizace"].widget.value = self.instance.organizace
@@ -277,8 +277,8 @@ class AuthUserChangeAdminForm(UserChangeForm, FormWithOrcid):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.fields["orcid"] = OrcidAutocompleteField(
@@ -335,7 +335,10 @@ class UpdatePasswordSettings(forms.ModelForm):
     )
 
     def clean(self):
-        """Provádí operaci clean."""
+        """Provádí operaci clean.
+
+        :raises ValidationError: Vyvolá se při splnění podmínky ``not old_password and (password1 or password2)``; nebo při splnění podmínky ``old_password and (not (password1 or password2))``.
+        """
         cleaned_data = super().clean()
         old_password = cleaned_data.get("old_password")[2:-2]
         password1 = cleaned_data.get("password1")[2:-2]
@@ -365,8 +368,8 @@ class UpdatePasswordSettings(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -388,8 +391,8 @@ class AuthUserLoginForm(AuthenticationForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(AuthUserLoginForm, self).__init__(*args, **kwargs)
         self.fields["username"].help_text = _("uzivatel.forms.login.username.tooltip")
@@ -406,7 +409,10 @@ class AuthUserLoginForm(AuthenticationForm):
         )
 
     def get_invalid_login_error(self):
-        """Vrací invalid login error."""
+        """Vrací invalid login error.
+
+        :return: Vrací výsledek volání ``ValidationError()``.
+        """
         return ValidationError(
             _("uzivatel.forms.login.error"),
             code="invalid_login",
@@ -420,8 +426,8 @@ class UserPasswordResetForm(PasswordResetForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)
         self.fields["email"].label = _("uzivatel.forms.passwordReset.email.label")
@@ -441,12 +447,12 @@ class UserPasswordResetForm(PasswordResetForm):
         """
         Send a django.core.mail.EmailMultiAlternatives to `to_email`.
 
-        :param subject_template_name: Cesta, URL nebo název zdroje ``subject_template_name``, ze kterého funkce čte nebo kam zapisuje.
-        :param email_template_name: Cesta, URL nebo název zdroje ``email_template_name``, ze kterého funkce čte nebo kam zapisuje.
-        :param context: Kontextová data používaná při serializaci nebo renderování.
+        :param subject_template_name: Parametr ``subject_template_name`` se předává do volání ``render_to_string()``.
+        :param email_template_name: Parametr ``email_template_name`` se předává do volání ``render_to_string()``.
+        :param context: Parametr ``context`` se předává do volání ``render_to_string()``, ``_log_notification()``.
         :param from_email: Uživatel nebo osoba ``from_email``, v jejímž kontextu se operace provádí.
         :param to_email: Uživatel nebo osoba ``to_email``, v jejímž kontextu se operace provádí.
-        :param html_email_template_name: Cesta, URL nebo název zdroje ``html_email_template_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param html_email_template_name: Parametr ``html_email_template_name`` se předává do volání ``render_to_string()``, ovlivňuje větvení podmínek.
         """
         subject = loader.render_to_string(subject_template_name, context)
         # Předmět e-mailu *nesmí* obsahovat znaky nového řádku.
@@ -524,8 +530,8 @@ class OsobaForm(forms.ModelForm, FormWithOrcid, FormWithWikidata):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
         kwargs.pop("create", False)
         super(OsobaForm, self).__init__(*args, **kwargs)

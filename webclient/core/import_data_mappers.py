@@ -138,7 +138,7 @@ class ImportDataIncorrectStructureError(ImportDataError):
         """
         Inicializuje instanci třídy.
 
-        :param missing_columns: Číselná nebo geometrická hodnota `missing_columns` použitá při výpočtu nebo transformaci.
+        :param missing_columns: Parametr ``missing_columns`` se předává do volání ``__init__()``, ``join()``.
         :param excess_columns: Číselná hodnota ``excess_columns`` použitá při výpočtu nebo transformaci.
         """
         super().__init__(
@@ -172,8 +172,8 @@ class ImportDataIncorrectStructureContentObjectError(ImportDataError):
         """
         Inicializuje instanci třídy.
 
-        :param columns: Číselná nebo geometrická hodnota `columns` použitá při výpočtu nebo transformaci.
-        :param expected_colummns_options: Dodatečné poziční argumenty předané voláním.
+        :param columns: Parametr ``columns`` se předává do volání ``__init__()``, ``join()``.
+        :param expected_colummns_options: Parametr ``expected_colummns_options`` se předává do volání ``__init__()``, ``join()``.
         """
         super().__init__(
             f'{_("core_admin.ImportDataIncorrectStructureContentObjectError.message.part_1")} '
@@ -196,7 +196,7 @@ class ImportDataMissingReferencedValueError(ImportDataError):
         Inicializuje instanci třídy.
 
         :param missing_value_id: Identifikátor objektu ``missing_value``.
-        :param missing_model_name: Název nebo typ ``missing_model_name`` používaný pro volbu cílové logiky.
+        :param missing_model_name: Parametr ``missing_model_name`` předává se do volání ``__init__()``.
         """
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
@@ -225,7 +225,7 @@ class ImportDataIntegrityError(ImportDataError):
 
         :param record_id: Identifikátor objektu ``record``.
         :param model_name: Název modelu používaný pro cílení operace.
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``__init__()``, ``format()``.
         """
         self.record_id = record_id
         self.model_name = model_name
@@ -251,7 +251,7 @@ class ImportDataLimitChoicesError(ImportDataError):
         Inicializuje instanci třídy.
 
         :param record_id: Identifikátor objektu ``record``.
-        :param limit_choices_to: Číselná nebo geometrická hodnota `limit_choices_to` použitá při výpočtu nebo transformaci.
+        :param limit_choices_to: Parametr ``limit_choices_to`` se předává do volání ``__init__()``, ``format()``, pracuje se s atributy ``items``.
         """
         self.record_id = record_id
         self.limit_choices_to = limit_choices_to
@@ -289,7 +289,7 @@ class ImportDataUnsupportedFileError(ImportDataError):
         """
         Inicializuje instanci třídy.
 
-        :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param file_name: Parametr ``file_name`` se předává do volání ``__init__()``, ``format()``.
         """
         self.file_name = file_name
         super().__init__(
@@ -310,7 +310,7 @@ class ImportDataUnsupportedFilesError(ImportDataError):
         """
         Inicializuje instanci třídy.
 
-        :param file_names: Cesta, URL nebo název zdroje ``file_names``, ze kterého funkce čte nebo kam zapisuje.
+        :param file_names: Parametr ``file_names`` se předává do volání ``__init__()``, ``format()``.
         """
         self.file_names = file_names
         super().__init__(
@@ -353,7 +353,10 @@ class BaseImportField:
 
     @property
     def value(self):
-        """Provádí operaci value."""
+        """Provádí operaci value.
+
+        :return: Vrací atribut objektu.
+        """
         return self._value
 
     @value.setter
@@ -361,7 +364,7 @@ class BaseImportField:
         """
         Provádí operaci value.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``str()``, ``_process_value()``, pracuje se s atributy ``setter``, ovlivňuje větvení podmínek.
         """
         if str(value).lower() == "nan":
             value = None
@@ -369,24 +372,33 @@ class BaseImportField:
 
     @property
     def is_null(self):
-        """Určí, zda null."""
+        """Určí, zda null.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return self._value is None or str(self._value).lower() == "nan"
 
     @property
     def instance_value(self):
-        """Provádí operaci instance value."""
+        """Provádí operaci instance value.
+
+        :return: Vrací atribut objektu.
+        """
         return self._value
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value."""
+        """Provádí operaci serialized value.
+
+        :return: Vrací atribut objektu.
+        """
         return self._value
 
     def _process_value(self, value):
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
         """
         return value
@@ -401,8 +413,10 @@ class IntegerImportField(BaseImportField):
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se při splnění podmínky ``value``.
         """
 
         if not value:
@@ -427,8 +441,10 @@ class PositiveIntegerImportField(BaseImportField):
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``_process_value()``, ``ImportDataError()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se při splnění podmínky ``value is not None and value < 0``.
         """
         value = super()._process_value(value)
         if value is not None and value < 0:
@@ -445,8 +461,10 @@ class DecimalImportField(BaseImportField):
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se při splnění podmínky ``value``.
         """
         if not value:
             return None
@@ -468,8 +486,10 @@ class BooleanImportField(BaseImportField):
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``ImportDataError()``, pracuje se s atributy ``lower``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
 
         if isinstance(value, bool):
@@ -490,7 +510,10 @@ class DateImportField(BaseImportField):
 
     @property
     def value(self):
-        """Provádí operaci value."""
+        """Provádí operaci value.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return self._value.isoformat() if self._value else None
 
     @value.setter
@@ -498,21 +521,26 @@ class DateImportField(BaseImportField):
         """
         Provádí operaci value.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``_process_value()``, pracuje se s atributy ``setter``.
         """
         self._value = self._process_value(value)
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value."""
+        """Provádí operaci serialized value.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return self._value.strftime("%Y-%m-%d") if self._value else None
 
     def _process_value(self, value) -> datetime.date | None:
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
 
         if not value or str(value).lower() == "nan":
@@ -538,7 +566,10 @@ class DateTimeImportField(BaseImportField):
 
     @property
     def value(self):
-        """Provádí operaci value."""
+        """Provádí operaci value.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return self._value.strftime("%Y-%m-%d %H:%M:%S") if self._value else None
 
     @value.setter
@@ -546,21 +577,26 @@ class DateTimeImportField(BaseImportField):
         """
         Provádí operaci value.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``_process_value()``, pracuje se s atributy ``setter``.
         """
         self._value = self._process_value(value)
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value."""
+        """Provádí operaci serialized value.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return self._value.strftime("%Y-%m-%d %H:%M:%S") if self._value else None
 
     def _process_value(self, value) -> datetime.datetime | None:
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
         if not value or str(value).lower() == "nan":
             return None
@@ -580,15 +616,20 @@ class DateRangeImportField(BaseImportField):
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value."""
+        """Provádí operaci serialized value.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"[{self.value.lower.strftime('%Y-%m-%d')},{self.value.upper.strftime('%Y-%m-%d')})"
 
     def _process_value(self, value) -> DateRange | None:
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``strip``, ovlivňuje větvení podmínek.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
 
         if not value or str(value).lower() == "nan":
@@ -613,9 +654,11 @@ class LookupImportField(BaseImportField):
         """
         Inicializuje instanci třídy.
 
-        :param lookup_model_classes: Název nebo typ ``lookup_model_classes`` používaný pro volbu cílové logiky.
+        :param lookup_model_classes: Parametr ``lookup_model_classes`` předává se do volání ``isinstance()``, ovlivňuje větvení podmínek.
         :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
-        :param limit_choices_to: Číselná nebo geometrická hodnota `limit_choices_to` použitá při výpočtu nebo transformaci.
+        :param limit_choices_to: Parametr ``limit_choices_to`` ovlivňuje větvení podmínek.
+
+            :raises ValueError: Vyvolá se s textem "limit_choices_to is only supported for Heslar model".
         """
         super().__init__()
         if not isinstance(lookup_model_classes, Iterable):
@@ -634,15 +677,20 @@ class LookupImportField(BaseImportField):
 
     @property
     def instance_value(self):
-        """Provádí operaci instance value."""
+        """Provádí operaci instance value.
+
+        :return: Vrací atribut objektu.
+        """
         return self._instance_value
 
     def _check_limit_choices_to(self, record):
         """
         Ověří limit choices to.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` předává se do volání ``all()``, ``getattr()``, ovlivňuje větvení podmínek.
         :return: Vrací výsledek ověření nebo validačního pravidla.
+
+            :raises ImportDataLimitChoicesError: Vyvolá se při splnění podmínky ``not all((getattr(record, k).pk == v for k, v in self.limit_choices_to.items()))``.
         """
         if self.limit_choices_to:
             if not all(getattr(record, k).pk == v for k, v in self.limit_choices_to.items()):
@@ -652,8 +700,10 @@ class LookupImportField(BaseImportField):
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``str()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
 
         if str(value).lower() == "nan" or value is None or len(str(value)) == 0:
@@ -688,7 +738,7 @@ class RuianLookupImportField(LookupImportField):
         """
         Provádí operaci value.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek.
         """
         if isinstance(value, str):
             match = re.match(r"ruian-(\d+)", value)
@@ -703,7 +753,7 @@ class VazbaLookupImportField(LookupImportField):
         """
         Inicializuje instanci třídy.
 
-        :param lookup_model_classes: Název nebo typ ``lookup_model_classes`` používaný pro volbu cílové logiky.
+        :param lookup_model_classes: Parametr ``lookup_model_classes`` předává se do volání ``__init__()``.
         :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
         :param read_field_name: Textový název nebo klíč ``read_field_name`` používaný v rámci operace.
         """
@@ -714,8 +764,10 @@ class VazbaLookupImportField(LookupImportField):
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``get_record_from_ident()``, ``get()``, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
         try:
             record = get_record_from_ident(value)
@@ -753,22 +805,27 @@ class GeomImportField(BaseImportField):
         """
         Inicializuje instanci třídy.
 
-        :param srid: Číselná nebo geometrická hodnota `srid` použitá při výpočtu nebo transformaci.
+        :param srid: Parametr ``srid`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         super().__init__()
         self.srid = srid
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value."""
+        """Provádí operaci serialized value.
+
+        :return: Vrací výsledek volání ``getattr()``.
+        """
         return getattr(self._value, "wkt", None)
 
     def _process_value(self, value) -> GEOSGeometry | None:
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``GEOSGeometry()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
         if not value:
             return None
@@ -788,16 +845,19 @@ class GenericForeignKeyImportField(LookupImportField):
         """
         Inicializuje instanci třídy.
 
-        :param lookup_model_classes: Název nebo typ ``lookup_model_classes`` používaný pro volbu cílové logiky.
+        :param lookup_model_classes: Parametr ``lookup_model_classes`` předává se do volání ``__init__()``.
         :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
-        :param serialized_attribute: Příznak ``serialized_attribute`` určující průběh nebo rozsah zpracování.
+        :param serialized_attribute: Parametr ``serialized_attribute`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         super().__init__(lookup_model_classes, lookup_field_name)
         self.serialized_attribute = serialized_attribute
 
     @property
     def serialized_value(self):
-        """Provádí operaci serialized value."""
+        """Provádí operaci serialized value.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``getattr()``, atribut objektu.
+        """
         if self.serialized_attribute:
             return getattr(self._value, self.serialized_attribute)
         else:
@@ -807,8 +867,10 @@ class GenericForeignKeyImportField(LookupImportField):
         """
                Provádí operaci process value.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
         if isinstance(value, str) and (match := re.match(r"(?:\w+-)?(\d+)", value)):
             value = int(match.group(1))
@@ -852,7 +914,10 @@ class ImportModelMapper(ABC):
 
     @classmethod
     def get_import_data_mapper_dict(cls):
-        """Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů."""
+        """Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů.
+
+        :return: Vrací slovník.
+        """
 
         return {
             "heslar": HeslarMapper,
@@ -906,7 +971,9 @@ class ImportModelMapper(ABC):
         """
         Vrátí třídu mapperu odpovídající zadanému názvu souboru (bez přípony).
 
-        :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param file_name: Parametr ``file_name`` se předává do volání ``get()``, pracuje se s atributy ``split``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
         """
 
         return cls.get_import_data_mapper_dict().get(file_name.split(".")[0])
@@ -916,7 +983,7 @@ class ImportModelMapper(ABC):
         """
         Vrátí slovník mapování polí pomocí metody map_field.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` ovlivňuje větvení podmínek.
         :return: Vrací výsledek operace.
         """
 
@@ -933,13 +1000,18 @@ class ImportModelMapper(ABC):
         return field_mapping
 
     def _get_filter_kwargs_primary_key(self) -> dict | None:
-        """Vrátí slovník s názvem (názvy) a hodnotou (hodnotami) primárního klíče pro filtrování."""
+        """Vrátí slovník s názvem (názvy) a hodnotou (hodnotami) primárního klíče pro filtrování.
+
+        :return: Vrací hodnotu typu ``dict | None``; podle větve může jít o: None, slovník, hodnotu podle větve zpracování.
+        """
 
         def value_dict_name(value):
             """
             Provádí operaci value dict name.
 
-            :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+            :param value: Parametr ``value`` pracuje se s atributy ``split``, vstupuje do návratové hodnoty.
+
+                :return: Vrací hodnotu podle větve zpracování.
             """
             return value.split("__")[0] if "__" in value else value
 
@@ -976,8 +1048,10 @@ class ImportModelMapper(ABC):
         """
                Zpracuje primary key.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataIncorrectPrimaryKeyFormatError: Vyvolá se při splnění podmínky ``match``.
         """
         if isinstance(value, str) and cls.primary_key_prefix:
             match = re.match(f"{cls.primary_key_prefix}-(.*)", value)
@@ -992,7 +1066,7 @@ class ImportModelMapper(ABC):
         """
                Zpracuje primary key custom prefix.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``int()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
                :param prefix: Číselná hodnota ``prefix`` použitá při výpočtu nebo transformaci.
         :return: Výstup funkce odpovídající implementované logice.
         """
@@ -1006,6 +1080,9 @@ class ImportModelMapper(ABC):
         Namapuje pole modelu na odpovídající instanci BaseImportField nebo její podtřídy.
 
         :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``BaseImportField()``, výsledek volání ``IntegerImportField()``, výsledek volání ``PositiveIntegerImportField()``.
+            :raises ImportDataError: Vyvolá se v konkrétních chybových větvích této funkce.
         """
 
         model_field = cls.model_class._meta.get_field(field_name)
@@ -1055,8 +1132,10 @@ class ImportModelMapper(ABC):
         """
         Vytvoří records. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``ImportDataError()``, ovlivňuje větvení podmínek.
         :return: Nově vytvořená hodnota připravená touto funkcí.
+
+            :raises ImportDataError: Vyvolá se při splnění podmínky ``performed_action not in (ImportDataAdminForm.PERFORMED_ACTION_INSERT, ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFO``.
         """
 
         mapping_dict = self.map(performed_action, True)
@@ -1094,8 +1173,10 @@ class ImportModelMapper(ABC):
 
         při updatu musí existovat. Vrátí slovník s primárními klíči, nebo vyvolá ImportDataIntegrityError.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``ImportDataIntegrityError()``, ovlivňuje větvení podmínek.
         :return: Vrací výsledek operace.
+
+            :raises ImportDataIntegrityError: Vyvolá se při splnění podmínky ``performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.model_class.objects.filter(**self._get_filter_kwargs_primary_key())``; nebo při splnění podmínky ``performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.obj``.
         """
 
         if self.primary_key and self._get_filter_kwargs_primary_key():
@@ -1120,9 +1201,11 @@ class ImportModelMapper(ABC):
         """
         Ověří column structure.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param performed_action: Parametr ``performed_action`` ovlivňuje větvení podmínek.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``set()``, ``get_mapping()``.
         :return: Vrací výsledek ověření nebo validačního pravidla.
+
+            :raises ImportDataIncorrectStructureError: Vyvolá se při splnění podmínky ``missing_columns or excess_columns``.
         """
         primary_keys = set((self.primary_key,) if isinstance(self.primary_key, str) else self.primary_key)
         mapping_column_set = set(self.value_dict.keys())
@@ -1159,10 +1242,10 @@ class ImportModelMapper(ABC):
 
         Poté vrátí slovník s názvy polí jako klíči a instancemi BaseImportField s načtenými hodnotami jako hodnotami.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-        :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
-        :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``_check_column_structure()``.
+        :param instance_values: Parametr ``instance_values`` ovlivňuje větvení podmínek.
+        :param serialize: Parametr ``serialize`` slouží jako vstup pro logiku funkce ``map``.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``_check_column_structure()``, ``get_mapping()``.
         :return: Vrací výsledek operace.
         """
 
@@ -1187,7 +1270,9 @@ class ImportModelMapper(ABC):
         """
         Ověří required fields.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``check_required_fields``.
+
+            :raises ImportDataError: Vyvolá se při splnění podmínky ``required and (value is None or str(value).lower().strip() in ('nan', '') or pd.isna(value))``.
         """
         for key, value in self.value_dict.items():
             required = self.is_field_required(key)
@@ -1199,6 +1284,8 @@ class ImportModelMapper(ABC):
         Provádí operaci map column name to field name.
 
         :param column_name: Textový název nebo klíč ``column_name`` používaný v rámci operace.
+
+            :return: Vrací výsledek volání ``get()``.
         """
 
         return self.column_to_field_mapping.get(column_name, column_name)
@@ -1208,7 +1295,7 @@ class ImportModelMapper(ABC):
         """
         Vytvoří relations. v aplikaci.
 
-        :param instance: Instance modelu, které se operace týká.
+        :param instance: Parametr ``instance`` předává se do volání ``getattr()``, pracuje se s atributy ``historie``, ``soubory``, ovlivňuje větvení podmínek.
         """
 
         if cls.historie_typ_vazby and not getattr(instance, "historie", None):
@@ -1229,9 +1316,11 @@ class ImportModelMapper(ABC):
         """
         Provádí operaci record postprocessing.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param record: Parametr ``record`` vstupuje do návratové hodnoty.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``record_postprocessing``.
+        :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``record_postprocessing``.
+
+            :return: Vrací proměnná ``record``.
         """
         return record
 
@@ -1247,8 +1336,10 @@ class GeometryTransformMixin:
         """
         Transformuje geometries. v aplikaci.
 
-        :param mapping_dict: Název nebo typ ``mapping_dict`` používaný pro volbu cílové logiky.
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param mapping_dict: Parametr ``mapping_dict`` předává se do volání ``transform_geom_to_sjtsk()``, ``transform_geom_to_wgs84()``, pracuje se s atributy ``get``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param performed_action: Parametr ``performed_action`` ovlivňuje větvení podmínek.
+
+            :return: Vrací proměnná ``mapping_dict``.
         """
         if performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             if mapping_dict.get("geom_system") == 4326 and mapping_dict.get("geom"):
@@ -1268,7 +1359,10 @@ class MultipleClassImportModelMapper(ImportModelMapper):
         """
         Načte validation. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``ImportDataIntegrityError()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
+            :raises ImportDataIntegrityError: Vyvolá se při splnění podmínky ``performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.value_dict.get('ident_cely') and self.model_class.objects.filter(id``; nebo při splnění podmínky ``performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.obj``.
         """
         if (
             performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
@@ -1300,7 +1394,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
         """
         Vytvoří records. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ovlivňuje větvení podmínek.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         class_0_fields = [item for model, item in self.fields + self.foreign_key_fields if model == self.classes[0][0]]
@@ -1367,7 +1461,9 @@ class HeslarMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["nazev_heslare"] = LookupImportField(HeslarNazev, "nazev")
@@ -1393,7 +1489,9 @@ class HeslarDataceMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["obdobi"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_OBDOBI})
@@ -1412,7 +1510,9 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument_typ"] = LookupImportField(
@@ -1440,7 +1540,9 @@ class HeslarHierarchieMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["heslo_nadrazene"] = LookupImportField(Heslar)
@@ -1468,7 +1570,9 @@ class HeslarOdkazMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["heslo"] = LookupImportField(Heslar)
@@ -1503,7 +1607,9 @@ class OrganizaceMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["soucast"] = LookupImportField(Organizace)
@@ -1565,7 +1671,9 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["typ_projektu"] = LookupImportField(
@@ -1583,10 +1691,10 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         """
                Provádí operaci map.
 
-               :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-               :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
-               :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
-               :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+               :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
+               :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+               :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+               :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
@@ -1607,7 +1715,9 @@ class ProjektKatastrMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["projekt"] = LookupImportField(Projekt)
@@ -1628,7 +1738,9 @@ class ProjektOznamovatelMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["projekt"] = LookupImportField(Projekt)
@@ -1662,7 +1774,9 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["projekt"] = LookupImportField(Projekt)
@@ -1686,10 +1800,10 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
         """
                Provádí operaci map.
 
-               :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-               :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
-               :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
-               :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+               :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
+               :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+               :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+               :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
@@ -1753,7 +1867,9 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = {}
         for __, item in cls.fields:
@@ -1767,6 +1883,8 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         Provádí operaci map field.
 
         :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         mapping_dict = {
             "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
@@ -1779,9 +1897,11 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
         """
         Provádí operaci record postprocessing.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``record_postprocessing()``, pracuje se s atributy ``typ_zaznamu``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``record_postprocessing()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``record_postprocessing()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``record_postprocessing()``.
         """
         if isinstance(record, ArcheologickyZaznam) and performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT:
             record.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
@@ -1834,7 +1954,9 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = {}
         for __, item in cls.fields:
@@ -1848,6 +1970,8 @@ class LokalitaMapper(MultipleClassImportModelMapper):
         Provádí operaci map field.
 
         :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         mapping_dict = {
             "hlavni_katastr": RuianLookupImportField(RuianKatastr, "kod"),
@@ -1868,7 +1992,9 @@ class AkceVedouciMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["akce"] = LookupImportField(Akce, "archeologicky_zaznam__ident_cely")
@@ -1891,7 +2017,9 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
@@ -1911,7 +2039,9 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP})
@@ -1924,10 +2054,10 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
         """
                Provádí operaci map.
 
-               :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-               :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
-               :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
-               :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+               :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
+               :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+               :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+               :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
@@ -1947,7 +2077,9 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
@@ -1960,9 +2092,11 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
         """
         Provádí operaci record postprocessing.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param record: Parametr ``record`` předává se do volání ``vytvor_pian()``, pracuje se s atributy ``archeologicky_zaznam``, ``pian``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``record_postprocessing``.
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``vytvor_pian()``.
+
+            :return: Vrací proměnná ``record``.
         """
         record: DokumentacniJednotka
         if pian := record.archeologicky_zaznam.hlavni_katastr.pian:
@@ -1994,7 +2128,9 @@ class AdbMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokumentacni_jednotka"] = LookupImportField(DokumentacniJednotka)
@@ -2018,7 +2154,9 @@ class AdbVyskovyBod(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["adb"] = LookupImportField(Adb)
@@ -2047,7 +2185,9 @@ class DokumentLetMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["letiste_start"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_LETISTE})
@@ -2132,7 +2272,9 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = {}
         for __, item in cls.fields:
@@ -2146,6 +2288,8 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         Provádí operaci map field.
 
         :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         mapping_dict = cls.lookup_fields_mapping
         return mapping_dict.get(field_name, BaseImportField())
@@ -2154,7 +2298,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         """
         Vytvoří records. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ovlivňuje větvení podmínek.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
 
@@ -2202,10 +2346,10 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
         """
                Provádí operaci map.
 
-               :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-               :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
-               :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
-               :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+               :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``transform_geometries()``, vstupuje do návratové hodnoty.
+               :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+               :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+               :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
@@ -2226,7 +2370,9 @@ class DokumentAutorMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
@@ -2247,7 +2393,9 @@ class DokumentJazykMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
@@ -2268,7 +2416,9 @@ class DokumentOsobaMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
@@ -2289,7 +2439,9 @@ class DokumentPosudekMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
@@ -2310,7 +2462,9 @@ class TvarMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
@@ -2331,7 +2485,9 @@ class DokumentCastMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument"] = LookupImportField(Dokument)
@@ -2353,7 +2509,9 @@ class NeidentAkceMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["dokument_cast"] = LookupImportField(DokumentCast)
@@ -2374,7 +2532,9 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["neident_akce"] = LookupImportField(DokumentCast)
@@ -2394,7 +2554,9 @@ class KomponentaMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vazba"] = VazbaLookupImportField(
@@ -2418,7 +2580,9 @@ class KomponentaAktivitaMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
@@ -2444,7 +2608,9 @@ class NalezObjektMapper(NalezMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
@@ -2466,7 +2632,9 @@ class NalezPredmetMapper(NalezMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["komponenta"] = LookupImportField(Komponenta)
@@ -2508,7 +2676,9 @@ class ExterniZdrojMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["typ"] = LookupImportField(Heslar, limit_choices_to={"nazev_heslare": HESLAR_EXTERNI_ZDROJ_TYP})
@@ -2532,7 +2702,9 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
@@ -2554,7 +2726,9 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["externi_zdroj"] = LookupImportField(ExterniZdroj)
@@ -2575,7 +2749,9 @@ class ExterniOdkazMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["archeologicky_zaznam"] = LookupImportField(ArcheologickyZaznam)
@@ -2608,7 +2784,9 @@ class UzivatelMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["osoba"] = LookupImportField(Osoba)
@@ -2630,7 +2808,9 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(False)
         field_mapping["uzivatel"] = LookupImportField(User, "ident_cely")
@@ -2657,6 +2837,8 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         Provádí operaci map field.
 
         :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+
+            :return: Vrací výsledek volání ``map_field()``.
         """
         if field_name == "uzivatel":
             field_name = "user"
@@ -2666,7 +2848,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         """
         Vytvoří records. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         mapping_dict = self.map(performed_action, True)
@@ -2688,9 +2870,11 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         """
         Ověří column structure.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``_check_column_structure``.
+        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``_check_column_structure``.
         :return: Vrací výsledek ověření nebo validačního pravidla.
+
+            :raises ImportDataIncorrectStructureContentObjectError: Vyvolá se při splnění podmínky ``mapping_column_set != expected_column_set_import and mapping_column_set != expected_column_set_job``.
         """
         mapping_column_set = set(self.value_dict.keys())
         expected_column_set_import = {"uzivatel", "ruian"}
@@ -2704,10 +2888,10 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         """
                Provádí operaci map.
 
-               :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
-               :param instance_values: Záznam/objekt ``instance_values``, který funkce čte, validuje nebo upravuje.
-               :param serialize: Příznak ``serialize`` určující průběh nebo rozsah zpracování.
-               :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+               :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
+               :param instance_values: Parametr ``instance_values`` předává se do volání ``map()``.
+               :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
+               :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
@@ -2736,7 +2920,9 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vedouci"] = LookupImportField(User)
@@ -2756,7 +2942,9 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = {"uzivatel": LookupImportField(User), "skupina": LookupImportField(Group, "name")}
         return field_mapping
@@ -2773,7 +2961,9 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         """
         Vytvoří records. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
+
+            :return: Vrací seznam.
         """
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
@@ -2781,7 +2971,9 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         """
         Načte validation. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``import_validation``.
+
+            :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
         """
         return self._get_filter_kwargs_primary_key()
 
@@ -2799,7 +2991,9 @@ class SouborMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="soubory")
@@ -2818,7 +3012,9 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = {"uzivatel": LookupImportField(User), "notifikace": LookupImportField(UserNotificationType)}
         return field_mapping
@@ -2835,7 +3031,9 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         """
         Vytvoří records. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``create_records``.
+
+            :return: Vrací seznam.
         """
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
@@ -2843,7 +3041,9 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         """
         Načte validation. v aplikaci.
 
-        :param performed_action: Záznam/objekt ``performed_action``, který funkce čte, validuje nebo upravuje.
+        :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``import_validation``.
+
+            :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
         """
         return self._get_filter_kwargs_primary_key()
 
@@ -2865,7 +3065,9 @@ class HistorieMapper(ImportModelMapper):
         """
         Vrací mapping. v aplikaci.
 
-        :param include_primary_key: Příznak ``include_primary_key`` určující průběh nebo rozsah zpracování.
+        :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
+
+            :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="historie")

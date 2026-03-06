@@ -16,16 +16,18 @@ Třídy
 
       Provádí operaci process record.
 
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param record: Parametr ``record`` slouží jako vstup pro logiku funkce ``process_record``.
       :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``process_record``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``process_record()``, pracuje se s atributy ``get``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ContinueMedataProcessing
@@ -38,7 +40,9 @@ Třídy
 
       Provádí operaci process record.
 
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``debug()``, pracuje se s atributy ``save_metadata``, ``ident_cely``, ovlivňuje větvení podmínek.
       :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``process_record``.
+
+      :return: Vrací proměnná ``result``.
 

@@ -406,7 +406,7 @@ def update_single_redis_snapshot(class_name: str, record_pk):
     """
     Aktualizuje single redis snapshot.
 
-    :param class_name: Název nebo typ ``class_name`` používaný pro volbu cílové logiky.
+    :param class_name: Parametr ``class_name`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
     :param record_pk: Identifikátor ``record_pk`` používaný pro dohledání cílového záznamu.
     """
     r = RedisConnector.get_connection()
@@ -462,7 +462,9 @@ def write_value_to_redis(key, value):
     Zapíše value to redis.
 
     :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
-    :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+    :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací n-tici.
     """
     redis_connection = RedisConnector.get_connection()
     redis_connection.set(key, value)
@@ -485,6 +487,8 @@ def run_data_import(job_id, user_id):
 
     :param job_id: Identifikátor objektu ``job``.
     :param user_id: Identifikátor objektu ``user``.
+
+        :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
     """
     logger.debug("cron.tasks.run_data_import.start", extra={"job_id": job_id})
 

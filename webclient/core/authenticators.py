@@ -12,7 +12,10 @@ class AMCRAuthUser(ModelBackend):
         """
         Provádí operaci user can authenticate.
 
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param user: Parametr ``user`` pracuje se s atributy ``is_active``, ovlivňuje větvení podmínek.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+            :raises ValidationError: Vyvolá se při splnění podmínky ``user.is_active``.
         """
         if user.is_active:
             return True

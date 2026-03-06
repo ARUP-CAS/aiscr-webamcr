@@ -48,12 +48,18 @@ logger = logging.getLogger(__name__)
 
 
 def only_notification_groups():
-    """Provádí operaci only notification groups."""
+    """Provádí operaci only notification groups.
+
+    :return: Vrací výsledek volání ``all()``.
+    """
     return UserNotificationType.objects.filter(ident_cely__icontains="S-E-").all()
 
 
 def get_default_licence():
-    """Vrací default licence."""
+    """Vrací default licence.
+
+    :return: Vrací proměnná ``DOKUMENT_LICENCE_NEZNAMA``.
+    """
     from heslar.hesla_dynamicka import DOKUMENT_LICENCE_NEZNAMA
 
     return DOKUMENT_LICENCE_NEZNAMA
@@ -133,8 +139,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.created_from_admin_panel = False
@@ -160,7 +166,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @cached_property
     def user_str(self):
-        """Provádí operaci user str."""
+        """Provádí operaci user str.
+
+        :return: Vrací proměnná ``retezec``.
+        """
         retezec = f"{self.last_name}, {self.first_name} ({self.ident_cely}, "
         if self.organizace:
             retezec += f"{self.organizace})"
@@ -168,7 +177,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @cached_property
     def user_str_en(self):
-        """Provádí operaci user str en."""
+        """Provádí operaci user str en.
+
+        :return: Vrací proměnná ``retezec``.
+        """
         retezec = f"{self.last_name}, {self.first_name} ({self.ident_cely}, "
         if self.organizace:
             retezec += f"{self.organizace})"
@@ -179,6 +191,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         if get_language() == "en":
             return self.user_str_en
@@ -190,6 +204,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         Textová reprezentace uživatele pro tabulky a autocomplete pole.
 
         :param viewer: Uživatel nebo osoba ``viewer``, v jejímž kontextu se operace provádí.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``base``.
         """
         lang = get_language()
 
@@ -205,7 +221,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return base
 
     def moje_spolupracujici_organizace(self):
-        """Provádí operaci moje spolupracujici organizace."""
+        """Provádí operaci moje spolupracujici organizace.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``moje_spolupracujici_organizace``, výsledek volání ``all()``.
+        """
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
         archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
         archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
@@ -225,7 +244,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             return Organizace.objects.all()
 
     def moje_stavy_pruzkumnych_projektu(self):
-        """Provádí operaci moje stavy pruzkumnych projektu."""
+        """Provádí operaci moje stavy pruzkumnych projektu.
+
+        :return: Vrací n-tici.
+        """
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
         archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
         archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
@@ -250,8 +272,8 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         Provádí operaci email user.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``send_mail()``, ``format()``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``email_user``.
         """
         try:
             send_mail(
@@ -265,25 +287,34 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             logger.error("user.email_user.error", extra={"pk": self.pk, "email": self.email})
 
     def name_and_id(self):
-        """Vrátí jméno uživatele včetně jeho plného identifikátoru."""
+        """Vrátí jméno uživatele včetně jeho plného identifikátoru.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
 
     @property
     def is_archiver_or_more(self):
-        """Určí, zda archiver or more."""
+        """Určí, zda archiver or more.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     @property
     def is_archeolog_or_more(self):
-        """Určí, zda archeolog or more."""
+        """Určí, zda archeolog or more.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return self.hlavni_role.pk in (ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
         """
         Uloží změny objektu.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
         """
         logger.debug("uzivatel.User.save.start", extra={"option": self._state.adding})
         # Náhodný řetězec je dočasný, než je přiřazeno ID.
@@ -322,7 +353,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def metadata(self):
-        """Provádí operaci metadata."""
+        """Provádí operaci metadata.
+
+        :return: Vrací výsledek volání ``get_metadata()``.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         connector = FedoraRepositoryConnector(self)
@@ -332,9 +366,9 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         Uloží metadata uživatele do Fedora repozitáře a případně uzavře transakci.
 
-        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
-        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``isinstance()``, ``debug()``, pracuje se s atributy ``uid``, ``add_updated_ident_cely``, ovlivňuje větvení podmínek.
+        :param close_transaction: Parametr ``close_transaction`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata``.
         """
         from core.repository_connector import FedoraTransaction
 
@@ -377,8 +411,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         """
         Zaznamená smazání uživatele v repozitáři a uzavře transakci dle potřeby.
 
-        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
-        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+        :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``isinstance()``, ``FedoraRepositoryConnector()``, pracuje se s atributy ``mark_transaction_as_closed``, ovlivňuje větvení podmínek.
+        :param close_transaction: Parametr ``close_transaction`` ovlivňuje větvení podmínek.
+
+            :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
         """
         logger.debug("uzivatel.models.User.delete_repository_container.start")
         if fedora_transaction is None and self.active_transaction is not None:
@@ -399,22 +435,34 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
 
     @property
     def can_see_users_details(self):
-        """Provádí operaci can see users details."""
+        """Provádí operaci can see users details.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return self.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
 
     @property
     def full_details(self):
-        """Provádí operaci full details."""
+        """Provádí operaci full details.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"{self.last_name}, {self.first_name} ({self.ident_cely}, {self.organizace})"
 
     @property
     def anonymous_details(self):
-        """Provádí operaci anonymous details."""
+        """Provádí operaci anonymous details.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"{self.ident_cely} ({self.organizace})"
 
     @property
     def can_see_ours_item(self):
-        """Provádí operaci can see ours item."""
+        """Provádí operaci can see ours item.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return self.hlavni_role.pk >= ROLE_ARCHEOLOG_ID
 
     class Meta:
@@ -431,15 +479,24 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         ]
 
     def get_permission_object(self):
-        """Vrací permission object."""
+        """Vrací permission object.
+
+        :return: Vrací proměnná ``self``.
+        """
         return self
 
     def get_create_user(self):
-        """Vrací create user."""
+        """Vrací create user.
+
+        :return: Vrací n-tici.
+        """
         return (self,)
 
     def get_create_org(self):
-        """Vrací create org."""
+        """Vrací create org.
+
+        :return: Vrací n-tici.
+        """
         return ()
 
 
@@ -524,8 +581,10 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         """
         Uloží změny objektu.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'organizace')``.
         """
         logger.debug("Organizace.save.start")
         if self._state.adding and not self.ident_cely:
@@ -548,6 +607,8 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
         """
         if get_language() == "en":
             if self.nazev_zkraceny_en:
@@ -563,7 +624,10 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
                 return ""
 
     def get_nazev(self):
-        """Vrací název organizace ve formátu používaném v aplikaci."""
+        """Vrací název organizace ve formátu používaném v aplikaci.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        """
         if get_language() == "en":
             if self.nazev_en:
                 return self.nazev_en
@@ -615,8 +679,10 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
         """
         Uloží změny objektu.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'osoba')``.
         """
         logger.debug("Osoba.save.start")
         # Náhodný řetězec je dočasný, než je přiřazeno ID.
@@ -647,6 +713,8 @@ class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRe
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.vypis_cely
 
@@ -735,6 +803,8 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``str()``, atribut objektu.
         """
         try:
             return str(self.NOTIFICATION_GROUPS_NAMES[self.ident_cely])

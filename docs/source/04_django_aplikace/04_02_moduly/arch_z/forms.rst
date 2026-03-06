@@ -16,8 +16,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: CreateArchZForm
@@ -30,6 +30,12 @@ Třídy
 
       Prepis init metody pro vyplnení init hodnot, nastanvení readonly.
 
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+      :param args: Parametr ``args`` předává se do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` předává se do volání ``__init__()``, pracuje se s atributy ``pop``.
+
 
 .. py:class:: CustomDateInput
 
@@ -41,7 +47,9 @@ Třídy
 
       Provádí operaci year only.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``fullmatch()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``fullmatch()``.
 
    .. py:method:: get_date_based_on_year()
 
@@ -49,11 +57,15 @@ Třídy
 
       :param year: Časový údaj ``year`` použitý při filtrování nebo výpočtu.
 
+      :return: Vrací výsledek volání ``date()``.
+
    .. py:method:: to_python()
 
       Prepis kvůli jinému objektu CustomDateInput.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``year_only()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_date_based_on_year()``, výsledek volání ``to_python()``.
 
 
 .. py:class:: StartDateInput
@@ -76,18 +88,24 @@ Třídy
 
       Přepis clean metody s custom oveřením datumu ukončení a zahájení.
 
+      :return: Vrací atribut objektu.
+      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``cleaned_data.get('datum_ukonceni') is not None and cleaned_data.get('datum_zahajeni') is None``; nebo při splnění podmínky ``cleaned_data.get('datum_zahajeni') > cleaned_data.get('datum_ukonceni')``.
+
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-      :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
 
    .. py:method:: clean_odlozena_nz()
 
       Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True.
+
+      :return: Vrací proměnná ``odlozena_nz``.
+      :raises ValidationError: Vyvolá se při splnění podmínky ``odlozena_nz and je_nz``.
 
    .. py:method:: clean_datum_zahajeni()
 
@@ -97,6 +115,8 @@ Třídy
 
       datum zahájení není dále něž mesíc v budoucnu
 
+      :return: Vrací vybranou hodnotu z kolekce.
+
    .. py:method:: clean_datum_ukonceni()
 
       Custom clean metoda pro ověření:
@@ -104,6 +124,8 @@ Třídy
       ak je specifikace_data=přesně tak datum_ukončení nesmí být prázdne
 
       datum ukončení není dále něž mesíc v budoucnu
+
+      :return: Vrací vybranou hodnotu z kolekce.
 
 
 .. py:class:: ArchzFilterForm

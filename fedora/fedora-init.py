@@ -12,7 +12,10 @@ import requests
 
 
 def get_password():
-    """Načte heslo uživatele `fedoraAdmin` ze souboru se secrets."""
+    """Načte heslo uživatele `fedoraAdmin` ze souboru se secrets.
+
+    :return: Vrací proměnná ``heslo``.
+    """
     soubor_xml = "/var/run/secrets/tomcat_users"
     strom = ET.parse(soubor_xml)
     root = strom.getroot()
@@ -31,7 +34,10 @@ AUTH = requests.auth.HTTPBasicAuth("fedoraAdmin", PASSWORD)
 
 
 def create_new_transaction():
-    """Založí novou transakci ve Fedora API a vrátí její URL."""
+    """Založí novou transakci ve Fedora API a vrátí její URL.
+
+    :return: Vrací vybranou hodnotu z kolekce.
+    """
     print("create_new_transaction")
     response = requests.post(API_URL + "/fcr:tx", auth=AUTH, timeout=10)
     print(response)

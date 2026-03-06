@@ -16,7 +16,9 @@ Třídy
 
       Vyrenderuje uzivatel custom.
 
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param record: Parametr ``record`` pracuje se s atributy ``uzivatel``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``display_name()``.
 
 
 .. py:class:: SimpleHistoryTable
@@ -34,19 +36,25 @@ Třídy
 
       Vyrenderuje uzivatel. v aplikaci.
 
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param record: Parametr ``record`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``display_name()``.
 
    .. py:method:: render_url()
 
       Vyrenderuje url. v aplikaci.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_url``.
+      :param record: Parametr ``record`` předává se do volání ``format_html()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``format_html()``.
 
    .. py:method:: value_url()
 
       Provádí operaci value url.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-      :param record: Záznam, který funkce čte nebo upravuje.
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``value_url``.
+      :param record: Parametr ``record`` vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování.
 

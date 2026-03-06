@@ -41,7 +41,9 @@ def file_validate_epsg(epsg):
     """
     Provádí operaci file validate epsg.
 
-    :param epsg: Číselná nebo geometrická hodnota `epsg` použitá při výpočtu nebo transformaci.
+    :param epsg: Parametr ``epsg`` ovlivňuje větvení podmínek.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
     if epsg == "4326":
         return True
@@ -56,6 +58,8 @@ def balanced_parentheses(expression):
     Provádí operaci balanced parentheses.
 
     :param expression: Číselná hodnota ``expression`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
     stack = 0
     for char in expression:
@@ -71,7 +75,10 @@ def balanced_parentheses(expression):
 
 
 def load_database_translation_strings():
-    """Načte database translation strings."""
+    """Načte database translation strings.
+
+    :return: Vrací seznam.
+    """
     return [
         _("pian.posgtres.importovatPian.check.unsupportedEPSG"),
         _("pian.posgtres.importovatPian.check.wrongGeometry"),
@@ -89,7 +96,9 @@ def validate_and_split_geometry(geom):
     """
     Funkce pro validaci řetězce s WKT geometrií.
 
-    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
+    :param geom: Parametr ``geom`` předává se do volání ``isinstance()``, ``append()``, pracuje se s atributy ``iloc``, ``copy``, ovlivňuje větvení podmínek.
+
+        :return: Vrací proměnná ``new_rows``.
     """
 
     new_rows = []
@@ -180,7 +189,9 @@ def get_mime_type(file_name):
     """
     Funkce pro získaní mime typu pro soubor.
 
-    :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+    :param file_name: Parametr ``file_name`` se předává do volání ``guess_type()``, pracuje se s atributy ``endswith``, ovlivňuje větvení podmínek.
+
+        :return: Vrací proměnná ``mime_type``.
     """
     mime_type = mimetypes.guess_type(file_name)[0]
     # Podle RFC 4180 je MIME typ CSV `text/csv`.
@@ -193,7 +204,9 @@ def get_cadastre_from_point(point):
     """
     Funkce pro získaní katastru z bodu geomu.
 
-    :param point: Doménový objekt `point`, se kterým funkce pracuje.
+    :param point: Parametr ``point`` předává se do volání ``raw()``, ``debug()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``katastr``, None.
     """
     query = (
         "select id, nazev from public.ruian_katastr where "
@@ -215,7 +228,9 @@ def get_cadastre_from_point_with_geometry(point):
     """
     Funkce pro získaní katastru s geometrií z bodu geomu.
 
-    :param point: Doménový objekt `point`, se kterým funkce pracuje.
+    :param point: Parametr ``point`` předává se do volání ``debug()``, ``execute()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: seznam, None.
     """
     query = (
         "select id, nazev,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
@@ -242,7 +257,7 @@ def get_all_pians_with_akce(ident_cely):
     """
     Funkce pro získaní všech pianů s akci.
 
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``execute()``.
     :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     query = """
@@ -311,8 +326,8 @@ def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
     """
     Funkce pro update katastru u akce podle katastrálního území.
 
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
-    :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
+    :param ident_cely: Parametr ``ident_cely`` pracuje se s atributy ``split``.
+    :param katastr: Parametr ``katastr`` předává se do volání ``execute()``, pracuje se s atributy ``pk``.
     """
     akce_ident_cely = ident_cely.split("-D")[0]
 
@@ -329,8 +344,8 @@ def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
     """
     Funkce pro update katastru u akce a lokalit.
 
-    :param dj: Doménový objekt `dj`, se kterým funkce pracuje.
-    :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+    :param dj: Parametr ``dj`` pracuje se s atributy ``typ``, ``archeologicky_zaznam``, ovlivňuje větvení podmínek.
+    :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``update_all_katastr_within_akce_or_lokalita``.
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:
@@ -359,8 +374,11 @@ def get_pians_from_akce(katastr: RuianKatastr, akce_ident_cely):
     """
     Funkce pro bodu, geomu a presnosti z akce.
 
-    :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
+    :param katastr: Parametr ``katastr`` předává se do volání ``debug()``, ``raw()``, pracuje se s atributy ``pk``.
     :param akce_ident_cely: Identifikátor ``akce_ident_cely`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací proměnná ``pians``.
+        :raises CannotFindCadasterCentre: Vyvolá se při zpracování zachycené výjimky typu ``IndexError``.
     """
     logger.debug("core.utils.get_pians_from_akce.start", extra={"katastr": katastr, "ident_cely": akce_ident_cely})
     query = (
@@ -432,9 +450,11 @@ def get_dj_pians_centroid(ident_cely, lat, lng):
     """
     Funkce pro získaní pianů s DJ podle ident_cely DJ a souradnic.
 
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
-    :param lat: Číselná nebo geometrická hodnota `lat` použitá při výpočtu nebo transformaci.
-    :param lng: Číselná nebo geometrická hodnota `lng` použitá při výpočtu nebo transformaci.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``raw()``, pracuje se s atributy ``rindex``.
+    :param lat: Parametr ``lat`` se předává do volání ``raw()``.
+    :param lng: Parametr ``lng`` se předává do volání ``raw()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``pians``, None.
     """
     query = (
         "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj from public.pian pian "
@@ -455,10 +475,12 @@ def get_num_pians_from_envelope(left, bottom, right, top):
     """
     Funkce pro získaní počtu pianů ze čtverce.
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param left: Parametr ``left`` se předává do volání ``execute()``, ``debug()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``execute()``, ``debug()``.
+    :param right: Parametr ``right`` se předává do volání ``execute()``, ``debug()``.
+    :param top: Parametr ``top`` se předává do volání ``execute()``, ``debug()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, None.
     """
     query = "select count(*) from public.pian pian where " "pian.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
     try:
@@ -478,11 +500,11 @@ def get_dj_pians_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pianů ze čtverce.
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param left: Parametr ``left`` se předává do volání ``raw()``, ``debug()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``raw()``, ``debug()``.
+    :param right: Parametr ``right`` se předává do volání ``raw()``, ``debug()``.
+    :param top: Parametr ``top`` se předává do volání ``raw()``, ``debug()``.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``raw()``.
     :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     query = (
@@ -517,7 +539,7 @@ def get_project_geom(ident_cely):
 
     Bez pristupnosti
 
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``Q()``, ``debug()``.
     :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     from django.db.models import Q
@@ -539,12 +561,14 @@ def get_num_projects_from_envelope(left, bottom, right, top, stavy, request):
 
     Bez pristupnosti
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param left: Parametr ``left`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param right: Parametr ``right`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param top: Parametr ``top`` se předává do volání ``Q()``, ``from_bbox()``.
     :param stavy: Číselná hodnota ``stavy`` použitá při výpočtu nebo transformaci.
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_num_projects_from_envelope``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``count()``, None.
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -575,12 +599,14 @@ def get_projects_from_envelope(left, bottom, right, top, stavy, request):
 
     Bez pristupnosti
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
+    :param left: Parametr ``left`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param right: Parametr ``right`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param top: Parametr ``top`` se předává do volání ``Q()``, ``from_bbox()``.
     :param stavy: Číselná hodnota ``stavy`` použitá při výpočtu nebo transformaci.
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_projects_from_envelope``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
     """
     from django.contrib.gis.geos import Polygon
     from django.db.models import Q
@@ -613,11 +639,11 @@ def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pas projekt ze čtverce.
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param left: Parametr ``left`` se předává do volání ``debug()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``debug()``.
+    :param right: Parametr ``right`` se předává do volání ``debug()``.
+    :param top: Parametr ``top`` se předává do volání ``debug()``.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``Q()``.
     :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     from django.db.models import Q
@@ -643,11 +669,11 @@ def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
 
     Funkce pro získaní pianů projektu ze čtverce.
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param left: Parametr ``left`` se předává do volání ``debug()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``debug()``.
+    :param right: Parametr ``right`` se předává do volání ``debug()``.
+    :param top: Parametr ``top`` se předává do volání ``debug()``.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``.
     :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
     """
     from arch_z.models import Akce
@@ -686,11 +712,13 @@ def get_3d_from_envelope(left, bottom, right, top, request):
     Funkce pro získaní 3d ze čtverce.
     Bez pristupnosti
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param left: Parametr ``left`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param right: Parametr ``right`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param top: Parametr ``top`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_3d_from_envelope``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
     """
     from core.views import PermissionFilterMixin
     from django.contrib.gis.geos import Polygon
@@ -721,11 +749,13 @@ def get_num_pass_from_envelope(left, bottom, right, top, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pas]
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param left: Parametr ``left`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param right: Parametr ``right`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param top: Parametr ``top`` se předává do volání ``Q()``, ``from_bbox()``.
+    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_num_pass_from_envelope``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``count()``, None.
     """
     from core.models import Permissions as p
     from core.views import PermissionFilterMixin
@@ -757,8 +787,10 @@ def get_pas_from_envelope(bounds, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pas]
 
-    :param bounds: Doménový objekt `bounds`, se kterým funkce pracuje.
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param bounds: Parametr ``bounds`` předává se do volání ``Q()``, ``Polygon()``.
+    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_pas_from_envelope``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``only()``, None.
     """
     from core.models import Permissions as p
     from core.views import PermissionFilterMixin
@@ -798,9 +830,11 @@ def get_pian_from_envelope(bounds, zoom, request):
     @janhnat zohlednit pristupnost - done
     musi zohlednit pristupnost [mapa_pian]
 
-    :param bounds: Doménový objekt `bounds`, se kterým funkce pracuje.
-    :param zoom: Číselná nebo geometrická hodnota `zoom` použitá při výpočtu nebo transformaci.
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param bounds: Parametr ``bounds`` slouží jako vstup pro logiku funkce ``get_pian_from_envelope``.
+    :param zoom: Parametr ``zoom`` ovlivňuje větvení podmínek.
+    :param request: Parametr ``request`` pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+
+        :return: Vrací n-tici.
     """
 
     from core.constants import PIAN_POTVRZEN, ROLE_ARCHEOLOG_ID, ROLE_BADATEL_ID
@@ -852,7 +886,9 @@ def get_dj_akce_for_pian(pian_ident_cely, request):
     Funkce pro pro ziskani dj/akce pro pian_ident_cely
 
     :param pian_ident_cely: Identifikátor ``pian_ident_cely`` používaný pro dohledání cílového záznamu.
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_dj_akce_for_pian``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``values()``, None.
     """
     from core.views import PermissionFilterMixin
     from django.db.models import Q
@@ -881,7 +917,9 @@ def dictfetchall(cursor):
     """
     Return all rows from a cursor as a dict
 
-    :param cursor: Číselná nebo geometrická hodnota `cursor` použitá při výpočtu nebo transformaci.
+    :param cursor: Parametr ``cursor`` pracuje se s atributy ``description``, ``fetchall``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování.
     """
     columns = [col[0] for col in cursor.description]
     return [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -891,11 +929,13 @@ def get_heatmap_pian(left, bottom, right, top, zoom):
     """
     Funkce pro získaní heat mapy pianů ze čtverce.
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
-    :param zoom: Číselná nebo geometrická hodnota `zoom` použitá při výpočtu nebo transformaci.
+    :param left: Parametr ``left`` se předává do volání ``execute()``, ``debug()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``execute()``, ``debug()``.
+    :param right: Parametr ``right`` se předává do volání ``execute()``, ``debug()``.
+    :param top: Parametr ``top`` se předává do volání ``execute()``, ``debug()``.
+    :param zoom: Parametr ``zoom`` ovlivňuje větvení podmínek.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
     """
     query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pian_l2"
     query_zoom = (
@@ -922,11 +962,13 @@ def get_heatmap_pas(left, bottom, right, top, zoom):
     """
     Funkce pro získaní heat mapy pass ze čtverce.
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
-    :param zoom: Číselná nebo geometrická hodnota `zoom` použitá při výpočtu nebo transformaci.
+    :param left: Parametr ``left`` se předává do volání ``execute()``, ``debug()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``execute()``, ``debug()``.
+    :param right: Parametr ``right`` se předává do volání ``execute()``, ``debug()``.
+    :param top: Parametr ``top`` se předává do volání ``execute()``, ``debug()``.
+    :param zoom: Parametr ``zoom`` ovlivňuje větvení podmínek.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
     """
     query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pas_l2"
     query_zoom = (
@@ -953,11 +995,13 @@ def get_heatmap_project(left, bottom, right, top, zoom):
     """
     Funkce pro získaní heat mapy projektů ze čtverce.
 
-    :param left: Číselná nebo geometrická hodnota `left` použitá při výpočtu nebo transformaci.
-    :param bottom: Číselná nebo geometrická hodnota `bottom` použitá při výpočtu nebo transformaci.
-    :param right: Číselná nebo geometrická hodnota `right` použitá při výpočtu nebo transformaci.
-    :param top: Číselná nebo geometrická hodnota `top` použitá při výpočtu nebo transformaci.
-    :param zoom: Číselná nebo geometrická hodnota `zoom` použitá při výpočtu nebo transformaci.
+    :param left: Parametr ``left`` se předává do volání ``execute()``, ``debug()``.
+    :param bottom: Parametr ``bottom`` se předává do volání ``execute()``, ``debug()``.
+    :param right: Parametr ``right`` se předává do volání ``execute()``, ``debug()``.
+    :param top: Parametr ``top`` se předává do volání ``execute()``, ``debug()``.
+    :param zoom: Parametr ``zoom`` ovlivňuje větvení podmínek.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``dictfetchall()``, None.
     """
     query = "select count*30 as pocet, ST_AsGeoJSON(st_centroid) as geom_geojson from amcr_heat_projekt_l2"
     query_zoom = (
@@ -984,8 +1028,10 @@ def get_message(az, message):
     """
     Funkce pro získaní textu správy podle záznamu.
 
-    :param az: Číselná nebo geometrická hodnota `az` použitá při výpočtu nebo transformaci.
-    :param message: Textová zpráva ``message`` používaná pro hlášení stavu nebo chyby.
+    :param az: Parametr ``az`` se předává do volání ``str()``, ``getattr()``, pracuje se s atributy ``typ_zaznamu``, vstupuje do návratové hodnoty.
+    :param message: Parametr ``message`` předává se do volání ``str()``, ``getattr()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``str()``.
     """
     return str(
         getattr(
@@ -1007,7 +1053,10 @@ class SearchTable(ColumnShiftTableBootstrap4):
     column_excluded = ["ident_cely"]
 
     def get_column_default_show(self):
-        """Vrací column default show."""
+        """Vrací column default show.
+
+        :return: Vrací výsledek volání ``get_column_default_show()``.
+        """
         self.column_default_show = list(set(self.columns.columns.keys()) - set(self.columns_to_hide))
         return super(SearchTable, self).get_column_default_show()
 
@@ -1015,8 +1064,10 @@ class SearchTable(ColumnShiftTableBootstrap4):
         """
         Metoda pro správně zobrazení náhledu souboru.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+        :param record: Parametr ``record`` předává se do volání ``reverse()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
         """
         from pas.models import SamostatnyNalez
 
@@ -1045,7 +1096,10 @@ class SearchTable(ColumnShiftTableBootstrap4):
         return ""
 
     def get_all_idents(self):
-        """Vrátí seznam identifikátorů záznamů tabulky."""
+        """Vrátí seznam identifikátorů záznamů tabulky.
+
+        :return: Vrací výsledek volání ``join()``.
+        """
         return ",".join([record.record.ident_cely for record in self.paginated_rows])
 
 
@@ -1056,9 +1110,11 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
     language code
 
     :param lang: Textová hodnota `lang` používaná pro vyhledání, pojmenování nebo hlášení stavu.
-    :param project_apps: Název nebo typ ``project_apps`` používaný pro volbu cílové logiky.
-    :param django_apps: Název nebo typ ``django_apps`` používaný pro volbu cílové logiky.
-    :param third_party_apps: Název nebo typ ``third_party_apps`` používaný pro volbu cílové logiky.
+    :param project_apps: Parametr ``project_apps`` ovlivňuje větvení podmínek.
+    :param django_apps: Parametr ``django_apps`` ovlivňuje větvení podmínek.
+    :param third_party_apps: Parametr ``third_party_apps`` ovlivňuje větvení podmínek.
+
+        :return: Vrací výsledek volání ``list()``.
     """
 
     paths = []
@@ -1170,8 +1226,10 @@ def replace_last(source_string, old, new):
     Provádí operaci replace last.
 
     :param source_string: Textový nebo strukturální vstup `source_string` používaný při sestavení nebo zpracování obsahu.
-    :param old: Číselná nebo geometrická hodnota `old` použitá při výpočtu nebo transformaci.
+    :param old: Parametr ``old`` se předává do volání ``rfind()``, ``replace()``.
     :param new: Nová hodnota porovnávaná nebo nastavovaná oproti původnímu stavu.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``source_string``.
     """
     index = source_string.rfind(old)
     if index != -1:
@@ -1189,7 +1247,7 @@ class SessionIdentifier:
         """
         Inicializuje instanci třídy.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``_generate_session_key()``.
         """
         self.cache_key = self._generate_session_key(request)
 
@@ -1197,7 +1255,7 @@ class SessionIdentifier:
         """
         Vygeneruje session key.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` pracuje se s atributy ``session``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         if "session_uuid" not in request.session:
@@ -1213,7 +1271,7 @@ class SessionIdentifier:
         """
         Nastaví ident. v aplikaci.
 
-        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param ident_cely: Parametr ``ident_cely`` se předává do volání ``set()``, ovlivňuje větvení podmínek.
         :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
         """
         old_ident_cely = self.get_ident()
@@ -1222,7 +1280,10 @@ class SessionIdentifier:
         cache.set(self.cache_key, ident_cely, timeout)
 
     def get_ident(self):
-        """Vrací ident. v aplikaci."""
+        """Vrací ident. v aplikaci.
+
+        :return: Vrací výsledek volání ``get()``.
+        """
         return cache.get(self.cache_key, None)
 
     def add_file_reference(self, ident, timeout=3600):
@@ -1241,6 +1302,8 @@ class SessionIdentifier:
         Provádí operaci file exists.
 
         :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
@@ -1259,7 +1322,10 @@ class SessionIdentifier:
             cache.set(f"{self.cache_key}_files", files)
 
     def get_cached_files(self):
-        """Vrací cached files."""
+        """Vrací cached files.
+
+        :return: Vrací proměnná ``files``.
+        """
         files = cache.get(f"{self.cache_key}_files", set())
         return files
 
@@ -1267,7 +1333,7 @@ class SessionIdentifier:
         """
         Nastaví project ownership.
 
-        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param ident_cely: Parametr ``ident_cely`` se předává do volání ``set()``.
         :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
         """
         from core.connectors import RedisConnector
@@ -1280,7 +1346,7 @@ class SessionIdentifier:
         """
         Ověří, zda anonymní uživatel vlastní daný projekt.
 
-        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param ident_cely: Parametr ``ident_cely`` vstupuje do návratové hodnoty.
         :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
         """
         from core.connectors import RedisConnector
@@ -1292,7 +1358,10 @@ class SessionIdentifier:
 
 
 def get_set_maintenance_in_cache():
-    """Funkce pro získání nastavení údržby z cache."""
+    """Funkce pro získání nastavení údržby z cache.
+
+    :return: Vrací proměnná ``maintenance``.
+    """
     maintenance = cache.get("maintenance")
     if maintenance is None:
         from core.models import OdstavkaSystemu
@@ -1311,7 +1380,10 @@ def get_set_maintenance_in_cache():
 
 
 def is_maintenance_in_progress():
-    """Funkce pro zjištění, zda je údržba v průběhu."""
+    """Funkce pro zjištění, zda je údržba v průběhu.
+
+    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    """
     maintenance = get_set_maintenance_in_cache()
     if maintenance:
         if get_timezone().localize(
@@ -1322,7 +1394,10 @@ def is_maintenance_in_progress():
 
 
 def get_timezone():
-    """Funkce pro získání časového pásma z nastavení."""
+    """Funkce pro získání časového pásma z nastavení.
+
+    :return: Vrací výsledek volání ``timezone()``.
+    """
     try:
         return pytz.timezone(settings.TIME_ZONE)
     except Exception as err:

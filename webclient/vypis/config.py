@@ -40,7 +40,9 @@ def get_config(name):
     """
     Vrací config. v aplikaci.
 
-    :param name: Název nebo identifikátor používaný v rámci operace.
+    :param name: Parametr ``name`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``get()``.
     """
     configs = {
         "dokument": DOKUMENTY_CONFIG,

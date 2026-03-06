@@ -10,7 +10,10 @@ logger = logging.getLogger(__name__)
 
 def list_files_in_db():
     # Provede vlastní zpracování.
-    """Provádí operaci list files in db."""
+    """Provádí operaci list files in db.
+
+    :return: Vrací hodnotu podle větve zpracování.
+    """
     soubory_query = Soubor.objects.all()
     return [soubor.path.path for soubor in soubory_query if soubor.path.name != "not specified yet"]
 
@@ -19,7 +22,7 @@ def remove_orphans(files_in_database):
     """
     Provádí operaci remove orphans.
 
-    :param files_in_database: Cesta, URL nebo název zdroje ``files_in_database``, ze kterého funkce čte nebo kam zapisuje.
+    :param files_in_database: Parametr ``files_in_database`` ovlivňuje větvení podmínek.
     """
     for path, subdirs, files in os.walk(MEDIA_ROOT):
         for name in files:

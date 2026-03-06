@@ -49,8 +49,8 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
@@ -61,11 +61,16 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Vrací permission object."""
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.komponenta.get_permission_object()
 
 
@@ -112,8 +117,8 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         """
         Provádí operaci init.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
@@ -124,9 +129,14 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.druh.heslo
 
     def get_permission_object(self):
-        """Vrací permission object."""
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.komponenta.get_permission_object()

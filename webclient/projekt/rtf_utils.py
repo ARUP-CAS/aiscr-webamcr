@@ -20,8 +20,8 @@ class ExpertniListCreator(DocumentCreator):
         """
                Provádí operaci utf16 decimals.
 
-               :param char: Číselná nebo geometrická hodnota `char` použitá při výpočtu nebo transformaci.
-               :param chunk_size: Číselná nebo geometrická hodnota `chunk_size` použitá při výpočtu nebo transformaci.
+               :param char: Parametr ``char`` pracuje se s atributy ``encode``.
+               :param chunk_size: Parametr ``chunk_size`` se předává do volání ``range()``.
         :return: Výstup funkce odpovídající implementované logice.
         """
         encoded_char = char.encode("utf-16-be")
@@ -53,7 +53,7 @@ class ExpertniListCreator(DocumentCreator):
         """
                Provádí operaci format akce str.
 
-               :param akce: Doménový objekt `akce`, se kterým funkce pracuje.
+               :param akce: Parametr ``akce`` předává se do volání ``str()``, pracuje se s atributy ``hlavni_typ``, ``vedlejsi_typ``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
         """
         if akce.hlavni_typ is not None and akce.vedlejsi_typ is not None:
@@ -67,7 +67,7 @@ class ExpertniListCreator(DocumentCreator):
         """
                Provádí operaci format akce.
 
-               :param akce_all: Doménový objekt `akce_all`, se kterým funkce pracuje.
+               :param akce_all: Parametr ``akce_all`` pracuje se s atributy ``count``, ovlivňuje větvení podmínek.
         :return: Výstup funkce odpovídající implementované logice.
         """
         if akce_all.count() > 0:
@@ -316,7 +316,7 @@ class ExpertniListCreator(DocumentCreator):
         """
                Provádí operaci open file.
 
-               :param name: Název nebo identifikátor používaný v rámci operace.
+               :param name: Parametr ``name`` předává se do volání ``open()``, vstupuje do návratové hodnoty.
         :return: Výstup funkce odpovídající implementované logice.
         """
         return open(name, "w")
@@ -339,7 +339,7 @@ class ExpertniListCreator(DocumentCreator):
         """
         Inicializuje instanci třídy.
 
-        :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+        :param projekt: Parametr ``projekt`` slouží jako vstup pro logiku funkce ``__init__``.
         :param popup_parametry: Číselná hodnota ``popup_parametry`` použitá při výpočtu nebo transformaci.
         """
         from projekt.models import Projekt

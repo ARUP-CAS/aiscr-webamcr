@@ -25,7 +25,10 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.goToAddress("/ext-zdroj/vyber?sort=autori&sort=rok_vydani_vzniku&sort=nazev")
 
     def zapsat_zaznam(self):
-        """Provádí operaci zapsat zaznam."""
+        """Provádí operaci zapsat zaznam.
+
+        :return: Vrací proměnná ``ident``.
+        """
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .btn")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-1-4 > .text")

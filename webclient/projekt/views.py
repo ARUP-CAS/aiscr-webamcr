@@ -149,7 +149,9 @@ def index(request):
     """
     Funkce pohledu pro zobrazení indexu s navigací projektu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``render()``.
     """
     return render(request, "projekt/index.html")
 
@@ -161,8 +163,10 @@ def detail(request, ident_cely):
     """
     Funkce pohledu pro zobrazení detailu projektu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``get_history_dates()``, ``get_detail_template_shows()``, pracuje se s atributy ``session``, ``user``, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``filter()``.
+
+        :return: Vrací výsledek volání ``render()``.
     """
     context = {"warnings": request.session.pop("temp_data", None)}
     projekt = get_object_or_404(
@@ -215,7 +219,9 @@ def post_ajax_get_projects_limit(request):
     """
     Funkce pohledu pro získaní heatmapy projektu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``loads()``, ``get_num_projects_from_envelope()``, pracuje se s atributy ``body``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     body = json.loads(request.body.decode("utf-8"))
     vrstvy_map = {"p1": [1], "p2": [2], "p3": [3], "p46": [4, 5, 6], "p78": [7, 8]}
@@ -265,7 +271,9 @@ def post_ajax_get_project_one(request):
     """
     Funkce pohledu pro získaní geometrie projektu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     body = json.loads(request.body.decode("utf-8"))
     pians = get_project_geom(
@@ -289,7 +297,9 @@ class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PasPermissionFilterMi
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``loads()``, pracuje se s atributy ``body``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         body = json.loads(request.body.decode("utf-8"))
         pians = get_project_pas_from_envelope(
@@ -321,7 +331,9 @@ class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilter
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``loads()``, pracuje se s atributy ``body``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         body = json.loads(request.body.decode("utf-8"))
         queries = get_project_pian_from_envelope(
@@ -360,7 +372,9 @@ def create(request):
 
     Funkce pohledu pro vytvoření projektu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``katastr_text_to_id()``, ``CreateProjektForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
     """
     logger.debug("projekt.views.create.start")
     required_fields = get_required_fields()
@@ -464,8 +478,10 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci projektu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``katastr_text_to_id()``, ``EditProjektForm()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``redirect()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     required_fields = get_required_fields(projekt)
@@ -559,8 +575,10 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if check_stav_changed(request, projekt):
@@ -604,7 +622,9 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
         Provádí operaci add ownership lookup.
 
         :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
-        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
+
+            :return: Vrací výsledek volání ``Q()``.
         """
         if ownership == Permissions.ownershipChoices.our:
             return Q(**{"organizace": self.request.user.organizace})
@@ -615,8 +635,10 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
-        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param permission: Parametr ``permission`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``accessibility``, vstupuje do návratové hodnoty.
+        :param qs: Parametr ``qs`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         accessibility_key = "pristupnost_snapshot__in"
         accessibilities = Heslar.objects.filter(
@@ -655,7 +677,9 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["hasSchvalitOznameni_header"] = _("projekt.views.projektListView.header.hasSchvalitOznameni")
@@ -671,7 +695,10 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         return context
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci."""
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací výsledek volání ``check_filter_permission()``.
+        """
         qs = super().get_queryset()
         qs = qs.order_by(*self._get_sort_params())
         qs = (
@@ -697,8 +724,10 @@ def schvalit(request, ident_cely):
     """
     Funkce pohledu pro schválení projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     logger.debug("projekt.views.schvalit.start", extra={"ident_cely": ident_cely})
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -771,8 +800,10 @@ def prihlasit(request, ident_cely):
     """
     Funkce pohledu pro přihlášení projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAPSANY:
@@ -835,8 +866,10 @@ def zahajit_v_terenu(request, ident_cely):
     """
     Funkce pohledu pro zahájení v terenu projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_PRIHLASENY:
@@ -896,8 +929,10 @@ def ukoncit_v_terenu(request, ident_cely):
     """
     Funkce pohledu pro ukončení v terenu projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
@@ -948,8 +983,10 @@ def uzavrit(request, ident_cely):
     """
     Funkce pohledu pro uzavření projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
@@ -1035,8 +1072,10 @@ def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt: Projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
@@ -1122,8 +1161,10 @@ def navrhnout_ke_zruseni(request, ident_cely):
     """
     Funkce pohledu pro navržení projektu ke zrušení pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
@@ -1186,8 +1227,10 @@ def zrusit(request, ident_cely):
     """
     Funkce pohledu pro zrušení projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
@@ -1256,8 +1299,10 @@ def vratit(request, ident_cely):
     """
     Funkce pohledu pro vrácení projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
@@ -1301,8 +1346,10 @@ def vratit_navrh_zruseni(request, ident_cely):
     """
     Funkce pohledu pro vrácení návrhu na zrušení projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
 
@@ -1351,9 +1398,11 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
     """
     Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``, ``odpojit()``, vstupuje do návratové hodnoty.
     :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``odpojit()``.
     """
     proj = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
@@ -1379,8 +1428,10 @@ def pripojit_dokument(request, proj_ident_cely):
     """
     Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``pripojit()``, vstupuje do návratové hodnoty.
     :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``pripojit()``.
     """
     proj = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     if proj.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
@@ -1398,8 +1449,10 @@ def generovat_oznameni(request, ident_cely):
     """
     Funkce pohledu pro generování oznámení projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``debug()``, ``add_message()``, pracuje se s atributy ``POST``, ``user``, ovlivňuje větvení podmínek.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``.
+
+        :return: Vrací výsledek volání ``redirect()``.
     """
     logger.debug(
         "projekt.views.generovat_oznameni.start",
@@ -1432,8 +1485,10 @@ class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
         """
         Vrací redirect url.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``get_redirect_url()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_redirect_url()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get_redirect_url()``.
         """
         ident_cely = kwargs["ident_cely"]
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -1451,8 +1506,10 @@ def generovat_expertni_list(request, ident_cely):
     """
     Funkce pohledu pro generování expertního listu projektu pomoci modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, pracuje se s atributy ``POST``.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, proměnná ``response``.
     """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -1505,8 +1562,8 @@ def get_detail_template_shows(projekt, user):
     """
     Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
 
-    :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
-    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :param projekt: Parametr ``projekt`` předává se do volání ``get_show_oznamovatel()``, ``check_permissions()``, pracuje se s atributy ``typ_projektu``, ``ident_cely``, ovlivňuje větvení podmínek.
+    :param user: Parametr ``user`` se předává do volání ``get_show_oznamovatel()``, ``check_permissions()``, pracuje se s atributy ``organizace``.
     :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
     """
     show_oznamovatel = get_show_oznamovatel(projekt, user)
@@ -1583,8 +1640,8 @@ def get_show_oznamovatel(projekt, user):
     """
     Vrací show oznamovatel.
 
-    :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
-    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :param projekt: Parametr ``projekt`` pracuje se s atributy ``typ_projektu``, ``has_oznamovatel``, ovlivňuje větvení podmínek.
+    :param user: Parametr ``user`` pracuje se s atributy ``is_archiver_or_more``, ``hlavni_role``, ovlivňuje větvení podmínek.
     :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
     """
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
@@ -1624,7 +1681,7 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu projektu.
 
-    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param zaznam: Parametr ``zaznam`` pracuje se s atributy ``stav``, ovlivňuje větvení podmínek.
     :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
     :return: Seznam názvů polí, která mají být v daném stavu povinná.
     """
@@ -1663,7 +1720,9 @@ def katastr_text_to_id(request):
     """
     Funkce podlehu pro získaní ID katastru podle názvu katastru.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` pracuje se s atributy ``POST``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``copy()``, proměnná ``post``.
     """
     hlavni_katastr: str = request.POST.get("hlavni_katastr")
     if hlavni_katastr is None or hlavni_katastr.strip() == "":
@@ -1695,11 +1754,16 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
         Vrací result label.
 
         :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+
+            :return: Vrací hodnotu podle větve zpracování.
         """
         return f"{result.ident_cely} ({result.hlavni_katastr}; {result.vedouci_projektu})"
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci."""
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
+        """
         if not self.request.user.is_authenticated:
             return Projekt.objects.none()
         self.typ = self.kwargs.get("typ")
@@ -1729,7 +1793,9 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
         """
         Ověří filter permission.
 
-        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param qs: Parametr ``qs`` předává se do volání ``filter_by_permission()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``qs``.
         """
         permissions = Permissions.objects.filter(
             main_role=self.request.user.hlavni_role,
@@ -1754,7 +1820,9 @@ class ProjectTableRowView(LoginRequiredMixin, View):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
+
+            :return: Vrací výsledek volání ``HttpResponse()``.
         """
         context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
         return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))
@@ -1769,7 +1837,7 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         """
         Vrací existing record.
 
-        :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
+        :param projekt: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``historie``.
         :return: Načtená data odpovídající zadaným vstupům.
         """
         historie_objects = Historie.objects.filter(vazba=projekt.historie, typ_zmeny=OZNAMENI_PROJ_MANUALNI)
@@ -1780,7 +1848,9 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
         """
         ident_cely = self.kwargs.get("ident_cely")
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -1796,9 +1866,11 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací výsledek volání ``render_to_response()``.
         """
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]
@@ -1821,9 +1893,11 @@ class UpravitDatumOznameniView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``UpravitDatumOznameniForm()``, ``create_transaction()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         context = self.get_context_data(**kwargs)
         projekt: Projekt = context["object"]
@@ -1866,7 +1940,10 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci."""
+        """Vrací zaznam. v aplikaci.
+
+        :return: Vrací proměnná ``zaznam``.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
             Projekt,
@@ -1878,9 +1955,11 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``render_to_response()``.
         """
         zaznam = self.get_zaznam()
         context = {
@@ -1900,9 +1979,11 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep08()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         form = ZadostProjektForm(data=request.POST)
         if form.is_valid():
@@ -1921,7 +2002,10 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci."""
+        """Vrací zaznam. v aplikaci.
+
+        :return: Vrací proměnná ``zaznam``.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
             Projekt,
@@ -1933,9 +2017,11 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``render_to_response()``.
         """
         zaznam = self.get_zaznam()
         context = {
@@ -1955,9 +2041,11 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep07()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         form = ZadostProjektForm(data=request.POST)
         if form.is_valid():
@@ -1976,7 +2064,10 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci."""
+        """Vrací zaznam. v aplikaci.
+
+        :return: Vrací proměnná ``zaznam``.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         zaznam = get_object_or_404(
             Projekt,
@@ -1988,9 +2079,11 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``render_to_response()``.
         """
         zaznam = self.get_zaznam()
         form = ZadostProjektForm(
@@ -2010,9 +2103,11 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep11()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
         """
         form = ZadostProjektForm(data=request.POST)
         if form.is_valid():

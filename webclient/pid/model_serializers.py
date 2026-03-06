@@ -52,7 +52,7 @@ class ModelSerializer(ABC):
         """
         Inicializuje instanci třídy.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         self.record = record
 
@@ -62,6 +62,8 @@ class ModelSerializer(ABC):
         Provádí operaci format date.
 
         :param date: Časový údaj ``date`` použitý při filtrování nebo výpočtu.
+
+            :return: Vrací výsledek volání ``strftime()``.
         """
         return date.strftime("%Y-%m-%d")
 
@@ -71,6 +73,8 @@ class ModelSerializer(ABC):
         Provádí operaci format date time.
 
         :param date_time: Časový údaj ``date_time`` použitý při filtrování nebo výpočtu.
+
+            :return: Vrací výsledek volání ``strftime()``.
         """
         return date_time.strftime("%Y-%m-%dT%H:%M:%S%z")
 
@@ -281,7 +285,10 @@ class ModelSerializer(ABC):
         pass
 
     def serialize_delete(self):
-        """Provádí operaci serialize delete."""
+        """Provádí operaci serialize delete.
+
+        :return: Vrací slovník.
+        """
         return {
             "data": {
                 "type": "dois",
@@ -300,11 +307,17 @@ class ModelSerializer(ABC):
         }
 
     def serialize_hide(self):
-        """Provádí operaci serialize hide."""
+        """Provádí operaci serialize hide.
+
+        :return: Vrací slovník.
+        """
         return {"data": {"type": "dois", "attributes": {"event": "hide"}}}
 
     def serialize_publish(self):
-        """Provádí operaci serialize publish."""
+        """Provádí operaci serialize publish.
+
+        :return: Vrací proměnná ``data``.
+        """
         data = {
             "data": {
                 "type": "dois",
@@ -360,7 +373,10 @@ class ModelSerializer(ABC):
         return data
 
     def serialize_update(self):
-        """Provádí operaci serialize update."""
+        """Provádí operaci serialize update.
+
+        :return: Vrací proměnná ``result``.
+        """
         result = self.serialize_publish()
         result["data"]["attributes"].pop("event")
         return result
@@ -373,7 +389,7 @@ class PartialSerializer(ABC):
         """
         Inicializuje instanci třídy.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` slouží jako vstup pro logiku funkce ``__init__``.
         """
         self.record = record
 
@@ -399,7 +415,7 @@ def serialize_ez_creator(autor: Osoba) -> Dict[str, str]:
     """
        Provádí operaci serialize ez creator.
 
-       :param autor: Číselná nebo geometrická hodnota `autor` použitá při výpočtu nebo transformaci.
+       :param autor: Parametr ``autor`` pracuje se s atributy ``vypis_cely``, ``jmeno``, vstupuje do návratové hodnoty.
     :return: Výstup funkce odpovídající implementované logice.
     """
     return {"name": autor.vypis_cely, "givenName": autor.jmeno, "familyName": autor.prijmeni, "nameType": "Personal"}
@@ -409,7 +425,7 @@ def serialize_ez_contributor(contributor: Osoba) -> Dict[str, str]:
     """
        Provádí operaci serialize ez contributor.
 
-       :param contributor: Číselná nebo geometrická hodnota `contributor` použitá při výpočtu nebo transformaci.
+       :param contributor: Parametr ``contributor`` pracuje se s atributy ``vypis_cely``, ``jmeno``, vstupuje do návratové hodnoty.
     :return: Výstup funkce odpovídající implementované logice.
     """
     return {
@@ -425,9 +441,9 @@ def serialize_geom(geom=None, katastr: RuianKatastr | None = None, verejne: bool
     """
        Provádí operaci serialize geom.
 
-       :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
-       :param katastr: Doménový objekt `katastr`, se kterým funkce pracuje.
-       :param verejne: Číselná nebo geometrická hodnota `verejne` použitá při výpočtu nebo transformaci.
+       :param geom: Parametr ``geom`` předává se do volání ``update()``, ``frozenset()``, pracuje se s atributy ``centroid``, ovlivňuje větvení podmínek.
+       :param katastr: Parametr ``katastr`` pracuje se s atributy ``nazev``, ``okres``, ovlivňuje větvení podmínek.
+       :param verejne: Parametr ``verejne`` ovlivňuje větvení podmínek.
     :return: Výstup funkce odpovídající implementované logice.
     """
     serialized_geom = {}
@@ -454,6 +470,8 @@ def serialize_affiliation(organizace: Organizace):
     Provádí operaci serialize affiliation.
 
     :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
+
+        :return: Vrací proměnná ``serialized_affiliation``.
     """
     serialized_affiliation = {"name": organizace.nazev}
     if organizace.ror:
@@ -468,7 +486,9 @@ def serialize_organizace_contributor(organizace: Organizace, contributor_type: s
     Provádí operaci serialize organizace contributor.
 
     :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
-    :param contributor_type: Název nebo typ ``contributor_type`` používaný pro volbu cílové logiky.
+    :param contributor_type: Parametr ``contributor_type`` vstupuje do návratové hodnoty.
+
+        :return: Vrací slovník.
     """
     return {
         "name": organizace.nazev,
@@ -494,6 +514,8 @@ def serialize_osoba_identifiers(osoba: Osoba):
     Provádí operaci serialize osoba identifiers.
 
     :param osoba: Uživatel nebo osoba ``osoba``, v jejímž kontextu se operace provádí.
+
+        :return: Vrací proměnná ``result``.
     """
     result = [
         {
@@ -521,7 +543,7 @@ def serialize_osoba(osoba: Osoba, organizace: Organizace | None = None, contribu
 
        :param osoba: Uživatel nebo osoba ``osoba``, v jejímž kontextu se operace provádí.
        :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
-       :param contributor_type: Název nebo typ ``contributor_type`` používaný pro volbu cílové logiky.
+       :param contributor_type: Parametr ``contributor_type`` ovlivňuje větvení podmínek.
     :return: Výstup funkce odpovídající implementované logice.
     """
     serialized_record = {
@@ -543,9 +565,11 @@ def serialize_subject(serialized_record, subject_attr="heslo_en", lang="en"):
     """
     Provádí operaci serialize subject.
 
-    :param serialized_record: Příznak ``serialized_record`` určující průběh nebo rozsah zpracování.
+    :param serialized_record: Parametr ``serialized_record`` předává se do volání ``getattr()``, pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek.
     :param subject_attr: Textový nebo strukturální vstup `subject_attr` používaný při sestavení nebo zpracování obsahu.
     :param lang: Textová hodnota `lang` používaná pro vyhledání, pojmenování nebo hlášení stavu.
+
+        :return: Vrací výsledek volání ``frozenset()``.
     """
     if serialized_record is None:
         return frozenset()
@@ -565,6 +589,8 @@ def serialize_subjects_komponenty(komp: Komponenta):
     Provádí operaci serialize subjects komponenty.
 
     :param komp: Komponenta nebo její serializovaný reprezentant.
+
+        :return: Vrací proměnná ``result``.
     """
     result = [serialize_subject(komp.obdobi)]
     result += [serialize_subject(komp.areal)]
@@ -603,7 +629,7 @@ class DokumentSerializer(ModelSerializer):
         """
         Inicializuje instanci třídy.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` předává se do volání ``__init__()``.
         """
         super().__init__(record)
         self.record: Dokument
@@ -625,7 +651,10 @@ class DokumentSerializer(ModelSerializer):
         return self.record.historie.historie_set
 
     def get_ident_cely(self):
-        """Vrací ident cely."""
+        """Vrací ident cely.
+
+        :return: Vrací atribut objektu.
+        """
         return self.record.ident_cely
 
     def _get_language(self):
@@ -1021,7 +1050,7 @@ class SamostatnyNalezSerializer(ModelSerializer):
         """
         Inicializuje instanci třídy.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` předává se do volání ``__init__()``.
         """
         super().__init__(record)
         self.record: SamostatnyNalez
@@ -1043,7 +1072,10 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return self.record.historie.historie_set
 
     def get_ident_cely(self):
-        """Vrací ident cely."""
+        """Vrací ident cely.
+
+        :return: Vrací atribut objektu.
+        """
         return self.record.ident_cely
 
     def _get_soubory_queryset(self):
@@ -1294,7 +1326,7 @@ class LokalitaSerializer(ModelSerializer):
         """
         Inicializuje instanci třídy.
 
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param record: Parametr ``record`` předává se do volání ``__init__()``.
         """
         super().__init__(record)
         self.record: Lokalita
@@ -1308,7 +1340,10 @@ class LokalitaSerializer(ModelSerializer):
         pass
 
     def get_ident_cely(self):
-        """Vrací ident cely."""
+        """Vrací ident cely.
+
+        :return: Vrací atribut objektu.
+        """
         return self.record.archeologicky_zaznam.ident_cely
 
     def _get_historie_queryset(self):
@@ -1662,13 +1697,19 @@ class LokalitaSerializer(ModelSerializer):
         return []
 
     def serialize_publish(self):
-        """Provádí operaci serialize publish."""
+        """Provádí operaci serialize publish.
+
+        :return: Vrací proměnná ``publish``.
+        """
         publish = super().serialize_publish()
         publish["data"]["attributes"]["relatedItems"] = self._serialize_related_items()
         return publish
 
     def serialize_update(self):
-        """Provádí operaci serialize update."""
+        """Provádí operaci serialize update.
+
+        :return: Vrací proměnná ``result``.
+        """
         result = super().serialize_publish()
         result["data"]["attributes"].pop("event")
         result["data"]["attributes"]["relatedItems"] = self._serialize_related_items()

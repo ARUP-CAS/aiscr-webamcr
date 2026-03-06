@@ -25,9 +25,9 @@ def projekt_pre_save(sender, instance: Projekt, **kwargs):
     """
     Metoda pro volání dílčích metod pro nastavení projektu pred uložením.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` se předává do volání ``create_projekt_vazby()``, ``change_termin_odevzdani_NZ()``.
+    :param instance: Parametr ``instance`` předává se do volání ``create_projekt_vazby()``, ``change_termin_odevzdani_NZ()``, pracuje se s atributy ``stav``, ``_state``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``projekt_pre_save``.
     """
     create_projekt_vazby(sender, instance)
     change_termin_odevzdani_NZ(sender, instance)
@@ -43,9 +43,9 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
     """
     Metoda pro nastavení terminu odevzdání NZ.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` pracuje se s atributy ``objects``, ``DoesNotExist``.
+    :param instance: Parametr ``instance`` předává se do volání ``get()``, ``debug()``, pracuje se s atributy ``pk``, ``termin_odevzdani_nz``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``change_termin_odevzdani_NZ``.
     """
     try:
         instance_db = sender.objects.get(pk=instance.pk)
@@ -67,9 +67,9 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
     Metoda se volá pred uložením projektu.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_projekt_vazby``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``historie``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_projekt_vazby``.
     """
     if instance.pk is None:
         logger.debug("projekt.signals.create_projekt_vazby.history_created", extra={"instance": instance})
@@ -87,9 +87,11 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     """
     Provádí operaci projekt pre delete.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``projekt_pre_delete``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``initial_dokumenty``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``projekt_pre_delete``.
+
+        :raises Exception: Vyvolá se při splnění podmínky ``instance.soubory and instance.soubory.soubory.exists()``.
     """
     logger.debug(
         "projekt.signals.projekt_pre_delete.start",
@@ -107,7 +109,7 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
             """
                        Uloží metadata.
 
-                       :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+                       :param close_transaction: Parametr ``close_transaction`` předává se do volání ``record_deletion()``.
             Výsledek provedené změny nad cílovým objektem.
             """
             if instance.soubory and instance.soubory.pk:
@@ -132,9 +134,9 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     Metoda pro odeslání emailu hlídacího psa pri založení projektu.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``projekt_post_save``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``getattr()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``projekt_post_save``.
     """
     # Když je projekt vytvořen přes stránku „oznámení“, metadata se ukládají přímo bez Celery.
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})

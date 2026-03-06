@@ -22,5 +22,8 @@ class MLStripper(HTMLParser):
         self.text.write(d)
 
     def get_data(self):
-        """Vrátí text bez HTML značek načtený během parsování."""
+        """Vrátí text bez HTML značek načtený během parsování.
+
+        :return: Vrací výsledek volání ``getvalue()``.
+        """
         return self.text.getvalue()

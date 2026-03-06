@@ -90,10 +90,10 @@ class CreateProjektForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
@@ -157,7 +157,11 @@ class CreateProjektForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean(self):
-        """Provádí operaci clean."""
+        """Provádí operaci clean.
+
+        :return: Vrací proměnná ``cleaned_data``.
+        :raises forms.ValidationError: Vyvolá se při splnění podmínky ``not coordinate_x1 or not coordinate_x2``.
+        """
         cleaned_data = super().clean()
 
         coordinate_x1 = cleaned_data.get("coordinate_x1")
@@ -283,11 +287,11 @@ class EditProjektForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-        :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-        :param edit_fields: Záznam/objekt ``edit_fields``, který funkce čte, validuje nebo upravuje.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+        :param edit_fields: Parametr ``edit_fields`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
@@ -392,7 +396,11 @@ class EditProjektForm(forms.ModelForm):
         self.helper.form_tag = False
 
     def clean(self):
-        """Kontrola datumu zahájení a ukončení pri validaci formuláře."""
+        """Kontrola datumu zahájení a ukončení pri validaci formuláře.
+
+        :return: Vrací atribut objektu.
+        :raises forms.ValidationError: Vyvolá se s textem "Datum zahájení nemůže být po datu ukončení".
+        """
         cleaned_data = super().clean()
         if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
             if cleaned_data.get("datum_zahajeni") and cleaned_data.get("datum_ukonceni"):
@@ -437,8 +445,8 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -457,7 +465,11 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         )
 
     def clean(self):
-        """Metoda na kontrolu obsahu důvodu pro zrušení."""
+        """Metoda na kontrolu obsahu důvodu pro zrušení.
+
+        :return: Vrací atribut objektu.
+        :raises forms.ValidationError: Vyvolá se při splnění podmínky ``not cleaned_data.get('projekt_id')``; nebo při splnění podmínky ``not cleaned_data.get('reason_text')``.
+        """
         cleaned_data = super().clean()
         if cleaned_data.get("reason") == "option1":
             if not cleaned_data.get("projekt_id"):
@@ -516,8 +528,8 @@ class PrihlaseniProjektForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
         """
         archivar = kwargs.pop("archivar", False)
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
@@ -598,8 +610,8 @@ class ZahajitVTerenuForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(ZahajitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_zahajeni"].required = True
@@ -620,7 +632,10 @@ class ZahajitVTerenuForm(forms.ModelForm):
         )
 
     def clean(self):
-        """Provádí operaci clean."""
+        """Provádí operaci clean.
+
+        :return: Vrací proměnná ``cleaned_data``.
+        """
         cleaned_data = super().clean()
         poslat_email_kraj = cleaned_data.get("poslat_email_kraj")
         if poslat_email_kraj == "False":
@@ -671,8 +686,8 @@ class UkoncitVTerenuForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(UkoncitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_ukonceni"].required = True
@@ -693,7 +708,11 @@ class UkoncitVTerenuForm(forms.ModelForm):
         )
 
     def clean(self):
-        """Metoda pro kontrolu datumu ukončení."""
+        """Metoda pro kontrolu datumu ukončení.
+
+        :return: Vrací atribut objektu.
+        :raises forms.ValidationError: Vyvolá se při splnění podmínky ``self.instance.datum_zahajeni > cleaned_data.get('datum_ukonceni')``.
+        """
         cleaned_data = super().clean()
         if {"datum_ukonceni"} <= cleaned_data.keys():
             if self.instance.datum_zahajeni > cleaned_data.get("datum_ukonceni"):
@@ -721,8 +740,8 @@ class ZruseniProjektForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -750,8 +769,8 @@ class GenerovatNovePotvrzeniForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -812,8 +831,8 @@ class GenerovatExpertniListForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -851,9 +870,9 @@ class PripojitProjektForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param dok: Doménový objekt `dok`, se kterým funkce pracuje.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param dok: Parametr ``dok`` ovlivňuje větvení podmínek.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PripojitProjektForm, self).__init__(*args, **kwargs)
         if dok:
@@ -915,8 +934,8 @@ class ZadostProjektForm(forms.Form):
 
         :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
         :param help_text: Číselná hodnota ``help_text`` použitá při výpočtu nebo transformaci.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(ZadostProjektForm, self).__init__(*args, **kwargs)
         self.fields["reason"] = forms.CharField(
@@ -965,8 +984,8 @@ class UpravitDatumOznameniForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(UpravitDatumOznameniForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -1001,8 +1020,8 @@ class NeodeslatMailForm(forms.Form):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)

@@ -23,7 +23,10 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.goToAddress("/pas/zapsat")
 
     def create_PAS(self):
-        """Vytvoří PAS. v aplikaci."""
+        """Vytvoří PAS. v aplikaci.
+
+        :return: Vrací vybranou hodnotu z kolekce.
+        """
         self.go_to_form()
         self.ElementClick(By.CSS_SELECTOR, "#div_id_projekt .filter-option-inner-inner")
         self.driver.find_element(By.CSS_SELECTOR, ".show > .bs-searchbox > .form-control").send_keys("M-202105907")

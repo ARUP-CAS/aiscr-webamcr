@@ -16,7 +16,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
 
    .. py:method:: _get_initial_value_from_instance()
 
@@ -41,13 +41,17 @@ Třídy
 
       Provádí operaci valid value.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``verify_doi()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``verify_doi()``.
 
    .. py:method:: validate()
 
       Validuje hodnotu. v aplikaci.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``verify_doi()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``verify_doi()``.
 
 
 .. py:class:: OrcidAutocompleteField
@@ -66,19 +70,25 @@ Třídy
 
       Provádí operaci prepare value.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: valid_value()
 
       Provádí operaci valid value.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``verify_orcid()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``verify_orcid()``.
 
    .. py:method:: validate()
 
       Validuje hodnotu. v aplikaci.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``verify_orcid()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``verify_orcid()``.
 
 
 .. py:class:: RorAutocompleteField
@@ -91,13 +101,17 @@ Třídy
 
       Provádí operaci valid value.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``verify_ror()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``verify_ror()``.
 
    .. py:method:: validate()
 
       Validuje hodnotu. v aplikaci.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``verify_ror()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``verify_ror()``.
 
 
 .. py:class:: WikiDataAutocompleteField
@@ -116,17 +130,23 @@ Třídy
 
       Provádí operaci prepare value.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: valid_value()
 
       Provádí operaci valid value.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``verify_wikidata()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``verify_wikidata()``.
 
    .. py:method:: validate()
 
       Validuje hodnotu. v aplikaci.
 
-      :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+      :param value: Parametr ``value`` předává se do volání ``verify_wikidata()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``verify_wikidata()``.
 

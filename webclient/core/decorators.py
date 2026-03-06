@@ -13,22 +13,30 @@ def allowed_user_groups(allowed_groups):
     """
     Omezí přístup k pohledu pouze na vybrané hlavní uživatelské role.
 
-    :param allowed_groups: Typová nebo konfigurační hodnota `allowed_groups` určující cílovou logiku.
+    :param allowed_groups: Parametr ``allowed_groups`` slouží jako vstup pro logiku funkce ``allowed_user_groups``.
+
+        :return: Vrací proměnná ``_method_wrapper``.
     """
 
     @wraps(allowed_groups)
     def _method_wrapper(func):
-        """Obalí cílovou funkci kontrolou hlavní role uživatele."""
+        """Obalí cílovou funkci kontrolou hlavní role uživatele.
+
+        :param func: Parametr ``func`` slouží jako vstup pro logiku funkce ``_method_wrapper``.
+        :return: Vrací proměnná ``_arguments_wrapper``.
+        """
 
         @wraps(func)
         def _arguments_wrapper(request, *args, **kwargs):
             """
                        Provádí operaci arguments wrapper.
 
-                       :param request: Django HTTP požadavek použitý při zpracování.
-                       :param args: Dodatečné poziční argumenty předané voláním.
-                       :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+                       :param request: Parametr ``request`` předává se do volání ``func()``, pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+                       :param args: Parametr ``args`` se předává do volání ``func()``, vstupuje do návratové hodnoty.
+                       :param kwargs: Parametr ``kwargs`` se předává do volání ``func()``, vstupuje do návratové hodnoty.
             :return: Výstup funkce odpovídající implementované logice.
+
+                :raises PermissionError: Vyvolá se s textem "Nepovolená uživatelská role".
             """
             hlavni_role = request.user.hlavni_role
             if hlavni_role.id not in allowed_groups:
@@ -45,6 +53,8 @@ def odstavka_in_progress(view_func):
     Při aktivní odstávce vrátí stránku údržby namísto cílového pohledu.
 
     :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+
+        :return: Vrací proměnná ``wrapper``.
     """
 
     @wraps(view_func)
@@ -52,9 +62,11 @@ def odstavka_in_progress(view_func):
         """
         Rozhodne, zda vrátit stránku odstávky, nebo vykonat původní pohled.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` se předává do volání ``render()``, ``view_func()``, pracuje se s atributy ``LANGUAGE_CODE``, ``path``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``view_func()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``view_func()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``view_func()``.
         """
         maintenance = get_set_maintenance_in_cache()
         if maintenance:

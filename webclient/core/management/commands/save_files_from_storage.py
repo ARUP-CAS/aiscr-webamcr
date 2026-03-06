@@ -43,7 +43,7 @@ class Command(BaseCommand):
         """
         Provádí operaci add arguments.
 
-        :param parser: Typová nebo konfigurační hodnota `parser` určující cílovou logiku.
+        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
         """
         parser.add_argument(
             "storage_path",
@@ -78,8 +78,10 @@ class Command(BaseCommand):
         """
         Zpracuje hodnotu. v aplikaci.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param options: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` pracuje se s atributy ``get``.
+
+            :raises CommandError: Vyvolá se při splnění podmínky ``pks and pk_range``; nebo při splnění podmínky ``not pks and (not pk_range)``.
         """
         storage_path = options["storage_path"]
         pks = options.get("pks")

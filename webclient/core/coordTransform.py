@@ -14,7 +14,7 @@ def readCoef(table):
     """
     Načtení tabulky s opravamy
 
-    :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
+    :param table: Parametr ``table`` slouží jako vstup pro logiku funkce ``readCoef``.
     """
 
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -37,6 +37,9 @@ def convertToJTSK(longitude, latitude, height=0):
     :param longitude: Číselná hodnota ``longitude`` použitá při výpočtu nebo transformaci.
     :param latitude: Číselná hodnota ``latitude`` použitá při výpočtu nebo transformaci.
     :param height: Číselná hodnota ``height`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
+        :raises Exception: Vyvolá se při splnění podmínky ``latitude < 40 or latitude > 60 or longitude < 5 or (longitude > 25)``.
     """
     if not isinstance(longitude, (int, float)) or not isinstance(latitude, (int, float)):
         return [None, None]
@@ -58,6 +61,9 @@ def convertToWGS84(minusY, minusX, height=0):
     :param minusY: Číselná hodnota ``minusY`` použitá při výpočtu nebo transformaci.
     :param minusX: Číselná hodnota ``minusX`` použitá při výpočtu nebo transformaci.
     :param height: Číselná hodnota ``height`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
+        :raises Exception: Vyvolá se při splnění podmínky ``minusY < -905000 or minusY > -400000 or minusX < -1230000 or (minusX > -930000)``.
     """
     if not isinstance(minusY, (int, float)) or not isinstance(minusX, (int, float)):
         return [None, None]
@@ -76,7 +82,9 @@ def wgs84_to_bessel(latitude, longitude, altitude=0.0):
 
     :param latitude: Číselná hodnota ``latitude`` použitá při výpočtu nebo transformaci.
     :param longitude: Číselná hodnota ``longitude`` použitá při výpočtu nebo transformaci.
-    :param altitude: Číselná nebo geometrická hodnota `altitude` použitá při výpočtu nebo transformaci.
+    :param altitude: Parametr ``altitude`` slouží jako vstup pro logiku funkce ``wgs84_to_bessel``.
+
+        :return: Vrací seznam.
     """
     b = math.radians(latitude)
     l = math.radians(longitude)
@@ -100,7 +108,9 @@ def bessel_to_wgs84(latitude, longitude, altitude=0.0):
 
     :param latitude: Číselná hodnota ``latitude`` použitá při výpočtu nebo transformaci.
     :param longitude: Číselná hodnota ``longitude`` použitá při výpočtu nebo transformaci.
-    :param altitude: Číselná nebo geometrická hodnota `altitude` použitá při výpočtu nebo transformaci.
+    :param altitude: Parametr ``altitude`` slouží jako vstup pro logiku funkce ``bessel_to_wgs84``.
+
+        :return: Vrací seznam.
     """
     b = math.radians(latitude)
     l = math.radians(longitude)
@@ -121,7 +131,9 @@ def bessel_to_jtsk(B, L):
     Provádí operaci bessel to jtsk.
 
     :param B: Geodetická hodnota vstupního parametru používaná ve výpočtu transformace.
-    :param L: Číselná nebo geometrická hodnota `L` použitá při výpočtu nebo transformaci.
+    :param L: Parametr ``L`` se předává do volání ``radians()``.
+
+        :return: Vrací seznam.
     """
     B = math.radians(B)
     L = math.radians(L)
@@ -206,6 +218,8 @@ def jtsk_to_bessel(X05, Y05):
 
     :param X05: Číselná hodnota ``X05`` použitá při výpočtu nebo transformaci.
     :param Y05: Číselná hodnota ``Y05`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
     """
     Yc = Y05 - 5_000_000.0
     Xc = X05 - 5_000_000.0
@@ -296,8 +310,10 @@ def blht_to_geo_coords_wgs(b, l, h):
     Provádí operaci blht to geo coords wgs.
 
     :param b: Geodetická hodnota vstupního parametru používaná ve výpočtu transformace.
-    :param l: Číselná nebo geometrická hodnota `l` použitá při výpočtu nebo transformaci.
-    :param h: Číselná nebo geometrická hodnota `h` použitá při výpočtu nebo transformaci.
+    :param l: Parametr ``l`` se předává do volání ``cos()``, ``sin()``.
+    :param h: Parametr ``h`` slouží jako vstup pro logiku funkce ``blht_to_geo_coords_wgs``.
+
+        :return: Vrací seznam.
     """
     a = 6378137.0
     e2 = 0.006694380022901
@@ -316,8 +332,10 @@ def blht_to_geo_coords_bessel(b, l, h):
     Provádí operaci blht to geo coords bessel.
 
     :param b: Geodetická hodnota vstupního parametru používaná ve výpočtu transformace.
-    :param l: Číselná nebo geometrická hodnota `l` použitá při výpočtu nebo transformaci.
-    :param h: Číselná nebo geometrická hodnota `h` použitá při výpočtu nebo transformaci.
+    :param l: Parametr ``l`` se předává do volání ``cos()``, ``sin()``.
+    :param h: Parametr ``h`` slouží jako vstup pro logiku funkce ``blht_to_geo_coords_bessel``.
+
+        :return: Vrací seznam.
     """
     a = 6377397.155
     e2 = 0.00667437223062
@@ -337,7 +355,9 @@ def geo_coords_to_blh_bessel(X, Y, Z):
 
     :param X: Číselná hodnota ``X`` použitá při výpočtu nebo transformaci.
     :param Y: Číselná hodnota ``Y`` použitá při výpočtu nebo transformaci.
-    :param Z: Číselná nebo geometrická hodnota `Z` použitá při výpočtu nebo transformaci.
+    :param Z: Parametr ``Z`` se předává do volání ``atan()``.
+
+        :return: Vrací seznam.
     """
     a = 6377397.155
     e2 = 0.00667437223062
@@ -364,7 +384,9 @@ def geo_coords_to_blh_wgs(X, Y, Z):
 
     :param X: Číselná hodnota ``X`` použitá při výpočtu nebo transformaci.
     :param Y: Číselná hodnota ``Y`` použitá při výpočtu nebo transformaci.
-    :param Z: Číselná nebo geometrická hodnota `Z` použitá při výpočtu nebo transformaci.
+    :param Z: Parametr ``Z`` se předává do volání ``atan()``.
+
+        :return: Vrací seznam.
     """
     a = 6378137.0
     e2 = 0.006694380022901
@@ -391,7 +413,9 @@ def ETRF2JTSK05transform_coords(xs, ys, zs):
 
     :param xs: Číselná hodnota ``xs`` použitá při výpočtu nebo transformaci.
     :param ys: Číselná hodnota ``ys`` použitá při výpočtu nebo transformaci.
-    :param zs: Číselná nebo geometrická hodnota `zs` použitá při výpočtu nebo transformaci.
+    :param zs: Parametr ``zs`` slouží jako vstup pro logiku funkce ``ETRF2JTSK05transform_coords``.
+
+        :return: Vrací seznam.
     """
     p1 = -572.203
     p2 = -85.328
@@ -416,7 +440,9 @@ def JTSK052ETRFtransform_coords(xs, ys, zs):
 
     :param xs: Číselná hodnota ``xs`` použitá při výpočtu nebo transformaci.
     :param ys: Číselná hodnota ``ys`` použitá při výpočtu nebo transformaci.
-    :param zs: Číselná nebo geometrická hodnota `zs` použitá při výpočtu nebo transformaci.
+    :param zs: Parametr ``zs`` slouží jako vstup pro logiku funkce ``JTSK052ETRFtransform_coords``.
+
+        :return: Vrací seznam.
     """
     p1 = 572.213
     p2 = 85.334
@@ -440,7 +466,9 @@ def WGS2ETRFtransform_coords(xs, ys, zs):
 
     :param xs: Číselná hodnota ``xs`` použitá při výpočtu nebo transformaci.
     :param ys: Číselná hodnota ``ys`` použitá při výpočtu nebo transformaci.
-    :param zs: Číselná nebo geometrická hodnota `zs` použitá při výpočtu nebo transformaci.
+    :param zs: Parametr ``zs`` slouží jako vstup pro logiku funkce ``WGS2ETRFtransform_coords``.
+
+        :return: Vrací seznam.
     """
     if "test" in sys.argv:
         today = date(2025, 6, 28)
@@ -468,7 +496,9 @@ def ETRF2WGStransform_coords(xs, ys, zs):
 
     :param xs: Číselná hodnota ``xs`` použitá při výpočtu nebo transformaci.
     :param ys: Číselná hodnota ``ys`` použitá při výpočtu nebo transformaci.
-    :param zs: Číselná nebo geometrická hodnota `zs` použitá při výpočtu nebo transformaci.
+    :param zs: Parametr ``zs`` slouží jako vstup pro logiku funkce ``ETRF2WGStransform_coords``.
+
+        :return: Vrací seznam.
     """
     if "test" in sys.argv:
         today = date(2025, 6, 28)
@@ -496,6 +526,8 @@ def jtsk05_to_jtsk(x05, y05):
 
     :param x05: Číselná hodnota ``x05`` použitá při výpočtu nebo transformaci.
     :param y05: Číselná hodnota ``y05`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
     """
     x05 -= 5000000
     y05 -= 5000000
@@ -537,6 +569,8 @@ def jtsk_to_jtsk05(X, Y):
 
     :param X: Číselná hodnota ``X`` použitá při výpočtu nebo transformaci.
     :param Y: Číselná hodnota ``Y`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
     """
     hy = int(Y / 2000) * 2000
     hx = int(X / 2000) * 2000
@@ -574,7 +608,9 @@ def get_multi_transform_to_sjtsk(wgs_points):
     """
     Vrací multi transform to sjtsk.
 
-    :param wgs_points: Doménový objekt `wgs_points`, se kterým funkce pracuje.
+    :param wgs_points: Parametr ``wgs_points`` slouží jako vstup pro logiku funkce ``get_multi_transform_to_sjtsk``.
+
+        :return: Vrací proměnná ``my``.
     """
     my = []
     for i in wgs_points:
@@ -587,7 +623,9 @@ def get_multi_transform_to_wgs84(jtsk_points):
     """
     Vrací multi transform to wgs84.
 
-    :param jtsk_points: Doménový objekt `jtsk_points`, se kterým funkce pracuje.
+    :param jtsk_points: Parametr ``jtsk_points`` slouží jako vstup pro logiku funkce ``get_multi_transform_to_wgs84``.
+
+        :return: Vrací proměnná ``my``.
     """
     my = []
     for i in jtsk_points:
@@ -601,6 +639,8 @@ def contains_two_floats(text):
     Provádí operaci contains two floats.
 
     :param text: Číselná hodnota ``text`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací výsledek volání ``bool()``.
     """
     pattern = r"^-?\d+(\.\d+)?\s+-?\d+(\.\d+)?$"
     match = re.match(pattern, text.strip())
@@ -611,8 +651,10 @@ def transform_geom(geom, transFunc):
     """
     Transformuje geom. v aplikaci.
 
-    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
-    :param transFunc: Číselná nebo geometrická hodnota `transFunc` použitá při výpočtu nebo transformaci.
+    :param geom: Parametr ``geom`` předává se do volání ``isinstance()``, pracuje se s atributy ``find``, ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param transFunc: Parametr ``transFunc`` slouží jako vstup pro logiku funkce ``transform_geom``.
+
+        :return: Vrací n-tici.
     """
     if not isinstance(geom, str):
         return "", "Not strig"
@@ -650,7 +692,9 @@ def transform_geom_to_sjtsk(geom):
     """
     Transformuje geom to sjtsk.
 
-    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
+    :param geom: Parametr ``geom`` předává se do volání ``transform_geom()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``transform_geom()``.
     """
     return transform_geom(geom, convertToJTSK)
 
@@ -659,6 +703,8 @@ def transform_geom_to_wgs84(geom):
     """
     Transformuje geom to wgs84.
 
-    :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
+    :param geom: Parametr ``geom`` předává se do volání ``transform_geom()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``transform_geom()``.
     """
     return transform_geom(geom, convertToWGS84)

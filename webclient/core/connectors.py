@@ -69,7 +69,9 @@ class RedisConnector:
         """
         Provádí operaci prepare model for redis.
 
-        :param table: Název nebo typ ``table`` používaný pro volbu cílové logiky.
+        :param table: Parametr ``table`` pracuje se s atributy ``columns``, ``rows``.
+
+            :return: Vrací proměnná ``data``.
         """
         columns = table.columns.iterall()
         row = table.rows[0]
@@ -165,6 +167,8 @@ class ClamdNetworkSocket:
 
                :param command: Textový název, klíč nebo zpráva ``command`` používaná v rámci operace.
         :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ClamdResponseError: Vyvolá se při splnění podmínky ``len(response) > 1``.
         """
         self._init_socket()
         try:
@@ -214,7 +218,7 @@ class ClamdNetworkSocket:
                Odešle command.
 
                :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
-               :param args: Dodatečné poziční argumenty předané voláním.
+               :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
         :return: Výstup funkce odpovídající implementované logice.
         """
         concat_args = ""

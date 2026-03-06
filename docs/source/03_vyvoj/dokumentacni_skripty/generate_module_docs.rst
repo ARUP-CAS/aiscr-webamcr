@@ -82,7 +82,7 @@ Funkce
 
    Odstraní obalové uvozovky/závorky z hodnoty komentáře.
 
-   :param value: Číselná nebo geometrická hodnota `value` použitá při výpočtu nebo transformaci.
+   :param value: Parametr ``value`` pracuje se s atributy ``strip``.
    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: parse_comment_values(comment_text)
@@ -96,15 +96,15 @@ Funkce
 
    Najde první uzel komentáře bezprostředně za daným elementem.
 
-   :param parent: Číselná nebo geometrická hodnota `parent` použitá při výpočtu nebo transformaci.
-   :param element: Záznam/objekt ``element``, který funkce čte, validuje nebo upravuje.
+   :param parent: Parametr ``parent`` se předává do volání ``list()``.
+   :param element: Parametr ``element`` ovlivňuje větvení podmínek.
    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: collect_choice_element_names(choice_element)
 
    Shromáždí názvy všech uzlů xs:element uvnitř bloku choice.
 
-   :param choice_element: Záznam/objekt ``choice_element``, který funkce čte, validuje nebo upravuje.
+   :param choice_element: Parametr ``choice_element`` slouží jako vstup pro logiku funkce ``collect_choice_element_names``.
    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: format_choice_note(names)
@@ -118,7 +118,7 @@ Funkce
 
    Rekurzivně extrahuje definice elementů a zaznamená kontext choice, pokud existuje.
 
-   :param parent: Číselná nebo geometrická hodnota `parent` použitá při výpočtu nebo transformaci.
+   :param parent: Parametr ``parent`` se předává do volání ``get_following_comment()``.
    :param choice_context: Kolekce ``choice_context`` zpracovávaná touto funkcí.
    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
@@ -126,14 +126,14 @@ Funkce
 
    Extrahuje řádky elementů z definice complexType.
 
-   :param complex_type: Název nebo typ ``complex_type`` používaný pro volbu cílové logiky.
+   :param complex_type: Parametr ``complex_type`` slouží jako vstup pro logiku funkce ``extract_elements_from_complex_type``.
    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: extract_model_mappings(schema_root)
 
    Načte mapování z volby elementu amcr do řádků Model -> ComplexType.
 
-   :param schema_root: Cesta, URL nebo název zdroje ``schema_root``, ze kterého funkce čte nebo kam zapisuje.
+   :param schema_root: Parametr ``schema_root`` pracuje se s atributy ``find``.
    :return: Hodnota vrácená funkcí podle aktuální logiky implementace.
 
 .. py:function:: extract_xsd_version(schema_root)
@@ -294,21 +294,37 @@ Funkce
 
    Vrátí jazyk pro zvýraznění syntaxe podle přípony souboru.
 
+   :param script_name: Parametr ``script_name`` předává se do volání ``Path()``.
+   :return: Vrací hodnotu typu ``str`` (str).
+
 .. py:function:: get_script_doc_name(script_name)
 
    Vrátí bezpečný název RST souboru pro skript.
+
+   :param script_name: Parametr ``script_name`` předává se do volání ``sub()``, vstupuje do návratové hodnoty.
+   :return: Vrací hodnotu typu ``str`` (výsledek volání ``lower()``).
 
 .. py:function:: generate_rst_for_project_script(source_file, output_dir)
 
    Vygeneruje RST dokumentaci pro jeden soubor v adresáři scripts/.
 
+   :param source_file: Parametr ``source_file`` předává se do volání ``get_script_doc_name()``, ``get_script_language()``, pracuje se s atributy ``name``.
+   :param output_dir: Parametr ``output_dir`` slouží jako vstup pro logiku funkce ``generate_rst_for_project_script``.
+   :return: Vrací hodnotu typu ``bool`` podle vyhodnocení podmínek.
+
 .. py:function:: generate_project_scripts_index_rst(toctree_entries, output_dir)
 
    Vygeneruje index.rst pro skripty v adresáři scripts/.
 
+   :param toctree_entries: Parametr ``toctree_entries`` předává se do volání ``sorted()``.
+   :param output_dir: Parametr ``output_dir`` slouží jako vstup pro logiku funkce ``generate_project_scripts_index_rst``.
+   :return: Vrací hodnotu typu ``bool`` podle vyhodnocení podmínek.
+
 .. py:function:: generate_project_scripts_docs()
 
    Vygeneruje RST dokumentaci pro soubory v ``scripts/``.
+
+   :return: Vrací hodnotu typu ``bool`` podle vyhodnocení podmínek.
 
 .. py:function:: build_docs()
 

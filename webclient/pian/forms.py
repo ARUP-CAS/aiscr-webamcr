@@ -46,8 +46,8 @@ class PianCreateForm(forms.ModelForm):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(PianCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
@@ -78,7 +78,10 @@ class PianCreateForm(forms.ModelForm):
         return g.wkt if hasattr(g, "wkt") else str(g)
 
     def run_loaded_validation(self):
-        """Metoda pro validaci geometrií při potvrzení PIANu."""
+        """Metoda pro validaci geometrií při potvrzení PIANu.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         self._errors = ErrorDict()
         self.cleaned_data = {}
         geom_wkt = self._instance_geom_wkt("geom")
@@ -96,7 +99,10 @@ class PianCreateForm(forms.ModelForm):
         return not bool(self.errors)
 
     def clean(self):
-        """Provádí operaci clean."""
+        """Provádí operaci clean.
+
+        :raises forms.ValidationError: Vyvolá se při splnění podmínky ``isinstance(geom, Polygon)``; nebo při splnění podmínky ``zm10 is not None and zm50 is not None``.
+        """
         validation_geom = self.data.get("geom")
         self.validate_geom(validation_geom, "4326")
         validation_geom_jtsk = self.data.get("geom_sjtsk")
@@ -125,8 +131,10 @@ class PianCreateForm(forms.ModelForm):
         """
         Metoda pro validaci PIAN pomocí funkce v postgres databázi.
 
-        :param geom: Doménový objekt `geom`, se kterým funkce pracuje.
-        :param epsg: Číselná nebo geometrická hodnota `epsg` použitá při výpočtu nebo transformaci.
+        :param geom: Parametr ``geom`` předává se do volání ``callproc()``, ``debug()``.
+        :param epsg: Parametr ``epsg`` se předává do volání ``callproc()``.
+
+            :raises forms.ValidationError: Vyvolá se při zpracování zachycené výjimky typu ``Exception``; nebo při splnění podmínky ``validation_results != 'valid'``.
         """
         c = connections["urgent"].cursor()
         logger.debug("pian.forms.validate_geom.start")

@@ -36,33 +36,41 @@ Třídy
 
       Provádí operaci url.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, str.
+
    .. py:method:: repository_uuid()
 
       Provádí operaci repository uuid.
 
+      :return: Vrací vybranou hodnotu z kolekce.
+
    .. py:method:: calculate_sha_512()
 
       Provádí operaci calculate sha 512.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: delete()
 
       Odstraní záznam objektu.
 
       :param using: Alias databázového spojení použitý při operaci.
-      :param keep_parents: Číselná nebo geometrická hodnota `keep_parents` použitá při výpočtu nebo transformaci.
+      :param keep_parents: Parametr ``keep_parents`` se předává do volání ``delete()``.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
+
+      :return: Vrací atribut objektu.
 
    .. py:method:: create_soubor_vazby()
 
@@ -72,13 +80,15 @@ Třídy
 
       Provádí operaci vytvoreno.
 
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, None.
+
    .. py:method:: get_repository_content()
 
       Vrací repository content.
 
       :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
-      :param thumb_small: Číselná nebo geometrická hodnota `thumb_small` použitá při výpočtu nebo transformaci.
-      :param thumb_large: Číselná nebo geometrická hodnota `thumb_large` použitá při výpočtu nebo transformaci.
+      :param thumb_small: Parametr ``thumb_small`` se předává do volání ``get_binary_file()``.
+      :param thumb_large: Parametr ``thumb_large`` se předává do volání ``get_binary_file()``.
       :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
       :return: Načtená data odpovídající zadaným vstupům.
 
@@ -86,15 +96,15 @@ Třídy
 
       Metoda pro zapsáni vytvoření souboru do historie.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
-      :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
+      :param file_name: Parametr ``file_name`` se předává do volání ``Historie()``.
 
    .. py:method:: zaznamenej_nahrani_nove_verze()
 
       Metoda pro zapsáni nahrání nové verze souboru do historie.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
-      :param nazev: Číselná nebo geometrická hodnota `nazev` použitá při výpočtu nebo transformaci.
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
+      :param nazev: Parametr ``nazev`` se předává do volání ``Historie()``, ovlivňuje větvení podmínek.
 
    .. py:method:: get_file_extension_by_mime()
 
@@ -102,18 +112,22 @@ Třídy
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
 
+      :return: Vrací výsledek volání ``get()``.
+
    .. py:method:: get_thumb_icon()
 
       Vrací thumb icon.
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
 
+      :return: Vrací n-tici.
+
    .. py:method:: get_mime_types()
 
       Vrací mime types.
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
-      :param check_archive: Příznak ``check_archive`` určující průběh nebo rozsah zpracování.
+      :param check_archive: Parametr ``check_archive`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
       :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: remove_gps_data()
@@ -128,7 +142,9 @@ Třídy
       Ověří mime for url.
 
       :param file: Soubor nebo cesta k souboru používaná při operaci.
-      :param source_url: Cesta, URL nebo název zdroje ``source_url``, ze kterého funkce čte nebo kam zapisuje.
+      :param source_url: Parametr ``source_url`` ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``mime``, bool.
 
    .. py:method:: check_antivirus()
 
@@ -141,7 +157,7 @@ Třídy
 
       Vytvoří file response.
 
-      :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
+      :param rep_bin_file: Parametr ``rep_bin_file`` pracuje se s atributy ``content``.
       :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: large_thumbnail()
@@ -166,9 +182,13 @@ Třídy
 
       Provádí operaci getMock.
 
+      :return: Vrací slovník.
+
    .. py:method:: get_historicke_verze()
 
       Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
+
+      :return: Vrací proměnná ``results``.
 
    .. py:method:: get_soubor_historicky()
 
@@ -193,6 +213,8 @@ Třídy
 
       Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
 
+      :raises ValidationError: Vyvolá se při splnění podmínky ``odstavky.first().pk != self.pk``.
+
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
@@ -210,17 +232,23 @@ Třídy
 
       Ověří concrete permission.
 
-      :param user: Uživatel, v jehož kontextu se operace provádí.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
       :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-      :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
+      :param typ: Parametr ``typ`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: bool, proměnná ``perm_check``.
 
    .. py:method:: check_base()
 
       Ověří base. v aplikaci.
 
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+
    .. py:method:: check_status()
 
       Ověří status. v aplikaci.
+
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: check_ownership()
 
@@ -228,13 +256,19 @@ Třídy
 
       :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
 
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+
    .. py:method:: check_accessibility()
 
       Ověří accessibility. v aplikaci.
 
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+
    .. py:method:: check_permission_skip()
 
       Ověří permission skip.
+
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: get_permission_object()
 
@@ -243,6 +277,8 @@ Třídy
    .. py:method:: permission_override()
 
       Metoda pro uplatneni specifickych obejiti opravneni podle nazvu akce.
+
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 
 .. py:class:: PermissionsSkip
@@ -257,13 +293,17 @@ Funkce
 
    Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
 
-   :param instance: Instance modelu, které se operace týká.
-   :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+   :param instance: Parametr ``instance`` předává se do volání ``fullmatch()``, ``join()``, pracuje se s atributy ``vazba``, ``nazev``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param filename: Parametr ``filename`` slouží jako vstup pro logiku funkce ``get_upload_to``.
+
+   :return: Vrací výsledek volání ``join()``.
 
 .. py:function:: check_permissions(action, user, ident)
 
    Ověří permissions. v aplikaci.
 
    :param action: Identifikátor akce, která se má provést.
-   :param user: Uživatel, v jehož kontextu se operace provádí.
+   :param user: Parametr ``user`` se předává do volání ``filter()``, ``append()``, pracuje se s atributy ``hlavni_role``.
    :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+
+   :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.

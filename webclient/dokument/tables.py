@@ -98,8 +98,8 @@ class Model3DTable(SearchTable):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(Model3DTable, self).__init__(*args, **kwargs)
 
@@ -107,8 +107,10 @@ class Model3DTable(SearchTable):
         """
         Metoda pro správně zobrazení náhledu souboru.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+        :param record: Parametr ``record`` předává se do volání ``len()``, ``reverse()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
         """
         if len(record.soubory.soubory.all()) > 0:
             soubor = record.soubory.soubory.first()
@@ -257,8 +259,10 @@ class DokumentTable(SearchTable):
         """
         Metoda pro správně zobrazení náhledu souboru.
 
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-        :param record: Záznam, který funkce čte nebo upravuje.
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+        :param record: Parametr ``record`` předává se do volání ``hasattr()``, ``len()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
         """
         if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
             soubor = record.soubory.first_soubor[0]
@@ -374,7 +378,7 @@ class DokumentTable(SearchTable):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(DokumentTable, self).__init__(*args, **kwargs)

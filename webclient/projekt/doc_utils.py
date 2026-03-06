@@ -55,9 +55,9 @@ def draw_image(filename, canvas, counter):
     """
     Provádí operaci draw image.
 
-    :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
-    :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
-    :param counter: Číselná nebo geometrická hodnota `counter` použitá při výpočtu nebo transformaci.
+    :param filename: Parametr ``filename`` se předává do volání ``ImageReader()``, ``drawImage()``.
+    :param canvas: Parametr ``canvas`` pracuje se s atributy ``drawImage``.
+    :param counter: Parametr ``counter`` ovlivňuje větvení podmínek.
     """
     img = utils.ImageReader(filename)
     iw, ih = img.getSize()
@@ -85,7 +85,7 @@ def add_page_number(canvas, doc):
     """
     Provádí operaci add page number.
 
-    :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
+    :param canvas: Parametr ``canvas`` pracuje se s atributy ``saveState``, ``setFont``.
     :param doc: Objekt dokumentu, který je funkcí upravován nebo čten.
     """
     canvas.saveState()
@@ -99,7 +99,7 @@ def draw_header(canvas, doc):
     """
     Provádí operaci draw header.
 
-    :param canvas: Doménový objekt `canvas`, se kterým funkce pracuje.
+    :param canvas: Parametr ``canvas`` předává se do volání ``draw_image()``, ``add_page_number()``.
     :param doc: Objekt dokumentu, který je funkcí upravován nebo čten.
     """
     counter = 0
@@ -119,8 +119,8 @@ class DocumentCreator(ABC):
         Inicializuje instanci třídy.
 
         :param oznamovatel: Uživatel nebo osoba `oznamovatel`, v jejímž kontextu se operace provádí.
-        :param projekt: Doménový objekt `projekt`, se kterým funkce pracuje.
-        :param fedora_transaction: Příznak ``fedora_transaction`` určující průběh nebo rozsah zpracování.
+        :param projekt: Parametr ``projekt`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``__init__``.
         :param additional: Kolekce nebo datová struktura `additional` zpracovávaná touto funkcí.
         """
         from oznameni.models import Oznamovatel
@@ -145,6 +145,8 @@ class DocumentCreator(ABC):
 
                :param date_obj: Časový údaj ``date_obj`` použitý při filtrování nebo výpočtu.
         Zpracovaná hodnota po validaci nebo transformaci.
+
+            :return: Vrací hodnotu typu ``str``; podle větve může jít o: str, výsledek volání ``strftime()``.
         """
         if date_obj is None:
             return ""
@@ -372,7 +374,10 @@ class DocumentCreator(ABC):
 
     @property
     def body_style(self):
-        """Provádí operaci body style."""
+        """Provádí operaci body style.
+
+        :return: Vrací vybranou hodnotu z kolekce.
+        """
         return self.styles["amBodyText"]
 
     @abstractmethod

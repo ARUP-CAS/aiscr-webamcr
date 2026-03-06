@@ -30,7 +30,9 @@ class PermissionMiddleware:
         """
         Provádí operaci call.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_response()``.
+
+            :return: Vrací proměnná ``response``.
         """
         response = self.get_response(request)
         return response
@@ -39,10 +41,12 @@ class PermissionMiddleware:
         """
         Metoda pro kontrolu oprvávnení pro každý view.
 
-        :param request: Aktuální HTTP request předaný view/funkci.
+        :param request: Parametr ``request`` se předává do volání ``append()``, ``check_concrete_permission()``, pracuje se s atributy ``user``, ``resolver_match``, ovlivňuje větvení podmínek.
         :param view_func: View funkce obalená dekorátorem nebo middlewarem.
         :param view_args: Dodatečné argumenty předané voláním.
         :param view_kwargs: Dodatečné argumenty předané voláním.
+
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``any(tested)``.
         """
         from core.models import Permissions
 
@@ -96,7 +100,9 @@ class ErrorMiddleware:
         """
         Provádí operaci call.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_response()``.
+
+            :return: Vrací proměnná ``response``.
         """
         response = self.get_response(request)
         return response
@@ -105,8 +111,10 @@ class ErrorMiddleware:
         """
         Provádí operaci process exception.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
         :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
+
+            :return: Vrací výsledek volání ``render()``.
         """
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
@@ -136,7 +144,9 @@ class StatusMessageMiddleware:
         """
         Provádí operaci call.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``get_response()``.
+
+            :return: Vrací proměnná ``response``.
         """
         response = self.get_response(request)
         return response
@@ -145,8 +155,8 @@ class StatusMessageMiddleware:
         """
                Provádí operaci show message.
 
-               :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
-               :param request: Django HTTP požadavek použitý při zpracování.
+               :param value: Parametr ``value`` předává se do volání ``int()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek.
+               :param request: Parametr ``request`` předává se do volání ``add_message()``.
                :param redis_key: Textový název nebo klíč ``redis_key`` používaný v rámci operace.
         :return: Výstup funkce odpovídající implementované logice.
         """
@@ -179,7 +189,7 @@ class StatusMessageMiddleware:
         """
         Provádí operaci process view.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
+        :param request: Parametr ``request`` předává se do volání ``findall()``, ``get_transaction_redis_key()``, pracuje se s atributy ``path``, ``user``.
         :param view_func: View funkce obalená dekorátorem nebo middlewarem.
         :param view_args: Dodatečné argumenty předané voláním.
         :param view_kwargs: Dodatečné argumenty předané voláním.

@@ -14,7 +14,10 @@ def get_secret(setting, default_value=None):
     Vrací tajnou hodnotu ze settings nebo dodanou výchozí hodnotu.
 
     :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
-    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
+    :param default_value: Parametr ``default_value`` se předává do volání ``get()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``get()``.
+        :raises ImproperlyConfigured: Vyvolá se při zpracování zachycené výjimky typu ``KeyError``.
     """
     file_path = (
         "/run/secrets/db_conf"
@@ -44,7 +47,10 @@ def get_mail_secret(setting, default_value=None):
     Vrací mail secret.
 
     :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
-    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
+    :param default_value: Parametr ``default_value`` se předává do volání ``get()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``get()``.
+        :raises ImproperlyConfigured: Vyvolá se při zpracování zachycené výjimky typu ``KeyError``.
     """
     file_mail_path = (
         "/run/secrets/mail_conf"
@@ -71,7 +77,9 @@ def get_plain_redis_pass(default_value=""):
     """
     Vrací plain redis pass.
 
-    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
+    :param default_value: Parametr ``default_value`` vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``rstrip()``, proměnná ``default_value``.
     """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
@@ -84,7 +92,9 @@ def get_redis_pass(default_value=""):
     """
     Vrací redis pass.
 
-    :param default_value: Číselná nebo geometrická hodnota `default_value` použitá při výpočtu nebo transformaci.
+    :param default_value: Parametr ``default_value`` vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``default_value``.
     """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
@@ -297,7 +307,9 @@ def rosetta_translation_rights(user):
     """
     Provádí operaci rosetta translation rights.
 
-    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :param user: Parametr ``user`` pracuje se s atributy ``groups``, vstupuje do návratové hodnoty.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
     from core.constants import ROLE_UPRAVA_TEXTU
 

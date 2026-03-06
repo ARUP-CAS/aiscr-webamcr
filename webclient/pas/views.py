@@ -84,8 +84,10 @@ def get_detail_context(sn, request):
     """
     Funkce pro získaní potřebného kontextu pro samostatný nález.
 
-    :param sn: Číselná nebo geometrická hodnota `sn` použitá při výpočtu nebo transformaci.
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param sn: Parametr ``sn`` se předává do volání ``CreateSamostatnyNalezForm()``, ``PotvrditNalezForm()``, pracuje se s atributy ``historie``, ``soubory``, ovlivňuje větvení podmínek.
+    :param request: Parametr ``request`` se předává do volání ``CreateSamostatnyNalezForm()``, ``get_history_dates()``, pracuje se s atributy ``user``.
+
+        :return: Vrací proměnná ``context``.
     """
     context = {"sn": sn}
     context["form"] = CreateSamostatnyNalezForm(instance=sn, readonly=True, user=request.user)
@@ -106,7 +108,9 @@ def index(request):
     """
     Funkce pohledu pro zobrazení domovské stránky samostatného nálezu s navigačními možnostmi.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``render()``.
     """
     return render(request, "pas/index.html")
 
@@ -129,8 +133,8 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         self.get_action_type = None
         self.copy_source = None
@@ -140,9 +144,11 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci dispatch.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``dispatch()``.
         """
         if "kopie" in self.request.path:
             get_action_type = self.ActionType.CREATE_AS_COPY.value
@@ -171,7 +177,10 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         self.copy_source = copy_source
 
     def get_form_kwargs(self):
-        """Vrací form kwargs."""
+        """Vrací form kwargs.
+
+        :return: Vrací proměnná ``kwargs``.
+        """
         kwargs = super().get_form_kwargs()
         if self.get_action_type == self.ActionType.CREATE_AS_COPY.value:
             kwargs["instance"] = self.copy_source
@@ -187,7 +196,9 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         if self.get_action_type in (self.ActionType.CREATE.value, self.ActionType.CREATE_FROM_PROJECT.value):
@@ -204,7 +215,9 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Provádí operaci form valid.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``form_invalid()``, pracuje se s atributy ``save``, ``save_m2m``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``form_invalid()``, výsledek volání ``HttpResponseRedirect()``.
         """
         form_coor = CoordinatesDokumentForm(self.request.POST)
         sn = form.save(commit=False)
@@ -250,7 +263,9 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Zaloguje chyby neplatného formuláře a zobrazí uživateli zprávu.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``info()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``form_invalid()``.
         """
         logger.info("pas.views.create.form_invalid", extra={"error": form.errors})
         messages.error(self.request, FORM_NOT_VALID)
@@ -260,7 +275,9 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Zpracuje geometry. v aplikaci.
 
-        :param form_coor: Záznam/objekt ``form_coor``, který funkce čte, validuje nebo upravuje.
+        :param form_coor: Parametr ``form_coor`` předává se do volání ``float()``, pracuje se s atributy ``data``.
+
+            :return: Vrací n-tici.
         """
         geom = None
         geom_sjtsk = None
@@ -288,9 +305,11 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``success()``, ``get()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, pracuje se s atributy ``get``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseRedirect()``, výsledek volání ``get()``.
         """
         ident_cely = kwargs.get("ident_cely")
         if self.get_action_type == self.ActionType.CREATE_FROM_PROJECT.value:
@@ -308,8 +327,10 @@ def detail(request, ident_cely):
     """
     Funkce pohledu pro zobrazení detailu samostatného nálezu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``update()``, ``get_detail_context()``, pracuje se s atributy ``session``, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
+
+        :return: Vrací výsledek volání ``render()``.
     """
     context = {"warnings": request.session.pop("temp_data", None)}
     sn = get_object_or_404(
@@ -348,8 +369,11 @@ def edit(request, ident_cely):
     """
     Funkce pohledu pro editaci samostatného nálezu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``CreateSamostatnyNalezForm()``, ``CoordinatesDokumentForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``redirect()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+        :raises PermissionDenied: Vyvolá se při splnění podmínky ``sn.stav == SN_ARCHIVOVANY``.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav == SN_ARCHIVOVANY:
@@ -437,8 +461,10 @@ def edit_ulozeni(request, ident_cely):
     """
     Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``PotvrditNalezForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
@@ -490,8 +516,10 @@ def vratit(request, ident_cely):
     """
     Funkce pohledu pro vrácení stavu samostatného nálezu pomocí modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     sn: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
@@ -546,8 +574,10 @@ def odeslat(request, ident_cely):
     """
     Funkce pohledu pro odeslání samostatného nálezu pomocí modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     sn: SamostatnyNalez = get_object_or_404(
         SamostatnyNalez.objects.select_related(
@@ -608,8 +638,10 @@ def potvrdit(request, ident_cely):
     """
     Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_ODESLANY:
@@ -661,8 +693,10 @@ def archivovat(request, ident_cely):
     """
     Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     sn: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_POTVRZENY:
@@ -725,7 +759,9 @@ class PasPermissionFilterMixin(PermissionFilterMixin):
         Provádí operaci add ownership lookup.
 
         :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
-        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
+
+            :return: Vrací výsledek volání ``Q()``.
         """
         filter_historie = {"uzivatel": self.request.user}
         filtered_my = Historie.objects.filter(**filter_historie)
@@ -768,7 +804,9 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         """
         Provádí operaci rename field for ordering.
 
-        :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
+        :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         field = field.replace("-", "")
         return {
@@ -785,7 +823,10 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci."""
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací výsledek volání ``check_filter_permission()``.
+        """
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -815,8 +856,10 @@ def smazat(request, ident_cely):
     """
     Funkce pohledu pro smazání samostatného nálezu pomocí modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
-    :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+    :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     nalez: SamostatnyNalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if check_stav_changed(request, nalez):
@@ -872,7 +915,9 @@ def zadost(request):
     """
     Funkce pohledu pro vytvoření žádosti o spolupráci.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``CreateZadostForm()``, ``filter()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
     """
     if request.method == "POST":
         logger.debug("pas.views.zadost.start")
@@ -977,7 +1022,9 @@ class UzivatelSpolupraceListView(SearchListView):
         """
         Provádí operaci rename field for ordering.
 
-        :param field: Záznam/objekt ``field``, který funkce čte, validuje nebo upravuje.
+        :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         field = field.replace("-", "")
         return {
@@ -986,7 +1033,10 @@ class UzivatelSpolupraceListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci."""
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací výsledek volání ``order_by()``.
+        """
         sort_params = self._get_sort_params()
         sort_params = [self.rename_field_for_ordering(x) for x in sort_params]
         qs = super().get_queryset()
@@ -1016,7 +1066,9 @@ class UzivatelSpolupraceListView(SearchListView):
         Provádí operaci add ownership lookup.
 
         :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
-        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``filtered_my``.
         """
         filtered_my = Q(spolupracovnik=self.request.user)
         if ownership == p.ownershipChoices.our:
@@ -1029,8 +1081,10 @@ class UzivatelSpolupraceListView(SearchListView):
         """
         Provádí operaci add accessibility lookup.
 
-        :param permission: Typová nebo konfigurační hodnota `permission` určující cílovou logiku.
-        :param qs: Vstupní queryset, který má být dále zpracován.
+        :param permission: Parametr ``permission`` slouží jako vstup pro logiku funkce ``add_accessibility_lookup``.
+        :param qs: Parametr ``qs`` vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``qs``.
         """
         return qs
 
@@ -1038,7 +1092,9 @@ class UzivatelSpolupraceListView(SearchListView):
         """
         Vrací context data.
 
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["show_zadost"] = check_permissions(p.actionChoices.spoluprace_zadost, self.request.user)
@@ -1048,7 +1104,10 @@ class UzivatelSpolupraceListView(SearchListView):
         return context
 
     def get_table_kwargs(self):
-        """Vrací table kwargs."""
+        """Vrací table kwargs.
+
+        :return: Vrací slovník.
+        """
         if self.request.user.hlavni_role.id != ROLE_ADMIN_ID:
             return {"exclude": ("smazani",)}
         return {}
@@ -1060,8 +1119,10 @@ def aktivace(request, pk):
     """
     Funkce pohledu pro aktivaci spolupráce pomocí modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``set_aktivni()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``, výsledek volání ``render()``.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
@@ -1109,9 +1170,11 @@ class AktivaceEmailView(LoginRequiredMixin, DetailView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``set_aktivni()``, pracuje se s atributy ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``redirect()``.
         """
         obj: UzivatelSpoluprace = self.get_object()
         fedora_transaction = FedoraTransaction()
@@ -1135,15 +1198,20 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_object(self):
-        """Vrací object. v aplikaci."""
+        """Vrací object. v aplikaci.
+
+        :return: Vrací výsledek volání ``get_object_or_404()``.
+        """
         return get_object_or_404(UzivatelSpoluprace, id=self.kwargs["pk"])
 
     def get_context_data(self, *args, **kwargs):
         """
         Vrací context data.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
         """
         obj: UzivatelSpoluprace = self.get_object()
         form = DeaktivovatSpolupraciForm()
@@ -1165,9 +1233,11 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``add_message()``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
         """
         context = self.get_context_data()
         warnings = context["object"].check_pred_deaktivaci()
@@ -1181,9 +1251,11 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param request: Parametr ``request`` předává se do volání ``DeaktivovatSpolupraciForm()``, ``set_neaktivni()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``redirect()``.
         """
         obj: UzivatelSpoluprace = self.get_object()
         logger.info("pas.views.deaktivace_spoluprace.start", extra={"pk": obj.pk})
@@ -1219,8 +1291,10 @@ def smazat_spolupraci(request, pk):
     """
     Funkce pohledu pro smazání spolupráce pomocí modalu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``add_message()``, ``render()``, pracuje se s atributy ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
     :param pk: Identifikátor ``pk`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
     """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
@@ -1283,8 +1357,8 @@ def get_detail_template_shows(sn, user):
     """
     Funkce pro získaní kontextu pro zobrazování možností na stránkách.
 
-    :param sn: Číselná nebo geometrická hodnota `sn` použitá při výpočtu nebo transformaci.
-    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :param sn: Parametr ``sn`` se předává do volání ``check_permissions()``, pracuje se s atributy ``stav``, ``ident_cely``.
+    :param user: Parametr ``user`` se předává do volání ``check_permissions()``, pracuje se s atributy ``is_archeolog_or_more``.
     :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
     """
     show_arch_links = sn.stav == SN_ARCHIVOVANY
@@ -1313,7 +1387,9 @@ def post_point_position_2_katastre(request):
     """
     Funkce pro získaní názvu katastru z bodu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     body = json.loads(request.body.decode("utf-8"))
     logger.debug("pas.views.post_point_position_2_katastre", extra={"data": body})
@@ -1335,7 +1411,9 @@ def post_point_position_2_katastre_with_geom(request):
     """
     Funkce pro získaní názvu katastru, geomu z bodu.
 
-    :param request: Aktuální HTTP request předaný view/funkci.
+    :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+
+        :return: Vrací výsledek volání ``JsonResponse()``.
     """
     body = json.loads(request.body.decode("utf-8"))
     [katastr_name, katastr_db, katastr_geom] = get_cadastre_from_point_with_geometry(Point(body["x1"], body["x2"]))
@@ -1356,7 +1434,7 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu samostatného nálezu.
 
-    :param zaznam: Záznam/objekt ``zaznam``, který funkce čte, validuje nebo upravuje.
+    :param zaznam: Parametr ``zaznam`` pracuje se s atributy ``stav``, ovlivňuje větvení podmínek.
     :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
     :return: Seznam názvů polí, která mají být v daném stavu povinná.
     """
@@ -1394,8 +1472,10 @@ class ProjektPasTableView(LoginRequiredMixin, View):
         """
         Vrací výsledek operace.
 
-        :param request: Django HTTP požadavek použitý při zpracování.
-        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``.
+
+            :return: Vrací výsledek volání ``HttpResponse()``.
         """
         projekt = Projekt.objects.get(ident_cely=ident_cely)
         qs = (

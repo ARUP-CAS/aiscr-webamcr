@@ -21,6 +21,8 @@ Třídy
 
       Vrací readonly fields.
 
-      :param request: Django HTTP požadavek použitý při zpracování.
-      :param obj: Objekt, se kterým funkce pracuje.
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
+      :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, atribut objektu.
 

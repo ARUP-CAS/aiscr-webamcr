@@ -263,8 +263,8 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
         """
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
@@ -281,7 +281,9 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
         """
         logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -306,9 +308,11 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Metoda pro filtrování podle období.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_obdobi``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(obdobi__in=value)
 
@@ -316,9 +320,11 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Metoda pro filtrování podle druhu nálezu.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_druh_nalezu``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(druh_nalezu__in=value)
 
@@ -326,9 +332,11 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Metoda pro filtrování podle lokalizace, poznámek a evidenčního čísla.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             Q(lokalizace__icontains=value) | Q(poznamka__icontains=value) | Q(evidencni_cislo__icontains=value)
@@ -338,9 +346,11 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         """
         Metoda pro filtrování podle oblasti.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
-        :param name: Název nebo identifikátor používaný v rámci operace.
-        :param value: Hodnota vstupu (např. z formuláře nebo filtru), kterou funkce validuje či převádí.
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_by_oblast``.
+        :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
         """
         if value == OBLAST_CECHY:
             return queryset.filter(ident_cely__contains="C-")
@@ -391,8 +401,8 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
         """
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
@@ -439,7 +449,9 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         """
         Filtruje queryset. v aplikaci.
 
-        :param queryset: Vstupní queryset, který má být dále zpracován.
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
         """
         logger.debug("pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.start")
         historie = self._get_history_subquery()
@@ -469,7 +481,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.samostatnyNalezFilterFormHelper.history.divider.label")
@@ -532,7 +544,7 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
         """
         Inicializuje instanci třídy.
 
-        :param form: Formulářová instance zpracovávaná funkcí.
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
         """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.UzivatelSpolupraceFilterFormHelper.history.divider.label")

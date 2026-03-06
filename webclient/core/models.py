@@ -64,8 +64,10 @@ def get_upload_to(instance, filename):
     """
     Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
 
-    :param instance: Instance modelu, které se operace týká.
-    :param filename: Cesta, URL nebo název zdroje ``filename``, ze kterého funkce čte nebo kam zapisuje.
+    :param instance: Parametr ``instance`` předává se do volání ``fullmatch()``, ``join()``, pracuje se s atributy ``vazba``, ``nazev``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param filename: Parametr ``filename`` slouží jako vstup pro logiku funkce ``get_upload_to``.
+
+        :return: Vrací výsledek volání ``join()``.
     """
     instance: Soubor
     vazba: SouborVazby = instance.vazba
@@ -143,19 +145,28 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def url(self):
-        """Provádí operaci url."""
+        """Provádí operaci url.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, str.
+        """
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return f"{settings.DIGIARCHIV_SERVER_URL}id/{self.path.split('record/')[1]}"
         return ""
 
     @property
     def repository_uuid(self):
-        """Provádí operaci repository uuid."""
+        """Provádí operaci repository uuid.
+
+        :return: Vrací vybranou hodnotu z kolekce.
+        """
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return self.path.split("/")[-1]
 
     def calculate_sha_512(self):
-        """Provádí operaci calculate sha 512."""
+        """Provádí operaci calculate sha 512.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        """
         repository_content = self.get_repository_content()
         if repository_content is not None:
             return repository_content.sha_512
@@ -166,7 +177,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Odstraní záznam objektu.
 
         :param using: Alias databázového spojení použitý při operaci.
-        :param keep_parents: Číselná nebo geometrická hodnota `keep_parents` použitá při výpočtu nebo transformaci.
+        :param keep_parents: Parametr ``keep_parents`` se předává do volání ``delete()``.
         """
         if self.historie is None:
             self.create_soubor_vazby()
@@ -193,8 +204,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         Inicializuje instanci třídy.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
         """
         super(Soubor, self).__init__(*args, **kwargs)
         self.suppress_signal = False
@@ -207,6 +218,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
                Vrací textovou reprezentaci objektu.
 
         Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
         """
         return self.nazev
 
@@ -221,7 +234,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def vytvoreno(self):
-        """Provádí operaci vytvoreno."""
+        """Provádí operaci vytvoreno.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, None.
+        """
         if self.historie is not None:
             return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
         else:
@@ -236,8 +252,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Vrací repository content.
 
         :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
-        :param thumb_small: Číselná nebo geometrická hodnota `thumb_small` použitá při výpočtu nebo transformaci.
-        :param thumb_large: Číselná nebo geometrická hodnota `thumb_large` použitá při výpočtu nebo transformaci.
+        :param thumb_small: Parametr ``thumb_small`` se předává do volání ``get_binary_file()``.
+        :param thumb_large: Parametr ``thumb_large`` se předává do volání ``get_binary_file()``.
         :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
         :return: Načtená data odpovídající zadaným vstupům.
         """
@@ -264,8 +280,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         Metoda pro zapsáni vytvoření souboru do historie.
 
-        :param user: Uživatel, v jehož kontextu se operace provádí.
-        :param file_name: Cesta, URL nebo název zdroje ``file_name``, ze kterého funkce čte nebo kam zapisuje.
+        :param user: Parametr ``user`` se předává do volání ``Historie()``.
+        :param file_name: Parametr ``file_name`` se předává do volání ``Historie()``.
         """
         self.create_soubor_vazby()
         hist = Historie(
@@ -280,8 +296,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         Metoda pro zapsáni nahrání nové verze souboru do historie.
 
-        :param user: Uživatel, v jehož kontextu se operace provádí.
-        :param nazev: Číselná nebo geometrická hodnota `nazev` použitá při výpočtu nebo transformaci.
+        :param user: Parametr ``user`` se předává do volání ``Historie()``.
+        :param nazev: Parametr ``nazev`` se předává do volání ``Historie()``, ovlivňuje větvení podmínek.
         """
         if self.historie is None:
             self.create_soubor_vazby()
@@ -301,6 +317,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Vrací file extension by mime.
 
         :param file: Soubor nebo cesta k souboru používaná při operaci.
+
+            :return: Vrací výsledek volání ``get()``.
         """
         mime_type = cls.get_mime_types(file)
         return {
@@ -337,6 +355,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Vrací thumb icon.
 
         :param file: Soubor nebo cesta k souboru používaná při operaci.
+
+            :return: Vrací n-tici.
         """
         mime_type = magic.from_buffer(file.read(), mime=True)
         logger.debug("core.models.Soubor.get_thumb_icon.start", extra={"mime_type": mime_type})
@@ -385,7 +405,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Vrací mime types.
 
         :param file: Soubor nebo cesta k souboru používaná při operaci.
-        :param check_archive: Příznak ``check_archive`` určující průběh nebo rozsah zpracování.
+        :param check_archive: Parametr ``check_archive`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
         :return: Načtená data odpovídající zadaným vstupům.
         """
         file.seek(0)
@@ -522,7 +542,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Ověří mime for url.
 
         :param file: Soubor nebo cesta k souboru používaná při operaci.
-        :param source_url: Cesta, URL nebo název zdroje ``source_url``, ze kterého funkce čte nebo kam zapisuje.
+        :param source_url: Parametr ``source_url`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``mime``, bool.
         """
         mime = cls.get_mime_types(file, check_archive=True)
         logger.debug("core.models.Soubor.check_mime_for_url.mime_types", extra={"mime_type": mime})
@@ -625,7 +647,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         Vytvoří file response.
 
-        :param rep_bin_file: Cesta, URL nebo název zdroje ``rep_bin_file``, ze kterého funkce čte nebo kam zapisuje.
+        :param rep_bin_file: Parametr ``rep_bin_file`` pracuje se s atributy ``content``.
         :return: Nově vytvořená hodnota připravená touto funkcí.
         """
         content = rep_bin_file.content
@@ -679,11 +701,17 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         return None
 
     def getMock(self):
-        """Provádí operaci getMock."""
+        """Provádí operaci getMock.
+
+        :return: Vrací slovník.
+        """
         return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
 
     def get_historicke_verze(self):
-        """Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie"""
+        """Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
+
+        :return: Vrací proměnná ``results``.
+        """
         from core.repository_connector import FedoraRepositoryConnector
         from core.utils import get_timezone
 
@@ -761,7 +789,10 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
         verbose_name_plural = _("core.model.OdstavkaSystemu.modelTitles.label")
 
     def clean(self):
-        """Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena."""
+        """Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
+
+        :raises ValidationError: Vyvolá se při splnění podmínky ``odstavky.first().pk != self.pk``.
+        """
         odstavky = OdstavkaSystemu.objects.filter(status=True)
         if odstavky.count() > 0 and self.status:
             if odstavky.first().pk != self.pk:
@@ -1096,9 +1127,11 @@ class Permissions(models.Model):
         """
         Ověří concrete permission.
 
-        :param user: Uživatel, v jehož kontextu se operace provádí.
+        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
         :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-        :param typ: Název nebo typ ``typ`` používaný pro volbu cílové logiky.
+        :param typ: Parametr ``typ`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, proměnná ``perm_check``.
         """
         self.typ = typ
         self.object = None
@@ -1128,14 +1161,20 @@ class Permissions(models.Model):
         return perm_check
 
     def check_base(self):
-        """Ověří base. v aplikaci."""
+        """Ověří base. v aplikaci.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         if self.base:
             return True
         else:
             return False
 
     def check_status(self):
-        """Ověří status. v aplikaci."""
+        """Ověří status. v aplikaci.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         if self.status:
             if not self.permission_object:
                 self.get_permission_object()
@@ -1168,6 +1207,8 @@ class Permissions(models.Model):
         Ověří ownership. v aplikaci.
 
         :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         if ownership:
             if not self.permission_object:
@@ -1186,7 +1227,10 @@ class Permissions(models.Model):
         return True
 
     def check_accessibility(self):
-        """Ověří accessibility. v aplikaci."""
+        """Ověří accessibility. v aplikaci.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         if self.accessibility:
             if not self.check_ownership(self.accessibility):
                 permission_object_pristupnost = self.permission_object.pristupnost.pk
@@ -1201,7 +1245,10 @@ class Permissions(models.Model):
         return True
 
     def check_permission_skip(self):
-        """Ověří permission skip."""
+        """Ověří permission skip.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         if not self.permission_object:
             self.get_permission_object()
             if self.permission_object == "error":
@@ -1256,7 +1303,10 @@ class Permissions(models.Model):
                 self.permission_object = "error"
 
     def permission_override(self):
-        """Metoda pro uplatneni specifickych obejiti opravneni podle nazvu akce."""
+        """Metoda pro uplatneni specifickych obejiti opravneni podle nazvu akce.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         if self.action in [self.actionChoices.soubor_nahled_dokument, self.actionChoices.soubor_stahnout_dokument]:
             if (
                 self.logged_in_user.organizace.cteni_dokumentu
@@ -1272,8 +1322,10 @@ def check_permissions(action, user, ident=None):
     Ověří permissions. v aplikaci.
 
     :param action: Identifikátor akce, která se má provést.
-    :param user: Uživatel, v jehož kontextu se operace provádí.
+    :param user: Parametr ``user`` se předává do volání ``filter()``, ``append()``, pracuje se s atributy ``hlavni_role``.
     :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
     permission_set = Permissions.objects.filter(
         main_role=user.hlavni_role,

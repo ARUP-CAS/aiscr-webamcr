@@ -97,5 +97,8 @@ class LokalitaTable(SearchTable):
         )
 
     def get_all_idents(self):
-        """Vrátí seznam identifikátorů archeologických záznamů pro lokalitu."""
+        """Vrátí seznam identifikátorů archeologických záznamů pro lokalitu.
+
+        :return: Vrací výsledek volání ``join()``.
+        """
         return ",".join([record.record.archeologicky_zaznam.ident_cely for record in self.paginated_rows])

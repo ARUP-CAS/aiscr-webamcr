@@ -16,10 +16,10 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Dodatečné poziční argumenty předané voláním.
-      :param required: Příznak ``required`` určující průběh nebo rozsah zpracování.
-      :param required_next: Příznak ``required_next`` určující průběh nebo rozsah zpracování.
-      :param readonly: Příznak ``readonly`` určující průběh nebo rozsah zpracování.
-      :param detail: Číselná nebo geometrická hodnota `detail` použitá při výpočtu nebo transformaci.
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+      :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param detail: Parametr ``detail`` ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 

@@ -29,7 +29,7 @@ class Command(BaseCommand):
         """
         Provádí operaci add arguments.
 
-        :param parser: Typová nebo konfigurační hodnota `parser` určující cílovou logiku.
+        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
         """
         parser.add_argument(
             "key",
@@ -46,8 +46,8 @@ class Command(BaseCommand):
         """
         Zpracuje hodnotu. v aplikaci.
 
-        :param args: Dodatečné poziční argumenty předané voláním.
-        :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``handle``.
         """
         logger.debug("core.management.commands.write_value_to_redis.start")
         key = kwargs["key"]

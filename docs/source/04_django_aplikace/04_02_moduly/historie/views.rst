@@ -18,11 +18,15 @@ Třídy
 
       Vrátí hodnotu z URL podle lookup_kwarg.
 
+      :return: Vrací vybranou hodnotu z kolekce.
+
    .. py:method:: prepare_queryset()
 
       Potomek může přepsat pro vlastní řazení nebo dodatečné filtry.
 
       :param qs: Queryset/filtr ``qs`` použitý při výběru záznamů.
+
+      :return: Vrací výsledek volání ``order_by()``.
 
    .. py:method:: add_extra_context()
 
@@ -33,6 +37,9 @@ Třídy
    .. py:method:: get_queryset()
 
       Vrací queryset historie po aplikaci výchozího řazení a filtrů.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, proměnná ``qs``.
+      :raises ValueError: Vyvolá se při splnění podmínky ``not self.queryset_filter``.
 
    .. py:method:: get_header_config()
 
@@ -52,20 +59,26 @@ Třídy
 
       Vrací tabulku historie naplněnou připraveným querysetem.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_table()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``get_table()``.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: render_to_response()
 
       Vyrenderuje to response.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
-      :param response_kwargs: Dodatečné pojmenované argumenty předané voláním.
+      :param context: Parametr ``context`` se předává do volání ``render_to_response()``, pracuje se s atributy ``get``, vstupuje do návratové hodnoty.
+      :param response_kwargs: Parametr ``response_kwargs`` se předává do volání ``render_to_response()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render_to_response()``, výsledek volání ``response()``.
 
 
 .. py:class:: ProjektHistorieListView
@@ -78,7 +91,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: AkceHistorieListView
@@ -91,7 +106,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: DokumentHistorieListView
@@ -104,13 +121,15 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+      :return: Vrací slovník.
 
    .. py:method:: add_extra_context()
 
       Provádí operaci add extra context.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``add_extra_context``.
 
 
 .. py:class:: SamostatnyNalezHistorieListView
@@ -123,7 +142,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: SpolupraceHistorieListView
@@ -136,7 +157,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: SouborHistorieListView
@@ -149,19 +172,23 @@ Třídy
 
       Provádí operaci prepare queryset.
 
-      :param qs: Vstupní queryset, který má být dále zpracován.
+      :param qs: Parametr ``qs`` pracuje se s atributy ``order_by``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``order_by()``.
 
    .. py:method:: add_extra_context()
 
       Provádí operaci add extra context.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``add_extra_context``.
 
    .. py:method:: get_header_config()
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: slovník, None.
 
 
 .. py:class:: LokalitaHistorieListView
@@ -174,7 +201,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: UzivatelHistorieListView
@@ -187,7 +216,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: ExterniZdrojHistorieListView
@@ -200,7 +231,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: PianHistorieListView
@@ -213,7 +246,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: PianLokalitaHistorieListView
@@ -226,7 +261,9 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+      :return: Vrací slovník.
 
 
 .. py:class:: AdbHistorieListView
@@ -239,5 +276,7 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontextová data používaná při serializaci nebo renderování.
+      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+      :return: Vrací slovník.
 

@@ -10,6 +10,6 @@ Funkce
 
    Provádí operaci soubor update metadata.
 
-   :param sender: Třída modelu, která signal vyvolala.
-   :param instance: Instance modelu, které se operace týká.
-   :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``soubor_update_metadata``.
+   :param instance: Parametr ``instance`` pracuje se s atributy ``uzivatel``, ``organizace_snapshot``, ovlivňuje větvení podmínek.
+   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``soubor_update_metadata``.

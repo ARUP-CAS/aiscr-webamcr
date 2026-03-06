@@ -22,9 +22,9 @@ def create_dokument_vazby(sender, instance, **kwargs):
 
     Metoda se volá pred uložením záznamu.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_dokument_vazby``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``pk``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_dokument_vazby``.
     """
     logger.debug("pas.signals.create_dokument_vazby.start", extra={"ident_cely": instance.ident_cely})
     if instance.pk is None:
@@ -42,10 +42,10 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
     """
     Uloží metadata samostatny nalez.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param created: Příznak, zda byla instance právě vytvořena.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_metadata_samostatny_nalez``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``check_if_task_queued()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param created: Parametr ``created`` slouží jako vstup pro logiku funkce ``save_metadata_samostatny_nalez``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_metadata_samostatny_nalez``.
     """
     logger.debug("pas.signals.save_metadata_samostatny_nalez.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
@@ -58,7 +58,7 @@ def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, created, *
             """
                        Uloží metadata.
 
-                       :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+                       :param close_transaction: Parametr ``close_transaction`` předává se do volání ``save_metadata()``.
             Výsledek provedené změny nad cílovým objektem.
             """
             if (created or instance.initial_pristupnost != instance.pristupnost) and instance.projekt:
@@ -84,9 +84,9 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
     """
     Provádí operaci dokument delete container soubor vazby.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``dokument_delete_container_soubor_vazby``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``dokument_delete_container_soubor_vazby``.
     """
     logger.debug("pas.signals.dokument_delete_container_soubor_vazby.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(SamostatnyNalez)
@@ -97,7 +97,7 @@ def dokument_delete_container_soubor_vazby(sender, instance: SamostatnyNalez, **
         """
         Uloží metadata. v aplikaci.
 
-        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+        :param close_transaction: Parametr ``close_transaction`` předává se do volání ``record_deletion()``.
         """
         if instance.projekt:
             instance.projekt.save_metadata(fedora_transaction)
@@ -125,9 +125,9 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
     """
     Uloží uzivatel spoluprce.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_uzivatel_spoluprce``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_uzivatel_spoluprce``.
     """
     logger.debug("pas.signals.save_uzivatel_spoluprce.start", extra={"pk": instance.pk})
     if not instance.suppress_signal:
@@ -137,7 +137,7 @@ def save_uzivatel_spoluprce(sender, instance: UzivatelSpoluprace, **kwargs):
             """
                        Uloží metadata.
 
-                       :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+                       :param close_transaction: Parametr ``close_transaction`` předává se do volání ``save_metadata()``.
             Výsledek provedené změny nad cílovým objektem.
             """
             instance.vedouci.save_metadata(fedora_transaction)
@@ -155,9 +155,9 @@ def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, 
     """
     Odstraní uzivatel spoluprce connections.
 
-    :param sender: Třída modelu, která signal vyvolala.
-    :param instance: Instance modelu, které se operace týká.
-    :param kwargs: Dodatečné pojmenované argumenty předané voláním.
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_uzivatel_spoluprce_connections``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_uzivatel_spoluprce_connections``.
     """
     logger.debug("pas.signals.delete_uzivatel_spoluprce_connections.start", extra={"pk": instance.pk})
     fedora_transaction = instance.active_transaction
@@ -166,7 +166,7 @@ def delete_uzivatel_spoluprce_connections(sender, instance: UzivatelSpoluprace, 
         """
         Uloží metadata. v aplikaci.
 
-        :param close_transaction: Příznak ``close_transaction`` určující průběh nebo rozsah zpracování.
+        :param close_transaction: Parametr ``close_transaction`` předává se do volání ``save_metadata()``.
         """
         Historie.save_record_deletion_record(record=instance)
         instance.vedouci.save_metadata(fedora_transaction)

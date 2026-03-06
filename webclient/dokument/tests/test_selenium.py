@@ -1272,7 +1272,10 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.goToAddress("/dokument/model/zapsat")
 
     def zapsat_zaznam(self):
-        """Provádí operaci zapsat zaznam."""
+        """Provádí operaci zapsat zaznam.
+
+        :return: Vrací proměnná ``ident``.
+        """
         self.go_to_form_zapsat()
         self.ElementClick(By.CSS_SELECTOR, ".select2-selection__rendered")
         self.driver.find_element(By.CSS_SELECTOR, ".select2-search__field").send_keys("švejcar")
@@ -1301,7 +1304,9 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         """
         Provádí operaci odeslat zaznam.
 
-        :param ident_cely: Identifikátor ``ident_cely`` používaný pro dohledání cílového záznamu.
+        :param ident_cely: Parametr ``ident_cely`` se předává do volání ``goToAddress()``.
+
+            :return: Vrací proměnná ``ident``.
         """
         self.goToAddress(f"/dokument/model/detail/{ident_cely}")
         self.ElementClick(By.ID, "buttonEdit")
