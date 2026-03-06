@@ -919,7 +919,7 @@ class LokalitaSekvence(models.Model):
 
 
 class AkceSekvence(models.Model):
-    """Model pro tabulku se sekvencemi akcií."""
+    """Model pro tabulku se sekvencemi akcí."""
 
     region = models.CharField(max_length=1, choices=[(OBLAST_MORAVA, "Morava"), (OBLAST_CECHY, "Cechy")])
     sekvence = models.IntegerField()
