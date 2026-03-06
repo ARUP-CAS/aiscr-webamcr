@@ -47,7 +47,7 @@ ${scriptpath}/test_deploy.sh -q
 
 #Status check
 print_d1 "STATUS CHECK"
-timeout=400         # max čas čekání v sekundách (5 minut)
+timeout=600         # max čas čekání v sekundách (10 minut)
 interval=20          # čas mezi kontrolami
 elapsed=0
 while true; do

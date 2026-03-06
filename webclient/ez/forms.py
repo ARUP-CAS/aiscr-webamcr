@@ -172,7 +172,7 @@ class ExterniZdrojForm(forms.ModelForm):
                         '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-4 input-osoba select2-input",
+                css_class="col-sm-4 input-osoba select2-input form-group",
             )
             editori = Div(
                 AppendedText(
@@ -181,7 +181,7 @@ class ExterniZdrojForm(forms.ModelForm):
                         '<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-4 input-osoba select2-input",
+                css_class="col-sm-4 input-osoba select2-input form-group",
             )
 
         self.helper.layout = Layout(

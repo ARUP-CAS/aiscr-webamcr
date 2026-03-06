@@ -75,6 +75,8 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "id_popis").send_keys("test")
         self.ElementClick(By.CSS_SELECTOR, ".required-next > .bs-placeholder .filter-option-inner-inner")
         self.ElementClick(By.ID, "bs-select-7-1")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_licence .filter-option-inner-inner")
+        self.ElementClick(By.ID, "bs-select-8-1")
 
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
@@ -262,7 +264,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "buttonUploadSubmit")
 
         self.ElementClick(By.CSS_SELECTOR, "#dokument-archivovat > .app-controls-button-text")
-        self.ElementClick(By.CSS_SELECTOR, ".custom-control-label")
+        self.ElementClick(By.ID, "id_confirm")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
         # self.wait(self.wait_interval+10)

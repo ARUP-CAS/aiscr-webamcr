@@ -48,10 +48,13 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "div_id_lokalizace")
         self.ElementClick(By.ID, "id_lokalizace")
         self.ElementSendKeys(By.ID, "id_lokalizace", "test")
-        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  button", "kultura púchovská")
+
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi  button")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  div.bs-searchbox > input", "kultura púchovská")
         self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  div.bs-searchbox > input", Keys.ENTER)
 
-        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  button", "lahev")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_druh_nalezu  button")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  div.bs-searchbox > input", "lahev")
         self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  div.bs-searchbox > input", Keys.ENTER)
 
         self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace button")
@@ -142,10 +145,13 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.ElementClick(By.ID, "visible_x2")
         self.driver.find_element(By.ID, "visible_x2").send_keys("49,2941092")
         self.ElementSendKeys(By.ID, "id_lokalizace", "test")
-        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  button", "kultura púchovská")
+
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_obdobi  button")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  div.bs-searchbox > input", "kultura púchovská")
         self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_obdobi  div.bs-searchbox > input", Keys.ENTER)
 
-        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  button", "lahev")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_druh_nalezu  button")
+        self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  div.bs-searchbox > input", "lahev")
         self.ElementSendKeys(By.CSS_SELECTOR, "#div_id_druh_nalezu  div.bs-searchbox > input", Keys.ENTER)
 
         self.ElementClick(By.CSS_SELECTOR, "#div_id_specifikace button")
@@ -441,9 +447,8 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.assertEqual(SamostatnyNalez.objects.filter(ident_cely="C-202010474-N00002").first().stav, SN_POTVRZENY)
 
         self.goToAddress("/pas/detail/C-202010474-N00002")
-        self.ElementClick(By.CSS_SELECTOR, "#pas-archivovat > .app-controls-button-text")
-        self.wait(1)
-        self.ElementClick(By.CSS_SELECTOR, ".custom-control-label")
+        self.ElementClick(By.ID, "pas-archivovat")
+        self.ElementClick(By.ID, "id_confirm")
         with WaitForPageLoad(self.driver):
             self.ElementClick(By.ID, "submit-btn")
 

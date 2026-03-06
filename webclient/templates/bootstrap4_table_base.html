@@ -1,6 +1,7 @@
 {% load django_tables2 %}
 {% load i18n %}
 {% block table-wrapper %}
+{% load template_filters %}
 {% load template_tags %}
 
 <div class="app-table-list-wrapper">
@@ -33,9 +34,9 @@
                 {% block table.tbody.row %}
                 <tr {{ row.attrs.as_html }}>
                     {% for column, cell in row.items %}
-                    <td {{ column.attrs.td.as_html }} {% if cell and "nahled" not in column.attrs.td.as_html %} rel="tooltip"{% endif %} data-placement="top" 
+                    <td {{ column.attrs.td.as_html }} {% if cell and "nahled" not in column.attrs.td.as_html %} rel="tooltip"{% endif %} data-bs-placement="top" 
                     {% if "nahled" not in column.attrs.td.as_html %}    
-                    title='{% if column.localize == None %}{{ cell }}{% else %}{% if column.localize %}{{ cell|localize }}{% else %}{{ cell|unlocalize }}{% endif %}{% endif %}'{% endif %}>
+                    title='{% if column.link != None %}{{ cell|unlink }}{% elif column.localize == None %}{{ cell }}{% else %}{% if column.localize %}{{ cell|localize }}{% else %}{{ cell|unlocalize }}{% endif %}{% endif %}'{% endif %}>
                         {% if column.localize == None %}{{ cell }}{% else %}{% if column.localize %}{{ cell|localize }}
                         {% else %}{{ cell|unlocalize }}{% endif %}{% endif %}
                     </td>
@@ -76,9 +77,7 @@
             <div class="form-group row">
                 <div class="input-group">
                     <input type="submit" class=" btn btn-primary mt-0" value="{% trans "templates.bootstrap4TableBase.jumpToPage.label" %}"/>
-                    <div class="input-group-append">
-                        <input type="number" class="textinput textInput form-control" max="{{table.paginator.num_pages}}" value="{{table.page.number}}" min="1" id="{{table.prefix}}jump-page"/>
-                    </div>
+                    <input type="number" class="textinput textInput form-control" max="{{table.paginator.num_pages}}" value="{{table.page.number}}" min="1" id="{{table.prefix}}jump-page"/>
                 </div>
             </div>
         </form>
@@ -127,9 +126,7 @@
             <div class="form-group row">
                 <div class="input-group">
                     <input type="submit" class=" btn btn-primary mt-0" value="{% trans "templates.bootstrap4TableBase.perPage.label" %}"/>
-                    <div class="input-group-append">
-                        <input type="number" class="textinput textInput form-control" value="{{table.paginator.per_page}}" max="500" min="10" id="{{table.prefix}}per-page-num"/>
-                    </div>
+                    <input type="number" class="textinput textInput form-control" value="{{table.paginator.per_page}}" max="500" min="10" id="{{table.prefix}}per-page-num"/>
                 </div>
             </div>
         </form>

@@ -262,8 +262,8 @@ class AkceUzivatel(BaseSeleniumTestClass):
         # Vytvoření PES
         time = self.getTime()
         self.goToAddress("/notifikace-projekty/")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_notifications-notification_types > div > div:nth-child(1) > label")
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_notifications-notification_types > div > div:nth-child(2) > label")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_notifications-notification_types div > div:nth-child(1) > label")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_notifications-notification_types div > div:nth-child(2) > label")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_ruiankraj-0-object_id .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-2-12 > .text")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_ruianokres-0-object_id .filter-option-inner-inner")
@@ -277,7 +277,7 @@ class AkceUzivatel(BaseSeleniumTestClass):
 
         # Úprava PES
         time = self.getTime()
-        self.ElementClick(By.CSS_SELECTOR, "#div_id_notifications-notification_types > div > div:nth-child(1) > label")
+        self.ElementClick(By.CSS_SELECTOR, "#div_id_notifications-notification_types div > div:nth-child(1) > label")
         self.ElementClick(By.CSS_SELECTOR, "#div_id_ruiankraj-1-object_id .filter-option-inner-inner")
         self.ElementClick(By.CSS_SELECTOR, "#bs-select-3-3 > .text")
         with WaitForPageLoad(self.driver):

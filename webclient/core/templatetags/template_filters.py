@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import re
 
 from core import constants
 from django import template
@@ -270,3 +271,10 @@ def get_value_from_heslar(nazev_heslare, hodnota):
     else:
         logger.error("template_filters.get_value_from_heslar.error", extra={"heslar": nazev_heslare, "value": hodnota})
         return ""
+
+
+@register.filter
+def unlink(cell):
+    s = str(cell)
+    # return the inner text of the anchor tag instead of the href attribute
+    return re.sub(r'<a\s+[^>]*href=["\'][^"\']+["\'][^>]*>(.*?)</a>', r"\1", s, flags=re.IGNORECASE | re.DOTALL)

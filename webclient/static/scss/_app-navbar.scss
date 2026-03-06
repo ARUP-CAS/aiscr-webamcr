@@ -1,6 +1,7 @@
 // --- NAVBAR ---
 
 .navbar {
+  padding: 0.5rem 1rem;
   @extend .bg-transparent, .border-0, .rounded-0;
   max-height: $app-navbar-height;
 
@@ -94,6 +95,15 @@
       color: #6c697b;
     }
   }
+
+  .navbar-collapse {
+    @media (max-width: 1199px) {
+      background-color: white !important;
+      z-index: 1;
+      padding: 1rem;
+    }
+  }
 }
+
 
 

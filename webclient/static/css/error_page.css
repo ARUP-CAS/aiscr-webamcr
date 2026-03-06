@@ -12,11 +12,28 @@ body {
 
 body.app-error {
     padding: 1.5rem 1rem;
-    background-color: #303641;
-    background-image: url('../img/login-bg.svg');
+    background-color: #ffffff;
+    background-image: url('../img/login-bg-light.svg');
     background-repeat: no-repeat;
     background-size: 700px;
     background-position: center 50px;
+    color: #212529;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark theme for error pages */
+html[data-theme="dark"] body.app-error {
+    background-color: #1a1a1a;
+    background-image: url('../img/login-bg-dark.svg');
+    color: #e0e0e0;
+}
+
+html[data-theme="dark"] body.app-error h1 {
+    color: #e0e0e0;
+}
+
+html[data-theme="dark"] body.app-error p {
+    color: #b0b0b0;
 }
 
 body.app-error.oznameni {
@@ -63,6 +80,9 @@ body.app-error .app-login-wrapper {
     min-height: calc(100vh - (1.5rem * 2));
     justify-content: center;
     display: flex!important;
+    .amcr-logo {
+        filter: invert(0.9);
+    }
 }
 
 .app-right {
@@ -81,7 +101,6 @@ body.app-error .app-login-wrapper {
 
 .jumbotron {
     padding: 1.5rem!important;
-    background-color: #e9ecef;
     border-radius: 0.3rem;
 }
 
@@ -177,11 +196,11 @@ h1 {
     margin-block-end: 0.67em;
     margin-inline-start: 0px;
     margin-inline-end: 0px;
-    color: white;
+    color: #212529;
     text-align: center;
 }
 
 p {
-    color: white;
+    color: #212529;
     text-align: center;
 }

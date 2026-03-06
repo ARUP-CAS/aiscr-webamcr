@@ -188,7 +188,6 @@ INSTALLED_APPS = [
     "django_tables2",
     "django_tables2_column_shifter",
     "crispy_forms",
-    "crispy_bootstrap4",
     "django_registration",
     "compressor",
     "django_recaptcha",
@@ -207,6 +206,7 @@ INSTALLED_APPS = [
     "fedora_management",
     "pid.apps.PidConfig",
     "vypis",
+    "crispy_bootstrap5",
 ]
 
 MIDDLEWARE = [
@@ -325,8 +325,8 @@ MEDIA_URL = "/static/media/"
 STATIC_ROOT = "/vol/web/static"
 MEDIA_ROOT = "/vol/web/media"
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 AUTH_USER_MODEL = "uzivatel.User"
 
 LOGIN_REDIRECT_URL = "/"
