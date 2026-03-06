@@ -98,7 +98,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
@@ -118,7 +118,7 @@ jobs:
 
       - name: Build and push image
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.context }}/${{ matrix.dockerfile }}
@@ -164,7 +164,7 @@ jobs:
           echo "dockerhub=${DIGEST_DOCKERHUB}" >> $GITHUB_OUTPUT
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@v4
 
       - name: Sign image
         shell: bash
@@ -235,6 +235,6 @@ jobs:
       - name: Upload SARIF
         continue-on-error: true
         if: steps.vulnscan.outcome == 'success'
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-${{ matrix.component }}.sarif

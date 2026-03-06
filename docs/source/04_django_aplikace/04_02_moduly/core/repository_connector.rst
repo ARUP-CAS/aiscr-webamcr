@@ -71,7 +71,7 @@ Třídy
 
    .. py:method:: _get_model_name()
 
-   .. py:method:: _get_rdf_inset_data()
+   .. py:method:: _get_creator_rdf_data()
 
    .. py:method:: _get_creator()
 
