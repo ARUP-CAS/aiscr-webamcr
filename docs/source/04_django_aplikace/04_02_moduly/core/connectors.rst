@@ -115,6 +115,8 @@ Třídy
 
       Odešle command.
 
+      Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
+
       :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
       :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
       :return: Výstup funkce odpovídající implementované logice.

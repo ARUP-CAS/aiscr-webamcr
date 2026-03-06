@@ -275,6 +275,20 @@ def get_value_from_heslar(nazev_heslare, hodnota):
 
 @register.filter
 def unlink(cell):
+    """
+    Django template filter, který odstraní anchor tagy z řetězce
+    a nahradí je jejich vnitřním textem.
+
+    Příklad::
+
+        {{ '<a href="/foo">Bar</a>'|unlink }}  →  'Bar'
+
+    :param cell: Hodnota ke zpracování (bude převedena na řetězec).
+    :type cell: any
+    :returns: Vstupní řetězec, kde jsou všechny ``<a href="...">...</a>``
+              tagy nahrazeny jejich vnitřním textem.
+    :rtype: str
+    """
     s = str(cell)
     # return the inner text of the anchor tag instead of the href attribute
     return re.sub(r'<a\s+[^>]*href=["\'][^"\']+["\'][^>]*>(.*?)</a>', r"\1", s, flags=re.IGNORECASE | re.DOTALL)

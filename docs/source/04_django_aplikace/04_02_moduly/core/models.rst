@@ -132,7 +132,14 @@ Třídy
 
    .. py:method:: remove_gps_data()
 
-      Provádí operaci remove gps data.
+      Odstraní GPS metadata z fotografie uložené v paměti.
+
+      Funkce načte EXIF data z obrázku, odstraní GPS informace a pokusí se
+      znovu uložit EXIF. Pokud narazí na nevalidní nebo nekompatibilní EXIF
+      tagy (např. UserComment, MakerNote apod.), automaticky je odstraní,
+      aby bylo možné obrázek úspěšně uložit.
+
+      V případě jakékoli chyby vrací původní vstupní soubor beze změny.
 
       :param bytes_io: Obsah souboru připravený ke kontrole antivirem.
       :return: Vrací výsledek operace odstranění.

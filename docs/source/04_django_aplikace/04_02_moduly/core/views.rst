@@ -174,17 +174,26 @@ Třídy
 
       Po POST požadavku přesměruje uživatele na bezpečnou návratovou URL.
 
-      :param request: Parametr ``request`` předává se do volání ``warning()``, ``handle_upload()``, pracuje se s atributy ``POST``, ``FILES``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``handle_upload()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``handle_upload()``, vstupuje do návratové hodnoty.
+      Metoda provádí kompletní validaci nahrávaného souboru před jeho uložením:
+      - Kontroluje přítomnost souboru v requestu
+      - Validuje MIME typ a detekuje šifrované soubory
+      - Provádí antivirovou kontrolu obsahu
+      - Deleguje finální zpracování na potomky prostřednictvím handle_upload()
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``_unknown_error_response()``, výsledek volání ``JsonResponse()``, výsledek volání ``handle_upload()``.
+
+      **Stavové kódy odpovědi:**
+
+      - ``200``: Soubor byl úspěšně validován a zpracován
+      - ``400``: Validační chyba (chybějící soubor, šifrovaný, virus, neplatný MIME typ)
+      - ``500``: Neznámá chyba při zpracování
 
    .. py:method:: handle_upload()
 
       Abstraktní metoda pro implementaci konkrétního zpracování nahraného souboru.
 
-      Potomci implementují vlastní workflow nahrání po úspěšné validaci souboru.
+      Tato metoda musí být implementována potomky třídy. Je volána z post() metody
+      po úspěšné validaci souboru (MIME typ, antivirus). Potomci zde implementují
+      specifickou logiku pro nové nahrání nebo aktualizaci existujícího souboru.
 
       :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``handle_upload``.
       :param soubor: Nahraný soubor z requestu připravený k uložení.
@@ -251,14 +260,15 @@ Třídy
 
       Provádí workflow vytvoření nového souboru včetně kontroly oprávnění,
       generování názvu, uložení do repository a založení databázového záznamu.
+      Podporuje anonymní upload pro oznámení a automaticky zpracovává metadata obrázků.
 
-      :param request: HTTP request s informacemi o uživateli a session.
-      :param soubor: Nahraný soubor z requestu.
-      :param soubor_data: Binární obsah souboru.
-      :param args: Dodatečné poziční argumenty z URL.
-      :param kwargs: Klíčové argumenty včetně ``ident_cely`` a ``typ_vazby``.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, proměnná ``resolved``.
+      **Stavové kódy odpovědi:**
+
+      - ``200``: Soubor úspěšně nahrán
+      - ``400``: Chyba při nahrávání (transakční konflikt, MIME typ, atd.)
+      - ``403``: Nedostatečná oprávnění nebo překročen limit souborů
+      - ``500``: Neexistující záznam nebo jiná interní chyba
 
    .. py:method:: _resolve_object_and_name()
 
@@ -302,15 +312,13 @@ Třídy
       Nahrazuje obsah existujícího souboru, zachovává název (s případnou úpravou
       přípony), aktualizuje repository a zapisuje novou verzi do historie.
 
-      :param request: HTTP request s informacemi o přihlášeném uživateli.
-      :param soubor: Nový nahraný soubor z requestu.
-      :param soubor_data: Binární obsah nového souboru.
-      :param args: Dodatečné poziční argumenty z URL.
-      :param kwargs: Klíčové argumenty včetně ``typ_vazby``, ``ident_cely`` a ``file_id``.
-      :raises Http404: Pokud soubor s daným ``file_id`` neexistuje.
-      :raises ZaznamSouborNotmatching: Pokud soubor nepatří k uvedenému záznamu.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``permission_check``, výsledek volání ``JsonResponse()``, výsledek volání ``_unknown_error_response()``.
+      **Stavové kódy odpovědi:**
+
+      - ``200``: Soubor úspěšně aktualizován
+      - ``400``: Chyba vazby, transakční konflikt, MIME typ nebo neplatný typ_vazby
+      - ``403``: Nedostatečná oprávnění k nahrazení souboru
+      - ``500``: Chybějící vazba nebo jiná interní chyba
 
    .. py:method:: _check_update_permissions()
 

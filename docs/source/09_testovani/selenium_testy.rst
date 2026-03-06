@@ -7066,6 +7066,7 @@ Uživatel se přihlásí jako Badatel
 Uživatel klikne na menu PAS -> Spolupráce
 Uživatel Badatel vidí jen své spolupráce
 Uživatel se přihlásí jako Archeolog
+Uživatel klikne na menu PAS -> Spolupráce
 Uživatel Archeolog vidí jen spolupráce své organizace
 
 Očekávané výsledky

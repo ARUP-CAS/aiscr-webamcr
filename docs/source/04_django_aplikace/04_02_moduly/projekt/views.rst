@@ -23,8 +23,6 @@ Třídy
 
 .. py:class:: ProjectPianFromEnvelopeView
 
-   @jiri-bartos presunuto z post_ajax_get_project_pas_limit
-
    Trida pohledu pro získaní heatmapy pianu.
 
    **Metody:**
@@ -326,8 +324,6 @@ Funkce
    :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: create(request)
-
-   @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
 
    Funkce pohledu pro vytvoření projektu.
 

@@ -106,7 +106,8 @@ Třídy
 
    .. py:method:: set_project_ownership()
 
-      Nastaví project ownership.
+      Uloží vlastnictví projektu pro anonymního uživatele do Redis.
+      Používá se pro ověření, že anonymní uživatel může nahrávat soubory pouze k projektu, který sám vytvořil.
 
       :param ident_cely: Parametr ``ident_cely`` se předává do volání ``set()``.
       :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
@@ -291,8 +292,6 @@ Funkce
 
 .. py:function:: get_project_pian_from_envelope(left, bottom, right, top, ident_cely)
 
-   @janhnat zohlednit pristupnost - zohledneno v ProjectPasFromEnvelopeView
-
    Funkce pro získaní pianů projektu ze čtverce.
 
    :param left: Parametr ``left`` se předává do volání ``debug()``.
@@ -303,8 +302,6 @@ Funkce
    :return: ``True``, pokud anonymní session vlastní projekt se zadaným identifikátorem.
 
 .. py:function:: get_3d_from_envelope(left, bottom, right, top, request)
-
-   @janhnat zohlednit pristupnost - zohledneno v ProjectPianFromEnvelopeView
 
    Funkce pro získaní 3d ze čtverce.
    Bez pristupnosti
@@ -321,7 +318,6 @@ Funkce
 
    Funkce pro získaní počtu pas ze čtverce.
 
-   @janhnat zohlednit pristupnost - done
    musi zohlednit pristupnost [mapa_pas]
 
    :param left: Parametr ``left`` se předává do volání ``Q()``, ``from_bbox()``.
@@ -336,7 +332,6 @@ Funkce
 
    Funkce pro získaní pas ze čtverce.
 
-   @janhnat zohlednit pristupnost - done
    musi zohlednit pristupnost [mapa_pas]
 
    :param bounds: Parametr ``bounds`` předává se do volání ``Q()``, ``Polygon()``.
@@ -348,7 +343,6 @@ Funkce
 
    Funkce pro získaní pianů ze čtverce.
 
-   @janhnat zohlednit pristupnost - done
    musi zohlednit pristupnost [mapa_pian]
 
    :param bounds: Parametr ``bounds`` slouží jako vstup pro logiku funkce ``get_pian_from_envelope``.

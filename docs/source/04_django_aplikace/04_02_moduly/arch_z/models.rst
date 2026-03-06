@@ -306,7 +306,7 @@ Třídy
 
 .. py:class:: AkceSekvence
 
-   Model pro tabulku se sekvencemi akcií.
+   Model pro tabulku se sekvencemi akcí.
 
 
 Funkce

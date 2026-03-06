@@ -259,6 +259,8 @@ Třídy
 
       Provádí operaci process value.
 
+      Převede řetězec na bool. Pokud hodnota není "true"/"1" ani "false"/"0", vyvolá ImportDataError.
+
       :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``ImportDataError()``, pracuje se s atributy ``lower``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -292,6 +294,9 @@ Třídy
    .. py:method:: _process_value()
 
       Provádí operaci process value.
+
+      Převede řetězec na datum. Podporované formáty jsou "YYYY-MM-DD" a "DD.MM.YYYY".
+      Pokud hodnota neodpovídá žádnému formátu, vyvolá ImportDataError.
 
       :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
@@ -351,6 +356,9 @@ Třídy
 
       Provádí operaci process value.
 
+      Převede řetězec na DateRange ve formátu "[YYYY-MM-DD, YYYY-MM-DD)".
+      Pokud hodnota neodpovídá očekávanému formátu, vyvolá ImportDataError.
+
       :param value: Parametr ``value`` předává se do volání ``str()``, ``isinstance()``, pracuje se s atributy ``strip``, ovlivňuje větvení podmínek.
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -391,6 +399,9 @@ Třídy
    .. py:method:: _process_value()
 
       Provádí operaci process value.
+
+      Ověří existenci hodnoty v databázi nebo v importovaných záznamech a vrátí odpovídající záznam.
+      Pokud referencovaný záznam neexistuje, vyvolá ImportDataMissingReferencedValueError.
 
       :param value: Parametr ``value`` předává se do volání ``str()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
@@ -456,6 +467,8 @@ Třídy
    .. py:method:: _process_value()
 
       Provádí operaci process value.
+
+      Převede řetězec na objekt GEOSGeometry. Pokud převod selže, vyvolá ImportDataError.
 
       :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``GEOSGeometry()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
       :return: Výstup funkce odpovídající implementované logice.
@@ -569,7 +582,7 @@ Třídy
 
    .. py:method:: create_records()
 
-      Vytvoří records. v aplikaci.
+      Vytvoří instanci záznamu nebo více instancí modelů připravených k uložení do databáze.
 
       :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ``ImportDataError()``, ovlivňuje větvení podmínek.
       :return: Nově vytvořená hodnota připravená touto funkcí.
@@ -621,13 +634,16 @@ Třídy
 
       Provádí operaci map column name to field name.
 
+      Převede název sloupce z importního souboru na název pole Django modelu.
+      Používá se, pokud se název pole liší od názvu databázového sloupce.
+
       :param column_name: Textový název nebo klíč ``column_name`` používaný v rámci operace.
 
       :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: create_relations()
 
-      Vytvoří relations. v aplikaci.
+      Vytvoří vazební záznamy pro Historie, Komponenty a Soubory, pokud ještě neexistují.
 
       :param instance: Parametr ``instance`` předává se do volání ``getattr()``, pracuje se s atributy ``historie``, ``soubory``, ovlivňuje větvení podmínek.
 
@@ -1076,7 +1092,7 @@ Třídy
 
    .. py:method:: create_records()
 
-      Vytvoří records. v aplikaci.
+      Vytvoří instanci Dokument a DokumentExtraData s vazbou na Dokument.
 
       :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``, ovlivňuje větvení podmínek.
       :return: Nově vytvořená hodnota připravená touto funkcí.

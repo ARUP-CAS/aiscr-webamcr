@@ -18,10 +18,11 @@ Třídy
 
    .. py:method:: run()
 
-      Spustí hodnotu. v aplikaci.
+      Zpracuje nahraný soubor s oprávněními, provede validaci, import oprávnění
+      a vrátí upravený list a seznam chybějících URL.
 
-      :param docfile: Parametr ``docfile`` se předává do volání ``read_csv()``, ``read_excel()``, pracuje se s atributy ``name``, ovlivňuje větvení podmínek.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param docfile: Parametr ``docfile`` se předává do volání ``read_csv()``, ``read_excel()``, pracuje se s atributy ``name``, ovlivňuje větvení podmínek. Nahraný CSV nebo Excel soubor s definicí oprávnění.
+      :return: Výstup funkce odpovídající implementované logice. Dvojice obsahující zpracovaný DataFrame a seznam chybějících URL.
 
    .. py:method:: validate_and_prepare_csv()
 
