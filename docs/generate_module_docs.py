@@ -1284,7 +1284,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
         return False
 
     def translate_section(section_name: str) -> str:
-        """Přelokládá název sekce do češtiny.
+        """Překládá název sekce do češtiny.
 
         :param section_name: Parametr ``section_name`` pracuje se s atributy ``rstrip``.
         :return: Vrací hodnotu typu ``str`` (výsledek volání ``get()``).
