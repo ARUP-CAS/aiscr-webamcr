@@ -796,7 +796,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "newDocumentSubmitBtn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/update_let")
 
-        # Vytvoření dokumentační části akce
+        # Vytvoření části dokumentu - akce
         self.createFedoraRecord("C-200810821A", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
@@ -813,7 +813,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_akce")
 
-        # Vytvoření dokumentační části lokality
+        # Vytvoření části dokumentu - lokality
         self.createFedoraRecord("C-K9000001", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
@@ -830,7 +830,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/create_dokument_cast_lokalita")
 
-        # Vytvoření dokumentační části projektu
+        # Vytvoření části dokumentu - projekty
         self.createFedoraRecord("C-201911202", "archivar")
         time = self.getTime()
         self.ElementClick(By.ID, "button-add-cast")
@@ -906,7 +906,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
         self.check_fedora_change(time, "dokument/tests/resources/test_141/ident_cely")
         self.check_fedora_delete(["record/X-C-DL-000000009"])
 
-        # Úprava dokumentační části
+        # Úprava části dokumentu
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "button-edit-cast")
@@ -958,7 +958,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_komponenta")
 
-        # Smazání dokumentační části
+        # Smazání části dokumentu
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "others")
@@ -967,7 +967,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast")
 
-        # Smazání dokumentační části projekt
+        # Smazání části dokumentu - projekt
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(2) strong")
         self.ElementClick(By.ID, "others")
@@ -976,7 +976,7 @@ class AkceDokumenty(BaseSeleniumTestClass):
             self.ElementClick(By.ID, "submit-btn")
         self.check_fedora_change(time, "dokument/tests/resources/test_141/delete_dokument_cast_projekt")
 
-        # Smazání dokumentační části lokalita
+        # Smazání části dokumentu - lokalita
         time = self.getTime()
         self.ElementClick(By.CSS_SELECTOR, ".list-group-item:nth-child(1) strong")
         self.ElementClick(By.ID, "others")
