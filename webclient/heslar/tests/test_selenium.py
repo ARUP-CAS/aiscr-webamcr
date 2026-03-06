@@ -10,37 +10,40 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class AkceHeslar(BaseSeleniumTestClass):
+    """Implementuje komponentu ``AkceHeslar`` v rámci aplikace."""
+
     def test_151_test_Fedora_heslar_001(self):
-        """Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
+        """
+        Test 151 Test Fedory pro hesláře (pozitivní scénář 1)
 
         Role:
-            Administrator
+        Administrator
 
         TestData:
-            HES-000886
-            HES-001066
-            HES-001065
+        HES-000886
+        HES-001066
+        HES-001065
 
         Steps:
-            - Vytvoření záznamu Heslář
-            - Editace záznamu Heslář
-            - Vytvoření záznamu Heslář datace
-            - Editace záznamu Heslář datace
-            - Smazání záznamu Heslář datace
-            - Vytvoření záznamu Heslář hierarchie
-            - Editace záznamu Heslář hierarchie
-            - Smazání záznamu Heslář hierarchie
-            - Vytvoření záznamu Heslář odkaz
-            - Editace záznamu Heslář odkaz
-            - Smazání záznamu Heslář odkaz
-            - Smazání záznamu Heslář
+        - Vytvoření záznamu Heslář
+        - Editace záznamu Heslář
+        - Vytvoření záznamu Heslář datace
+        - Editace záznamu Heslář datace
+        - Smazání záznamu Heslář datace
+        - Vytvoření záznamu Heslář hierarchie
+        - Editace záznamu Heslář hierarchie
+        - Smazání záznamu Heslář hierarchie
+        - Vytvoření záznamu Heslář odkaz
+        - Editace záznamu Heslář odkaz
+        - Smazání záznamu Heslář odkaz
+        - Smazání záznamu Heslář
 
         Expected:
-            - zápis dat do Fedory
+        - zápis dat do Fedory
         """
         logger.info("AkceHeslar.test_151_test_Fedora_heslar_001.start")
         self.login("administrator")
-        # C heslo
+        # Vytvoření hesla
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslar/add/")
         self.ElementClick(By.ID, "id_nazev_heslare")
@@ -55,7 +58,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslo")
 
-        # U detail
+        # Úprava detailu
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslar/1444/change/")
         self.ElementSendKeys(By.ID, "id_zkratka", "update")
@@ -63,7 +66,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslo")
 
-        # C heslar_datace
+        # Vytvoření vazby heslář_datace
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslardatace/add/")
         self.ElementClick(By.ID, "id_obdobi")
@@ -77,7 +80,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslar_datace")
 
-        # U heslar_datace
+        # Úprava vazby heslář_datace
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslardatace/1444/change/")
         self.driver.find_element(By.ID, "id_rok_do_min").clear()
@@ -86,7 +89,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslar_datace")
 
-        # D heslar_datace
+        # Smazání vazby heslář_datace
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslardatace/1444/change/")
         self.ElementClick(By.CSS_SELECTOR, ".deletelink")
@@ -94,7 +97,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, "input[type=submit]:nth-child(2)")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslar_datace")
 
-        # C heslar_hierarchie
+        # Vytvoření vazby heslář_hierarchie
         self.createFedoraRecord("HES-000886", "administrator")
         self.createFedoraRecord("HES-001066", "administrator")
         time = self.getTime()
@@ -116,7 +119,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslar_hierarchie")
 
-        # U heslar_hierarchie
+        # Úprava vazby heslář_hierarchie
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarhierarchie/1215/change/")
         self.ElementClick(By.CSS_SELECTOR, "option:nth-child(3)")
@@ -124,7 +127,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslar_hierarchie")
 
-        # D heslar_hierarchie
+        # Smazání vazby heslář_hierarchie
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarhierarchie/1215/change/")
         self.ElementClick(By.CSS_SELECTOR, ".deletelink")
@@ -132,7 +135,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, "#content input[type=submit]:nth-child(2)")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslar_hierarchie")
 
-        # C heslar_odkaz
+        # Vytvoření vazby heslář_odkaz
         self.createFedoraRecord("HES-001065", "administrator")
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarodkaz/add/")
@@ -150,7 +153,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/create_heslar_odkaz")
 
-        # U heslar_odkaz
+        # Úprava vazby heslář_odkaz
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarodkaz/1163/change/")
         self.ElementClick(By.CSS_SELECTOR, "#id_skos_mapping_relation > option:nth-child(2)")
@@ -158,7 +161,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.NAME, "_save")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/update_heslar_odkaz")
 
-        # D heslar_odkaz
+        # Smazání vazby heslář_odkaz
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslarodkaz/1163/change/")
         self.ElementClick(By.CSS_SELECTOR, ".deletelink")
@@ -166,7 +169,7 @@ class AkceHeslar(BaseSeleniumTestClass):
             self.ElementClick(By.CSS_SELECTOR, "#content input[type=submit]:nth-child(2)")
         self.check_fedora_change(time, "heslar/tests/resources/test_151/delete_heslar_odkaz")
 
-        # D heslo
+        # Smazání hesla
         time = self.getTime()
         self.goToAddress("/admin/heslar/heslar/1444/change/")
         self.ElementClick(By.CSS_SELECTOR, ".deletelink")

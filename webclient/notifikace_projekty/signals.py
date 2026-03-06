@@ -11,6 +11,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Pes, weak=False)
 def pes_save(sender, instance: Pes, **kwargs):
+    """
+    Provádí operaci pes save.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``pes_save``.
+    :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``on_commit()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``pes_save``.
+    """
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(lambda: instance.user.save_metadata(fedora_transaction, close_transaction=True))
@@ -22,12 +29,19 @@ def pes_save(sender, instance: Pes, **kwargs):
 
 @receiver(pre_delete, sender=Pes, weak=False)
 def pes_delete(sender, instance: Pes, **kwargs):
+    """
+    Provádí operaci pes delete.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``pes_delete``.
+    :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``on_commit()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``pes_delete``.
+    """
     if instance.user and not getattr(instance, "suppress_signal", False):
         fedora_transaction = FedoraTransaction()
         try:
             transaction.on_commit(lambda: instance.user.save_metadata(fedora_transaction, close_transaction=True))
         except FedoraError as err:
-            # Occurs when record is update via admin interface
+            # Nastává při aktualizaci záznamu přes administraci.
             logger.debug("notifikace_projekty.signals.pes_delete.save_metadata.error", extra={"error": err})
         logger.debug(
             "notifikace_projekty.signals.pes_delete.save_metadata.end",

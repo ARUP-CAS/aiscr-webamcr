@@ -26,6 +26,10 @@ logger = logging.getLogger(__name__)
 def constants_import(request):
     """
     Automatický import stavov projektú do kontextu všech template.
+
+    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``constants_import``.
+
+        :return: Vrací proměnná ``constants_dict``.
     """
     constants_dict = {
         "PROJEKT_STAV_OZNAMENY": PROJEKT_STAV_OZNAMENY,
@@ -45,19 +49,34 @@ def constants_import(request):
 def digi_links_from_settings(request):
     """
     Automatický import linkov na digitálni archiv zo settings do kontextov všech template.
+
+    :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``digi_links_from_settings``.
+
+        :return: Vrací výsledek volání ``getattr()``.
     """
     return getattr(settings, "DIGI_LINKS")
 
 
 def logout_next_url(request):
+    """
+    Provádí operaci logout next url.
+
+    :param request: Parametr ``request`` předává se do volání ``debug()``, pracuje se s atributy ``path``, vstupuje do návratové hodnoty.
+
+        :return: Vrací slovník.
+    """
     logger.debug(f"request path: {request.path}")
     return {"logout_next_url": request.path}
 
 
-# for autologout function redirect immediatelly
+# Pro funkci automatického odhlášení přesměruje ihned.
 def auto_logout_client(request):
     """
     Automatický výpočet a import kontextu potrebného pro správně zobrzazení automatického logoutu na všech stránkach.
+
+    :param request: Parametr ``request`` se předává do volání ``str()``, ``seconds_until_session_end()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: slovník, proměnná ``ctx``.
     """
     if request.user.is_anonymous:
         return {}
@@ -127,6 +146,13 @@ def auto_logout_client(request):
 
 
 def main_shows(request):
+    """
+    Provádí operaci main shows.
+
+    :param request: Parametr ``request`` pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+
+        :return: Vrací proměnná ``main_show``.
+    """
     main_show = {}
     if request.user.is_authenticated:
         if request.user.hlavni_role.id == ROLE_ADMIN_ID:

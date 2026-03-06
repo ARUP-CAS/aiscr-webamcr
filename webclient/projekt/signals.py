@@ -24,6 +24,10 @@ logger = logging.getLogger(__name__)
 def projekt_pre_save(sender, instance: Projekt, **kwargs):
     """
     Metoda pro volání dílčích metod pro nastavení projektu pred uložením.
+
+    :param sender: Parametr ``sender`` se předává do volání ``create_projekt_vazby()``, ``change_termin_odevzdani_NZ()``.
+    :param instance: Parametr ``instance`` předává se do volání ``create_projekt_vazby()``, ``change_termin_odevzdani_NZ()``, pracuje se s atributy ``stav``, ``_state``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``projekt_pre_save``.
     """
     create_projekt_vazby(sender, instance)
     change_termin_odevzdani_NZ(sender, instance)
@@ -38,6 +42,10 @@ def projekt_pre_save(sender, instance: Projekt, **kwargs):
 def change_termin_odevzdani_NZ(sender, instance, **kwargs):
     """
     Metoda pro nastavení terminu odevzdání NZ.
+
+    :param sender: Parametr ``sender`` pracuje se s atributy ``objects``, ``DoesNotExist``.
+    :param instance: Parametr ``instance`` předává se do volání ``get()``, ``debug()``, pracuje se s atributy ``pk``, ``termin_odevzdani_nz``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``change_termin_odevzdani_NZ``.
     """
     try:
         instance_db = sender.objects.get(pk=instance.pk)
@@ -56,7 +64,12 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
 def create_projekt_vazby(sender, instance, **kwargs):
     """
     Metoda pro vytvoření historických vazeb projektu.
+
     Metoda se volá pred uložením projektu.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_projekt_vazby``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``historie``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_projekt_vazby``.
     """
     if instance.pk is None:
         logger.debug("projekt.signals.create_projekt_vazby.history_created", extra={"instance": instance})
@@ -71,6 +84,15 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Projekt, weak=False)
 def projekt_pre_delete(sender, instance: Projekt, **kwargs):
+    """
+    Provádí operaci projekt pre delete.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``projekt_pre_delete``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``initial_dokumenty``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``projekt_pre_delete``.
+
+        :raises Exception: Vyvolá se při splnění podmínky ``instance.soubory and instance.soubory.soubory.exists()``.
+    """
     logger.debug(
         "projekt.signals.projekt_pre_delete.start",
         extra={"ident_cely": instance.ident_cely, "initial": instance.initial_dokumenty},
@@ -84,6 +106,12 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
     if not instance.suppress_signal:
 
         def save_metadata(close_transaction=False):
+            """
+                       Uloží metadata.
+
+                       :param close_transaction: Parametr ``close_transaction`` předává se do volání ``record_deletion()``.
+            Výsledek provedené změny nad cílovým objektem.
+            """
             if instance.soubory and instance.soubory.pk:
                 instance.soubory.delete()
             for dokument_pk in instance.initial_dokumenty:
@@ -105,8 +133,12 @@ def projekt_pre_delete(sender, instance: Projekt, **kwargs):
 def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
     Metoda pro odeslání emailu hlídacího psa pri založení projektu.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``projekt_post_save``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``getattr()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``projekt_post_save``.
     """
-    # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
+    # Když je projekt vytvořen přes stránku „oznámení“, metadata se ukládají přímo bez Celery.
     logger.debug("projekt.signals.projekt_post_save.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(Projekt)
     invalidate_model(Akce)
@@ -116,9 +148,14 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         if instance.close_active_transaction_when_finished:
 
             def save_metadata():
+                """
+                               Uloží metadata.
+
+                Výsledek provedené změny nad cílovým objektem.
+                """
                 if instance.hlavni_katastr in instance.katastry.all():
-                    # This must be done in on_commit function, see
-                    # https://stackoverflow.com/questions/23795811/django-accessing-manytomany-fields-from-post-save-signal
+                    # Toto je nutné provést ve funkci `on_commit`, viz
+                    # Viz dokumentace k přístupu k many-to-many poli v post_save signálu.
                     instance.katastry.remove(instance.hlavni_katastr)
                 instance.save_metadata(fedora_transaction, close_transaction=True)
 

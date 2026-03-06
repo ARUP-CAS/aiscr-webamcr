@@ -10,11 +10,16 @@ logger = logging.getLogger(__name__)
 class ManyToManyRestrictedClassMixin:
     """
     Třída pro model pro vytvoření property has_connections.
+
     Hledá jestli má model nejakou many to many vazbu.
     """
 
     @property
     def has_connections(self):
+        """Určí, zda connections.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         attr_list = []
         for attr in dir(self):
             if not attr.startswith("_") and attr not in ("has_connections", "objects"):
@@ -31,10 +36,21 @@ class ManyToManyRestrictedClassMixin:
 
 
 class IPWhitelistMixin:
+    """Implementuje komponentu ``IPWhitelistMixin`` v rámci aplikace."""
+
     def dispatch(self, request, *args, **kwargs):
+        """
+        Provádí operaci dispatch.
+
+        :param request: Parametr ``request`` předává se do volání ``dispatch()``, pracuje se s atributy ``META``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseForbidden()``, výsledek volání ``dispatch()``.
+        """
         ALLOWED_IPS = settings.ALLOWED_HOSTS + ["127.0.0.1", "10.0.0.2"]
         client_ip = request.META.get("REMOTE_ADDR", "")  # Get client IP
-        if client_ip not in ALLOWED_IPS and "*" not in ALLOWED_IPS:  # Check if IP is allowed
+        if client_ip not in ALLOWED_IPS and "*" not in ALLOWED_IPS:  # Ověří, že je IP adresa povolena.
             logger.error("healthcheck.views.IPWhitelistMixin", extra={"ip": client_ip})
             return HttpResponseForbidden("Access denied: Your IP is not allowed.")  # Deny access
-        return super().dispatch(request, *args, **kwargs)  # Otherwise, proceed with the view
+        return super().dispatch(request, *args, **kwargs)  # Jinak pokračuje zpracování pohledu.

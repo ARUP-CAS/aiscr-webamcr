@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class Model3DTable(SearchTable):
-    """
-    Class pro definování tabulky pro modelu 3D použitých pro zobrazení přehledu modelu 3D a exportu.
-    """
+    """Definuje tabulku 3D modelů pro přehled i export."""
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.modelTable.ident_cely.label"))
     doi = tables.Column(verbose_name=_("dokument.tables.modelTable.doi.label"), default="")
@@ -60,6 +58,8 @@ class Model3DTable(SearchTable):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         fields = (
             "ident_cely",
@@ -95,11 +95,22 @@ class Model3DTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(Model3DTable, self).__init__(*args, **kwargs)
 
     def render_nahled(self, value, record):
         """
         Metoda pro správně zobrazení náhledu souboru.
+
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+        :param record: Parametr ``record`` předává se do volání ``len()``, ``reverse()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
         """
         if len(record.soubory.soubory.all()) > 0:
             soubor = record.soubory.soubory.first()
@@ -133,9 +144,7 @@ class Model3DTable(SearchTable):
 
 
 class DokumentTable(SearchTable):
-    """
-    Class pro definování tabulky pro dokumenty použitých pro zobrazení přehledu dokumentů a exportu.
-    """
+    """Definuje tabulku dokumentů pro přehled i export."""
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("dokument.tables.dokumentTable.ident_cely.label"))
     doi = tables.Column(verbose_name=_("dokument.tables.dokumentTable.doi.label"), default="")
@@ -249,6 +258,11 @@ class DokumentTable(SearchTable):
     def render_nahled(self, value, record):
         """
         Metoda pro správně zobrazení náhledu souboru.
+
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+        :param record: Parametr ``record`` předává se do volání ``hasattr()``, ``len()``, pracuje se s atributy ``soubory``, ``ident_cely``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
         """
         if hasattr(record.soubory, "first_soubor") and len(record.soubory.first_soubor) > 0:
             soubor = record.soubory.first_soubor[0]
@@ -281,6 +295,8 @@ class DokumentTable(SearchTable):
         return ""
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         fields = (
             "nahled",
@@ -359,4 +375,10 @@ class DokumentTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(DokumentTable, self).__init__(*args, **kwargs)

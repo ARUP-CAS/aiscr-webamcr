@@ -14,12 +14,23 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param attrs: Kolekce ``attrs`` zpracovávaná touto funkcí.
+
    .. py:method:: format_value()
+
+      Provádí operaci format value.
+
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``format_value``.
+
+      :return: Vrací výsledek volání ``str()``.
 
 
 .. py:class:: AutocompleteSelect2WidgetMixin
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AutocompleteSelect2WidgetMixin`` v rámci aplikace.
 
    **Metody:**
 
@@ -27,23 +38,28 @@ Třídy
 
       Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy.
 
+      :param args: Parametr ``args`` se předává do volání ``build_attrs()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``build_attrs()``.
+
+      :return: Vrací proměnná ``attrs``.
+
 
 .. py:class:: AutocompleteListSelect2
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AutocompleteListSelect2`` v rámci aplikace.
 
 
 .. py:class:: AutocompleteSelect2Multiple
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AutocompleteSelect2Multiple`` v rámci aplikace.
 
 
 .. py:class:: AutocompleteModelSelect2
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AutocompleteModelSelect2`` v rámci aplikace.
 
 
 .. py:class:: AutocompleteModelSelect2Multiple
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AutocompleteModelSelect2Multiple`` v rámci aplikace.
 

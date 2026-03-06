@@ -63,9 +63,10 @@ logger = logging.getLogger(__name__)
 def send_notifications_enz():
     """
     Každý den zkontrolovat a případně odeslat upozornění uživatelům na základě pole projekt.datum_odevzdani_NZ,
+
     pokud je projekt ve stavu <P5 a zároveň:
-       -- pokud [dnes] + 90 dní = datum_odevzdani_NZ => email E-NZ-01
-       -- pokud [dnes] - 1 den = datum_odevzdani_NZ => email E-NZ-02
+    -- pokud [dnes] + 90 dní = datum_odevzdani_NZ => email E-NZ-01
+    -- pokud [dnes] - 1 den = datum_odevzdani_NZ => email E-NZ-02
     """
     try:
         logger.debug("cron.tasks.send_notifications_enz.do.start")
@@ -97,9 +98,7 @@ def send_notification_enz03():
 
 @shared_task
 def send_notifications_en():
-    """
-    Každý den kontrola a odeslání emailů E-N-01 a E-N-02
-    """
+    """Každý den kontrola a odeslání emailů E-N-01 a E-N-02"""
     try:
         logger.debug("cron.tasks.send_notifications_en.do.start")
         dataEn01 = Mailer.get_en01_data()
@@ -119,6 +118,7 @@ def send_notifications_en():
 def delete_personal_data_canceled_projects():
     """
     Rok po zrušení projektu nahradit související údaje v tabulce oznamovatel řetězcem “RRRR-MM-DD: údaj odstraněn”,
+
     kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
     """
     try:
@@ -160,6 +160,7 @@ def delete_personal_data_canceled_projects():
 def delete_reporter_data_ten_years():
     """
     Deset let po zápisu projektu smazat související záznam z tabulky oznamovatel + odstranit projektovou dokumentaci
+
     a vytvořit log (jako při archivaci projektu).
     """
     logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
@@ -200,6 +201,7 @@ def delete_reporter_data_ten_years():
 def change_document_accessibility():
     """
     Každý den změnit přístupnost dokumentů, u kterých datum_zverejneni<=[dnes], a to na přístupnost stanovenou
+
     v hesláři organizace (podle vazby dokument.organizace), ale nikdy ne na vyšší přístupnost, než má nejlépe
     přístupný připojený archeologický záznam (tj. když mají připojené AZ C a D, bude mít dokument nejvýše C).
     """
@@ -257,9 +259,7 @@ def change_document_accessibility():
 
 @shared_task
 def delete_unsubmited_projects():
-    """
-    Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
-    """
+    """Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami."""
     logger.debug("core.cron.delete_unsubmited_projects.do.start")
     now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
     projekt_query = (
@@ -296,6 +296,7 @@ def delete_unsubmited_projects():
 def cancel_old_projects():
     """
     Každý den převést na P8 projekty v P1 starší tří let, které mají plánované datum zahájení více než rok
+
     v minulosti. Do poznámky ke zrušení uvést “Automatické zrušení projektů starších tří let, u kterých již
     nelze očekávat zahájení.”
     """
@@ -340,6 +341,7 @@ def cancel_old_projects():
 
 @shared_task
 def update_snapshot_fields():
+    """Aktualizuje snapshot fields."""
     try:
         logger.debug("core.cron.update_snapshot_fields.do.start")
         for item in ExterniZdroj.objects.filter(
@@ -376,6 +378,11 @@ def update_snapshot_fields():
 
 @shared_task
 def update_all_redis_snapshots(rewrite_existing=False):
+    """
+    Aktualizuje all redis snapshots.
+
+    :param rewrite_existing: Číselná hodnota ``rewrite_existing`` použitá při výpočtu nebo transformaci.
+    """
     logger.debug("cron.tasks.update_all_redis_snapshots.start")
     r = RedisConnector.get_connection()
     classes_list = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
@@ -412,6 +419,12 @@ def update_all_redis_snapshots(rewrite_existing=False):
 
 @shared_task
 def update_single_redis_snapshot(class_name: str, record_pk):
+    """
+    Aktualizuje single redis snapshot.
+
+    :param class_name: Parametr ``class_name`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
+    :param record_pk: Identifikátor ``record_pk`` používaný pro dohledání cílového záznamu.
+    """
     r = RedisConnector.get_connection()
     if class_name == "Akce":
         item = Akce.objects.get(pk=record_pk)
@@ -437,6 +450,7 @@ def update_single_redis_snapshot(class_name: str, record_pk):
 
 @shared_task
 def update_materialized_views():
+    """Aktualizuje materialized views."""
     logger.debug("cron.tasks.update_materialized_views.start")
 
     query = (
@@ -460,6 +474,14 @@ def update_materialized_views():
 
 @shared_task
 def write_value_to_redis(key, value):
+    """
+    Zapíše value to redis.
+
+    :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
+    :param value: Parametr ``value`` předává se do volání ``set()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací n-tici.
+    """
     redis_connection = RedisConnector.get_connection()
     redis_connection.set(key, value)
     return key, value
@@ -467,6 +489,7 @@ def write_value_to_redis(key, value):
 
 @shared_task
 def call_digiarchiv_update_task():
+    """Provádí operaci call digiarchiv update task."""
     logger.debug("cron.tasks.call_digiarchiv_update_task.start")
     url = settings.DIGIARCHIV_URL
     requests.get(url)
@@ -475,6 +498,14 @@ def call_digiarchiv_update_task():
 
 @shared_task
 def run_data_import(job_id, user_id):
+    """
+    Spustí data import.
+
+    :param job_id: Identifikátor objektu ``job``.
+    :param user_id: Identifikátor objektu ``user``.
+
+        :raises ValueError: Vyvolá se při splnění podmínky ``isinstance(record, Model)``; nebo s textem "Missing required DIRECTORY_PATH setting".
+    """
     logger.debug("cron.tasks.run_data_import.start", extra={"job_id": job_id})
 
     redis_connector = RedisConnector().get_connection()

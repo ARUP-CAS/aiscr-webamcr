@@ -8,5 +8,5 @@ Třídy
 
 .. py:class:: HistorieAdmin
 
-   Popis není k dispozici.
+   Implementuje komponentu ``HistorieAdmin`` v rámci aplikace.
 

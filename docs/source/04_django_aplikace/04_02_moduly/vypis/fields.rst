@@ -8,350 +8,695 @@ Třídy
 
 .. py:class:: SimpleSectionTemplateName
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SimpleSectionTemplateName`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``__init__``.
+
    .. py:method:: __str__()
+
+      Vrací textovou reprezentaci objektu.
+
+      Textová reprezentace objektu.
+
+      :return: Vrací atribut objektu.
 
    .. py:method:: get_name()
 
+      Vrací name. v aplikaci.
+
+      :param instance: Parametr ``instance`` slouží jako vstup pro logiku funkce ``get_name``.
+
+      :return: Vrací atribut objektu.
+
    .. py:method:: get_permission()
+
+      Vrací permission. v aplikaci.
+
+      :param instance: Parametr ``instance`` slouží jako vstup pro logiku funkce ``get_permission``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_permission``.
+
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 
 .. py:class:: SectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Parametr ``name`` předává se do volání ``__init__()``.
+      :param accessor: Parametr ``accessor`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+
    .. py:method:: get_name()
+
+      Vrací name. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
 
 
 .. py:class:: PianSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PianSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_name()
 
+      Vrací name. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, None.
+
 
 .. py:class:: OznamovatelSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``OznamovatelSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_permission()
 
+      Vrací permission. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``get_show_oznamovatel()``, vstupuje do návratové hodnoty.
+      :param user: Parametr ``user`` se předává do volání ``get_show_oznamovatel()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``get_show_oznamovatel()``.
+
 
 .. py:class:: Field
 
-   Popis není k dispozici.
+   Implementuje komponentu ``Field`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
+      :param accessor: Parametr ``accessor`` slouží jako vstup pro logiku funkce ``__init__``.
+
    .. py:method:: __repr__()
+
+      Vrací reprezentaci objektu pro ladění.
+
+      Textová reprezentace objektu.
+
+      :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: __str__()
 
+      Vrací textovou reprezentaci objektu.
+
+      Textová reprezentace objektu.
+
+      :return: Vrací atribut objektu.
+
    .. py:method:: get_value()
 
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``strftime()``, hodnotu podle větve zpracování, výsledek volání ``getattr()``.
+
    .. py:method:: get_label()
+
+      Vrací label. v aplikaci.
+
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: SouborField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SouborField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
+      :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
+      :param key_name: Textový název nebo klíč ``key_name`` používaný v rámci operace.
+
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``reverse()``, pracuje se s atributy ``vazba``, ``id``, vstupuje do návratové hodnoty.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``reverse()``, None.
 
 
 .. py:class:: SouborDownloadField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SouborDownloadField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ``reverse()``, pracuje se s atributy ``vazba``, ``id``, vstupuje do návratové hodnoty.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: slovník, None.
 
 
 .. py:class:: Model3dKomponentaField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``Model3dKomponentaField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, pracuje se s atributy ``casti``, vstupuje do návratové hodnoty.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací výsledek volání ``getattr()``.
 
 
 .. py:class:: Model3dKomponentaAktivityField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``Model3dKomponentaAktivityField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``get_value()``.
+      :param user: Parametr ``user`` se předává do volání ``get_value()``.
+
+      :return: Vrací výsledek volání ``join()``.
 
 
 .. py:class:: ChooseField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ChooseField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``mark_safe()``, None.
 
 
 .. py:class:: StatusField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``StatusField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací výsledek volání funkce.
 
 
 .. py:class:: ZjisteniField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ZjisteniField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``_()``, výsledek volání funkce.
 
 
 .. py:class:: ForeignField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Parametr ``name`` předává se do volání ``__init__()``.
+      :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací výsledek volání ``mark_safe()``.
 
 
 .. py:class:: GeomGmlField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``GeomGmlField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_gml()``, None.
 
 
 .. py:class:: GeomWktField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``GeomWktField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_wkt()``, None.
 
 
 .. py:class:: ForeignGeomGmlField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignGeomGmlField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_gml()``, None.
 
 
 .. py:class:: ForeignGeomWktField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignGeomWktField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_wkt()``, None.
 
 
 .. py:class:: ManyToManyField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ManyToManyField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací výsledek volání ``join()``.
 
 
 .. py:class:: ForeignManyToManyField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignManyToManyField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
 
 
 .. py:class:: DoubleField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DoubleField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
 
 
 .. py:class:: DoubleFieldNum
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DoubleFieldNum`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
 
 
 .. py:class:: ForeignDoubleField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignDoubleField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
 
 
 .. py:class:: ForeignDoubleFieldNum
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ForeignDoubleFieldNum`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
 
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
+
 
 .. py:class:: RepeatableField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``RepeatableField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Parametr ``name`` předává se do volání ``__init__()``.
+      :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+      :param template_name: Parametr ``template_name`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param model_name: Název modelu používaný pro cílení operace.
+
    .. py:method:: get_related_manager()
 
+      Vrací related manager.
+
+      :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``_meta``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``filter()``.
+
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``get_related_manager()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``data``, None.
 
 
 .. py:class:: VbRepeatableField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``VbRepeatableField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_value()
 
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``get_related_manager()``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``data``, None.
+
 
 .. py:class:: HistorieRepeatableField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``HistorieRepeatableField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_related_manager()
 
+      Vrací related manager.
+
+      :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``historie``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``filter()``.
+
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``get_related_manager()``.
+      :param user: Parametr ``user`` se předává do volání ``uzivatel_protected()``, pracuje se s atributy ``hlavni_role``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``data``, None.
 
 
 .. py:class:: RepeatableSectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``RepeatableSectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_label()
 
+      Vrací label. v aplikaci.
+
+      :return: Vrací výsledek volání ``get_label()``.
+
    .. py:method:: get_sections()
 
+      Vrací sections. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``_meta``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``related_manager``, None.
+
    .. py:method:: get_value()
+
+      Vrací value. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``_meta``.
+      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``get_value``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``data``, None.
 
 
 .. py:class:: SectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param name: Parametr ``name`` předává se do volání ``__init__()``.
+      :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
 
 
 .. py:class:: RepeatableSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``RepeatableSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param name: Parametr ``name`` předává se do volání ``__init__()``.
+      :param accessor: Parametr ``accessor`` se předává do volání ``__init__()``.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+      :param model_name: Název modelu používaný pro cílení operace.
+
    .. py:method:: get_sections()
 
+      Vrací sections. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``filter()``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``related_manager``, None.
+
    .. py:method:: get_name()
+
+      Vrací name. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
 
 
 .. py:class:: SouboryRepeatableSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SouboryRepeatableSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_sections()
 
+      Vrací sections. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``filter()``, pracuje se s atributy ``soubory``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``related_manager``, None.
+
    .. py:method:: get_name()
+
+      Vrací name. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``new_name``.
 
 
 .. py:class:: KomponentaRepeatableSectionNameWithAccessor
 
-   Popis není k dispozici.
+   Implementuje komponentu ``KomponentaRepeatableSectionNameWithAccessor`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_name()
 
+      Vrací name. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování.
+
 
 .. py:class:: SubSectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``SubSectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param config: Konfigurační slovník používaný pro sestavení výstupu.
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+
    .. py:method:: get_config()
 
+      Vrací config. v aplikaci.
+
+      :return: Vrací atribut objektu.
+
    .. py:method:: get_instance()
+
+      Vrací instance. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``getattr()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``getattr()``, None, proměnná ``instance``.
 
 
 .. py:class:: NeidentAkceSubSectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NeidentAkceSubSectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: get_instance()
 
+      Vrací instance. v aplikaci.
+
+      :param instance: Parametr ``instance`` předává se do volání ``get()``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``neident_akce``, None.
+
 
 .. py:class:: HistorieSubSectionField
 
-   Popis není k dispozici.
+   Implementuje komponentu ``HistorieSubSectionField`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param foreign_key: Textový název nebo klíč ``foreign_key`` používaný v rámci operace.
+      :param label_key: Textový název nebo klíč ``label_key`` používaný v rámci operace.
+
    .. py:method:: get_config()
+
+      Vrací config. v aplikaci.
+
+      :return: Vrací výsledek volání ``get_historie_config()``.
 
 
 Funkce
@@ -359,16 +704,32 @@ Funkce
 
 .. py:function:: get_model(name)
 
-   Popis není k dispozici.
+   Vrací model. v aplikaci.
+
+   :param name: Parametr ``name`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+
+   :return: Vrací výsledek volání ``get()``.
 
 .. py:function:: get_gml(geom)
 
-   Popis není k dispozici.
+   Vrací gml. v aplikaci.
+
+   :param geom: Parametr ``geom`` předává se do volání ``execute()``, pracuje se s atributy ``wkt``.
+
+   :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, None.
 
 .. py:function:: get_wkt(geom)
 
-   Popis není k dispozici.
+   Vrací wkt. v aplikaci.
+
+   :param geom: Parametr ``geom`` předává se do volání ``execute()``, pracuje se s atributy ``wkt``.
+
+   :return: Vrací vybranou hodnotu z kolekce.
 
 .. py:function:: get_historie_config(label_key)
 
-   Popis není k dispozici.
+   Vrací historie config.
+
+   :param label_key: Textový název nebo klíč ``label_key`` používaný v rámci operace.
+
+   :return: Vrací slovník.

@@ -13,6 +13,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=Lokalita, weak=False)
 def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
+    """
+    Uloží lokalita snapshot.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_lokalita_snapshot``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``archeologicky_zaznam``, ``set_snapshots``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_lokalita_snapshot``.
+    """
     logger.debug(
         "lokalita.signals.save_lokalita_snapshot.start", extra={"ident_cely": instance.archeologicky_zaznam.ident_cely}
     )
@@ -34,6 +41,13 @@ def save_lokalita_snapshot(sender, instance: Lokalita, **kwargs):
 
 @receiver(post_save, sender=Lokalita, weak=False)
 def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
+    """
+    Uloží lokalita redis snapshot.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_lokalita_redis_snapshot``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``check_if_task_queued()``, pracuje se s atributy ``archeologicky_zaznam``, ``pk``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_lokalita_redis_snapshot``.
+    """
     logger.debug(
         "lokalita.signals.save_lokalita_redis_snapshot.start",
         extra={"ident_cely": instance.archeologicky_zaznam.ident_cely},
@@ -48,6 +62,13 @@ def save_lokalita_redis_snapshot(sender, instance: Lokalita, **kwargs):
 
 @receiver(pre_delete, sender=Lokalita, weak=False)
 def delete_lokalita(sender, instance: Lokalita, **kwargs):
+    """
+    Odstraní lokalita. v aplikaci.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_lokalita``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``archeologicky_zaznam``.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_lokalita``.
+    """
     logger.debug(
         "lokalita.signals.delete_lokalita.start", extra={"ident_cely": instance.archeologicky_zaznam.ident_cely}
     )

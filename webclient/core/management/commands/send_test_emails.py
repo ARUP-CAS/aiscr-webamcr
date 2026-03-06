@@ -33,6 +33,11 @@ class Command(BaseCommand):
     help = _("core.management.commands.send_test_emails.Command.help")
 
     def get_emails_settings(self):
+        """
+        Načte seznam testovacích emailových adres z administrátorského nastavení.
+
+        :return: Seznam emailových adres určených pro testovací odeslání.
+        """
         try:
             settings_query = CustomAdminSettings.objects.filter(item_group="settings", item_id="mail_test")
             return json.loads(settings_query.last().value)["emails"]
@@ -40,6 +45,12 @@ class Command(BaseCommand):
             return []
 
     def handle(self, *args, **options):
+        """
+        Odešle testovací email na všechny adresy definované v nastavení.
+
+        :param args: Dodatečné poziční argumenty předané příkazu.
+        :param options: Dodatečné pojmenované argumenty předané příkazu.
+        """
         recipients = self.get_emails_settings()
 
         for to_email in recipients:

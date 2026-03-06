@@ -6,7 +6,17 @@ from nalez.models import NalezObjekt, NalezPredmet
 
 
 class NalezFormSetHelper(FormHelper):
+    """Implementuje komponentu ``NalezFormSetHelper`` v rámci aplikace."""
+
     def __init__(self, typ=None, typ_vazby="dokument", *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param typ: Parametr ``typ`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param typ_vazby: Parametr ``typ_vazby`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -14,16 +24,26 @@ class NalezFormSetHelper(FormHelper):
         self.typ_vazby = typ_vazby
 
 
-# Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
+# Funkce bude podtříděna, aby šlo předat volby do formsetů při volání formsetfactory.
 def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=True):
     """
     Funkce která vrací formulář nálezu objekty pro formset.
+
+    :param druh_obj_choices: Parametr ``druh_obj_choices`` slouží jako vstup pro logiku funkce ``create_nalez_objekt_form``.
+    :param spec_obj_choices: Parametr ``spec_obj_choices`` slouží jako vstup pro logiku funkce ``create_nalez_objekt_form``.
+    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací proměnná ``CreateNalezObjektForm``.
     """
 
     class CreateNalezObjektForm(forms.ModelForm):
+        """Implementuje komponentu ``CreateNalezObjektForm`` v rámci aplikace."""
+
         typ = forms.CharField(widget=forms.HiddenInput())
 
         class Meta:
+            """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = NalezObjekt
             fields = ["druh", "specifikace", "pocet", "poznamka"]
             labels = {
@@ -42,6 +62,14 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
         def __init__(
             self, druh_objekt_choices=druh_obj_choices, specifikace_objekt_choices=spec_obj_choices, *args, **kwargs
         ):
+            """
+            Inicializuje instanci třídy.
+
+            :param druh_objekt_choices: Parametr ``druh_objekt_choices`` předává se do volání ``TwoLevelSelectField()``, ``Select()``.
+            :param specifikace_objekt_choices: Parametr ``specifikace_objekt_choices`` předává se do volání ``TwoLevelSelectField()``, ``Select()``.
+            :param args: Parametr ``args`` se předává do volání ``__init__()``.
+            :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+            """
             super(CreateNalezObjektForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
                 label=_("nalez.forms.nalezObjekt.druh.label"),
@@ -79,12 +107,22 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
 def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices, not_readonly=True):
     """
     Funkce která vrací formulář nálezu předměty pro formset.
+
+    :param druh_projekt_choices: Parametr ``druh_projekt_choices`` slouží jako vstup pro logiku funkce ``create_nalez_predmet_form``.
+    :param specifikce_predmetu_choices: Parametr ``specifikce_predmetu_choices`` slouží jako vstup pro logiku funkce ``create_nalez_predmet_form``.
+    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací proměnná ``CreateNalezPredmetForm``.
     """
 
     class CreateNalezPredmetForm(forms.ModelForm):
+        """Implementuje komponentu ``CreateNalezPredmetForm`` v rámci aplikace."""
+
         typ = forms.CharField(widget=forms.HiddenInput())
 
         class Meta:
+            """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = NalezPredmet
 
             fields = ["druh", "specifikace", "pocet", "poznamka"]
@@ -104,6 +142,12 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices,
             }
 
         def __init__(self, *args, **kwargs):
+            """
+            Inicializuje instanci třídy.
+
+            :param args: Parametr ``args`` se předává do volání ``__init__()``.
+            :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+            """
             super(CreateNalezPredmetForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
                 label=_("nalez.forms.nalezPredmet.druh.label"),
