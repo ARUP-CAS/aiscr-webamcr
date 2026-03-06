@@ -313,6 +313,9 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         """
         Provádí operaci porovnej png obsah.
 
+        Porovná dva PNG obrázky zadané jako binární řetězce.
+        Vrací True, pokud jsou zcela totožné.
+
         :param bin1: První binární vstup použitý při porovnání.
         :param bin2: Druhý binární vstup použitý při porovnání.
 
@@ -498,7 +501,6 @@ class BaseSeleniumTestClass(LiveServerTestCase):
                 self.save_container_content(n["fedora_id"], path)
 
     def check_fedora_change(self, time, path):
-        # Pomocný debug výpis změny ve Fedoře je zde záměrně vypnutý.
         """
         Ověří fedora change.
 
@@ -1292,7 +1294,7 @@ return new Date('2025-06-28T12:00:00Z');}};
 
     def xml_to_string_bez_ignorovanych_z_textu(self, xml_text, ignorovane_tagy, filename):
         """
-        Provádí operaci xml to string bez ignorovanych z textu.
+        Načte XML z textového vstupu, odstraní ignorované tagy a vrátí serializovanou podobu.
 
         :param xml_text: Parametr ``xml_text`` se předává do volání ``fromstring()``.
         :param ignorovane_tagy: Číselná hodnota ``ignorovane_tagy`` použitá při výpočtu nebo transformaci.
@@ -1406,6 +1408,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         """
         Provádí operaci odstran predikaty.
 
+        Odstraní trojice podle predikátů (může být prefixed nebo plné URI).
+
         :param graf: Parametr ``graf`` předává se do volání ``list()``, pracuje se s atributy ``namespace_manager``, ``triples``.
         :param predikaty_k_ignoru: Číselná hodnota ``predikaty_k_ignoru`` použitá při výpočtu nebo transformaci.
         """
@@ -1497,6 +1501,9 @@ return new Date('2025-06-28T12:00:00Z');}};
     def uprav_rdf_pred_ulozenim(self, rdf_input, ignorovat_predikaty=None):
         """
         Provádí operaci uprav rdf pred ulozenim.
+
+        Načte RDF z textu nebo bytes, odstraní proměnlivé predikáty, base URI a UUID,
+        a vrátí výstup jako serializovaný Turtle string.
 
         :param rdf_input: Parametr ``rdf_input`` se předává do volání ``parse()``.
         :param ignorovat_predikaty: Číselná hodnota ``ignorovat_predikaty`` použitá při výpočtu nebo transformaci.
