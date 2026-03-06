@@ -2051,7 +2051,7 @@ class FedoraTransaction(BaseFedoraTransaction):
         Spustí asynchronní aktualizaci digiarchívu přes Celery.
 
         Kontroluje, zda úloha již není naplánovaná nebo běží, aby nedocházelo k duplicitnímu spuštění.
-        
+
         """
         from cron.tasks import call_digiarchiv_update_task
 
