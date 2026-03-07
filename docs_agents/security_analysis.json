@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "status": "skeleton — čeká na analýzu T05",
+    "needs_agent_update": true
+  },
+  "django_security_settings": {
+    "note": "Zkontrolovat: SECRET_KEY, DEBUG, ALLOWED_HOSTS, SECURE_SSL_REDIRECT, CSRF_COOKIE_SECURE, SESSION_COOKIE_SECURE, X_FRAME_OPTIONS"
+  },
+  "secrets_management": {
+    "known_mechanism": "Docker secrets (soubory secrets/)",
+    "expected_files": [
+      "secrets/local_db_pass",
+      "secrets/pg_admin_pass",
+      "secrets.alternative.json",
+      "secrets_mail_client.json"
+    ],
+    "note": "Ověřit, zda jsou všechny secrets v .gitignore a nejsou commitovány"
+  },
+  "authentication": {
+    "suspected_mechanism": "CAS (Central Authentication Service) — ověřit",
+    "django_auth_backends": "Vyplnit při T05"
+  },
+  "certificate_concerns": {
+    "path": "cert/",
+    "note": "Adresář cert/ obsahuje certifikáty pro lokální testování - zkontrolovat, zda nejsou použity v produkci"
+  },
+  "known_vulnerabilities": [],
+  "csrf_xss_issues": [],
+  "raw_sql_usage": [],
+  "cors_configuration": {}
+}

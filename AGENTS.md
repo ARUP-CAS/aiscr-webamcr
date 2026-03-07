@@ -1,33 +1,76 @@
 # AGENTS.md
 
-Pravidla v tomto souboru plati pro cely repozitar `aiscr-webamcr`.
-Pokud je v podadresari dalsi `AGENTS.md`, ma pro dany strom vyssi prioritu.
+Rules in this file apply to the entire `aiscr-webamcr` repository.
+A nested `AGENTS.md` in a subdirectory takes precedence for that subtree.
 
-## Cil
+---
 
-Udrzovat zmeny male, bezpecne a snadno reviewovatelne v souladu s projektovymi pravidly
-(`CONTRIBUTING.md`, `README.md`, CI workflow a Sphinx dokumentace).
+## Repository orientation
 
-## Chovani agenta
+Before starting any work, gather context:
 
-- Vzdy maximalne vyuzivej dovednosti.
-- Po dokonceni ulohy navrhni aktualizaci tohoto souboru tak, aby se zvysovala jeho kvalita.
-- Osvedcene dovednosti zapis do sekce `Doporucene dovednosti`
+- **Repository structure overview:** `docs_agents/repository_map.json`
+- **Ongoing audit state and past findings:** `docs_agents/review_cache.json`,
+  `docs_agents/bugs.md`, `docs_agents/refactoring_backlog.md`
+- **Analytical background** (architecture, ORM, Docker, security, etc.):
+  other JSON files in `docs_agents/`
 
-## Doporucene dovednosti
+These files contain context accumulated across previous sessions —
+reading them avoids duplicating work and provides relevant background for the task.
 
-- `doc` - pro kontrolu a upravy dokumentacnich artefaktu, kdy zalezi na formatu.
-- `gh-fix-ci` - kdyz je potreba rychle dohledat a opravit chyby z CI.
-- `gh-address-comments` - pri zapracovani review pripominek z PR.
+For technical audit or review tasks, read first:
+`docs_agents/PROMPT.md`
 
-## Rychly kontext repozitare
+---
 
-- Hlavni aplikace: `webclient/` (Django 5.2)
-- Dokumentace: `docs/` (Sphinx, Read the Docs)
-- Infrastruktura: `docker-compose*.yml`, `proxy/`, `redis/`, `elasticsearch/`, `kibana/`, `logstash/`, `prometheus/`
-- Provozni a helper skripty: `scripts/`
+## AI-generated content
 
-## Autoritativni zdroje pravidel (cti pred vetsimi zmenami)
+All content produced by agents (audit reports, analysis JSON files, prompt evolution notes)
+belongs in the `docs_agents/` directory and should be committed to a dedicated
+`agents/{agent_name}/` branch, branched off `test`.
+
+This keeps AI-generated artefacts reviewable and separate from application code.
+`agents/` branches are merged into `test` only after human review.
+Merging into `dev` is done exclusively by humans — do not target `dev` in any PR.
+
+---
+
+## Goal
+
+Keep changes small, safe, and easy to review in line with project conventions
+(`CONTRIBUTING.md`, `README.md`, CI workflows and Sphinx documentation).
+
+---
+
+## Agent behaviour
+
+- Gather context before starting work (see section above) — do not repeat what was already done.
+- Use available skills where they add value.
+- After completing a task, suggest whether and how to update this file to improve its quality.
+- Record proven skills in the `Recommended skills` section below.
+
+---
+
+## Recommended skills
+
+- `doc` — for reviewing and editing documentation artefacts where formatting matters.
+- `gh-fix-ci` — when you need to quickly locate and fix CI failures.
+- `gh-address-comments` — when incorporating review comments from a PR.
+
+---
+
+## Repository quick reference
+
+- Main application: `webclient/` (Django 5.2)
+- Documentation: `docs/` (Sphinx, Read the Docs)
+- Infrastructure: `docker-compose*.yml`, `proxy/`, `redis/`, `elasticsearch/`,
+  `kibana/`, `logstash/`, `prometheus/`
+- Operational and helper scripts: `scripts/`
+- Ongoing audit: `docs_agents/` — read before any technical task
+
+---
+
+## Authoritative rule sources (read before larger changes)
 
 1. `CONTRIBUTING.md`
 2. `docs/source/03_vyvoj/kodovaci_standardy.rst`
@@ -35,111 +78,150 @@ Udrzovat zmeny male, bezpecne a snadno reviewovatelne v souladu s projektovymi p
 4. `.pre-commit-config.yaml`
 5. `.flake8`
 
-## Povinne zasady pri upravach
+---
 
-1. Nemenit runtime chovani, pokud je ukol ciste dokumentacni nebo refaktor bez feature.
-2. Drzet se stylu existujici casti kodu, neprovadet velke vedlejsi refactory.
-3. Needitovat rucne soubory `*/migrations/*.py`, pokud ukol explicitne nepozaduje schema zmenu.
-4. Neprepisovat ani neodstranovat cizi (uz existujici) zmeny mimo scope zadani.
-5. Necommitovat zadne secrety, klice ani lokalni citlive konfigurace.
+## Mandatory rules for edits
 
-## Kodovaci standardy a kvalita
+1. Do not change runtime behaviour when the task is purely documentary or a no-feature refactor.
+2. Follow the style of existing code; do not introduce large unrelated refactors.
+3. Do not manually edit `*/migrations/*.py` unless the task explicitly requires a schema change.
+4. Do not overwrite or remove existing changes outside the scope of the task.
+5. Do not commit secrets, keys, or sensitive local configuration.
 
-- Python format:
-  - `black` s delkou radku 120
-  - `isort --profile black`
-  - `flake8` dle `.flake8`
-- Docstringy:
-  - U verejnych trid/funkci/metod drzet projektovy style guide.
-  - Pouzivat Sphinx styl (`:param:`, `:return:`, `:raises:`) kde dava smysl.
-  - Nepouzivat Google-sekce `Args:`, `Returns:`, `Raises:`.
-  - Udrzovat popisy konkretni vuci realnemu chovani kodu (ne obecne sablony typu "vstupni hodnota").
-  - U `:return:` a `:raises:` vzdy popsat konkretni chovani podle implementace (typ/navratove vetve, podminky vyvolani vyjimky), ne genericke formulace.
-  - U `:param:` vzdy popsat vyznam konkretniho parametru v kontextu funkce/metody (jak ovlivnuje chovani), ne genericke formulace.
-  - Nezdvojovat informace: pokud je pouzit Sphinx blok, nepsat paralelni Google blok se stejnym obsahem.
-  - Hook `method-docstring-style-reminder` je neblokujici, ale varovani brat vazne.
+> **Note:** `cert/` contains self-signed certificates for local development only.
+> These are intentionally committed and are not a production security concern.
+
+---
+
+## Coding standards and quality
+
+Python formatting:
+
+- `black` with line length 120
+- `isort --profile black`
+- `flake8` per `.flake8`
+
+Docstrings:
+
+- Use Czech language only, but do not translate definitions, etc.
+- Follow the project style guide for public classes, functions and methods.
+- Use Sphinx style (such as `:param:`, `:return:`, `:raises:`) where appropriate.
+- Do not use Google-style sections like `Args:`, `Returns:`, `Raises:`.
+- Keep descriptions specific to actual code behaviour — not generic templates
+  like "input value" or "return value of the function".
+- For `:return:` and `:raises:` always describe the concrete behaviour
+  (return type/branches, exception conditions), not generic wording.
+- For `:param:` always describe what the parameter does in context
+  (how it affects behaviour), not generic wording.
+- Do not duplicate information: if a Sphinx block is used, do not write
+  a parallel Google block with the same content.
+- The `method-docstring-style-reminder` hook is non-blocking, but treat warnings seriously.
+
+---
 
 ## Docstring review checklist
 
-Pri hromadnych upravach docstringu proved:
+When performing bulk docstring edits:
 
-1. Vyhledani zbytkoveho Google stylu:
-   - `Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'`
-2. Vyhledani generickych formulaci:
-   - `Select-String -Pattern 'Popis parametru|Návratová hodnota funkce|Vstupní hodnota|Hodnota parametru|Pokud během zpracování nastane chyba|Raised when processing fails'`
-3. Kontrolu, ze popis odpovida kontextu funkce (parametry i return typ/chovani).
-4. Kontrolu, ze nejsou duplicitni bloky se stejnym obsahem.
+1. Find remaining Google-style blocks:
+   `Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'`
+2. Find generic wording:
+   `Select-String -Pattern 'Popis parametru|Navratova hodnota funkce|Vstupni hodnota|Hodnota parametru|Pokud behem zpracovani nastane chyba|Raised when processing fails'`
+3. Verify that descriptions match the function's actual context (params and return type/behaviour).
+4. Verify there are no duplicate blocks with the same content.
+5. Verify that docstrings are Czech only.
 
-## Generovane artefakty a dokumentace
+---
 
-Nektere soubory se meni automaticky pomoci skriptu/hooku:
+## Generated artefacts and documentation
 
-- `docs/generate_module_docs.py` (modulova dokumentace)
-- `docs/generate_selenium_test_docs.py` (sekce mezi markery v `docs/source/09_testovani/selenium_testy.rst`)
-- `docs/licenses/convert_to_rst.py` (generuje `docs/source/12_zavislosti/python_knihovny.rst`)
+Some files are modified automatically by scripts or hooks:
 
-Pravidla:
+- `docs/generate_module_docs.py` (module documentation)
+- `docs/generate_selenium_test_docs.py` (section between markers in
+  `docs/source/09_testovani/selenium_testy.rst`)
+- `docs/licenses/convert_to_rst.py` (generates
+  `docs/source/12_zavislosti/python_knihovny.rst`)
 
-1. Neupravuj rucne auto-generovane bloky, pokud existuje skript.
-2. Pri zmene Selenium testu nebo struktury modulu spust relevantni generatory.
-3. Pri zmene dependencies otestuj, jestli je potreba regenerovat seznam Python knihoven.
+Rules:
 
-## Testy pred odevzdanim zmen
+1. Do not manually edit auto-generated blocks where a script exists.
+2. After changing Selenium tests or module structure, run the relevant generators.
+3. After changing dependencies, check whether the Python library list needs regeneration.
 
-Minimalne:
+---
+
+## Tests before submitting changes
+
+Minimum:
 
 1. `.\\.venv\\Scripts\\python.exe -m compileall -q webclient`
 2. `pre-commit run --all-files`
 
-### Preferovana varianta Pythonu
+### Preferred Python interpreter
 
-Pro vsechny kontrolni skripty a testy preferuj interpreter z lokalniho virtualniho prostredi:
+Use the interpreter from the local virtual environment:
 
 - `.\.venv\Scripts\python.exe`
-- teprve pokud `.venv` neni dostupne, pouzij `python`/`python3`/`py`
+- fall back to `python`/`python3`/`py` only if `.venv` is unavailable
 
-Dle typu zmen:
+Based on change type:
 
-1. Cileny beh Django testu pro dotcene moduly.
-2. Selenium testy (`scripts/start_selenium_tests.sh`) jen kdyz je to potreba podle scope zmen, protoze jsou tezke a casove narocne.
-3. Vybirej prednostne ty selenium testy, ktere odpovidaji scope zmen.
+1. Run targeted Django tests for affected modules.
+2. Run Selenium tests (`scripts/start_selenium_tests.sh`) only when the scope requires it
+   — they are heavy and time-consuming;
+   - after confirmation of the human initiating the prompt.
+3. Prefer Selenium tests that match the scope of changes.
 
-Vysledek overeni vzdy strucne popsat v PR/summary (`co bylo spusteno`, `co proslo`, `co nebylo mozne spustit`).
+Always briefly describe the test outcome in the PR/summary
+(`what was run`, `what passed`, `what could not be run`).
 
-### Fallback bez Pythonu
+### Fallback without Python
 
-Pokud v prostredi neni dostupny `python`/`python3`/`py`:
+If `python`/`python3`/`py` is unavailable in the environment:
 
-1. Uved tuto skutecnost explicitne v summary/PR.
-2. Proved aspon statickou kontrolu diffu a formatu:
+1. State this explicitly in the summary/PR.
+2. Perform at least a static diff and format check:
    - `git diff -- '*.py'`
    - `git diff -- docs/source/09_testovani/selenium_testy.rst`
-3. Docstringy kontroluj manualne podle checklistu vyse (`:param:`, `:return:`, `:raises:` a bez `Args:/Returns:/Raises:`).
-4. Pokud kontrolni skripty nelze spustit, nikdy netvrd, ze probehly.
+3. Review docstrings manually using the checklist above.
+4. Never claim checks passed if the scripts could not be run.
 
-## Selenium popisy vs test branch checklist
+---
 
-Pri kontrole vyznamu popisu Selenium testu proti vetvi `test` proved:
+## Selenium descriptions vs test branch checklist
+
+When verifying Selenium test descriptions against the `test` branch:
 
 1. `git diff -w test -- webclient/*/tests/test_selenium.py`
 2. `git diff -w test -- docs/source/09_testovani/selenium_testy.rst`
-3. Zmeny opravuj jen tam, kde doslo k posunu vyznamu; ciste formatovaci zmeny ponech.
-4. Pokud je `selenium_testy.rst` generovany skriptem, po upravach over konzistenci s `docs/generate_selenium_test_docs.py`.
+3. Fix only where the meaning has changed; leave purely formatting differences alone.
+4. If `selenium_testy.rst` is generated by a script, verify consistency with
+   `docs/generate_selenium_test_docs.py` after edits.
 
-## Git a PR workflow
+---
 
-- Branch naming: preferovat `feature/<issue>` nebo `bugfix/<issue>` (viz `CONTRIBUTING.md`).
-- Delat mensi logicke commity.
-- V PR uvadet:
-  - odkaz na issue (`#cislo`)
+## Git and PR workflow
+
+- Base branch for all development: `test`. Always branch off `test`, if not instructed specificaly otherwise.
+- Branch naming:
+  - application changes: `feature/<issue>` or `bugfix/<issue>` (see `CONTRIBUTING.md`)
+  - agent-generated content: `agents/{agent_name}/<topic>`
+- Make small, logical commits.
+- In a PR include:
+  - issue reference (`#number`)
   - Motivation
   - Description
   - Testing
-- Pokud prace jeste neni pripravena k review, pouzit Draft PR.
-## Co vlastnici a CI typicky ocekavaji
+- Use a Draft PR if the work is not yet ready for review.
+- Do not open PRs targeting `dev` — merging into `dev` is done exclusively by humans.
 
-- CODEOWNERS pro repozitar: `@motyc`, `@jhavrlant`
-- Pre-commit workflow bezi na PR do vetvi `dev` a `test`
-- CI muze automaticky vytvorit PR s opravami formatovani/generovanych souboru
+---
 
-Agent ma preferovat takove zmeny, ktere timto pipeline projdou bez manualnich zasahu.
+## What owners and CI typically expect
+
+- CODEOWNERS for the repository: `@motyc`, `@jhavrlant`
+- Pre-commit workflow runs on PRs into `test` (and `dev`, which is managed by humans)
+- CI may automatically create a PR with formatting or generated-file fixes
+
+Prefer changes that pass this pipeline without manual intervention.

@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "status": "skeleton — čeká na analýzu T06",
+    "needs_agent_update": true
+  },
+  "configuration": {
+    "broker": "Redis (předpoklad dle docker-compose.yml)",
+    "backend": "Vyplnit při T06",
+    "worker_service": "celery_worker (dle docker-compose.yml)",
+    "beat_service": "celery_beat (dle docker-compose.yml)"
+  },
+  "tasks": [],
+  "beat_schedule": {},
+  "error_handling_issues": [],
+  "race_condition_candidates": [],
+  "missing_idempotence": [],
+  "timeout_issues": []
+}

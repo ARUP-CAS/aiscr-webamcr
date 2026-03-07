@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "status": "skeleton — čeká na analýzu T08",
+    "needs_agent_update": true
+  },
+  "sphinx_docs": {
+    "location": "docs/",
+    "readthedocs_config": "readthedocs.yaml",
+    "readthedocs_url": "https://aiscr-webamcr.readthedocs.io/cs/stable/",
+    "issues": []
+  },
+  "documentation_generators": [],
+  "broken_links": [],
+  "coverage_gaps": [],
+  "outdated_content": []
+}

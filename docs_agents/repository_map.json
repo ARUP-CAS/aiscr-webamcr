@@ -1,0 +1,140 @@
+{
+  "_meta": {
+    "status": "partial — inicializováno ručně z veřejně dostupných zdrojů",
+    "needs_agent_update": true,
+    "note": "Agent musí při T01 doplnit přesné velikosti souborů, seznam modulů a Django apps."
+  },
+  "repository": {
+    "name": "aiscr-webamcr",
+    "branch": "test",
+    "language_breakdown": {
+      "Python": "47.2%",
+      "JavaScript": "36.8%",
+      "HTML": "10.6%",
+      "SCSS": "3.9%",
+      "CSS": "0.7%",
+      "Shell": "0.7%",
+      "Dockerfile": "0.1%"
+    },
+    "commits": 5022,
+    "releases": 29,
+    "latest_release": "v1.2.0",
+    "open_issues": 113,
+    "open_prs": 10
+  },
+  "root_files": {
+    "AGENTS.md": "Instrukce pro agenty — číst jako první",
+    "CITATION.cff": "Citační metadata (DOI: 10.5281/zenodo.8363642)",
+    "CODEOWNERS": "Správci kódu",
+    "CONTRIBUTING.md": "Průvodce pro přispěvatele",
+    "LICENSE": "GPL-3.0",
+    "README.md": "Hlavní dokumentace repozitáře",
+    "readthedocs.yaml": "Konfigurace Read the Docs buildů",
+    "manage.py": "Django management entry point",
+    "Dockerfile": "Produkční image",
+    "Dockerfile-DB": "Vývojová databáze",
+    "Dockerfile-DEV": "Vývojové prostředí",
+    ".pre-commit-config.yaml": "Pre-commit hooky",
+    ".flake8": "Linting konfigurace",
+    ".isort.cfg": "Import sorting",
+    "requirements.txt": "Python závislosti (produkce)",
+    "pyproject.toml": "Python projekt metadata",
+    "package.json": "npm závislosti a build skripty"
+  },
+  "docker_compose_files": {
+    "docker-compose.yml": "Produkční stack (web, Redis, Celery, ELK, Prometheus, Selenium)",
+    "docker-compose-dev-local-db.yml": "Lokální vývoj s lokální DB",
+    "docker-compose-dev-local-db-all-containers.yml": "Lokální vývoj — všechny kontejnery",
+    "docker-compose-proxy.yml": "NGINX proxy z image",
+    "docker-compose-test.yml": "Selenium testovací prostředí",
+    "git_docker-compose.yml": "Deployment z lokálního repozitáře",
+    "git_docker-compose.override.yml": "Override pro lokální deployment",
+    "git_docker-compose-proxy.yml": "NGINX proxy z lokálního repozitáře"
+  },
+  "directories": {
+    "webclient": {
+      "type": "django_project",
+      "description": "Hlavní Django aplikace AMČR",
+      "note": "Agent musí při T01 zmapovat přesnou strukturu Django apps",
+      "known_domain_entities": [
+        "Projekt — terénní archaeologické projekty",
+        "Akce — terénní akce (projektové i samostatné)",
+        "Lokalita — archeologické lokality",
+        "Dokument — terénní dokumentace, zprávy, fotografie",
+        "PAS (Povrchové sběry) — samostatné nálezy",
+        "Knihovna3D — 3D modely",
+        "PIAN — prostorové jednotky",
+        "Hesláře — řízené slovníky",
+        "Uživatel — správa uživatelů a organizací"
+      ],
+      "expected_app_structure": "Agent doplní při T01"
+    },
+    "scripts": {
+      "type": "operational_scripts",
+      "description": "Provozní a vývojové skripty (deploy, dev, test, dokumentace)",
+      "key_script": "dev_deploy.sh — hlavní lokální deployment skript"
+    },
+    "docs": {
+      "type": "sphinx_documentation",
+      "description": "Sphinx dokumentace (readthedocs.io)",
+      "url": "https://aiscr-webamcr.readthedocs.io/cs/stable/"
+    },
+    ".github": {
+      "type": "ci_cd",
+      "description": "GitHub Actions workflows a šablony"
+    },
+    "proxy": {
+      "type": "infrastructure",
+      "description": "NGINX reverse proxy konfigurace a build",
+      "note": "POZOR: adresář se jmenuje 'proxy', nikoli 'nginx'"
+    },
+    "elasticsearch": {
+      "type": "infrastructure",
+      "description": "Elasticsearch konfigurace pro logy a full-text search"
+    },
+    "kibana": {
+      "type": "infrastructure",
+      "description": "Kibana — vizualizace Elasticsearch / Logstash dat"
+    },
+    "logstash": {
+      "type": "infrastructure",
+      "description": "Logstash — sběr a transformace logů"
+    },
+    "prometheus": {
+      "type": "infrastructure",
+      "description": "Prometheus monitoring + Grafana"
+    },
+    "redis": {
+      "type": "infrastructure",
+      "description": "Redis cache — Celery broker i Django cache backend"
+    },
+    "fedora": {
+      "type": "infrastructure",
+      "description": "Testovací instance Fedora repozitáře (produkce je spravována samostatně)"
+    },
+    "cert": {
+      "type": "development",
+      "description": "Certifikáty pro lokální testování — zkontrolovat, zda neobsahuje citlivé soubory"
+    },
+    "locale": {
+      "type": "i18n",
+      "description": "Překlady (gettext .po/.mo soubory)"
+    },
+    "static": {
+      "type": "frontend",
+      "description": "Statické soubory (JS, CSS, obrázky) — zahrnuje vendorované knihovny"
+    },
+    "templates": {
+      "type": "frontend",
+      "description": "Django HTML šablony"
+    }
+  },
+  "external_integrations": {
+    "fedora_repository": "Produkční digitální repozitář (samostatná instance mimo tento repozitář)",
+    "postgresql": "Primární databáze",
+    "elasticsearch": "Full-text search a logování",
+    "redis": "Cache a Celery broker",
+    "celery": "Asynchronní zpracování úloh (worker + beat)",
+    "cas_auth": "CAS autentizace (pravděpodobně — ověřit při T05)"
+  }
+}
