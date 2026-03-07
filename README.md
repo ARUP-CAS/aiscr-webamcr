@@ -2,6 +2,8 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8363642.svg)](https://zenodo.org/doi/10.5281/zenodo.8363642) [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/ARUP-CAS/aiscr-webamcr/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/ARUP-CAS/aiscr-webamcr) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8934/badge)](https://www.bestpractices.dev/projects/8934) [![Documentation Status](https://readthedocs.org/projects/aiscr-webamcr/badge/?version=latest)](https://aiscr-webamcr.readthedocs.io/cs/latest/?badge=latest) [![Licence: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
+[ENGLISH VERSION HERE](README_en.md)
+
 Archeologická mapa České republiky (AMČR) je informační systém pro sběr, správu a prezentaci dat o archeologických terénních výzkumech a pro podporu souvisejících pracovních procesů. Je provozován Archeologickým ústavem Akademie věd České republiky v Praze a Brně.
 
 ## Odkazy
