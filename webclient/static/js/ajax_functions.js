@@ -37,7 +37,7 @@ get_vychozi_licence = function (organizaceID, licenceID, start_url) {
                     $(licenceID).selectpicker('refresh');
                 }
             }
-            next_url = start_url + this.value
+            const next_url = start_url + this.value
             xhttp.open("GET", next_url);
             xhttp.send();
         });
