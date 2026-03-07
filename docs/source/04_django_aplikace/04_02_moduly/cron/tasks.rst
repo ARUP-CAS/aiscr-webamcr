@@ -14,6 +14,10 @@ Funkce
    -- pokud [dnes] + 90 dní = datum_odevzdani_NZ => email E-NZ-01
    -- pokud [dnes] - 1 den = datum_odevzdani_NZ => email E-NZ-02
 
+.. py:function:: send_notification_enz03()
+
+   Kontrola a odeslání emailů E-NZ-03 pro akce čekající na archivaci déle než 90 dní.
+
 .. py:function:: send_notifications_en()
 
    Každý den kontrola a odeslání emailů E-N-01 a E-N-02

@@ -11,6 +11,8 @@ import projekt.models
 import uzivatel.models
 from cacheops import invalidate_model
 from core.constants import (
+    ARCHIVE_EMAIL_CECHY,
+    ARCHIVE_EMAIL_MORAVA,
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     NAVRZENI_KE_ZRUSENI_PROJ,
@@ -62,6 +64,7 @@ ALWAYS_ACTIVE = [
     "E-N-04",
     "E-NZ-01",
     "E-NZ-02",
+    "E-NZ-03",
     "E-V-01",
     "E-O-01",
     "E-O-02",
@@ -476,6 +479,70 @@ class Mailer:
             stav=PROJEKT_STAV_UKONCENY_V_TERENU, termin_odevzdani_nz=today_minus_1_day
         )
         cls._send_notification_for_projects(projects, notification_type)
+
+    @classmethod
+    def send_enz03(cls):
+        """Odešle notifikaci E-NZ-03 archivům za archeologické záznamy odeslané před přesně 91 dny.
+
+        Vyhledá záznamy ve stavu ``AZ_STAV_ODESLANY``, jejichž poslední změna typu ``ODESLANI_AZ``
+        proběhla přesně 91 dní zpět (bez novější změny stejného typu). Podle prefixu ``ident_cely``
+        (``C-`` pro Čechy, ``M-`` pro Moravu) určí cílový archivní e-mail a odešle notifikaci
+        s údaji o záznamu, katastru, organizaci a odesílateli.
+        """
+        threshold_date = (datetime.now() - timedelta(days=91)).date()
+        IDENT_CELY = "E-NZ-03"
+        logger.debug("services.mailer.send_enz03", extra={"ident_cely": IDENT_CELY})
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        zaznamy = (
+            arch_z.models.ArcheologickyZaznam.objects.filter(
+                stav=AZ_STAV_ODESLANY,
+                historie__historie__typ_zmeny=ODESLANI_AZ,
+                historie__historie__datum_zmeny__date=threshold_date,
+            )
+            .exclude(
+                historie__historie__typ_zmeny=ODESLANI_AZ,
+                historie__historie__datum_zmeny__date__gt=threshold_date,
+            )
+            .distinct()
+        )
+        for zaznam in zaznamy:
+            history_entry = zaznam.historie.historie_set.filter(typ_zmeny=ODESLANI_AZ).order_by("-datum_zmeny").first()
+            if not history_entry:
+                continue
+            if zaznam.ident_cely.startswith("C-"):
+                archive_email = ARCHIVE_EMAIL_CECHY
+            elif zaznam.ident_cely.startswith("M-"):
+                archive_email = ARCHIVE_EMAIL_MORAVA
+            else:
+                logger.warning(
+                    "services.mailer.send_enz03.unknown_region",
+                    extra={"ident_cely": zaznam.ident_cely},
+                )
+                continue
+            if zaznam.typ_zaznamu == arch_z.models.ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+                organizace = zaznam.akce.organizace.nazev if zaznam.akce.organizace else ""
+            else:
+                organizace = ""
+            subject = notification_type.predmet.format(ident_cely=zaznam.ident_cely)
+            html = render_to_string(
+                notification_type.cesta_sablony,
+                {
+                    "title": subject,
+                    "ident_cely": zaznam.ident_cely,
+                    "katastr": zaznam.hlavni_katastr.nazev,
+                    "organizace": organizace,
+                    "sender_name": history_entry.uzivatel.first_name,
+                    "sender_surname": history_entry.uzivatel.last_name,
+                    "sender_email": history_entry.uzivatel.email,
+                    "site_url": settings.SITE_URL,
+                },
+            )
+            cls.__send(
+                subject=subject,
+                to=archive_email,
+                html_content=html,
+                notification_type=notification_type,
+            )
 
     @classmethod
     def send_ev01(cls, zaznam: "arch_z.models.ArcheologickyZaznam", reason):
