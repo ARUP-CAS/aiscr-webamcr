@@ -54,7 +54,7 @@ notification_settings = {
     },
     "E-NZ-03": {
         "zasilat_neaktivnim": False,
-        "predmet": "AMČR: akce {ident_cely} - vypršela lhůta pro kontrolu | AMCR: action {ident_cely} - archival check deadline passed",
+        "predmet": "AMČR: akce {ident_cely} - vypršela lhůta pro kontrolu | AMCR: action {ident_cely} - validation deadline passed",
         "cesta_sablony": "/emails/E-NZ-03.html",
     },
     "E-V-01": {
