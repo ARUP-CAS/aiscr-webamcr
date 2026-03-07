@@ -1,132 +1,187 @@
-# Archaeologická mapa České republiky (AMČR)
+# Archeologická mapa České republiky (AMČR)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8363642.svg)](https://zenodo.org/doi/10.5281/zenodo.8363642)
-[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/ARUP-CAS/aiscr-webamcr/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/ARUP-CAS/aiscr-webamcr)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8934/badge)](https://www.bestpractices.dev/projects/8934)
-[![Documentation Status](https://readthedocs.org/projects/aiscr-webamcr/badge/?version=latest)](https://aiscr-webamcr.readthedocs.io/cs/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8363642.svg)](https://zenodo.org/doi/10.5281/zenodo.8363642) [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/ARUP-CAS/aiscr-webamcr/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/ARUP-CAS/aiscr-webamcr) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8934/badge)](https://www.bestpractices.dev/projects/8934) [![Documentation Status](https://readthedocs.org/projects/aiscr-webamcr/badge/?version=latest)](https://aiscr-webamcr.readthedocs.io/cs/latest/?badge=latest) [![Licence: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-AMČR je informační systém pro **sběr, správu a prezentaci dat o archeologických terénních výzkumech** v České republice.
+Archeologická mapa České republiky (AMČR) je informační systém pro sběr, správu a prezentaci dat o archeologických terénních výzkumech a pro podporu souvisejících pracovních procesů. Je provozován Archeologickým ústavem Akademie věd České republiky v Praze a Brně.
 
-## Účel repozitáře
+## Odkazy
 
-V tomto repozitáři je hlavní webová aplikace AMČR a související infrastruktura:
+- **Dokumentace:** https://aiscr-webamcr.readthedocs.io/cs/stable/
+- **Changelog:** https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog
+- **Produkční aplikace:** https://amcr.aiscr.cz/
+- **AIS CR:** https://www.aiscr.cz/
 
-- evidence archeologických záznamů a podpora workflow,
-- lokální i produkční nasazení pomocí Docker Compose,
-- asynchronní zpracování úloh (Celery),
-- monitoring (Prometheus/Grafana),
-- logování a vyhledávání (Elasticsearch/Kibana/Logstash),
-- technická dokumentace.
+---
 
-## Dokumentace
+## Technologický stack
 
-- **Stabilní dokumentace (CZ):** <https://aiscr-webamcr.readthedocs.io/cs/stable/>
-- **Nejnovější dokumentace (CZ):** <https://aiscr-webamcr.readthedocs.io/cs/latest/>
-- **Release notes / changelog:** <https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog>
+| Vrstva | Technologie |
+| --- | --- |
+| Backend | Python, Django 5.2 |
+| Databáze | PostgreSQL |
+| Asynchronní úlohy | Celery + Redis |
+| Vyhledávání / logy | Elasticsearch, Kibana, Logstash |
+| Monitoring | Prometheus |
+| Úložiště dokumentů | Fedora Repository |
+| Frontend | JavaScript (~37 %), SCSS, HTML |
+| Proxy | NGINX (`proxy/`) |
+| Infrastruktura | Docker, Docker Compose |
+| CI/CD | GitHub Actions, pre-commit |
+| Dokumentace | Sphinx, Read the Docs |
 
-## Struktura repozitáře (high level)
+---
 
-### Základní součásti
+## Struktura repozitáře
 
-- `.github` - workflows zajišťující automatizace při vývoji, testování a nasazování aplikace.
-- `webclient/` – zdrojové kódy Django aplikace.
-- `docs/` – zdrojové soubory Sphinx dokumentace.
-- `scripts/` – provozní a vývojové pomocné skripty.
-- `Dockerfile.yml` – definice buidování hlavního kontejneru.
-- `docker-compose.yml` – definice prostředí pro hlavní kontejner.
-
-### Nastavení závislostí
-
-- `elasticsearch` - konfigurace Elasticsearch ro sběr a zálohování logů.
-- `kibana` - konfigurace Kibana jako interface pro Elasticsearch a Logstash.
-- `logstash` - konfigurace Logstash pro sběr a zálohování logů.
-- `prometheus` - konfigurace Prometheus pro monitoring.
-- `proxy` - konfigurace a buildování pro NGINX proxy.
-- `redis` - konfigurace a buildování pro Redis cache.
-- `docker-compose-proxy.yml` – definice prostředí pro nasazení NGINX proxy z lokáního repozitáře.
-- `readthedocs.yaml` – konfigurace buildování Sphinx dokumentace pro Read the Docs.
-
-### Vývoj a testování
-
-- `cert` - certifikáty pro lokální testování a vývoj.
-- `fedora` - kontejner pro testovací instanci Fedora (produkční instance je spravována zcela nezávisle).
-- `Dockerfile-DEV.yml` – definice buidování kontejneru pro vývoj.
-- `Dockerfile-DB.yml` – definice buidování kontejneru pro databázi při vývoji (standardně běží jako součást prosředí serveru).
-- `docker-compose-dev-*.yml` – definice prostředí pro různé režimy vývojového nasazení.
-- `docker-compose-test.yml` - definice prostředí pro testovací nasazení (Selenium testy).
-- `git_docker-compose.override.yml` – alternativní definice prostředí pro nasazení z lokáního repozitáře.
-- `git_docker-compose.yml` – definice prostředí pro nasazení aplikace z lokáního repozitáře.
-- `git_docker-compose-proxy.yml` – definice prostředí pro nasazení NGINX proxy z lokáního repozitáře.
-
-## Rychlý start (lokální vývoj)
-
-> Doporučená cesta pro lokální vývoj je Docker Compose + skript `scripts/dev_deploy.sh`.
-
-### 1) Požadavky
-
-- Docker + Docker Compose plugin
-- Git
-- konfigurační/secrets soubory podle lokální compose konfigurace
-
-### 2) Připravte secrets
-
-Lokální skript i compose konfigurace očekávají minimálně tyto soubory:
-
-- `secrets/local_db_pass`
-- `secrets/pg_admin_pass`
-- `secrets.alternative.json`
-- `secrets_mail_client.json`
-
-Detaily a poznámky k umístění najdete přímo v `docker-compose-dev-local-db.yml`.
-
-### 3) Spusťte lokální stack
-
-```bash
-./scripts/dev_deploy.sh
+```text
+aiscr-webamcr/
+├── .github/              # GitHub Actions CI/CD
+├── cert/                 # Samopodepsané certifikáty pro lokální vývoj (záměrně commitováno)
+├── docs/                 # Sphinx dokumentace
+├── elasticsearch/        # Konfigurace Elasticsearch
+├── fedora/               # Konfigurace Fedora Repository
+├── kibana/               # Konfigurace Kibana
+├── logstash/             # Konfigurace Logstash
+├── prometheus/           # Konfigurace Prometheus
+├── proxy/                # NGINX proxy konfigurace
+├── redis/                # Konfigurace Redis
+├── scripts/              # Deployment a vývojové skripty
+├── webclient/            # Hlavní Django aplikace
+├── docs_agents/          # Dokumentace a konfigurace pro AI agenty
+├── AGENTS.md             # Pravidla a instrukce pro AI coding agenty
+├── CODEOWNERS            # Vlastníci kódu
+├── CONTRIBUTING.md       # Vývojový manuál
+├── Dockerfile            # Produkční image
+├── Dockerfile-DB         # Vývojová databáze
+├── Dockerfile-DEV        # Vývojové prostředí
+├── docker-compose*.yml   # Různé compose konfigurace
+└── README.md             # Tento soubor
 ```
 
-Užitečné volby:
+---
+
+## Vývojové prostředí
+
+### Prerekvizity
+
+- Python 3.11+
+- Docker a Docker Compose
+- Node.js 18+ a npm (pro SCSS / JS build)
+
+---
+
+### Spuštění lokálně
 
 ```bash
-./scripts/dev_deploy.sh -h
-./scripts/dev_deploy.sh -b web
-./scripts/dev_deploy.sh -d
-./scripts/dev_deploy.sh -x
+# 1. Vytvořit virtualenv a nainstalovat závislosti
+python -m venv .venv
+.venv/Scripts/activate   # Windows
+# source .venv/bin/activate  # Linux / macOS
+pip install -r requirements.txt
+
+# 2. Spustit infrastrukturní služby
+docker compose -f docker-compose-dev-local-db-all-containers.yml up -d
+
+# 3. Spustit Django
+python manage.py migrate
+python manage.py runserver
+
+# 4. Spustit Celery worker (v samostatném terminálu)
+celery -A webclient worker -l info
 ```
 
-Výchozí dostupnost aplikace: **http://localhost:8000**.
+Podrobná instalační příručka:  
+https://aiscr-webamcr.readthedocs.io/cs/stable/
+
+---
+
+### Konfigurace prostředí
+
+Citlivé hodnoty (hesla, API klíče, `SECRET_KEY`) se **nikdy necommitují**.
+
+Použijte:
+
+- proměnné prostředí
+- `.env` soubor (viz `.gitignore`)
+
+> **Poznámka k `cert/`:**  
+> Adresář obsahuje samopodepsané certifikáty pouze pro lokální vývoj.  
+> Jsou záměrně commitovány a nepředstavují bezpečnostní riziko v produkci.
+
+---
 
 ## Testování
 
-Projekt obsahuje automatizované testy (včetně Selenium scénářů). Pro detailní postup testování použijte dokumentaci v `docs/source/09_testovani/` a související skripty v `scripts/`.
+```bash
+# Python kompilace — minimum před každým commitem
+.venv/Scripts/python.exe -m compileall -q webclient
 
-## Produkční nasazení
+# Pre-commit hooks
+pre-commit run --all-files
 
-Produkční stack je definován v `docker-compose.yml` a zahrnuje mj.:
+# Django unit testy
+python manage.py test <app_name>
 
-- aplikační službu `web`,
-- Redis,
-- Celery worker + beat,
-- monitoring (Prometheus, Grafana, exportéry),
-- logovací/search stack (ELK),
-- Selenium službu.
+# Selenium testy (pouze při relevantním scope a po dohodě)
+bash scripts/start_selenium_tests.sh
+```
 
-Pro konkrétní deployment workflow viz skripty v adresáři `scripts/`.
+Výsledky testů vždy popište v PR:
 
-Aplikace očekává samostatně dostupnou instanci repozitáře Fedora a připojení databáze PostgreSQL.
+- co bylo spuštěno
+- co prošlo
+- co nešlo spustit
 
-## Přispívání
+---
 
-1. Vytvořte feature nebo bugfix branch.
-2. Udržujte změny malé a jasně popsané.
-3. Otevřete pull request s popisem změny a dopadu.
-4. Spusťte relevantní Selenium testy před merge PR pro upravené části, nejpozději pak před merge do hlavní větve (`dev`).
+## Větve a workflow
+
+| Větev | Prostředí | Popis |
+| --- | --- | --- |
+| `test` | Staging | Základna pro veškerý vývoj. Vždy větvete od `test`. |
+| `dev` | Stabilní / integrace | Merguje výhradně lidský reviewer. |
+
+Nové funkce a opravy se vyvíjejí v `test`.
+
+Do `dev` se merguje teprve po stabilizaci — **výhradně lidským reviewerem**.
+
+Release je vytvářen z **tagovaného commitu na `dev`**.
+
+Viz `CONTRIBUTING.md` pro podrobný vývojový postup.
+
+---
+
+## AI agenti
+
+Repozitář obsahuje konfiguraci pro AI coding agenty (OpenAI Codex, Claude Code a další):
+
+- `AGENTS.md` — pravidla, konvence a instrukce pro agenty
+- `docs_agents/` — průběžné audity, analýzy a backlog nálezů
+
+Větve generované agenty:
+
+```markdown
+agents/{agent_name}/<topic>
+```
+
+se větví od `test` a mergují do `test` **výhradně po lidském review**.
+
+---
 
 ## Citace
 
-Pokud AMČR používáte ve výstupech, citujte software pomocí DOI:
-<https://doi.org/10.5281/zenodo.8363642>
+```markdown
+AIS CR: Archeologická mapa České republiky (AMČR). [cit. YYYY-MM-DD].
+Dostupné z: https://amcr.aiscr.cz/
+DOI: 10.5281/zenodo.8363642
+```
+
+Viz také `CITATION.cff`.
+
+---
 
 ## Licence
 
-Projekt je licencován podle souboru [`LICENSE`](LICENSE).
+[GPL-3.0](LICENSE)  
+© [Archeologický ústav AV ČR, Praha, v.v.i.](https://www.arup.cas.cz/)  
+© [Archeologický ústav AV ČR, Brno, v.v.i.](https://www.arub.cz/)
