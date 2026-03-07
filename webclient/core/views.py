@@ -1241,7 +1241,9 @@ def redirect_ident_view(request, ident_cely):
     try:
         object = get_record_from_ident(ident_cely)
     except Http404:
-        h = Historie.objects.select_related("vazba").filter(poznamka__icontains=ident_cely).first()
+        h = next(
+            iter(Historie.objects.select_related("vazba").filter(poznamka__icontains=ident_cely).order_by()[:1]), None
+        )
         object = h.vazba.navazany_objekt if h else None
     if object:
         try:
