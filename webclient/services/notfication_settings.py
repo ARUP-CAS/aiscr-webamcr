@@ -52,6 +52,11 @@ notification_settings = {
         "predmet": "AMČR: projekt {ident_cely} - vypršela lhůta pro odevzdání NZ | AMCR: project {ident_cely} - report submission deadline passed",
         "cesta_sablony": "emails/E-NZ-02.html",
     },
+    "E-NZ-03": {
+        "zasilat_neaktivnim": False,
+        "predmet": "AMČR: akce {ident_cely} - vypršela lhůta pro kontrolu | AMCR: action {ident_cely} - archival check deadline passed",
+        "cesta_sablony": "/emails/E-NZ-03.html",
+    },
     "E-V-01": {
         "zasilat_neaktivnim": False,
         "predmet": "AMČR: záznam {ident_cely} vrácen k doplnění | AMCR: record {ident_cely} returned for completion",

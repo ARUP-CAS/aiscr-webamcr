@@ -80,6 +80,22 @@ def send_notifications_enz():
 
 
 @shared_task
+def send_notification_enz03():
+    """
+    Kontrola a odeslání emailů E-NZ-03 pro akce čekající na archivaci déle než 90 dní.
+    """
+    try:
+        logger.debug("cron.tasks.send_notification_enz03.do.start")
+        Mailer.send_enz03()
+        logger.debug("cron.tasks.send_notification_enz03.do.end")
+    except Exception as err:
+        logger.error(
+            "cron.tasks.send_notification_enz03.do.error",
+            extra={"error": str(err), "traceback": traceback.format_exc()},
+        )
+
+
+@shared_task
 def send_notifications_en():
     """
     Každý den kontrola a odeslání emailů E-N-01 a E-N-02
