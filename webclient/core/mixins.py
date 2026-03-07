@@ -1,6 +1,6 @@
+import ipaddress
 import logging
 
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseForbidden
 
@@ -36,7 +36,10 @@ class ManyToManyRestrictedClassMixin:
 
 
 class IPWhitelistMixin:
-    """Implementuje komponentu ``IPWhitelistMixin`` v rámci aplikace."""
+    """
+    Mixin pro filtrování IP adres. Používá se pro PrometheusMetrics a HealthCheck.
+    Dovolí přístup pouze z lokálních adres.
+    """
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -48,9 +51,13 @@ class IPWhitelistMixin:
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseForbidden()``, výsledek volání ``dispatch()``.
         """
-        ALLOWED_IPS = settings.ALLOWED_HOSTS + ["127.0.0.1", "10.0.0.2"]
-        client_ip = request.META.get("REMOTE_ADDR", "")  # Get client IP
-        if client_ip not in ALLOWED_IPS and "*" not in ALLOWED_IPS:  # Ověří, že je IP adresa povolena.
-            logger.error("healthcheck.views.IPWhitelistMixin", extra={"ip": client_ip})
+        client_ip = None
+        try:
+            client_ip = ipaddress.ip_address(request.META.get("REMOTE_ADDR", ""))  # Get client IP
+            allowed = client_ip.is_loopback or client_ip.is_private or client_ip.is_link_local
+        except ValueError:
+            allowed = False
+        if not allowed:
+            logger.error("core.mixins.IPWhitelistMixin", extra={"ip": client_ip})
             return HttpResponseForbidden("Access denied: Your IP is not allowed.")  # Deny access
-        return super().dispatch(request, *args, **kwargs)  # Jinak pokračuje zpracování pohledu.
+        return super().dispatch(request, *args, **kwargs)

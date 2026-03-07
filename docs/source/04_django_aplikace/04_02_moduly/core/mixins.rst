@@ -23,7 +23,8 @@ Třídy
 
 .. py:class:: IPWhitelistMixin
 
-   Implementuje komponentu ``IPWhitelistMixin`` v rámci aplikace.
+   Mixin pro filtrování IP adres. Používá se pro PrometheusMetrics a HealthCheck.
+   Dovolí přístup pouze z lokálních adres.
 
    **Metody:**
 
