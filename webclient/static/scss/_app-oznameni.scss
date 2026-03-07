@@ -16,7 +16,7 @@
 
         a {
           &:first-child {
-            @extend .mr-4;
+            @extend .me-4 !optional;
 
             &:not(:hover) {
               img {
@@ -37,7 +37,7 @@
         }
 
         .app-flags {
-          margin-top: -5px !important;
+          padding-right: 0px;
 
           .nav-link {
             background: transparent;
@@ -50,26 +50,38 @@
             }
           }
         }
+
+        .app-theme-toggle {
+          padding-left: 0px;
+          ;
+          background: transparent;
+          border: 0;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s ease;
+
+          .material-icons {
+            font-size: 1.25rem;
+          }
+        }
       }
+    }
+
+    .oznameni-warning {
+      padding: 5px;
+      background-color: #eef7b7;
+      margin-bottom: 10px;
+      margin-top: 10px;
     }
 
     .bs-stepper {
       overflow-x: auto;
-    }
 
-    .jumbotron {
-      @extend .p-4;
-
-      h1 {
-        @extend .app-heading-thin;
-      }
-
-      .collapse {
-        p {
-          &:last-child {
-            @extend .m-0;
-          }
-        }
+      .bs-stepper-header .step {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
       }
     }
 
@@ -87,7 +99,7 @@
 
     .app-footer {
       .form-check {
-        @extend .ml-3;
+        @extend .ms-3;
         display: inline-block;
       }
 

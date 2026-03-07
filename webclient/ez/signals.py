@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
     """
     Metoda pro vytvoření historických vazeb externího zdroje.
+
     Metoda se volá pred uložením záznamu.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``create_ez_vazby``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``pk``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``create_ez_vazby``.
     """
     logger.debug("ez.signals.create_ez_vazby.start", extra={"ident_cely": instance.ident_cely})
     if instance.pk is None:
@@ -34,6 +39,13 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(post_save, sender=ExterniZdroj, weak=False)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
+    """
+    Provádí operaci externi zdroj save metadata.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``externi_zdroj_save_metadata``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``on_commit()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``externi_zdroj_save_metadata``.
+    """
     logger.debug("ez.signals.externi_zdroj_save_metadata.start", extra={"ident_cely": instance.ident_cely})
     invalidate_model(ExterniZdroj)
     if not instance.suppress_signal:
@@ -51,6 +63,13 @@ def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(pre_delete, sender=ExterniZdroj, weak=False)
 def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
+    """
+    Odstraní externi zdroj repository container.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_externi_zdroj_repository_container``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``record_deletion()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_externi_zdroj_repository_container``.
+    """
     logger.debug(
         "ez.signals.delete_externi_zdroj_repository_container.start", extra={"ident_cely": instance.ident_cely}
     )

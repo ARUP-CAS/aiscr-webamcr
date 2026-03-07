@@ -17,20 +17,25 @@ class Command(BaseCommand):
     prostřednictvím metody save_metadata.
 
     Parametry:
-        - --model: Název třídy modelu (např. Projekt, ArcheologickyZaznam). Pokud není zadán, zpracují se všechny dostupné modely
-        - --limit: Maximální počet záznamů ke zpracování
-        - --start-with-pk: Primární klíč, od kterého začít zpracování
+    - --model: Název třídy modelu (např. Projekt, ArcheologickyZaznam). Pokud není zadán, zpracují se všechny dostupné modely
+    - --limit: Maximální počet záznamů ke zpracování
+    - --start-with-pk: Primární klíč, od kterého začít zpracování
 
     Příklady použití::
 
-        python manage.py generate_metadata
-        python manage.py generate_metadata --model Projekt --limit 100
-        python manage.py generate_metadata --model Adb --start-with-pk 1000 --limit 50
+    python manage.py generate_metadata
+    python manage.py generate_metadata --model Projekt --limit 100
+    python manage.py generate_metadata --model Adb --start-with-pk 1000 --limit 50
     """
 
     help = _("core.management.commands.generate_metadata.Command.help")
 
     def add_arguments(self, parser):
+        """
+        Provádí operaci add arguments.
+
+        :param parser: Parametr ``parser`` pracuje se s atributy ``add_argument``.
+        """
         parser.add_argument(
             "--model",
             type=str,
@@ -51,6 +56,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """
+        Zpracuje hodnotu. v aplikaci.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` pracuje se s atributy ``get``.
+        """
         model_class = options.get("model")
         limit = options.get("limit")
         start_with_pk = options.get("start_with_pk")

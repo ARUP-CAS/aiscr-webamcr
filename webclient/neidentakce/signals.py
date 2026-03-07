@@ -11,6 +11,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=NeidentAkce, weak=False)
 def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
+    """
+    Provádí operaci neident akce post save.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``neident_akce_post_save``.
+    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``dokument_cast``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``neident_akce_post_save``.
+    """
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(
@@ -24,6 +31,13 @@ def neident_akce_post_save(sender, instance: NeidentAkce, **kwargs):
 
 @receiver(post_delete, sender=NeidentAkce, weak=False)
 def neident_akce_post_delete(sender, instance: NeidentAkce, **kwargs):
+    """
+    Provádí operaci neident akce post delete.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``neident_akce_post_delete``.
+    :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``dokument_cast``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``neident_akce_post_delete``.
+    """
     if instance.dokument_cast and instance.dokument_cast.dokument and not instance.suppress_signal:
         fedora_transaction = FedoraTransaction()
         transaction.on_commit(

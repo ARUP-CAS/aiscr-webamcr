@@ -17,20 +17,44 @@ register = template.Library()
 logger = logging.getLogger(__name__)
 
 
-# to get message constant for auto logout
+# Získá textovou konstantu zprávy pro automatické odhlášení.
 @register.simple_tag
 def get_message(message):
+    """
+    Vrátí bezpečně escapovaný text konstanty podle jejího názvu.
+
+    :param message: Parametr ``message`` předává se do volání ``mark_safe()``, ``str()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``mark_safe()``.
+    """
     return mark_safe("'%s'" % str(getattr(mc, message, "Message constant not found")))
 
 
 class QuerystringNodeMulti(Node):
+    """Implementuje komponentu ``QuerystringNodeMulti`` v rámci aplikace."""
+
     def __init__(self, updates, removals, asvar=None):
+        """
+        Inicializuje instanci třídy.
+
+        :param updates: Časový údaj ``updates`` použitý při filtrování nebo výpočtu.
+        :param removals: Kolekce nebo datová struktura `removals` zpracovávaná touto funkcí.
+        :param asvar: Parametr ``asvar`` slouží jako vstup pro logiku funkce ``__init__``.
+        """
         super().__init__()
         self.updates = updates
         self.removals = removals
         self.asvar = asvar
 
     def render(self, context):
+        """
+        Vyrenderuje hodnotu. v aplikaci.
+
+        :param context: Parametr ``context`` se předává do volání ``dict()``, ``resolve()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: str, proměnná ``value``.
+            :raises ImproperlyConfigured: Vyvolá se při splnění podmínky ``'request' not in context``.
+        """
         if "request" not in context:
             raise ImproperlyConfigured(context_processor_error_msg % "querystring")
 
@@ -72,16 +96,25 @@ class QuerystringNodeMulti(Node):
 @register.tag
 def querystring_multi(parser, token):
     """
-    Creates a URL (containing only the query string [including "?"]) derived
-    from the current URL's query string, by updating it with the provided
-    keyword arguments.
-    Example (imagine URL is ``/abc/?gender=male&name=Brad``)::
-        # {% querystring "name"="abc" "age"=15 %}
-        ?name=abc&gender=male&age=15
-        {% querystring "name"="Ayers" "age"=20 %}
-        ?name=Ayers&gender=male&age=20
-        {% querystring "name"="Ayers" without "gender" %}
-        ?name=Ayers
+    Provádí operaci querystring multi.
+
+    Vytvoří URL (obsahující pouze dotazový řetězec [včetně „?“]) odvozený
+    z dotazového řetězce aktuální URL, a to jeho aktualizací pomocí zadaných
+    klíčových argumentů.
+
+    Příklad (předpokládejme, že URL je „/abc/?gender=male&name=Brad“):
+    # {% querystring „name“=„abc“ „age“=15 %}
+    ?name=abc&gender=male&age=15
+    {% querystring „name“=„Ayers“ „age“=20 %}
+    ?name=Ayers&gender=male&age=20
+    {% querystring „name“=‚Ayers‘ without „gender“ %}
+    ?name=Ayers
+
+    :param parser: Parametr ``parser`` předává se do volání ``token_kwargs()``, pracuje se s atributy ``compile_filter``.
+    :param token: Textový nebo strukturální vstup `token` používaný při sestavení nebo zpracování obsahu.
+
+        :return: Vrací výsledek volání ``QuerystringNodeMulti()``.
+        :raises TemplateSyntaxError: Vyvolá se při splnění podmínky ``bits and bits.pop(0) != 'without'``.
     """
     bits = token.split_contents()
     tag = bits.pop(0)
@@ -98,17 +131,21 @@ def querystring_multi(parser, token):
     else:
         asvar = None
 
-    # ``bits`` should now be empty of a=b pairs, it should either be empty, or
-    # have ``without`` arguments.
+    # V této fázi by ``bits`` nemělo obsahovat páry a=b; buď je prázdné,
+    # nebo obsahuje argumenty za klíčovým slovem ``without``.
     if bits and bits.pop(0) != "without":
         raise TemplateSyntaxError("Malformed arguments to '%s'" % tag)
     removals = [parser.compile_filter(bit) for bit in bits]
     return QuerystringNodeMulti(updates, removals, asvar=asvar)
 
 
-# To get info about maintenance
+# Vrátí informaci o zapnutém režimu údržby.
 @register.simple_tag
 def get_maintenance():
+    """Vrací maintenance. v aplikaci.
+
+    :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    """
     if get_set_maintenance_in_cache():
         return True
     return False
@@ -116,16 +153,32 @@ def get_maintenance():
 
 @register.simple_tag
 def get_server_domain():
+    """Vrátí doménu používanou pro e-mailové odkazy.
+
+    :return: Vrací atribut objektu.
+    """
     return settings.EMAIL_SERVER_DOMAIN_NAME
 
 
 @register.simple_tag
 def get_site_url():
+    """Vrátí základní URL adresu aplikace.
+
+    :return: Vrací atribut objektu.
+    """
     return settings.SITE_URL
 
 
 @register.simple_tag
 def get_settings(item_group, item_id):
+    """
+    Vrací settings. v aplikaci.
+
+    :param item_group: Parametr ``item_group`` předává se do volání ``filter()``, ``error()``.
+    :param item_id: Identifikátor objektu ``item``.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+    """
     settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
     if settings_query.count() > 0:
         return settings_query.last().value
@@ -135,15 +188,30 @@ def get_settings(item_group, item_id):
 
 @register.simple_tag
 def message_top(forloop_counter):
-    # 65px is the height of the message incl. margin
+    """
+    Vypočítá vertikální offset pro vykreslení systémových zpráv.
+
+    :param forloop_counter: Parametr ``forloop_counter`` vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování.
+    """
+    # 65 px je výška jedné zprávy včetně okrajů.
     return forloop_counter * 65 + 15
 
 
 @register.simple_tag
 def get_datetime_now():
+    """Vrátí aktuální datum a čas ve formátu používaném v šablonách.
+
+    :return: Vrací výsledek volání ``strftime()``.
+    """
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 @register.simple_tag
 def get_test_env():
+    """Vrátí příznak testovacího prostředí.
+
+    :return: Vrací atribut objektu.
+    """
     return settings.TEST_ENV

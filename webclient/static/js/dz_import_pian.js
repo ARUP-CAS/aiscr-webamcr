@@ -23,13 +23,9 @@ const show_upload_successful_message = (file, result = UploadResultsEnum.success
         } 
         const button_element = document.createElement("button");
         button_element.setAttribute('type', 'button');
-        button_element.setAttribute('class', 'close');
-        button_element.setAttribute('data-dismiss', 'alert');
+        button_element.setAttribute('class', 'btn-close');
+        button_element.setAttribute('data-bs-dismiss', 'alert');
         button_element.setAttribute('aria-label', 'Close');
-        const span_element = document.createElement("span");
-        span_element.setAttribute('aria-hidden', 'true');
-        span_element.innerHTML = "&times;";
-        button_element.appendChild(span_element);
         alert_element.appendChild(button_element);
         message_container_element.appendChild(alert_element);
     }

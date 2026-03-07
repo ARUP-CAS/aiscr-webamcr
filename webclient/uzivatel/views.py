@@ -63,11 +63,13 @@ logger = logging.getLogger(__name__)
 
 
 class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    """
-    Třída pohledu pro získaní osob pro autocomplete.
-    """
+    """Třída pohledu pro získaní osob pro autocomplete."""
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = Osoba.objects.all()
         if self.q:
             qs = qs.filter(vypis_cely__icontains=self.q)
@@ -75,14 +77,23 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
 
 
 class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PermissionFilterMixin):
-    """
-    Třída pohledu pro získaní uživatelů pro autocomplete.
-    """
+    """Třída pohledu pro získaní uživatelů pro autocomplete."""
 
     def get_result_label(self, result):
+        """
+        Vrací result label.
+
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+
+            :return: Vrací výsledek volání ``display_name()``.
+        """
         return result.display_name(viewer=self.request.user)
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací výsledek volání ``check_filter_permission()``.
+        """
         qs = User.objects.select_related("organizace")
 
         if self.q:
@@ -105,9 +116,25 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         return self.check_filter_permission(qs)
 
     def add_accessibility_lookup(self, permission, qs):
+        """
+        Provádí operaci add accessibility lookup.
+
+        :param permission: Parametr ``permission`` slouží jako vstup pro logiku funkce ``add_accessibility_lookup``.
+        :param qs: Parametr ``qs`` vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``qs``.
+        """
         return qs
 
     def add_ownership_lookup(self, ownership, qs=None):
+        """
+        Provádí operaci add ownership lookup.
+
+        :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+        :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
+
+            :return: Vrací výsledek volání ``Q()``.
+        """
         return Q()
 
 
@@ -117,9 +144,20 @@ class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySe
     """
 
     def get_result_label(self, result):
+        """
+        Vrací result label.
+
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+
+            :return: Vrací výsledek volání ``display_name()``.
+        """
         return result.display_name()
 
     def get_queryset(self):
+        """Vrací queryset. v aplikaci.
+
+        :return: Vrací proměnná ``qs``.
+        """
         qs = User.objects.all().select_related("organizace").order_by("ident_cely")
         if self.q:
             qs = qs.filter(Q(ident_cely__icontains=self.q) | Q(organizace__nazev_zkraceny__icontains=self.q))
@@ -131,6 +169,10 @@ class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySe
 def create_osoba(request):
     """
     Funkce pohledu pro vytvoření osoby.
+
+    :param request: Parametr ``request`` se předává do volání ``OsobaForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``JsonResponse()``.
     """
     if request.method == "POST":
         form = OsobaForm(request.POST)
@@ -157,7 +199,7 @@ def create_osoba(request):
                 messages.add_message(request, messages.WARNING, OSOBA_JIZ_EXISTUJE)
                 return render(request, "uzivatel/create_osoba.html", {"form": form})
 
-            # return JSON response to update dropdown and select and message
+            # Vrátí JSON odpověď pro aktualizaci rozbalovací nabídky, výběru a zprávy.
             django_messages = []
             for message in messages.get_messages(request):
                 django_messages.append(
@@ -185,14 +227,17 @@ def create_osoba(request):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class UserRegistrationView(RegistrationView):
-    """
-    Třída pohledu pro registraci uživatele.
-    """
+    """Třída pohledu pro registraci uživatele."""
 
     form_class = AuthUserCreationFormWithRecaptcha
     success_url = reverse_lazy("django_registration_complete")
 
     def send_activation_email(self, user):
+        """
+        Odešle activation email.
+
+        :param user: Parametr ``user`` se předává do volání ``send_activation_email()``, ``_log_notification()``, pracuje se s atributy ``email``.
+        """
         try:
             super().send_activation_email(user)
             notification_type = UserNotificationType.objects.get(ident_cely="E-U-01")
@@ -209,19 +254,24 @@ class UserRegistrationView(RegistrationView):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class UserLoginView(LoginView):
-    """
-    Třída pohledu pro prihlášení uživatele.
-    """
+    """Třída pohledu pro prihlášení uživatele."""
 
     authentication_form = AuthUserLoginForm
 
 
 class UserLogoutView(LogoutView):
-    """
-    Třída pohledu pro odhlášení uživatele, kvůli zobrazení info o logoutu
-    """
+    """Třída pohledu pro odhlášení uživatele, kvůli zobrazení info o logoutu"""
 
     def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``post()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``post()``.
+        """
         if request.POST.get("logout_type") == "autologout":
             logger.debug("message added")
             messages.add_message(self.request, messages.SUCCESS, AUTOLOGOUT_AFTER_LOGOUT)
@@ -231,19 +281,31 @@ class UserLogoutView(LogoutView):
 
 
 class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    """
-    Třída pohledu pro editaci uživatele.
-    """
+    """Třída pohledu pro editaci uživatele."""
 
     model = User
     form_class = AuthUserChangeForm
     template_name = "uzivatel/update_user.html"
 
     def get_object(self, queryset=None):
+        """
+        Vrací object. v aplikaci.
+
+        :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``get_object``.
+
+            :return: Vrací výsledek volání ``get()``.
+        """
         user_pk = self.request.user.pk
         return User.objects.get(pk=user_pk)
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         self.object = self.get_object()
         context = super().get_context_data(**kwargs)
         context["form"] = self.form_class(instance=self.request.user)
@@ -259,6 +321,13 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
         return context
 
     def _change_password(self, request, request_data):
+        """
+               Provádí operaci change password.
+
+               :param request: Parametr ``request`` předává se do volání ``Historie()``, ``add_message()``, pracuje se s atributy ``user``.
+               :param request_data: Kolekce ``request_data`` zpracovávaná touto funkcí.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         form = UpdatePasswordSettings(request_data, instance=self.request.user, prefix="pass")
         if form.is_valid():
             Historie(
@@ -279,16 +348,33 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
             return self.invalid_form_context(form, "form_password")
 
     def invalid_form_context(self, form, form_tag="form"):
-        # Attribute "object" needs to exist.
-        # This is because Django's get_context_data() function uses the object to pass it into the context.
+        # Atribut "object" musí existovat.
+        # Důvod: Django `get_context_data()` používá objekt pro jeho předání do contextu.
+        """
+        Provádí operaci invalid form context.
+
+        :param form: Parametr ``form`` slouží jako vstup pro logiku funkce ``invalid_form_context``.
+        :param form_tag: Parametr ``form_tag`` slouží jako vstup pro logiku funkce ``invalid_form_context``.
+
+            :return: Vrací proměnná ``context``.
+        """
         self.object = None
         context = self.get_context_data()
-        # Update context with need form instances which contain form validation errors.
+        # Doplní context o potřebné instance formulářů obsahující validační chyby.
         context[form_tag] = form
         return context
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``dict()``, ``form_class()``, pracuje se s atributy ``POST``, ``user``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
+        """
         request_data = dict(request.POST)
         logger.debug("uzivatel.views.UserAccountUpdateView.post.start")
         form = self.form_class(data=request.POST, instance=self.request.user)
@@ -336,6 +422,10 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 def update_notifications(request):
     """
     Funkce pohledu pro editaci notifikací.
+
+    :param request: Parametr ``request`` se předává do volání ``NotificationsForm()``, ``FedoraTransaction()``, pracuje se s atributy ``POST``, ``user``.
+
+        :return: Vrací výsledek volání ``redirect()``.
     """
     from services.mailer import NOTIFICATION_GROUPS
 
@@ -359,19 +449,32 @@ def update_notifications(request):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class UserActivationView(ActivationView):
-    """
-    Třída pohledu pro aktivaci uživatele.
-    """
+    """Třída pohledu pro aktivaci uživatele."""
 
     form_class = AuthActivationForm
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+               Provádí operaci dispatch.
+
+               :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
+               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         return super().dispatch(request, *args, **kwargs)
 
     def activate(self, form):
+        """
+        Provádí operaci activate.
+
+        :param form: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
+
+            :return: Vrací proměnná ``user``.
+        """
         username = form.cleaned_data["activation_key"]
         user = self.get_user(username)
-        # User must by activated manually by an administrator of the system
+        # Uživatel musí být aktivován ručně administrátorem systému.
         user.is_active = False
         user.save()
         for notification in UserNotificationType.objects.filter(
@@ -398,28 +501,48 @@ class UserActivationView(ActivationView):
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class UserPasswordResetView(PasswordResetView):
-    """
-    Třída pohledu pro resetování hesla.
-    """
+    """Třída pohledu pro resetování hesla."""
 
     form_class = UserPasswordResetForm
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+               Provádí operaci dispatch.
+
+               :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
+               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         return super().dispatch(request, *args, **kwargs)
 
 
 @method_decorator(odstavka_in_progress, name="dispatch")
 class TokenAuthenticationBearer(TokenAuthentication):
-    """
-    Override třídy pro nastavení názvu tokenu na Bearer.
-    """
+    """Override třídy pro nastavení názvu tokenu na Bearer."""
 
     keyword = "Bearer"
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """
+               Provádí operaci dispatch.
+
+               :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
+               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         return super().dispatch(request, *args, **kwargs)
 
     def authenticate_credentials(self, key):
+        """
+        Provádí operaci authenticate credentials.
+
+        :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
+
+            :return: Vrací n-tici.
+            :raises exceptions.AuthenticationFailed: Vyvolá se při zpracování zachycené výjimky typu ``model.DoesNotExist``; nebo při splnění podmínky ``not token.user.is_active``.
+        """
         model = self.get_model()
         try:
             token = model.objects.select_related("user").get(key=key)
@@ -436,9 +559,7 @@ class TokenAuthenticationBearer(TokenAuthentication):
 
 
 class MyXMLRenderer(BaseRenderer):
-    """
-    Override třídy pro nastavení správnych tagů.
-    """
+    """Override třídy pro nastavení správnych tagů."""
 
     media_type = "application/xml"
     format = "xml"
@@ -447,15 +568,19 @@ class MyXMLRenderer(BaseRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """
         Renders `data` into serialized XML.
+
+        :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+        :param accepted_media_type: Parametr ``accepted_media_type`` slouží jako vstup pro logiku funkce ``render``.
+        :param renderer_context: Kolekce ``renderer_context`` zpracovávaná touto funkcí.
+
+            :return: Vrací proměnná ``data``.
         """
         return data
 
 
 @method_decorator(odstavka_in_progress, name="get")
 class GetUserInfo(APIView):
-    """
-    Třída podlehu pro získaní základních info o uživately.
-    """
+    """Třída podlehu pro získaní základních info o uživately."""
 
     authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [IsAuthenticated]
@@ -467,14 +592,37 @@ class GetUserInfo(APIView):
     ]
 
     def get(self, request, format=None):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``.
+        :param format: Parametr ``format`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``Response()``.
+        """
         user = request.user
         return Response(user.metadata)
 
     def handle_exception(self, exc):
+        """
+        Zpracuje exception. v aplikaci.
+
+        :param exc: Číselná hodnota ``exc`` použitá při výpočtu nebo transformaci.
+
+            :return: Vrací výsledek volání ``handle_exception()``.
+        """
         self.is_exception = True
         return super().handle_exception(exc)
 
     def perform_content_negotiation(self, request, force=False):
+        """
+        Provádí operaci perform content negotiation.
+
+        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
+        :param force: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
+        """
         try:
             self.is_exception
             return JSONRenderer(), JSONRenderer.media_type
@@ -482,6 +630,16 @@ class GetUserInfo(APIView):
             return super().perform_content_negotiation(request, force)
 
     def finalize_response(self, request, response, *args, **kwargs):
+        """
+        Provádí operaci finalize response.
+
+        :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
+        :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
+        :param args: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``finalize_response()``.
+        """
         try:
             self.is_exception
             neg = self.perform_content_negotiation(request, force=True)
@@ -492,11 +650,18 @@ class GetUserInfo(APIView):
 
 @method_decorator(odstavka_in_progress, name="post")
 class ObtainAuthTokenWithUpdate(ObtainAuthToken):
-    """
-    Třída pohledu pro získaní tokenu pro API.
-    """
+    """Třída pohledu pro získaní tokenu pro API."""
 
     def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``Response()``.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
@@ -507,24 +672,40 @@ class ObtainAuthTokenWithUpdate(ObtainAuthToken):
                     Token.objects.filter(user=user).delete()
                     token = Token.objects.create(user=user)
             except IntegrityError:
-                # pokud mezitím druhý request token vytvořil,
-                # jen si ho načteme
+                # Pokud mezitím druhý request token vytvořil,
+                # jen si ho načteme.
                 token = Token.objects.get(user=user)
         return Response({"token": token.key})
 
 
 class UserDeleteRequest(LoginRequiredMixin, UpdateView):
-    """
-    Třída pohledu pro požádání o smazání účtu
-    """
+    """Třída pohledu pro požádání o smazání účtu"""
 
     def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``send_eu07()``, ``add_message()``, pracuje se s atributy ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         user: User = request.user
         Mailer.send_eu07(user, request)
         messages.add_message(request, messages.SUCCESS, ZADOST_SMAZANI_UZIVATELE_SUCCESS)
         return JsonResponse({"redirect": reverse("uzivatel:update-uzivatel")})
 
     def get(self, request, *args, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``render()``.
+        """
         context = {
             "title": _("uzivatel.views.UserDeleteRequest.title.text"),
             "id_tag": "user-delete-request-dialog",

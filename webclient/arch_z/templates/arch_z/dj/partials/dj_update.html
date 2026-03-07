@@ -18,7 +18,7 @@
             </a>
           {% endif %}
           {% if j.show_import_pian_new %}
-            <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian">
+            <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#importovat_pian">
               {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPianNew.label" %}
             </button>
           {% endif %}
@@ -45,8 +45,8 @@
             </a>
           {% endif %}
         </div>
-        <button class="btn" type="button" id="add_others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                aria-expanded="false" rel="tooltip" data-placement="top"
+        <button class="btn" type="button" id="add_others" type="button" data-bs-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false" rel="tooltip" data-bs-placement="top"
                 title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridat.label' %}">
           <span class="material-icons">add</span>
         </button>
@@ -61,7 +61,7 @@
               </a>
             {% endif %}
             {% if j.show_import_pian_change %}
-              <button class="dropdown-item" data-toggle="modal" data-target="#importovat_pian" data-action-id="change">
+              <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#importovat_pian" data-action-id="change">
                 {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.importovatPianChange.label" %}
               </button>
             {% endif %}
@@ -105,8 +105,8 @@
               </button>
             {% endif %}
           </div>
-          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                  aria-expanded="false" rel="tooltip" data-placement="top"
+          <button class="btn" type="button" id="others" type="button" data-bs-toggle="dropdown" aria-haspopup="true"
+                  aria-expanded="false" rel="tooltip" data-bs-placement="top"
                   title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.dalsiNabidka.label' %}">
             <span class="material-icons">more_vert</span>
           </button>

@@ -16,6 +16,10 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+      :return: Vrací proměnná ``context``.
+
 
 .. py:class:: ExterniZdrojListView
 
@@ -25,11 +29,30 @@ Třídy
 
    .. py:method:: init_translations()
 
+      Provádí operaci init translations.
+
    .. py:method:: rename_field_for_ordering()
+
+      Provádí operaci rename field for ordering.
+
+      :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_queryset()
 
+      Vrací queryset. v aplikaci.
+
+      :return: Vrací výsledek volání ``check_filter_permission()``.
+
    .. py:method:: add_accessibility_lookup()
+
+      Provádí operaci add accessibility lookup.
+
+      :param permission: Parametr ``permission`` slouží jako vstup pro logiku funkce ``add_accessibility_lookup``.
+      :param qs: Parametr ``qs`` vstupuje do návratové hodnoty.
+
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: ExterniZdrojDetailView
@@ -40,6 +63,12 @@ Třídy
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+      :return: Vrací proměnná ``context``.
+
 
 .. py:class:: ExterniZdrojCreateView
 
@@ -49,13 +78,43 @@ Třídy
 
    .. py:method:: get_form_kwargs()
 
+      Vrací form kwargs.
+
+      :return: Vrací proměnná ``kwargs``.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: form_valid()
 
+      Provádí operaci form valid.
+
+      :param form: Parametr ``form`` se předává do volání ``save_autor_editor()``, ``form_invalid()``, pracuje se s atributy ``save``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseRedirect()``, výsledek volání ``form_invalid()``.
+
    .. py:method:: form_invalid()
 
+      Provádí operaci form invalid.
+
+      :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``form_invalid()``.
+
    .. py:method:: get()
+
+      Vrací výsledek operace.
+
+      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``get()``.
 
 
 .. py:class:: ExterniZdrojEditView
@@ -66,15 +125,53 @@ Třídy
 
    .. py:method:: get_form_kwargs()
 
+      Vrací form kwargs.
+
+      :return: Vrací proměnná ``kwargs``.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: form_valid()
 
+      Provádí operaci form valid.
+
+      :param form: Parametr ``form`` se předává do volání ``save_autor_editor()``, pracuje se s atributy ``save``.
+
+      :return: Vrací výsledek volání ``HttpResponseRedirect()``.
+
    .. py:method:: form_invalid()
+
+      Provádí operaci form invalid.
+
+      :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``form_invalid()``.
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``get()``.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``post()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``post()``.
 
 
 .. py:class:: TransakceView
@@ -85,15 +182,51 @@ Třídy
 
    .. py:method:: init_translation()
 
+      Provádí operaci init translation.
+
    .. py:method:: get_zaznam()
+
+      Vrací zaznam. v aplikaci.
+
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+      :return: Vrací proměnná ``context``.
+
    .. py:method:: dispatch()
+
+      Provádí operaci dispatch.
+
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``check_stav_changed()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``dispatch()``.
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací výsledek volání ``render_to_response()``.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, pracuje se s atributy ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ExterniZdrojOdeslatView
@@ -104,6 +237,8 @@ Třídy
 
    .. py:method:: init_translation()
 
+      Provádí operaci init translation.
+
 
 .. py:class:: ExterniZdrojPotvrditView
 
@@ -113,7 +248,17 @@ Třídy
 
    .. py:method:: init_translation()
 
+      Provádí operaci init translation.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, pracuje se s atributy ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ExterniZdrojSmazatView
@@ -124,7 +269,17 @@ Třídy
 
    .. py:method:: init_translation()
 
+      Provádí operaci init translation.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, ``add_message()``, pracuje se s atributy ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ExterniZdrojVratitView
@@ -135,9 +290,27 @@ Třídy
 
    .. py:method:: init_translation()
 
+      Provádí operaci init translation.
+
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací výsledek volání ``render_to_response()``.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, ``VratitForm()``, pracuje se s atributy ``user``, ``POST``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
 
 
 .. py:class:: ExterniOdkazOdpojitView
@@ -148,11 +321,34 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :return: Výstup funkce odpovídající implementované logice.
+
    .. py:method:: init_translation()
+
+      Provádí operaci init translation.
 
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, pracuje se s atributy ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ExterniOdkazPripojitView
@@ -163,9 +359,25 @@ Třídy
 
    .. py:method:: init_translation()
 
+      Provádí operaci init translation.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``PripojitArchZaznamForm()``, ``create_transaction()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ExterniOdkazEditView
@@ -176,17 +388,60 @@ Třídy
 
    .. py:method:: dispatch()
 
+      Provádí operaci dispatch.
+
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :return: Výstup funkce odpovídající implementované logice.
+
    .. py:method:: get_context_data()
+
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
 
    .. py:method:: get_success_url()
 
+      Vrací success url.
+
+      :return: Vrací proměnná ``response``.
+
    .. py:method:: get_object()
+
+      Vrací object. v aplikaci.
+
+      :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``get_object``.
+
+      :return: Vrací proměnná ``object``.
 
    .. py:method:: post()
 
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, ``post()``, pracuje se s atributy ``user``.
+      :param args: Parametr ``args`` se předává do volání ``post()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
+
    .. py:method:: form_valid()
 
+      Provádí operaci form valid.
+
+      :param form: Parametr ``form`` se předává do volání ``form_valid()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``form_valid()``.
+
    .. py:method:: form_invalid()
+
+      Provádí operaci form invalid.
+
+      :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+
+      :return: Vrací výsledek volání ``form_invalid()``.
 
 
 .. py:class:: ExterniOdkazOdpojitAZView
@@ -197,13 +452,40 @@ Třídy
 
    .. py:method:: init_translation()
 
+      Provádí operaci init translation.
+
    .. py:method:: dispatch()
+
+      Provádí operaci dispatch.
+
+      :param request: Parametr ``request`` předává se do volání ``add_message()``, ``dispatch()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: get_zaznam()
 
+      Vrací zaznam. v aplikaci.
+
+      :return: Vrací výsledek volání ``get_object_or_404()``.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, pracuje se s atributy ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ExterniZdrojAutocomplete
@@ -214,9 +496,26 @@ Třídy
 
    .. py:method:: get_result_label()
 
+      Vrací result label.
+
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+
+      :return: Vrací hodnotu podle větve zpracování.
+
    .. py:method:: get_queryset()
 
+      Vrací queryset. v aplikaci.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
+
    .. py:method:: add_accessibility_lookup()
+
+      Provádí operaci add accessibility lookup.
+
+      :param permission: Parametr ``permission`` slouží jako vstup pro logiku funkce ``add_accessibility_lookup``.
+      :param qs: Parametr ``qs`` vstupuje do návratové hodnoty.
+
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: ExterniZdrojTableRowView
@@ -227,6 +526,12 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
+
+      :return: Vrací výsledek volání ``HttpResponse()``.
+
 
 .. py:class:: ExterniOdkazPripojitDoAzView
 
@@ -236,9 +541,27 @@ Třídy
 
    .. py:method:: get_zaznam()
 
+      Vrací zaznam. v aplikaci.
+
+      :return: Vrací proměnná ``zaznam``.
+
    .. py:method:: get_context_data()
 
+      Vrací context data.
+
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      :return: Vrací proměnná ``context``.
+
    .. py:method:: post()
+
+      Obsluhuje HTTP metodu POST.
+
+      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, ``PripojitExterniOdkazForm()``, pracuje se s atributy ``user``, ``POST``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: EzOdkazyTableView
@@ -249,6 +572,13 @@ Třídy
 
    .. py:method:: get()
 
+      Vrací výsledek operace.
+
+      :param request: Parametr ``request`` předává se do volání ``check_permissions()``, pracuje se s atributy ``GET``, ``user``.
+      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``.
+
+      :return: Vrací výsledek volání ``HttpResponse()``.
+
 
 Funkce
 ------
@@ -257,24 +587,27 @@ Funkce
 
    Funkce pro získaní historických datumu.
 
+   :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+   :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+   :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
+
 .. py:function:: get_detail_template_shows(zaznam, user)
 
    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
+
+   :param zaznam: Parametr ``zaznam`` předává se do volání ``check_permissions()``, pracuje se s atributy ``stav``, ``ident_cely``.
+   :param user: Parametr ``user`` se předává do volání ``check_permissions()``.
+   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
 
 .. py:function:: get_required_fields()
 
    Funkce pro získaní dictionary povinných polí podle stavu externího zdroje.
 
-
-   **Argumenty:**
-
-   - ``zaznam`` (*Externí zdroj*): model ExterniZdroj pro který se dané pole počítají.
-   - ``next`` (*int*): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
-
-   **Návratová hodnota:**
-
-   *required_fields*: list polí.
+   :return: Vrací proměnná ``required_fields``.
 
 .. py:function:: save_autor_editor(zaznam, form)
 
    Funkce pro uložení autorů a editorů k externímu zdroji podle toho v jakém pořadí byly zadáni.
+
+   :param zaznam: Parametr ``zaznam`` předává se do volání ``create()``.
+   :param form: Parametr ``form`` pracuje se s atributy ``cleaned_data``.

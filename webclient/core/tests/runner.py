@@ -17,31 +17,48 @@ TYP_DJ_CELEK_AKCE_ID = ""
 
 
 class CustomTextTestResult(unittest.runner.TextTestResult):
-    """Extension of TextTestResult to support numbering test cases"""
+    """Rozšíření třídy TextTestResult s podporou číslování testovacích případů."""
 
     def __init__(self, stream, descriptions, verbosity):
-        """Initializes the test number generator, then calls super impl"""
+        """Inicializuje generátor čísel testů a poté zavolá implementaci předka.
+
+        :param stream: Parametr ``stream`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
+        :param descriptions: Parametr ``descriptions`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
+        :param verbosity: Parametr ``verbosity`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
+        :return: Vrací výsledek volání ``__init__()``.
+        """
 
         self.test_numbers = itertools.count(1)
 
         return super(CustomTextTestResult, self).__init__(stream, descriptions, verbosity)
 
     def startTest(self, test):
-        """Writes the test number to the stream if showAll is set, then calls super impl"""
+        """
+        Pokud je showAll zapnuto, zapíše číslo testu do výstupu a poté zavolá implementaci předka.
+
+        :param test: Test case nebo testovací objekt, se kterým runner pracuje.
+
+            :return: Vrací výsledek volání ``startTest()``.
+        """
 
         if True:  # self.showAll:
             progress = "[{0}/{1}] ".format(next(self.test_numbers), self.test_case_count)
             self.stream.write(progress)
 
-            # Also store the progress in the test itself, so that if it errors,
-            # it can be written to the exception information by our overridden
-            # _exec_info_to_string method:
+            # Průběh ukládá i do samotného testu, aby se při chybě
+            # mohl propsat do informací o výjimce v našem přepsaném runneru.
+            # metoda _exec_info_to_string:
             test.progress_index = progress
 
         return super(CustomTextTestResult, self).startTest(test)
 
     def _exc_info_to_string(self, err, test):
-        """Gets an exception info string from super, and prepends 'Test Number' line"""
+        """Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu.
+
+        :param err: Parametr ``err`` předává se do volání ``_exc_info_to_string()``.
+        :param test: Parametr ``test`` předává se do volání ``_exc_info_to_string()``, ``format()``, pracuje se s atributy ``progress_index``.
+        :return: Vrací proměnná ``info``.
+        """
 
         info = super(CustomTextTestResult, self)._exc_info_to_string(err, test)
 
@@ -52,18 +69,28 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
 
 
 class CustomTextTestRunner(unittest.runner.TextTestRunner):
-    """Extension of TextTestRunner to support numbering test cases"""
+    """Rozšíření třídy TextTestRunner s podporou číslování testovacích případů."""
 
     resultclass = CustomTextTestResult
 
     def run(self, test):
-        """Stores the total count of test cases, then calls super impl"""
+        """
+        Spustí hodnotu. v aplikaci.
+
+        :param test: Test case nebo testovací objekt, se kterým runner pracuje.
+
+            :return: Vrací výsledek volání ``run()``.
+        """
 
         self.test_case_count = test.countTestCases()
         return super(CustomTextTestRunner, self).run(test)
 
     def _makeResult(self):
-        """Creates and returns a result instance that knows the count of test cases"""
+        """
+               Provádí operaci makeResult.
+
+        :return: Výstup funkce odpovídající implementované logice.
+        """
 
         result = super(CustomTextTestRunner, self)._makeResult()
         result.test_case_count = self.test_case_count
@@ -71,11 +98,27 @@ class CustomTextTestRunner(unittest.runner.TextTestRunner):
 
 
 class AMCRSeleniumTestRunner(BaseRunner):
+    """Implementuje komponentu ``AMCRSeleniumTestRunner`` v rámci aplikace."""
+
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(AMCRSeleniumTestRunner, self).__init__(*args, **kwargs)
         self.test_runner = CustomTextTestRunner
 
     def setup_databases(self, *args, **kwargs):
+        """
+        Provádí operaci setup databases.
+
+        :param args: Parametr ``args`` se předává do volání ``setup_databases()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``setup_databases()``.
+
+            :return: Vrací proměnná ``temp_return``.
+        """
         self.keepdb = True
         temp_return = super().setup_databases(*args, **kwargs)
         return temp_return
@@ -83,4 +126,10 @@ class AMCRSeleniumTestRunner(BaseRunner):
     def teardown_databases(self, *args, **kwargs):
         # do somthing
         # return super().teardown_databases(*args, **kwargs)
+        """
+        Provádí operaci teardown databases.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``teardown_databases``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``teardown_databases``.
+        """
         pass

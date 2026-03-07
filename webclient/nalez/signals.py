@@ -14,6 +14,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_delete, sender=NalezObjekt, weak=False)
 def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
+    """
+    Odstraní nalez objekt.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_nalez_objekt``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``hasattr()``, pracuje se s atributy ``pk``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_nalez_objekt``.
+    """
     logger.debug("nalez.signals.delete_nalez_objekt.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
     if not hasattr(instance, "active_transaction") or not hasattr(instance, "close_active_transaction_when_finished"):
@@ -61,6 +68,13 @@ def delete_nalez_objekt(sender, instance: NalezObjekt, **kwargs):
 
 @receiver(post_delete, sender=NalezPredmet, weak=False)
 def delete_nalez_predmet(sender, instance: NalezObjekt, **kwargs):
+    """
+    Odstraní nalez predmet.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_nalez_predmet``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``hasattr()``, pracuje se s atributy ``pk``, ``active_transaction``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_nalez_predmet``.
+    """
     logger.debug("nalez.signals.delete_nalez_predmet.start", extra={"pk": instance.pk})
     invalidate_arch_z_related_models()
     if not hasattr(instance, "active_transaction") or not hasattr(instance, "close_active_transaction_when_finished"):

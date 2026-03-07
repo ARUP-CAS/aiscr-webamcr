@@ -310,7 +310,7 @@ Přehled testů
 
    * - 027
      - oznameni
-     - | \-
+     - 
      -
        .. raw:: html
        
@@ -4772,7 +4772,8 @@ Uživatelské kroky
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
 
-- Po kliknutí na tlačítko Zapsat se objeví nápověda u pole autoři “Vyberte prosím v seznamu některou položku”
+- Formulář se neuloží a zobrazí validaci u pole Autoři.
+- U pole Autoři se zobrazí nápověda „Vyberte prosím v seznamu některou položku“.
 
 Stav testu
 ^^^^^^^^^^
@@ -6537,7 +6538,7 @@ Oznámení projektu stavebníkem
 Uživatelská role
 ^^^^^^^^^^^^^^^^
 
-\-
+-
 
 Předpoklady
 ^^^^^^^^^^^
@@ -7016,13 +7017,13 @@ test1.jpg
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
 
-- Vytvoření PAS
-- Editace PAS
+- Vytvoření záznamu PAS
+- Editace záznamu PAS
 - Vytvoření souboru
-- Reload soubor
+- Reload souboru
 - Smazání souboru
-- Editace Uložení
-- Smazání PAS
+- Editace záznamu Uložení
+- Smazání záznamu PAS
 
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
@@ -7158,13 +7159,13 @@ Uživatelské kroky
 1. Uživatel klikne na menu Projekty -> Vybrat projekty
 2. Uživatel kliká na záhlaví jednotlivých sloupců
 3. Uživatel skryje a znovu zobrazí jednotlivé sloupce pomocí výsuvného
-   menu
+menu
 
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
 
 1. Po kliknutí na název sloupce je do adresy stránky přidán řetězec
-   ``sort=sloupec``
+``sort=sloupec``
 2. Po skrytí sloupce zmizí název sloupce ze záhlaví
 3. Po zobrazení sloupce je sloupec v záhlaví tabulky
 
@@ -7201,33 +7202,23 @@ Testovací data
 | Field                 | Value                                       |
 +=======================+=============================================+
 | typ_projektu          | záchranný                                   |
-+-----------------------+---------------------------------------------+
 | id_podnet             | test                                        |
-+-----------------------+---------------------------------------------+
 | id_lokalizace         | test                                        |
-+-----------------------+---------------------------------------------+
 | id_parcelni_cislo     | test                                        |
-+-----------------------+---------------------------------------------+
 | id_planovane_zahajeni | dynamicky vložené datum (dnes + dva dny až  |
 |                       | dnes + pět dní)                             |
-+-----------------------+---------------------------------------------+
 | id_oznamovatel        | test                                        |
-+-----------------------+---------------------------------------------+
 | id_odpovedna_osoba    | test                                        |
-+-----------------------+---------------------------------------------+
 | id_adresa             | test                                        |
-+-----------------------+---------------------------------------------+
 | id_telefon            | +420123456789                               |
-+-----------------------+---------------------------------------------+
 | id_email              | test@example.com                            |
-+-----------------------+---------------------------------------------+
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
 
 1. Uživatel klikne na menu Projekty -> Zapsat
 2. Uživatel vyplní data do formuláře a kliknutím na mapu vybere hlavní
-   katastr
+katastr
 3. Uživatel klikne na tlačítko Uložit
 
 Očekávané výsledky
@@ -7281,7 +7272,8 @@ Archivář schválí projekt.
 Očekávané výsledky
 ^^^^^^^^^^^^^^^^^^
 
--  Změní se označení projektu.
+- Projekt přejde do schváleného stavu a aktualizuje se jeho identifikátor.
+- Odešle se notifikační e-mail po schválení projektu.
 
 Stav testu
 ^^^^^^^^^^
@@ -7313,9 +7305,7 @@ Testovací data
 
 ================= =====================================
 Field ID          Value
-================= =====================================
 id_datum_zahajeni (date calculated: -5 days from today)
-================= =====================================
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7358,9 +7348,7 @@ Testovací data
 
 ================= =====================================
 Field ID          Value
-================= =====================================
 id_datum_ukonceni (date calculated: -1 days from today)
-================= =====================================
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7403,9 +7391,7 @@ Testovací data
 
 ================= =====================================
 Field ID          Value
-================= =====================================
 id_datum_ukonceni (date calculated: 90 days from today)
-================= =====================================
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7563,7 +7549,7 @@ Předpoklady
 
 -  Uživatel je přihlášen.
 -  Existuje projekt ve stavu A5, který má nearchivovanou projektovou
-   akci.
+akci.
 
 Testovací data
 ^^^^^^^^^^^^^^
@@ -7611,9 +7597,7 @@ Testovací data
 
 ========= =====
 Field ID  Value
-========= =====
 id_reason test
-========= =====
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7655,9 +7639,7 @@ Testovací data
 
 ========= =====
 Field ID  Value
-========= =====
 id_reason test
-========= =====
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7699,9 +7681,7 @@ Testovací data
 
 ========= =====
 Field ID  Value
-========= =====
 id_reason test
-========= =====
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7743,9 +7723,7 @@ Testovací data
 
 ========= =====
 Field ID  Value
-========= =====
 id_reason test
-========= =====
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7787,9 +7765,7 @@ Testovací data
 
 ========= =====
 Field ID  Value
-========= =====
 id_reason test
-========= =====
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7831,9 +7807,7 @@ Testovací data
 
 ======== ==========
 Field ID Value
-======== ==========
 reason   item no. 2
-======== ==========
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7875,10 +7849,8 @@ Testovací data
 
 ============= ==========
 Field ID      Value
-============= ==========
 reason        item no. 1
 id_projekt_id test
-============= ==========
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7920,9 +7892,7 @@ Testovací data
 
 ======== ==========
 Field ID Value
-======== ==========
 reason   item no. 2
-======== ==========
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -7965,9 +7935,7 @@ Testovací data
 
 ============== =====
 Field ID       Value
-============== =====
 id_reason_text test
-============== =====
 
 Uživatelské kroky
 ^^^^^^^^^^^^^^^^^
@@ -8054,8 +8022,8 @@ Uživatelské kroky
 - Update - projekt
 - Update oznamovatel
 - Smazat soubor v projektu
-- Vytvoření soubor
-- Vytvoření projektová akce
+- Vytvoření souboru
+- Vytvoření projektové akce
 - Změna přístupnosti Akce
 - Smazání projektové Akce
 - Smazání projektu
@@ -8099,10 +8067,10 @@ Uživatelské kroky
 - Schválení projektu - změna ident-cely projektu
 - Vytvoření průzkumného projektu
 - Vytvoření části dokumentu projektu
-- Vytvoření PAS
+- Vytvoření záznamu PAS
 - Změna přístupnosti PAS
 - Smazání části dokumentu
-- Smazání PAS
+- Smazání záznamu PAS
 - Smazání projektu
 - Znovu vytvoření PAS
 - Vytvoření části dokumentu - existující dokument

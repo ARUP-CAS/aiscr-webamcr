@@ -40,6 +40,8 @@ services:
       - locale_data:/vol/web/locale
     command:  
       - client
+    networks:
+      - prod-net
 
   redis:
     image: ${redis_image}
@@ -69,6 +71,8 @@ services:
       - redis_host
     depends_on:
       - redis
+    networks:
+      - prod-net
     entrypoint: [ '/bin/sh', '-c', 'export REDIS_ADDR=$$(cat /var/run/secrets/redis_host) ; export REDIS_PASSWORD=$$(cat /run/secrets/redis_pass) ; /redis_exporter' ]
 
 
@@ -170,7 +174,7 @@ services:
       - "--web.enable-admin-api"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:9.3.0
+    image: docker.elastic.co/logstash/logstash:9.3.1
     restart: always
     environment:
       - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
@@ -185,7 +189,7 @@ services:
       - logstash_elastic_host
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.1
     hostname: elasticsearch
     restart: always
     environment:
@@ -211,7 +215,7 @@ services:
           memory: "2G"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.0
+    image: docker.elastic.co/kibana/kibana:9.3.1
     restart: always
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
@@ -247,6 +251,8 @@ services:
       - "--docker_only=true"
     ports:
       - "8088:8080"
+    networks:
+      - prod-net
     restart: always
 
   postgresql_exporter:

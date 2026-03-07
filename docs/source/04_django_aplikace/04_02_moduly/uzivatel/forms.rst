@@ -14,14 +14,24 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``, pracuje se s atributy ``get``.
+
 
 .. py:class:: AuthUserCreationFormWithRecaptcha
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AuthUserCreationFormWithRecaptcha`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: AuthUserChangeForm
@@ -32,6 +42,11 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: AuthReadOnlyUserChangeForm
 
@@ -41,14 +56,24 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: AuthUserChangeAdminForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AuthUserChangeAdminForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``, ``OrcidAutocompleteField()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: NotificationsForm
@@ -64,7 +89,16 @@ Třídy
 
    .. py:method:: clean()
 
+      Provádí operaci clean.
+
+      :raises ValidationError: Vyvolá se při splnění podmínky ``not old_password and (password1 or password2)``; nebo při splnění podmínky ``old_password and (not (password1 or password2))``.
+
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: AuthUserLoginForm
@@ -75,20 +109,41 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
    .. py:method:: get_invalid_login_error()
+
+      Vrací invalid login error.
+
+      :return: Vrací výsledek volání ``ValidationError()``.
 
 
 .. py:class:: UserPasswordResetForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``UserPasswordResetForm`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
    .. py:method:: send_mail()
 
       Send a django.core.mail.EmailMultiAlternatives to `to_email`.
+
+      :param subject_template_name: Parametr ``subject_template_name`` se předává do volání ``render_to_string()``.
+      :param email_template_name: Parametr ``email_template_name`` se předává do volání ``render_to_string()``.
+      :param context: Parametr ``context`` se předává do volání ``render_to_string()``, ``_log_notification()``.
+      :param from_email: Uživatel nebo osoba ``from_email``, v jejímž kontextu se operace provádí.
+      :param to_email: Uživatel nebo osoba ``to_email``, v jejímž kontextu se operace provádí.
+      :param html_email_template_name: Parametr ``html_email_template_name`` se předává do volání ``render_to_string()``, ovlivňuje větvení podmínek.
 
 
 .. py:class:: OsobaForm
@@ -99,10 +154,15 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+
 
 .. py:class:: AuthActivationForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AuthActivationForm`` v rámci aplikace.
 
 
 .. py:class:: TestEmailForm

@@ -7,11 +7,26 @@ from .models import Akce
 
 
 class BooleanValueColumn(tables.columns.Column):
+    """Implementuje komponentu ``BooleanValueColumn`` v rámci aplikace."""
+
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        """
         self.value_labels = kwargs.pop("value_labels", None)
         super(BooleanValueColumn, self).__init__(*args, **kwargs)
 
     def render(self, value):
+        """
+        Převede booleovskou hodnotu na textovou reprezentaci pro tabulku.
+
+        :param value: Parametr ``value`` předává se do volání ``bool()``, ``len()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, str.
+        """
         value = [x for x in self.value_labels if x[0] == bool(value)]
         if len(value) > 0:
             return value[0][1]
@@ -19,9 +34,7 @@ class BooleanValueColumn(tables.columns.Column):
 
 
 class AkceTable(SearchTable):
-    """
-    Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
-    """
+    """Definuje tabulku akcí pro přehled i export."""
 
     ident_cely = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.ident_cely.label"),
@@ -129,6 +142,14 @@ class AkceTable(SearchTable):
     )
 
     def order_vedouci_organizace(self, queryset, is_descending):
+        """
+        Provádí operaci order vedouci organizace.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``annotate``, vstupuje do návratové hodnoty.
+        :param is_descending: Parametr ``is_descending`` předává se do volání ``order_by()``.
+
+            :return: Vrací n-tici.
+        """
         queryset = queryset.annotate(
             vedouci_organizace__nazev_zkraceny=StringAgg(
                 "akcevedouci__organizace__nazev_zkraceny",
@@ -156,6 +177,8 @@ class AkceTable(SearchTable):
     first_columns = None
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Akce
         fields = (
             "pristupnost",
@@ -198,10 +221,17 @@ class AkceTable(SearchTable):
         )
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(AkceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):
-        """
-        Vrátí seznam identifikátorů archeologických záznamů pro akci.
+        """Vrátí seznam identifikátorů archeologických záznamů pro akci.
+
+        :return: Vrací výsledek volání ``join()``.
         """
         return ",".join([record.record.archeologicky_zaznam.ident_cely for record in self.paginated_rows])

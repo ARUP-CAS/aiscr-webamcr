@@ -1,0 +1,623 @@
+// --- DARK THEME ---
+// Apply dark mode styles when data-theme="dark" is set
+
+@import 'app-variables-dark';
+
+// Apply dark theme styles to the entire app when theme is set to dark
+html[data-theme="dark"],
+body.app-dark-theme {
+    // Colors
+    --white: #{$white-dark};
+    --gray-100: #{$gray-100-dark};
+    --gray-200: #{$gray-200-dark};
+    --gray-300: #{$gray-300-dark};
+    --gray-400: #{$gray-400-dark};
+    --gray-500: #{$gray-500-dark};
+    --gray-600: #{$gray-600-dark};
+    --gray-700: #{$gray-700-dark};
+    --gray-800: #{$gray-800-dark};
+    --gray-900: #{$gray-900-dark};
+
+    // Body
+    color: $body-text-dark;
+    background-color: $body-bg-dark;
+
+    // Sidebar
+    .app-sidebar-wrapper {
+        background-color: $app-sidebar-bg-dark;
+
+        .app-sidebar-heading {
+            border-bottom-color: $app-sidebar-accordion-border-color-dark;
+        }
+
+        .accordion {
+            .card {
+                background-color: transparent;
+                border-color: $app-sidebar-accordion-border-color-dark;
+
+                .card-header {
+                    background-color: transparent;
+                    border-bottom-color: $app-sidebar-accordion-border-color-dark;
+
+                    .btn {
+                        color: $app-sidebar-accordion-color-dark;
+
+                        &.active {
+                            color: $app-sidebar-accordion-color-active-dark;
+                        }
+                    }
+                }
+
+                .card-body {
+                    background-color: $app-sidebar-accordion-body-color-dark;
+
+                    ul li a {
+                        color: $app-sidebar-accordion-color-dark;
+
+                        &:hover {
+                            color: $app-sidebar-accordion-color-active-dark;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Navbar
+    .navbar {
+        background-color: $navbar-bg-dark !important;
+        border-bottom-color: $card-border-dark;
+
+        .nav-link,
+        .navbar-text {
+            color: $navbar-text-dark !important;
+        }
+    }
+
+    // Main content
+    .app-page-wrapper {
+        background-color: $body-bg-dark;
+    }
+
+    #app-page-wrapper .container-fluid.app-content-wrapper {
+        background-color: $body-bg-dark;
+    }
+
+    .leaflet-container {
+        background-color: $body-bg-dark;
+    }
+
+    .bs-stepper .step-trigger {
+        color: $body-text-dark;
+    }
+
+    // Cards
+    .card {
+        background-color: $card-bg-dark;
+        border-color: $card-border-dark;
+        color: $body-text-dark;
+
+        .card-header {
+            background-color: $gray-200-dark;
+            border-bottom-color: $card-border-dark;
+        }
+
+        .card-body {
+            color: $body-text-dark;
+        }
+    }
+
+    // Forms and inputs
+    .form-control,
+    .form-select,
+    textarea,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    input[type="search"] {
+        background-color: $input-bg-dark;
+        border-color: $input-border-color-dark;
+        color: $input-text-color-dark;
+
+        &::placeholder {
+            color: $input-placeholder-color-dark;
+        }
+
+        &:focus {
+            background-color: $input-bg-dark;
+            border-color: $primary-dark;
+            color: $input-text-color-dark;
+        }
+    }
+
+    .app-divider-label {
+        color: $body-text-dark;
+    }
+
+    .modal {
+        .modal-title {
+            color: $body-text-dark;
+        }
+
+        .modal-body {
+            color: $body-text-dark;
+        }
+
+        .btn-close {
+            --bs-btn-close-filter: invert(1) grayscale(100%) brightness(200%);
+        }
+    }
+
+    // Buttons
+    .btn-light {
+        background-color: $gray-300-dark;
+        border-color: $gray-400-dark;
+        color: $body-text-dark;
+
+        &:hover {
+            background-color: $gray-400-dark;
+            border-color: $gray-500-dark;
+        }
+    }
+
+    // Borders
+    .border,
+    .border-top,
+    .border-bottom,
+    .border-start,
+    .border-end {
+        border-color: $border-color-dark !important;
+    }
+
+    // Tables
+    table {
+        &.table.table-striped.table-sm tbody tr td {
+            background-color: $gray-400-dark;
+        }
+
+        color: $body-text-dark;
+        border-color: $border-color-dark;
+        background-color: $gray-400-dark;
+
+        thead th {
+            background-color: $gray-200-dark;
+            border-color: $border-color-dark;
+            color: $body-text-dark;
+        }
+
+        tbody {
+            background-color: $gray-200-dark;
+
+            tr {
+                border-color: $border-color-dark;
+
+                &:hover {
+                    background-color: $gray-100-dark;
+                }
+            }
+        }
+    }
+
+    // Dropdowns
+    .dropdown-menu {
+        background-color: $card-bg-dark;
+        border-color: $card-border-dark;
+
+        .dropdown-item {
+            color: $body-text-dark;
+
+            &:hover {
+                background-color: $gray-200-dark;
+                color: $body-text-dark;
+            }
+        }
+    }
+
+    // Modals
+    .modal-content {
+        background-color: $card-bg-dark;
+        border-color: $card-border-dark;
+    }
+
+    .modal-header {
+        background-color: $gray-200-dark;
+        border-bottom-color: $card-border-dark;
+    }
+
+    // Footer
+    footer {
+        background-color: $app-footer-bottom-bg-dark;
+        color: $body-text-dark;
+
+        a {
+            color: $primary-dark;
+
+            &:hover {
+                color: lighten($primary-dark, 10);
+            }
+        }
+    }
+
+    // Alerts
+    .alert {
+        background-color: rgba($gray-500-dark, 0.2);
+        border-color: rgba($gray-500-dark, 0.5);
+        color: $body-text-dark;
+    }
+
+    // Badge
+    .badge {
+        background-color: $primary-dark;
+        color: $white-dark;
+    }
+
+    // Tooltips
+    .tooltip-inner {
+        background-color: $gray-800-dark;
+        color: $white-dark;
+    }
+
+    // Scrollbar styling (for webkit browsers)
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: $gray-200-dark;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: $gray-400-dark;
+        border-radius: 5px;
+
+        &:hover {
+            background: $gray-500-dark;
+        }
+    }
+
+    .text-muted {
+        color: rgba(253, 254, 255, 0.8) !important;
+    }
+
+    .btn.dropdown-toggle.btn-light {
+        background-color: $gray-400-dark;
+
+    }
+
+    .select2-container--default {
+        .select2-dropdown {
+            background-color: $gray-400-dark;
+        }
+
+        .select2-selection .select2-selection__rendered {
+            color: $body-text-dark;
+        }
+
+        .select2-results__option[aria-selected="true"] {
+            background-color: $primary;
+            color: $body-text-dark;
+        }
+
+        .select2-results__option--highlighted[aria-selected] {
+            background-color: $gray-200-dark;
+            color: $body-text-dark;
+        }
+
+        .select2-selection--multiple {
+            .select2-selection__choice {
+                background-color: $gray-600-dark;
+                color: $body-text-dark;
+            }
+
+            .select2-selection__choice__remove {
+                color: $body-text-dark;
+            }
+
+            .select2-selection__choice__remove:hover {
+                color: white;
+            }
+        }
+
+        &.select2-container--disabled .select2-selection--multiple {
+            background-color: $gray-500-dark;
+        }
+
+    }
+
+    /* Darker Daterange Picker */
+
+    .daterangepicker td.off,
+    .daterangepicker td.off.in-range,
+    .daterangepicker td.off.start-date,
+    .daterangepicker td.off.end-date {
+        background-color: transparent;
+        color: $gray-600-dark;
+    }
+
+    .daterangepicker {
+        background-color: $body-bg-dark;
+        color: #ebf4f0;
+
+        table thead th {
+            background-color: inherit;
+            color: $body-text-dark;
+        }
+    }
+
+    .daterangepicker .calendar-table {
+        background-color: $body-bg-dark;
+        border: unset;
+    }
+
+    .datepicker.dropdown-menu table {
+        background-color: $body-bg-dark;
+    }
+
+    .daterangepicker tr:hover {
+        background-color: inherit;
+        color: inherit;
+    }
+
+    .daterangepicker td:hover {
+        background-color: $gray-600-dark;
+        color: inherit;
+    }
+
+    .daterangepicker td.active,
+    .daterangepicker td.active:hover {
+        background-color: #357ebd !important;
+        color: #ebf4f8;
+    }
+
+    .daterangepicker td.in-range {
+        background-color: $gray-600-dark;
+        color: #ebf4f8;
+    }
+
+    .btn-success.disabled,
+    .btn-success[disabled],
+    fieldset[disabled] .btn-success,
+    .btn-success.disabled:hover,
+    .btn-success[disabled]:hover,
+    fieldset[disabled] .btn-success:hover,
+    .btn-success.disabled:focus,
+    .btn-success[disabled]:focus,
+    fieldset[disabled] .btn-success:focus,
+    .btn-success.disabled.focus,
+    .btn-success[disabled].focus,
+    fieldset[disabled] .btn-success.focus,
+    .btn-success.disabled:active,
+    .btn-success[disabled]:active,
+    fieldset[disabled] .btn-success:active,
+    .btn-success.disabled.active,
+    .btn-success[disabled].active,
+    fieldset[disabled] .btn-success.active {
+        color: #fff;
+        background-color: inherit;
+    }
+
+    .btn-default {
+        color: #fff;
+        background-color: inherit;
+    }
+
+    .daterangepicker select.monthselect {
+        //color: rgba(37, 47, 57, 0.9);
+    }
+
+    .daterangepicker select.yearselect {
+        //color: rgba(37, 47, 57, 0.9);
+    }
+
+    .daterangepicker .input-mini {
+        //color: #ebf4f8;
+    }
+
+    .list-group-item {
+        background-color: transparent;
+    }
+
+    // Login/Registration Pages
+    &.app-accounts {
+        background-image: url('img/login-bg-dark.svg');
+
+        .app-login-wrapper {
+            h1 {
+                color: $body-text-dark !important;
+            }
+
+            .app-logo {
+                filter: invert(0);
+            }
+
+            .card {
+
+                background-color: $card-bg-dark;
+                border-color: $card-border-dark;
+
+                .card-body {
+                    color: $body-text-dark;
+
+                    h1 {
+                        color: $body-text-dark;
+                    }
+
+                    form {
+                        label {
+                            color: $body-text-dark;
+                        }
+
+                        input {
+
+                            &[type="text"],
+                            &[type="password"],
+                            &[type="email"] {
+                                background-color: $input-bg-dark;
+                                border-color: $input-border-color-dark;
+                                color: $input-text-color-dark;
+
+                                &::placeholder {
+                                    color: $input-placeholder-color-dark;
+                                }
+
+                                &:focus {
+                                    background-color: $input-bg-dark;
+                                    border-color: $primary-dark;
+                                    color: $input-text-color-dark;
+                                }
+
+                            }
+                        }
+
+                        .input-group-text {
+                            border-color: #666666;
+                        }
+
+                        select {
+                            background-color: $input-bg-dark;
+                            border-color: $input-border-color-dark;
+                            color: $input-text-color-dark;
+                        }
+
+                        ul {
+                            color: $body-text-dark;
+
+                            li {
+                                color: $body-text-dark;
+                            }
+                        }
+                    }
+
+                    a {
+                        color: $primary-dark;
+
+                        &:hover {
+                            color: lighten($primary-dark, 10);
+                        }
+                    }
+
+                    p {
+                        color: $body-text-dark;
+                    }
+
+                    hr {
+                        border-color: $border-color-dark;
+                    }
+                }
+            }
+
+            .app-col-desc {
+                .app-inner {
+                    background-color: #d2d2d20d;
+                    border-left-color: $border-color-dark;
+
+                    hr {
+                        border-color: $border-color-dark;
+                    }
+
+                    .card {
+                        background-color: transparent;
+                        color: $body-text-dark;
+
+                        .card-body {
+                            color: $body-text-dark;
+
+                            h3 {
+                                color: $body-text-dark;
+                            }
+
+                            p {
+                                color: rgba($body-text-dark, 0.8);
+
+                                a {
+                                    color: $primary-dark;
+
+                                    &:hover {
+                                        color: lighten($primary-dark, 10);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Oznameni Pages
+    &.app-oznameni {
+        .app-header {
+            .app-left a:first-child img {
+                filter: brightness(0) invert(0.8);
+            }
+
+            .app-left a:first-child:hover img {
+                filter: brightness(0) invert(1);
+            }
+
+            .app-right {
+                a:first-child img {
+                    filter: brightness(0) invert(0.8);
+                    opacity: 1 !important;
+                }
+
+                a:first-child:hover img {
+                    filter: brightness(0) invert(1);
+                    opacity: 1 !important;
+                }
+
+                .app-flags {
+                    .app-control-btn {
+                        color: $body-text-dark;
+                        padding: 0.5rem;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+
+                        .material-icons {
+                            font-size: 1.25rem;
+                        }
+
+                        &:hover {
+                            color: $primary-dark;
+                        }
+                    }
+                }
+
+                .app-theme-toggle {
+                    color: $body-text-dark !important;
+
+                    button:hover {
+                        opacity: 0.8;
+                    }
+                }
+
+            }
+        }
+
+        .bg-body-secondary {
+            background-color: $gray-500-dark !important;
+
+            .oznameni-warning {
+                background-color: $dark;
+                border-color: $gray-500-dark;
+                color: $body-text-dark;
+            }
+        }
+
+        .table> :not(caption)>*>* {
+            border-color: $border-color-dark;
+            background-color: $gray-300-dark;
+            color: $body-text-dark;
+        }
+
+        .dropzone.mb-0.dz-clickable {
+            background-color: $gray-600-dark;
+        }
+    }
+}

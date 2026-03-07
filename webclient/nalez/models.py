@@ -7,9 +7,7 @@ from komponenta.models import Komponenta
 
 
 class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
-    """
-    Class pro db model nalez objekt.
-    """
+    """Databázový model objektu nálezu."""
 
     komponenta = models.ForeignKey(
         Komponenta,
@@ -42,25 +40,42 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "nalez_objekt"
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
+        """
         return self.druh.heslo
 
     def get_permission_object(self):
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.komponenta.get_permission_object()
 
 
 class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
-    """
-    Class pro db model nalez predmet.
-    """
+    """Databázový model předmětu nálezu."""
 
     komponenta = models.ForeignKey(
         Komponenta,
@@ -93,16 +108,35 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "nalez_predmet"
         ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __init_(self, *args, **kwargs):
+        """
+        Provádí operaci init.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.close_active_transaction_when_finished = False
         self.active_transaction = None
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
+        """
         return self.druh.heslo
 
     def get_permission_object(self):
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.komponenta.get_permission_object()
