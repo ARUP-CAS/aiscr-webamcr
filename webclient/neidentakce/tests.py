@@ -1,1 +1,1 @@
-# Create your tests here.
+"""Testy aplikace neidentifikovaných akcí."""

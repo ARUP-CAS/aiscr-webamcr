@@ -2,5 +2,7 @@ from django.apps import AppConfig
 
 
 class FedoraManagementConfig(AppConfig):
+    """Implementuje komponentu ``FedoraManagementConfig`` v rámci aplikace."""
+
     default_auto_field = "django.db.models.BigAutoField"
     name = "fedora_management"

@@ -22,11 +22,26 @@ logger = logging.getLogger(__name__)
 
 
 class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
+    """Implementuje komponentu ``ObjectWithMetadataAdmin`` v rámci aplikace."""
+
     @action(label="Metadata", description="Download of metadata")
     def metadata(self, request, obj):
+        """
+        Provádí operaci metadata.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``metadata``.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``metadata``.
+
+            :return: Vrací proměnná ``response``.
+        """
         metadata = obj.metadata
 
         def context_processor(content):
+            """
+            Provádí operaci context processor.
+
+            :param content: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
+            """
             yield content
 
         response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
@@ -37,6 +52,8 @@ class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
 
 
 class HeslarWithMetadataAdmin(ObjectWithMetadataAdmin):
+    """Implementuje komponentu ``HeslarWithMetadataAdmin`` v rámci aplikace."""
+
     pass
 
 
@@ -44,6 +61,7 @@ class HeslarWithMetadataAdmin(ObjectWithMetadataAdmin):
 class HeslarNazevAdmin(admin.ModelAdmin):
     """
     Admin část pro prohlížení modelu heslař název.
+
     Práva na změnu jsou zakázaná.
     """
 
@@ -53,20 +71,42 @@ class HeslarNazevAdmin(admin.ModelAdmin):
     search_fields = ("nazev",)
 
     def has_add_permission(self, request, obj=None):
+        """
+        Určí, zda add permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Určí, zda delete permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
+        """
+        Určí, zda change permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
 
 @admin.register(Heslar)
 class HeslarAdmin(HeslarWithMetadataAdmin):
-    """
-    Admin část pro správu modelu heslař.
-    """
+    """Admin část pro správu modelu heslař."""
 
     list_display = ("ident_cely", "nazev_heslare", "heslo", "heslo_en", "zkratka", "popis", "popis_en", "razeni")
     fields = ("nazev_heslare", "ident_cely", "heslo", "heslo_en", "zkratka", "popis", "popis_en", "razeni")
@@ -74,22 +114,58 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
     list_filter = ("nazev_heslare",)
 
     def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        """
+        Vyrenderuje change form.
+
+        :param request: Parametr ``request`` předává se do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+        :param context: Parametr ``context`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+        :param add: Parametr ``add`` předává se do volání ``render_change_form()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :param change: Parametr ``change`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+        :param form_url: Parametr ``form_url`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` předává se do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``render_change_form()``.
+        """
         if add:
             context["adminform"].form.fields["nazev_heslare"].queryset = HeslarNazev.objects.filter(povolit_zmeny=True)
         return super(HeslarAdmin, self).render_change_form(request, context, add, change, form_url, obj)
 
     def has_change_permission(self, request, obj=None):
+        """
+        Určí, zda change permission.
+
+        :param request: Parametr ``request`` předává se do volání ``has_change_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` předává se do volání ``has_change_permission()``, pracuje se s atributy ``nazev_heslare``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_change_permission()``.
+        """
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
         return super().has_change_permission(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        Vrací readonly fields.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``pk``, ovlivňuje větvení podmínek.
+
+            :return: Vrací n-tici.
+        """
         if obj is not None and obj.pk is not None:
             return "ident_cely", "nazev_heslare"
         else:
             return ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Určí, zda delete permission.
+
+        :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``nazev_heslare``, ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
+        """
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
         if obj is not None:
@@ -99,9 +175,7 @@ class HeslarAdmin(HeslarWithMetadataAdmin):
 
 @admin.register(HeslarDatace)
 class HeslarDataceAdmin(admin.ModelAdmin):
-    """
-    Admin část pro správu modelu heslař datace.
-    """
+    """Admin část pro správu modelu heslař datace."""
 
     list_display = ("obdobi_ident_cely", "obdobi", "rok_od_min", "rok_od_max", "rok_do_min", "rok_do_max", "poznamka")
     fields = ("obdobi", "rok_od_min", "rok_od_max", "rok_do_min", "rok_do_max", "poznamka")
@@ -109,12 +183,27 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     list_filter = ("obdobi",)
 
     def get_readonly_fields(self, request, obj=None):
-        if obj:  # This means this is an edit
+        """
+        Vrací readonly fields.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
+        :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, seznam.
+        """
+        if obj:  # Znamená to, že jde o úpravu existujícího záznamu.
             return ("obdobi",)
         else:
             return []
 
     def obdobi_ident_cely(self, obj):
+        """
+        Provádí operaci obdobi ident cely.
+
+        :param obj: Parametr ``obj`` pracuje se s atributy ``obdobi``, vstupuje do návratové hodnoty.
+
+            :return: Vrací atribut objektu.
+        """
         return obj.obdobi.ident_cely
 
 
@@ -122,6 +211,7 @@ class HeslarDataceAdmin(admin.ModelAdmin):
 class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     """
     Admin část pro prohlížení modelu heslař dokument typ material.
+
     Práva na změnu jsou zakázaná.
     """
 
@@ -139,20 +229,42 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
+        """
+        Určí, zda add permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Určí, zda delete permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
+        """
+        Určí, zda change permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
 
 @admin.register(HeslarOdkaz)
 class HeslarOdkazAdmin(admin.ModelAdmin):
-    """
-    Admin část pro správu modelu heslař odkaz.
-    """
+    """Admin část pro správu modelu heslař odkaz."""
 
     list_display = ("heslo_ident_cely", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     fields = ("heslar_nazev", "heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation", "scheme_uri")
@@ -161,14 +273,19 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     form = HeslarOdkazForm
 
     def heslo_ident_cely(self, obj):
+        """
+        Provádí operaci heslo ident cely.
+
+        :param obj: Parametr ``obj`` pracuje se s atributy ``heslo``, vstupuje do návratové hodnoty.
+
+            :return: Vrací atribut objektu.
+        """
         return obj.heslo.ident_cely
 
 
 @admin.register(HeslarHierarchie)
 class HeslarHierarchieAdmin(admin.ModelAdmin):
-    """
-    Admin část pro správu modelu heslař hierarchie.
-    """
+    """Admin část pro správu modelu heslař hierarchie."""
 
     list_display = ("heslo_podrazene_ident_cely", "heslo_podrazene", "heslo_nadrazene", "typ")
     fields = ("heslar_nazev_podrazene", "heslo_podrazene", "heslar_nazev_nadrazene", "heslo_nadrazene", "typ")
@@ -182,14 +299,19 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     form = HeslarHierarchieForm
 
     def heslo_podrazene_ident_cely(self, obj):
+        """
+        Provádí operaci heslo podrazene ident cely.
+
+        :param obj: Parametr ``obj`` pracuje se s atributy ``heslo_podrazene``, vstupuje do návratové hodnoty.
+
+            :return: Vrací atribut objektu.
+        """
         return obj.heslo_podrazene.ident_cely
 
 
 @admin.register(Osoba)
 class OsobaAdmin(ObjectWithMetadataAdmin):
-    """
-    Admin část pro správu modelu osob.
-    """
+    """Admin část pro správu modelu osob."""
 
     form = OsobaAdminForm
 
@@ -219,15 +341,37 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     readonly_fields = ("ident_cely",)
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         self.wiki_data_available = None
         super().__init__(*args, **kwargs)
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Určí, zda delete permission.
+
+        :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
+        """
         if obj is not None:
             return not obj.has_connections
         return super().has_delete_permission(request)
 
     def get_fields(self, request, obj=None):
+        """
+        Vrací fields. v aplikaci.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_fields``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``get_fields``.
+
+            :return: Vrací výsledek volání ``tuple()``.
+        """
         fields = list(self.fields)
         if self.wiki_data_available is None:
             try:
@@ -244,9 +388,7 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
 
 @admin.register(Organizace)
 class OrganizaceAdmin(ObjectWithMetadataAdmin):
-    """
-    Admin část pro správu modelu organizace.
-    """
+    """Admin část pro správu modelu organizace."""
 
     form = OrganizaceAdminForm
     list_display = (
@@ -305,27 +447,59 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     readonly_fields = ("ident_cely",)
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Určí, zda delete permission.
+
+        :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` pracuje se s atributy ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
+        """
         if obj is not None:
             return not obj.has_connections
         return super().has_delete_permission(request)
 
 
 class HeslarRuianAdmin(ObjectWithMetadataAdmin):
+    """Implementuje komponentu ``HeslarRuianAdmin`` v rámci aplikace."""
+
     def has_add_permission(self, request, obj=None):
+        """
+        Určí, zda add permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
     def has_delete_permission(self, request, obj=None):
+        """
+        Určí, zda delete permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
     def has_change_permission(self, request, obj=None):
+        """
+        Určí, zda change permission.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
         return False
 
 
 @admin.register(RuianKraj)
 class HeslarRuianKrajAdmin(ObjectWithMetadataAdmin):
-    """
-    Admin část pro správu modelu ruian kraj.
-    """
+    """Admin část pro správu modelu ruian kraj."""
 
     list_display = ("nazev", "kod", "rada_id", "nazev_en", "email")
     fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en", "email")
@@ -335,9 +509,7 @@ class HeslarRuianKrajAdmin(ObjectWithMetadataAdmin):
 
 @admin.register(RuianOkres)
 class HeslarRuianOkresAdmin(HeslarRuianAdmin):
-    """
-    Admin část pro správu modelu ruian okres.
-    """
+    """Admin část pro správu modelu ruian okres."""
 
     list_display = ("nazev", "kraj", "spz", "kod", "nazev_en")
     fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
@@ -347,9 +519,7 @@ class HeslarRuianOkresAdmin(HeslarRuianAdmin):
 
 @admin.register(RuianKatastr)
 class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
-    """
-    Admin část pro správu modelu ruian katastr.
-    """
+    """Admin část pro správu modelu ruian katastr."""
 
     list_display = ("nazev", "okres", "pian_ident_cely", "kod")
     fields = ("nazev", "kod", "okres")

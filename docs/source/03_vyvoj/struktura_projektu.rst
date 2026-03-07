@@ -37,3 +37,15 @@ lokální a testovací konfigurace.
 
 
 
+
+
+Vazba dokumentace na kódovou strukturu
+------------------------------------
+
+* Modulová dokumentace pro Django aplikace je v ``docs/source/04_django_aplikace/04_02_moduly``.
+* Implementace těchto modulů je v adresářích pod ``webclient/`` (např. ``webclient/core``, ``webclient/projekt``).
+* Při přidání nové Django aplikace je potřeba doplnit:
+
+  #. položku do ``INSTALLED_APPS`` v ``webclient/webclient/settings/base.py``,
+  #. odpovídající ``index.rst`` pod ``docs/source/04_django_aplikace/04_02_moduly``,
+  #. odkaz na modul v ``docs/source/04_django_aplikace/04_02_moduly/index.rst``.

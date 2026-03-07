@@ -21,28 +21,63 @@ from SPARQLWrapper import JSON, SPARQLWrapper
 
 
 class ApiView(autocomplete.Select2ListView):
+    """Implementuje komponentu ``ApiView`` v rámci aplikace."""
+
     API_URL = None
     CACHE_PREFIX = None
     r = RedisConnector().get_connection()
 
     def __init__(self, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(**kwargs)
 
     @classmethod
     def _get_value_from_cache(cls, key):
+        """
+        Vrací value from cache.
+
+        :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         cached_value = cls.r.get(f"{cls.CACHE_PREFIX}_{key}")
         if cached_value:
             return [key, cached_value.decode("utf-8")]
 
     @classmethod
     def _save_value_to_cache(cls, key, value):
+        """
+               Uloží value to cache.
+
+               :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
+               :param value: Parametr ``value`` předává se do volání ``set()``.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         cls.r.set(f"{cls.CACHE_PREFIX}_{key}", value)
 
     @classmethod
     def api_call(cls, q, use_cache=False):
+        """
+        Provádí operaci api call.
+
+        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
+        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+        """
         pass
 
     def get(self, request, *args, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         if self.q:
             results = self.get_list()
             results = self.autocomplete_results(results)
@@ -51,18 +86,37 @@ class ApiView(autocomplete.Select2ListView):
             return JsonResponse({"results": []})
 
     def autocomplete_results(self, results):
+        """
+        Provádí operaci autocomplete results.
+
+        :param results: Kolekce ``results`` zpracovávaná touto funkcí.
+
+            :return: Vrací hodnotu podle větve zpracování.
+        """
         return [dict(id=x, text=y) for x, y in results]
 
     def get_list(self):
+        """Vrací list. v aplikaci.
+
+        :return: Vrací výsledek volání ``api_call()``.
+        """
         return self.api_call(self.q)
 
 
 class DoiAutocompleteView(LoginRequiredMixin, ApiView):
+    """Implementuje komponentu ``DoiAutocompleteView`` v rámci aplikace."""
+
     API_URL = settings.DATACITE_URL
     CACHE_PREFIX = "DOI"
 
     @classmethod
     def _api_call_data_cite(cls, q):
+        """
+               Provádí operaci api call data cite.
+
+               :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         params = {
             "query": f"doi:*{q.upper()}*",
         }
@@ -79,6 +133,12 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _api_call_cross_ref_doi(cls, q):
+        """
+               Provádí operaci api call cross ref doi.
+
+               :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         base_url = f"https://api.crossref.org/works/{q}"
         response = requests.get(base_url)
         if response.status_code == 200:
@@ -106,6 +166,12 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _api_call_cross_ref_title(cls, q):
+        """
+               Provádí operaci api call cross ref title.
+
+               :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         base_url = f"https://api.crossref.org/works"
         params = {"query.title": q}
         response = requests.get(base_url, params=params)
@@ -120,6 +186,12 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def _doi_item_exists(cls, doi: str) -> list:
+        """
+               Provádí operaci doi item exists.
+
+               :param doi: Textová hodnota `doi` používaná pro vyhledání, pojmenování nebo hlášení stavu.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         url = f"https://doi.org/{doi}"
         resp = requests.head(url, allow_redirects=True, timeout=5)
         if resp.status_code < 400:
@@ -129,6 +201,14 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
     @classmethod
     def api_call(cls, q, use_cache=False):
+        """
+        Provádí operaci api call.
+
+        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
+        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+
+            :return: Vrací proměnná ``results``.
+        """
         results = cls._api_call_cross_ref_doi(q)
         if not results:
             results = cls._api_call_data_cite(q) + cls._api_call_cross_ref_title(q)
@@ -138,12 +218,22 @@ class DoiAutocompleteView(LoginRequiredMixin, ApiView):
 
 
 class OrcidAutocompleteView(ApiView):
+    """Implementuje komponentu ``OrcidAutocompleteView`` v rámci aplikace."""
+
     API_URL = "https://pub.orcid.org/v3.0/expanded-search"
     HEADERS = {"Accept": "application/json", "User-Agent": "Python-Requests"}
     CACHE_PREFIX = "ORCID"
 
     @classmethod
     def api_call(cls, q, use_cache=True):
+        """
+        Provádí operaci api call.
+
+        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
+        :param use_cache: Parametr ``use_cache`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: seznam, proměnná ``result_list``.
+        """
         if use_cache:
             cached_value = cls._get_value_from_cache(q)
             if cached_value:
@@ -173,11 +263,21 @@ class OrcidAutocompleteView(ApiView):
 
 
 class RorAutocompleteView(LoginRequiredMixin, ApiView):
+    """Implementuje komponentu ``RorAutocompleteView`` v rámci aplikace."""
+
     API_URL = "https://api.ror.org/organizations"
     HEADERS = {"Accept": "application/json", "User-Agent": "Python-Requests"}
 
     @classmethod
     def api_call(cls, q, use_cache=False):
+        """
+        Provádí operaci api call.
+
+        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
+        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+
+            :return: Vrací proměnná ``result_list``.
+        """
         params = {
             "query": q,
         }
@@ -204,12 +304,22 @@ class RorAutocompleteView(LoginRequiredMixin, ApiView):
 
 
 class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
+    """Implementuje komponentu ``WikiDataAutocompleteView`` v rámci aplikace."""
+
     API_URL = "https://query.wikidata.org/sparql"
     CACHE_PREFIX = "WIKIDATA"
     ID_REGEX = re.compile(r".*Q\d+")
 
     @classmethod
     def api_call(cls, q, use_cache=False):
+        """
+        Provádí operaci api call.
+
+        :param q: Vyhledávací dotaz použitý pro filtrování/autocomplete výsledků.
+        :param use_cache: Parametr ``use_cache`` slouží jako vstup pro logiku funkce ``api_call``.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: seznam, proměnná ``result_list``.
+        """
         if not q:
             return []
         if q.startswith("https://www.wikidata.org/entity/"):
@@ -244,7 +354,7 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
                 }}
             """
 
-        # Set up the SPARQL wrapper
+        # Inicializace klienta SPARQL dotazování.
         sparql = SPARQLWrapper(cls.API_URL)
         sparql.setQuery(query)
         sparql.setReturnFormat(JSON)
@@ -264,8 +374,19 @@ class WikiDataAutocompleteView(LoginRequiredMixin, ApiView):
 
 
 class ContinuePidProcessing(AdminRecordProcessingView):
+    """Implementuje komponentu ``ContinuePidProcessing`` v rámci aplikace."""
+
     @staticmethod
     def _perform_client_action(record, attribute_name, publish_callable_method, set_callable_method=None):
+        """
+               Provádí operaci perform client action.
+
+               :param record: Parametr ``record`` předává se do volání ``isinstance()``, pracuje se s atributy ``save``, ``lokalita``, ovlivňuje větvení podmínek.
+               :param attribute_name: Textový název nebo klíč ``attribute_name`` používaný v rámci operace.
+               :param publish_callable_method: Parametr ``publish_callable_method`` slouží jako vstup pro logiku funkce ``_perform_client_action``.
+               :param set_callable_method: Kolekce ``set_callable_method`` zpracovávaná touto funkcí.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         try:
             result = publish_callable_method()
             if set_callable_method:
@@ -282,6 +403,15 @@ class ContinuePidProcessing(AdminRecordProcessingView):
             )
 
     def process_record(self, record, result, **kwargs):
+        """
+        Provádí operaci process record.
+
+        :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``_perform_client_action()``, pracuje se s atributy ``active_transaction``, ``doi``, ovlivňuje větvení podmínek.
+        :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+        :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.
+
+            :return: Vrací proměnná ``result``.
+        """
         fedora_transaction = FedoraTransaction()
         record.active_transaction = fedora_transaction
         performed_action = kwargs.get("performed_action")

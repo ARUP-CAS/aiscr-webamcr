@@ -4,9 +4,7 @@ from projekt.models import Projekt
 
 
 class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
-    """
-    Class pro db model oznamovatel.
-    """
+    """Databázový model oznamovatele."""
 
     projekt = models.OneToOneField(
         Projekt,
@@ -23,8 +21,17 @@ class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
     poznamka = models.CharField(max_length=1000, null=True, blank=True)
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
+        """
         return self.odpovedna_osoba + " (" + self.email + ")"
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "oznamovatel"
         verbose_name = "oznamovatele"

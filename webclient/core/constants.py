@@ -2,8 +2,8 @@ from typing import Final
 
 from django.utils.translation import gettext_lazy as _
 
-# Stavy
-# Projekty
+# Stavy.
+# Projekty.
 PROJEKT_STAV_VYTVORENY: Final = -1  # P-1
 PROJEKT_STAV_OZNAMENY: Final = 0  # P0
 PROJEKT_STAV_ZAPSANY: Final = 1  # P1
@@ -14,33 +14,33 @@ PROJEKT_STAV_UZAVRENY: Final = 5  # P5
 PROJEKT_STAV_ARCHIVOVANY: Final = 6  # P6
 PROJEKT_STAV_NAVRZEN_KE_ZRUSENI: Final = 7  # P7
 PROJEKT_STAV_ZRUSENY: Final = 8  # P8
-# Akce + Lokalita (archeologicke zaznamy)
+# Akce + lokalita (archeologické záznamy).
 AZ_STAV_ZAPSANY: Final = 1  # AZ1
 AZ_STAV_ODESLANY: Final = 2  # AZ2
 AZ_STAV_ARCHIVOVANY: Final = 3  # AZ3
-# Dokumenty
+# Dokumenty.
 D_STAV_ZAPSANY: Final = 1  # D1
 D_STAV_ODESLANY: Final = 2  # D2
 D_STAV_ARCHIVOVANY: Final = 3  # D3
-# Samostatny nalezy
+# Samostatné nálezy.
 SN_ZAPSANY: Final = 1  # SN1
 SN_ODESLANY: Final = 2  # SN2
 SN_POTVRZENY: Final = 3  # SN3
 SN_ARCHIVOVANY: Final = 4  # SN4
-# Uzivatel
-# Pian
+# Uživatel.
+# PIAN.
 PIAN_NEPOTVRZEN: Final = 1  # PI1
 PIAN_POTVRZEN: Final = 2  # PI2
-# Uzivatel_spoluprace
+# Uživatel/spolupráce.
 SPOLUPRACE_NEAKTIVNI: Final = 1  # US1
 SPOLUPRACE_AKTIVNI: Final = 2  # US2
-# Externi zdroje
+# Externí zdroje.
 EZ_STAV_ZAPSANY: Final = 1  # EZ1
 EZ_STAV_ODESLANY: Final = 2  # EZ2
 EZ_STAV_POTVRZENY: Final = 3  # EZ3
 
-# Transakce historie
-# Projekty
+# Transakce historie.
+# Projekty.
 OZNAMENI_PROJ: Final = "PX0"  # 0
 OZNAMENI_PROJ_MANUALNI: Final = "PX0M"  # 0
 SCHVALENI_OZNAMENI_PROJ: Final = "P01"  # 1
@@ -56,38 +56,38 @@ VRACENI_PROJ: Final = "P-1"  # New
 VRACENI_NAVRHU_ZRUSENI: Final = "P71"  # New
 VRACENI_ZRUSENI: Final = "P81"  # New
 RUSENI_STARE_PROJ: Final = "P18"  # New
-# Akce + Lokalita (archeologicke zaznamy)
+# Akce + lokalita (archeologické záznamy).
 ZAPSANI_AZ: Final = "AZ01"  # 1
 ODESLANI_AZ: Final = "AZ12"  # 2
 ARCHIVACE_AZ: Final = "AZ23"  # 3
 VRACENI_AZ: Final = "AZ-1"  # New
 ZMENA_AZ: Final = "AZ-2"  # New
-# Dokument
+# Dokument.
 ZAPSANI_DOK: Final = "D01"  # 1
 ODESLANI_DOK: Final = "D12"  # 2
 ARCHIVACE_DOK: Final = "D23"  # 3
 VRACENI_DOK: Final = "D-1"  # New
-# Samostatny nalez
+# Samostatný nález.
 ZAPSANI_SN: Final = "SN01"  # 1
 ODESLANI_SN: Final = "SN12"  # 2
 POTVRZENI_SN: Final = "SN23"  # 3
 ARCHIVACE_SN: Final = "SN34"  # 4
 VRACENI_SN: Final = "SN-1"  # 5
-# Soubory
+# Soubory.
 NAHRANI_SBR: Final = "SBR0"  # 0
-# Uzivatel
+# Uživatel.
 ZMENA_HLAVNI_ROLE: Final = "HR"  # 0, 1
 ZMENA_UDAJU_ADMIN: Final = "ZUA"  # 0
 ZMENA_HESLA_ADMIN: Final = "ZHA"
 ADMIN_UPDATE: Final = "AU"  # 0
 ZMENA_UDAJU_UZIVATEL: Final = "ZUU"
 ZMENA_HESLA_UZIVATEL: Final = "ZHU"
-# Katastr
+# Katastr.
 ZMENA_KATASTRU: Final = "KAT"
 
 IMPORT = "IMP"
 
-# Uzivatel
+# Uživatel.
 ROLE_BADATEL_ID = 1
 ROLE_ARCHEOLOG_ID = 2
 ROLE_ARCHIVAR_ID = 3
@@ -95,15 +95,15 @@ ROLE_ADMIN_ID = 4
 ROLE_UPRAVA_TEXTU = 6
 ROLE_NASTAVENI_ODSTAVKY = 8
 
-# Pian
+# PIAN.
 ZAPSANI_PIAN: Final = "PI01"
 POTVRZENI_PIAN: Final = "PI12"
-# Uzivatel_spoluprace
+# Uživatel/spolupráce.
 SPOLUPRACE_ZADOST: Final = "SP01"  # 1
 SPOLUPRACE_AKTIVACE: Final = "SP12"  # 2, 4
 SPOLUPRACE_DEAKTIVACE: Final = "SP-1"  # 3
 
-# Externi_zdroj
+# Externí zdroj.
 ZAPSANI_EXT_ZD: Final = "EZ01"  # 1
 ODESLANI_EXT_ZD: Final = "EZ12"  # 2
 POTVRZENI_EXT_ZD: Final = "EZ23"  # 3
@@ -122,11 +122,11 @@ CESKY = "cs"
 ANGLICKY = "en"
 JAZYKY = ((CESKY, _("core.constants.cs.text")), (ANGLICKY, _("core.constants.en.text")))
 
-# Typy vazeb
+# Typy vazeb.
 PROJEKT_RELATION_TYPE: Final = "projekt"
 DOKUMENT_RELATION_TYPE: Final = "dokument"
 SAMOSTATNY_NALEZ_RELATION_TYPE: Final = "samostatny_nalez"
-UZIVATEL_RELATION_TYPE: Final = "uzivatel"  # This is for auth_user table
+UZIVATEL_RELATION_TYPE: Final = "uzivatel"  # Toto je pro tabulku `auth_user`.
 PIAN_RELATION_TYPE: Final = "pian"
 UZIVATEL_SPOLUPRACE_RELATION_TYPE: Final = "uzivatel_spoluprace"
 EXTERNI_ZDROJ_RELATION_TYPE: Final = "externi_zdroj"
@@ -191,3 +191,6 @@ MAX_POCET_SOUBORU_PROJEKTU = 40
 LIMIT_PRVKU_ZOBRAZENI_HEATMAP = 7_000  # Počet prvků v mapovém výřezu, při kterém se už má zobrazit heatmap
 
 EPSG_WGS84 = 4326
+# Archive emails
+ARCHIVE_EMAIL_CECHY: Final = "amcr@arup.cas.cz"
+ARCHIVE_EMAIL_MORAVA: Final = "amcr@arub.cz"

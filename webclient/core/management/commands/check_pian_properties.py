@@ -26,24 +26,30 @@ class Command(BaseCommand):
     - Pokud se některá hodnota liší, provede aktualizaci
 
     Poznámka:
-        - Aktualizace jsou prováděny včetně Fedora transakcí a metadat
-        - Proces může trvat delší dobu v závislosti na počtu PIANů
+    - Aktualizace jsou prováděny včetně Fedora transakcí a metadat
+    - Proces může trvat delší dobu v závislosti na počtu PIANů
 
     Příklady použití::
 
-        python manage.py check_pian_properties
+    python manage.py check_pian_properties
     """
 
     help = _("core.management.commands.check_pian_properties.Command.help")
 
     def handle(self, *args, **options):
+        """
+        Zpracuje argumenty příkazu a zkontroluje konzistenci vlastností PIAN.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        """
         from heslar.hesla_dynamicka import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
         from heslar.models import Heslar
         from pian.models import Pian, get_ZM_from_point
 
         logger.debug("core.management.commands.check_pian_properties.start")
 
-        # Prepare geometry type mapping
+        # Připraví mapování tříd geometrií na odpovídající heslářové hodnoty typu.
         geom_type = {}
         geom_type[str(Point)] = Heslar.objects.get(id=GEOMETRY_BOD)
         geom_type[str(LineString)] = Heslar.objects.get(id=GEOMETRY_LINIE)
@@ -65,7 +71,7 @@ class Command(BaseCommand):
             changes = []
             geom = item.geom
 
-            # Check geometry type
+            # Ověří, zda uložený typ odpovídá skutečnému typu geometrie.
             if item.typ.pk != geom_type[str(type(geom))].pk:
                 old_typ = str(item.typ)
                 item.typ = geom_type[str(type(geom))]
@@ -86,7 +92,7 @@ class Command(BaseCommand):
             else:
                 point = Centroid(geom)
 
-            # Check ZM10 and ZM50
+            # Zkontroluje ZM10 a ZM50.
             zm10, zm50 = get_ZM_from_point(point)
             if zm10 is not None and zm50 is not None:
                 if item.zm10.pk != zm10.pk:
@@ -112,7 +118,7 @@ class Command(BaseCommand):
                         + str(zm50)
                     )
 
-            # Save if there were changes
+            # Uloží pouze pokud došlo ke změnám.
             if save is True:
                 pocet_zmenenych += 1
                 self.stdout.write(
@@ -143,7 +149,7 @@ class Command(BaseCommand):
 
             index += 1
 
-            # Show periodic progress even when no changes
+            # Pravidelně vypisuje průběh i bez změn.
             if index % 100 == 0:
                 self.stdout.write(
                     "\r"

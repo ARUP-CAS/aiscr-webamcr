@@ -63,9 +63,7 @@ logger = logging.getLogger(__name__)
 
 
 class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
-    """
-    Class pro db model dokument.
-    """
+    """Databázový model dokumentu."""
 
     STATES = (
         (D_STAV_ZAPSANY, _("dokument.models.dokument.states.D1")),
@@ -180,6 +178,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     doi = models.CharField(max_length=255, null=True, blank=True, db_index=True)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument"
         indexes = [
             models.Index(fields=["stav", "ident_cely"]),
@@ -190,26 +190,43 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         ]
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.initial_let = self.let
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
+        """
         return self.ident_cely
 
     def get_absolute_url(self):
-        """
-        Metoda pro získaní absolut url záznamu podle typu dokumentu.
+        """Metoda pro získaní absolut url záznamu podle typu dokumentu.
+
+        :return: Vrací výsledek volání ``reverse()``.
         """
         if "3D" in self.ident_cely:
             return reverse("dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely})
         return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_doi(self):
+        """Nastaví doi. v aplikaci."""
         self.doi = f"{settings.DOI_PREFIX}/{self.ident_cely}"
 
     def set_zapsany(self, user):
         """
         Metoda pro nastavení stavu zapsaný a uložení změny do historie.
+
+        :param user: Parametr ``user`` se předává do volání ``Historie()``.
         """
         self.stav = D_STAV_ZAPSANY
         Historie(
@@ -221,6 +238,17 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @staticmethod
     def set_permanent_identificator(dokument, request, messages, fedora_transaction) -> Optional[JsonResponse]:
+        """
+               Nastaví permanent identificator.
+
+               :param dokument: Parametr ``dokument`` předává se do volání ``get_dokument_rada()``, ``set_permanent_ident_cely()``, pracuje se s atributy ``ident_cely``, ``typ_dokumentu``.
+               :param request: Parametr ``request`` předává se do volání ``add_message()``.
+               :param messages: Parametr ``messages`` předává se do volání ``add_message()``, pracuje se s atributy ``add_message``, ``SUCCESS``.
+               :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``rollback_transaction``.
+        Výsledek provedené změny nad cílovým objektem.
+
+            :return: Vrací hodnotu typu ``Optional[JsonResponse]`` (výsledek volání ``JsonResponse()``).
+        """
         from core.message_constants import MAXIMUM_IDENT_DOSAZEN
         from dokument.views import get_detail_json_view
 
@@ -244,6 +272,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def set_odeslany(self, user, old_ident):
         """
         Metoda pro nastavení stavu odeslaný a uložení změny do historie.
+
+        :param user: Parametr ``user`` se předává do volání ``Historie()``.
+        :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
         """
         self.stav = D_STAV_ODESLANY
         if old_ident != self.ident_cely:
@@ -261,6 +292,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def set_archivovany(self, user, old_ident):
         """
         Metoda pro nastavení stavu archivovaný a uložení změny do historie.
+
+        :param user: Parametr ``user`` se předává do volání ``Historie()``.
+        :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
         """
         self.stav = D_STAV_ARCHIVOVANY
         if not self.datum_zverejneni:
@@ -280,6 +314,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def set_vraceny(self, user, new_state, poznamka):
         """
         Metoda pro vrácení o jeden stav méně a uložení změny do historie.
+
+        :param user: Parametr ``user`` se předává do volání ``Historie()``.
+        :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+        :param poznamka: Parametr ``poznamka`` se předává do volání ``Historie()``.
         """
         self.stav = new_state
         Historie(
@@ -294,11 +332,13 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Metoda na kontrolu prerekvizit pred posunem do stavu odeslaný:
 
-            polia: format, popis, duveryhodnost, obdobi, areal jsou vyplněna pro model 3D.
+        polia: format, popis, duveryhodnost, obdobi, areal jsou vyplněna pro model 3D.
 
-            polia: pristupnost, popis, ulozeni_originalu jsou vyplněna pro model 3D.
+        polia: pristupnost, popis, ulozeni_originalu jsou vyplněna pro model 3D.
 
-            Dokument má aspoň jeden dokument.
+        Dokument má aspoň jeden dokument.
+
+            :return: Vrací proměnná ``result``.
         """
         result = []
 
@@ -322,7 +362,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 result.append(_("dokument.models.formCheckOdeslani.missingUlozeniOriginalu.text"))
             if self.jazyky.all().count() == 0:
                 result.append(_("dokument.models.formCheckOdeslani.missingJazyky.text"))
-        # At least one soubor must be attached to the dokument
+        # K dokumentu musí být připojen alespoň jeden soubor.
         if self.soubory.soubory.all().count() == 0:
             result.append(_("dokument.models.formCheckOdeslani.missingSoubor.text"))
         result = [str(x) for x in result]
@@ -332,16 +372,18 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         Metoda na kontrolu prerekvizit pred archivací:
 
-            kontrola jako před odesláním
+        kontrola jako před odesláním
 
+            :return: Vrací proměnná ``result``.
         """
-        # At least one soubor must be attached to the dokument
+        # K dokumentu musí být připojen alespoň jeden soubor.
         result = self.check_pred_odeslanim()
         return result
 
     def has_extra_data(self):
-        """
-        Metoda na zjištení že dokument má extra data.
+        """Metoda na zjištení že dokument má extra data.
+
+        :return: Vrací proměnná ``has_extra_data``.
         """
         has_extra_data = False
         try:
@@ -351,8 +393,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return has_extra_data
 
     def get_komponenta(self):
-        """
-        Metoda na získaní všech komponent dokumentu.
+        """Metoda na získaní všech komponent dokumentu.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, None.
+        :raises UnexpectedDataRelations: Vyvolá se s textem "Neleze ziskat komponentu modelu 3D.".
         """
         if "3D" in self.ident_cely:
             try:
@@ -366,8 +410,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     def set_permanent_ident_cely(self, region, rada):
         """
         Metoda pro nastavení permanentního ident celý pro dokument.
+
         Metoda bere pořadoví číslo z db dokument sekvence.
         Metoda zmení i ident připojených souborů.
+
+        :param region: Parametr ``region`` se předává do volání ``get()``, ``create()``.
+        :param rada: Parametr ``rada`` se předává do volání ``get()``, ``create()``, pracuje se s atributy ``zkratka``.
+
+            :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
         """
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
@@ -384,7 +434,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             prefix = f"{region}-{rada.zkratka}-{str(current_year)}"
             docs = Dokument.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
             if docs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:05}").count() > 0:
-                # number from empty spaces
+                # číslo bez mezer
                 idents = list(docs.values_list("ident_cely", flat=True).order_by("ident_cely"))
                 idents = [sub.replace(prefix, "") for sub in idents]
                 idents = [sub.lstrip("0") for sub in idents]
@@ -431,9 +481,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.save()
 
     def set_datum_zverejneni(self):
-        """
-        metoda pro nastavení datumu zvěřejnení.
-        """
+        """metoda pro nastavení datumu zvěřejnení."""
         new_date = datetime.date.today()
         new_month = new_date.month + self.organizace.mesicu_do_zverejneni
         year = new_date.year + (math.floor(new_month / 12))
@@ -445,9 +493,17 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.datum_zverejneni = datetime.date(year, month, day)
 
     def get_permission_object(self):
+        """Vrací permission object.
+
+        :return: Vrací proměnná ``self``.
+        """
         return self
 
     def get_create_user(self):
+        """Vrací create user.
+
+        :return: Vrací n-tici.
+        """
         try:
             return (self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel,)
         except Exception as e:
@@ -455,6 +511,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
+        """Vrací create org.
+
+        :return: Vrací n-tici.
+        """
         try:
             return (self.get_create_user()[0].organizace,)
         except Exception as e:
@@ -463,11 +523,20 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @property
     def thumbnail_image(self):
+        """Provádí operaci thumbnail image.
+
+        :return: Vrací atribut objektu.
+        """
         if self.thumbnail_image_file:
             return self.thumbnail_image_file.pk
 
     @property
     def thumbnail_image_file(self) -> Soubor | None:
+        """
+               Provádí operaci thumbnail image file.
+
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         if self.soubory.soubory.count() > 0:
             soubory = [x for x in self.soubory.soubory.all()]
             soubory = list(sorted(soubory, key=lambda x: x.nazev))
@@ -475,6 +544,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @cached_property
     def large_thumbnail(self):
+        """Provádí operaci large thumbnail.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
+        """
         soubor = self.thumbnail_image_file
         if soubor:
             return soubor.large_thumbnail
@@ -482,12 +555,17 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @cached_property
     def small_thumbnail(self):
+        """Provádí operaci small thumbnail.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
+        """
         soubor = self.thumbnail_image_file
         if soubor:
             return soubor.small_thumbnail
         return None
 
     def set_snapshots(self):
+        """Nastaví snapshots. v aplikaci."""
         if not self.dokumentautor_set.all():
             self.autori_snapshot = None
         else:
@@ -503,6 +581,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @property
     def redis_snapshot_id(self):
+        """Provádí operaci redis snapshot id.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         if self.ident_cely.startswith("3D"):
             from dokument.views import Model3DListView
 
@@ -513,6 +595,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return f"{DokumentListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
+        """Vygeneruje redis snapshot.
+
+        :return: Vrací n-tici.
+        """
         from dokument.tables import DokumentTable, Model3DTable
 
         if self.ident_cely.startswith("3D"):
@@ -527,38 +613,78 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return self.redis_snapshot_id, data
 
     def _get_doi_client(self):
+        """
+        Vrací doi client.
+
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         from pid.client import DigitalObjectIdentifierClient
 
         return DigitalObjectIdentifierClient(self)
 
     @property
     def doi_exists(self):
+        """Provádí operaci doi exists.
+
+        :return: Vrací výsledek volání ``check_record_exists()``.
+        """
         return self._get_doi_client().check_record_exists()
 
     def doi_delete(self, check_status=True):
+        """
+        Provádí operaci doi delete.
+
+        :param check_status: Parametr ``check_status`` předává se do volání ``delete_record()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``delete_record()``.
+        """
         if self.doi:
             return self._get_doi_client().delete_record(check_status)
 
     def doi_hide(self, check_status=True):
+        """
+        Provádí operaci doi hide.
+
+        :param check_status: Parametr ``check_status`` předává se do volání ``hide_record()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``hide_record()``.
+        """
         if self.doi:
             return self._get_doi_client().hide_record(check_status)
 
     def doi_publish(self, check_status=True):
+        """
+        Provádí operaci doi publish.
+
+        :param check_status: Parametr ``check_status`` předává se do volání ``publish_record()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``publish_record()``.
+        """
         return self._get_doi_client().publish_record(check_status)
 
     def doi_update(self, check_status=True, reload_record=False):
+        """
+        Provádí operaci doi update.
+
+        :param check_status: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
+        :param reload_record: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``update_record()``.
+        """
         if self.doi:
             return self._get_doi_client().update_record(check_status, reload_record)
 
     @property
     def doi_url(self):
+        """Provádí operaci doi url.
+
+        :return: Vrací výsledek volání ``get_record_url()``.
+        """
         return self._get_doi_client().get_record_url()
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
-    """
-    Class pro db model dokument část.
-    """
+    """Databázový model části dokumentu."""
 
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
@@ -589,6 +715,8 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_cast"
         constraints = [
             CheckConstraint(
@@ -606,8 +734,9 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         ]
 
     def get_absolute_url(self):
-        """
-        Metoda pro získaní absolut url.
+        """Metoda pro získaní absolut url.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_absolute_url()``, výsledek volání ``reverse()``.
         """
         if "3D" in self.dokument.ident_cely:
             return self.dokument.get_absolute_url()
@@ -620,9 +749,19 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         )
 
     def get_permission_object(self):
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         return self.dokument.get_permission_object()
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.initial_projekt_id = self.projekt_id
         self.initial_archeologicky_zaznam_id = self.archeologicky_zaznam_id
@@ -634,18 +773,36 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     @property
     def initial_archeologicky_zaznam(self) -> ArcheologickyZaznam | None:
-        """Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (lazy-load)."""
+        """
+        Vrátí objekt dokument na základě initial_archeologicky_zaznam_id (líné načtení).
+
+        :return: Vrací výsledek operace.
+        """
         if self.initial_archeologicky_zaznam_id is not None:
             return ArcheologickyZaznam.objects.get(pk=self.initial_archeologicky_zaznam_id)
         return None
 
     @property
     def initial_projekt(self) -> Projekt | None:
+        """
+               Provádí operaci initial projekt.
+
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         if self.initial_projekt_id is not None:
             return Projekt.objects.get(pk=self.initial_projekt_id)
         return None
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
+        """
+        Vytvoří transaction. v aplikaci.
+
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+        :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
+
+            :return: Vrací atribut objektu.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -655,14 +812,16 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
 
     @property
     def dokument_doi(self):
+        """Provádí operaci dokument doi.
+
+        :return: Vrací atribut objektu.
+        """
         if self.dokument:
             return self.dokument.doi
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
-    """
-    Class pro db model dokument extra data.
-    """
+    """Databázový model doplňkových dat dokumentu."""
 
     dokument = models.OneToOneField(
         Dokument,
@@ -733,6 +892,8 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
     geom_system = models.CharField(max_length=6, default="4326")
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_extra_data"
         constraints = [
             CheckConstraint(
@@ -743,24 +904,22 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
 
 
 class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
-    """
-    Class pro db model dokument autori. Obsahuje pořadí.
-    """
+    """Databázový model autorů dokumentu (včetně pořadí)."""
 
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
     poradi = models.IntegerField(db_index=True)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = ("poradi",)
 
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
-    """
-    Class pro db model dokument jazyky.
-    """
+    """Databázový model jazyků dokumentu."""
 
     dokument = models.ForeignKey(
         Dokument,
@@ -775,30 +934,37 @@ class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_jazyk"
         unique_together = (("dokument", "jazyk"),)
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
+        """
         return "D: " + str(self.dokument) + " - J: " + str(self.jazyk)
 
 
 class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
-    """
-    Class pro db model dokument osoby.
-    """
+    """Databázový model osob dokumentu."""
 
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     osoba = models.ForeignKey(Osoba, models.RESTRICT, db_column="osoba")
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_osoba"
         unique_together = (("dokument", "osoba"),)
 
 
 class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Model):
-    """
-    Class pro db model dokument posudky.
-    """
+    """Databázový model posudků dokumentu."""
 
     dokument = models.ForeignKey(
         Dokument,
@@ -813,17 +979,24 @@ class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Mod
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_posudek"
         unique_together = (("dokument", "posudek"),)
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací hodnotu podle větve zpracování.
+        """
         return "D: " + str(self.dokument) + " - P: " + str(self.posudek)
 
 
 class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
-    """
-    Class pro db model tvary.
-    """
+    """Databázový model tvarů."""
 
     dokument = models.ForeignKey(Dokument, on_delete=models.CASCADE, db_column="dokument")
     tvar = models.ForeignKey(
@@ -832,17 +1005,34 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "tvar"
         unique_together = (("dokument", "tvar", "poznamka"),)
         ordering = ["tvar__razeni"]
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.active_transaction = None
         self.close_active_transaction_when_finished = None
         self.suppress_signal = False
 
     def create_transaction(self, transaction_user, success_message=None, error_message=None):
+        """
+        Vytvoří transaction. v aplikaci.
+
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+        :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+        :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
+
+            :return: Vrací atribut objektu.
+        """
         from core.repository_connector import FedoraTransaction
         from uzivatel.models import User
 
@@ -852,9 +1042,7 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
 
 
 class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):
-    """
-    Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
-    """
+    """Databázový model sekvence dokumentu podle roku a řady."""
 
     rada = models.ForeignKey(
         Heslar,
@@ -866,6 +1054,8 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
     sekvence = models.IntegerField()
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "dokument_sekvence"
         constraints = [
             models.UniqueConstraint(fields=["rada", "region", "rok"], name="unique_sekvence_dokument"),
@@ -873,9 +1063,7 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
 
 
 class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
-    """
-    Class pro db model let.
-    """
+    """Databázový model letu."""
 
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     datum = models.DateField(blank=True, null=True)
@@ -927,14 +1115,31 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     ident_cely = models.TextField(unique=True)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "let"
         ordering = ["ident_cely"]
         verbose_name_plural = "Lety"
 
     def __str__(self):
+        """
+               Vrací textovou reprezentaci objektu.
+
+        Textová reprezentace objektu.
+
+            :return: Vrací atribut objektu.
+        """
         return self.ident_cely
 
     def save(self, *args, **kwargs):
+        """
+        Uloží změny objektu.
+
+        :param args: Parametr ``args`` se předává do volání ``save()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
+
+            :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'let')``.
+        """
         from core.repository_connector import FedoraRepositoryConnector
 
         if not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(
@@ -945,12 +1150,22 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
             raise ValidationError(_("dokument.models.Let.save.check_container_deleted_or_not_exists.invalid"))
 
     def get_absolute_url(self):
+        """Vrací absolute url.
+
+        :return: Vrací výsledek volání ``reverse()``.
+        """
         return reverse("admin:dokument_let_change", args=[self.pk])
 
 
 def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     Funkce pro získaní správného jména souboru.
+
+    :param dokument: Parametr ``dokument`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``soubory``, vstupuje do návratové hodnoty.
+    :param filename: Parametr ``filename`` se předává do volání ``splitext()``, vstupuje do návratové hodnoty.
+    :param add_to_index: Číselná hodnota ``add_to_index`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, bool.
     """
     logger.debug(
         "dokument.models.get_dokument_soubor_name.start",

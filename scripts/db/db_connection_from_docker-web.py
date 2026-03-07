@@ -14,7 +14,7 @@ dbh = data["DB_HOST"]
 e_code = 1
 conn = psycopg2.connect(f"dbname={dbn} user={dbu} host={dbh} password={dbp}")
 try:
-    # Establish the connection and create a cursor object
+    # Naváže spojení a vytvoří objekt kurzoru.
 
     with conn.cursor() as cursor:
         cursor.execute("SELECT 1")

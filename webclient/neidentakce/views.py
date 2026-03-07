@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
-    """
-    Třída pohledu pro editaci neident akce pomocí modalu.
-    """
+    """Třída pohledu pro editaci neident akce pomocí modalu."""
 
     model = NeidentAkce
     template_name = "core/transakce_modal.html"
@@ -29,11 +27,22 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     prefix = "neident_modal"
 
     def get_form_kwargs(self):
+        """Vrací form kwargs.
+
+        :return: Vrací proměnná ``kwargs``.
+        """
         kwargs = super().get_form_kwargs()
         kwargs["prefix"] = self.prefix
         return kwargs
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         context = super().get_context_data(**kwargs)
         zaznam = self.object
         context = {
@@ -46,6 +55,10 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
+        """Vrací success url.
+
+        :return: Vrací výsledek volání ``reverse()``.
+        """
         context = self.get_context_data()
         dc = context["object"].dokument_cast
         return reverse(
@@ -57,14 +70,37 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         )
 
     def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``post()``.
+        :param args: Parametr ``args`` se předává do volání ``post()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         super().post(request, *args, **kwargs)
         return JsonResponse({"redirect": self.get_success_url()})
 
     def form_valid(self, form):
+        """
+        Provádí operaci form valid.
+
+        :param form: Parametr ``form`` se předává do volání ``form_valid()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``form_valid()``.
+        """
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         return super().form_valid(form)
 
     def form_invalid(self, form):
+        """
+        Provádí operaci form invalid.
+
+        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``form_invalid()``.
+        """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"error": form.errors})
         return super().form_invalid(form)

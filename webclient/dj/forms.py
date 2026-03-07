@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class CreateDJForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky."""
 
     pian_text = forms.CharField(
         max_length=100,
@@ -36,6 +34,13 @@ class CreateDJForm(forms.ModelForm):
     ):
         """
         Metoda formuláře pro získaní querysetu pro typ DJ podle typu akce.
+
+        :param jednotky: Číselná hodnota ``jednotky`` použitá při výpočtu nebo transformaci.
+        :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``hasattr()``, pracuje se s atributy ``typ``, ``ident_cely``, ovlivňuje větvení podmínek.
+        :param typ_arch_z: Parametr ``typ_arch_z`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
+        :param typ_akce: Parametr ``typ_akce`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
         """
         logger.debug(
             "dj.forms.CreateDJForm.__init__.cannot_get_typ_akce",
@@ -86,6 +91,8 @@ class CreateDJForm(forms.ModelForm):
         return queryset
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = DokumentacniJednotka
         fields = ("typ", "negativni_jednotka", "nazev", "pian")
 
@@ -135,6 +142,15 @@ class CreateDJForm(forms.ModelForm):
         typ_akce=None,
         **kwargs,
     ):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+        :param typ_arch_z: Parametr ``typ_arch_z`` předává se do volání ``ModelChoiceField()``, ``get_typ_queryset()``.
+        :param typ_akce: Parametr ``typ_akce`` předává se do volání ``ModelChoiceField()``, ``get_typ_queryset()``, ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        """
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
         if self.instance.ident_cely and typ_akce is None:
@@ -194,9 +210,7 @@ class CreateDJForm(forms.ModelForm):
 
 
 class ChangeKatastrForm(forms.Form):
-    """
-    Formulář pro editaci katastru u archeologického záznamu.
-    """
+    """Formulář pro editaci katastru u archeologického záznamu."""
 
     katastr = forms.ModelChoiceField(
         label=_("dj.forms.ChangeKatastrForm.katastr.label"),
@@ -207,6 +221,12 @@ class ChangeKatastrForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(ChangeKatastrForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False

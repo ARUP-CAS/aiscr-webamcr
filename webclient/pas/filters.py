@@ -50,9 +50,7 @@ logger = logging.getLogger(__name__)
 
 
 class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
-    """
-    Třída pro zakladní filtrování samostatného nálezu a jejich potomků.
-    """
+    """Třída pro zakladní filtrování samostatného nálezu a jejich potomků."""
 
     TYP_VAZBY = SAMOSTATNY_NALEZ_RELATION_TYPE
     HISTORIE_TYP_ZMENY_STARTS_WITH = "SN"
@@ -183,7 +181,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
 
     hloubka_do = NumberFilter(field_name="hloubka", label=" ", lookup_expr="lte")
 
-    # Filters by historie
+    # Filtrování podle historie
     historie_typ_zmeny = MultipleChoiceFilter(
         choices=list(filter(lambda x: x[0].startswith("SN") or x[0].startswith("KAT"), Historie.CHOICES)),
         label=_("pas.filters.samostatnyNalezFilter.historie_typ_zmeny.label"),
@@ -253,6 +251,8 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = SamostatnyNalez
         fields = {
             "predano": ["exact"],
@@ -260,6 +260,12 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         form = PasFilterForm
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+        """
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         self.filters["obdobi"].extra["choices"] = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:]
@@ -272,6 +278,13 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_queryset(self, queryset):
+        """
+        Filtruje queryset. v aplikaci.
+
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
+        """
         logger.debug("pas.filters.SamostatnyNalezFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(SamostatnyNalezFilter, self).filter_queryset(queryset)
@@ -294,18 +307,36 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
     def filter_obdobi(self, queryset, name, value):
         """
         Metoda pro filtrování podle období.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_obdobi``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(obdobi__in=value)
 
     def filter_druh_nalezu(self, queryset, name, value):
         """
         Metoda pro filtrování podle druhu nálezu.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_druh_nalezu``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(druh_nalezu__in=value)
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metoda pro filtrování podle lokalizace, poznámek a evidenčního čísla.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             Q(lokalizace__icontains=value) | Q(poznamka__icontains=value) | Q(evidencni_cislo__icontains=value)
@@ -314,6 +345,12 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
     def filter_by_oblast(self, queryset, name, value):
         """
         Metoda pro filtrování podle oblasti.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_by_oblast``.
+        :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
         """
         if value == OBLAST_CECHY:
             return queryset.filter(ident_cely__contains="C-")
@@ -323,9 +360,7 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
 
 
 class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
-    """
-    Třída pro zakladní filtrování uživatelské spolupráce a jejich potomků.
-    """
+    """Třída pro zakladní filtrování uživatelské spolupráce a jejich potomků."""
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = "SP"
     TYP_VAZBY = UZIVATEL_SPOLUPRACE_RELATION_TYPE
@@ -357,10 +392,18 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = UzivatelSpoluprace
         fields = ["stav"]
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+        """
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
@@ -403,6 +446,13 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
         self.helper = UzivatelSpolupraceFilterFormHelper()
 
     def filter_queryset(self, queryset):
+        """
+        Filtruje queryset. v aplikaci.
+
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
+        """
         logger.debug("pas.filters.UzivatelSpolupraceFilterFormHelper.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(UzivatelSpolupraceFilter, self).filter_queryset(queryset)
@@ -423,13 +473,16 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
 
 
 class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
-    """
-    Třída pro správně zobrazení filtru.
-    """
+    """Třída pro správně zobrazení filtru."""
 
     form_method = "GET"
 
     def __init__(self, form=None):
+        """
+        Inicializuje instanci třídy.
+
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
+        """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.samostatnyNalezFilterFormHelper.history.divider.label")
         }
@@ -461,7 +514,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(history_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#historieCollapse",
                     role="button",
                     aria_expanded="false",
@@ -483,13 +536,16 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
 
 
 class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
-    """
-    Třída pro správně zobrazení filtru.
-    """
+    """Třída pro správně zobrazení filtru."""
 
     form_method = "GET"
 
     def __init__(self, form=None):
+        """
+        Inicializuje instanci třídy.
+
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
+        """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("pas.filters.UzivatelSpolupraceFilterFormHelper.history.divider.label")
         }
@@ -505,7 +561,7 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(history_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#historieCollapse",
                     role="button",
                     aria_expanded="false",

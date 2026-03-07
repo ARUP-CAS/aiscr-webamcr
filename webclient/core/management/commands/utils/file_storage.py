@@ -25,18 +25,15 @@ def save_single_file_from_storage_impl(
     Tato funkce načte soubor z lokálního úložiště, provede kontroly (MIME type, antivirus),
     a uloží jej do Fedora repozitáře včetně aktualizace metadat v databázi.
 
-    Args:
-        record: Instance modelu Soubor nebo jeho primární klíč
-        storage_path: Cesta k adresáři se soubory
-        save_thumbs: Zda generovat náhledy pro obrazové soubory
-        disable_antivirus: Zda přeskočit antivirovou kontrolu
-
-    Raises:
-        core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje
-
     Příklad:
         >>> save_single_file_from_storage_impl(123, "/tmp/files", save_thumbs=True)
         >>> save_single_file_from_storage_impl(soubor_instance, "/var/storage")
+
+    :param record_par: Parametr ``record_par`` předává se do volání ``isinstance()``, ``get()``, ovlivňuje větvení podmínek. Instance modelu Soubor nebo jeho primární klíč
+    :param storage_path: Parametr ``storage_path`` se předává do volání ``find_matching_file()``, ``warning()``. Cesta k adresáři se soubory.
+    :param save_thumbs: Parametr ``save_thumbs`` předává se do volání ``update_binary_file()``, ``save_binary_file()``. Určuje, zda generovat náhledy pro obrazové soubory.
+    :param disable_antivirus: Parametr ``disable_antivirus`` ovlivňuje větvení podmínek. Určuje, zda přeskočit antivirovou kontrolu.
+        :raises core.models.Soubor.DoesNotExist: Pokud záznam s daným PK neexistuje.
     """
     from core.repository_connector import FedoraRepositoryConnector, FedoraTransaction
     from xml_generator.models import ModelWithMetadata
@@ -56,7 +53,14 @@ def save_single_file_from_storage_impl(
     conn = FedoraRepositoryConnector(related_record, fedora_transaction)
 
     def find_matching_file(directory, number):
-        """Najde soubor v adresáři podle čísla v názvu."""
+        """
+        Najde soubor v adresáři podle čísla v názvu.
+
+        :param directory: Cílový adresář, ve kterém se hledá soubor.
+        :param number: Parametr ``number`` ovlivňuje větvení podmínek.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``join()``, None.
+        """
         for inner_file in os.listdir(directory):
             filename, _ = os.path.splitext(inner_file)
             if filename.isdigit() and int(filename) == number:
@@ -79,7 +83,7 @@ def save_single_file_from_storage_impl(
     soubor_data.seek(0)
     mimetype = Soubor.get_mime_types(soubor_data)
     soubor_data.seek(0)
-    # Antivirus labeled file as infected or the check failed
+    # Antivirus označil soubor jako infikovaný nebo kontrola selhala.
     if not disable_antivirus and Soubor.check_antivirus(soubor_data) not in (
         AntivirusCheckResult.PASSES,
         AntivirusCheckResult.SKIPPED,

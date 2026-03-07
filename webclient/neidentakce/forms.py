@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 class NeidentAkceForm(forms.ModelForm):
-    """
-    Hlavní formulář pro editaci a zobrazení neident akce.
-    """
+    """Hlavní formulář pro editaci a zobrazení neident akce."""
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = NeidentAkce
         fields = (
             "katastr",
@@ -72,9 +72,18 @@ class NeidentAkceForm(forms.ModelForm):
         }
 
     class Media:
+        """Implementuje komponentu ``Media`` v rámci aplikace."""
+
         js = ["js/create_osoba_modal.js"]
 
     def __init__(self, *args, readonly=False, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(NeidentAkceForm, self).__init__(*args, **kwargs)
         self.fields["katastr"].required = True
         self.fields["vedouci"].required = False

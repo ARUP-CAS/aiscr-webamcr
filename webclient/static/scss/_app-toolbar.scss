@@ -1,7 +1,7 @@
 // --- BREADCRUMB ---
 
 .app-toolbar {
-  @extend .d-flex, .pr-3;
+  @extend .d-flex, .pe-3  !optional;
   height: $app-toolbar-height;
   margin: -#{$spacer-3} -#{$spacer-3} #{$spacer-3} -#{$spacer-3};
 
@@ -20,7 +20,7 @@
     @extend .flex-grow-1, .d-flex;
 
     .app-entity-title {
-      @extend .d-flex, .align-items-center, .mr-5;
+      @extend .d-flex, .align-items-center, .me-5 !optional;
       list-style: none;
       box-sizing: border-box;
       background-color: $white;
@@ -44,7 +44,7 @@
 
       .material-icons {
         @include setIcon($position: text-bottom);
-        @extend .mr-1;
+        @extend .me-1;
       }
 
 
@@ -81,7 +81,7 @@
         @extend .d-flex;
 
         .btn {
-          @extend .d-flex, .rounded-0, .pl-3, .pr-3;
+          @extend .d-flex, .rounded-0, .ps-3, .pe-3  !optional;
           border: 0;
           align-items: center;
           border-left: 1px solid;
@@ -92,7 +92,7 @@
           }
 
           .material-icons {
-            @extend .mr-2;
+            @extend .me-2 !optional;
           }
         }
       } 

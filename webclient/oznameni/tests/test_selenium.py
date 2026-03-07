@@ -13,8 +13,14 @@ logger = logging.getLogger("tests")
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class OznameniSeleniumTest(BaseSeleniumTestClass):
+    """Implementuje komponentu ``OznameniSeleniumTest`` v rámci aplikace."""
+
     @staticmethod
     def oznameni_projektu(self):
+        """Provádí operaci oznameni projektu.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         port = self.server_thread.port
         self.driver.get(f"https://{settings.WEB_SERVER_ADDRESS}:{port}/oznameni")
         self.ElementClick(By.ID, "id_oznamovatel")
@@ -52,24 +58,25 @@ class OznameniSeleniumTest(BaseSeleniumTestClass):
         return pian.group() if pian else None
 
     def test_027_oznameni_projektu_001(self):
-        """Test 027 Proces oznámení projektu (pozitivní scénář 1)
+        """
+        Test 027 Proces oznámení projektu (pozitivní scénář 1)
 
         Oznámení projektu stavebníkem
 
         Role:
-            \\-
+        -
 
         Preconditions:
-            žádné
+        žádné
 
         TestData:
-            test_foto_1.jpg
+        test_foto_1.jpg
 
         Steps:
-            Uživatel na stránce /oznameni vyplní formulář a odešle ho.
+        Uživatel na stránce /oznameni vyplní formulář a odešle ho.
 
         Expected:
-            -  V databázi je o jedn projekt více.
+        -  V databázi je o jedn projekt více.
         """
         logger.info("OznameniSeleniumTest.test_027_oznameni_projektu_001.start")
         project_count_old = Projekt.objects.count()
