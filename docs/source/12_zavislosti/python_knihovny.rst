@@ -52,7 +52,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Licence
      - Odkaz
    * - Django
-     - 5.2.11
+     - 5.2.12
      - BSD-3-Clause
      - https://www.djangoproject.com/
    * - Jinja2
@@ -144,7 +144,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/asottile/cfgv
    * - charset-normalizer
-     - 3.4.4
+     - 3.4.5
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
@@ -175,9 +175,9 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 2025.6
      - MIT License
      - https://github.com/django-crispy-forms/crispy-bootstrap4
-   * - cron_descriptor
-     - 2.0.6
-     - MIT
+   * - cron-descriptor
+     - 1.4.5
+     - MIT License
      - https://github.com/Salamek/cron-descriptor
    * - cryptography
      - 46.0.5
@@ -212,11 +212,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://github.com/Suor/django-cacheops
    * - django-celery-beat
-     - 2.8.1
+     - 2.9.0
      - BSD License
      - https://github.com/celery/django-celery-beat
    * - django-crispy-forms
-     - 2.5
+     - 2.6
      - MIT
      - https://github.com/django-crispy-forms/django-crispy-forms
    * - django-debug-toolbar
@@ -332,7 +332,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD-3-Clause
      - https://github.com/kjd/idna
    * - imagesize
-     - 1.4.1
+     - 2.0.0
      - MIT License
      - https://github.com/shibukawa/imagesize_py
    * - inflate64
@@ -388,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.24
+     - 9.0.25
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -408,7 +408,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/raimon49/pip-licenses
    * - platformdirs
-     - 4.9.2
+     - 4.9.4
      - MIT
      - https://github.com/tox-dev/platformdirs
    * - polib
@@ -464,7 +464,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/pyparsing/pyparsing/
    * - pypdf
-     - 6.7.3
+     - 6.7.5
      - BSD-3-Clause
      - https://github.com/py-pdf/pypdf
    * - pyppmd
@@ -480,7 +480,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.1.0
+     - 1.1.1
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -492,7 +492,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - http://github.com/ahupp/python-magic
    * - pytz
-     - 2025.2
+     - 2026.1.post1
      - MIT License
      - http://pythonhosted.org/pytz
    * - rarfile
@@ -588,7 +588,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - http://sphinx-doc.org/
    * - sphinxcontrib-mermaid
-     - 2.0.0
+     - 2.0.1
      - BSD License
      - https://github.com/mgaitan/sphinxcontrib-mermaid
    * - sphinxcontrib-qthelp
@@ -608,8 +608,8 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://tablib.readthedocs.io
    * - tabulate
-     - 0.9.0
-     - MIT License
+     - 0.10.0
+     - MIT
      - https://github.com/astanin/python-tabulate
    * - texttable
      - 1.7.0
@@ -664,7 +664,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License
      - https://github.com/websocket-client/websocket-client.git
    * - wrapt
-     - 2.1.1
+     - 2.1.2
      - Copyright (c) 2013-2025, Graham Dumpleton
      - https://github.com/GrahamDumpleton/wrapt
    * - wsproto
