@@ -357,21 +357,38 @@ Create: `docs_agents/orm_analysis.json`
 
 Inspect:
 
-- Django models in each application
+- Django models in each application — **read every `models.py` directly** (do not rely on summaries)
 - migrations (count, state, squash candidates)
 - queryset patterns in views, serializers and management commands
 - usage of `select_related` / `prefetch_related`
+- `signals.py` files — signals trigger `save()` chains that can cause hidden N+1 queries
+- `managers.py` files — custom QuerySet managers affect ORM behaviour throughout the app
+- `historie/models.py` — HistorieVazby and Historie are used by virtually all models
 
 Detect:
 
 - N+1 queries
+- `len(queryset.all())` instead of `.count()` — common anti-pattern, always flag
 - missing `select_related` / `prefetch_related`
+- missing initial-value caching in `__init__()`: if a model's `save()` does
+  `Model.objects.get(pk=self.pk)` to detect field changes, it should instead save
+  `self._initial_<field> = self.<field>` in `__init__()` and compare in `save()`
+- imports from non-standard libraries where stdlib or Django equivalents exist
+  (e.g. `cached_property` from `distlib.util` instead of `functools`)
+- deprecated ORM methods: `.extra()` (deprecated Django 4.0), `raw()` without
+  parameters, `select_related` called without field names on large querysets
 - unindexed fields used in filters
 - heavy ORM loops
 - large tables without indexes
 - queries in templates or property methods
 
+Note: The repository uses a special `urgent` database (Django DB router) for sequence
+generation models (ProjektSekvence, AkceSekvence, PianSekvence). This is intentional
+for concurrent safety — do not flag it as a misconfiguration.
+
 Record severe ORM issues as bugs in `bugs.md`.
+Cross-reference every bug entry with existing GitHub Issues (the repository has 113 open
+issues) **before** writing the entry — see the BUG TRACKING section for the procedure.
 
 ```json
 {
@@ -897,3 +914,10 @@ The final report must include:
 6. Cross-reference all bugs with existing GitHub Issues before filing.
 7. When a Django app is large, create one sub-task per app (e.g., T03a, T03b).
 8. Infrastructure components (ELK, Prometheus, Redis, Fedora) are in scope for T04.
+9. **DONE MEANS DONE — never mark a task or sub-task as `done` until every file in its stated
+   scope has been directly read using the Read tool.** Information obtained via a sub-agent
+   summary, Grep output, or directory listing does NOT count as having read the file.
+   If the line or file budget is exhausted mid-task, split into sub-tasks, mark the completed
+   part as `done`, set the parent task to `split`, and leave the remainder as `pending`.
+   Starting the next session without completing all sub-tasks is acceptable; starting it
+   with a falsely marked `done` is not.

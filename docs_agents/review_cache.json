@@ -1,7 +1,7 @@
 {
   "schema_version": "2",
   "initialized_at": "2026-03-07",
-  "last_updated": "2026-03-08T13:00:00Z",
+  "last_updated": "2026-03-08T14:30:00Z",
   "tasks": {
     "T01": {
       "status": "done",
@@ -16,13 +16,19 @@
     "T03": {
       "status": "done",
       "completed_at": "2026-03-08",
-      "report_path": "docs_agents/review_reports/T03.md",
+      "report_path": "docs_agents/review_reports/T03b.md",
       "sub_tasks": {
         "T03a": {
           "status": "done",
           "completed_at": "2026-03-08",
-          "scope": "core, projekt, arch_z, uzivatel, heslar, pian, pas",
+          "scope": "Modely přímo přečteny: core, projekt, arch_z, uzivatel. Raw SQL / extra() vyhledávání celým repozitářem.",
           "report_path": "docs_agents/review_reports/T03.md"
+        },
+        "T03b": {
+          "status": "done",
+          "completed_at": "2026-03-08",
+          "scope": "Modely přímo přečteny: heslar, pian, pas, adb, oznameni, xml_generator. ORM vzory ve views (cílené Grep). GitHub Issues: nedostupné bez autentizace, zdokumentováno.",
+          "report_path": "docs_agents/review_reports/T03b.md"
         }
       }
     },

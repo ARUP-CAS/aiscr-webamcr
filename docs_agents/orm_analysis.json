@@ -1,8 +1,9 @@
 {
-  "schema_version": "1",
-  "generated_at": "2026-03-08T13:00:00Z",
-  "task_id": "T03",
-  "note": "T03 pokrývá modely aplikací: core, projekt, arch_z, uzivatel, heslar, pian, pas. Modely adb, oznameni, notifikace_projekty, xml_generator jsou zahrnuty v migration_summary; podrobná analýza v sub-tasku T03b.",
+  "schema_version": "2",
+  "generated_at": "2026-03-08T14:00:00Z",
+  "task_id": "T03+T03b",
+  "note": "Kompletní analýza všech modelů. T03a pokryla: core, projekt, arch_z, uzivatel (přímé čtení). T03b doplnila: heslar, pian, pas, adb, oznameni, xml_generator (přímé čtení) + ORM vzory ve views.",
+  "github_issues_crossref": "GitHub Issues nebyly přístupné bez autentizace. Bugy označeny 'nelze ověřit'. Doporučeno ruční prohledání před vytvořením issues.",
 
   "models": {
     "core.SouborVazby": {
@@ -271,6 +272,77 @@
       "migration_count": 13,
       "notes": "Model má málo db_index=True na FK polích — u tabulky s pravděpodobně tisíci záznamy je to problém pro filtrování."
     },
+    "adb.Kladysm5": {
+      "fields_count": 4,
+      "indexed_fields": ["gid (PK)", "geom spatial 5514"],
+      "potential_missing_indexes": ["mapno"],
+      "foreign_keys": [],
+      "migration_count": 7
+    },
+    "adb.Adb": {
+      "fields_count": 12,
+      "indexed_fields": ["dokumentacni_jednotka (PK+OneToOne)", "typ_sondy", "autor_popisu", "rok_popisu", "autor_revize", "rok_revize"],
+      "potential_missing_indexes": ["podnet FK bez db_index", "sm5 FK bez db_index"],
+      "foreign_keys": [
+        "dokumentacni_jednotka → dj.DokumentacniJednotka (PK)",
+        "typ_sondy → heslar.Heslar",
+        "podnet → heslar.Heslar (bez db_index)",
+        "autor_popisu → uzivatel.Osoba",
+        "autor_revize → uzivatel.Osoba",
+        "sm5 → Kladysm5 (bez db_index)"
+      ],
+      "migration_count": 7,
+      "notes": "Používá FieldTracker z model_utils pro sledování změn — alternativa k initial_ vzoru."
+    },
+    "adb.VyskovyBod": {
+      "fields_count": 4,
+      "indexed_fields": ["ident_cely unique", "geom spatial 5514 3D"],
+      "potential_missing_indexes": ["adb FK bez db_index", "typ FK bez db_index"],
+      "foreign_keys": [
+        "adb → Adb (bez db_index)",
+        "typ → heslar.Heslar (bez db_index)"
+      ],
+      "migration_count": 7
+    },
+    "adb.AdbSekvence": {
+      "fields_count": 2,
+      "indexed_fields": ["kladysm5 (OneToOne)"],
+      "potential_missing_indexes": [],
+      "foreign_keys": ["kladysm5 → Kladysm5"],
+      "migration_count": 7
+    },
+    "oznameni.Oznamovatel": {
+      "fields_count": 6,
+      "indexed_fields": ["projekt (PK+OneToOne)"],
+      "potential_missing_indexes": [],
+      "foreign_keys": ["projekt → projekt.Projekt (cascade, PK)"],
+      "migration_count": 3,
+      "notes": "Jednoduchý model bez ORM problémů."
+    },
+    "heslar.Heslar": {
+      "fields_count": 7,
+      "indexed_fields": ["ident_cely unique"],
+      "potential_missing_indexes": ["nazev_heslare FK bez db_index — kritické, viz BUG-005"],
+      "foreign_keys": ["nazev_heslare → HeslarNazev (bez db_index)"],
+      "migration_count": 12,
+      "notes": "nazev_heslare je filtrováno v limit_choices_to v desítkách FK polí napříč aplikací. Absence indexu způsobuje table scan při každém formulářovém dotazu."
+    },
+    "heslar.HeslarHierarchie": {
+      "fields_count": 3,
+      "indexed_fields": [],
+      "potential_missing_indexes": ["heslo_podrazene FK", "heslo_nadrazene FK"],
+      "foreign_keys": ["heslo_podrazene → Heslar (bez db_index)", "heslo_nadrazene → Heslar (bez db_index)"],
+      "migration_count": 12,
+      "notes": "GOOD: __init__() správně ukládá initial hodnoty FK polí."
+    },
+    "heslar.HeslarOdkaz": {
+      "fields_count": 6,
+      "indexed_fields": [],
+      "potential_missing_indexes": ["heslo FK"],
+      "foreign_keys": ["heslo → Heslar (bez db_index)"],
+      "migration_count": 12,
+      "notes": "GOOD: __init__() ukládá initial_heslo."
+    },
     "pas.UzivatelSpoluprace": {
       "fields_count": 4,
       "indexed_fields": [],
@@ -407,8 +479,23 @@
       "id": "NP1-012",
       "location": "pas/models.py:182-186",
       "method": "SamostatnyNalez.save()",
-      "description": "Extra SELECT get(pk=self.pk) při každém uložení záznamu pro zjištění změny pristupnost — stejný vzor jako NP1-008.",
+      "description": "Extra SELECT get(pk=self.pk) při každém uložení záznamu pro zjištění změny pristupnost. Model má initial_pristupnost property, ale ta je nastavována PO extra SELECT, nikoliv v __init__(). Vzor je neúplný — viz BUG-004.",
+      "severity": "Nízká",
+      "note": "Oprava T03a: závažnost snížena z Střední na Nízká — počet samostatných nálezů je typicky menší než počet arch. záznamů."
+    },
+    {
+      "id": "NP1-013",
+      "location": "pian/models.py:220-240",
+      "method": "Pian.get_create_org()",
+      "description": "Triple-hop N+1: pro každou DJ přistupuje k dok_jednotka.archeologicky_zaznam.akce.projekt.organizace bez select_related. Každý z těchto přístupů může spustit samostatný DB dotaz.",
       "severity": "Střední"
+    },
+    {
+      "id": "NP1-014",
+      "location": "xml_generator/models.py:325-345",
+      "method": "ModelWithMetadata.record_deletion()",
+      "description": "Dva oddělené for-cykly přes self.soubory.soubory.all() bez prefetch. Celkový dopad je nízký (jen při mazání).",
+      "severity": "Nízká"
     }
   ],
 
