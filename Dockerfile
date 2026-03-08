@@ -30,13 +30,13 @@ RUN echo $TZ > /etc/timezone && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./webclient/requirements.txt /tmp/requirements.txt
-COPY ./package.json /node_modules_build/package.json
+COPY ./package*.json /node_modules_build/
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
 
 RUN --mount=type=cache,target=/root/.npm \
-    cd /node_modules_build && npm install
+    cd /node_modules_build && npm ci
 
 FROM python-builder AS app-builder
 
