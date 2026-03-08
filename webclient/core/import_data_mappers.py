@@ -1909,11 +1909,9 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: SamostatnyNalez) -> list:
         return [record, record.projekt]
-        return [record, record.projekt]
 
     @staticmethod
     def get_record_history(record: SamostatnyNalez):
-        return record
         return record
 
 
@@ -2260,7 +2258,6 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
     @staticmethod
     def get_record_history(record: DokumentacniJednotka):
         return record.archeologicky_zaznam
-        return record.archeologicky_zaznam
 
 
 class AdbMapper(ImportModelMapper):
@@ -2301,7 +2298,6 @@ class AdbMapper(ImportModelMapper):
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Adb) -> list:
         return [record, record.dokumentacni_jednotka.archeologicky_zaznam]
-        return [record, record.dokumentacni_jednotka.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: Adb):
@@ -2331,7 +2327,6 @@ class AdbVyskovyBod(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: VyskovyBod) -> list:
-        return [record.adb, record.adb.dokumentacni_jednotka.archeologicky_zaznam]
         return [record.adb, record.adb.dokumentacni_jednotka.archeologicky_zaznam]
 
     @staticmethod

@@ -543,12 +543,18 @@ Třídy
 
       :return: Vrací výsledek volání ``get()``.
 
+   .. py:method:: get_file_name_for_mapper()
+
+      Vrátí název souboru odpovídající zadané třídě mapperu.
+
    .. py:method:: get_mapping()
 
       Vrátí slovník mapování polí pomocí metody map_field.
 
       :param include_primary_key: Parametr ``include_primary_key`` ovlivňuje větvení podmínek.
       :return: Vrací výsledek operace.
+
+   .. py:method:: load_record_from_db()
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
@@ -666,6 +672,12 @@ Třídy
 
       :return: Vrací proměnná ``record``.
 
+   .. py:method:: fedora_update_targets()
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: GeometryTransformMixin
 
@@ -692,13 +704,6 @@ Třídy
    **Metody:**
 
    .. py:method:: import_validation()
-
-      Načte validation. v aplikaci.
-
-      :param performed_action: Parametr ``performed_action`` předává se do volání ``ImportDataIntegrityError()``, ovlivňuje větvení podmínek.
-
-      :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
-      :raises ImportDataIntegrityError: Vyvolá se při splnění podmínky ``performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.value_dict.get('ident_cely') and self.model_class.objects.filter(id``; nebo při splnění podmínky ``performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.obj``.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 
@@ -750,6 +755,8 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
 
 .. py:class:: HeslarDokumentTypMaterialRadaMapper
 
@@ -764,6 +771,8 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
 
 
 .. py:class:: HeslarHierarchieMapper
@@ -780,6 +789,8 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
 
 .. py:class:: HeslarOdkazMapper
 
@@ -795,6 +806,8 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
 
 .. py:class:: OrganizaceMapper
 
@@ -809,6 +822,8 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
 
 
 .. py:class:: OsobaMapper
@@ -840,6 +855,8 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: ProjektKatastrMapper
 
@@ -855,6 +872,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: ProjektOznamovatelMapper
 
@@ -869,6 +890,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: SamostatnyNalezMapper
@@ -894,6 +919,10 @@ Třídy
       :param serialize: Parametr ``serialize`` předává se do volání ``map()``.
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: ArcheologickyZaznamAkceMapper
@@ -928,6 +957,10 @@ Třídy
 
       :return: Vrací výsledek volání ``record_postprocessing()``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: LokalitaMapper
 
@@ -951,6 +984,8 @@ Třídy
 
       :return: Vrací výsledek volání ``get()``.
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: AkceVedouciMapper
 
@@ -966,6 +1001,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: get_record_history()
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
 
 .. py:class:: ArcheologickyZaznamKatastrMapper
 
@@ -980,6 +1019,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: PianMapper
@@ -1006,6 +1049,8 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: DokumentacniJednotkaMapper
 
@@ -1031,6 +1076,10 @@ Třídy
 
       :return: Vrací proměnná ``record``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: AdbMapper
 
@@ -1046,6 +1095,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: AdbVyskovyBod
 
@@ -1060,6 +1113,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentLetMapper
@@ -1116,6 +1173,8 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: DokumentAutorMapper
 
@@ -1130,6 +1189,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentJazykMapper
@@ -1146,6 +1209,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: DokumentOsobaMapper
 
@@ -1160,6 +1227,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentPosudekMapper
@@ -1176,6 +1247,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: TvarMapper
 
@@ -1190,6 +1265,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: DokumentCastMapper
@@ -1206,6 +1285,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: NeidentAkceMapper
 
@@ -1220,6 +1303,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: NeidentAkceVedouciMapper
@@ -1236,6 +1323,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: KomponentaMapper
 
@@ -1251,6 +1342,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: KomponentaAktivitaMapper
 
@@ -1265,6 +1360,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: NalezMapper
@@ -1322,6 +1421,8 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: get_record_history()
+
 
 .. py:class:: ExterniZdrojAutorMapper
 
@@ -1336,6 +1437,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: ExterniZdrojEditorMapper
@@ -1352,6 +1457,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: ExterniOdkazMapper
 
@@ -1367,6 +1476,10 @@ Třídy
 
       :return: Vrací proměnná ``field_mapping``.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: UzivatelMapper
 
@@ -1381,6 +1494,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: get_record_history()
+
+   .. py:method:: import_validation()
 
 
 .. py:class:: UzivatelNotifikaceProjektMapper
@@ -1438,6 +1555,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``map()``.
       :return: Výstup funkce odpovídající implementované logice.
 
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
+
 
 .. py:class:: UzivatelSpolupraceMapper
 
@@ -1452,6 +1573,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: UzivatelOpravneniMapper
@@ -1484,11 +1609,9 @@ Třídy
 
    .. py:method:: import_validation()
 
-      Načte validation. v aplikaci.
+   .. py:method:: get_record_history()
 
-      :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``import_validation``.
-
-      :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
+   .. py:method:: _get_updated_ident_cely_record_list()
 
 
 .. py:class:: SouborMapper
@@ -1504,6 +1627,10 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
+
+   .. py:method:: get_record_history()
 
 
 .. py:class:: UzivatelNotifikaceMapper
@@ -1536,11 +1663,9 @@ Třídy
 
    .. py:method:: import_validation()
 
-      Načte validation. v aplikaci.
+   .. py:method:: get_record_history()
 
-      :param performed_action: Parametr ``performed_action`` slouží jako vstup pro logiku funkce ``import_validation``.
-
-      :return: Vrací výsledek volání ``_get_filter_kwargs_primary_key()``.
+   .. py:method:: _get_updated_ident_cely_record_list()
 
 
 .. py:class:: HistorieMapper
@@ -1556,4 +1681,6 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` předává se do volání ``get_mapping()``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _get_updated_ident_cely_record_list()
 
