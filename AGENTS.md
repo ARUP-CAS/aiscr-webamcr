@@ -409,16 +409,16 @@ When performing bulk docstring edits:
 1.  Find remaining Google-style blocks:
 
 ```{=html}
-<!-- -->
+Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'
 ```
-    Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'
+    
 
 2.  Find generic wording:
 
 ```{=html}
-<!-- -->
+Select-String -Pattern 'Popis parametru|Navratova hodnota funkce|Vstupni hodnota|Hodnota parametru|Pokud behem zpracovani nastane chyba|Raised when processing fails'
 ```
-    Select-String -Pattern 'Popis parametru|Navratova hodnota funkce|Vstupni hodnota|Hodnota parametru|Pokud behem zpracovani nastane chyba|Raised when processing fails'
+    
 
 3.  Verify descriptions match the actual code behaviour.
 4.  Verify there are no duplicate blocks.
