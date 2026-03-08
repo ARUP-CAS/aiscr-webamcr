@@ -481,14 +481,37 @@ Create: `docs_agents/security_analysis.json`
 
 Inspect:
 
-- Django security settings (`SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `SECURE_*`)
-- secrets management (Docker secrets vs env vars vs files)
-- authentication and authorisation (CAS integration, Django permissions)
+- Run `python manage.py check --deploy` first and record all warnings
+  (covers `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, HTTPS settings, cookie security)
+- Django security settings (`SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `SECURE_*`);
+  pay attention to fallback values in `get_secret()` calls — a fallback of `"True"`
+  for `DEBUG` is as dangerous as hardcoding `DEBUG = True`
+- secrets management (Docker secrets vs env vars vs files); when auditing
+  committed sample secrets files, distinguish placeholder values
+  ("changeme", "test_key", "PLACEHOLDER", "your_key_here", "secret") from
+  potentially real credentials (random-looking hex/base64 strings, third-party
+  domain URLs, email addresses) — real-looking credentials → Střední, recommend rotation
+- authentication and authorisation (CAS integration, Django permissions);
+  verify that any custom `user_can_authenticate()` backend returns `False`
+  (not raises an exception) for inactive users
+- NGINX proxy configuration (`proxy/default.conf`) — HTTPS redirect, HSTS,
+  `X-Frame-Options`, `Content-Security-Policy` may be set at proxy level; check
+  whether Django-level `SECURE_*` settings are still needed (defense-in-depth)
+- `webclient/webclient/urls.py` — check admin URL path predictability, exposed
+  debug views
+- `webclient/core/middleware.py` (or `middleware/` directory if split) — custom
+  middleware can introduce or remove security controls
 - CORS configuration
 - CSRF protection
 - SQL injection risks (raw queries, `extra()`, `RawSQL()`)
-- XSS risks (`safe` filters in templates, `mark_safe()`)
-- dependencies with known CVEs (compare against current database)
+- XSS risks (`safe` filters in templates, `mark_safe()`):
+  - **Acceptable:** hardcoded HTML string without user input (e.g. widget decoration)
+  - **Střední risk:** value from a model property or DB attribute without explicit `escape()`
+  - **Vysoká risk:** value directly from request parameters or user input
+  - Preferred pattern: `format_html()` instead of `mark_safe()` for dynamic content
+- dependencies with known CVEs — primary method: run `pip audit` or
+  `safety check -r requirements.txt`; if tools unavailable in offline environment,
+  record as "CVE audit recommended" and add to `refactoring_backlog.md` as a SEC step
 - sensitive files in `.gitignore` vs what is actually committed
 
 > **Note on `cert/`:** This directory contains self-signed certificates for local
@@ -498,10 +521,13 @@ Inspect:
 Severity mapping:
 
 - `DEBUG=True` in production → Kritická
+- `get_secret("DEBUG", "True")` — dangerous fallback → Vysoká
 - hardcoded `SECRET_KEY` → Kritická
 - outdated dependency with CVE → Vysoká
 - missing CSRF protection → Vysoká
+- `mark_safe()` with DB/request value without `escape()` → Střední
 - unnecessary `safe` filter → Střední
+- real-looking credentials in committed sample file → Střední
 
 ```json
 {
