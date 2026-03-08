@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "status": "skeleton — čeká na analýzu T02",
+    "needs_agent_update": true
+  },
+  "django_apps": {},
+  "python_dependencies": {
+    "source_files": ["requirements.txt", "pyproject.toml"],
+    "packages": {}
+  },
+  "npm_dependencies": {
+    "source_file": "package.json",
+    "packages": {}
+  },
+  "docker_service_dependencies": {
+    "note": "Vyplnit z docker-compose.yml — sekce depends_on",
+    "services": {}
+  },
+  "circular_dependencies": [],
+  "architectural_issues": []
+}

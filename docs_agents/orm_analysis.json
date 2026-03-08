@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "status": "skeleton — čeká na analýzu T03",
+    "needs_agent_update": true,
+    "note": "Rozsáhlá analýza — pravděpodobně bude rozdělena na sub-tasky dle Django app"
+  },
+  "models": {},
+  "migrations": {
+    "note": "Vyplnit: počet migrací na app, squash kandidáti, stav"
+  },
+  "query_patterns": [],
+  "n_plus_one_candidates": [],
+  "missing_prefetch_candidates": [],
+  "unindexed_filter_fields": []
+}

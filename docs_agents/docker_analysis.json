@@ -1,0 +1,96 @@
+{
+  "_meta": {
+    "status": "partial — seznam souborů znám, obsah čeká na analýzu T04",
+    "needs_agent_update": true
+  },
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "purpose": "Produkční image Django aplikace",
+      "analyzed": false
+    },
+    {
+      "path": "Dockerfile-DB",
+      "purpose": "Vývojová databáze (PostgreSQL)",
+      "analyzed": false
+    },
+    {
+      "path": "Dockerfile-DEV",
+      "purpose": "Vývojové prostředí Django",
+      "analyzed": false
+    },
+    {
+      "path": "proxy/",
+      "purpose": "NGINX reverse proxy — konfigurace a build",
+      "analyzed": false
+    },
+    {
+      "path": "redis/",
+      "purpose": "Redis — konfigurace a build",
+      "analyzed": false
+    },
+    {
+      "path": "elasticsearch/",
+      "purpose": "Elasticsearch konfigurace",
+      "analyzed": false
+    },
+    {
+      "path": "kibana/",
+      "purpose": "Kibana konfigurace",
+      "analyzed": false
+    },
+    {
+      "path": "logstash/",
+      "purpose": "Logstash konfigurace",
+      "analyzed": false
+    },
+    {
+      "path": "prometheus/",
+      "purpose": "Prometheus + Grafana konfigurace",
+      "analyzed": false
+    },
+    {
+      "path": "fedora/",
+      "purpose": "Testovací Fedora instance",
+      "analyzed": false
+    }
+  ],
+  "docker_compose_services": {
+    "docker-compose.yml": {
+      "purpose": "Produkční stack",
+      "known_services": ["web", "redis", "celery_worker", "celery_beat", "elasticsearch", "kibana", "logstash", "prometheus", "selenium"],
+      "analyzed": false
+    },
+    "docker-compose-dev-local-db.yml": {
+      "purpose": "Lokální vývoj",
+      "analyzed": false
+    },
+    "docker-compose-dev-local-db-all-containers.yml": {
+      "purpose": "Lokální vývoj — všechny kontejnery",
+      "analyzed": false
+    },
+    "docker-compose-proxy.yml": {
+      "purpose": "NGINX proxy z image",
+      "analyzed": false
+    },
+    "docker-compose-test.yml": {
+      "purpose": "Selenium testy",
+      "analyzed": false
+    },
+    "git_docker-compose.yml": {
+      "purpose": "Deployment z lokálního repozitáře",
+      "analyzed": false
+    },
+    "git_docker-compose.override.yml": {
+      "purpose": "Override pro lokální deployment",
+      "analyzed": false
+    },
+    "git_docker-compose-proxy.yml": {
+      "purpose": "NGINX proxy z lokálního repozitáře",
+      "analyzed": false
+    }
+  },
+  "base_images": {},
+  "security_issues": [],
+  "optimization_opportunities": []
+}

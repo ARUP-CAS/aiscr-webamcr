@@ -1,145 +1,506 @@
-# AGENTS.md
+# AGENTS.md --- Instructions for AI Agents
 
-Pravidla v tomto souboru plati pro cely repozitar `aiscr-webamcr`.
-Pokud je v podadresari dalsi `AGENTS.md`, ma pro dany strom vyssi prioritu.
+Rules in this file apply to the entire `aiscr-webamcr` repository. A
+nested `AGENTS.md` in a subdirectory takes precedence for that subtree.
 
-## Cil
+------------------------------------------------------------------------
 
-Udrzovat zmeny male, bezpecne a snadno reviewovatelne v souladu s projektovymi pravidly
-(`CONTRIBUTING.md`, `README.md`, CI workflow a Sphinx dokumentace).
+## Repository Overview
 
-## Chovani agenta
+This repository contains the production Django web application for the
+Archaeological Map of the Czech Republic (AMČR), part of the AIS CR
+infrastructure maintained by ARUP-CAS.
 
-- Vzdy maximalne vyuzivej dovednosti.
-- Po dokonceni ulohy navrhni aktualizaci tohoto souboru tak, aby se zvysovala jeho kvalita.
-- Osvedcene dovednosti zapis do sekce `Doporucene dovednosti`
+Main components include:
 
-## Doporucene dovednosti
+-   Django application (`webclient/`)
+-   Sphinx documentation (`docs/`)
+-   Docker-based development and runtime environment
+-   Selenium testing infrastructure
+-   Monitoring and logging stack (Elasticsearch, Kibana, Logstash,
+    Prometheus)
 
-- `doc` - pro kontrolu a upravy dokumentacnich artefaktu, kdy zalezi na formatu.
-- `gh-fix-ci` - kdyz je potreba rychle dohledat a opravit chyby z CI.
-- `gh-address-comments` - pri zapracovani review pripominek z PR.
+Development follows a multi-branch workflow:
 
-## Rychly kontext repozitare
+    feature / agents branches
+    → test
+    → dev
+    → main (production)
 
-- Hlavni aplikace: `webclient/` (Django 5.2)
-- Dokumentace: `docs/` (Sphinx, Read the Docs)
-- Infrastruktura: `docker-compose*.yml`, `proxy/`, `redis/`, `elasticsearch/`, `kibana/`, `logstash/`, `prometheus/`
-- Provozni a helper skripty: `scripts/`
+AI agents must always target **`test`** unless explicitly instructed
+otherwise.
 
-## Autoritativni zdroje pravidel (cti pred vetsimi zmenami)
+------------------------------------------------------------------------
 
-1. `CONTRIBUTING.md`
-2. `docs/source/03_vyvoj/kodovaci_standardy.rst`
-3. `docs/source/04_django_aplikace/04_01_core/docstring_style_guide.rst`
-4. `.pre-commit-config.yaml`
-5. `.flake8`
+## Repository Orientation (Mandatory First Step)
 
-## Povinne zasady pri upravach
+Before starting any work, agents must gather repository context.
 
-1. Nemenit runtime chovani, pokud je ukol ciste dokumentacni nebo refaktor bez feature.
-2. Drzet se stylu existujici casti kodu, neprovadet velke vedlejsi refactory.
-3. Needitovat rucne soubory `*/migrations/*.py`, pokud ukol explicitne nepozaduje schema zmenu.
-4. Neprepisovat ani neodstranovat cizi (uz existujici) zmeny mimo scope zadani.
-5. Necommitovat zadne secrety, klice ani lokalni citlive konfigurace.
+Read the following files:
 
-## Kodovaci standardy a kvalita
+-   `docs_agents/repository_map.json`
+-   `docs_agents/review_cache.json`
+-   `docs_agents/bugs.md`
+-   `docs_agents/refactoring_backlog.md`
+-   `docs_agents/PROMPT.md`
 
-- Python format:
-  - `black` s delkou radku 120
-  - `isort --profile black`
-  - `flake8` dle `.flake8`
-- Docstringy:
-  - U verejnych trid/funkci/metod drzet projektovy style guide.
-  - Pouzivat Sphinx styl (`:param:`, `:return:`, `:raises:`) kde dava smysl.
-  - Nepouzivat Google-sekce `Args:`, `Returns:`, `Raises:`.
-  - Udrzovat popisy konkretni vuci realnemu chovani kodu (ne obecne sablony typu "vstupni hodnota").
-  - U `:return:` a `:raises:` vzdy popsat konkretni chovani podle implementace (typ/navratove vetve, podminky vyvolani vyjimky), ne genericke formulace.
-  - U `:param:` vzdy popsat vyznam konkretniho parametru v kontextu funkce/metody (jak ovlivnuje chovani), ne genericke formulace.
-  - Nezdvojovat informace: pokud je pouzit Sphinx blok, nepsat paralelni Google blok se stejnym obsahem.
-  - Hook `method-docstring-style-reminder` je neblokujici, ale varovani brat vazne.
+Purpose:
 
-## Docstring review checklist
+-   understand repository structure
+-   avoid repeating previous audit work
+-   reuse previously collected analysis
+-   continue long-running technical review sessions
 
-Pri hromadnych upravach docstringu proved:
+Agents should treat these files as the **persistent state of the review
+process**.
 
-1. Vyhledani zbytkoveho Google stylu:
-   - `Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'`
-2. Vyhledani generickych formulaci:
-   - `Select-String -Pattern 'Popis parametru|Návratová hodnota funkce|Vstupní hodnota|Hodnota parametru|Pokud během zpracování nastane chyba|Raised when processing fails'`
-3. Kontrolu, ze popis odpovida kontextu funkce (parametry i return typ/chovani).
-4. Kontrolu, ze nejsou duplicitni bloky se stejnym obsahem.
+### Resolving Inconsistencies
 
-## Generovane artefakty a dokumentace
+If content in `docs_agents/` contradicts high-level repository rules or
+governance defined in this document (`AGENTS.md`), `CONTRIBUTING.md`, or
+other authoritative project documentation, agents must treat those
+higher-level documents as the **source of truth**.
 
-Nektere soubory se meni automaticky pomoci skriptu/hooku:
+In such cases agents should:
 
-- `docs/generate_module_docs.py` (modulova dokumentace)
-- `docs/generate_selenium_test_docs.py` (sekce mezi markery v `docs/source/09_testovani/selenium_testy.rst`)
-- `docs/licenses/convert_to_rst.py` (generuje `docs/source/12_zavislosti/python_knihovny.rst`)
+1.  Prefer the high-level governance rules defined in:
+    -   `AGENTS.md`
+    -   `CONTRIBUTING.md`
+    -   repository coding standards
+2.  Adapt or update affected files in `docs_agents/` to align with those
+    rules.
+3.  Record the adjustment in the review history (for example
+    `review_cache.json` or `refactoring_backlog.md`) when relevant.
 
-Pravidla:
+This ensures long-running AI review artefacts remain consistent with
+current repository governance.
 
-1. Neupravuj rucne auto-generovane bloky, pokud existuje skript.
-2. Pri zmene Selenium testu nebo struktury modulu spust relevantni generatory.
-3. Pri zmene dependencies otestuj, jestli je potreba regenerovat seznam Python knihoven.
+------------------------------------------------------------------------
 
-## Testy pred odevzdanim zmen
+## AI-Generated Content
 
-Minimalne:
+All artefacts produced by AI agents must be stored in:
 
-1. `.\\.venv\\Scripts\\python.exe -m compileall -q webclient`
-2. `pre-commit run --all-files`
+`docs_agents/`
 
-### Preferovana varianta Pythonu
+Examples include:
 
-Pro vsechny kontrolni skripty a testy preferuj interpreter z lokalniho virtualniho prostredi:
+-   audit reports
+-   analysis JSON files
+-   dependency analysis
+-   architectural notes
+-   prompt evolution notes
 
-- `.\.venv\Scripts\python.exe`
-- teprve pokud `.venv` neni dostupne, pouzij `python`/`python3`/`py`
+Agent work must be committed to branches named:
 
-Dle typu zmen:
+`agents/<agent_name>/<topic>`
 
-1. Cileny beh Django testu pro dotcene moduly.
-2. Selenium testy (`scripts/start_selenium_tests.sh`) jen kdyz je to potreba podle scope zmen, protoze jsou tezke a casove narocne.
-3. Vybirej prednostne ty selenium testy, ktere odpovidaji scope zmen.
+Examples:
 
-Vysledek overeni vzdy strucne popsat v PR/summary (`co bylo spusteno`, `co proslo`, `co nebylo mozne spustit`).
+-   `agents/claude/docstring-audit`
+-   `agents/gpt/repository-analysis`
 
-### Fallback bez Pythonu
+Rules:
 
-Pokud v prostredi neni dostupny `python`/`python3`/`py`:
+-   agent branches must be created from **`test`**
+-   agent branches must never push directly to protected branches
+-   all agent work requires human review before merge
 
-1. Uved tuto skutecnost explicitne v summary/PR.
-2. Proved aspon statickou kontrolu diffu a formatu:
-   - `git diff -- '*.py'`
-   - `git diff -- docs/source/09_testovani/selenium_testy.rst`
-3. Docstringy kontroluj manualne podle checklistu vyse (`:param:`, `:return:`, `:raises:` a bez `Args:/Returns:/Raises:`).
-4. Pokud kontrolni skripty nelze spustit, nikdy netvrd, ze probehly.
+------------------------------------------------------------------------
 
-## Selenium popisy vs test branch checklist
+## Goal
 
-Pri kontrole vyznamu popisu Selenium testu proti vetvi `test` proved:
+The goal of AI agents in this repository is to support **long-running,
+incremental technical review** of the project.
 
-1. `git diff -w test -- webclient/*/tests/test_selenium.py`
-2. `git diff -w test -- docs/source/09_testovani/selenium_testy.rst`
-3. Zmeny opravuj jen tam, kde doslo k posunu vyznamu; ciste formatovaci zmeny ponech.
-4. Pokud je `selenium_testy.rst` generovany skriptem, po upravach over konzistenci s `docs/generate_selenium_test_docs.py`.
+Agents should focus on:
 
-## Git a PR workflow
+-   small, safe improvements
+-   documentation accuracy
+-   code quality improvements
+-   CI stability
+-   identification of bugs and technical debt
 
-- Branch naming: preferovat `feature/<issue>` nebo `bugfix/<issue>` (viz `CONTRIBUTING.md`).
-- Delat mensi logicke commity.
-- V PR uvadet:
-  - odkaz na issue (`#cislo`)
-  - Motivation
-  - Description
-  - Testing
-- Pokud prace jeste neni pripravena k review, pouzit Draft PR.
-## Co vlastnici a CI typicky ocekavaji
+Large architectural changes should only be proposed, not performed
+automatically.
 
-- CODEOWNERS pro repozitar: `@motyc`, `@jhavrlant`
-- Pre-commit workflow bezi na PR do vetvi `dev` a `test`
-- CI muze automaticky vytvorit PR s opravami formatovani/generovanych souboru
+------------------------------------------------------------------------
 
-Agent ma preferovat takove zmeny, ktere timto pipeline projdou bez manualnich zasahu.
+## Agent Behaviour
+
+Agents must:
+
+-   gather repository context before starting work
+-   avoid repeating previously recorded work
+-   prefer incremental improvements
+-   record findings in `docs_agents/`
+-   follow repository coding standards
+-   keep changes minimal and reviewable
+-   suggest improvements to this file when appropriate
+
+Agents must not perform large refactors without explicit instruction.
+
+### Recommended Skills
+
+Specialised agent capabilities that may help with repository
+maintenance.
+
+Skills are optional helpers and should be used when they improve
+efficiency or quality of work.
+
+Examples:
+
+-   `doc` --- reviewing and editing documentation artefacts
+-   `gh-fix-ci` --- diagnosing and fixing CI failures
+-   `gh-address-comments` --- incorporating pull request review comments
+
+------------------------------------------------------------------------
+
+## Verification Sources
+
+When verifying behaviour or documentation, the following priority
+applies:
+
+1.  live systems or APIs
+2.  source code repositories
+3.  official technical documentation
+4.  repository documentation
+
+Examples:
+
+-   Django behaviour should be verified against official Django
+    documentation
+-   Docker image metadata should be verified against container
+    registries
+-   Elasticsearch and Redis behaviour should be verified against
+    upstream documentation
+
+------------------------------------------------------------------------
+
+## Scope
+
+### In Scope
+
+Agents may modify:
+
+-   `webclient/`
+-   `docs/`
+-   `scripts/`
+-   `docs_agents/`
+-   Docker configuration
+-   CI configuration
+-   documentation files
+
+Typical tasks include:
+
+-   documentation improvements
+-   CI fixes
+-   dependency analysis
+-   bug identification
+-   code readability improvements
+-   refactoring proposals
+
+### Out of Scope
+
+Agents must not modify generated artefacts or runtime data such as:
+
+-   `node_modules/`
+-   `_site/`
+-   `build/`
+-   `dist/`
+-   `__pycache__/`
+-   `*/migrations/*.py` (unless schema change is required)
+
+Generated documentation blocks must not be edited manually if scripts
+exist.
+
+------------------------------------------------------------------------
+
+## Tech Stack
+
+Technologies detected in this repository.
+
+### Backend
+
+-   Python
+-   Django 5.2
+
+### Documentation
+
+-   Sphinx
+-   Read the Docs
+
+### Infrastructure
+
+-   Docker
+-   docker-compose
+
+### Observability stack
+
+-   Elasticsearch
+-   Kibana
+-   Logstash
+-   Prometheus
+-   Redis
+
+### Testing
+
+-   Django test framework
+-   Selenium tests
+
+### Code quality tooling
+
+-   black
+-   isort
+-   flake8
+-   pre-commit
+
+------------------------------------------------------------------------
+
+## Branch and PR Rules
+
+Development workflow:
+
+    agents / feature branches
+    → test
+    → dev
+    → main
+
+Rules:
+
+-   always branch from **`test`**
+-   never push directly to `test`, `dev`, or `main`
+-   always open a Pull Request
+
+Branch naming:
+
+Application changes:
+
+-   `feature/<topic>`
+-   `bugfix/<topic>`
+-   `docs/<topic>`
+
+Agent branches:
+
+-   `agents/<agent>/<topic>`
+
+Pull requests must include:
+
+-   motivation
+-   description of changes
+-   testing information
+-   issue reference if available
+
+Agents must **never open PRs targeting `dev`**.
+
+------------------------------------------------------------------------
+
+## docs_agents Structure
+
+The `docs_agents` directory stores the persistent state of AI-assisted
+technical review.
+
+`PROMPT.md`\
+Instructions for running long-term AI review sessions.
+
+`PROMPT_RUN.md`\
+Instructions for executing a review session.
+
+`review_config.yaml`\
+Configuration of analysis modules according to the repository stack.
+
+`repository_map.json`\
+Overview of repository structure and major directories.
+
+`dependency_graph.json`\
+Map of key dependencies and services.
+
+`review_cache.json`\
+Persistent state of previous review sessions.
+
+`bugs.md`\
+Structured log of discovered issues.
+
+`refactoring_backlog.md`\
+Long-term improvement backlog.
+
+Agents must update these files instead of duplicating work.
+
+------------------------------------------------------------------------
+
+## Repository Context
+
+This repository is part of the AIS CR ecosystem maintained by ARUP-CAS.
+
+Related repositories include:
+
+-   aiscr-webamcr
+-   aiscr-digiarchiv-2
+-   aiscr-webamcr-help
+-   aiscr-api-home
+
+These repositories share similar governance and AI-assisted review
+structure.
+
+Agents working across repositories should preserve consistency in
+documentation and review processes.
+
+------------------------------------------------------------------------
+
+## Authoritative Rule Sources
+
+Before performing larger changes, consult:
+
+1.  `CONTRIBUTING.md`
+2.  `docs/source/03_vyvoj/kodovaci_standardy.rst`
+3.  `docs/source/04_django_aplikace/04_01_core/docstring_style_guide.rst`
+4.  `.pre-commit-config.yaml`
+5.  `.flake8`
+
+These files define the project's coding standards.
+
+------------------------------------------------------------------------
+
+## Mandatory Rules for Edits
+
+1.  Do not change runtime behaviour when the task is purely documentary
+    or a no-feature refactor.
+2.  Follow the style of existing code and avoid unrelated refactors.
+3.  Do not manually edit `*/migrations/*.py` unless a schema change is
+    required.
+4.  Do not overwrite or remove existing changes outside the scope of the
+    task.
+5.  Do not commit secrets, keys, or sensitive local configuration.
+
+Note:
+
+`cert/` contains self-signed certificates for local development only.
+These are intentionally committed and are not a production security
+concern.
+
+------------------------------------------------------------------------
+
+## Coding Standards and Quality
+
+Python formatting:
+
+-   `black` (line length 120)
+-   `isort` with profile `black`
+-   `flake8` per `.flake8`
+
+Docstrings:
+
+-   must be written in Czech
+-   must use Sphinx style (`:param:`, `:return:`, `:raises:`)
+-   Google-style blocks (`Args`, `Returns`, `Raises`) are not allowed
+-   descriptions must reflect real behaviour of the code
+-   avoid generic wording
+-   avoid duplicate docstring sections
+
+The `method-docstring-style-reminder` hook is non-blocking, but warnings
+should be treated seriously.
+
+------------------------------------------------------------------------
+
+## Docstring Review Checklist
+
+When performing bulk docstring edits:
+
+1.  Find remaining Google-style blocks:
+
+```{=html}
+Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'
+```
+    
+
+2.  Find generic wording:
+
+```{=html}
+Select-String -Pattern 'Popis parametru|Navratova hodnota funkce|Vstupni hodnota|Hodnota parametru|Pokud behem zpracovani nastane chyba|Raised when processing fails'
+```
+    
+
+3.  Verify descriptions match the actual code behaviour.
+4.  Verify there are no duplicate blocks.
+5.  Verify docstrings are Czech only.
+
+------------------------------------------------------------------------
+
+## Generated Artefacts and Documentation
+
+Some files are generated automatically by scripts:
+
+-   `docs/generate_module_docs.py`
+-   `docs/generate_selenium_test_docs.py`
+-   `docs/licenses/convert_to_rst.py`
+
+Rules:
+
+1.  Do not manually edit generated sections.
+2.  After changing Selenium tests or module structure, run the
+    generators.
+3.  After changing dependencies, verify whether dependency documentation
+    must be regenerated.
+
+------------------------------------------------------------------------
+
+## Tests Before Submitting Changes
+
+Minimum checks:
+
+    .\.venv\Scripts\python.exe -m compileall -q webclient
+    pre-commit run --all-files
+
+Preferred interpreter:
+
+    .\.venv\Scripts\python.exe
+
+Testing rules:
+
+-   run targeted Django tests when code changes
+-   run Selenium tests only when necessary
+-   Selenium tests require human confirmation due to runtime cost
+
+PR descriptions must include:
+
+-   what tests were run
+-   what passed
+-   what could not be executed
+
+------------------------------------------------------------------------
+
+## Selenium Descriptions vs Test Branch Checklist
+
+When verifying Selenium test descriptions against the `test` branch:
+
+    git diff -w test -- webclient/*/tests/test_selenium.py
+    git diff -w test -- docs/source/09_testovani/selenium_testy.rst
+
+Fix only where the meaning has changed.
+
+If `selenium_testy.rst` is generated by a script, verify consistency
+with `docs/generate_selenium_test_docs.py`.
+
+------------------------------------------------------------------------
+
+## Repository Quick Reference
+
+Main directories:
+
+-   `webclient/` --- Django application
+-   `docs/` --- Sphinx documentation
+-   `scripts/` --- helper and operational scripts
+-   `docs_agents/` --- AI-assisted review state
+
+Infrastructure configuration:
+
+-   `docker-compose*.yml`
+-   `proxy/`
+-   `redis/`
+-   `elasticsearch/`
+-   `kibana/`
+-   `logstash/`
+-   `prometheus/`
+
+Certificates in `cert/` are self-signed for development only and
+intentionally committed.

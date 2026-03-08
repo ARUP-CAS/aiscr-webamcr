@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "status": "skeleton — čeká na analýzu T10",
+    "needs_agent_update": true
+  },
+  "key_scripts": {
+    "scripts/dev_deploy.sh": {
+      "purpose": "Hlavní skript pro lokální deployment",
+      "known_options": ["-h", "-b web", "-d", "-x"],
+      "analyzed": false
+    }
+  },
+  "all_scripts": [],
+  "issues": []
+}

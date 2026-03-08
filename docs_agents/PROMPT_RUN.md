@@ -1,0 +1,1 @@
+Přečti docs_agents/PROMPT.md a pokračuj v review.

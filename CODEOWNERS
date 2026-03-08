@@ -1,8 +1,45 @@
-# This is a comment.
-# Each line is a file pattern followed by one or more owners.
+# CODEOWNERS
+#
+# Každý PR musí být schválen alespoň jedním z vlastníků kódu.
+# Syntax: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-# These owners will be the default owners for everything in
-# the repo. Unless a later match takes precedence,
-# they will be requested for review when someone opens
-# a pull request.
-*       @motyc @jhavrlant
+# Výchozí vlastníci pro vše v repozitáři
+*                           @motyc @jhavrlant
+
+# Hlavní Django aplikace
+/webclient/                 @motyc @jhavrlant
+
+# Infrastruktura
+/elasticsearch/             @motyc @jhavrlant
+/fedora/                    @motyc @jhavrlant
+/kibana/                    @motyc @jhavrlant
+/logstash/                  @motyc @jhavrlant
+/prometheus/                @motyc @jhavrlant
+/proxy/                     @motyc @jhavrlant
+/redis/                     @motyc @jhavrlant
+
+# Deployment skripty
+/scripts/                   @motyc @jhavrlant
+
+# CI/CD workflows a GitHub konfigurace
+/.github/                   @motyc @jhavrlant
+
+# Sphinx dokumentace
+/docs/                      @motyc @jhavrlant
+
+# Agentní dokumentace — vyžaduje human review před mergem do test
+/docs_agents/               @motyc @jhavrlant
+
+# Projektová dokumentace a pravidla
+/AGENTS.md                  @motyc @jhavrlant
+/CONTRIBUTING.md            @motyc @jhavrlant
+/README.md                  @motyc @jhavrlant
+/CODEOWNERS                 @motyc @jhavrlant
+/CITATION.cff               @motyc @jhavrlant
+
+# Docker a build konfigurace
+/Dockerfile                 @motyc @jhavrlant
+/Dockerfile-DB              @motyc @jhavrlant
+/Dockerfile-DEV             @motyc @jhavrlant
+/docker-compose*.yml        @motyc @jhavrlant
+/git_docker-compose*.yml    @motyc @jhavrlant

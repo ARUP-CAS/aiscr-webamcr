@@ -1,0 +1,25 @@
+{
+  "_meta": {
+    "status": "skeleton — čeká na analýzu T09",
+    "needs_agent_update": true
+  },
+  "workflows": [],
+  "pre_commit_hooks": {
+    "config_file": ".pre-commit-config.yaml",
+    "hooks": []
+  },
+  "linting_config": {
+    "flake8": ".flake8",
+    "isort": ".isort.cfg"
+  },
+  "test_infrastructure": {
+    "selenium_compose": "docker-compose-test.yml",
+    "test_docs": "docs/source/09_testovani/"
+  },
+  "security_scanning": {
+    "dependabot": null,
+    "codeql": null,
+    "note": "Ověřit při T09"
+  },
+  "issues": []
+}

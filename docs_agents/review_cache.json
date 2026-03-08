@@ -1,0 +1,20 @@
+{
+  "schema_version": "2",
+  "initialized_at": "2026-03-07",
+  "last_updated": null,
+  "note": "Inicializační cache — žádné soubory zatím nebyly analyzovány. Agent musí při prvním spuštění spočítat SHA-256 hashes všech relevantních souborů.",
+  "tasks": {
+    "T01": { "status": "pending", "completed_at": null, "report_path": null },
+    "T02": { "status": "pending", "completed_at": null, "report_path": null },
+    "T03": { "status": "pending", "completed_at": null, "report_path": null },
+    "T04": { "status": "pending", "completed_at": null, "report_path": null },
+    "T05": { "status": "pending", "completed_at": null, "report_path": null },
+    "T06": { "status": "pending", "completed_at": null, "report_path": null },
+    "T07": { "status": "pending", "completed_at": null, "report_path": null },
+    "T08": { "status": "pending", "completed_at": null, "report_path": null },
+    "T09": { "status": "pending", "completed_at": null, "report_path": null },
+    "T10": { "status": "pending", "completed_at": null, "report_path": null },
+    "T11": { "status": "blocked", "completed_at": null, "report_path": null }
+  },
+  "file_hashes": {}
+}
