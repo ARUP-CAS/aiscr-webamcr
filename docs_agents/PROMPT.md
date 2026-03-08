@@ -117,6 +117,7 @@ cache_strategy:
 
 important_directories:
   - webclient
+  - webclient/services
   - scripts
   - docs
   - .github
@@ -309,14 +310,27 @@ Analyze:
 
 - Python imports between Django applications in `webclient/`
 - Django application dependencies (INSTALLED_APPS, cross-app imports)
+  - Use `webclient/webclient/settings/base.py` → `INSTALLED_APPS` as the
+    authoritative list of Django applications.
+  - Analyse only production Python files — exclude `tests/` directories from
+    the import graph. Tests may import any app; such imports must not be
+    counted as architectural dependencies.
+  - Distinguish **module-level imports** (load-time, high risk for circular
+    dependency) from **lazy imports** (inside functions — lower risk, but
+    still an architectural smell worth noting separately).
 - Docker service dependencies (does X depend on Y at startup?)
 - external libraries from `requirements.txt` and `pyproject.toml`
-- npm dependencies from `package.json`
+- npm dependencies from `package.json` (if absent, record as N/A and delegate
+  CDN dependency analysis to T07)
 
 Detect:
 
 - circular dependencies between Django applications
+  - **module-level** circular imports → severity Vysoká
+  - **lazy** circular imports (import inside function) → severity Střední
 - tightly coupled modules
+  - flag any module with **fan-in > 10** as a decomposition candidate
+  - flag any module with **fan-out > 6** as a high-responsibility candidate
 - modules with excessive responsibilities
 - outdated dependencies (versions)
 
