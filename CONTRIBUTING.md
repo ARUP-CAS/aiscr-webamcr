@@ -255,6 +255,17 @@ Podrobnosti o chování agentů viz `AGENTS.md`.
 
 Technický dluh a auditní výstupy jsou evidovány v `docs_agents/`.
 
+### Jak spustit review session
+
+Otevřete nový kontext AI agenta a jako první zprávu vložte:
+
+```
+Přečti docs_agents/PROMPT.md a pokračuj v review.
+```
+
+Agent si načte `AGENTS.md`, stav z `docs_agents/review_cache.json` a zahájí
+další čekající task dle registru v `docs_agents/PROMPT.md`.
+
 ---
 
 ### Postup pro maintainera při review agentní větve
