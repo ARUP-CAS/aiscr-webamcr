@@ -1,21 +1,347 @@
 {
-  "_meta": {
-    "status": "skeleton — čeká na analýzu T02",
-    "needs_agent_update": true
+  "schema_version": "1",
+  "generated_at": "2026-03-08",
+  "task_id": "T02",
+  "repository": "ARUP-CAS/aiscr-webamcr",
+  "branch": "test",
+
+  "django_apps": {
+    "core": {
+      "imports_from": [],
+      "imported_by": ["adb", "arch_z", "cron", "dj", "dokument", "ez", "heslar", "historie", "komponenta", "lokalita", "notifikace_projekty", "pas", "pian", "projekt", "uzivatel", "xml_generator", "services"],
+      "note": "Centrální infrastruktura — bez cross-app závislostí, závisí na ní téměř všechny ostatní aplikace."
+    },
+    "heslar": {
+      "imports_from": ["core", "xml_generator"],
+      "imported_by": ["adb", "arch_z", "dj", "dokument", "ez", "historie", "komponenta", "lokalita", "nalez", "neidentakce", "pas", "pian", "pid", "projekt", "uzivatel", "xml_generator"],
+      "note": "Řízené slovníky (číselníky). Importována téměř všemi doménovými aplikacemi."
+    },
+    "xml_generator": {
+      "imports_from": ["adb", "core", "heslar"],
+      "imported_by": ["adb", "arch_z", "dj", "dokument", "ez", "heslar", "komponenta", "pian", "projekt", "uzivatel"],
+      "note": "Generátor XML výstupů. Obsahuje BaseAmcrModel a ModelWithMetadata. CIRKULÁRNÍ ZÁVISLOST s adb."
+    },
+    "uzivatel": {
+      "imports_from": ["core", "heslar", "pid", "xml_generator"],
+      "imported_by": ["adb", "arch_z", "dokument", "ez", "historie", "nalez", "neidentakce", "pas", "pian", "projekt", "services"],
+      "note": "Uživatelé, organizace, oprávnění, CAS SSO. Importována mnoha aplikacemi."
+    },
+    "projekt": {
+      "imports_from": ["core", "heslar", "historie", "oznameni", "uzivatel", "xml_generator"],
+      "imported_by": ["arch_z", "cron", "dokument", "oznameni", "pas", "services"],
+      "note": "Hlavní doménová entita — archeologické projekty. CIRKULÁRNÍ ZÁVISLOST s oznameni."
+    },
+    "oznameni": {
+      "imports_from": ["projekt"],
+      "imported_by": ["projekt"],
+      "note": "Oznamovatelé projektů. CIRKULÁRNÍ ZÁVISLOST s projekt (vzájemné importy na úrovni models.py)."
+    },
+    "arch_z": {
+      "imports_from": ["core", "ez", "heslar", "historie", "komponenta", "uzivatel", "xml_generator"],
+      "imported_by": ["cron", "dj", "dokument", "lokalita", "services"],
+      "note": "Archeologické záznamy. Vysoce propojená doménová aplikace."
+    },
+    "dokument": {
+      "imports_from": ["arch_z", "core", "heslar", "historie", "komponenta", "projekt", "uzivatel", "xml_generator"],
+      "imported_by": ["cron", "neidentakce", "services"],
+      "note": "Dokumenty a přílohy. Nejvyšší počet importovaných aplikací (8 cross-app importů)."
+    },
+    "adb": {
+      "imports_from": ["core", "dj", "heslar", "uzivatel", "xml_generator"],
+      "imported_by": ["xml_generator"],
+      "note": "Archeologická databáze. CIRKULÁRNÍ ZÁVISLOST s xml_generator (models.py ↔ generator.py)."
+    },
+    "pas": {
+      "imports_from": ["core", "heslar", "historie", "projekt", "uzivatel"],
+      "imported_by": ["cron", "services"],
+      "note": "Spolupráce amatérských nálezců (detektor kovů)."
+    },
+    "pian": {
+      "imports_from": ["core", "heslar", "historie", "uzivatel", "xml_generator"],
+      "imported_by": ["dj"],
+      "note": "Prostorová identifikace nálezů — geometrie a transformace souřadnic."
+    },
+    "komponenta": {
+      "imports_from": ["core", "heslar", "xml_generator"],
+      "imported_by": ["arch_z", "dj", "dokument", "nalez"],
+      "note": "Sdílená komponenta pro záznamy."
+    },
+    "dj": {
+      "imports_from": ["arch_z", "heslar", "komponenta", "pian", "xml_generator"],
+      "imported_by": ["adb"],
+      "note": "Distribuovaná aplikace DJ."
+    },
+    "lokalita": {
+      "imports_from": ["arch_z", "core", "heslar"],
+      "imported_by": ["cron"],
+      "note": "Lokality."
+    },
+    "ez": {
+      "imports_from": ["core", "heslar", "historie", "uzivatel", "xml_generator"],
+      "imported_by": ["arch_z"],
+      "note": "Externí zdroje."
+    },
+    "historie": {
+      "imports_from": ["core", "heslar", "uzivatel"],
+      "imported_by": ["arch_z", "dokument", "ez", "pas", "pian", "projekt"],
+      "note": "Historické záznamy změn."
+    },
+    "nalez": {
+      "imports_from": ["heslar", "komponenta", "uzivatel"],
+      "imported_by": [],
+      "note": "Nálezy."
+    },
+    "neidentakce": {
+      "imports_from": ["dokument", "heslar", "uzivatel"],
+      "imported_by": [],
+      "note": "Neidentifikované akce."
+    },
+    "notifikace_projekty": {
+      "imports_from": ["uzivatel"],
+      "imported_by": [],
+      "note": "E-mailové notifikace via Celery. Bez testů."
+    },
+    "cron": {
+      "imports_from": ["arch_z", "core", "dokument", "lokalita", "pas", "projekt"],
+      "imported_by": [],
+      "note": "Celery beat schedule. Bez testů."
+    },
+    "fedora_management": {
+      "imports_from": [],
+      "imported_by": [],
+      "note": "Fedora Commons správa digitálních objektů."
+    },
+    "pid": {
+      "imports_from": ["heslar"],
+      "imported_by": ["uzivatel"],
+      "note": "PID — persistentní identifikátory."
+    },
+    "vypis": {
+      "imports_from": [],
+      "imported_by": [],
+      "note": "Výpisy (reporting)."
+    },
+    "services": {
+      "imports_from": ["arch_z", "core", "dokument", "pas", "projekt", "uzivatel"],
+      "imported_by": [],
+      "note": "Sdílené servisní funkce (mailer.py aj.)."
+    }
   },
-  "django_apps": {},
+
+  "circular_dependencies": [
+    {
+      "id": "CIRC-01",
+      "severity": "Vysoká",
+      "apps": ["projekt", "oznameni"],
+      "description": "projekt a oznameni se vzájemně importují. oznameni/models.py importuje Projekt z projekt/models.py; projekt/forms.py, views.py a urls.py importují z oznameni.",
+      "evidence": [
+        "webclient/oznameni/models.py: from projekt.models import Projekt",
+        "webclient/projekt/forms.py: from oznameni.forms import DateRangeField, DateRangeWidget",
+        "webclient/projekt/views.py: from oznameni.forms import OznamovatelProjektCreateForm",
+        "webclient/projekt/urls.py: from oznameni.views import OznamovatelCreateView"
+      ],
+      "risk": "Import oznameni.models → projekt.models je na úrovni modulu. Django při bootování toto obvykle zvládne díky lazy loadingu, nicméně přidání dalších importů nebo přesun logiky může kdykoli způsobit ImportError.",
+      "recommendation": "Sloučit oznameni do projekt, nebo extrahovat sdílenou logiku do core/shared modulu."
+    },
+    {
+      "id": "CIRC-02",
+      "severity": "Střední",
+      "apps": ["adb", "xml_generator"],
+      "description": "adb/models.py importuje z xml_generator/models.py (BaseAmcrModel, ModelWithMetadata); xml_generator/generator.py importuje z adb/models.py (VyskovyBod na úrovni modulu, Adb lazy uvnitř funkce).",
+      "evidence": [
+        "webclient/adb/models.py: from xml_generator.models import BaseAmcrModel, ModelWithMetadata",
+        "webclient/xml_generator/generator.py: from adb.models import VyskovyBod  # module-level import",
+        "webclient/xml_generator/generator.py: from adb.models import Adb  # lazy import uvnitř funkce"
+      ],
+      "risk": "Modulový import VyskovyBod v generator.py může způsobit problémy při rozšíření xml_generator.models nebo změně pořadí načítání aplikací. Lazy import Adb situaci částečně zmírňuje.",
+      "recommendation": "Přesunout BaseAmcrModel a ModelWithMetadata do core nebo dedikovaného amcr_base modulu. Oddělit xml_generator od konkrétních doménových modelů."
+    }
+  ],
+
+  "architectural_issues": [
+    {
+      "id": "ARCH-01",
+      "severity": "Vysoká",
+      "description": "Aplikace `core` je importována 16+ aplikacemi. Má 77 Python souborů a 26 migrací — porušení principu jediné zodpovědnosti. Jakákoli změna v core má potenciálně globální dopad.",
+      "recommendation": "Dekomponovat core na menší, tematické moduly (core.permissions, core.logging, core.middleware, core.signals)."
+    },
+    {
+      "id": "ARCH-02",
+      "severity": "Vysoká",
+      "description": "Aplikace `dokument` importuje 8 jiných aplikací (nejvyšší fan-out). Vysoká míra závislostí svědčí o nadměrné zodpovědnosti nebo tight coupling.",
+      "recommendation": "Auditovat, zda nelze některé závislosti nahradit signály nebo volnějším propojením přes services vrstvu."
+    },
+    {
+      "id": "ARCH-03",
+      "severity": "Střední",
+      "description": "Aplikace `xml_generator` je importována 10 aplikacemi a zároveň importuje 3 jiné. Slouží jako průřezová infrastruktura (BaseAmcrModel, ModelWithMetadata), ale spolu s generátorem tvoří nezdravou závislost.",
+      "recommendation": "Rozdělit xml_generator na `amcr_base` (base modely) a `xml_generator` (pouze generátor XML). Tím se odstraní cirkulární závislost CIRC-02."
+    },
+    {
+      "id": "ARCH-04",
+      "severity": "Nízká",
+      "description": "Aplikace `cron` a `notifikace_projekty` nemají žádné testy (viz AGENTS.md). Cron importuje 6 aplikací bez ochranné sítě testů.",
+      "recommendation": "Přidat unit testy pro Celery tasky v cron a notifikace_projekty."
+    }
+  ],
+
   "python_dependencies": {
-    "source_files": ["requirements.txt", "pyproject.toml"],
-    "packages": {}
+    "source": "webclient/requirements.txt",
+    "note": "Žádný pyproject.toml nebyl nalezen. Veškeré Python závislosti jsou spravovány přes requirements.txt.",
+    "total_packages": 65,
+    "key_dependencies": {
+      "Django": "5.2.12",
+      "celery": "5.6.2",
+      "djangorestframework": "3.16.1",
+      "psycopg2-binary": "2.9.11",
+      "redis": "7.2.1",
+      "Pillow": "12.1.1",
+      "lxml": "6.0.2",
+      "selenium": "4.41.0",
+      "django-cacheops": "7.2",
+      "pandas": "3.0.1",
+      "django-prometheus": "2.4.1",
+      "uWSGI": "2.0.31",
+      "sphinx": "9.1.0"
+    },
+    "concerns": [
+      {
+        "package": "selenium",
+        "version": "4.41.0",
+        "note": "Testovací závislost je zařazena v produkčním requirements.txt. Měla by být oddělena do requirements-test.txt."
+      },
+      {
+        "package": "django-debug-toolbar",
+        "version": "6.2.0",
+        "note": "Debug toolbar a django-livereload-server jsou vývojové nástroje v produkčním requirements.txt — produkční image zbytečně zatěžují."
+      },
+      {
+        "package": "pre-commit",
+        "version": "4.5.1",
+        "note": "Nástroj pro vývojáře v produkčním requirements.txt."
+      },
+      {
+        "package": "coverage",
+        "version": "7.13.4",
+        "note": "Testovací závislost v produkčním requirements.txt."
+      },
+      {
+        "package": "sphinxcontrib-mermaid",
+        "version": "",
+        "note": "Bez specifikace verze — může způsobit nedeterministické buildy."
+      }
+    ]
   },
+
   "npm_dependencies": {
-    "source_file": "package.json",
-    "packages": {}
+    "source": null,
+    "note": "Žádný package.json nebyl v repozitáři nalezen. Frontend závislosti jsou pravděpodobně spravovány přes CDN. Podrobnosti předány T07."
   },
+
   "docker_service_dependencies": {
-    "note": "Vyplnit z docker-compose.yml — sekce depends_on",
-    "services": {}
+    "source": "docker-compose.yml",
+    "services": {
+      "web": {
+        "depends_on": ["redis", "celery_worker", "celery_beat"],
+        "note": "Hlavní Django/uWSGI aplikace."
+      },
+      "celery_worker": {
+        "depends_on": ["redis"],
+        "note": "Celery worker — zpracování asynchronních úloh."
+      },
+      "celery_beat": {
+        "depends_on": ["redis"],
+        "note": "Celery beat — plánování úloh."
+      },
+      "celery_exporter": {
+        "depends_on": ["redis"],
+        "note": "Prometheus exporter pro Celery metriky."
+      },
+      "redis-exporter": {
+        "depends_on": ["redis"],
+        "note": "Prometheus exporter pro Redis metriky."
+      },
+      "grafana": {
+        "depends_on": ["prometheus"],
+        "note": "Vizualizace Prometheus metrik."
+      },
+      "kibana": {
+        "depends_on": ["elasticsearch"],
+        "note": "Vizualizace Elasticsearch dat."
+      },
+      "redis": {
+        "depends_on": [],
+        "note": "Cache a Celery broker — základní služba."
+      },
+      "prometheus": {
+        "depends_on": [],
+        "note": "Metrics collection."
+      },
+      "elasticsearch": {
+        "depends_on": [],
+        "note": "Fulltextové vyhledávání a log agregace."
+      },
+      "logstash": {
+        "depends_on": [],
+        "note": "Log pipeline. Bez explicitního depends_on na elasticsearch — potenciální race condition při startu."
+      },
+      "postgresql_exporter": {
+        "depends_on": [],
+        "note": "Prometheus exporter pro PostgreSQL."
+      },
+      "sidecar": {
+        "depends_on": [],
+        "note": "rsync záloha locale souborů."
+      },
+      "selenium": {
+        "depends_on": [],
+        "note": "Standalone Chromium pro Selenium testy."
+      },
+      "cadvisor": {
+        "depends_on": [],
+        "note": "Container metriky pro Prometheus."
+      }
+    },
+    "dependency_graph_summary": {
+      "redis": ["web", "celery_worker", "celery_beat", "celery_exporter", "redis-exporter"],
+      "elasticsearch": ["kibana"],
+      "prometheus": ["grafana"]
+    },
+    "issues": [
+      {
+        "id": "DOCKER-DEP-01",
+        "severity": "Nízká",
+        "description": "logstash nemá depends_on: elasticsearch, přestože z něj čte/do něj zapisuje. Může dojít k selhání při souběžném startu.",
+        "recommendation": "Přidat depends_on: - elasticsearch do definice logstash service."
+      }
+    ]
   },
-  "circular_dependencies": [],
-  "architectural_issues": []
+
+  "tightly_coupled_modules": [
+    {
+      "module": "core",
+      "reason": "Importován 16+ aplikacemi. Obsahuje middleware, permissions, constants, signals, logging — příliš mnoho zodpovědností.",
+      "fan_in": 16
+    },
+    {
+      "module": "heslar",
+      "reason": "Importován 16 aplikacemi jako centrální číselník. Tato vazba je přirozená pro architekturu s řízenými slovníky.",
+      "fan_in": 16
+    },
+    {
+      "module": "xml_generator",
+      "reason": "Importován 10 aplikacemi — obsahuje BaseAmcrModel, který by měl patřit do core nebo sdíleného base modulu.",
+      "fan_in": 10
+    },
+    {
+      "module": "uzivatel",
+      "reason": "Importován 11 aplikacemi. Přirozené pro aplikaci spravující uživatele, ale stojí za pozornost.",
+      "fan_in": 11
+    },
+    {
+      "module": "dokument",
+      "reason": "Importuje 8 aplikací (nejvyšší fan-out). Potenciální porušení principu jedné zodpovědnosti.",
+      "fan_out": 8
+    }
+  ]
 }

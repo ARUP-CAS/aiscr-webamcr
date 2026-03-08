@@ -1,14 +1,18 @@
 {
   "schema_version": "2",
   "initialized_at": "2026-03-07",
-  "last_updated": "2026-03-08T00:00:00Z",
+  "last_updated": "2026-03-08T12:00:00Z",
   "tasks": {
     "T01": {
       "status": "done",
       "completed_at": "2026-03-08",
       "report_path": "docs_agents/review_reports/T01.md"
     },
-    "T02": { "status": "pending", "completed_at": null, "report_path": null },
+    "T02": {
+      "status": "done",
+      "completed_at": "2026-03-08",
+      "report_path": "docs_agents/review_reports/T02.md"
+    },
     "T03": { "status": "pending", "completed_at": null, "report_path": null },
     "T04": { "status": "pending", "completed_at": null, "report_path": null },
     "T05": { "status": "pending", "completed_at": null, "report_path": null },
@@ -43,7 +47,7 @@
     "docker-compose.yml": {
       "sha256": "3b03a31e1c8e7a1a2bf9edce77013b4367507e9d44ab3a25c44f55530c7df4cc",
       "last_reviewed": "2026-03-08",
-      "task_id": "T01"
+      "task_id": "T02"
     },
     "docker-compose-dev-local-db.yml": {
       "sha256": "805576a72a777a1192a9d3e64f6a77bcda89eec62d4ece2d9d6e68251563c194",
@@ -103,12 +107,12 @@
     "webclient/requirements.txt": {
       "sha256": "f4d94a593752f7a9044f7f98251860f2a72c0d2f1a0b5b55ac0058c09209aceb",
       "last_reviewed": "2026-03-08",
-      "task_id": "T01"
+      "task_id": "T02"
     },
     "webclient/webclient/settings/base.py": {
       "sha256": "2d00af2db1b765375249b4b7833bac438ccdd6fc694f88b5724f822ab63fb204",
       "last_reviewed": "2026-03-08",
-      "task_id": "T01"
+      "task_id": "T02"
     },
     "webclient/webclient/settings/dev.py": {
       "sha256": "0016fd1a1e015eb3681cb8fecf9b8e9fc817a2b8c42ce46a9369e79af366cad6",
@@ -129,6 +133,26 @@
       "sha256": "395ce5da91c6f91de1ca79ba7b0084c0933d9aa0cff708e02624128bd335ddee",
       "last_reviewed": "2026-03-08",
       "task_id": "T01"
+    },
+    "webclient/oznameni/models.py": {
+      "sha256": "274e5ea63b092fc1f64159ef4470b362c2feb837dd89bfd7ff713eb702855dea",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T02"
+    },
+    "webclient/projekt/forms.py": {
+      "sha256": "c37ee99d781bc311188db5da01cd9319bf6a81ca957ee705f645a376c4090798",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T02"
+    },
+    "webclient/adb/models.py": {
+      "sha256": "d37ec5c937748ab2908c90966cf1bdae0e63581f440ef452a5b48b7bdce97788",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T02"
+    },
+    "webclient/xml_generator/generator.py": {
+      "sha256": "1bcd11e5f81f806ad628c16ca33792e321f9cfdc7e4d5a15bb5df56b5de2b588",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T02"
     }
   }
 }
