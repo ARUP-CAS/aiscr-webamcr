@@ -1,7 +1,7 @@
 {
   "schema_version": "2",
   "initialized_at": "2026-03-07",
-  "last_updated": "2026-03-08T12:00:00Z",
+  "last_updated": "2026-03-08T16:00:00Z",
   "tasks": {
     "T01": {
       "status": "done",
@@ -13,8 +13,26 @@
       "completed_at": "2026-03-08",
       "report_path": "docs_agents/review_reports/T02.md"
     },
-    "T03": { "status": "pending", "completed_at": null, "report_path": null },
-    "T04": { "status": "pending", "completed_at": null, "report_path": null },
+    "T03": {
+      "status": "done",
+      "completed_at": "2026-03-08",
+      "report_path": "docs_agents/review_reports/T03b.md",
+      "sub_tasks": {
+        "T03a": {
+          "status": "done",
+          "completed_at": "2026-03-08",
+          "scope": "Modely přímo přečteny: core, projekt, arch_z, uzivatel. Raw SQL / extra() vyhledávání celým repozitářem.",
+          "report_path": "docs_agents/review_reports/T03.md"
+        },
+        "T03b": {
+          "status": "done",
+          "completed_at": "2026-03-08",
+          "scope": "Modely přímo přečteny: heslar, pian, pas, adb, oznameni, xml_generator. ORM vzory ve views (cílené Grep). GitHub Issues: nedostupné bez autentizace, zdokumentováno.",
+          "report_path": "docs_agents/review_reports/T03b.md"
+        }
+      }
+    },
+    "T04": { "status": "done", "completed_at": "2026-03-08", "report_path": "docs_agents/review_reports/T04.md" },
     "T05": { "status": "pending", "completed_at": null, "report_path": null },
     "T06": { "status": "pending", "completed_at": null, "report_path": null },
     "T07": { "status": "pending", "completed_at": null, "report_path": null },
@@ -153,6 +171,56 @@
       "sha256": "1bcd11e5f81f806ad628c16ca33792e321f9cfdc7e4d5a15bb5df56b5de2b588",
       "last_reviewed": "2026-03-08",
       "task_id": "T02"
+    },
+    "docker-compose-dev-local-db-all-containers.yml": {
+      "sha256": "4a8b7f070012bc8c11e0e7e706b6b30e9c7d600ab9a897a3060b19b78e64b0da",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "proxy/Dockerfile": {
+      "sha256": "b8530bdadc35819e629954f23cc44d84f9cb5b8b2561560573105681e495dbec",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "proxy/default.conf": {
+      "sha256": "cad79708a177c14c2926394f4fd5e9975ae159ba2de1c8a2014a6010bc7193ec",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "redis/Dockerfile": {
+      "sha256": "2a75489a99e4b298961268ce2a1c5b4058ac8c0013df0e29e0599ec8622844d2",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "redis/redis.conf": {
+      "sha256": "00ab1d01d81542b342135b314f991ca7d13d34ced2c29ef2d89b6ac22634b9e9",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "fedora/Dockerfile": {
+      "sha256": "0f1b7a97975536702e3f27cb7d71a8c4eb32c1c07a046781d03fb038c2078429",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "elasticsearch/elasticsearch.example.yml": {
+      "sha256": "979be0c5382fcd9c1e8d0fe5a95c6c81f4f9333c5682dd99dad8474f2830b03c",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "kibana/kibana.example.yml": {
+      "sha256": "a7066ca3d28e144e6d552720145c17532cffa2c327c652984a65ac1a9d6a4554",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "logstash/logstash.example.conf": {
+      "sha256": "7af9ecc236a202ab3b5a26997b10961c73d8bf15c510c5930bf7bcc375252f50",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
+    },
+    "prometheus/prometheus.example.yml": {
+      "sha256": "ca573c8523bcfea2737229b4bfe0afd33211b93530f51c18f818c4beedd7642b",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T04"
     }
   }
 }
