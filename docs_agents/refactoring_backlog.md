@@ -154,3 +154,38 @@
 - **Popis:** Obě aplikace nemají žádné testy, přestože cron importuje 6 jiných aplikací.
 - **Doporučení:** Přidat unit testy pro Celery tasky.
 - **Náročnost:** M
+
+### [T05] SEC-01: Opravit DEBUG fallback v production.py
+- **Soubor:** `webclient/webclient/settings/production.py:3`
+- **Popis:** `get_secret("DEBUG", "True")` — fallback je "True" → DEBUG=True při chybějícím klíči. Viz BUG-010.
+- **Doporučení:** Změnit fallback na "False".
+- **Náročnost:** S
+- **Závažnost:** Vysoká
+
+### [T05] SEC-02: Rotace Mailtrap credentials a nahrazení placeholdery
+- **Soubor:** `webclient/webclient/settings/sample_secrets_mail_client.json`
+- **Popis:** Zdánlivě reálné Mailtrap sandbox credentials v commitu. Viz BUG-011.
+- **Doporučení:** Ověřit, rotovat, nahradit za zjevné placeholdery.
+- **Náročnost:** S
+- **Závažnost:** Střední
+
+### [T05] SEC-03: Přidat Django security headers do production.py
+- **Soubor:** `webclient/webclient/settings/production.py`
+- **Popis:** Chybí `SECURE_HSTS_SECONDS`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_CONTENT_TYPE_NOSNIFF`. Django security check (`manage.py check --deploy`) bude hlásit selhání.
+- **Doporučení:** Přidat do production.py a přidat `manage.py check --deploy` do CI pipeline.
+- **Náročnost:** S
+- **Závažnost:** Střední
+
+### [T05] SEC-XSS: Audit mark_safe() ve vypis/ aplikaci
+- **Soubory:** `webclient/vypis/fields.py:363,438`, `webclient/vypis/views.py:79`
+- **Popis:** Tři místa aplikují `mark_safe()` na hodnoty z DB nebo model properties. Viz BUG-012.
+- **Doporučení:** Přepsat na `format_html()` nebo zajistit `escape()` před mark_safe.
+- **Náročnost:** M
+- **Závažnost:** Střední
+
+### [T05] SEC-04: Přidat CVE scanning do CI pipeline
+- **Soubory:** `.github/workflows/` (nový krok)
+- **Popis:** Chybí automatická kontrola CVE v Python závislostech.
+- **Doporučení:** Přidat `pip audit` nebo `safety check` jako CI krok.
+- **Náročnost:** S
+- **Závažnost:** Střední

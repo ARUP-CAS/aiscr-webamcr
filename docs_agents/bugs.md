@@ -117,3 +117,39 @@
 - **Popis:** `usermod -aG sudo user` přidává produkčního aplikačního uživatele do skupiny `sudo`. Pokud dojde k RCE exploitaci aplikace (např. přes eval() — viz BUG-001), útočník může eskalovat oprávnění na root uvnitř kontejneru.
 - **Navrhovaná oprava:** Odebrat `usermod -aG sudo user`. Pro nutné privilegované operace (crontab setup) nastavit specifická NOPASSWD pravidla v `/etc/sudoers`.
 - **Task:** T04
+
+---
+
+### BUG-010: Nebezpečný fallback pro DEBUG v production.py
+
+- **Soubor:** `webclient/webclient/settings/production.py:3`
+- **Závažnost:** Vysoká
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** `DEBUG = get_secret("DEBUG", "True") == "True"` — výchozí fallback je řetězec `"True"`. Pokud klíč `DEBUG` chybí v secrets souboru, produkční instance se spustí s `DEBUG=True`. To vystavuje úplné Python tracebacky, settings hodnoty a deaktivuje bezpečnostní kontroly Django.
+- **Navrhovaná oprava:** Změnit fallback na `"False"`: `DEBUG = get_secret("DEBUG", "False") == "True"`
+- **Task:** T05
+
+---
+
+### BUG-011: Mailtrap credentials v commitu
+
+- **Soubor:** `webclient/webclient/settings/sample_secrets_mail_client.json`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** Soubor obsahuje zdánlivě reálné Mailtrap sandbox credentials (`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`). Kdokoliv s přístupem k repozitáři může použít tyto credentials k přihlášení do Mailtrap a číst zachycené testovací e-maily.
+- **Navrhovaná oprava:** Ověřit zda jsou credentials aktivní, pokud ano rotovat. Nahradit v souboru za zjevné placeholder hodnoty (např. `"PLACEHOLDER_USER"`, `"PLACEHOLDER_PASSWORD"`).
+- **Task:** T05
+
+---
+
+### BUG-012: mark_safe() s hodnotami z databáze ve vypis/fields.py
+
+- **Soubory:**
+  - `webclient/vypis/fields.py:363` — `mark_safe(value.get_ident_cely_link)`
+  - `webclient/vypis/fields.py:438` — `mark_safe(new_instance)`
+  - `webclient/vypis/views.py:79` — `mark_safe(field.get_name(instance))`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** Tři místa v `vypis/` aplikují `mark_safe()` na hodnoty odvozené z databázových instancí nebo model properties. Pokud tyto hodnoty nejsou správně escapovány před zabalením do `mark_safe()`, může dojít ke stored XSS. Ident_cely hodnoty mají řízenou strukturu, ale vzor je architektonicky nebezpečný a vyžaduje explicitní ověření.
+- **Navrhovaná oprava:** Auditovat `get_ident_cely_link` property, `get_name()` implementace a Dokument.extra_data atribut. Přepsat na `format_html()` nebo zajistit `escape()` před `mark_safe()`.
+- **Task:** T05

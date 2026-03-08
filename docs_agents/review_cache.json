@@ -1,7 +1,7 @@
 {
   "schema_version": "2",
   "initialized_at": "2026-03-07",
-  "last_updated": "2026-03-08T16:00:00Z",
+  "last_updated": "2026-03-08T17:00:00Z",
   "tasks": {
     "T01": {
       "status": "done",
@@ -33,7 +33,7 @@
       }
     },
     "T04": { "status": "done", "completed_at": "2026-03-08", "report_path": "docs_agents/review_reports/T04.md" },
-    "T05": { "status": "pending", "completed_at": null, "report_path": null },
+    "T05": { "status": "done", "completed_at": "2026-03-08", "report_path": "docs_agents/review_reports/T05.md" },
     "T06": { "status": "pending", "completed_at": null, "report_path": null },
     "T07": { "status": "pending", "completed_at": null, "report_path": null },
     "T08": { "status": "pending", "completed_at": null, "report_path": null },
@@ -221,6 +221,46 @@
       "sha256": "ca573c8523bcfea2737229b4bfe0afd33211b93530f51c18f818c4beedd7642b",
       "last_reviewed": "2026-03-08",
       "task_id": "T04"
+    },
+    "webclient/webclient/settings/production.py": {
+      "sha256": "aee569e98d7459c3a16a454258038960a793b6d99e0a7e2bb859639b6f27fedc",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T05"
+    },
+    "webclient/webclient/settings/sample_secrets_db.json": {
+      "sha256": "f67216d473cdeae26ec74c993a8e1ad581ae24e85ef95cc16a1e1596d5cfe596",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T05"
+    },
+    "webclient/webclient/settings/sample_secrets_mail_client.json": {
+      "sha256": "599443f4f50f0fec1081f6b6bbef8b04dfeb453720600bf2425ce2a9529b1bf2",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T05"
+    },
+    "webclient/core/authenticators.py": {
+      "sha256": "6622f87eba213642b42e1361c18a1f5d9719abee626a2fe4a8b225ce54260d94",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T05"
+    },
+    "webclient/core/context_processors.py": {
+      "sha256": "248645fa95a6032bc6481bac8a0b02c138e0976d0157efa563f8f1bf0ea62563",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T05"
+    },
+    "webclient/core/templatetags/template_tags.py": {
+      "sha256": "58074f0e244b224fece4d35fccfef137363159e46d055bd3631539d0137bb815",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T05"
+    },
+    "webclient/vypis/fields.py": {
+      "sha256": "606a216e467b93cd946a0810d89243fec4fa65f90ae3529acb13ac776196c3b8",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T05"
+    },
+    "webclient/vypis/views.py": {
+      "sha256": "6e91e435851277af36c7e40b424285d2d56d3e6a31eaabf09bf70314bf882bf2",
+      "last_reviewed": "2026-03-08",
+      "task_id": "T05"
     }
   }
 }
