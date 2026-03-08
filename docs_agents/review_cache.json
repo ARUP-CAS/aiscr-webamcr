@@ -1,7 +1,7 @@
 {
   "schema_version": "2",
   "initialized_at": "2026-03-07",
-  "last_updated": "2026-03-08T12:00:00Z",
+  "last_updated": "2026-03-08T13:00:00Z",
   "tasks": {
     "T01": {
       "status": "done",
@@ -13,7 +13,19 @@
       "completed_at": "2026-03-08",
       "report_path": "docs_agents/review_reports/T02.md"
     },
-    "T03": { "status": "pending", "completed_at": null, "report_path": null },
+    "T03": {
+      "status": "done",
+      "completed_at": "2026-03-08",
+      "report_path": "docs_agents/review_reports/T03.md",
+      "sub_tasks": {
+        "T03a": {
+          "status": "done",
+          "completed_at": "2026-03-08",
+          "scope": "core, projekt, arch_z, uzivatel, heslar, pian, pas",
+          "report_path": "docs_agents/review_reports/T03.md"
+        }
+      }
+    },
     "T04": { "status": "pending", "completed_at": null, "report_path": null },
     "T05": { "status": "pending", "completed_at": null, "report_path": null },
     "T06": { "status": "pending", "completed_at": null, "report_path": null },

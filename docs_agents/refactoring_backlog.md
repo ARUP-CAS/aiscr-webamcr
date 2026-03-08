@@ -27,6 +27,24 @@
 - **Doporučení:** Auditovat závislosti, zvážit signály nebo services vrstvu.
 - **Náročnost:** M
 
+### [T03] ORM-01: Extra SELECT v save() metodách ArcheologickyZaznam a SamostatnyNalez
+- **Soubory:** `webclient/arch_z/models.py:531`, `webclient/pas/models.py:182`
+- **Popis:** Při každém volání `save()` (kde `pk != None`) se dělá extra `SELECT get(pk=self.pk)` pro zjištění změny `pristupnost`. Správné řešení je ukládání počáteční hodnoty v `__init__()` jako u `initial_stav`.
+- **Doporučení:** Přidat `self._initial_pristupnost = self.pristupnost` v `__init__()`, v `save()` porovnat s `self._initial_pristupnost`.
+- **Náročnost:** S
+
+### [T03] ORM-02: N+1 v check_pred_* metodách
+- **Soubory:** `webclient/projekt/models.py`, `webclient/arch_z/models.py`
+- **Popis:** Metody `check_pred_uzavrenim()` a `check_pred_odeslanim()` dělají N+1 dotazy při iteraci přes akce a dokumentační jednotky. Viz BUG-002.
+- **Doporučení:** Prefetch_related před voláním check metod, nebo přijmout prefetchovaná data jako parametr.
+- **Náročnost:** M
+
+### [T03] ORM-03: Chybějící indexy na pas.SamostatnyNalez
+- **Soubory:** `webclient/pas/models.py`
+- **Popis:** FK pole `projekt`, `katastr`, `pristupnost`, `stav` nemají `db_index=True`. Pro tabulku s tisíci záznamy jsou indexy klíčové.
+- **Doporučení:** Přidat `db_index=True` nebo indexy přes migraci.
+- **Náročnost:** S
+
 ## Střední priorita
 
 <!-- Optimalizace, dekompozice modulů, Docker build -->
@@ -52,6 +70,30 @@
 ## Nízká priorita
 
 <!-- Kosmetické úpravy, dokumentace, minor code quality -->
+
+### [T03] ORM-04: Nahradit eval() za int() v generátorech identifikátorů
+- **Soubory:** `webclient/projekt/models.py:663`, `webclient/arch_z/models.py:331`, `webclient/arch_z/models.py:889`
+- **Popis:** Tři výskyty `eval(i)` pro převod čísla z řetězce. Viz BUG-001.
+- **Doporučení:** Nahradit `int(i)`, přidat validaci `i.isdigit()`.
+- **Náročnost:** S
+
+### [T03] ORM-05: Opravit import cached_property v uzivatel/models.py
+- **Soubory:** `webclient/uzivatel/models.py:28`
+- **Popis:** Import z `distlib.util` místo `functools`. Viz BUG-003.
+- **Doporučení:** `from functools import cached_property`
+- **Náročnost:** S
+
+### [T03] ORM-06: Nahradit .extra() v arch_z/filters.py za RawSQL
+- **Soubory:** `webclient/arch_z/filters.py:773-775`
+- **Popis:** `.extra(where=["ST_Z(geom) >= %s"])` je deprecated od Django 4.0.
+- **Doporučení:** Použít `RawSQL` nebo PostGIS funkci.
+- **Náročnost:** S
+
+### [T03] ORM-07: Squash migrací u aplikací s 20+ migracemi
+- **Aplikace:** uzivatel (31), core (26), arch_z (20), dokument (19)
+- **Popis:** Celkem 152 migrací — aplikace s nejvíce migracemi jsou kandidáty na `squashmigrations`.
+- **Doporučení:** Postupný squash po stabilizaci schématu, začít s méně kritickými aplikacemi.
+- **Náročnost:** M
 
 ### [T02] DOCKER-DEP-01: logstash bez depends_on elasticsearch
 - **Soubory:** `docker-compose.yml`
