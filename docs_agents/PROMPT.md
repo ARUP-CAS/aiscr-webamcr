@@ -146,6 +146,9 @@ important_files:
   - git_docker-compose.yml
   - git_docker-compose.override.yml
   - git_docker-compose-proxy.yml
+  - redis/docker-entrypoint.sh
+  - scripts/entrypoint.sh
+  - scripts/entrypoint.dev.sh
   - readthedocs.yaml
   - .pre-commit-config.yaml
   - .flake8
@@ -438,6 +441,20 @@ Detect:
 - unnecessary installed packages
 - inconsistencies between dev and production configurations
 - hardcoded secrets or passwords
+- incorrect secret injection patterns: for every service reading Docker secrets, verify
+  the correct mechanism is used — Grafana (`GF_*__FILE` suffix), PostgreSQL
+  (`POSTGRES_PASSWORD_FILE`), Redis (entrypoint sed), Elasticsearch/Logstash
+  (entrypoint wrapper script — these do NOT support `_FILE` variants)
+- version parity between dev and prod: compare base image versions of shared services
+  (ELK, Prometheus, Grafana, Selenium) across all compose files; major version gaps
+  → severity Střední
+- services misplaced in wrong environment: test tools (Selenium) must not appear in
+  the production compose; dev-only services must not appear in prod
+- multi-process containers without PID 1 management: if a container runs two or more
+  processes (`cmd1 & cmd2`), verify it uses a process supervisor (tini, s6-overlay)
+  or the exec pattern in an entrypoint script
+- monitoring and admin interfaces (Grafana, Prometheus, Kibana, Elasticsearch)
+  exposed publicly without network isolation or authentication
 
 ```json
 {
@@ -456,6 +473,11 @@ Detect:
 Create: `docs_agents/security_analysis.json`
 
 **Purpose:** Security audit of the production system.
+
+> **Cross-reference T04:** Docker-level security findings (secret injection errors,
+> container privilege escalation, exposed monitoring ports) are already recorded in
+> `docs_agents/docker_analysis.json` from T04. Do not duplicate those entries here —
+> reference them by ID (SEC-D01 … SEC-D06) if they overlap with Django-level concerns.
 
 Inspect:
 
