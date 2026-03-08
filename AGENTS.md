@@ -13,11 +13,11 @@ infrastructure maintained by ARUP-CAS.
 
 Main components include:
 
--   Django application (`webclient/`)
--   Sphinx documentation (`docs/`)
--   Docker-based development and runtime environment
--   Selenium testing infrastructure
--   Monitoring and logging stack (Elasticsearch, Kibana, Logstash,
+- Django application (`webclient/`)
+- Sphinx documentation (`docs/`)
+- Docker-based development and runtime environment
+- Selenium testing infrastructure
+- Monitoring and logging stack (Elasticsearch, Kibana, Logstash,
     Prometheus)
 
 Development follows a multi-branch workflow:
@@ -38,18 +38,18 @@ Before starting any work, agents must gather repository context.
 
 Read the following files:
 
--   `docs_agents/repository_map.json`
--   `docs_agents/review_cache.json`
--   `docs_agents/bugs.md`
--   `docs_agents/refactoring_backlog.md`
--   `docs_agents/PROMPT.md`
+- `docs_agents/repository_map.json`
+- `docs_agents/review_cache.json`
+- `docs_agents/bugs.md`
+- `docs_agents/refactoring_backlog.md`
+- `docs_agents/PROMPT.md`
 
 Purpose:
 
--   understand repository structure
--   avoid repeating previous audit work
--   reuse previously collected analysis
--   continue long-running technical review sessions
+- understand repository structure
+- avoid repeating previous audit work
+- reuse previously collected analysis
+- continue long-running technical review sessions
 
 Agents should treat these files as the **persistent state of the review
 process**.
@@ -64,9 +64,9 @@ higher-level documents as the **source of truth**.
 In such cases agents should:
 
 1.  Prefer the high-level governance rules defined in:
-    -   `AGENTS.md`
-    -   `CONTRIBUTING.md`
-    -   repository coding standards
+    - `AGENTS.md`
+    - `CONTRIBUTING.md`
+    - repository coding standards
 2.  Adapt or update affected files in `docs_agents/` to align with those
     rules.
 3.  Record the adjustment in the review history (for example
@@ -85,11 +85,11 @@ All artefacts produced by AI agents must be stored in:
 
 Examples include:
 
--   audit reports
--   analysis JSON files
--   dependency analysis
--   architectural notes
--   prompt evolution notes
+- audit reports
+- analysis JSON files
+- dependency analysis
+- architectural notes
+- prompt evolution notes
 
 Agent work must be committed to branches named:
 
@@ -97,14 +97,14 @@ Agent work must be committed to branches named:
 
 Examples:
 
--   `agents/claude/docstring-audit`
--   `agents/gpt/repository-analysis`
+- `agents/claude/docstring-audit`
+- `agents/gpt/repository-analysis`
 
 Rules:
 
--   agent branches must be created from **`test`**
--   agent branches must never push directly to protected branches
--   all agent work requires human review before merge
+- agent branches must be created from **`test`**
+- agent branches must never push directly to protected branches
+- all agent work requires human review before merge
 
 ------------------------------------------------------------------------
 
@@ -115,11 +115,11 @@ incremental technical review** of the project.
 
 Agents should focus on:
 
--   small, safe improvements
--   documentation accuracy
--   code quality improvements
--   CI stability
--   identification of bugs and technical debt
+- small, safe improvements
+- documentation accuracy
+- code quality improvements
+- CI stability
+- identification of bugs and technical debt
 
 Large architectural changes should only be proposed, not performed
 automatically.
@@ -130,13 +130,13 @@ automatically.
 
 Agents must:
 
--   gather repository context before starting work
--   avoid repeating previously recorded work
--   prefer incremental improvements
--   record findings in `docs_agents/`
--   follow repository coding standards
--   keep changes minimal and reviewable
--   suggest improvements to this file when appropriate
+- gather repository context before starting work
+- avoid repeating previously recorded work
+- prefer incremental improvements
+- record findings in `docs_agents/`
+- follow repository coding standards
+- keep changes minimal and reviewable
+- suggest improvements to this file when appropriate
 
 Agents must not perform large refactors without explicit instruction.
 
@@ -150,9 +150,9 @@ efficiency or quality of work.
 
 Examples:
 
--   `doc` --- reviewing and editing documentation artefacts
--   `gh-fix-ci` --- diagnosing and fixing CI failures
--   `gh-address-comments` --- incorporating pull request review comments
+- `doc` --- reviewing and editing documentation artefacts
+- `gh-fix-ci` --- diagnosing and fixing CI failures
+- `gh-address-comments` --- incorporating pull request review comments
 
 ------------------------------------------------------------------------
 
@@ -168,11 +168,11 @@ applies:
 
 Examples:
 
--   Django behaviour should be verified against official Django
+- Django behaviour should be verified against official Django
     documentation
--   Docker image metadata should be verified against container
+- Docker image metadata should be verified against container
     registries
--   Elasticsearch and Redis behaviour should be verified against
+- Elasticsearch and Redis behaviour should be verified against
     upstream documentation
 
 ------------------------------------------------------------------------
@@ -183,33 +183,33 @@ Examples:
 
 Agents may modify:
 
--   `webclient/`
--   `docs/`
--   `scripts/`
--   `docs_agents/`
--   Docker configuration
--   CI configuration
--   documentation files
+- `webclient/`
+- `docs/`
+- `scripts/`
+- `docs_agents/`
+- Docker configuration
+- CI configuration
+- documentation files
 
 Typical tasks include:
 
--   documentation improvements
--   CI fixes
--   dependency analysis
--   bug identification
--   code readability improvements
--   refactoring proposals
+- documentation improvements
+- CI fixes
+- dependency analysis
+- bug identification
+- code readability improvements
+- refactoring proposals
 
 ### Out of Scope
 
 Agents must not modify generated artefacts or runtime data such as:
 
--   `node_modules/`
--   `_site/`
--   `build/`
--   `dist/`
--   `__pycache__/`
--   `*/migrations/*.py` (unless schema change is required)
+- `node_modules/`
+- `_site/`
+- `build/`
+- `dist/`
+- `__pycache__/`
+- `*/migrations/*.py` (unless schema change is required)
 
 Generated documentation blocks must not be edited manually if scripts
 exist.
@@ -222,38 +222,38 @@ Technologies detected in this repository.
 
 ### Backend
 
--   Python
--   Django 5.2
+- Python
+- Django 5.2
 
 ### Documentation
 
--   Sphinx
--   Read the Docs
+- Sphinx
+- Read the Docs
 
 ### Infrastructure
 
--   Docker
--   docker-compose
+- Docker
+- docker-compose
 
 ### Observability stack
 
--   Elasticsearch
--   Kibana
--   Logstash
--   Prometheus
--   Redis
+- Elasticsearch
+- Kibana
+- Logstash
+- Prometheus
+- Redis
 
 ### Testing
 
--   Django test framework
--   Selenium tests
+- Django test framework
+- Selenium tests
 
 ### Code quality tooling
 
--   black
--   isort
--   flake8
--   pre-commit
+- black
+- isort
+- flake8
+- pre-commit
 
 ------------------------------------------------------------------------
 
@@ -268,28 +268,28 @@ Development workflow:
 
 Rules:
 
--   always branch from **`test`**
--   never push directly to `test`, `dev`, or `main`
--   always open a Pull Request
+- always branch from **`test`**
+- never push directly to `test`, `dev`, or `main`
+- always open a Pull Request
 
 Branch naming:
 
 Application changes:
 
--   `feature/<topic>`
--   `bugfix/<topic>`
--   `docs/<topic>`
+- `feature/<topic>`
+- `bugfix/<topic>`
+- `docs/<topic>`
 
 Agent branches:
 
--   `agents/<agent>/<topic>`
+- `agents/<agent>/<topic>`
 
 Pull requests must include:
 
--   motivation
--   description of changes
--   testing information
--   issue reference if available
+- motivation
+- description of changes
+- testing information
+- issue reference if available
 
 Agents must **never open PRs targeting `dev`**.
 
@@ -332,10 +332,9 @@ This repository is part of the AIS CR ecosystem maintained by ARUP-CAS.
 
 Related repositories include:
 
--   aiscr-webamcr
--   aiscr-digiarchiv-2
--   aiscr-webamcr-help
--   aiscr-api-home
+- aiscr-digiarchiv-2
+- aiscr-webamcr-help
+- aiscr-api-home
 
 These repositories share similar governance and AI-assisted review
 structure.
@@ -382,18 +381,18 @@ concern.
 
 Python formatting:
 
--   `black` (line length 120)
--   `isort` with profile `black`
--   `flake8` per `.flake8`
+- `black` (line length 120)
+- `isort` with profile `black`
+- `flake8` per `.flake8`
 
 Docstrings:
 
--   must be written in Czech
--   must use Sphinx style (`:param:`, `:return:`, `:raises:`)
--   Google-style blocks (`Args`, `Returns`, `Raises`) are not allowed
--   descriptions must reflect real behaviour of the code
--   avoid generic wording
--   avoid duplicate docstring sections
+- must be written in Czech
+- must use Sphinx style (`:param:`, `:return:`, `:raises:`)
+- Google-style blocks (`Args`, `Returns`, `Raises`) are not allowed
+- descriptions must reflect real behaviour of the code
+- avoid generic wording
+- avoid duplicate docstring sections
 
 The `method-docstring-style-reminder` hook is non-blocking, but warnings
 should be treated seriously.
@@ -428,9 +427,9 @@ Select-String -Pattern 'Popis parametru|Navratova hodnota funkce|Vstupni hodnota
 
 Some files are generated automatically by scripts:
 
--   `docs/generate_module_docs.py`
--   `docs/generate_selenium_test_docs.py`
--   `docs/licenses/convert_to_rst.py`
+- `docs/generate_module_docs.py`
+- `docs/generate_selenium_test_docs.py`
+- `docs/licenses/convert_to_rst.py`
 
 Rules:
 
@@ -455,15 +454,15 @@ Preferred interpreter:
 
 Testing rules:
 
--   run targeted Django tests when code changes
--   run Selenium tests only when necessary
--   Selenium tests require human confirmation due to runtime cost
+- run targeted Django tests when code changes
+- run Selenium tests only when necessary
+- Selenium tests require human confirmation due to runtime cost
 
 PR descriptions must include:
 
--   what tests were run
--   what passed
--   what could not be executed
+- what tests were run
+- what passed
+- what could not be executed
 
 ------------------------------------------------------------------------
 
@@ -485,20 +484,20 @@ with `docs/generate_selenium_test_docs.py`.
 
 Main directories:
 
--   `webclient/` --- Django application
--   `docs/` --- Sphinx documentation
--   `scripts/` --- helper and operational scripts
--   `docs_agents/` --- AI-assisted review state
+- `webclient/` --- Django application
+- `docs/` --- Sphinx documentation
+- `scripts/` --- helper and operational scripts
+- `docs_agents/` --- AI-assisted review state
 
 Infrastructure configuration:
 
--   `docker-compose*.yml`
--   `proxy/`
--   `redis/`
--   `elasticsearch/`
--   `kibana/`
--   `logstash/`
--   `prometheus/`
+- `docker-compose*.yml`
+- `proxy/`
+- `redis/`
+- `elasticsearch/`
+- `kibana/`
+- `logstash/`
+- `prometheus/`
 
 Certificates in `cert/` are self-signed for development only and
 intentionally committed.
