@@ -345,6 +345,11 @@ class ImportDataActiveUserCannotBeDeleted(ImportDataError):
     """
 
     def __init__(self, primary_key_value):
+        """
+        Inicializuje výjimku pro pokus o smazání právě aktivního uživatele.
+
+        :param primary_key_value: Hodnota ``ident_cely`` uživatele, který nesmí být smazán.
+        """
         self.primary_key_value = primary_key_value
         super().__init__(
             "{} {}".format(
@@ -705,6 +710,23 @@ class LookupImportField(BaseImportField):
         """
         return self._instance_value
 
+    @staticmethod
+    def _get_record_lookup_value(record, lookup_field_name):
+        """
+        Vrátí hodnotu atributu z importovaného záznamu i pro lookup cesty s oddělovačem ``__``.
+
+        :param record: Parametr ``record`` předává se do volání ``getattr()``.
+        :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
+
+        :return: Vrací hodnotu atributu nebo ``None``, pokud cestu nelze vyhodnotit.
+        """
+        value = record
+        for attribute in lookup_field_name.split("__"):
+            if value is None:
+                return None
+            value = getattr(value, attribute, None)
+        return value
+
     def _check_limit_choices_to(self, record):
         """
         Ověří limit choices to.
@@ -742,7 +764,8 @@ class LookupImportField(BaseImportField):
             filtered_records = [
                 record
                 for record in self.records
-                if isinstance(record, current_class) and getattr(record, self.lookup_field_name, None) == value
+                if isinstance(record, current_class)
+                and self._get_record_lookup_value(record, self.lookup_field_name) == value
             ]
             if len(filtered_records) == 1:
                 self._check_limit_choices_to(filtered_records[0])
@@ -1009,6 +1032,8 @@ class ImportModelMapper(ABC):
     def get_file_name_for_mapper(cls, mapper_class):
         """
         Vrátí název souboru odpovídající zadané třídě mapperu.
+
+        :param mapper_class: Třída mapperu, podle které se vyhledá odpovídající název souboru.
         """
 
         return [k for k, v in cls.get_import_data_mapper_dict().items() if v == mapper_class][0]
@@ -1036,6 +1061,12 @@ class ImportModelMapper(ABC):
 
     @classmethod
     def load_record_from_db(cls, record):
+        """
+        Načte aktuální podobu záznamu z databáze podle jeho primárního klíče.
+
+        :param record: Instance modelu, jejíž aktuální stav má být z databáze znovu načten.
+        :return: Nalezený záznam z databáze, jinak ``None`` při chybě nebo nepodporovaném primárním klíči.
+        """
         if isinstance(cls.primary_key, str):
             try:
                 return cls.model_class.objects.get(pk=record.pk)
@@ -1217,6 +1248,8 @@ class ImportModelMapper(ABC):
         při updatu musí existovat. Vrátí slovník s primárními klíči, nebo vyvolá ImportDataIntegrityError.
 
         :param performed_action: Parametr ``performed_action`` předává se do volání ``ImportDataIntegrityError()``, ovlivňuje větvení podmínek.
+        :param args: Dodatečné poziční argumenty zachované kvůli jednotné signatuře, metoda je nepoužívá.
+        :param kwargs: Dodatečné pojmenované argumenty zachované kvůli jednotné signatuře, metoda je nepoužívá.
         :return: Vrací výsledek operace.
 
             :raises ImportDataIntegrityError: Vyvolá se při splnění podmínky ``performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT and self.model_class.objects.filter(**self._get_filter_kwargs_primary_key())``; nebo při splnění podmínky ``performed_action in (ImportDataAdminForm.PERFORMED_ACTION_UPDATE, ImportDataAdminForm.PERFORMED_ACTION_DELETE) and (not self.model_class.obj``.
@@ -1372,6 +1405,12 @@ class ImportModelMapper(ABC):
 
     @classmethod
     def fedora_update_targets(cls, record) -> set:
+        """
+        Vrátí cíle pro následnou aktualizaci ve Fedoře odvozené z navázaných záznamů.
+
+        :param record: Záznam, po jehož změně se mají vyhledat dotčené objekty s ``ident_cely``.
+        :return: Množina dvojic ``(třída, primární_klíč)`` pro záznamy, které mají být ve Fedoře aktualizovány.
+        """
         return {
             (item.__class__, item.pk)
             for item in cls._get_updated_ident_cely_record_list(record)
@@ -1380,6 +1419,12 @@ class ImportModelMapper(ABC):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record) -> list:
+        """
+        Vrátí výchozí seznam záznamů, jejichž ``ident_cely`` se má po změně přegenerovat.
+
+        :param record: Záznam zpracovávaný importem.
+        :return: Seznam obsahující přímo ``record`` pro modely s metadaty, jinak prázdný seznam.
+        """
         if isinstance(record, ModelWithMetadata):
             return [record]
         else:
@@ -1387,6 +1432,12 @@ class ImportModelMapper(ABC):
 
     @staticmethod
     def get_record_history(record):
+        """
+        Určí výchozí cíl pro zápis historie importované změny.
+
+        :param record: Záznam, pro který se má najít objekt určený pro historii.
+        :return: ``None``, pokud mapper nemá definovaný konkrétní cílový objekt historie.
+        """
         return None
 
 
@@ -1421,6 +1472,13 @@ class MultipleClassImportModelMapper(ImportModelMapper):
     classes = tuple()
 
     def import_validation(self, performed_action, *args, **kwargs):
+        """
+        Ověří existenci více-modelového záznamu podle ``ident_cely`` hlavního archeologického záznamu.
+
+        :param performed_action: Typ prováděné operace importu.
+        :return: Slovník filtračních podmínek pro dohledání cílového záznamu.
+        :raises ImportDataIntegrityError: Vyvolá se, pokud záznam při insertu již existuje nebo při updatu či mazání chybí.
+        """
         if (
             performed_action == ImportDataAdminForm.PERFORMED_ACTION_INSERT
             and self.value_dict.get("ident_cely")
@@ -1556,6 +1614,12 @@ class HeslarDataceMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record) -> list:
+        """
+        Vrátí heslářové období navázané na importovanou dataci.
+
+        :param record: Záznam ``HeslarDatace`` po importu.
+        :return: Seznam s objektem ``obdobi``, jehož identifikátor se má případně aktualizovat.
+        """
         return [record.obdobi]
 
 
@@ -1589,6 +1653,12 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: HeslarDokumentTypMaterialRada) -> list:
+        """
+        Vrátí dokumentovou řadu navázanou na importovanou kombinaci typu a materiálu.
+
+        :param record: Záznam ``HeslarDokumentTypMaterialRada`` po importu.
+        :return: Seznam s navázanou hodnotou ``dokument_rada``.
+        """
         return [record.dokument_rada]
 
 
@@ -1616,6 +1686,12 @@ class HeslarHierarchieMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: HeslarHierarchie) -> list:
+        """
+        Vrátí oba heslářové uzly propojené importovanou hierarchií.
+
+        :param record: Záznam ``HeslarHierarchie`` po importu.
+        :return: Seznam nadřazeného a podřazeného hesla.
+        """
         return [record.heslo_nadrazene, record.heslo_podrazene]
 
 
@@ -1649,6 +1725,12 @@ class HeslarOdkazMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: HeslarOdkaz) -> list:
+        """
+        Vrátí heslo navázané na importovaný externí odkaz hesláře.
+
+        :param record: Záznam ``HeslarOdkaz`` po importu.
+        :return: Seznam s heslem, jehož metadata mohou být změnou odkazu dotčena.
+        """
         return [record.heslo]
 
 
@@ -1697,6 +1779,12 @@ class OrganizaceMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Organizace) -> list:
+        """
+        Vrátí přímo importovanou organizaci jako cíl pro následné aktualizace.
+
+        :param record: Záznam ``Organizace`` po importu.
+        :return: Jednoprvkový seznam obsahující importovanou organizaci.
+        """
         return [record]
 
 
@@ -1779,6 +1867,12 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
 
     @staticmethod
     def get_record_history(record: Projekt):
+        """
+        Vrátí projekt jako cíl pro zápis historie.
+
+        :param record: Importovaný záznam ``Projekt``.
+        :return: Přímo předaný projekt.
+        """
         return record
 
 
@@ -1807,10 +1901,22 @@ class ProjektKatastrMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: ProjektKatastr) -> list:
+        """
+        Vrátí projekt navázaný na importovanou vazbu ke katastru.
+
+        :param record: Záznam ``ProjektKatastr`` po importu.
+        :return: Seznam s projektem, jehož identifikátor je potřeba zohlednit.
+        """
         return [record.projekt]
 
     @staticmethod
     def get_record_history(record: ProjektKatastr):
+        """
+        Vrátí projekt související s importovanou vazbou na katastr.
+
+        :param record: Záznam ``ProjektKatastr`` po importu.
+        :return: Projekt, do jehož historie má být změna propsána.
+        """
         return record.projekt
 
 
@@ -1837,10 +1943,22 @@ class ProjektOznamovatelMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Oznamovatel) -> list:
+        """
+        Vrátí projekt, k němuž patří importovaný oznamovatel.
+
+        :param record: Záznam ``Oznamovatel`` po importu.
+        :return: Seznam s navázaným projektem.
+        """
         return [record.projekt]
 
     @staticmethod
     def get_record_history(record: Oznamovatel):
+        """
+        Vrátí projekt jako cíl pro historii změn oznamovatele.
+
+        :param record: Záznam ``Oznamovatel`` po importu.
+        :return: Projekt, k němuž se oznamovatel vztahuje.
+        """
         return record.projekt
 
 
@@ -1908,10 +2026,22 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: SamostatnyNalez) -> list:
+        """
+        Vrátí samostatný nález a jeho projekt pro návaznou aktualizaci identifikátorů.
+
+        :param record: Záznam ``SamostatnyNalez`` po importu.
+        :return: Seznam obsahující nález a případně jeho projekt.
+        """
         return [record, record.projekt]
 
     @staticmethod
     def get_record_history(record: SamostatnyNalez):
+        """
+        Vrátí samostatný nález jako cíl pro historii změn.
+
+        :param record: Záznam ``SamostatnyNalez`` po importu.
+        :return: Přímo předaný nález.
+        """
         return record
 
 
@@ -2014,6 +2144,12 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Akce | ArcheologickyZaznam) -> list:
+        """
+        Vrátí archeologický záznam a projekt dotčené akce podle typu importovaného objektu.
+
+        :param record: Záznam ``Akce`` nebo ``ArcheologickyZaznam`` po importu.
+        :return: Seznam souvisejícího archeologického záznamu a projektu.
+        """
         if isinstance(record, ArcheologickyZaznam):
             return [record, record.akce.projekt]
         elif isinstance(record, Akce):
@@ -2021,6 +2157,12 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
 
     @staticmethod
     def get_record_history(record: Akce | ArcheologickyZaznam):
+        """
+        Vrátí archeologický záznam, do jehož historie se změna akce zapisuje.
+
+        :param record: Záznam ``Akce`` nebo ``ArcheologickyZaznam`` po importu.
+        :return: Archeologický záznam odpovídající importované akci.
+        """
         if isinstance(record, ArcheologickyZaznam):
             return record
         elif isinstance(record, Akce):
@@ -2100,6 +2242,12 @@ class LokalitaMapper(MultipleClassImportModelMapper):
 
     @staticmethod
     def get_record_history(record: ArcheologickyZaznam | Lokalita):
+        """
+        Vrátí archeologický záznam navázaný na lokalitu.
+
+        :param record: Záznam ``Lokalita`` nebo přímo ``ArcheologickyZaznam`` po importu.
+        :return: Archeologický záznam, ke kterému se historie váže.
+        """
         if isinstance(record, Lokalita):
             return record.archeologicky_zaznam
         else:
@@ -2130,10 +2278,22 @@ class AkceVedouciMapper(ImportModelMapper):
 
     @staticmethod
     def get_record_history(record: AkceVedouci):
+        """
+        Vrátí archeologický záznam akce, k níž je vedoucí navázán.
+
+        :param record: Záznam ``AkceVedouci`` po importu.
+        :return: Archeologický záznam nadřazené akce.
+        """
         return record.akce.archeologicky_zaznam
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: AkceVedouci) -> list:
+        """
+        Vrátí archeologický záznam dotčený změnou vedoucího akce.
+
+        :param record: Záznam ``AkceVedouci`` po importu.
+        :return: Seznam s archeologickým záznamem navázané akce.
+        """
         return [record.akce.archeologicky_zaznam]
 
 
@@ -2162,10 +2322,22 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: ArcheologickyZaznamKatastr) -> list:
+        """
+        Vrátí archeologický záznam propojený s importovanou vazbou na katastr.
+
+        :param record: Záznam ``ArcheologickyZaznamKatastr`` po importu.
+        :return: Seznam s navázaným archeologickým záznamem.
+        """
         return [record.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: ArcheologickyZaznamKatastr):
+        """
+        Vrátí archeologický záznam jako cíl pro historii vazby na katastr.
+
+        :param record: Záznam ``ArcheologickyZaznamKatastr`` po importu.
+        :return: Navázaný archeologický záznam.
+        """
         return record.archeologicky_zaznam
 
 
@@ -2207,6 +2379,12 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
 
     @staticmethod
     def get_record_history(record: Pian):
+        """
+        Vrátí přímo importovaný PIAN jako cíl pro historii.
+
+        :param record: Záznam ``Pian`` po importu.
+        :return: Přímo předaný záznam ``Pian``.
+        """
         return record
 
 
@@ -2253,10 +2431,22 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: DokumentacniJednotka) -> list:
+        """
+        Vrátí archeologický záznam navázaný na dokumentační jednotku.
+
+        :param record: Záznam ``DokumentacniJednotka`` po importu.
+        :return: Seznam s nadřazeným archeologickým záznamem.
+        """
         return [record.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: DokumentacniJednotka):
+        """
+        Vrátí archeologický záznam jako cíl pro historii dokumentační jednotky.
+
+        :param record: Záznam ``DokumentacniJednotka`` po importu.
+        :return: Archeologický záznam navázaný na dokumentační jednotku.
+        """
         return record.archeologicky_zaznam
 
 
@@ -2297,10 +2487,22 @@ class AdbMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Adb) -> list:
+        """
+        Vrátí ADB záznam a jeho nadřazený archeologický záznam pro aktualizaci identifikátorů.
+
+        :param record: Záznam ``Adb`` po importu.
+        :return: Seznam obsahující ADB záznam a archeologický záznam dokumentační jednotky.
+        """
         return [record, record.dokumentacni_jednotka.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: Adb):
+        """
+        Vrátí archeologický záznam nadřazený importovanému ADB záznamu.
+
+        :param record: Záznam ``Adb`` po importu.
+        :return: Archeologický záznam propojený přes dokumentační jednotku.
+        """
         return record.dokumentacni_jednotka.archeologicky_zaznam
 
 
@@ -2327,10 +2529,22 @@ class AdbVyskovyBod(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: VyskovyBod) -> list:
+        """
+        Vrátí výškový bod nepřímo přes ADB záznam a jeho archeologický kontext.
+
+        :param record: Záznam ``VyskovyBod`` po importu.
+        :return: Seznam s ADB záznamem a nadřazeným archeologickým záznamem.
+        """
         return [record.adb, record.adb.dokumentacni_jednotka.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: VyskovyBod):
+        """
+        Vrátí archeologický záznam navázaný na importovaný výškový bod.
+
+        :param record: Záznam ``VyskovyBod`` po importu.
+        :return: Archeologický záznam dostupný přes navázaný ADB záznam.
+        """
         return record.adb.dokumentacni_jednotka.archeologicky_zaznam
 
 
@@ -2527,6 +2741,12 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
 
     @staticmethod
     def get_record_history(record: Dokument | DokumentExtraData):
+        """
+        Vrátí dokument, do jehož historie se má změna propsat.
+
+        :param record: Záznam ``Dokument`` nebo ``DokumentExtraData`` po importu.
+        :return: Přímo dokument nebo dokument navázaný přes extra data.
+        """
         if isinstance(record, Dokument):
             return record
         else:
@@ -2558,10 +2778,22 @@ class DokumentAutorMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: DokumentAutor) -> list:
+        """
+        Vrátí dokument dotčený změnou pořadí nebo vazby autora.
+
+        :param record: Záznam ``DokumentAutor`` po importu.
+        :return: Seznam s navázaným dokumentem.
+        """
         return [record.dokument]
 
     @staticmethod
     def get_record_history(record: DokumentAutor):
+        """
+        Vrátí dokument jako cíl pro historii vazby autora.
+
+        :param record: Záznam ``DokumentAutor`` po importu.
+        :return: Navázaný dokument.
+        """
         return record.dokument
 
 
@@ -2589,10 +2821,22 @@ class DokumentJazykMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: DokumentJazyk) -> list:
+        """
+        Vrátí dokument dotčený změnou jazykové vazby.
+
+        :param record: Záznam ``DokumentJazyk`` po importu.
+        :return: Seznam s navázaným dokumentem.
+        """
         return [record.dokument]
 
     @staticmethod
     def get_record_history(record: DokumentJazyk):
+        """
+        Vrátí dokument jako cíl pro historii jazykové vazby.
+
+        :param record: Záznam ``DokumentJazyk`` po importu.
+        :return: Navázaný dokument.
+        """
         return record.dokument
 
 
@@ -2620,10 +2864,22 @@ class DokumentOsobaMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: DokumentOsoba) -> list:
+        """
+        Vrátí dokument dotčený změnou osobní vazby.
+
+        :param record: Záznam ``DokumentOsoba`` po importu.
+        :return: Seznam s navázaným dokumentem.
+        """
         return [record.dokument]
 
     @staticmethod
     def get_record_history(record: DokumentOsoba):
+        """
+        Vrátí dokument jako cíl pro historii osobní vazby.
+
+        :param record: Záznam ``DokumentOsoba`` po importu.
+        :return: Navázaný dokument.
+        """
         return record.dokument
 
 
@@ -2651,10 +2907,22 @@ class DokumentPosudekMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: DokumentPosudek) -> list:
+        """
+        Vrátí dokument dotčený změnou vazby na posudek.
+
+        :param record: Záznam ``DokumentPosudek`` po importu.
+        :return: Seznam s navázaným dokumentem.
+        """
         return [record.dokument]
 
     @staticmethod
     def get_record_history(record: DokumentPosudek):
+        """
+        Vrátí dokument jako cíl pro historii vazby na posudek.
+
+        :param record: Záznam ``DokumentPosudek`` po importu.
+        :return: Navázaný dokument.
+        """
         return record.dokument
 
 
@@ -2682,10 +2950,22 @@ class TvarMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Tvar) -> list:
+        """
+        Vrátí dokument dotčený změnou tvaru leteckého snímku.
+
+        :param record: Záznam ``Tvar`` po importu.
+        :return: Seznam s dokumentem, ke kterému tvar patří.
+        """
         return [record.dokument]
 
     @staticmethod
     def get_record_history(record: Tvar):
+        """
+        Vrátí dokument jako cíl pro historii tvaru.
+
+        :param record: Záznam ``Tvar`` po importu.
+        :return: Navázaný dokument.
+        """
         return record.dokument
 
 
@@ -2714,10 +2994,22 @@ class DokumentCastMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: DokumentCast) -> list:
+        """
+        Vrátí všechny hlavní entity navázané na importovanou část dokumentu.
+
+        :param record: Záznam ``DokumentCast`` po importu.
+        :return: Seznam dokumentu, archeologického záznamu a projektu, pokud jsou navázány.
+        """
         return [record.dokument, record.archeologicky_zaznam, record.projekt]
 
     @staticmethod
     def get_record_history(record: DokumentCast):
+        """
+        Vrátí dokument jako cíl pro historii části dokumentu.
+
+        :param record: Záznam ``DokumentCast`` po importu.
+        :return: Nadřazený dokument.
+        """
         return record.dokument
 
 
@@ -2745,10 +3037,22 @@ class NeidentAkceMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: NeidentAkce) -> list:
+        """
+        Vrátí dokument navázaný na neidentifikovanou akci přes část dokumentu.
+
+        :param record: Záznam ``NeidentAkce`` po importu.
+        :return: Seznam s nadřazeným dokumentem.
+        """
         return [record.dokument_cast.dokument]
 
     @staticmethod
     def get_record_history(record: NeidentAkce):
+        """
+        Vrátí dokument jako cíl pro historii neidentifikované akce.
+
+        :param record: Záznam ``NeidentAkce`` po importu.
+        :return: Dokument navázaný přes část dokumentu.
+        """
         return record.dokument_cast.dokument
 
 
@@ -2776,10 +3080,22 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: NeidentAkceVedouci) -> list:
+        """
+        Vrátí dokument dotčený změnou vedoucího neidentifikované akce.
+
+        :param record: Záznam ``NeidentAkceVedouci`` po importu.
+        :return: Seznam s dokumentem navázaným přes neidentifikovanou akci.
+        """
         return [record.neident_akce.dokument_cast.dokument]
 
     @staticmethod
     def get_record_history(record: NeidentAkceVedouci):
+        """
+        Vrátí dokument jako cíl pro historii vedoucího neidentifikované akce.
+
+        :param record: Záznam ``NeidentAkceVedouci`` po importu.
+        :return: Dokument navázaný přes neidentifikovanou akci.
+        """
         return record.neident_akce.dokument_cast.dokument
 
 
@@ -2809,6 +3125,12 @@ class KomponentaMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Komponenta) -> list:
+        """
+        Vrátí záznamy dotčené změnou komponenty podle typu navázaného objektu.
+
+        :param record: Záznam ``Komponenta`` po importu.
+        :return: Seznam archeologických záznamů nebo dokumentů odvozených z vazby komponenty.
+        """
         record_list = []
         navazany_objekt = record.komponenta_vazby.navazany_objekt
         if isinstance(navazany_objekt, DokumentCast):
@@ -2822,6 +3144,12 @@ class KomponentaMapper(ImportModelMapper):
 
     @staticmethod
     def get_record_history(record: Komponenta):
+        """
+        Vrátí objekt, do jehož historie se má změna komponenty propsat.
+
+        :param record: Záznam ``Komponenta`` po importu.
+        :return: Archeologický záznam nebo dokument odvozený z vazby komponenty.
+        """
         navazany_objekt = record.komponenta_vazby.navazany_objekt
         if isinstance(navazany_objekt, DokumentCast):
             if navazany_objekt.archeologicky_zaznam:
@@ -2856,11 +3184,23 @@ class KomponentaAktivitaMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: KomponentaAktivita) -> list:
+        """
+        Vrátí stejné cílové záznamy jako navázaná komponenta.
+
+        :param record: Záznam ``KomponentaAktivita`` po importu.
+        :return: Seznam záznamů odvozený z mapperu komponenty.
+        """
         komponenta = record.komponenta
         return KomponentaMapper._get_updated_ident_cely_record_list(komponenta)
 
     @staticmethod
     def get_record_history(record: KomponentaAktivita):
+        """
+        Vrátí objekt historie stejný jako u navázané komponenty.
+
+        :param record: Záznam ``KomponentaAktivita`` po importu.
+        :return: Cílový objekt historie odvozený z komponenty.
+        """
         komponenta = record.komponenta
         return KomponentaMapper.get_record_history(komponenta)
 
@@ -2873,11 +3213,23 @@ class NalezMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: NalezObjekt | NalezPredmet) -> list:
+        """
+        Vrátí cílové záznamy odvozené z komponenty, ke které nález patří.
+
+        :param record: Záznam ``NalezObjekt`` nebo ``NalezPredmet`` po importu.
+        :return: Seznam záznamů získaný z mapperu komponenty.
+        """
         komponenta = record.komponenta
         return KomponentaMapper._get_updated_ident_cely_record_list(komponenta)
 
     @staticmethod
     def get_record_history(record: NalezObjekt | NalezPredmet):
+        """
+        Vrátí objekt historie odvozený z komponenty navázané na nález.
+
+        :param record: Záznam ``NalezObjekt`` nebo ``NalezPredmet`` po importu.
+        :return: Cílový objekt historie získaný z mapperu komponenty.
+        """
         komponenta = record.komponenta
         return KomponentaMapper.get_record_history(komponenta)
 
@@ -2974,6 +3326,12 @@ class ExterniZdrojMapper(ImportModelMapper):
 
     @staticmethod
     def get_record_history(record: ExterniZdroj):
+        """
+        Vrátí přímo importovaný externí zdroj jako cíl pro historii.
+
+        :param record: Záznam ``ExterniZdroj`` po importu.
+        :return: Přímo předaný externí zdroj.
+        """
         return record
 
 
@@ -3002,10 +3360,22 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: ExterniZdrojAutor) -> list:
+        """
+        Vrátí externí zdroj dotčený změnou pořadí nebo vazby autora.
+
+        :param record: Záznam ``ExterniZdrojAutor`` po importu.
+        :return: Seznam s navázaným externím zdrojem.
+        """
         return [record.externi_zdroj]
 
     @staticmethod
     def get_record_history(record: ExterniZdrojAutor):
+        """
+        Vrátí externí zdroj jako cíl pro historii vazby autora.
+
+        :param record: Záznam ``ExterniZdrojAutor`` po importu.
+        :return: Navázaný externí zdroj.
+        """
         return record.externi_zdroj
 
 
@@ -3034,10 +3404,22 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: ExterniZdrojEditor) -> list:
+        """
+        Vrátí externí zdroj dotčený změnou pořadí nebo vazby editora.
+
+        :param record: Záznam ``ExterniZdrojEditor`` po importu.
+        :return: Seznam s navázaným externím zdrojem.
+        """
         return [record.externi_zdroj]
 
     @staticmethod
     def get_record_history(record: ExterniZdrojEditor):
+        """
+        Vrátí externí zdroj jako cíl pro historii vazby editora.
+
+        :param record: Záznam ``ExterniZdrojEditor`` po importu.
+        :return: Navázaný externí zdroj.
+        """
         return record.externi_zdroj
 
 
@@ -3065,10 +3447,22 @@ class ExterniOdkazMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: ExterniOdkaz) -> list:
+        """
+        Vrátí externí zdroj a archeologický záznam propojené importovaným odkazem.
+
+        :param record: Záznam ``ExterniOdkaz`` po importu.
+        :return: Seznam navázaného externího zdroje a archeologického záznamu.
+        """
         return [record.externi_zdroj, record.archeologicky_zaznam]
 
     @staticmethod
     def get_record_history(record: ExterniOdkaz):
+        """
+        Vrátí externí zdroj jako cíl pro historii externího odkazu.
+
+        :param record: Záznam ``ExterniOdkaz`` po importu.
+        :return: Navázaný externí zdroj.
+        """
         return record.externi_zdroj
 
 
@@ -3108,9 +3502,23 @@ class UzivatelMapper(ImportModelMapper):
 
     @staticmethod
     def get_record_history(record: User):
+        """
+        Vrátí uživatele jako cíl pro historii změn.
+
+        :param record: Záznam ``User`` po importu.
+        :return: Přímo předaný uživatel.
+        """
         return record
 
     def import_validation(self, performed_action, user_id) -> dict | None:
+        """
+        Zabrání smazání aktivního uživatele a jinak deleguje běžnou validaci mapperu.
+
+        :param performed_action: Typ prováděné operace importu.
+        :param user_id: Primární klíč aktuálně přihlášeného uživatele.
+        :return: Filtrační podmínky primárního klíče nebo ``None`` podle standardní validace mapperu.
+        :raises ImportDataActiveUserCannotBeDeleted: Vyvolá se při pokusu smazat právě aktivního uživatele.
+        """
         if (
             performed_action == ImportDataAdminForm.PERFORMED_ACTION_DELETE
             and User.objects.get(pk=user_id).ident_cely == self.value_dict["ident_cely"]
@@ -3233,10 +3641,22 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Pes) -> list:
+        """
+        Vrátí uživatele dotčeného změnou projektové notifikace.
+
+        :param record: Záznam ``Pes`` po importu.
+        :return: Seznam s uživatelem navázaným na notifikaci.
+        """
         return [record.user]
 
     @staticmethod
     def get_record_history(record: Pes):
+        """
+        Vrátí uživatele jako cíl pro historii projektové notifikace.
+
+        :param record: Záznam ``Pes`` po importu.
+        :return: Uživatel navázaný na notifikaci.
+        """
         return record.user
 
 
@@ -3264,10 +3684,22 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: UzivatelSpoluprace) -> list:
+        """
+        Vrátí oba uživatele zapojené do spolupráce.
+
+        :param record: Záznam ``UzivatelSpoluprace`` po importu.
+        :return: Seznam vedoucího a spolupracovníka.
+        """
         return [record.vedouci, record.spolupracovnik]
 
     @staticmethod
     def get_record_history(record: UzivatelSpoluprace):
+        """
+        Vrátí přímo vazbu spolupráce jako cíl pro historii.
+
+        :param record: Záznam ``UzivatelSpoluprace`` po importu.
+        :return: Přímo předaná vazba spolupráce.
+        """
         return record
 
 
@@ -3309,14 +3741,33 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
     def import_validation(self, *args, **kwargs):
+        """
+        Vrátí filtrační podmínky uživatele bez další validační logiky.
+
+        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :return: Slovník s podmínkou pro dohledání cílového uživatele.
+        """
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod
     def get_record_history(record: User):
+        """
+        Vrátí uživatele jako cíl pro historii změn oprávnění.
+
+        :param record: Záznam ``User`` po importu.
+        :return: Přímo předaný uživatel.
+        """
         return record
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: User) -> list:
+        """
+        Vrátí uživatele dotčeného změnou skupinového oprávnění.
+
+        :param record: Záznam ``User`` po importu.
+        :return: Jednoprvkový seznam s uživatelem.
+        """
         return [record]
 
 
@@ -3343,10 +3794,22 @@ class SouborMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Soubor) -> list:
+        """
+        Vrátí objekt navázaný na importovaný soubor.
+
+        :param record: Záznam ``Soubor`` po importu.
+        :return: Seznam s objektem dostupným přes vazbu souboru.
+        """
         return [record.vazba.navazany_objekt]
 
     @staticmethod
     def get_record_history(record: Soubor):
+        """
+        Vrátí přímo soubor jako cíl pro historii změn.
+
+        :param record: Záznam ``Soubor`` po importu.
+        :return: Přímo předaný soubor.
+        """
         return record
 
 
@@ -3388,14 +3851,33 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         return [User.objects.get(ident_cely=self.value_dict["uzivatel"])]
 
     def import_validation(self, *args, **kwargs):
+        """
+        Vrátí filtrační podmínky uživatele bez další validační logiky.
+
+        :param args: Nepoužité poziční argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :param kwargs: Nepoužité pojmenované argumenty zachované kvůli sjednocenému rozhraní mapperů.
+        :return: Slovník s podmínkou pro dohledání cílového uživatele.
+        """
         return self._get_filter_kwargs_primary_key()
 
     @staticmethod
     def get_record_history(record: User):
+        """
+        Vrátí uživatele jako cíl pro historii notifikačních preferencí.
+
+        :param record: Záznam ``User`` po importu.
+        :return: Přímo předaný uživatel.
+        """
         return record
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: User) -> list:
+        """
+        Vrátí uživatele dotčeného změnou typu notifikace.
+
+        :param record: Záznam ``User`` po importu.
+        :return: Jednoprvkový seznam s uživatelem.
+        """
         return [record]
 
 
@@ -3427,6 +3909,12 @@ class HistorieMapper(ImportModelMapper):
 
     @staticmethod
     def _get_updated_ident_cely_record_list(record: Historie) -> list:
+        """
+        Vrátí objekty dotčené importovaným historickým záznamem podle typu vazby.
+
+        :param record: Záznam ``Historie`` po importu.
+        :return: Seznam objektů navázaných přes ``vazba``, jejichž identifikátory je třeba aktualizovat.
+        """
         navazany_objekt = record.vazba.navazany_objekt
         if isinstance(navazany_objekt, ModelWithMetadata) or isinstance(navazany_objekt, User):
             return [navazany_objekt]
