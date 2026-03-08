@@ -290,10 +290,8 @@ The `docs_agents` directory stores the persistent state
 of AI-assisted technical review.
 
 `PROMPT.md`  
-Instructions for running long-term AI review sessions.
-
-`PROMPT_RUN.md`  
-Instructions for executing a review session.
+Instructions for running long-term AI review sessions.  
+Contains the initialization sequence, task registry and execution procedure.
 
 `review_config.yaml`  
 Configuration of analysis modules according to the repository stack.
