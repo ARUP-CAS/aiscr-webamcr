@@ -484,10 +484,29 @@ with `docs/generate_selenium_test_docs.py`.
 
 Main directories:
 
-- `webclient/` --- Django application
+- `webclient/` --- Django application (Django project root; `manage.py` and
+    `requirements.txt` are located here, **not** in the repository root)
 - `docs/` --- Sphinx documentation
 - `scripts/` --- helper and operational scripts
 - `docs_agents/` --- AI-assisted review state
+
+Important: `static/` and `templates/` directories are located inside
+`webclient/`, not at the repository root.
+
+### Key Django Applications
+
+| Directory | Full name | Notes |
+|-----------|-----------|-------|
+| `webclient/core/` | Core | Shared infrastructure — 77 .py files, 26 migrations. Largest app by far; consider sub-tasks when analysing. |
+| `webclient/projekt/` | Projekt | Primary domain entity (archaeological projects) |
+| `webclient/arch_z/` | Archeologický záznam | Archaeological records — 33 .py files, 20 migrations |
+| `webclient/uzivatel/` | Uživatel | Users, organisations, permissions, CAS SSO — 43 .py files, 31 migrations |
+| `webclient/dokument/` | Dokument | Documents and attachments — 31 .py files |
+| `webclient/heslar/` | Hesláře | Controlled vocabularies / domain value lists |
+| `webclient/pian/` | PIAN | Spatial identification of finds — geometry, coordinate transforms |
+| `webclient/pas/` | PAS | Amateur metal-detector finds cooperation |
+| `webclient/cron/` | Cron | Celery beat schedule — **no tests** |
+| `webclient/notifikace_projekty/` | Notifikace projektů | E-mail notifications via Celery — **no tests** |
 
 Infrastructure configuration:
 
