@@ -79,3 +79,41 @@
 - **Popis:** Funkce `get_vyskovy_bod()` volá `vyskove_body.count()` dvakrát — jednou pro test na 0 a jednou pro test na maximum — každé volání spouští samostatný SQL COUNT dotaz.
 - **Navrhovaná oprava:** Uložit výsledek `count = vyskove_body.count()` jednou a porovnat `count == 0` a `count <= MAXIMAL_VYSKOVY_BOD + offset`.
 - **Task:** T03b
+
+---
+
+### BUG-007: GF_SECURITY_ADMIN_PASSWORD nastaveno na cestu k souboru místo hesla
+
+- **Soubory:**
+  - `docker-compose.yml:149`
+  - `docker-compose-test.yml:169`
+  - `git_docker-compose.yml:144`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** Grafana `GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password` nastavuje admin heslo na literální string (cestu k souboru), nikoli na obsah Docker secretu. Grafná nepodporuje automatické čtení Docker secrets přes `GF_SECURITY_ADMIN_PASSWORD`; správný formát je `GF_SECURITY_ADMIN_PASSWORD__FILE`. Důsledek: Grafana admin heslo je literální string `/run/secrets/grafana_admin_password`.
+- **Navrhovaná oprava:** Nahradit `GF_SECURITY_ADMIN_PASSWORD=...` za `GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password` ve všech třech souborech.
+- **Task:** T04
+
+---
+
+### BUG-008: ELASTIC_PASSWORD a LOGSTASH_INTERNAL_PASSWORD nastaveny na názvy secretů
+
+- **Soubory:**
+  - `docker-compose.yml:180-181,201`
+  - `git_docker-compose.yml:172-173,194`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** Elasticsearch `ELASTIC_PASSWORD=elastic_pass` a Logstash `LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass` mají jako hodnotu název Docker secretu (řetězec), nikoli jeho obsah. Elasticsearch ani Logstash Docker images nepodporují `_FILE` variantu pro tyto proměnné. Výsledek: Elasticsearch bootstrap heslo je nastaveno na literál `"elastic_pass"` namísto skutečné hodnoty ze secretu.
+- **Navrhovaná oprava:** Použít entrypoint wrapper skript: `export ELASTIC_PASSWORD=$(cat /run/secrets/elastic_pass)` před spuštěním Elasticsearch / Logstash.
+- **Task:** T04
+
+---
+
+### BUG-009: sudo přístup aplikačního uživatele v produkčním kontejneru
+
+- **Soubor:** `Dockerfile:99`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** `usermod -aG sudo user` přidává produkčního aplikačního uživatele do skupiny `sudo`. Pokud dojde k RCE exploitaci aplikace (např. přes eval() — viz BUG-001), útočník může eskalovat oprávnění na root uvnitř kontejneru.
+- **Navrhovaná oprava:** Odebrat `usermod -aG sudo user`. Pro nutné privilegované operace (crontab setup) nastavit specifická NOPASSWD pravidla v `/etc/sudoers`.
+- **Task:** T04
