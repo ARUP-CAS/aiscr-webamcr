@@ -5,9 +5,9 @@ from core.connectors import RedisConnector
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.utils import OperationalError
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy
 
 from redis import ResponseError
@@ -123,6 +123,37 @@ class ErrorMiddleware:
         if isinstance(exception, OperationalError) and "canceling statement due to statement timeout" in str(exception):
             context = {"exception": exception}
             return render(request, "db_timeout_error.html", context, status=504)
+
+
+class InactiveUserMiddleware:
+    """Middleware pro zachycení ValidationError s kódem 'inactive' při přístupu deaktivovaného uživatele s aktivní session."""
+
+    def __init__(self, get_response):
+        """
+        Inicializuje instanci třídy.
+
+        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        """
+        self.get_response = get_response
+
+    def __call__(self, request):
+        """
+        Obaluje zpracování požadavku a zachycuje ``ValidationError`` s kódem ``inactive``,
+        která vznikne při vyhodnocení ``request.user`` pro deaktivovaného uživatele.
+        Session se smaže a uživatel je přesměrován na přihlašovací stránku s varovnou hláškou.
+
+        :param request: Parametr ``request`` předává se do volání ``get_response()``.
+
+            :return: Vrací přesměrování na přihlašovací stránku nebo ``response``.
+        """
+        try:
+            return self.get_response(request)
+        except ValidationError as e:
+            if getattr(e, "code", None) == "inactive":
+                request.session.flush()
+                messages.warning(request, e.message)
+                return redirect("django_authentication_login")
+            raise
 
 
 class StatusMessageMiddleware:
