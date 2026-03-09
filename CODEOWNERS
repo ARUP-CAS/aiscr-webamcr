@@ -28,7 +28,7 @@
 /docs/                      @motyc @jhavrlant
 
 # Agentní dokumentace — vyžaduje human review před mergem do test
-/docs_agents/               @motyc @jhavrlant
+/.agents/                   @motyc
 
 # Projektová dokumentace a pravidla
 /AGENTS.md                  @motyc @jhavrlant
