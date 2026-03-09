@@ -49,7 +49,7 @@ aiscr-webamcr/
 ├── redis/                # Konfigurace Redis
 ├── scripts/              # Deployment a vývojové skripty
 ├── webclient/            # Hlavní Django aplikace
-├── docs_agents/          # Dokumentace a konfigurace pro AI agenty
+├── .agents/              # Konfigurace, prompty a výstupy pro AI agenty
 ├── AGENTS.md             # Pravidla a instrukce pro AI coding agenty
 ├── CODEOWNERS            # Vlastníci kódu
 ├── CONTRIBUTING.md       # Vývojový manuál
@@ -158,7 +158,7 @@ Viz `CONTRIBUTING.md` pro podrobný vývojový postup.
 Repozitář obsahuje konfiguraci pro AI coding agenty (OpenAI Codex, Claude Code a další):
 
 - `AGENTS.md` — pravidla, konvence a instrukce pro agenty
-- `docs_agents/` — průběžné audity, analýzy a backlog nálezů
+- `.agents/` — průběžné audity, analýzy a backlog nálezů
 
 Větve generované agenty:
 
