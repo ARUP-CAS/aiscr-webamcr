@@ -38,11 +38,11 @@ Before starting any work, agents must gather repository context.
 
 Read the following files:
 
-- `docs_agents/repository_map.json`
-- `docs_agents/review_cache.json`
-- `docs_agents/bugs.md`
-- `docs_agents/refactoring_backlog.md`
-- `docs_agents/PROMPT.md`
+- `.agents/analysis/repository_map.json`
+- `.agents/config/review_cache.json`
+- `.agents/reports/bugs.md`
+- `.agents/reports/refactoring_backlog.md`
+- `.agents/prompts/review_codebase.md`
 
 Purpose:
 
@@ -56,7 +56,7 @@ process**.
 
 ### Resolving Inconsistencies
 
-If content in `docs_agents/` contradicts high-level repository rules or
+If content in `.agents/` contradicts high-level repository rules or
 governance defined in this document (`AGENTS.md`), `CONTRIBUTING.md`, or
 other authoritative project documentation, agents must treat those
 higher-level documents as the **source of truth**.
@@ -67,7 +67,7 @@ In such cases agents should:
     - `AGENTS.md`
     - `CONTRIBUTING.md`
     - repository coding standards
-2.  Adapt or update affected files in `docs_agents/` to align with those
+2.  Adapt or update affected files in `.agents/` to align with those
     rules.
 3.  Record the adjustment in the review history (for example
     `review_cache.json` or `refactoring_backlog.md`) when relevant.
@@ -81,7 +81,7 @@ current repository governance.
 
 All artefacts produced by AI agents must be stored in:
 
-`docs_agents/`
+`.agents/`
 
 Examples include:
 
@@ -133,7 +133,7 @@ Agents must:
 - gather repository context before starting work
 - avoid repeating previously recorded work
 - prefer incremental improvements
-- record findings in `docs_agents/`
+- record findings in `.agents/`
 - follow repository coding standards
 - keep changes minimal and reviewable
 - suggest improvements to this file when appropriate
@@ -186,7 +186,7 @@ Agents may modify:
 - `webclient/`
 - `docs/`
 - `scripts/`
-- `docs_agents/`
+- `.agents/`
 - Docker configuration
 - CI configuration
 - documentation files
@@ -295,17 +295,29 @@ Agents must **never open PRs targeting `dev`**.
 
 ------------------------------------------------------------------------
 
-## docs_agents Structure
+## .agents Structure
 
-The `docs_agents` directory stores the persistent state of AI-assisted
-technical review.
+The `.agents` directory stores the persistent state of AI-assisted
+technical review. It is organized into subfolders:
 
-`PROMPT.md`  
-Instructions for running long-term AI review sessions.  
+### prompts/
+
+`review_codebase.md`\
+Instructions for running long-term AI review sessions.\
 Contains the initialization sequence, task registry and execution procedure.
+
+`prompt_evolution/`\
+Suggestions for improving the review prompt, accumulated across sessions.
+
+### config/
 
 `review_config.yaml`\
 Configuration of analysis modules according to the repository stack.
+
+`review_cache.json`\
+Persistent state of previous review sessions.
+
+### analysis/
 
 `repository_map.json`\
 Overview of repository structure and major directories.
@@ -313,8 +325,13 @@ Overview of repository structure and major directories.
 `dependency_graph.json`\
 Map of key dependencies and services.
 
-`review_cache.json`\
-Persistent state of previous review sessions.
+`*_analysis.json`\
+Task-specific analysis outputs (ORM, Docker, security, etc.).
+
+### reports/
+
+`review_reports/`\
+Task completion reports (`<task_id>.md`).
 
 `bugs.md`\
 Structured log of discovered issues.
@@ -488,7 +505,7 @@ Main directories:
     `requirements.txt` are located here, **not** in the repository root)
 - `docs/` --- Sphinx documentation
 - `scripts/` --- helper and operational scripts
-- `docs_agents/` --- AI-assisted review state
+- `.agents/` --- AI-assisted review state
 
 Important: `static/` and `templates/` directories are located inside
 `webclient/`, not at the repository root.
