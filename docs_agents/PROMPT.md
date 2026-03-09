@@ -117,6 +117,7 @@ cache_strategy:
 
 important_directories:
   - webclient
+  - webclient/services
   - scripts
   - docs
   - .github
@@ -145,6 +146,9 @@ important_files:
   - git_docker-compose.yml
   - git_docker-compose.override.yml
   - git_docker-compose-proxy.yml
+  - redis/docker-entrypoint.sh
+  - scripts/entrypoint.sh
+  - scripts/entrypoint.dev.sh
   - readthedocs.yaml
   - .pre-commit-config.yaml
   - .flake8
@@ -309,14 +313,27 @@ Analyze:
 
 - Python imports between Django applications in `webclient/`
 - Django application dependencies (INSTALLED_APPS, cross-app imports)
+  - Use `webclient/webclient/settings/base.py` → `INSTALLED_APPS` as the
+    authoritative list of Django applications.
+  - Analyse only production Python files — exclude `tests/` directories from
+    the import graph. Tests may import any app; such imports must not be
+    counted as architectural dependencies.
+  - Distinguish **module-level imports** (load-time, high risk for circular
+    dependency) from **lazy imports** (inside functions — lower risk, but
+    still an architectural smell worth noting separately).
 - Docker service dependencies (does X depend on Y at startup?)
 - external libraries from `requirements.txt` and `pyproject.toml`
-- npm dependencies from `package.json`
+- npm dependencies from `package.json` (if absent, record as N/A and delegate
+  CDN dependency analysis to T07)
 
 Detect:
 
 - circular dependencies between Django applications
+  - **module-level** circular imports → severity Vysoká
+  - **lazy** circular imports (import inside function) → severity Střední
 - tightly coupled modules
+  - flag any module with **fan-in > 10** as a decomposition candidate
+  - flag any module with **fan-out > 6** as a high-responsibility candidate
 - modules with excessive responsibilities
 - outdated dependencies (versions)
 
@@ -343,21 +360,38 @@ Create: `docs_agents/orm_analysis.json`
 
 Inspect:
 
-- Django models in each application
+- Django models in each application — **read every `models.py` directly** (do not rely on summaries)
 - migrations (count, state, squash candidates)
 - queryset patterns in views, serializers and management commands
 - usage of `select_related` / `prefetch_related`
+- `signals.py` files — signals trigger `save()` chains that can cause hidden N+1 queries
+- `managers.py` files — custom QuerySet managers affect ORM behaviour throughout the app
+- `historie/models.py` — HistorieVazby and Historie are used by virtually all models
 
 Detect:
 
 - N+1 queries
+- `len(queryset.all())` instead of `.count()` — common anti-pattern, always flag
 - missing `select_related` / `prefetch_related`
+- missing initial-value caching in `__init__()`: if a model's `save()` does
+  `Model.objects.get(pk=self.pk)` to detect field changes, it should instead save
+  `self._initial_<field> = self.<field>` in `__init__()` and compare in `save()`
+- imports from non-standard libraries where stdlib or Django equivalents exist
+  (e.g. `cached_property` from `distlib.util` instead of `functools`)
+- deprecated ORM methods: `.extra()` (deprecated Django 4.0), `raw()` without
+  parameters, `select_related` called without field names on large querysets
 - unindexed fields used in filters
 - heavy ORM loops
 - large tables without indexes
 - queries in templates or property methods
 
+Note: The repository uses a special `urgent` database (Django DB router) for sequence
+generation models (ProjektSekvence, AkceSekvence, PianSekvence). This is intentional
+for concurrent safety — do not flag it as a misconfiguration.
+
 Record severe ORM issues as bugs in `bugs.md`.
+Cross-reference every bug entry with existing GitHub Issues (the repository has 113 open
+issues) **before** writing the entry — see the BUG TRACKING section for the procedure.
 
 ```json
 {
@@ -407,6 +441,20 @@ Detect:
 - unnecessary installed packages
 - inconsistencies between dev and production configurations
 - hardcoded secrets or passwords
+- incorrect secret injection patterns: for every service reading Docker secrets, verify
+  the correct mechanism is used — Grafana (`GF_*__FILE` suffix), PostgreSQL
+  (`POSTGRES_PASSWORD_FILE`), Redis (entrypoint sed), Elasticsearch/Logstash
+  (entrypoint wrapper script — these do NOT support `_FILE` variants)
+- version parity between dev and prod: compare base image versions of shared services
+  (ELK, Prometheus, Grafana, Selenium) across all compose files; major version gaps
+  → severity Střední
+- services misplaced in wrong environment: test tools (Selenium) must not appear in
+  the production compose; dev-only services must not appear in prod
+- multi-process containers without PID 1 management: if a container runs two or more
+  processes (`cmd1 & cmd2`), verify it uses a process supervisor (tini, s6-overlay)
+  or the exec pattern in an entrypoint script
+- monitoring and admin interfaces (Grafana, Prometheus, Kibana, Elasticsearch)
+  exposed publicly without network isolation or authentication
 
 ```json
 {
@@ -426,16 +474,44 @@ Create: `docs_agents/security_analysis.json`
 
 **Purpose:** Security audit of the production system.
 
+> **Cross-reference T04:** Docker-level security findings (secret injection errors,
+> container privilege escalation, exposed monitoring ports) are already recorded in
+> `docs_agents/docker_analysis.json` from T04. Do not duplicate those entries here —
+> reference them by ID (SEC-D01 … SEC-D06) if they overlap with Django-level concerns.
+
 Inspect:
 
-- Django security settings (`SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `SECURE_*`)
-- secrets management (Docker secrets vs env vars vs files)
-- authentication and authorisation (CAS integration, Django permissions)
+- Run `python manage.py check --deploy` first and record all warnings
+  (covers `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS`, HTTPS settings, cookie security)
+- Django security settings (`SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `SECURE_*`);
+  pay attention to fallback values in `get_secret()` calls — a fallback of `"True"`
+  for `DEBUG` is as dangerous as hardcoding `DEBUG = True`
+- secrets management (Docker secrets vs env vars vs files); when auditing
+  committed sample secrets files, distinguish placeholder values
+  ("changeme", "test_key", "PLACEHOLDER", "your_key_here", "secret") from
+  potentially real credentials (random-looking hex/base64 strings, third-party
+  domain URLs, email addresses) — real-looking credentials → Střední, recommend rotation
+- authentication and authorisation (CAS integration, Django permissions);
+  verify that any custom `user_can_authenticate()` backend returns `False`
+  (not raises an exception) for inactive users
+- NGINX proxy configuration (`proxy/default.conf`) — HTTPS redirect, HSTS,
+  `X-Frame-Options`, `Content-Security-Policy` may be set at proxy level; check
+  whether Django-level `SECURE_*` settings are still needed (defense-in-depth)
+- `webclient/webclient/urls.py` — check admin URL path predictability, exposed
+  debug views
+- `webclient/core/middleware.py` (or `middleware/` directory if split) — custom
+  middleware can introduce or remove security controls
 - CORS configuration
 - CSRF protection
 - SQL injection risks (raw queries, `extra()`, `RawSQL()`)
-- XSS risks (`safe` filters in templates, `mark_safe()`)
-- dependencies with known CVEs (compare against current database)
+- XSS risks (`safe` filters in templates, `mark_safe()`):
+  - **Acceptable:** hardcoded HTML string without user input (e.g. widget decoration)
+  - **Střední risk:** value from a model property or DB attribute without explicit `escape()`
+  - **Vysoká risk:** value directly from request parameters or user input
+  - Preferred pattern: `format_html()` instead of `mark_safe()` for dynamic content
+- dependencies with known CVEs — primary method: run `pip audit` or
+  `safety check -r requirements.txt`; if tools unavailable in offline environment,
+  record as "CVE audit recommended" and add to `refactoring_backlog.md` as a SEC step
 - sensitive files in `.gitignore` vs what is actually committed
 
 > **Note on `cert/`:** This directory contains self-signed certificates for local
@@ -445,10 +521,13 @@ Inspect:
 Severity mapping:
 
 - `DEBUG=True` in production → Kritická
+- `get_secret("DEBUG", "True")` — dangerous fallback → Vysoká
 - hardcoded `SECRET_KEY` → Kritická
 - outdated dependency with CVE → Vysoká
 - missing CSRF protection → Vysoká
+- `mark_safe()` with DB/request value without `escape()` → Střední
 - unnecessary `safe` filter → Střední
+- real-looking credentials in committed sample file → Střední
 
 ```json
 {
@@ -883,3 +962,10 @@ The final report must include:
 6. Cross-reference all bugs with existing GitHub Issues before filing.
 7. When a Django app is large, create one sub-task per app (e.g., T03a, T03b).
 8. Infrastructure components (ELK, Prometheus, Redis, Fedora) are in scope for T04.
+9. **DONE MEANS DONE — never mark a task or sub-task as `done` until every file in its stated
+   scope has been directly read using the Read tool.** Information obtained via a sub-agent
+   summary, Grep output, or directory listing does NOT count as having read the file.
+   If the line or file budget is exhausted mid-task, split into sub-tasks, mark the completed
+   part as `done`, set the parent task to `split`, and leave the remainder as `pending`.
+   Starting the next session without completing all sub-tasks is acceptable; starting it
+   with a falsely marked `done` is not.

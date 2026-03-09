@@ -60,6 +60,10 @@ tasks:
       Pokud je Django aplikace rozsáhlá, vytvoř sub-tasky T03a, T03b atd.
       Doménové entity AMČR: Projekt, Akce, Lokalita, Dokument, PAS,
       Knihovna3D, PIAN, Hesláře, Uživatel, Organizace.
+    warning: >
+      Aplikace `core` obsahuje 77 Python souborů a 26 migrací — výrazně největší app.
+      Doporučeno rozdělit do sub-tasků: T03a (core modely a migrace),
+      T03b (ostatní apps). Aplikace `uzivatel` má 31 migrací a je druhá největší.
 
   - id: T04
     name: docker_analysis
@@ -74,6 +78,14 @@ tasks:
     target_file: docs_agents/security_analysis.json
     priority: 5
     status: pending
+    key_files:
+      - webclient/webclient/settings/base.py     # hlavní Django settings (596 řádků)
+      - webclient/webclient/settings/production.py
+      - webclient/webclient/settings/dev.py
+      - webclient/webclient/settings/sample_secrets_db.json
+      - webclient/webclient/settings/sample_secrets_mail_client.json
+      - webclient/core/authenticators.py
+      - webclient/uzivatel/models.py              # uživatelé a oprávnění
 
   - id: T06
     name: celery_analysis
@@ -81,6 +93,11 @@ tasks:
     target_file: docs_agents/celery_analysis.json
     priority: 6
     status: pending
+    key_files:
+      - webclient/webclient/celery.py             # Celery app a konfigurace
+      - webclient/cron/tasks.py                   # Celery beat schedule (bez testů!)
+      - webclient/notifikace_projekty/tasks.py    # e-mailové notifikace (bez testů!)
+      - webclient/webclient/settings/base.py      # CELERY_* nastavení jsou zde
 
   - id: T07
     name: frontend_analysis
@@ -130,14 +147,13 @@ important_directories:
   - prometheus
   - redis
   - fedora
-  - locale
-  - static
-  - templates
   - cert
+  # Poznámka: adresáře "locale", "static" a "templates" jsou zanořeny v webclient/,
+  # nikoli v kořeni repozitáře. Použij cesty webclient/static/ a webclient/templates/.
 
 important_files:
   - AGENTS.md
-  - manage.py
+  - webclient/manage.py                          # Django project root je webclient/, ne repo kořen
   - Dockerfile
   - Dockerfile-DB
   - Dockerfile-DEV
@@ -153,9 +169,7 @@ important_files:
   - .pre-commit-config.yaml
   - .flake8
   - .isort.cfg
-  - requirements.txt
-  - pyproject.toml
-  - package.json
+  - webclient/requirements.txt                   # requirements je v webclient/, ne v kořeni repozitáře
 
 ignored_directories:
   - .git
