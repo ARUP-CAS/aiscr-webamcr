@@ -48,8 +48,8 @@ or to list CDN dependencies), but their internal content must not be audited.
 At the start of every agent session, execute in this exact order:
 
 1. Read `AGENTS.md` — contains repository-specific agent instructions that take precedence.
-2. Read `docs_agents/review_config.yaml` — load configuration.
-3. Read `docs_agents/review_cache.json` — load progress state.
+2. Read `.agents/config/review_config.yaml` — load configuration.
+3. Read `.agents/config/review_cache.json` — load progress state.
 4. Compute SHA-256 hashes of all source files listed in the cache.
 5. Detect changed files by comparing hashes; mark affected tasks as pending.
 6. Select the next pending task from the task registry (see TASK REGISTRY below).
@@ -63,31 +63,38 @@ At the start of every agent session, execute in this exact order:
 Create and maintain:
 
 ```plain
-docs_agents/
-  bugs.md
-  celery_analysis.json
-  cicd_analysis.json
-  dependency_graph.json
-  docker_analysis.json
-  documentation_analysis.json
-  frontend_analysis.json
-  orm_analysis.json
-  PROMPT.md
-  prompt_evolution/README.md
-  review_reports/README.md
-  refactoring_backlog.md
-  repository_map.json
-  review_cache.json
-  review_config.yaml
-  scripts_analysis.json
-  security_analysis.json
+.agents/
+  README.md
+  prompts/
+    review_codebase.md
+    prompt_evolution/
+      README.md
+  config/
+    review_config.yaml
+    review_cache.json
+  analysis/
+    repository_map.json
+    dependency_graph.json
+    orm_analysis.json
+    docker_analysis.json
+    security_analysis.json
+    celery_analysis.json
+    frontend_analysis.json
+    documentation_analysis.json
+    cicd_analysis.json
+    scripts_analysis.json
+  reports/
+    review_reports/
+      README.md
+    bugs.md
+    refactoring_backlog.md
 ```
 
 ---
 
 ## CONFIGURATION FILE
 
-Create and maintain: `docs_agents/review_config.yaml`
+Create and maintain: `.agents/config/review_config.yaml`
 
 ```yaml
 repository: aiscr-webamcr
@@ -193,12 +200,12 @@ vendored_exclusions:
     They may be referenced (e.g. checking SRI attributes in templates).
 
 prompt_evolution:
-  suggestions_path: docs_agents/prompt_evolution/
+  suggestions_path: .agents/prompts/prompt_evolution/
   apply_manually: true
   reviewer: human
   note: >
     Suggestions accumulate in prompt_evolution/ across sessions.
-    A human reviewer applies accepted suggestions to docs_agents/PROMPT.md
+    A human reviewer applies accepted suggestions to .agents/prompts/review_codebase.md
     before starting a new audit cycle.
 ```
 
@@ -214,67 +221,67 @@ tasks:
   - id: T01
     name: repository_map
     description: Repository structure index
-    target_file: docs_agents/repository_map.json
+    target_file: .agents/analysis/repository_map.json
     priority: 1
 
   - id: T02
     name: dependency_graph
     description: Internal and external dependency graph
-    target_file: docs_agents/dependency_graph.json
+    target_file: .agents/analysis/dependency_graph.json
     priority: 2
 
   - id: T03
     name: orm_analysis
     description: Django model, migration and ORM pattern analysis
-    target_file: docs_agents/orm_analysis.json
+    target_file: .agents/analysis/orm_analysis.json
     priority: 3
 
   - id: T04
     name: docker_analysis
     description: All Dockerfile and docker-compose file analysis
-    target_file: docs_agents/docker_analysis.json
+    target_file: .agents/analysis/docker_analysis.json
     priority: 4
 
   - id: T05
     name: security_analysis
     description: Security audit (settings, secrets, authentication, CORS)
-    target_file: docs_agents/security_analysis.json
+    target_file: .agents/analysis/security_analysis.json
     priority: 5
 
   - id: T06
     name: celery_analysis
     description: Celery task, beat schedule and async pattern analysis
-    target_file: docs_agents/celery_analysis.json
+    target_file: .agents/analysis/celery_analysis.json
     priority: 6
 
   - id: T07
     name: frontend_analysis
     description: AMČR developer JS/SCSS analysis (vendored libraries excluded)
-    target_file: docs_agents/frontend_analysis.json
+    target_file: .agents/analysis/frontend_analysis.json
     priority: 7
 
   - id: T08
     name: documentation_analysis
     description: Sphinx documentation and documentation generator analysis
-    target_file: docs_agents/documentation_analysis.json
+    target_file: .agents/analysis/documentation_analysis.json
     priority: 8
 
   - id: T09
     name: cicd_analysis
     description: GitHub Actions, pre-commit hooks and CI pipeline analysis
-    target_file: docs_agents/cicd_analysis.json
+    target_file: .agents/analysis/cicd_analysis.json
     priority: 9
 
   - id: T10
     name: scripts_analysis
     description: scripts/ directory analysis (deploy, dev, test scripts)
-    target_file: docs_agents/scripts_analysis.json
+    target_file: .agents/analysis/scripts_analysis.json
     priority: 10
 
   - id: T11
     name: final_audit
     description: Final consolidated audit of all findings
-    target_file: docs_agents/review_reports/final_audit.md
+    target_file: .agents/reports/review_reports/final_audit.md
     priority: 11
     requires: [T01, T02, T03, T04, T05, T06, T07, T08, T09, T10]
 ```
@@ -283,7 +290,7 @@ tasks:
 
 ## REPOSITORY MAP (T01)
 
-Create: `docs_agents/repository_map.json`
+Create: `.agents/analysis/repository_map.json`
 
 **Purpose:** Provide a structural index of the repository.
 
@@ -305,7 +312,7 @@ Update whenever the repository structure changes.
 
 ## DEPENDENCY GRAPH (T02)
 
-Create: `docs_agents/dependency_graph.json`
+Create: `.agents/analysis/dependency_graph.json`
 
 **Purpose:** Map internal and external dependencies.
 
@@ -354,7 +361,7 @@ Record architectural issues in `refactoring_backlog.md`.
 
 ## DJANGO ORM ANALYSIS (T03)
 
-Create: `docs_agents/orm_analysis.json`
+Create: `.agents/analysis/orm_analysis.json`
 
 **Purpose:** Analyse database usage and ORM patterns.
 
@@ -414,7 +421,7 @@ issues) **before** writing the entry — see the BUG TRACKING section for the pr
 
 ## DOCKER BUILD ANALYSIS (T04)
 
-Create: `docs_agents/docker_analysis.json`
+Create: `.agents/analysis/docker_analysis.json`
 
 **Purpose:** Analyse Docker configuration and build efficiency.
 
@@ -470,13 +477,13 @@ Detect:
 
 ## SECURITY ANALYSIS (T05)
 
-Create: `docs_agents/security_analysis.json`
+Create: `.agents/analysis/security_analysis.json`
 
 **Purpose:** Security audit of the production system.
 
 > **Cross-reference T04:** Docker-level security findings (secret injection errors,
 > container privilege escalation, exposed monitoring ports) are already recorded in
-> `docs_agents/docker_analysis.json` from T04. Do not duplicate those entries here —
+> `.agents/analysis/docker_analysis.json` from T04. Do not duplicate those entries here —
 > reference them by ID (SEC-D01 … SEC-D06) if they overlap with Django-level concerns.
 
 Inspect:
@@ -544,7 +551,7 @@ Severity mapping:
 
 ## CELERY ANALYSIS (T06)
 
-Create: `docs_agents/celery_analysis.json`
+Create: `.agents/analysis/celery_analysis.json`
 
 **Purpose:** Analyse asynchronous task processing.
 
@@ -580,7 +587,7 @@ Detect:
 
 ## FRONTEND ANALYSIS (T07)
 
-Create: `docs_agents/frontend_analysis.json`
+Create: `.agents/analysis/frontend_analysis.json`
 
 **Purpose:** Analyse **custom** frontend code written by AMČR developers
 (JavaScript accounts for ~37 % of the repository).
@@ -672,7 +679,7 @@ Skip any file or directory matching at least one of these conditions:
 
 ## DOCUMENTATION ANALYSIS (T08)
 
-Create: `docs_agents/documentation_analysis.json`
+Create: `.agents/analysis/documentation_analysis.json`
 
 **Purpose:** Analyse documentation quality and documentation generators.
 
@@ -712,7 +719,7 @@ Detect:
 
 ## CI/CD ANALYSIS (T09)
 
-Create: `docs_agents/cicd_analysis.json`
+Create: `.agents/analysis/cicd_analysis.json`
 
 **Purpose:** Analyse automation, testing and deployment pipeline.
 
@@ -749,7 +756,7 @@ Detect:
 
 ## SCRIPTS ANALYSIS (T10)
 
-Create: `docs_agents/scripts_analysis.json`
+Create: `.agents/analysis/scripts_analysis.json`
 
 **Purpose:** Analyse operational and development scripts.
 
@@ -772,7 +779,7 @@ Detect:
 
 ## REVIEW CACHE
 
-Create and maintain: `docs_agents/review_cache.json`
+Create and maintain: `.agents/config/review_cache.json`
 
 ```json
 {
@@ -812,7 +819,7 @@ Create and maintain: `docs_agents/review_cache.json`
 
 ## BUG TRACKING
 
-Create and maintain: `docs_agents/bugs.md`
+Create and maintain: `.agents/reports/bugs.md`
 
 Before adding a bug entry:
 
@@ -846,7 +853,7 @@ When a bug of severity `Kritická` is found:
 
    ```markdown
    ⚠️  KRITICKÁ CHYBA — BUG-XXX: <stručný popis>
-   Viz docs_agents/bugs.md. Před dalším taskem doporučeno lidské review.
+   Viz .agents/reports/bugs.md. Před dalším taskem doporučeno lidské review.
    ```
 
 3. Do not start the next task in the same session until the finding is recorded
@@ -856,7 +863,7 @@ When a bug of severity `Kritická` is found:
 
 ## REFACTORING BACKLOG
 
-Create and maintain: `docs_agents/refactoring_backlog.md`
+Create and maintain: `.agents/reports/refactoring_backlog.md`
 
 ```markdown
 # Refactoring backlog
@@ -875,7 +882,7 @@ Create and maintain: `docs_agents/refactoring_backlog.md`
 
 ## REPORT OUTPUT
 
-Each completed task must produce: `docs_agents/review_reports/<task_id>.md`
+Each completed task must produce: `.agents/reports/review_reports/<task_id>.md`
 
 The report must be written in Czech and include:
 
@@ -917,17 +924,17 @@ At the end of each task report, include a section:
 - Jaké soubory nebo adresáře by stálo za to přidat
 ```
 
-Save to: `docs_agents/prompt_evolution/<task_id>_prompt_update.md`
+Save to: `.agents/prompts/prompt_evolution/<task_id>_prompt_update.md`
 
 Suggestions accumulate across sessions. A human reviewer applies accepted
-suggestions to `docs_agents/PROMPT.md` before starting a new audit cycle.
-Agents must not self-modify `PROMPT.md`.
+suggestions to `.agents/prompts/review_codebase.md` before starting a new audit cycle.
+Agents must not self-modify `review_codebase.md`.
 
 ---
 
 ## FINAL AUDIT (T11)
 
-When all tasks T01–T10 are completed, create: `docs_agents/review_reports/final_audit.md`
+When all tasks T01–T10 are completed, create: `.agents/reports/review_reports/final_audit.md`
 
 The final report must include:
 

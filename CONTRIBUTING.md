@@ -253,26 +253,26 @@ Agenti **nesmějí** cílit PR do `dev`.
 
 Podrobnosti o chování agentů viz `AGENTS.md`.
 
-Technický dluh a auditní výstupy jsou evidovány v `docs_agents/`.
+Technický dluh a auditní výstupy jsou evidovány v `.agents/`.
 
 ### Jak spustit review session
 
 Otevřete nový kontext AI agenta a jako první zprávu vložte:
 
 ```
-Přečti docs_agents/PROMPT.md a pokračuj v review.
+Přečti .agents/prompts/review_codebase.md a pokračuj v review.
 ```
 
-Agent si načte `AGENTS.md`, stav z `docs_agents/review_cache.json` a zahájí
-další čekající task dle registru v `docs_agents/PROMPT.md`.
+Agent si načte `AGENTS.md`, stav z `.agents/config/review_cache.json` a zahájí
+další čekající task dle registru v `.agents/prompts/review_codebase.md`.
 
 ---
 
 ### Postup pro maintainera při review agentní větve
 
-1. Zkontrolujte `docs_agents/review_reports/<task_id>.md`.
-2. Ověřte `docs_agents/bugs.md`.
-3. Zkontrolujte `docs_agents/refactoring_backlog.md`.
+1. Zkontrolujte `.agents/reports/review_reports/<task_id>.md`.
+2. Ověřte `.agents/reports/bugs.md`.
+3. Zkontrolujte `.agents/reports/refactoring_backlog.md`.
 4. Schvalte nebo zamítněte PR.
 
 ---
