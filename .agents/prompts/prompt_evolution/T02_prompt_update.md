@@ -7,11 +7,11 @@
 
 ## Co v promptu chybělo nebo bylo nejasné
 
-1. **Absence package.json nebyla anticipována.** PROMPT.md předpokládá existenci `package.json`, ale ten v repozitáři chybí. Agent se zbytečně zdržel hledáním. Doporučeno: přidat do T02 instrukci „pokud package.json neexistuje, zaznamenat jako N/A a přesunout analýzu CDN závislostí do T07."
+1. **Absence package.json nebyla anticipována.** review_codebase.md předpokládá existenci `package.json`, ale ten v repozitáři chybí. Agent se zbytečně zdržel hledáním. Doporučeno: přidat do T02 instrukci „pokud package.json neexistuje, zaznamenat jako N/A a přesunout analýzu CDN závislostí do T07."
 
 2. **Definice cross-app importu je nejednoznačná.** Není jasné, zda do grafu patří i importy uvnitř testů (`tests/`) nebo pouze produkční kód. Pro tuto analýzu byl zahrnut produkční kód i testovací soubory, ale konvence by měla být explicitně definována.
 
-3. **Chybí instrukce pro identifikaci lazy importů.** Lazy import (import uvnitř funkce) je architektonicky odlišný od modulového importu, ale PROMPT.md to nerozlišuje. U cirkulárních závislostí je tento rozdíl klíčový.
+3. **Chybí instrukce pro identifikaci lazy importů.** Lazy import (import uvnitř funkce) je architektonicky odlišný od modulového importu, ale review_codebase.md to nerozlišuje. U cirkulárních závislostí je tento rozdíl klíčový.
 
 ---
 
@@ -19,7 +19,7 @@
 
 1. **Explicitní potvrzení absence package.json** — přidat kontrolu do inicializační sekvence.
 
-2. **Rozlišení fan-in/fan-out metriky** — PROMPT.md by mohl specifikovat prahové hodnoty (např. fan-in > 10 = kandidát na dekompozici).
+2. **Rozlišení fan-in/fan-out metriky** — review_codebase.md by mohl specifikovat prahové hodnoty (např. fan-in > 10 = kandidát na dekompozici).
 
 3. **Odkaz na INSTALLED_APPS** jako autoritativní zdroj seznamu aplikací — v tomto tasku bylo nutné ručně sestavit seznam z base.py.
 
