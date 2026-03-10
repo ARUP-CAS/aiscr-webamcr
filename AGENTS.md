@@ -3,6 +3,9 @@
 Rules in this file apply to the entire `aiscr-webamcr` repository. A
 nested `AGENTS.md` in a subdirectory takes precedence for that subtree.
 
+For Claude Code-specific instructions (environment, quick commands),
+see [CLAUDE.md](CLAUDE.md).
+
 ------------------------------------------------------------------------
 
 ## Repository Overview
@@ -422,16 +425,15 @@ When performing bulk docstring edits:
 
 1.  Find remaining Google-style blocks:
 
-```{=html}
-Select-String -Pattern '^\s*(Args:|Returns:|Raises:)'
-```
-    
+    ```bash
+    grep -rn '^\s*\(Args:\|Returns:\|Raises:\)' webclient/
+    ```
 
 2.  Find generic wording:
 
-```{=html}
-Select-String -Pattern 'Popis parametru|Navratova hodnota funkce|Vstupni hodnota|Hodnota parametru|Pokud behem zpracovani nastane chyba|Raised when processing fails'
-```
+    ```bash
+    grep -rn 'Popis parametru\|Navratova hodnota funkce\|Vstupni hodnota\|Hodnota parametru\|Pokud behem zpracovani nastane chyba\|Raised when processing fails' webclient/
+    ```
     
 
 3.  Verify descriptions match the actual code behaviour.
