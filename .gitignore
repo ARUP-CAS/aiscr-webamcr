@@ -1,7 +1,7 @@
 # Database and venv
 env/
 venv/
-.venv
+.venv/
 db.sqlite3
 
 # Sensitive files
@@ -114,5 +114,6 @@ logstash/logstash.conf
 /webclient/core/tests/resources/ssl.crt
 /webclient/core/tests/resources/ssl.key
 
-# agent config
+# agents
 .codex/
+.claude/

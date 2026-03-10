@@ -34,7 +34,7 @@
     ".github": { "purpose": "GitHub Actions workflows a CI/CD konfigurace (7 workflows)", "in_scope": true },
     "cert": { "purpose": "Samopodepsané SSL certifikáty pro lokální vývoj — záměrně commitovány, nejsou bezpečnostním rizikem", "in_scope": false },
     "docs": { "purpose": "Sphinx dokumentace projektu (~261+ RST/MD souborů, 13 tematických sekcí)", "in_scope": true },
-    "docs_agents": { "purpose": "Persistentní stav AI-asistovaného technického review (analýzy, cache, backlog)", "in_scope": false },
+    ".agents": { "purpose": "Persistentní stav AI-asistovaného technického review (analýzy, cache, backlog)", "in_scope": false },
     "elasticsearch": { "purpose": "Konfigurační soubory pro Elasticsearch (elasticsearch.example.yml)", "in_scope": true },
     "fedora": { "purpose": "Fedora Commons repository management — Dockerfile, ACL TTL (18 souborů), LDP TTL (15 souborů), init skript", "in_scope": true },
     "kibana": { "purpose": "Konfigurační soubory pro Kibana dashboarding (kibana.example.yml)", "in_scope": true },
