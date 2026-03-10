@@ -164,7 +164,7 @@ jobs:
           echo "dockerhub=${DIGEST_DOCKERHUB}" >> $GITHUB_OUTPUT
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v4
+        uses: sigstore/cosign-installer@v4.1.0
 
       - name: Sign image
         shell: bash
@@ -226,7 +226,7 @@ jobs:
       - name: Vulnerability scan
         continue-on-error: true
         id: vulnscan
-        uses: aquasecurity/trivy-action@v0.34.2
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: sarif
