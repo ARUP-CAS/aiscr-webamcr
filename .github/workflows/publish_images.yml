@@ -176,22 +176,18 @@ jobs:
 
       - name: Attest build provenance - GitHub
         id: attest_github
-        uses: actions/attest@v4
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
           subject-digest: ${{ steps.digests.outputs.github }}
-          predicate-type: https://slsa.dev/provenance/v1
-          predicate: '{}'
           push-to-registry: true
 
       - name: Attest build provenance - DockerHub
         id: attest_dockerhub
-        uses: actions/attest@v4
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
           subject-digest: ${{ steps.digests.outputs.dockerhub }}
-          predicate-type: https://slsa.dev/provenance/v1
-          predicate: '{}'
           push-to-registry: true
 
       - name: Generate SBOM
