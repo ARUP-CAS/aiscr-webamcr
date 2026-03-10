@@ -1,6 +1,6 @@
-# Configuration file for the Sphinx documentation builder.
+# Konfigurační soubor pro generátor dokumentace Sphinx.
 #
-# For the full list of built-in configuration values, see the documentation:
+# Úplný seznam vestavěných konfiguračních hodnot je v dokumentaci:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os

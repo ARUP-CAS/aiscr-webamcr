@@ -1,7 +1,7 @@
 // --- SIDEBAR ---
 
 @import 'app-variables';
-@import './bootstrap/bootstrap';
+@import './bootstrap5/bootstrap';
 @import 'app-mixins';
 @import 'app-global';
 
@@ -30,6 +30,7 @@
     @media (max-width: 380px) {
       display: block;
     }
+
     @media (min-width: 380px) {
       display: none;
     }
@@ -59,9 +60,11 @@
       a {
         color: $app-sidebar-accordion-color;
       }
+
       a.active {
         color: $app-sidebar-accordion-color-active;
       }
+
       color: $app-sidebar-accordion-color;
       padding: 0;
 
@@ -126,7 +129,7 @@
     #app-sidebar-wrapper {
       margin-left: 0;
     }
-  }  
+  }
 }
 
 
@@ -167,7 +170,9 @@
 }
 
 // test footer always on bottom page
-html, body, #app-wrapper {
+html,
+body,
+#app-wrapper {
   height: 100%;
 }
 

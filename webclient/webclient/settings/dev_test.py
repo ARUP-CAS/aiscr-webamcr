@@ -1,6 +1,7 @@
-from .dev import *
+from .base import *
 
 DEBUG = False
+ALLOWED_HOSTS += ["web"]
 LOGGING["handlers"]["logstash"]["tags"] = "dev_test"
 
 if "debug_toolbar" in INSTALLED_APPS:
@@ -8,9 +9,22 @@ if "debug_toolbar" in INSTALLED_APPS:
 if "debug_toolbar.middleware.DebugToolbarMiddleware" in MIDDLEWARE:
     MIDDLEWARE.remove("debug_toolbar.middleware.DebugToolbarMiddleware")
 DEBUG_TOOLBAR_PANELS = []
+SITE_URL = "http://localhost:8000"
+
+CLAMD_HOST = get_secret("CLAMD_HOST")
+CLAMD_PORT = 3310
 
 
 def get_test_secret(setting, default_value=None):
+    """
+    Vrací test secret.
+
+    :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
+    :param default_value: Parametr ``default_value`` se předává do volání ``get()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``get()``.
+        :raises ImproperlyConfigured: Vyvolá se při zpracování zachycené výjimky typu ``KeyError``.
+    """
     file_test_path = (
         "/run/secrets/test_conf"
         if os.path.exists("/run/secrets/test_conf")
@@ -28,6 +42,8 @@ def get_test_secret(setting, default_value=None):
     else:
         return secrets_test.get(setting, default_value)
 
+
+TEST_RUNNER = "core.tests.runner.AMCRSeleniumTestRunner"
 
 SELENIMUM_ADDRESS = get_test_secret("TEST_SELENIMUM_ADDRESS")
 SELENIUM_PORT = get_test_secret("TEST_SELENIUM_PORT")
@@ -47,6 +63,7 @@ DATABASES["default"]["TEST"] = {"MIGRATE": False}
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 LOGGING["handlers"]["console"]["level"] = "ERROR"
 SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
+AUTO_LOGOUT = {}
 
 DATABASES["test_db"] = {
     "ENGINE": "django_prometheus.db.backends.postgis",

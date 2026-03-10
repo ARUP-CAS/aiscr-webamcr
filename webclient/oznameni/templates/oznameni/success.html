@@ -5,6 +5,7 @@
 {% block title %}{% trans "oznameni.templates.oznameni.sucess.title" %}{% endblock %}
 
 {% block head %}
+  <script src="{% static 'js/theme-toggle.js' %}"></script>
   <link rel="stylesheet" type="text/css" href="{% static 'css/bs-stepper.min.css' %}" />
 {% endblock %}
 
@@ -37,7 +38,7 @@
     </div>
   </div>
 
-  <div class="jumbotron mb-0">
+  <div class="p-4 mb-0 bg-body-secondary rounded-3">
     <h1 class="display-4">{% trans "oznameni.templates.oznameni.sucess.dakujemeText1" %}</h1>
     {% trans "oznameni.templates.oznameni.sucess.dakujemeText2" %}
     <hr class="my-4">

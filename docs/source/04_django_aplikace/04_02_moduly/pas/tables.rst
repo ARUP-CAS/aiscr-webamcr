@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: SamostatnyNalezTable
 
-   Class pro definování tabulky pro samostatný nález použitých pro zobrazení přehledu nálezu a exportu.
+   Definuje tabulku samostatných nálezů pro přehled i export.
 
    **Metody:**
 
@@ -16,36 +16,73 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+      :param record: Parametr ``record`` předává se do volání ``reverse()``, pracuje se s atributy ``nahled_soubor``, ``ident_cely``.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
+
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: AktivaceDeaktivaceColumn
 
-   Popis není k dispozici.
+   Implementuje komponentu ``AktivaceDeaktivaceColumn`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: render()
+
+      Vyrenderuje hodnotu. v aplikaci.
+
+      :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``aktivni``, ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+      :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
 
 
 .. py:class:: smazatColumn
 
-   Popis není k dispozici.
+   Implementuje komponentu ``smazatColumn`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: render()
 
+      Vyrenderuje hodnotu. v aplikaci.
+
+      :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+      :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+
+      :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
+
 
 .. py:class:: UzivatelSpolupraceTable
 
-   Class pro definování tabulky pro uživatelskou spolupráci použitých pro zobrazení přehledu spoluprác a exportu.
+   Definuje tabulku uživatelských spoluprací pro přehled i export.
 
    **Metody:**
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
    .. py:method:: get_all_idents()
 
       Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
+
+      :return: Vrací str.
 

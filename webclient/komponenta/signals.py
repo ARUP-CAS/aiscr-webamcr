@@ -14,6 +14,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Komponenta, weak=False)
 def komponenta_save(sender, instance: Komponenta, **kwargs):
+    """
+    Provádí operaci komponenta save.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``komponenta_save``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``komponenta_save``.
+    """
     logger.debug("komponenta.signals.komponenta_save.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_save.suppress_signal", extra={"pk": instance.pk})
@@ -47,6 +54,13 @@ def komponenta_save(sender, instance: Komponenta, **kwargs):
 
 @receiver(post_delete, sender=Komponenta, weak=False)
 def komponenta_delete(sender, instance: Komponenta, **kwargs):
+    """
+    Provádí operaci komponenta delete.
+
+    :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``komponenta_delete``.
+    :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``pk``, ``suppress_signal``, ovlivňuje větvení podmínek.
+    :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``komponenta_delete``.
+    """
     logger.debug("komponenta.signals.komponenta_delete.start", extra={"pk": instance.pk})
     if instance.suppress_signal:
         logger.debug("komponenta.signals.komponenta_delete.suppress_signal", extra={"pk": instance.pk})
@@ -58,6 +72,11 @@ def komponenta_delete(sender, instance: Komponenta, **kwargs):
         navazany_objekt = instance.komponenta_vazby.navazany_objekt
 
         def save_metadata():
+            """
+                       Uloží metadata.
+
+            Výsledek provedené změny nad cílovým objektem.
+            """
             if isinstance(navazany_objekt, DokumentCast):
                 navazany_objekt.dokument.save_metadata(fedora_transaction, skip_container_check=True)
             elif isinstance(navazany_objekt, DokumentacniJednotka):

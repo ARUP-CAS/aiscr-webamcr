@@ -36,6 +36,11 @@ urlpatterns = [
         name="download_thumbnail",
     ),
     path(
+        "soubor/stahnout-nahled-DZ/<str:typ_vazby>/<str:ident_cely>/<int:pk>",
+        views.DownloadThumbnailDZ.as_view(),
+        name="download_thumbnail_DZ",
+    ),
+    path(
         "soubor/stahnout-nahled-velky/<str:typ_vazby>/<str:ident_cely>/<int:pk>",
         views.DownloadThumbnailLarge.as_view(),
         name="download_thumbnail_large",

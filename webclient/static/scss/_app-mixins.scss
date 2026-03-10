@@ -142,6 +142,10 @@
         border-color: $color;
         background-color: $color;
       }
+      .form-check-input:checked{
+        background-color: $color;
+        border-color: $color;
+      }
 
       .badge {
         background-color: $color !important;
@@ -152,9 +156,9 @@
       .app-table-list-wrapper {
         .table {
           thead {
-            background-color: $color !important;
             position: sticky;
             top: 0;
+            --bs-table-bg: #{$color} !important;
       
             a {
               color: $white;

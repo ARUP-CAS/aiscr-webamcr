@@ -1,6 +1,6 @@
 from typing import Final
 
-# Nazvy heslaru
+# Názvy heslářů.
 HESLAR_AKTIVITA: Final = 1
 HESLAR_AREAL: Final = 2
 HESLAR_AREAL_KAT: Final = 3

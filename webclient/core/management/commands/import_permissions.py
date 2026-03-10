@@ -20,18 +20,24 @@ class Command(BaseCommand):
     Při importu se kontroluje správnost formátu a hodnot.
 
     Poznámka:
-        - CSV soubor musí být umístěn v adresáři ``core/resources/``
-        - Při chybě ve formátu CSV se import přeruší a zobrazí se chybová hláška
-        - Úspěšný import zobrazí počet importovaných oprávnění a případné chybějící hodnoty
+    - CSV soubor musí být umístěn v adresáři ``core/resources/``
+    - Při chybě ve formátu CSV se import přeruší a zobrazí se chybová hláška
+    - Úspěšný import zobrazí počet importovaných oprávnění a případné chybějící hodnoty
 
     Příklady použití::
 
-        python manage.py import_permissions
+    python manage.py import_permissions
     """
 
     help = _("core.management.commands.import_permissions.Command.help")
 
     def handle(self, *args, **options):
+        """
+        Zpracuje hodnotu. v aplikaci.
+
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
+        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        """
         logger.debug("core.management.commands.import_permissions.start")
         with open("core/resources/uzivatelska_prava.csv", "rb") as f:
             permission_file = SimpleUploadedFile(

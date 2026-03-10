@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class LokalitaForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení lokality.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení lokality."""
 
     typ_lokality_disp = forms.CharField(
         label=_("lokalita.forms.typLokality.label"),
@@ -24,6 +22,8 @@ class LokalitaForm(forms.ModelForm):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Lokalita
         fields = (
             "druh",
@@ -65,6 +65,16 @@ class LokalitaForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, readonly=False, detail=False, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param detail: Parametr ``detail`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(LokalitaForm, self).__init__(*args, **kwargs)
         if self.instance.pk is not None:
             nadrazene = HeslarHierarchie.objects.filter(

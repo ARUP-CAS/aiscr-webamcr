@@ -46,7 +46,7 @@ check_create_network () {
     docker network inspect ${network_name} > /dev/null 2>&1
     network_status=$?
     if [ ${network_status} -eq 1  ]; then
-      er "docker network create -d overlay ${network_name}"
+      er "docker network create -d overlay --attachable ${network_name}"
       echo_dec "Network ${network_name} created"
     else
        echo_dec "Network ${network_name} already exists"
@@ -104,6 +104,7 @@ run_default ()
    echo_dec "create image"
    er "${cmd_create_images}"
    er "${cmd_create_images_proxy}"
+   er "${cmd_create_images_redis}"
 
    
     er "${cmd_deploy_base} ${compose_test} ${stack_name}" && \
@@ -193,6 +194,7 @@ fi
 cmd_stack_rm="docker stack rm ${stack_name}"
 cmd_create_images="docker build -t test_prod -f Dockerfile --build-arg VERSION_APP=\"$(git rev-parse --short HEAD | head -c 8)\" --build-arg TAG_APP=local_build  ."
 cmd_create_images_proxy="docker build -t test_proxy -f proxy/Dockerfile --build-arg VERSION_APP="$(git rev-parse --short HEAD | head -c 8)" --build-arg TAG_APP=local_build  ./proxy"
+cmd_create_images_redis="docker build -t test_redis -f redis/Dockerfile --build-arg VERSION_APP="$(git rev-parse --short HEAD | head -c 8)" --build-arg TAG_APP=local_build  ./redis"
 cmd_deploy_base="docker stack deploy --compose-file"
 
 #Cleaning old images
@@ -210,7 +212,6 @@ while getopts "hxqbut:d" option; do
          echo_dec "Remove docker stack: ${stack_name}"
          if check_stack_exists; then
             er "${cmd_stack_rm}" && \
-            er "docker network rm ${network_name}" && \
             echo_dec "Stack ${stack_name} removal successful" || echo_dec "Stack ${stack_name} removal FAILED"
          else
              echo_dec "STACK ${stack_name} doesn't exist so can't be removed!!!"

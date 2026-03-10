@@ -112,7 +112,8 @@
       Pozemkova: '{% trans "leaflet_search.Pozemkova" %}',
       SearchTextCancel: '{% trans "leaflet_search.SearchTextCancel" %}',
       SearchTextError: '{% trans "leaflet_search.SearchTextError" %}',
-      ButtonTitle: '{% trans "leaflet_search.ButtonTitle" %}'
+      ButtonTitle: '{% trans "leaflet_search.ButtonTitle" %}',
+      ButtonSelTitle: '{% trans "leaflet_search.ButtonSelTitle" %}'
   };
   </script>
   <script >
@@ -239,7 +240,7 @@
   </script>
   <script>
     window.onload = function (){
-      load_daterangepicker("#div_id_planovane_zahajeni")
+      load_daterangepicker("#app-page-wrapper")
     };
   </script>
 {% endblock %}

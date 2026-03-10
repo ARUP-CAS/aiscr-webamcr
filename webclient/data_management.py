@@ -2,6 +2,7 @@ from django.db import connection
 
 
 def my_custom_sql(self):
+    """Provádí operaci my custom sql."""
     with connection.cursor() as cursor:
         cursor.execute("""
             DO

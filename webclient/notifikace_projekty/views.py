@@ -48,14 +48,19 @@ CARD_NAME_TRANS = {
 
 
 class PesListView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro zobrazení listu hlídacích psů.
-    """
+    """Třída pohledu pro zobrazení listu hlídacích psů."""
 
     http_method_names = ["get"]
     template_name = "notifikace_projekty/pes_list.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací proměnná ``context``.
+        """
         context = super().get_context_data(**kwargs)
         old_pes_post = self.request.session.pop("_old_pes_post", None)
         PesFormset = {}
@@ -120,14 +125,21 @@ class PesListView(LoginRequiredMixin, TemplateView):
 
 
 class PesCreateView(LoginRequiredMixin, View):
-    """
-    Třída pohledu pro vytvořené hlídacího psa.
-    """
+    """Třída pohledu pro vytvořené hlídacího psa."""
 
     http_method_names = ["post"]
 
     @method_decorator(handle_fedora_error)
     def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``PesFormset()``, ``PesNotificationsForm()``, pracuje se s atributy ``POST``, ``user``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``redirect()``.
+        """
         formsets = []
         valid = True
         pes_form_valid = False
@@ -184,9 +196,7 @@ class PesCreateView(LoginRequiredMixin, View):
 
 
 class PesSmazatView(LoginRequiredMixin, TemplateView):
-    """
-    Třída pohledu pro smazání hlídacího psa pomocí modalu.
-    """
+    """Třída pohledu pro smazání hlídacího psa pomocí modalu."""
 
     template_name = "core/transakce_modal.html"
     title = _("notifikaceProjekty.views.pesSmazatView.title.text")
@@ -194,6 +204,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
     button = _("notifikaceProjekty.views.pesSmazatView.submitButton")
 
     def get_zaznam(self) -> Pes:
+        """
+        Vrací zaznam. v aplikaci.
+
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         id = self.kwargs.get("pk")
         return get_object_or_404(
             Pes,
@@ -201,6 +216,11 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         )
 
     def get_object_identification(self) -> str:
+        """
+        Vrací object identification.
+
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         pes: Pes = self.get_zaznam()
         object = pes.content_object
         if isinstance(object, RuianKatastr) or isinstance(object, RuianOkres) or isinstance(object, RuianKraj):
@@ -210,6 +230,13 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         return ""
 
     def get_context_data(self, **kwargs):
+        """
+        Vrací context data.
+
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+
+            :return: Vrací proměnná ``context``.
+        """
         zaznam = self.get_zaznam()
         context = {
             "object": zaznam,
@@ -222,10 +249,28 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """
+        Vrací výsledek operace.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+            :return: Vrací výsledek volání ``render_to_response()``.
+        """
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Obsluhuje HTTP metodu POST.
+
+        :param request: Parametr ``request`` předává se do volání ``filter()``, ``add_message()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+
+            :return: Vrací výsledek volání ``JsonResponse()``.
+        """
         try:
             zaznam = self.get_zaznam()
             zaznam.delete()

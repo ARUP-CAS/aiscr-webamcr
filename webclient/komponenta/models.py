@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Model):
     """
-    Class pro db model komponenta vazby.
+    Databázový model vazeb komponenty.
+
     Model se používa k napojení na jednotlivé záznamy.
     """
 
@@ -26,14 +27,26 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
     typ_vazby = models.TextField(max_length=24, choices=CHOICES)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "komponenta_vazby"
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.suppress_komponenta_signal = False
 
     @property
     def navazany_objekt(self):
+        """Provádí operaci navazany objekt.
+
+        :return: Vrací atribut objektu.
+        """
         if hasattr(self, "casti_dokumentu") and self.casti_dokumentu:
             return self.casti_dokumentu
         elif hasattr(self, "dokumentacni_jednotka") and self.dokumentacni_jednotka:
@@ -41,9 +54,7 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
 
 
 class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
-    """
-    Class pro db model komponenty.
-    """
+    """Databázový model komponenty."""
 
     obdobi = models.ForeignKey(
         Heslar,
@@ -77,6 +88,12 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
@@ -84,17 +101,31 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     @property
     def ident_cely_safe(self):
+        """Provádí operaci ident cely safe.
+
+        :return: Vrací výsledek volání ``replace()``.
+        """
         return self.ident_cely.replace("-", "_")
 
     @property
     def pocet_nalezu(self):
+        """Provádí operaci pocet nalezu.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         return self.objekty.all().count() + self.predmety.all().count()
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "komponenta"
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
+        """Vrací absolute url.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``reverse()``, výsledek volání ``get_absolute_url()``.
+        """
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             from arch_z.models import ArcheologickyZaznam
 
@@ -128,18 +159,30 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
             )
 
     def get_permission_object(self):
+        """Vrací permission object.
+
+        :return: Vrací výsledek volání ``get_permission_object()``.
+        """
         if self.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
             return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
         else:
             return self.komponenta_vazby.casti_dokumentu.get_permission_object()
 
     def create_transaction(self, transaction_user):
+        """
+        Vytvoří transaction. v aplikaci.
+
+        :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+
+            :return: Vrací atribut objektu.
+        """
         from core.repository_connector import FedoraTransaction
 
         self.active_transaction = FedoraTransaction(transaction_user=transaction_user)
         return self.active_transaction
 
     def set_transaction_main_record(self):
+        """Nastaví transaction main record."""
         try:
             related_model = self.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam
             self.active_transaction.main_record = related_model
@@ -148,9 +191,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
 
 class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), models.Model):
-    """
-    Class pro db model komponenta aktivity.
-    """
+    """Databázový model aktivit komponenty."""
 
     komponenta = models.ForeignKey(Komponenta, models.CASCADE, db_column="komponenta")
     aktivita = models.ForeignKey(
@@ -161,5 +202,7 @@ class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), mode
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         db_table = "komponenta_aktivita"
         unique_together = (("komponenta", "aktivita"),)

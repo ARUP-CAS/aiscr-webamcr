@@ -25,7 +25,7 @@
           <div class="btn-group" role="group">
             <a class="btn app-entity-dokument" id="NahratSoubory" href="{% url 'core:upload_file' 'pas' sn.ident_cely %}"
                rel="tooltip"
-               data-placement="top" title="{% trans 'pas.templates.detail.nahratSoubor' %}">
+               data-bs-placement="top" title="{% trans 'pas.templates.detail.nahratSoubor' %}">
               <span class="material-icons">publish</span>
             </a>
           </div>
@@ -53,7 +53,7 @@
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'pas:edit' sn.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'pas.templates.detail.upravit.label' %}">
+               data-bs-placement="top" title="{% trans 'pas.templates.detail.upravit.label' %}">
               <span id="edit-btn" class="material-icons">edit</span>
             </a>
           </div>
@@ -82,7 +82,7 @@
         {% if show.ulozeni_edit %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <button id="pas-edit-ulozeni" class="btn" type="button" name="button" rel="tooltip"data-placement="top">
+            <button id="pas-edit-ulozeni" class="btn" type="button" name="button" rel="tooltip"data-bs-placement="top">
               <span id="edit-btn2" class="material-icons">edit</span>
             </button>
           </div>

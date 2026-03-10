@@ -1,0 +1,26 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div id="content-main">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <fieldset class="module aligned">
+        {{ form.as_p }}
+      </fieldset>
+      <div class="submit-row">
+        <input type="submit" value="{% translate 'admin.test_email.sent_test_email' %}" class="default">
+      </div>
+    </form>
+
+    {% if result %}
+      <h2>{% translate 'admin.test_email.result' %}</h2>
+      <pre>{{ result }}</pre>
+    {% endif %}
+
+    {% if error %}
+      <h2>{% translate 'admin.test_email.error' %}</h2>
+      <pre style="white-space: pre-wrap;">{{ error }}</pre>
+    {% endif %}
+  </div>
+{% endblock %}

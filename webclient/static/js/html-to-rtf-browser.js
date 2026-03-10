@@ -8929,6 +8929,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         tagName = tagName + '.main-header';
 
                     }
+                    if (attributes.class && attributes.class.includes('sub-header')) {
+                        tagName = tagName + '.sub-header';
+
+                    }
                     if (attributes.class && attributes.class.includes('row')) {
                         tagName = tagName + '.row';
 
@@ -9222,9 +9226,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     closingRtf: ''
                 },
                 {
-                    opening: 'div.main-header.row',
+                    opening: 'div.main-header',
                     openingRtf: '{\\pard{\\b',
-                    closing: '/div.main-header.row',
+                    closing: '/div.main-header',
+                    closingRtf: '}\\sb70\\par}'
+                },
+                {
+                    opening: 'div.sub-header',
+                    openingRtf: '{\\pard{\\b',
+                    closing: '/div.sub-header',
                     closingRtf: '}\\sb70\\par}'
                 },
             ];
