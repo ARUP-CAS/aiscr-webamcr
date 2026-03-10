@@ -68,6 +68,29 @@ Třídy
       :return: Vrací výsledek volání ``render()``.
 
 
+.. py:class:: InactiveUserMiddleware
+
+   Middleware pro zachycení ValidationError s kódem 'inactive' při přístupu deaktivovaného uživatele s aktivní session.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+
+   .. py:method:: __call__()
+
+      Obaluje zpracování požadavku a zachycuje ``ValidationError`` s kódem ``inactive``,
+      která vznikne při vyhodnocení ``request.user`` pro deaktivovaného uživatele.
+      Session se smaže a uživatel je přesměrován na přihlašovací stránku s varovnou hláškou.
+
+      :param request: Parametr ``request`` předává se do volání ``get_response()``.
+
+      :return: Vrací přesměrování na přihlašovací stránku nebo ``response``.
+
+
 .. py:class:: StatusMessageMiddleware
 
    Implementuje komponentu ``StatusMessageMiddleware`` v rámci aplikace.
