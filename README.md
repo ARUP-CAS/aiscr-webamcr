@@ -8,10 +8,10 @@ Archeologická mapa České republiky (AMČR) je informační systém pro sběr,
 
 ## Odkazy
 
-- **Dokumentace:** https://aiscr-webamcr.readthedocs.io/cs/stable/
-- **Changelog:** https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog
-- **Produkční aplikace:** https://amcr.aiscr.cz/
-- **AIS CR:** https://www.aiscr.cz/
+- **Dokumentace:** <https://aiscr-webamcr.readthedocs.io/cs/stable/>
+- **Changelog:** <https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog>
+- **Produkční aplikace:** <https://amcr.aiscr.cz/>
+- **AIS CR:** <https://www.aiscr.cz/>
 
 ---
 
@@ -93,7 +93,7 @@ celery -A webclient worker -l info
 ```
 
 Podrobná instalační příručka:  
-https://aiscr-webamcr.readthedocs.io/cs/stable/
+<https://aiscr-webamcr.readthedocs.io/cs/stable/>
 
 ---
 
@@ -114,42 +114,9 @@ Použijte:
 
 ## Testování
 
-```bash
-# Python kompilace — minimum před každým commitem
-.venv/Scripts/python.exe -m compileall -q webclient
+Minimum před každým commitem: `pre-commit run --all-files`
 
-# Pre-commit hooks
-pre-commit run --all-files
-
-# Django unit testy
-python manage.py test <app_name>
-
-# Selenium testy (pouze při relevantním scope a po dohodě)
-bash scripts/start_selenium_tests.sh
-```
-
-Výsledky testů vždy popište v PR:
-
-- co bylo spuštěno
-- co prošlo
-- co nešlo spustit
-
----
-
-## Větve a workflow
-
-| Větev | Prostředí | Popis |
-| --- | --- | --- |
-| `test` | Staging | Základna pro veškerý vývoj. Vždy větvete od `test`. |
-| `dev` | Stabilní / integrace | Merguje výhradně lidský reviewer. |
-
-Nové funkce a opravy se vyvíjejí v `test`.
-
-Do `dev` se merguje teprve po stabilizaci — **výhradně lidským reviewerem**.
-
-Release je vytvářen z **tagovaného commitu na `dev`**.
-
-Viz `CONTRIBUTING.md` pro podrobný vývojový postup.
+Podrobnosti o testování, větvení a workflow viz [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 

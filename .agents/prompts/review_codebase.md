@@ -30,15 +30,10 @@ All of the following components are **in scope** for this review:
 
 **Third-party vendored libraries must NOT be audited for internal code quality.**
 This exclusion applies globally to all tasks — not only to T07.
+Specific exclusion rules (directories, file patterns, copyright headers) are defined in
+`review_config.yaml` → `vendored_exclusions`.
 
-Files and directories excluded from quality analysis in every task:
-
-- `vendor/`, `vendors/`, `lib/`, `libs/`, `node_modules/`, `dist/`
-- any file matching `*.min.js` or `*.min.css`
-- any file whose first lines contain a third-party copyright header
-  (`/*!`, `* @license`, `* jQuery`, `* Bootstrap`, etc.)
-
-These files may still be **referenced** (e.g. to check SRI attributes in templates
+Vendored files may still be **referenced** (e.g. to check SRI attributes in templates
 or to list CDN dependencies), but their internal content must not be audited.
 
 ---
@@ -52,7 +47,7 @@ At the start of every agent session, execute in this exact order:
 3. Read `.agents/config/review_cache.json` — load progress state.
 4. Compute SHA-256 hashes of all source files listed in the cache.
 5. Detect changed files by comparing hashes; mark affected tasks as pending.
-6. Select the next pending task from the task registry (see TASK REGISTRY below).
+6. Select the next pending task from the task registry in `review_config.yaml`.
 7. Execute the task, respecting task size limits.
 8. Update all relevant analysis files and the cache.
 
@@ -60,231 +55,24 @@ At the start of every agent session, execute in this exact order:
 
 ## DIRECTORY STRUCTURE
 
-Create and maintain:
-
-```plain
-.agents/
-  README.md
-  prompts/
-    review_codebase.md
-    prompt_evolution/
-      README.md
-  config/
-    review_config.yaml
-    review_cache.json
-  analysis/
-    repository_map.json
-    dependency_graph.json
-    orm_analysis.json
-    docker_analysis.json
-    security_analysis.json
-    celery_analysis.json
-    frontend_analysis.json
-    documentation_analysis.json
-    cicd_analysis.json
-    scripts_analysis.json
-  reports/
-    review_reports/
-      README.md
-    bugs.md
-    refactoring_backlog.md
-```
+See `.agents/README.md` for the directory layout. The structure is created
+during T01 and maintained thereafter.
 
 ---
 
-## CONFIGURATION FILE
+## CONFIGURATION
 
-Create and maintain: `.agents/config/review_config.yaml`
-
-```yaml
-repository: aiscr-webamcr
-branch: test
-
-# Task priority and execution order is defined in the task registry below.
-# Do not add a separate review_priorities list — it would conflict with task priority fields.
-
-task_size_limits:
-  max_files_per_task: 20
-  max_lines_per_task: 6000    # total line budget per task
-  max_lines_per_file: 2000    # threshold for a single file
-  large_file_strategy: split_task
-  # If a file exceeds max_lines_per_file:
-  #   split_task        → split the task into sub-tasks (T03a, T03b, ...)
-  #   truncate_with_note → analyse the first 2000 lines, record the truncation
-  prefer_single_app_per_task: true
-
-cache_strategy:
-  hash_algorithm: sha256
-  hash_target: file_content
-  cache_format:
-    file_path: string
-    sha256: string
-    last_reviewed: iso8601
-    task_id: string
-
-important_directories:
-  - webclient
-  - webclient/services
-  - scripts
-  - docs
-  - .github
-  - proxy
-  - elasticsearch
-  - logstash
-  - kibana
-  - prometheus
-  - redis
-  - fedora
-  - locale
-  - static
-  - templates
-
-important_files:
-  - AGENTS.md
-  - manage.py
-  - Dockerfile
-  - Dockerfile-DB
-  - Dockerfile-DEV
-  - docker-compose.yml
-  - docker-compose-dev-local-db.yml
-  - docker-compose-dev-local-db-all-containers.yml
-  - docker-compose-proxy.yml
-  - docker-compose-test.yml
-  - git_docker-compose.yml
-  - git_docker-compose.override.yml
-  - git_docker-compose-proxy.yml
-  - redis/docker-entrypoint.sh
-  - scripts/entrypoint.sh
-  - scripts/entrypoint.dev.sh
-  - readthedocs.yaml
-  - .pre-commit-config.yaml
-  - .flake8
-  - .isort.cfg
-  - requirements.txt
-  - pyproject.toml
-  - package.json
-
-ignored_directories:
-  - .git
-  - .venv
-  - venv
-  - node_modules
-  - __pycache__
-  - build
-  - dist
-  - media
-  - staticfiles
-  - coverage
-  - .pytest_cache
-  - .mypy_cache
-  - cert           # self-signed dev certificates — intentionally committed, not a security concern
-
-vendored_exclusions:
-  directories:
-    - vendor/
-    - vendors/
-    - lib/
-    - libs/
-    - node_modules/
-    - dist/
-  file_patterns:
-    - "*.min.js"
-    - "*.min.css"
-  copyright_headers:
-    - "/*!"
-    - "* @license"
-    - "* jQuery"
-    - "* Bootstrap"
-  note: >
-    Vendored files must not be audited for internal code quality in any task.
-    They may be referenced (e.g. checking SRI attributes in templates).
-
-prompt_evolution:
-  suggestions_path: .agents/prompts/prompt_evolution/
-  apply_manually: true
-  reviewer: human
-  note: >
-    Suggestions accumulate in prompt_evolution/ across sessions.
-    A human reviewer applies accepted suggestions to .agents/prompts/review_codebase.md
-    before starting a new audit cycle.
-```
+Load from `.agents/config/review_config.yaml` — that file is the single source of
+truth for task size limits, directories, vendored exclusions, tech stack, and file lists.
+Do not duplicate configuration values in this prompt.
 
 ---
 
 ## TASK REGISTRY
 
-The following tasks are executed in order. Each session picks the next pending task.
-Tasks are marked `done` in the cache after completion, `pending` if files changed.
-
-```yaml
-tasks:
-  - id: T01
-    name: repository_map
-    description: Repository structure index
-    target_file: .agents/analysis/repository_map.json
-    priority: 1
-
-  - id: T02
-    name: dependency_graph
-    description: Internal and external dependency graph
-    target_file: .agents/analysis/dependency_graph.json
-    priority: 2
-
-  - id: T03
-    name: orm_analysis
-    description: Django model, migration and ORM pattern analysis
-    target_file: .agents/analysis/orm_analysis.json
-    priority: 3
-
-  - id: T04
-    name: docker_analysis
-    description: All Dockerfile and docker-compose file analysis
-    target_file: .agents/analysis/docker_analysis.json
-    priority: 4
-
-  - id: T05
-    name: security_analysis
-    description: Security audit (settings, secrets, authentication, CORS)
-    target_file: .agents/analysis/security_analysis.json
-    priority: 5
-
-  - id: T06
-    name: celery_analysis
-    description: Celery task, beat schedule and async pattern analysis
-    target_file: .agents/analysis/celery_analysis.json
-    priority: 6
-
-  - id: T07
-    name: frontend_analysis
-    description: AMČR developer JS/SCSS analysis (vendored libraries excluded)
-    target_file: .agents/analysis/frontend_analysis.json
-    priority: 7
-
-  - id: T08
-    name: documentation_analysis
-    description: Sphinx documentation and documentation generator analysis
-    target_file: .agents/analysis/documentation_analysis.json
-    priority: 8
-
-  - id: T09
-    name: cicd_analysis
-    description: GitHub Actions, pre-commit hooks and CI pipeline analysis
-    target_file: .agents/analysis/cicd_analysis.json
-    priority: 9
-
-  - id: T10
-    name: scripts_analysis
-    description: scripts/ directory analysis (deploy, dev, test scripts)
-    target_file: .agents/analysis/scripts_analysis.json
-    priority: 10
-
-  - id: T11
-    name: final_audit
-    description: Final consolidated audit of all findings
-    target_file: .agents/reports/review_reports/final_audit.md
-    priority: 11
-    requires: [T01, T02, T03, T04, T05, T06, T07, T08, T09, T10]
-```
+Task definitions and priorities are in `.agents/config/review_config.yaml` → `tasks:`.
+Each session picks the next pending task from the cache. Tasks are marked `done`
+in the cache after completion, `pending` if files changed.
 
 ---
 

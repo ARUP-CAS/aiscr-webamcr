@@ -1,6 +1,7 @@
 # CLAUDE.md — Claude Code Instructions
 
 Full agent rules, repository structure, and coding standards: see [AGENTS.md](AGENTS.md).
+Coding standards, branch rules, and PR process: see [CONTRIBUTING.md](CONTRIBUTING.md).
 AI review system state and artifacts: see [.agents/README.md](.agents/README.md).
 
 ## Repository
@@ -54,18 +55,7 @@ feature / bugfix / docs / agents branches → test → dev → main
 - Modify files outside task scope
 - Commit secrets or sensitive configuration
 
-## Generated Artifacts
+## Generated Artifacts & Pre-commit Hooks
 
-Scripts that auto-generate documentation:
-- `docs/generate_module_docs.py`
-- `docs/generate_selenium_test_docs.py`
-- `docs/licenses/convert_to_rst.py`
-
-Run these after changing module structure, Selenium tests, or dependencies.
-
-## Pre-commit Hooks
-
-- `isort`, `black`, `flake8` — standard formatting
-- `method-docstring-style-reminder` — non-blocking, but warnings should be addressed
-- `generate-module-docs`, `generate-selenium-test-docs` — auto-run on commit
-- Migrations are excluded from all hooks
+See [CONTRIBUTING.md](CONTRIBUTING.md) §Generovaná dokumentace and §Testování for details.
+Migrations are excluded from all hooks.
