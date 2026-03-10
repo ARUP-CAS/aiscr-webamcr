@@ -126,33 +126,46 @@ class ErrorMiddleware:
 
 
 class InactiveUserMiddleware:
-    """Middleware pro zachycení ValidationError s kódem 'inactive' při přístupu deaktivovaného uživatele s aktivní session."""
+    """
+    Middleware zachytávající ``ValidationError`` s kódem ``inactive``,
+    která může vzniknout při vyhodnocení ``request.user`` u deaktivovaného
+    uživatele s stále aktivní session.
+
+    Pokud k této chybě dojde, session se zruší a uživatel je přesměrován
+    na přihlašovací stránku s varovnou hláškou.
+    """
 
     def __init__(self, get_response):
         """
-        Inicializuje instanci třídy.
+        Inicializuje middleware.
 
-        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        :param get_response: Callable z middleware řetězce,
+                             který zpracuje požadavek a vrátí response.
         """
         self.get_response = get_response
 
     def __call__(self, request):
         """
-        Obaluje zpracování požadavku a zachycuje ``ValidationError`` s kódem ``inactive``,
-        která vznikne při vyhodnocení ``request.user`` pro deaktivovaného uživatele.
-        Session se smaže a uživatel je přesměrován na přihlašovací stránku s varovnou hláškou.
+        Obalí zpracování požadavku a zachytí ``ValidationError`` s kódem
+        ``inactive``, která může vzniknout při vyhodnocení ``request.user``.
 
-        :param request: Parametr ``request`` předává se do volání ``get_response()``.
+        Pokud je chyba zachycena, session se zruší a uživatel je
+        přesměrován na přihlašovací stránku.
 
-            :return: Vrací přesměrování na přihlašovací stránku nebo ``response``.
+        :param request: Instance ``HttpRequest``.
+        :return: Standardní ``response`` nebo přesměrování na login.
         """
         try:
             return self.get_response(request)
+
         except ValidationError as e:
-            if getattr(e, "code", None) == "inactive":
+            if getattr(e, "code", None) == "inactive" or any(
+                err.code == "inactive" for err in getattr(e, "error_list", [])
+            ):
                 request.session.flush()
-                messages.warning(request, e.message)
+                messages.warning(request, str(e))
                 return redirect("django_authentication_login")
+
             raise
 
 
