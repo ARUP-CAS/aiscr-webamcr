@@ -186,7 +186,7 @@ for concurrent safety — do not flag it as a misconfiguration.
 
 Record severe ORM issues as bugs in `bugs.md`.
 Cross-reference every bug entry with existing GitHub Issues (the repository has 113 open
-issues) **before** writing the entry — see the BUG TRACKING section for the procedure.
+issues; aktuální počet a datum viz `review_config.yaml` → `open_issues`) **before** writing the entry — see the BUG TRACKING section for the procedure.
 
 ```json
 {
@@ -352,6 +352,7 @@ Inspect:
 
 - definitions of all Celery tasks (`tasks.py` files)
 - beat schedule configuration
+  - when `django_celery_beat` is used, only record that the schedule is stored in the database (not fully visible in the repository) and briefly summarise the types of periodic tasks; do not try to reconstruct the full schedule from code alone
 - retry strategies and error handling
 - shared state between tasks (dangerous global variables)
 - timeout configuration
@@ -365,14 +366,17 @@ Detect:
 - missing idempotence in critical tasks
 - tasks called synchronously where they should be async
 - memory leaks in long-running tasks
+- calls to external services (HTTP, file systems, external APIs) without an explicit timeout or without a retry strategy for critical tasks
 
 ```json
 {
   "tasks": [],
   "beat_schedule": {},
+  "configuration": {},
   "error_handling_issues": [],
   "race_condition_candidates": [],
-  "configuration": {}
+  "missing_idempotence": [],
+  "timeout_issues": []
 }
 ```
 
@@ -414,10 +418,11 @@ Skip any file or directory matching at least one of these conditions:
 
 - custom JS architecture: modularity, separation of concerns
 - async/await vs callback patterns in custom code
-- inline scripts in templates — quantity and complexity
+- inline scripts in templates — quantity and complexity; larger inline blocks in core templates (for example `base.html`) should be treated as candidates for extraction into separate JS files and listed in `template_inline_scripts.extraction_candidates`
 - Django integration patterns (CSRF tokens, URL reversal in JS, data attributes)
 - SCSS structure: variables, nesting, repeated patterns
 - how CDN dependencies are loaded (integrity hash / SRI, fallback)
+  - for first‑party analytics tools (for example Google Tag Manager, Google Analytics), document missing SRI but do not treat it as a defect; the risk decision belongs to the project security policy
 
 ### What to detect
 
@@ -428,6 +433,7 @@ Skip any file or directory matching at least one of these conditions:
 - missing minification of custom JS/CSS in the production build
 - direct DOM manipulations that could be replaced by a Django mechanism
 - inconsistent patterns for passing data from server to JS
+- how dark mode is implemented (if present) — how it is toggled (`prefers-color-scheme` vs. UI button), how it maps to CSS (`data-theme`, dedicated SCSS layer) and how it is reflected in `frontend_analysis.json`
 
 ### What NOT to address
 
@@ -481,7 +487,7 @@ Inspect:
 - Sphinx documentation in `docs/`
 - `readthedocs.yaml` — Read the Docs build configuration
 - reStructuredText files
-- documentation generators in `scripts/`
+- documentation generators (for example `docs/generate_module_docs.py`, `docs/generate_selenium_test_docs.py`, `docs/licenses/convert_to_rst.py`), including those that use `subprocess` (check `returncode` and how stderr/stdout are handled)
 - automatically generated dependency tables
 - licence documentation
 
@@ -494,17 +500,20 @@ Detect:
 - broken or outdated links
 - inconsistent formatting
 - documentation that does not match current code behaviour
+  - for Selenium documentation, check whether the generator enforces required sections (for example `Steps`, `Expected`) and how it behaves when they are missing; record missing sections under `coverage_gaps` with a recommendation for CI (for example failing the build on incomplete documentation)
 
 ```json
 {
   "sphinx_docs": {
     "location": "docs/",
-    "readthedocs_config": "readthedocs.yaml",
+    "readthedocs_config": "docs/source/conf.py",
+    "readthedocs_url": "https://aiscr-webamcr.readthedocs.io/cs/stable/",
     "issues": []
   },
   "documentation_generators": [],
   "broken_links": [],
-  "coverage_gaps": []
+  "coverage_gaps": [],
+  "outdated_content": []
 }
 ```
 
@@ -523,6 +532,10 @@ Inspect:
 - `.flake8` — linting configuration
 - `.isort.cfg` — import sorting configuration
 - test infrastructure (`docker-compose-test.yml`, Selenium tests)
+- security scanning and supply-chain tooling:
+  - image-level scanning (Docker Scout, Trivy, SBOM generators, cosign signing, provenance)
+  - static code analysis (CodeQL, Bandit, etc.), if present
+  - Dependabot configuration (`.github/dependabot.yml`) for Python dependencies and GitHub Actions
 
 Detect:
 
@@ -532,7 +545,7 @@ Detect:
 - missing branch protection rules
 - suboptimal use of GitHub Actions cache
 - pre-commit hooks that may fail in CI
-- missing security scanning (Dependabot, CodeQL)
+- missing security scanning (Dependabot, CodeQL, image-level scanning)
 
 ```json
 {
@@ -616,7 +629,8 @@ Create and maintain: `.agents/reports/bugs.md`
 
 Before adding a bug entry:
 
-1. Check if a related GitHub Issue exists (the repository has 113 open issues).
+1. Check if a related GitHub Issue exists (for current number of open issues see
+   `review_config.yaml` → `open_issues`; can be updated during the session run).
 2. If yes → mark as "již evidováno (Issue #XXX)".
 3. If partially related → mark as "rozšíření existujícího issue #XXX".
 4. If none exists → mark as "nový kandidát na issue".
@@ -721,7 +735,7 @@ Save to: `.agents/prompts/prompt_evolution/<task_id>_prompt_update.md`
 
 Suggestions accumulate across sessions. A human reviewer applies accepted
 suggestions to `.agents/prompts/review_codebase.md` before starting a new audit cycle.
-Agents must not self-modify `review_codebase.md`.
+Agents must not self-modify `review_codebase.md` without explicit approval by human.
 
 ---
 
