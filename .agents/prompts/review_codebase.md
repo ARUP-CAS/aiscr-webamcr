@@ -269,6 +269,11 @@ Create: `.agents/analysis/security_analysis.json`
 
 **Purpose:** Security audit of the production system.
 
+For security-sensitive changes (auth, secrets, CORS, CSRF, XSS), consider
+using a **security-reviewer** subagent before merge; document findings in
+`.agents/analysis/security_analysis.json` and `bugs.md` / `refactoring_backlog.md`
+as usual.
+
 > **Cross-reference T04:** Docker-level security findings (secret injection errors,
 > container privilege escalation, exposed monitoring ports) are already recorded in
 > `.agents/analysis/docker_analysis.json` from T04. Do not duplicate those entries here —

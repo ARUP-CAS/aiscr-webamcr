@@ -14,8 +14,7 @@ This repository contains the production Django web application for the
 Archaeological Map of the Czech Republic (AMČR), part of the AIS CR
 infrastructure maintained by ARUP-CAS.
 
-Django project root is `webclient/` — `manage.py` and `requirements.txt`
-live there, **not** in the repo root.
+Django project root is `webclient/` (see [CLAUDE.md](CLAUDE.md) for key paths and environment).
 
 ------------------------------------------------------------------------
 
@@ -187,6 +186,9 @@ Examples:
 4. Do not overwrite or remove existing changes outside the scope of the
     task.
 5. Do not commit secrets, keys, or sensitive local configuration.
+6. Do not edit sensitive paths that are in `.gitignore` (e.g.
+   `local_settings.py`, `secrets*.json`, `webclient_env_var.sh`); see
+   [.agents/prompts/hooks_reference.md](.agents/prompts/hooks_reference.md) for the recommended PreToolUse rule.
 
 Note:
 
@@ -203,7 +205,46 @@ requirements, and generated artifact rules are defined in
 [CONTRIBUTING.md](CONTRIBUTING.md). Agents must follow those rules.
 
 For docstring conventions, generated documentation rules, and the
-authoritative rule sources list, see CONTRIBUTING.md.
+authoritative rule sources list, see CONTRIBUTING.md. For a short
+conventions summary for agents, see
+[.agents/prompts/project_conventions.md](.agents/prompts/project_conventions.md).
+
+------------------------------------------------------------------------
+
+## Recommended MCP Servers and Subagents (documentation only)
+
+Local MCP config (e.g. `.mcp.json`) is not in the repo. The following are
+recommended and documented here so the team can enable them locally:
+
+- **context7** — Live documentation for Django, DRF, Celery, Sphinx and
+  other libraries. Install locally (e.g. `claude mcp add context7` or
+  Cursor equivalent).
+- **GitHub MCP** (e.g. plugin-github-github) — Issues, PRs, Actions; aligns
+  with AGENTS.md requirement to cross-reference bugs with GitHub Issues.
+
+For deep review of a specific area or security-sensitive changes, agents
+may use (or recommend) subagents such as **code-reviewer** or
+**security-reviewer**; any findings must be written to `.agents/reports/`
+and, when relevant, to `refactoring_backlog.md` or `bugs.md`.
+
+------------------------------------------------------------------------
+
+## Shared Automation Rules (No .cursor / .claude in Git)
+
+Team-shared rules and automation config must live in the repository so they
+are versioned and visible to all. The directories `.cursor/` and `.claude/`
+are in `.gitignore`; do not use them for anything that should be shared.
+
+- **Agent and project rules:** `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`
+- **Review config and task definitions:** `.agents/config/` (e.g.
+  `review_config.yaml`)
+- **Prompts and automation recommendations:** `.agents/prompts/`,
+  `.agents/reports/` (e.g. `claude_automation_recommendations.md`)
+
+Document recommended hooks, MCP servers, and subagents in `AGENTS.md` or
+`.agents/`; local implementation may remain in `.cursor/` or `.claude/` per
+developer. Recommended hook behaviour is described in
+[.agents/prompts/hooks_reference.md](.agents/prompts/hooks_reference.md).
 
 ------------------------------------------------------------------------
 

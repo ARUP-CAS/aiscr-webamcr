@@ -57,5 +57,13 @@ feature / bugfix / docs / agents branches → test → dev → main
 
 ## Generated Artifacts & Pre-commit Hooks
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) §Generovaná dokumentace and §Testování for details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) § Generovaná dokumentace a artefakty and § Testování for details.
 Migrations are excluded from all hooks.
+
+## Recommended MCP (local config)
+
+For live library docs (Django, DRF, Celery, Sphinx): **context7**. For
+issues/PRs and cross-referencing with AGENTS.md: **GitHub MCP**. Configure
+locally (e.g. Cursor MCP or `claude mcp add …`); repo does not commit
+`.cursor/` or `.claude/`. Dev setup checklist:
+[.agents/prompts/setup_dev.md](.agents/prompts/setup_dev.md).
