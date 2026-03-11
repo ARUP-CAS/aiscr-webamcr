@@ -164,7 +164,7 @@ jobs:
           echo "dockerhub=${DIGEST_DOCKERHUB}" >> $GITHUB_OUTPUT
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v4
+        uses: sigstore/cosign-installer@v4.1.0
 
       - name: Sign image
         shell: bash
@@ -176,26 +176,24 @@ jobs:
 
       - name: Attest build provenance - GitHub
         id: attest_github
-        uses: actions/attest@v4
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}
           subject-digest: ${{ steps.digests.outputs.github }}
-          predicate-type: https://slsa.dev/provenance/v1
           push-to-registry: true
 
       - name: Attest build provenance - DockerHub
         id: attest_dockerhub
-        uses: actions/attest@v4
+        uses: actions/attest-build-provenance@v4
         with:
           subject-name: ${{ env.REGISTRY_DOCKERHUB }}/${{ matrix.image_name_dockerhub }}
           subject-digest: ${{ steps.digests.outputs.dockerhub }}
-          predicate-type: https://slsa.dev/provenance/v1
           push-to-registry: true
 
       - name: Generate SBOM
         continue-on-error: true
         id: sbom
-        uses: aquasecurity/trivy-action@v0.34.2
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: spdx-json
@@ -226,7 +224,7 @@ jobs:
       - name: Vulnerability scan
         continue-on-error: true
         id: vulnscan
-        uses: aquasecurity/trivy-action@v0.34.2
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ env.REGISTRY_GITHUB }}/${{ matrix.image_name_github }}@${{ steps.digests.outputs.github }}
           format: sarif
