@@ -480,7 +480,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache Software License; BSD License
      - https://github.com/dateutil/dateutil
    * - python-discovery
-     - 1.1.2
+     - 1.1.3
      - MIT License
      - https://github.com/tox-dev/python-discovery
    * - python-logstash
@@ -616,7 +616,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/foutaise/texttable/
    * - tornado
-     - 6.5.4
+     - 6.5.5
      - Apache Software License
      - http://www.tornadoweb.org/
    * - trio
