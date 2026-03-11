@@ -12,4 +12,5 @@ Dokumentace modulu dokument.
    views
    signals
    admin
+   filters
    tables

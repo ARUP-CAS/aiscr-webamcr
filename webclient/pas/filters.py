@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 
 import crispy_forms
 import django_filters

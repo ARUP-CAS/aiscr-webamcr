@@ -11,4 +11,5 @@ Dokumentace modulu lokalita.
    forms
    views
    signals
+   filters
    tables

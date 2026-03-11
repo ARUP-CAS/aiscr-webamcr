@@ -11,5 +11,6 @@ Dokumentace modulu arch_z.
    forms
    views
    signals
+   filters
    tables
    validators

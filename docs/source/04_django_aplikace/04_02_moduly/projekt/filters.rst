@@ -23,6 +23,7 @@ Třídy
 
    Třída pro filtrování záznamu podle katastru, kraje, okresu a popisných údajů.
 
+   Třída je použita v dalších filtrech.
 
    **Metody:**
 

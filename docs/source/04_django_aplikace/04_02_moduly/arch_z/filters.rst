@@ -103,6 +103,10 @@ Třídy
 
       :return: Vrací výsledek volání ``distinct()``.
 
+   .. py:method:: filter_ident_cely()
+
+      Metoda pro filtrování podle identu akce, ale i dočasného.
+
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.

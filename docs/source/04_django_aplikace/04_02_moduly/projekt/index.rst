@@ -12,6 +12,7 @@ Dokumentace modulu projekt.
    views
    signals
    admin
+   filters
    doc_utils
    rtf_utils
    tables

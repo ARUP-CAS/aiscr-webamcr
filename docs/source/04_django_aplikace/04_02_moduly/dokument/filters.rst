@@ -37,6 +37,10 @@ Třídy
 
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: filter_ident_cely()
+
+      Metoda pro filtrování podle identu projektu, ale i dočasného.
+
 
 .. py:class:: Model3DFilter
 

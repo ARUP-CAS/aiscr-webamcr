@@ -11,4 +11,5 @@ Dokumentace modulu pas.
    forms
    views
    signals
+   filters
    tables
