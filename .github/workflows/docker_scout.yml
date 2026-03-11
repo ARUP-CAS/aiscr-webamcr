@@ -54,7 +54,7 @@ jobs:
       # (don't push on PR, load instead)
       - name: Build and push Docker image
         id: build-and-push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           file: Dockerfile
           sbom: ${{ github.event_name != 'pull_request' }}
@@ -97,7 +97,7 @@ jobs:
       # (don't push on PR, load instead)
       #- name: Build and push Docker image - proxy
       #  id: build-and-push-proxy
-      #  uses: docker/build-push-action@v6
+      #  uses: docker/build-push-action@v7
       #  with:
       #    context: "{{defaultContext}}:proxy"
       #    sbom: ${{ github.event_name != 'pull_request' }}
@@ -140,7 +140,7 @@ jobs:
       # (don't push on PR, load instead)
       #- name: Build and push Docker image - Redis
       #  id: build-and-push-redis
-      #  uses: docker/build-push-action@v6
+      #  uses: docker/build-push-action@v7
       #  with:
       #    context: "{{defaultContext}}:redis"
       #    sbom: ${{ github.event_name != 'pull_request' }}
