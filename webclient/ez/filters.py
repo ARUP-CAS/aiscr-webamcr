@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojFilter(HistorieFilter, FilterSet):
-    """Třída pro zakladní filtrování externího zdroju a jejich potomků."""
+    """Třída pro základní filtrování externího zdroju a jejich potomků."""
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = "EZ"
     INCLUDE_KAT_TYP_ZMENY = False

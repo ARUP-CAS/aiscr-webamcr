@@ -194,7 +194,13 @@ class HistorieFilter(FilterSet):
 
     def filter_ident_cely(self, queryset, name, value):
         """
-        Metoda pro filtrování podle identu projektu, ale i dočasného.
+        Metoda pro filtrování podle identu dokumentu/projektu/EZ, ale i dočasného.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` nepoužito.
+        :param value: Parametr ``value`` ovlivňuje větvení podmínek, předává se do volání ``filter()``.
+
+            :return: Vrací filtrovaný ``queryset`` podle ``ident_cely`` nebo poznámky z historie.
         """
         if not value:
             return queryset

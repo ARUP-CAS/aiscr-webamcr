@@ -107,6 +107,12 @@ Třídy
 
       Metoda pro filtrování podle identu akce, ale i dočasného.
 
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` nepoužito.
+      :param value: Parametr ``value`` ovlivňuje větvení podmínek, předává se do volání ``filter()``.
+
+      :return: Vrací filtrovaný ``queryset`` podle ``ident_cely`` nebo poznámky z historie.
+
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
