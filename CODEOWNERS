@@ -27,9 +27,6 @@
 # Sphinx dokumentace
 /docs/                      @motyc @jhavrlant
 
-# Agentní dokumentace — vyžaduje human review před mergem do test
-/.agents/                   @motyc
-
 # Projektová dokumentace a pravidla
 /CONTRIBUTING.md            @motyc
 /README.md                  @motyc

@@ -12,6 +12,8 @@ import sys
 from pathlib import Path
 from typing import Iterable, Set, Union
 
+sys.stdout.reconfigure(encoding="utf-8")
+
 # =========================
 # Configuration
 # =========================
