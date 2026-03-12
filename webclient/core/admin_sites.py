@@ -201,7 +201,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             "sprava_uzivatelu",
             [
                 find_model("uzivatel", "User"),
-                custom_link(_("core.admin_site.AmcrCustomAdminSite.emailove_notifikace")),
+                find_model("uzivatel", "NotificationsLog"),
             ],
         )
         if section:
@@ -267,7 +267,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             form = UpdateDocumentObjectIdentifierFileForm(request.POST, request.FILES)
             context["form"] = form
             if form.is_valid():
-                uploaded_file = request.FILES["ident_list_file"]
+                uploaded_file = form.cleaned_data["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
                     job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
@@ -296,7 +296,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
         if request.method == "POST" and request.user.is_superuser:
             form = UpdateMetadataFileForm(request.POST, request.FILES)
             if form.is_valid():
-                uploaded_file = request.FILES["ident_list_file"]
+                uploaded_file = form.cleaned_data["ident_list_file"]
                 sheet = self._read_file(uploaded_file, context)
                 if isinstance(sheet, pd.DataFrame):
                     job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
@@ -338,10 +338,10 @@ class AmcrCustomAdminSite(admin.AdminSite):
         if not is_maintenance_in_progress():
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         if request.method == "POST" and request.user.is_superuser:
-            data_file = request.FILES["data_file"]
             form = ImportDataAdminForm(request.POST, request.FILES)
             if form.is_valid():
                 cleaned_data = form.cleaned_data
+                data_file = cleaned_data["data_file"]
             else:
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             context["form"] = form
