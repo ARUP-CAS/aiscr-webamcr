@@ -510,7 +510,7 @@ def run_data_import(job_id, user_id):
     logger.debug("cron.tasks.run_data_import.start", extra={"job_id": job_id})
 
     redis_connector = RedisConnector().get_connection()
-
+    redis_connector.set("import_data_running", "true")
     record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
     performed_action = redis_connector.get(f"import_performed_action_{job_id}").decode("utf-8")
     redis_connector.set(f"import_data_progress_{job_id}", json.dumps([]))
@@ -902,6 +902,7 @@ def run_data_import(job_id, user_id):
     for record_id in range(record_count):
         redis_connector.expire(f"import_data_{job_id}_record_{record_id}", expiration_seconds)
 
+    redis_connector.set("import_data_running", "false")
     logger.debug(
         "cron.tasks.run_data_import.end", extra={"job_id": job_id, "failed": failed, "record_count": record_count}
     )

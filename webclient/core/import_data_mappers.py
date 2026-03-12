@@ -699,6 +699,7 @@ class LookupImportField(BaseImportField):
     """Importní pole pro hodnoty odkazující na instanci jiného modelu (cizí klíč)."""
 
     records = []
+    lookup_cache = {}
 
     def __init__(
         self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", limit_choices_to: dict | None = None
@@ -727,6 +728,15 @@ class LookupImportField(BaseImportField):
             raise ValueError("limit_choices_to is only supported for Heslar model")
         self.limit_choices_to = limit_choices_to
 
+    @classmethod
+    def clear_cache(cls):
+        """
+        Vyčistí sdílenou cache vyhledaných FK záznamů.
+
+        :return: Funkce nevrací žádnou hodnotu.
+        """
+        LookupImportField.lookup_cache = {}
+
     @property
     def instance_value(self):
         """Provádí operaci instance value.
@@ -751,6 +761,18 @@ class LookupImportField(BaseImportField):
                 return None
             value = getattr(value, attribute, None)
         return value
+
+    @staticmethod
+    def _get_cache_key(model_class, lookup_field_name, value):
+        """
+        Sestaví klíč pro sdílenou cache vyhledaných instancí.
+
+        :param model_class: Třída modelu použitá pro lookup.
+        :param lookup_field_name: Název lookup pole.
+        :param value: Vyhledávaná hodnota.
+        :return: N-tice použitelná jako klíč cache.
+        """
+        return model_class, lookup_field_name, value
 
     def _check_limit_choices_to(self, record):
         """
@@ -781,8 +803,15 @@ class LookupImportField(BaseImportField):
         if str(value).lower() == "nan" or value is None or len(str(value)) == 0:
             return None
         for current_class in self.lookup_model_class_list:
+            cache_key = self._get_cache_key(current_class, self.lookup_field_name, value)
+            record = LookupImportField.lookup_cache.get(cache_key)
+            if record:
+                self._check_limit_choices_to(record)
+                self._instance_value = record
+                return value
             record = current_class.objects.filter(**{self.lookup_field_name: value}).first()
             if record:
+                LookupImportField.lookup_cache[cache_key] = record
                 self._check_limit_choices_to(record)
                 self._instance_value = record
                 return value
@@ -793,6 +822,7 @@ class LookupImportField(BaseImportField):
                 and self._get_record_lookup_value(record, self.lookup_field_name) == value
             ]
             if len(filtered_records) == 1:
+                LookupImportField.lookup_cache[cache_key] = filtered_records[0]
                 self._check_limit_choices_to(filtered_records[0])
                 self._instance_value = filtered_records[0]
                 return value

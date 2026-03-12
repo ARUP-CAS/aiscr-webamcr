@@ -690,12 +690,16 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 name = name.split("/")[-1]
             return name.strip().lower()
 
+        import_data_running_value = self.redis_connector.get("import_data_running")
+        import_data_running = import_data_running_value == "true"
+
         context = {
             "app_list": self.get_app_list(request),
             "maintenance": is_maintenance_in_progress(),
+            "import_data_running": import_data_running,
             **self.each_context(request),
         }
-        if not is_maintenance_in_progress():
+        if not is_maintenance_in_progress() or import_data_running:
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         if request.method == "POST" and request.user.is_superuser:
             data_file = request.FILES["data_file"]
@@ -712,6 +716,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
             validation_results = []
             records = []
             LookupImportField.records = records
+            LookupImportField.clear_cache()
             record_id = 0
             invalid_records = []
             performed_action = cleaned_data["performed_action"]
@@ -811,6 +816,7 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             finally:
                 LookupImportField.records = []
+                LookupImportField.clear_cache()
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)
             self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)

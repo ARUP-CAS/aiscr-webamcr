@@ -352,6 +352,7 @@ class AmcrCustomAdminSite(admin.AdminSite):
             validation_results = []
             records = []
             LookupImportField.records = records
+            LookupImportField.clear_cache()
             record_id = 0
             invalid_records = []
             performed_action = cleaned_data["performed_action"]
@@ -449,6 +450,9 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            finally:
+                LookupImportField.records = []
+                LookupImportField.clear_cache()
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)
             self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)

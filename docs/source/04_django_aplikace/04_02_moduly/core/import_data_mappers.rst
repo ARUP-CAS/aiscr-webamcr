@@ -410,6 +410,12 @@ Třídy
 
       :raises ValueError: Vyvolá se s textem "limit_choices_to is only supported for Heslar model".
 
+   .. py:method:: clear_cache()
+
+      Vyčistí sdílenou cache vyhledaných FK záznamů.
+
+      :return: Funkce nevrací žádnou hodnotu.
+
    .. py:method:: instance_value()
 
       Provádí operaci instance value.
@@ -424,6 +430,15 @@ Třídy
       :param lookup_field_name: Textový název nebo klíč ``lookup_field_name`` používaný v rámci operace.
 
       :return: Vrací hodnotu atributu nebo ``None``, pokud cestu nelze vyhodnotit.
+
+   .. py:method:: _get_cache_key()
+
+      Sestaví klíč pro sdílenou cache vyhledaných instancí.
+
+      :param model_class: Třída modelu použitá pro lookup.
+      :param lookup_field_name: Název lookup pole.
+      :param value: Vyhledávaná hodnota.
+      :return: N-tice použitelná jako klíč cache.
 
    .. py:method:: _check_limit_choices_to()
 
