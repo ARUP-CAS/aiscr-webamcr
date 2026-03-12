@@ -156,7 +156,7 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "core.apps.AmcrAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
