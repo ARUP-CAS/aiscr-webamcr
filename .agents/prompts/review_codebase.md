@@ -30,15 +30,10 @@ All of the following components are **in scope** for this review:
 
 **Third-party vendored libraries must NOT be audited for internal code quality.**
 This exclusion applies globally to all tasks — not only to T07.
+Specific exclusion rules (directories, file patterns, copyright headers) are defined in
+`review_config.yaml` → `vendored_exclusions`.
 
-Files and directories excluded from quality analysis in every task:
-
-- `vendor/`, `vendors/`, `lib/`, `libs/`, `node_modules/`, `dist/`
-- any file matching `*.min.js` or `*.min.css`
-- any file whose first lines contain a third-party copyright header
-  (`/*!`, `* @license`, `* jQuery`, `* Bootstrap`, etc.)
-
-These files may still be **referenced** (e.g. to check SRI attributes in templates
+Vendored files may still be **referenced** (e.g. to check SRI attributes in templates
 or to list CDN dependencies), but their internal content must not be audited.
 
 ---
@@ -52,7 +47,7 @@ At the start of every agent session, execute in this exact order:
 3. Read `.agents/config/review_cache.json` — load progress state.
 4. Compute SHA-256 hashes of all source files listed in the cache.
 5. Detect changed files by comparing hashes; mark affected tasks as pending.
-6. Select the next pending task from the task registry (see TASK REGISTRY below).
+6. Select the next pending task from the task registry in `review_config.yaml`.
 7. Execute the task, respecting task size limits.
 8. Update all relevant analysis files and the cache.
 
@@ -60,231 +55,24 @@ At the start of every agent session, execute in this exact order:
 
 ## DIRECTORY STRUCTURE
 
-Create and maintain:
-
-```plain
-.agents/
-  README.md
-  prompts/
-    review_codebase.md
-    prompt_evolution/
-      README.md
-  config/
-    review_config.yaml
-    review_cache.json
-  analysis/
-    repository_map.json
-    dependency_graph.json
-    orm_analysis.json
-    docker_analysis.json
-    security_analysis.json
-    celery_analysis.json
-    frontend_analysis.json
-    documentation_analysis.json
-    cicd_analysis.json
-    scripts_analysis.json
-  reports/
-    review_reports/
-      README.md
-    bugs.md
-    refactoring_backlog.md
-```
+See `.agents/README.md` for the directory layout. The structure is created
+during T01 and maintained thereafter.
 
 ---
 
-## CONFIGURATION FILE
+## CONFIGURATION
 
-Create and maintain: `.agents/config/review_config.yaml`
-
-```yaml
-repository: aiscr-webamcr
-branch: test
-
-# Task priority and execution order is defined in the task registry below.
-# Do not add a separate review_priorities list — it would conflict with task priority fields.
-
-task_size_limits:
-  max_files_per_task: 20
-  max_lines_per_task: 6000    # total line budget per task
-  max_lines_per_file: 2000    # threshold for a single file
-  large_file_strategy: split_task
-  # If a file exceeds max_lines_per_file:
-  #   split_task        → split the task into sub-tasks (T03a, T03b, ...)
-  #   truncate_with_note → analyse the first 2000 lines, record the truncation
-  prefer_single_app_per_task: true
-
-cache_strategy:
-  hash_algorithm: sha256
-  hash_target: file_content
-  cache_format:
-    file_path: string
-    sha256: string
-    last_reviewed: iso8601
-    task_id: string
-
-important_directories:
-  - webclient
-  - webclient/services
-  - scripts
-  - docs
-  - .github
-  - proxy
-  - elasticsearch
-  - logstash
-  - kibana
-  - prometheus
-  - redis
-  - fedora
-  - locale
-  - static
-  - templates
-
-important_files:
-  - AGENTS.md
-  - manage.py
-  - Dockerfile
-  - Dockerfile-DB
-  - Dockerfile-DEV
-  - docker-compose.yml
-  - docker-compose-dev-local-db.yml
-  - docker-compose-dev-local-db-all-containers.yml
-  - docker-compose-proxy.yml
-  - docker-compose-test.yml
-  - git_docker-compose.yml
-  - git_docker-compose.override.yml
-  - git_docker-compose-proxy.yml
-  - redis/docker-entrypoint.sh
-  - scripts/entrypoint.sh
-  - scripts/entrypoint.dev.sh
-  - readthedocs.yaml
-  - .pre-commit-config.yaml
-  - .flake8
-  - .isort.cfg
-  - requirements.txt
-  - pyproject.toml
-  - package.json
-
-ignored_directories:
-  - .git
-  - .venv
-  - venv
-  - node_modules
-  - __pycache__
-  - build
-  - dist
-  - media
-  - staticfiles
-  - coverage
-  - .pytest_cache
-  - .mypy_cache
-  - cert           # self-signed dev certificates — intentionally committed, not a security concern
-
-vendored_exclusions:
-  directories:
-    - vendor/
-    - vendors/
-    - lib/
-    - libs/
-    - node_modules/
-    - dist/
-  file_patterns:
-    - "*.min.js"
-    - "*.min.css"
-  copyright_headers:
-    - "/*!"
-    - "* @license"
-    - "* jQuery"
-    - "* Bootstrap"
-  note: >
-    Vendored files must not be audited for internal code quality in any task.
-    They may be referenced (e.g. checking SRI attributes in templates).
-
-prompt_evolution:
-  suggestions_path: .agents/prompts/prompt_evolution/
-  apply_manually: true
-  reviewer: human
-  note: >
-    Suggestions accumulate in prompt_evolution/ across sessions.
-    A human reviewer applies accepted suggestions to .agents/prompts/review_codebase.md
-    before starting a new audit cycle.
-```
+Load from `.agents/config/review_config.yaml` — that file is the single source of
+truth for task size limits, directories, vendored exclusions, tech stack, and file lists.
+Do not duplicate configuration values in this prompt.
 
 ---
 
 ## TASK REGISTRY
 
-The following tasks are executed in order. Each session picks the next pending task.
-Tasks are marked `done` in the cache after completion, `pending` if files changed.
-
-```yaml
-tasks:
-  - id: T01
-    name: repository_map
-    description: Repository structure index
-    target_file: .agents/analysis/repository_map.json
-    priority: 1
-
-  - id: T02
-    name: dependency_graph
-    description: Internal and external dependency graph
-    target_file: .agents/analysis/dependency_graph.json
-    priority: 2
-
-  - id: T03
-    name: orm_analysis
-    description: Django model, migration and ORM pattern analysis
-    target_file: .agents/analysis/orm_analysis.json
-    priority: 3
-
-  - id: T04
-    name: docker_analysis
-    description: All Dockerfile and docker-compose file analysis
-    target_file: .agents/analysis/docker_analysis.json
-    priority: 4
-
-  - id: T05
-    name: security_analysis
-    description: Security audit (settings, secrets, authentication, CORS)
-    target_file: .agents/analysis/security_analysis.json
-    priority: 5
-
-  - id: T06
-    name: celery_analysis
-    description: Celery task, beat schedule and async pattern analysis
-    target_file: .agents/analysis/celery_analysis.json
-    priority: 6
-
-  - id: T07
-    name: frontend_analysis
-    description: AMČR developer JS/SCSS analysis (vendored libraries excluded)
-    target_file: .agents/analysis/frontend_analysis.json
-    priority: 7
-
-  - id: T08
-    name: documentation_analysis
-    description: Sphinx documentation and documentation generator analysis
-    target_file: .agents/analysis/documentation_analysis.json
-    priority: 8
-
-  - id: T09
-    name: cicd_analysis
-    description: GitHub Actions, pre-commit hooks and CI pipeline analysis
-    target_file: .agents/analysis/cicd_analysis.json
-    priority: 9
-
-  - id: T10
-    name: scripts_analysis
-    description: scripts/ directory analysis (deploy, dev, test scripts)
-    target_file: .agents/analysis/scripts_analysis.json
-    priority: 10
-
-  - id: T11
-    name: final_audit
-    description: Final consolidated audit of all findings
-    target_file: .agents/reports/review_reports/final_audit.md
-    priority: 11
-    requires: [T01, T02, T03, T04, T05, T06, T07, T08, T09, T10]
-```
+Task definitions and priorities are in `.agents/config/review_config.yaml` → `tasks:`.
+Each session picks the next pending task from the cache. Tasks are marked `done`
+in the cache after completion, `pending` if files changed.
 
 ---
 
@@ -398,7 +186,7 @@ for concurrent safety — do not flag it as a misconfiguration.
 
 Record severe ORM issues as bugs in `bugs.md`.
 Cross-reference every bug entry with existing GitHub Issues (the repository has 113 open
-issues) **before** writing the entry — see the BUG TRACKING section for the procedure.
+issues; aktuální počet a datum viz `review_config.yaml` → `open_issues`) **before** writing the entry — see the BUG TRACKING section for the procedure.
 
 ```json
 {
@@ -481,6 +269,11 @@ Create: `.agents/analysis/security_analysis.json`
 
 **Purpose:** Security audit of the production system.
 
+For security-sensitive changes (auth, secrets, CORS, CSRF, XSS), consider
+using a **security-reviewer** subagent before merge; document findings in
+`.agents/analysis/security_analysis.json` and `bugs.md` / `refactoring_backlog.md`
+as usual.
+
 > **Cross-reference T04:** Docker-level security findings (secret injection errors,
 > container privilege escalation, exposed monitoring ports) are already recorded in
 > `.agents/analysis/docker_analysis.json` from T04. Do not duplicate those entries here —
@@ -559,6 +352,7 @@ Inspect:
 
 - definitions of all Celery tasks (`tasks.py` files)
 - beat schedule configuration
+  - when `django_celery_beat` is used, only record that the schedule is stored in the database (not fully visible in the repository) and briefly summarise the types of periodic tasks; do not try to reconstruct the full schedule from code alone
 - retry strategies and error handling
 - shared state between tasks (dangerous global variables)
 - timeout configuration
@@ -572,14 +366,17 @@ Detect:
 - missing idempotence in critical tasks
 - tasks called synchronously where they should be async
 - memory leaks in long-running tasks
+- calls to external services (HTTP, file systems, external APIs) without an explicit timeout or without a retry strategy for critical tasks
 
 ```json
 {
   "tasks": [],
   "beat_schedule": {},
+  "configuration": {},
   "error_handling_issues": [],
   "race_condition_candidates": [],
-  "configuration": {}
+  "missing_idempotence": [],
+  "timeout_issues": []
 }
 ```
 
@@ -621,10 +418,11 @@ Skip any file or directory matching at least one of these conditions:
 
 - custom JS architecture: modularity, separation of concerns
 - async/await vs callback patterns in custom code
-- inline scripts in templates — quantity and complexity
+- inline scripts in templates — quantity and complexity; larger inline blocks in core templates (for example `base.html`) should be treated as candidates for extraction into separate JS files and listed in `template_inline_scripts.extraction_candidates`
 - Django integration patterns (CSRF tokens, URL reversal in JS, data attributes)
 - SCSS structure: variables, nesting, repeated patterns
 - how CDN dependencies are loaded (integrity hash / SRI, fallback)
+  - for first‑party analytics tools (for example Google Tag Manager, Google Analytics), document missing SRI but do not treat it as a defect; the risk decision belongs to the project security policy
 
 ### What to detect
 
@@ -635,6 +433,7 @@ Skip any file or directory matching at least one of these conditions:
 - missing minification of custom JS/CSS in the production build
 - direct DOM manipulations that could be replaced by a Django mechanism
 - inconsistent patterns for passing data from server to JS
+- how dark mode is implemented (if present) — how it is toggled (`prefers-color-scheme` vs. UI button), how it maps to CSS (`data-theme`, dedicated SCSS layer) and how it is reflected in `frontend_analysis.json`
 
 ### What NOT to address
 
@@ -688,7 +487,7 @@ Inspect:
 - Sphinx documentation in `docs/`
 - `readthedocs.yaml` — Read the Docs build configuration
 - reStructuredText files
-- documentation generators in `scripts/`
+- documentation generators (for example `docs/generate_module_docs.py`, `docs/generate_selenium_test_docs.py`, `docs/licenses/convert_to_rst.py`), including those that use `subprocess` (check `returncode` and how stderr/stdout are handled)
 - automatically generated dependency tables
 - licence documentation
 
@@ -701,17 +500,20 @@ Detect:
 - broken or outdated links
 - inconsistent formatting
 - documentation that does not match current code behaviour
+  - for Selenium documentation, check whether the generator enforces required sections (for example `Steps`, `Expected`) and how it behaves when they are missing; record missing sections under `coverage_gaps` with a recommendation for CI (for example failing the build on incomplete documentation)
 
 ```json
 {
   "sphinx_docs": {
     "location": "docs/",
-    "readthedocs_config": "readthedocs.yaml",
+    "readthedocs_config": "docs/source/conf.py",
+    "readthedocs_url": "https://aiscr-webamcr.readthedocs.io/cs/stable/",
     "issues": []
   },
   "documentation_generators": [],
   "broken_links": [],
-  "coverage_gaps": []
+  "coverage_gaps": [],
+  "outdated_content": []
 }
 ```
 
@@ -730,6 +532,10 @@ Inspect:
 - `.flake8` — linting configuration
 - `.isort.cfg` — import sorting configuration
 - test infrastructure (`docker-compose-test.yml`, Selenium tests)
+- security scanning and supply-chain tooling:
+  - image-level scanning (Docker Scout, Trivy, SBOM generators, cosign signing, provenance)
+  - static code analysis (CodeQL, Bandit, etc.), if present
+  - Dependabot configuration (`.github/dependabot.yml`) for Python dependencies and GitHub Actions
 
 Detect:
 
@@ -739,7 +545,7 @@ Detect:
 - missing branch protection rules
 - suboptimal use of GitHub Actions cache
 - pre-commit hooks that may fail in CI
-- missing security scanning (Dependabot, CodeQL)
+- missing security scanning (Dependabot, CodeQL, image-level scanning)
 
 ```json
 {
@@ -823,7 +629,8 @@ Create and maintain: `.agents/reports/bugs.md`
 
 Before adding a bug entry:
 
-1. Check if a related GitHub Issue exists (the repository has 113 open issues).
+1. Check if a related GitHub Issue exists (for current number of open issues see
+   `review_config.yaml` → `open_issues`; can be updated during the session run).
 2. If yes → mark as "již evidováno (Issue #XXX)".
 3. If partially related → mark as "rozšíření existujícího issue #XXX".
 4. If none exists → mark as "nový kandidát na issue".
@@ -928,7 +735,7 @@ Save to: `.agents/prompts/prompt_evolution/<task_id>_prompt_update.md`
 
 Suggestions accumulate across sessions. A human reviewer applies accepted
 suggestions to `.agents/prompts/review_codebase.md` before starting a new audit cycle.
-Agents must not self-modify `review_codebase.md`.
+Agents must not self-modify `review_codebase.md` without explicit approval by human.
 
 ---
 

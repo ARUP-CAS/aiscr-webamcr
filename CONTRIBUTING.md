@@ -1,7 +1,9 @@
 # Přispívání do projektu — AMČR (aiscr-webamcr)
 
-Děkujeme za zájem o přispívání do projektu!  
+Děkujeme za zájem o přispívání do projektu!
 Tento dokument popisuje vývojový postup, konvence a pravidla pro přispěvatele.
+
+> Pro AI agenty viz také [AGENTS.md](AGENTS.md) — specifická pravidla pro chování agentů.
 
 ---
 
@@ -131,7 +133,7 @@ Pravidla:
 - `:return:` a `:raises:` vždy popisují konkrétní chování
 - `:param:` popisuje vliv parametru na chování
 
-Kontrola docstringů před odesláním PR (viz `AGENTS.md` — Docstring review checklist):
+Kontrola docstringů před odesláním PR:
 
 ```powershell
 # Hledej zbývající Google-style bloky
@@ -277,8 +279,37 @@ další čekající task dle registru v `.agents/prompts/review_codebase.md`.
 
 ---
 
+## Správa dokumentace repozitáře
+
+Každý dokumentační soubor má jednu cílovou skupinu a jednu zodpovědnost.
+Pravidla se neopakují — místo toho se používají křížové odkazy.
+
+| Soubor | Cílová skupina | Zodpovědnost |
+| --- | --- | --- |
+| `README.md` / `README_en.md` | GitHub návštěvníci | Přehled projektu, quick start |
+| `CONTRIBUTING.md` | Vývojáři (lidé i agenti) | Konvence kódu, větve, PR, testování |
+| `CLAUDE.md` | Claude Code | Prostředí, příkazy, rychlá reference |
+| `AGENTS.md` | AI agenti (obecně) | Governance, chování, scope |
+| `.agents/prompts/review_codebase.md` | Review agent sessions | Instrukce pro review tasky |
+| `.agents/config/review_config.yaml` | Review agent runtime | Konfigurační hodnoty |
+
+Pravidla:
+
+1. **Neopakujte pravidla** — pokud je pravidlo definováno v `CONTRIBUTING.md`,
+   ostatní soubory na něj odkazují místo kopírování.
+2. **Kanonický zdroj** — pro každý typ informace existuje právě jeden
+   kanonický soubor (viz tabulka výše).
+3. **README soubory** jsou záměrně samostatné (self-contained) pro GitHub
+   návštěvníky. Duplikace tech stacku a základního přehledu je přijatelná.
+4. **Při změně pravidla** aktualizujte kanonický zdroj a ověřte, že
+   odkazující soubory stále správně odkazují.
+5. **README.md a README_en.md** musí být udržovány synchronně — jsou
+   překlady téhož obsahu.
+
+---
+
 ## Kontakt
 
-- **Issues:** https://github.com/ARUP-CAS/aiscr-webamcr/issues
-- **Dokumentace:** https://aiscr-webamcr.readthedocs.io/cs/stable/
-- **Archeologický ústav AV ČR, Praha:** amcr@arup.cas.cz
+- **Issues:** <https://github.com/ARUP-CAS/aiscr-webamcr/issues>
+- **Dokumentace:** <https://aiscr-webamcr.readthedocs.io/cs/stable/>
+- **Archeologický ústav AV ČR, Praha:** <amcr@arup.cas.cz>
