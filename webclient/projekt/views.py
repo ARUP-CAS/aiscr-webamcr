@@ -111,7 +111,7 @@ from dokument.models import Dokument, DokumentCast
 from dokument.views import odpojit, pripojit
 from fedora_management.decorators import handle_fedora_error
 from heslar.hesla import HESLAR_PRISTUPNOST
-from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_BADATELSKY_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie
 from oznameni.forms import OznamovatelProjektCreateForm
@@ -502,6 +502,7 @@ def edit(request, ident_cely):
     if request.method == "POST":
         if request.POST.get("hlavni_katastr") is not None:
             request.POST = katastr_text_to_id(request)
+        old_typ_projektu = projekt.typ_projektu
         form = EditProjektForm(
             request.POST,
             instance=projekt,
@@ -511,6 +512,21 @@ def edit(request, ident_cely):
         )
         if form.is_valid():
             logger.debug("projekt.views.edit.form_valid")
+            new_typ = form.cleaned_data.get("typ_projektu")
+            if new_typ and new_typ != old_typ_projektu:
+                if new_typ.id in [TYP_PROJEKTU_ZACHRANNY_ID, TYP_PROJEKTU_BADATELSKY_ID]:
+                    if projekt.casti_dokumentu.exists() or projekt.samostatne_nalezy.exists():
+                        form.add_error(
+                            "typ_projektu",
+                            _("projekt.views.edit.typ_projektu_error.zachranny_badatelsky"),
+                        )
+                elif new_typ.id == TYP_PROJEKTU_PRUZKUM_ID:
+                    if projekt.akce_set.exists():
+                        form.add_error(
+                            "typ_projektu",
+                            _("projekt.views.edit.typ_projektu_error.pruzkum"),
+                        )
+        if form.is_valid():
             if (form.fields["coordinate_x1"].disabled or form.fields["coordinate_x2"].disabled) and (
                 projekt.geom is not None and len(projekt.geom) > 0
             ):
