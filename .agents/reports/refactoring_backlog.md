@@ -61,10 +61,52 @@
 - **Doporučení:** Rozdělit na amcr_base (base modely) a xml_generator (čistě XML generátor).
 - **Náročnost:** M
 
+### [T06] CELERY-01: Zpevnit error handling dlouhých Celery úloh
+- **Soubory:** `webclient/cron/tasks.py`
+- **Popis:** Úlohy `update_all_redis_snapshots`, `update_single_redis_snapshot` a `update_materialized_views` nemají centrální ošetření výjimek. Chyba uprostřed dávky (např. výpadek Redis/DB nebo problém v REFRESH MATERIALIZED VIEW) ukončí celý task bez shrnutí a bez přehledného logu o částečném úspěchu.
+- **Doporučení:** Zabalit hlavní smyčky/volání do `try/except` bloků s logováním shrnutí (počet zpracovaných položek, aktuální třída/model, jméno materializovaného pohledu) a konzistentním chováním při selhání.
+- **Náročnost:** S
+
+### [T06] CELERY-02: Timeout a error handling pro externí HTTP volání
+- **Soubory:** `webclient/cron/tasks.py`
+- **Popis:** Úloha `call_digiarchiv_update_task` volá `requests.get(settings.DIGIARCHIV_URL)` bez explicitního `timeout` a bez `try/except`. Při výpadku nebo pomalé odpovědi služby může worker čekat neúměrně dlouho a logy neobsahují jasnou informaci o příčině.
+- **Doporučení:** Přidat rozumný `timeout` a obalit volání do `try/except` s logováním chyby; volitelně nastavit retry strategii přes Celery (např. countdown/max_retries).
+- **Náročnost:** S
+
+### [T06] CELERY-03: Omezit polling vzor v check_hlidaci_pes
+- **Soubory:** `webclient/notifikace_projekty/tasks.py`
+- **Popis:** Task `check_hlidaci_pes` čeká v while-smyčce (`time.sleep(0.5)`) na vytvoření projektu v DB, bez horního časového limitu. Při chybné konfiguraci nebo rollbacku transakce může běžet déle, než je žádoucí, a blokovat worker.
+- **Doporučení:** Preferovat plánování tasku pomocí `transaction.on_commit()` (spuštění až po potvrzení transakce) nebo přidat maximální počet iterací / časový budget s bezpečným ukončením a logem po jeho překročení.
+- **Náročnost:** M
+
 ### [T02] REQ-01: Smíšené produkční a vývojové závislosti v requirements.txt
 - **Soubory:** `webclient/requirements.txt`
 - **Popis:** Selenium, debug-toolbar, pre-commit, coverage, sphinx aj. jsou v produkčním requirements.txt. Produkční image je zbytečně velký.
 - **Doporučení:** Rozdělit na requirements.txt, requirements-dev.txt, requirements-test.txt.
+- **Náročnost:** S
+
+### [T08] DOCS-01: Oddělit requirements pro build dokumentace
+- **Soubory:** `readthedocs.yaml`, `webclient/requirements.txt`
+- **Popis:** Read the Docs build instaluje kompletní `webclient/requirements.txt`, který obsahuje i vývojové a testovací balíčky (Selenium, debug-toolbar, Sphinx atd.). Pro build dokumentace to není nutné a zvyšuje čas i riziko konfliktů závislostí.
+- **Doporučení:** Vytvořit samostatný soubor (např. `docs/requirements.txt`) s minimální sadou balíků pro dokumentaci a v `.readthedocs.yaml` přepnout instalaci na tento soubor.
+- **Náročnost:** S
+
+### [T08] DOCS-02: Zlepšit error handling v generátoru licencí
+- **Soubory:** `docs/licenses/convert_to_rst.py`
+- **Popis:** Skript spouští `pip-licenses` přes `subprocess.run` a bez kontroly návratového kódu rovnou parsuje JSON výstup. Při chybě nástroje nebo nevalidním výstupu skončí tracebackem bez srozumitelné hlášky.
+- **Doporučení:** Kontrolovat `returncode` a obalit `json.loads` do `try/except` s jasnou chybovou zprávou (např. chybějící `pip-licenses`), případně vracet nenulový exit kód pro jasné selhání v CI.
+- **Náročnost:** S
+
+### [T08] DOCS-03: Vynutit úplnost docstringů pro Selenium testy
+- **Soubory:** `docs/generate_selenium_test_docs.py`
+- **Popis:** Generátor Selenium dokumentace počítá s tím, že všechny testy mají docstring a povinné sekce `Steps` a `Expected`. Chybějící sekce vede k neúplné dokumentaci bez jasného upozornění.
+- **Doporučení:** Doplnit kontrolu a souhrnný report chybějících sekcí/docstringů a při běhu v CI (např. v pre-commit hooku) možnost selhat build, pokud nejsou splněna minimální dokumentační pravidla.
+- **Náročnost:** M
+
+### [T09] CI-01: Přidat Dependabot a lehký CodeQL workflow
+- **Soubory:** `.github/` (nové workflow a konfigurace)
+- **Popis:** Aktuální pipeline používá Docker Scout a Trivy pro skenování Docker image, ale nemá samostatnou kontrolu Python závislostí (Dependabot) ani statickou analýzu kódu (CodeQL). Riziko, že zranitelné knihovny v kódu projdou bez upozornění, je vyšší.
+- **Doporučení:** Přidat `.github/dependabot.yml` pro Python a GitHub Actions a jednoduchý CodeQL workflow pro Python (např. běh na push/PR do větve `dev`), aby doplnil image-level scanning.
 - **Náročnost:** S
 
 ## Nízká priorita
@@ -189,3 +231,15 @@
 - **Doporučení:** Přidat `pip audit` nebo `safety check` jako CI krok.
 - **Náročnost:** S
 - **Závažnost:** Střední
+
+### [T07] FRONT-01: Extrahovat větší inline skripty z base.html
+- **Soubory:** `webclient/templates/base.html`
+- **Popis:** Šablona `base.html` obsahuje několik větších inline skriptů (inicializace datepickerů, automatické skrývání flash zpráv, periodická kontrola autentizace, jazykový přepínač). Logika je korektní, ale hůře znovupoužitelná a méně přehledná v inline podobě.
+- **Doporučení:** Přesunout tyto bloky do samostatných JS souborů ve `static/js/` (např. `datepicker-init.js`, `messages.js`, `auth_check.js`, `language_switcher.js`) a v šabloně je načítat přes `{% static %}`.
+- **Náročnost:** S
+
+### [T07] FRONT-02: Zvážit bundler/minifikaci vlastního JS
+- **Soubory:** `webclient/static/js/`
+- **Popis:** Vlastní JavaScript (mapové skripty, helpery, theme-toggle) je servírován jako více samostatných souborů bez bundleru a minifikace. V produkci to zvyšuje počet HTTP požadavků a velikost assetů.
+- **Doporučení:** Zvážit nasazení lehkého bundleru (např. Webpack/Vite/rollup) nebo alespoň minifikačního kroku v rámci stávajícího `django-compressor` nastavení pro vlastní JS.
+- **Náročnost:** M

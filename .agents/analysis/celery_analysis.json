@@ -1,0 +1,214 @@
+{
+  "_meta": {
+    "status": "done — T06",
+    "needs_agent_update": false
+  },
+  "configuration": {
+    "broker": "Redis — viz CELERY_BROKER_URL v webclient/webclient/settings/base.py (redis://<redis_host>:<redis_port>)",
+    "backend": "django-db — viz CELERY_RESULT_BACKEND v webclient/webclient/settings/base.py",
+    "worker_service": "celery_worker (dle docker-compose.yml)",
+    "beat_service": "celery_beat (dle docker-compose.yml)",
+    "scheduler": "django_celery_beat.schedulers:DatabaseScheduler (beat schedule uložena v DB, není v repozitáři)"
+  },
+  "tasks": [
+    {
+      "name": "send_notifications_enz",
+      "module": "webclient.cron.tasks",
+      "description": "Denní odesílání notifikací E‑NZ‑01 a E‑NZ‑02 podle data odevzdání NZ.",
+      "external_io": ["email"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "send_notification_enz03",
+      "module": "webclient.cron.tasks",
+      "description": "Denní kontrola a odeslání emailů E‑NZ‑03 pro akce čekající na archivaci.",
+      "external_io": ["email"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "send_notifications_en",
+      "module": "webclient.cron.tasks",
+      "description": "Denní odesílání notifikací E‑N‑01 a E‑N‑02 podle seznamu projektů.",
+      "external_io": ["email"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "delete_personal_data_canceled_projects",
+      "module": "webclient.cron.tasks",
+      "description": "Anonymizace osobních údajů u projektů zrušených před více než rokem a archivace dokumentace.",
+      "external_io": ["Fedora", "DB"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "delete_reporter_data_ten_years",
+      "module": "webclient.cron.tasks",
+      "description": "Po 10 letech maže záznam oznamovatele a archivuje dokumentaci.",
+      "external_io": ["Fedora", "DB", "email"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "change_document_accessibility",
+      "module": "webclient.cron.tasks",
+      "description": "Denní úprava přístupnosti dokumentů podle data zveřejnění, vazeb na AZ a licenční politiky organizace.",
+      "external_io": ["Fedora", "DB", "Redis (cacheops invalidation)"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "delete_unsubmited_projects",
+      "module": "webclient.cron.tasks",
+      "description": "Mazání rozpracovaných projektů (stav vytvořený) starších než 12 hodin včetně souborů ve Fedoře.",
+      "external_io": ["Fedora", "DB"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "cancel_old_projects",
+      "module": "webclient.cron.tasks",
+      "description": "Automatické zrušení starých nezahájených záchranných projektů a odeslání notifikací.",
+      "external_io": ["Fedora", "DB", "email"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "update_snapshot_fields",
+      "module": "webclient.cron.tasks",
+      "description": "Doplnění snapshot polí pro vícero modelů (ExterniZdroj, Dokument, Lokalita, Akce, Historie).",
+      "external_io": ["DB"],
+      "uses_transactions": false,
+      "has_error_handling": true,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "update_all_redis_snapshots",
+      "module": "webclient.cron.tasks",
+      "description": "Hromadná rekonstrukce Redis snapshotů pro hlavní doménové modely.",
+      "external_io": ["Redis", "DB"],
+      "uses_transactions": false,
+      "has_error_handling": false,
+      "idempotent_by_design": true,
+      "notes": "Dlouhotrvající iterace přes velké tabulky; používá iterator(chunk_size=1000) a pipeline."
+    },
+    {
+      "name": "update_single_redis_snapshot",
+      "module": "webclient.cron.tasks",
+      "description": "Aktualizace jednoho Redis snapshotu podle class_name a PK.",
+      "external_io": ["Redis", "DB"],
+      "uses_transactions": false,
+      "has_error_handling": false,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "update_materialized_views",
+      "module": "webclient.cron.tasks",
+      "description": "REFRESH MATERIALIZED VIEW pro více heat‑map pohledů v jedné dávce.",
+      "external_io": ["DB"],
+      "uses_transactions": false,
+      "has_error_handling": false,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "write_value_to_redis",
+      "module": "webclient.cron.tasks",
+      "description": "Pomocný task pro zápis klíč‑hodnota do Redis.",
+      "external_io": ["Redis"],
+      "uses_transactions": false,
+      "has_error_handling": false,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "call_digiarchiv_update_task",
+      "module": "webclient.cron.tasks",
+      "description": "HTTP volání DIGIARCHIV_URL pro spuštění aktualizace na externí službě.",
+      "external_io": ["HTTP"],
+      "uses_transactions": false,
+      "has_error_handling": false,
+      "idempotent_by_design": true
+    },
+    {
+      "name": "run_data_import",
+      "module": "webclient.cron.tasks",
+      "description": "Komplexní import dat a souborů řízený přes Redis frontu a Fedora transakce.",
+      "external_io": ["Redis", "DB", "Filesystem", "Fedora"],
+      "uses_transactions": true,
+      "has_error_handling": true,
+      "idempotent_by_design": false,
+      "notes": "Používá transaction.atomic, per‑record Fedora transakce a detailní logování; opakované spuštění se stejnými vstupy může mít vedlejší efekty (INSERT/UPDATE/DELETE)."
+    },
+    {
+      "name": "check_hlidaci_pes",
+      "module": "webclient.notifikace_projekty.tasks",
+      "description": "Po založení projektu čeká na jeho uložení a rozesílá notifikace hlídacím psům dle území a typu projektu.",
+      "external_io": ["DB", "email"],
+      "uses_transactions": false,
+      "has_error_handling": false,
+      "idempotent_by_design": true,
+      "notes": "Polling nad DB (sleep smyčka) do vytvoření projektu, bez globálního timeoutu."
+    }
+  ],
+  "beat_schedule": {
+    "source": "Spravováno přes django_celery_beat v databázi (není součástí repozitáře). Konkrétní periodické rozvrhy nelze z kódu vyčíst."
+  },
+  "error_handling_issues": [
+    {
+      "task": "update_all_redis_snapshots",
+      "module": "webclient.cron.tasks",
+      "severity": "Střední",
+      "description": "Dlouhotrvající hromadné generování Redis snapshotů nemá žádné centrální try/except; chyba kdekoliv v iteraci ukončí celý průchod bez jednoznačného shrnutí výsledku.",
+      "recommendation": "Zabalit hlavní smyčku do try/except s logováním shrnutí (počet úspěšně zpracovaných záznamů, třída modelu, klíčové parametry)."
+    },
+    {
+      "task": "update_single_redis_snapshot",
+      "module": "webclient.cron.tasks",
+      "severity": "Nízká",
+      "description": "Chybí ošetření výjimek při načítání záznamu z DB; DoesNotExist vyústí v neodchycenou výjimku, ačkoliv jde o obsloužitelný stav.",
+      "recommendation": "Zachytit DoesNotExist/ValueError a zalogovat chybějící záznam místo pádu tasku."
+    },
+    {
+      "task": "update_materialized_views",
+      "module": "webclient.cron.tasks",
+      "severity": "Nízká",
+      "description": "Spouští několik REFRESH MATERIALIZED VIEW příkazů v jednom SQL stringu bez lokálního try/except; chyba v jedné view ukončí celou dávku bez doplňujícího log kontextu.",
+      "recommendation": "Obalit execute() do try/except s logováním konkrétní SQL chyby; případně spouštět jednotlivé REFRESH příkazy samostatně."
+    }
+  ],
+  "race_condition_candidates": [
+    {
+      "task": "check_hlidaci_pes",
+      "module": "webclient.notifikace_projekty.tasks",
+      "severity": "Střední",
+      "description": "Task čeká v while‑smyčce (sleep 0.5s) na vytvoření Projektu v DB. Při extrémním zpoždění transakce nebo rollbacku zůstane smyčka běžet déle, než je nutné.",
+      "recommendation": "Preferovat použití transaction.on_commit() při plánování tasku nebo přidat horní limit počtu pokusů/času čekání."
+    }
+  ],
+  "missing_idempotence": [],
+  "timeout_issues": [
+    {
+      "task": "call_digiarchiv_update_task",
+      "module": "webclient.cron.tasks",
+      "severity": "Střední",
+      "description": "Používá requests.get(settings.DIGIARCHIV_URL) bez timeoutu a bez ošetření výjimek; při výpadku služby může worker viset po dobu socket timeoutu OS.",
+      "recommendation": "Volat requests.get(url, timeout=<rozumná_hodnota>) a obalit do try/except s logováním selhání; volitelně přidat retry strategii přes Celery."
+    },
+    {
+      "task": "check_hlidaci_pes",
+      "module": "webclient.notifikace_projekty.tasks",
+      "severity": "Nízká",
+      "description": "Polling smyčka nad DB nemá definovaný maximální čas běhu; při chybné konfiguraci může task čekat dlouho na vznik projektu.",
+      "recommendation": "Přidat maximální počet iterací nebo time‑budget a po jeho překročení task bezpečně ukončit s logem."
+    }
+  ]
+}

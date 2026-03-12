@@ -1316,13 +1316,20 @@ def check_stav_changed(request, zaznam):
 def redirect_ident_view(request, ident_cely):
     """
     Přesměruje uživatele na detail záznamu nalezeného podle identifikátoru.
+    Pokud identifikátor není nalezen mezi aktuálními, pokusí se hledat mezi dočasnými v historii.
 
     :param request: Parametr ``request`` předává se do volání ``redirect()``, ``get_absolute_url()``, vstupuje do návratové hodnoty.
     :param ident_cely: Hledaný identifikátor záznamu.
 
         :return: Vrací výsledek volání ``redirect()``.
     """
-    object = get_record_from_ident(ident_cely)
+    try:
+        object = get_record_from_ident(ident_cely)
+    except Http404:
+        h = next(
+            iter(Historie.objects.select_related("vazba").filter(poznamka__icontains=ident_cely).order_by()[:1]), None
+        )
+        object = h.vazba.navazany_objekt if h and h.vazba else None
     if object:
         try:
             if isinstance(object, Pian):

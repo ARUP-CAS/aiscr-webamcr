@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojFilter(HistorieFilter, FilterSet):
-    """Třída pro zakladní filtrování externího zdroju a jejich potomků."""
+    """Třída pro základní filtrování externího zdroju a jejich potomků."""
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = "EZ"
     INCLUDE_KAT_TYP_ZMENY = False
@@ -38,7 +38,7 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
 
     ident_cely = CharFilter(
         field_name="ident_cely",
-        lookup_expr="icontains",
+        method="filter_ident_cely",
         label=_("ez.filters.identCely.label"),
         distinct=True,
     )
@@ -141,6 +141,8 @@ class ExterniZdrojFilter(HistorieFilter, FilterSet):
                 queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            if "poznamka__icontains" in historie:
+                queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
             queryset = queryset.filter(queryset_history)
 
         return queryset
@@ -273,9 +275,10 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),

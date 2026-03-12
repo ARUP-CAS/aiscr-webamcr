@@ -1,7 +1,9 @@
 # Přispívání do projektu — AMČR (aiscr-webamcr)
 
-Děkujeme za zájem o přispívání do projektu!  
+Děkujeme za zájem o přispívání do projektu!
 Tento dokument popisuje vývojový postup, konvence a pravidla pro přispěvatele.
+
+> Pro AI agenty viz také [AGENTS.md](AGENTS.md) — specifická pravidla pro chování agentů.
 
 ---
 
@@ -131,7 +133,7 @@ Pravidla:
 - `:return:` a `:raises:` vždy popisují konkrétní chování
 - `:param:` popisuje vliv parametru na chování
 
-Kontrola docstringů před odesláním PR (viz `AGENTS.md` — Docstring review checklist):
+Kontrola docstringů před odesláním PR:
 
 ```powershell
 # Hledej zbývající Google-style bloky
@@ -253,32 +255,61 @@ Agenti **nesmějí** cílit PR do `dev`.
 
 Podrobnosti o chování agentů viz `AGENTS.md`.
 
-Technický dluh a auditní výstupy jsou evidovány v `docs_agents/`.
+Technický dluh a auditní výstupy jsou evidovány v `.agents/`.
 
 ### Jak spustit review session
 
 Otevřete nový kontext AI agenta a jako první zprávu vložte:
 
 ```
-Přečti docs_agents/PROMPT.md a pokračuj v review.
+Přečti .agents/prompts/review_codebase.md a pokračuj v review.
 ```
 
-Agent si načte `AGENTS.md`, stav z `docs_agents/review_cache.json` a zahájí
-další čekající task dle registru v `docs_agents/PROMPT.md`.
+Agent si načte `AGENTS.md`, stav z `.agents/config/review_cache.json` a zahájí
+další čekající task dle registru v `.agents/prompts/review_codebase.md`.
 
 ---
 
 ### Postup pro maintainera při review agentní větve
 
-1. Zkontrolujte `docs_agents/review_reports/<task_id>.md`.
-2. Ověřte `docs_agents/bugs.md`.
-3. Zkontrolujte `docs_agents/refactoring_backlog.md`.
+1. Zkontrolujte `.agents/reports/review_reports/<task_id>.md`.
+2. Ověřte `.agents/reports/bugs.md`.
+3. Zkontrolujte `.agents/reports/refactoring_backlog.md`.
 4. Schvalte nebo zamítněte PR.
+
+---
+
+## Správa dokumentace repozitáře
+
+Každý dokumentační soubor má jednu cílovou skupinu a jednu zodpovědnost.
+Pravidla se neopakují — místo toho se používají křížové odkazy.
+
+| Soubor | Cílová skupina | Zodpovědnost |
+| --- | --- | --- |
+| `README.md` / `README_en.md` | GitHub návštěvníci | Přehled projektu, quick start |
+| `CONTRIBUTING.md` | Vývojáři (lidé i agenti) | Konvence kódu, větve, PR, testování |
+| `CLAUDE.md` | Claude Code | Prostředí, příkazy, rychlá reference |
+| `AGENTS.md` | AI agenti (obecně) | Governance, chování, scope |
+| `.agents/prompts/review_codebase.md` | Review agent sessions | Instrukce pro review tasky |
+| `.agents/config/review_config.yaml` | Review agent runtime | Konfigurační hodnoty |
+
+Pravidla:
+
+1. **Neopakujte pravidla** — pokud je pravidlo definováno v `CONTRIBUTING.md`,
+   ostatní soubory na něj odkazují místo kopírování.
+2. **Kanonický zdroj** — pro každý typ informace existuje právě jeden
+   kanonický soubor (viz tabulka výše).
+3. **README soubory** jsou záměrně samostatné (self-contained) pro GitHub
+   návštěvníky. Duplikace tech stacku a základního přehledu je přijatelná.
+4. **Při změně pravidla** aktualizujte kanonický zdroj a ověřte, že
+   odkazující soubory stále správně odkazují.
+5. **README.md a README_en.md** musí být udržovány synchronně — jsou
+   překlady téhož obsahu.
 
 ---
 
 ## Kontakt
 
-- **Issues:** https://github.com/ARUP-CAS/aiscr-webamcr/issues
-- **Dokumentace:** https://aiscr-webamcr.readthedocs.io/cs/stable/
-- **Archeologický ústav AV ČR, Praha:** amcr@arup.cas.cz
+- **Issues:** <https://github.com/ARUP-CAS/aiscr-webamcr/issues>
+- **Dokumentace:** <https://aiscr-webamcr.readthedocs.io/cs/stable/>
+- **Archeologický ústav AV ČR, Praha:** <amcr@arup.cas.cz>

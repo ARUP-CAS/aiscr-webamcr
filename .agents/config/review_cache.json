@@ -1,50 +1,66 @@
 {
   "schema_version": "2",
   "initialized_at": "2026-03-07",
-  "last_updated": "2026-03-08T17:00:00Z",
+  "last_updated": "2026-03-11T12:00:00Z",
   "tasks": {
     "T01": {
       "status": "done",
       "completed_at": "2026-03-08",
-      "report_path": "docs_agents/review_reports/T01.md"
+      "report_path": ".agents/reports/review_reports/T01.md"
     },
     "T02": {
       "status": "done",
       "completed_at": "2026-03-08",
-      "report_path": "docs_agents/review_reports/T02.md"
+      "report_path": ".agents/reports/review_reports/T02.md"
     },
     "T03": {
       "status": "done",
       "completed_at": "2026-03-08",
-      "report_path": "docs_agents/review_reports/T03b.md",
+      "report_path": ".agents/reports/review_reports/T03b.md",
       "sub_tasks": {
         "T03a": {
           "status": "done",
           "completed_at": "2026-03-08",
           "scope": "Modely přímo přečteny: core, projekt, arch_z, uzivatel. Raw SQL / extra() vyhledávání celým repozitářem.",
-          "report_path": "docs_agents/review_reports/T03.md"
+          "report_path": ".agents/reports/review_reports/T03.md"
         },
         "T03b": {
           "status": "done",
           "completed_at": "2026-03-08",
           "scope": "Modely přímo přečteny: heslar, pian, pas, adb, oznameni, xml_generator. ORM vzory ve views (cílené Grep). GitHub Issues: nedostupné bez autentizace, zdokumentováno.",
-          "report_path": "docs_agents/review_reports/T03b.md"
+          "report_path": ".agents/reports/review_reports/T03b.md"
         }
       }
     },
-    "T04": { "status": "done", "completed_at": "2026-03-08", "report_path": "docs_agents/review_reports/T04.md" },
-    "T05": { "status": "done", "completed_at": "2026-03-08", "report_path": "docs_agents/review_reports/T05.md" },
-    "T06": { "status": "pending", "completed_at": null, "report_path": null },
-    "T07": { "status": "pending", "completed_at": null, "report_path": null },
-    "T08": { "status": "pending", "completed_at": null, "report_path": null },
-    "T09": { "status": "pending", "completed_at": null, "report_path": null },
+    "T04": { "status": "done", "completed_at": "2026-03-08", "report_path": ".agents/reports/review_reports/T04.md" },
+    "T05": { "status": "done", "completed_at": "2026-03-08", "report_path": ".agents/reports/review_reports/T05.md" },
+    "T06": {
+      "status": "done",
+      "completed_at": "2026-03-11",
+      "report_path": ".agents/reports/review_reports/T06.md"
+    },
+    "T07": {
+      "status": "done",
+      "completed_at": "2026-03-11",
+      "report_path": ".agents/reports/review_reports/T07.md"
+    },
+    "T08": {
+      "status": "done",
+      "completed_at": "2026-03-11",
+      "report_path": ".agents/reports/review_reports/T08.md"
+    },
+    "T09": {
+      "status": "done",
+      "completed_at": "2026-03-11",
+      "report_path": ".agents/reports/review_reports/T09.md"
+    },
     "T10": { "status": "pending", "completed_at": null, "report_path": null },
     "T11": { "status": "blocked", "completed_at": null, "report_path": null }
   },
   "file_hashes": {
     "AGENTS.md": {
-      "sha256": "7980bd248e577e55d201f4466a79f45eb9e847ec26def83dd6ae8c049bffd4fd",
-      "last_reviewed": "2026-03-08",
+      "sha256": "f4393081af3541efb8e4001acd50affc8a3fa3b194c01d8173eef058ff7475f0",
+      "last_reviewed": "2026-03-11",
       "task_id": "T01"
     },
     "Dockerfile": {

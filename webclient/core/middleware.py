@@ -5,9 +5,9 @@ from core.connectors import RedisConnector
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.utils import OperationalError
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy
 
 from redis import ResponseError
@@ -123,6 +123,50 @@ class ErrorMiddleware:
         if isinstance(exception, OperationalError) and "canceling statement due to statement timeout" in str(exception):
             context = {"exception": exception}
             return render(request, "db_timeout_error.html", context, status=504)
+
+
+class InactiveUserMiddleware:
+    """
+    Middleware zachytávající ``ValidationError`` s kódem ``inactive``,
+    která může vzniknout při vyhodnocení ``request.user`` u deaktivovaného
+    uživatele s stále aktivní session.
+
+    Pokud k této chybě dojde, session se zruší a uživatel je přesměrován
+    na přihlašovací stránku s varovnou hláškou.
+    """
+
+    def __init__(self, get_response):
+        """
+        Inicializuje middleware.
+
+        :param get_response: Callable z middleware řetězce,
+                             který zpracuje požadavek a vrátí response.
+        """
+        self.get_response = get_response
+
+    def __call__(self, request):
+        """
+        Obalí zpracování požadavku a zachytí ``ValidationError`` s kódem
+        ``inactive``, která může vzniknout při vyhodnocení ``request.user``.
+
+        Pokud je chyba zachycena, session se zruší a uživatel je
+        přesměrován na přihlašovací stránku.
+
+        :param request: Instance ``HttpRequest``.
+        :return: Standardní ``response`` nebo přesměrování na login.
+        """
+        try:
+            return self.get_response(request)
+
+        except ValidationError as e:
+            if getattr(e, "code", None) == "inactive" or any(
+                err.code == "inactive" for err in getattr(e, "error_list", [])
+            ):
+                request.session.flush()
+                messages.warning(request, str(e))
+                return redirect("django_authentication_login")
+
+            raise
 
 
 class StatusMessageMiddleware:

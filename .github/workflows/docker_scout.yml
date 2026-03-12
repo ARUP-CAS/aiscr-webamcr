@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Authenticate to the container registry
       - name: Authenticate to registry ${{ env.REGISTRY }}
@@ -40,7 +40,7 @@ jobs:
       # Extract metadata (tags, labels) for Docker
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           labels: |
@@ -54,7 +54,7 @@ jobs:
       # (don't push on PR, load instead)
       - name: Build and push Docker image
         id: build-and-push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           file: Dockerfile
           sbom: ${{ github.event_name != 'pull_request' }}
@@ -83,7 +83,7 @@ jobs:
       # Extract metadata (tags, labels) for Docker
       #- name: Extract Docker metadata - proxy
       #  id: meta-proxy
-      #  uses: docker/metadata-action@v5
+      #  uses: docker/metadata-action@v6
       #  with:
       #    images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PROXY }}
       #    labels: |
@@ -97,7 +97,7 @@ jobs:
       # (don't push on PR, load instead)
       #- name: Build and push Docker image - proxy
       #  id: build-and-push-proxy
-      #  uses: docker/build-push-action@v6
+      #  uses: docker/build-push-action@v7
       #  with:
       #    context: "{{defaultContext}}:proxy"
       #    sbom: ${{ github.event_name != 'pull_request' }}
@@ -126,7 +126,7 @@ jobs:
       # Extract metadata (tags, labels) for Docker
       #- name: Extract Docker metadata - Redis
       #  id: meta-redis
-      #  uses: docker/metadata-action@v5
+      #  uses: docker/metadata-action@v6
       #  with:
       #    images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_REDIS }}
       #    labels: |
@@ -140,7 +140,7 @@ jobs:
       # (don't push on PR, load instead)
       #- name: Build and push Docker image - Redis
       #  id: build-and-push-redis
-      #  uses: docker/build-push-action@v6
+      #  uses: docker/build-push-action@v7
       #  with:
       #    context: "{{defaultContext}}:redis"
       #    sbom: ${{ github.event_name != 'pull_request' }}
