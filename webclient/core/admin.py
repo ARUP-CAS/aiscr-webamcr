@@ -1,11 +1,7 @@
 import csv
-import io
 import json
 import logging
 import os
-import random
-import string
-import zipfile
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -20,27 +16,14 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
-from fedora_management.forms import UpdateMetadataFileForm
-from pid.forms import UpdateDocumentObjectIdentifierFileForm
 from polib import pofile
 from uzivatel.models import User
 
-from .connectors import RedisConnector
 from .constants import ROLE_NASTAVENI_ODSTAVKY
 from .exceptions import WrongCSVError, WrongSheetError
-from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
-from .import_data_mappers import (
-    ImportDataError,
-    ImportDataIntegrityError,
-    ImportDataUnsupportedFileError,
-    ImportDataUnsupportedFilesError,
-    ImportDataValidationResult,
-    ImportModelMapper,
-    LookupImportField,
-)
+from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
-from .utils import is_maintenance_in_progress
 
 logger = logging.getLogger(__name__)
 

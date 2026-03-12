@@ -1,11 +1,11 @@
-{% load rosetta i18n %}
+{% load i18n %}
 
-{% if app_list or request.user|can_translate%}
+{% if app_list %}
   {% for app in app_list %}
-    <div class="app-{{ app.app_label }} module{% if app.app_url in request.path|urlencode %} current-app{% endif %}">
+    <div class="app-{{ app.app_label }} module">
       <table>
         <caption>
-          <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}core.templates.admin.appList.models{% endblocktranslate %}">{{ app.name }}</a> <!-- Models in the {{ name }} application -->
+          {% if app.app_url %}<a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}core.templates.admin.appList.models{% endblocktranslate %}">{{ app.name }}</a>{% else %}{{ app.name }}{% endif %}
         </caption>
         {% for model in app.models %}
           <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
@@ -35,60 +35,6 @@
       </table>
     </div>
   {% endfor %}
-  {% if request.user.is_superuser %}
-    <div class="app-rosetta module">
-      <table>
-        <caption>
-          {% trans "core.templates.admin.appList.fedora_management" %}
-        </caption>
-        <tbody>
-          <tr>
-            <th scope="row" colspan="3"><a href="{% url 'admin:update_metadata' %}">{% trans "core.templates.admin.appList.update_metadata" %}</a></th>
-            <td></td>
-            </tr>
-          </tbody>
-      </table>
-    </div>
-    <div class="app-rosetta module">
-      <table>
-        <caption>
-          {% trans "core.templates.admin.appList.doi_management" %}
-        </caption>
-        <tbody>
-          <tr>
-            <th scope="row" colspan="3"><a href="{% url 'admin:update_doi' %}">{% trans "core.templates.admin.appList.update_doi" %}</a></th>
-            <td></td>
-            </tr>
-          </tbody>
-      </table>
-    </div>
-    <div class="app-rosetta module">
-      <table>
-        <caption>
-          {% trans "core.templates.admin.appList.import_data" %}
-        </caption>
-        <tbody>
-          <tr>
-            <th scope="row" colspan="3"><a href="{% url 'admin:import_data' %}">{% trans "core.templates.admin.appList.import_data" %}</a></th>
-            <td></td>
-            </tr>
-          </tbody>
-      </table>
-    </div>
-  {% endif %}
-  {% if request.user|can_translate  %}
-    <div class="app-rosetta module">
-        <table>
-        <caption>
-            <a class="section" href="{% url 'rosetta-file-list' po_filter='project' %}">Rosetta</a>
-        </caption>
-            <tbody><tr>
-                <th scope="row"><a href="{% url 'rosetta-file-list' po_filter='project' %}">{% trans "core.templates.admin.appList.translations" %}</a></th>
-                <td colspan="2"><a href="{% url 'rosetta-file-list' po_filter='project' %}" class="changelink">{% trans "core.templates.admin.appList.change" %}</a></td>
-            </tr>
-        </tbody></table>
-    </div>
-  {% endif %}
 {% else %}
   <p>{% translate 'core.templates.admin.appList.noPermissions' %}</p>  <!-- You don’t have permission to view or edit anything. -->
 {% endif %}
