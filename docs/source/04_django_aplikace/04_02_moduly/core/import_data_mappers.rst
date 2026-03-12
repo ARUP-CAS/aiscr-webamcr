@@ -214,6 +214,22 @@ Třídy
       :return: Výstup funkce odpovídající implementované logice.
 
 
+.. py:class:: FileNameImportField
+
+   Importní pole pro název souboru bez adresářových oddělovačů a skrytého prefixu.
+
+   **Metody:**
+
+   .. py:method:: _process_value()
+
+      Provádí operaci process value.
+
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``decode()``, ``str()``, ``startswith()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :return: Výstup funkce odpovídající implementované logice.
+
+      :raises ImportDataError: Vyvolá se při neplatném názvu souboru.
+
+
 .. py:class:: IntegerImportField
 
    Importní pole pro hodnoty datového typu integer.

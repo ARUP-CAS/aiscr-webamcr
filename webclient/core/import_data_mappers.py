@@ -423,6 +423,31 @@ class BaseImportField:
         return value
 
 
+class FileNameImportField(BaseImportField):
+    """Importní pole pro název souboru bez adresářových oddělovačů a skrytého prefixu."""
+
+    forbidden_separators = ("/", "\\")
+
+    def _process_value(self, value) -> str | None:
+        """
+               Provádí operaci process value.
+
+               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``decode()``, ``str()``, ``startswith()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+        :return: Výstup funkce odpovídající implementované logice.
+
+            :raises ImportDataError: Vyvolá se při neplatném názvu souboru.
+        """
+        if value is None:
+            return None
+        if isinstance(value, bytes):
+            value = value.decode("utf-8")
+        elif not isinstance(value, str):
+            value = str(value)
+        if any(separator in value for separator in self.forbidden_separators) or value.startswith("."):
+            raise ImportDataError(f"Invalid file name value: {value}")
+        return value
+
+
 class IntegerImportField(BaseImportField):
     """Importní pole pro hodnoty datového typu integer."""
 
@@ -756,10 +781,10 @@ class LookupImportField(BaseImportField):
         if str(value).lower() == "nan" or value is None or len(str(value)) == 0:
             return None
         for current_class in self.lookup_model_class_list:
-            saved_records_query = current_class.objects.filter(**{self.lookup_field_name: value})
-            if saved_records_query.exists():
-                self._check_limit_choices_to(saved_records_query.first())
-                self._instance_value = saved_records_query.first()
+            record = current_class.objects.filter(**{self.lookup_field_name: value}).first()
+            if record:
+                self._check_limit_choices_to(record)
+                self._instance_value = record
                 return value
             filtered_records = [
                 record
@@ -927,7 +952,9 @@ class GenericForeignKeyImportField(LookupImportField):
 
         for current_class in self.lookup_model_class_list:
             if current_class.objects.filter(**{self.lookup_field_name: value}).exists():
-                return current_class.objects.get(**{self.lookup_field_name: value})
+                value = current_class.objects.get(**{self.lookup_field_name: value})
+                self._instance_value = value
+                return value
         raise ImportDataMissingReferencedValueError(
             value, ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list])
         )
@@ -3789,6 +3816,7 @@ class SouborMapper(ImportModelMapper):
             :return: Vrací proměnná ``field_mapping``.
         """
         field_mapping = super().get_mapping(include_primary_key)
+        field_mapping["nazev"] = FileNameImportField()
         field_mapping["vazba"] = VazbaLookupImportField(read_field_name="soubory")
         return field_mapping
 

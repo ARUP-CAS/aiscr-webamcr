@@ -1,7 +1,11 @@
 import csv
+import io
 import json
 import logging
 import os
+import random
+import string
+import zipfile
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -19,11 +23,22 @@ from django.utils.translation import gettext as _
 from polib import pofile
 from uzivatel.models import User
 
+from .connectors import RedisConnector
 from .constants import ROLE_NASTAVENI_ODSTAVKY
 from .exceptions import WrongCSVError, WrongSheetError
-from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
+from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
+from .import_data_mappers import (
+    ImportDataError,
+    ImportDataIntegrityError,
+    ImportDataUnsupportedFileError,
+    ImportDataUnsupportedFilesError,
+    ImportDataValidationResult,
+    ImportModelMapper,
+    LookupImportField,
+)
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
+from .utils import is_maintenance_in_progress
 
 logger = logging.getLogger(__name__)
 
@@ -601,6 +616,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
             :return: Vrací výsledek volání ``TemplateResponse()``.
         """
+        from pid.forms import UpdateDocumentObjectIdentifierFileForm
+
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -630,6 +647,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
 
             :return: Vrací výsledek volání ``TemplateResponse()``.
         """
+        from fedora_management.forms import UpdateMetadataFileForm
+
         context = {
             "app_list": self.get_app_list(request),
             **self.each_context(request),
@@ -790,6 +809,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            finally:
+                LookupImportField.records = []
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)
             self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
