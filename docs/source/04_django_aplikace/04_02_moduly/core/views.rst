@@ -801,6 +801,7 @@ Funkce
 .. py:function:: redirect_ident_view(request, ident_cely)
 
    Přesměruje uživatele na detail záznamu nalezeného podle identifikátoru.
+   Pokud identifikátor není nalezen mezi aktuálními, pokusí se hledat mezi dočasnými v historii.
 
    :param request: Parametr ``request`` předává se do volání ``redirect()``, ``get_absolute_url()``, vstupuje do návratové hodnoty.
    :param ident_cely: Hledaný identifikátor záznamu.

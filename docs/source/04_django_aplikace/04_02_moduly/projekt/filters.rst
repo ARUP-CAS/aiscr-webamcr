@@ -21,9 +21,9 @@ Třídy
 
 .. py:class:: KatastrFilterMixin
 
-   Třída pro filtrování záznamu podle katastru, kraje, okresu a popisních údajů.
+   Třída pro filtrování záznamu podle katastru, kraje, okresu a popisných údajů.
 
-   Třída je prepoužita v dalších filtrech.
+   Třída je použita v dalších filtrech.
 
    **Metody:**
 
@@ -59,7 +59,7 @@ Třídy
 
    .. py:method:: filter_popisne_udaje()
 
-      Metoda pro filtrování podle popisních údajů.
+      Metoda pro filtrování podle popisných údajů.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
@@ -94,7 +94,7 @@ Třídy
 
    .. py:method:: filter_popisne_udaje_akce()
 
-      Metoda pro filtrování podle popisních údajů akce.
+      Metoda pro filtrování podle popisných údajů akce.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje_akce``.
@@ -124,7 +124,7 @@ Třídy
 
    .. py:method:: filter_announced_after()
 
-      Metoda pro filtrování podle datumu oznámení od.
+      Metoda pro filtrování podle data oznámení od.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_announced_after``.
@@ -134,7 +134,7 @@ Třídy
 
    .. py:method:: filter_announced_before()
 
-      Metoda pro filtrování podle datumu oznámení do.
+      Metoda pro filtrování podle data oznámení do.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_announced_before``.
@@ -144,7 +144,7 @@ Třídy
 
    .. py:method:: filter_approved_after()
 
-      Metoda pro filtrování podle datumu schválení od.
+      Metoda pro filtrování podle data schválení od.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_approved_after``.
@@ -154,7 +154,7 @@ Třídy
 
    .. py:method:: filter_approved_before()
 
-      Metoda pro filtrování podle datumu schválení do.
+      Metoda pro filtrování podle data schválení do.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_approved_before``.
