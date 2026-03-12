@@ -140,6 +140,8 @@ jobs:
       packages: write
       contents: read
       attestations: write
+      security-events: write
+      artifact-metadata: write
     uses: ./.github/workflows/publish_images.yml
     with:
       tag: ${{ inputs.new_tag }}

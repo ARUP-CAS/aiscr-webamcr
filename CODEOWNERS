@@ -27,15 +27,16 @@
 # Sphinx dokumentace
 /docs/                      @motyc @jhavrlant
 
-# Agentní dokumentace — vyžaduje human review před mergem do test
-/.agents/                   @motyc
-
 # Projektová dokumentace a pravidla
-/AGENTS.md                  @motyc @jhavrlant
-/CONTRIBUTING.md            @motyc @jhavrlant
-/README.md                  @motyc @jhavrlant
-/CODEOWNERS                 @motyc @jhavrlant
-/CITATION.cff               @motyc @jhavrlant
+/CONTRIBUTING.md            @motyc
+/README.md                  @motyc
+/README_en.md               @motyc
+/CITATION.cff               @motyc
+
+# AI review infrastruktura — VŽDY vyžaduje lidský review před mergem
+/.agents/                   @motyc
+/AGENTS.md                  @motyc
+/CLAUDE.md                  @motyc
 
 # Docker a build konfigurace
 /Dockerfile                 @motyc @jhavrlant

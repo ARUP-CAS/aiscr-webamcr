@@ -48,11 +48,14 @@ from __future__ import annotations
 
 import ast
 import re
+import sys
 import textwrap
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+sys.stdout.reconfigure(encoding="utf-8")
 
 START_MARKER = ".. AUTO-GENERATED-SELENIUM-TESTS-START"
 END_MARKER = ".. AUTO-GENERATED-SELENIUM-TESTS-END"

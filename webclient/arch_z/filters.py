@@ -100,7 +100,9 @@ class NumberRangeFilter(RangeFilter):
 
 
 class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
-    """Třída pro zakladní filtrování archeologických záznamů a jejich potomků."""
+    """
+    Třída pro základní filtrování archeologických záznamů a jejich potomků.
+    """
 
     # Filtrování podle historie
 
@@ -117,7 +119,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     ident_cely = CharFilter(
         field_name="archeologicky_zaznam__ident_cely",
-        lookup_expr="icontains",
+        method="filter_ident_cely",
         label=_("arch_z.filters.ArchZaznamFilter.ident_cely.label"),
         distinct=True,
     )
@@ -316,7 +318,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         """
-        Metoda pro filtrování podle poznámky a počtu predmětu.
+        Metoda pro filtrování podle poznámky a počtu předmětů.
 
         :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
         :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_predmet_pozn_pocet``.
@@ -350,6 +352,29 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilterMixin, FilterSet):
             | Q(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__pocet__icontains=value
             )
+        ).distinct()
+
+    def filter_ident_cely(self, queryset, name, value):
+        """
+        Metoda pro filtrování podle identu akce, ale i dočasného.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` nepoužito.
+        :param value: Parametr ``value`` ovlivňuje větvení podmínek, předává se do volání ``filter()``.
+
+            :return: Vrací filtrovaný ``queryset`` podle ``ident_cely`` nebo poznámky z historie.
+        """
+        if not value:
+            return queryset
+
+        # 1) primárně hledat v ident_cely
+        qs = queryset.filter(archeologicky_zaznam__ident_cely__icontains=value)
+        if qs.exists():  # jen když něco najde, tak tím skončit
+            return qs
+
+        # 2) fallback: hledat v Historie.poznamka
+        return queryset.filter(
+            archeologicky_zaznam__historie__historie__poznamka__icontains=value,
         ).distinct()
 
     def __init__(self, *args, **kwargs):
@@ -623,7 +648,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filtr_vedouci(self, queryset, name, value):
         """
-        Metoda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
+        Metoda pro filtrování podle hlavního a vedlejšího vedoucího akce.
 
         :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
         :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_vedouci``.
@@ -637,7 +662,7 @@ class AkceFilter(ArchZaznamFilter):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metoda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
+        Metoda pro filtrování podle lokalizace, upřesnění, uložení, označení akce.
 
         :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
         :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
@@ -808,6 +833,10 @@ class AkceFilter(ArchZaznamFilter):
                 )
             if "typ_zmeny" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            if "poznamka__icontains" in historie:
+                queryset_history &= Q(
+                    archeologicky_zaznam__historie__historie__poznamka__icontains=historie["poznamka__icontains"]
+                )
             queryset = queryset.filter(queryset_history)
         return queryset
 
@@ -895,9 +924,10 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),

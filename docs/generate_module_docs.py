@@ -31,6 +31,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+sys.stdout.reconfigure(encoding="utf-8")
+
 # Define paths
 docs_dir = Path(__file__).parent
 project_root = docs_dir.parent

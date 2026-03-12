@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class LokalitaFilter(ArchZaznamFilter):
-    """Třída pro zakladní filtrování lokality a jejich potomků."""
+    """
+    Třída pro základní filtrování lokality a jejich potomků.
+    """
 
     igsn = CharFilter(
         lookup_expr="icontains",
@@ -84,6 +86,10 @@ class LokalitaFilter(ArchZaznamFilter):
                 )
             if "typ_zmeny" in historie:
                 queryset_history &= Q(archeologicky_zaznam__historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            if "poznamka__icontains" in historie:
+                queryset_history &= Q(
+                    archeologicky_zaznam__historie__historie__poznamka__icontains=historie["poznamka__icontains"]
+                )
             queryset = queryset.filter(queryset_history)
 
         return queryset
@@ -179,9 +185,10 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),

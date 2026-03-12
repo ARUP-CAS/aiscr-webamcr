@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: LokalitaFilter
 
-   Třída pro zakladní filtrování lokality a jejich potomků.
+   Třída pro základní filtrování lokality a jejich potomků.
 
    **Metody:**
 

@@ -2,7 +2,7 @@ Django==5.2.12
 psycopg2-binary==2.9.11
 simplejson==3.20.2
 django-crispy-forms==2.6
-crispy-bootstrap5==2025.4
+crispy-bootstrap5==2026.3
 django-recaptcha==4.1.0
 django_registration==5.2.1
 django-filter==25.2
@@ -53,7 +53,7 @@ requests==2.32.5
 polib==1.2.0
 pytz==2026.1.post1
 python-dateutil==2.9.0.post0
-setuptools==82.0.0
+setuptools==82.0.1
 Werkzeug==3.1.6
 pyOpenSSL==25.3.0
 sphinxcontrib-googleanalytics==0.5

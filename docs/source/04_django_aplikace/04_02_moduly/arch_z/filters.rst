@@ -39,7 +39,7 @@ Třídy
 
 .. py:class:: ArchZaznamFilter
 
-   Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
+   Třída pro základní filtrování archeologických záznamů a jejich potomků.
 
    **Metody:**
 
@@ -85,7 +85,7 @@ Třídy
 
    .. py:method:: filter_predmet_pozn_pocet()
 
-      Metoda pro filtrování podle poznámky a počtu predmětu.
+      Metoda pro filtrování podle poznámky a počtu předmětů.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_predmet_pozn_pocet``.
@@ -102,6 +102,16 @@ Třídy
       :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
 
       :return: Vrací výsledek volání ``distinct()``.
+
+   .. py:method:: filter_ident_cely()
+
+      Metoda pro filtrování podle identu akce, ale i dočasného.
+
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` nepoužito.
+      :param value: Parametr ``value`` ovlivňuje větvení podmínek, předává se do volání ``filter()``.
+
+      :return: Vrací filtrovaný ``queryset`` podle ``ident_cely`` nebo poznámky z historie.
 
    .. py:method:: __init__()
 
@@ -129,7 +139,7 @@ Třídy
 
    .. py:method:: filtr_vedouci()
 
-      Metoda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
+      Metoda pro filtrování podle hlavního a vedlejšího vedoucího akce.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filtr_vedouci``.
@@ -139,7 +149,7 @@ Třídy
 
    .. py:method:: filter_popisne_udaje()
 
-      Metoda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
+      Metoda pro filtrování podle lokalizace, upřesnění, uložení, označení akce.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.

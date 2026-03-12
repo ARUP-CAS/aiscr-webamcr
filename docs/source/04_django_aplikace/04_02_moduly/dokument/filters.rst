@@ -21,7 +21,7 @@ Třídy
 
 .. py:class:: HistorieFilter
 
-   Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
+   Třída pro základní filtrování historie. Třída je děděná v jednotlivých filtracích záznamů.
 
    **Metody:**
 
@@ -37,10 +37,20 @@ Třídy
 
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: filter_ident_cely()
+
+      Metoda pro filtrování podle identu dokumentu/projektu/EZ, ale i dočasného.
+
+      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      :param name: Parametr ``name`` nepoužito.
+      :param value: Parametr ``value`` ovlivňuje větvení podmínek, předává se do volání ``filter()``.
+
+      :return: Vrací filtrovaný ``queryset`` podle ``ident_cely`` nebo poznámky z historie.
+
 
 .. py:class:: Model3DFilter
 
-   Třída pro zakladní filtrování modelu 3D a jejich potomků.
+   Třída pro základní filtrování modelu 3D a jejich potomků.
 
    **Metody:**
 
@@ -105,13 +115,13 @@ Třídy
 
 .. py:class:: DokumentFilter
 
-   Třída pro zakladní filtrování dokumentu a jejich potomků.
+   Třída pro základní filtrování dokumentu a jejich potomků.
 
    **Metody:**
 
    .. py:method:: filter_uzemni_prislusnost()
 
-      Metoda pro filtrování podle územní príslušnosti.
+      Metoda pro filtrování podle územní příslušnosti.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_uzemni_prislusnost``.
@@ -121,7 +131,7 @@ Třídy
 
    .. py:method:: filter_popisne_udaje()
 
-      Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regiónu a události.
+      Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regionu a události.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
@@ -131,7 +141,7 @@ Třídy
 
    .. py:method:: filter_predmet_pozn_pocet()
 
-      Metoda pro filtrování podle poznámky a počtu predmětu.
+      Metoda pro filtrování podle poznámky a počtu předmětů.
 
       :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
       :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_predmet_pozn_pocet``.
