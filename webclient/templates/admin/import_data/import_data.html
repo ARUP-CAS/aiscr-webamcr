@@ -239,7 +239,7 @@
               const table = document.getElementById("result_list");
               for (let i = 0; i < data.finished_record_count; i++) {
                   const row = table.rows[i + 1]
-                  row.cells[3].innerText = data.primary_keys[i]
+                  row.cells[3].innerText = data.primary_keys[i] || ""
                   row.cells[5].innerText = translations[data.serialized_results[i]] || data.serialized_results[i]
               }
 

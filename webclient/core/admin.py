@@ -810,8 +810,13 @@ class FedoraCustomAdminSite(admin.AdminSite):
             records_count = record_id
             self.redis_connector.set(f"import_data_count_{job_id}", records_count)
             self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
+            self.redis_connector.set(f"import_data_progress_{job_id}", json.dumps({}))
+            self.redis_connector.set(f"import_data_primary_keys_{job_id}", json.dumps({}))
             self.redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
             self.redis_connector.set(f"import_data_progress_files_{job_id}", 0)
+            self.redis_connector.set(
+                f"import_data_status_message_{job_id}", _("core.templates.admin.import_data.starting")
+            )
             context["records_count"] = records_count
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])

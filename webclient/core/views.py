@@ -2361,14 +2361,15 @@ class DataImportProgress(LoginRequiredMixin, View):
         job_id = kwargs.get("job_id")
         redis_connector = RedisConnector().get_connection_decode()
         try:
-            record_count = int(redis_connector.get(f"import_data_count_{job_id}"))
-            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}"))
+            record_count_raw = redis_connector.get(f"import_data_count_{job_id}") or 0
+            record_count = int(record_count_raw)
+            import_data_progress_files = int(redis_connector.get(f"import_data_progress_files_{job_id}") or 0)
             status_message = redis_connector.get(f"import_data_status_message_{job_id}")
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
-            import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}"))
-            serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}"))
-            serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}"))
+            import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
+            serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}") or "{}")
+            serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
 
             progress_data = math.floor((len(serialized_results) / record_count) * 100)
             progress_files = math.floor(import_data_progress_files * 100)
@@ -2387,9 +2388,9 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "primary_keys": import_data_primary_keys,
                 "status": status,
                 "serialized_results_files": serialized_results_files,
-                "status_message": status_message,
+                "status_message": status_message or _("core.templates.admin.import_data.starting"),
             }
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
             progress_response = {
                 "status": "unknown",
                 "status_message": _("core.views.dataImportProgress.unknown_import_status"),

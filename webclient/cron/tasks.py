@@ -652,7 +652,7 @@ def run_data_import(job_id, user_id):
 
                     fedora_update_targets_set |= fedora_transaction.updated_ident_cely
                     logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id, "job_id": job_id})
-                    import_results[record_id] = "cron.tasks.run_data_import.success"
+                    import_results[record_id] = _("cron.tasks.run_data_import.success")
                     if primary_key_record:
                         import_primary_keys[record_id] = f"ident_cely: {primary_key_record.ident_cely}"
                     else:
