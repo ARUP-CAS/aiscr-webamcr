@@ -52,7 +52,8 @@
 ### BUG-004: Extra SELECT v SamostatnyNalez.save() — initial_pristupnost vzor je neúplný
 
 - **Soubor:** `webclient/pas/models.py:182-186`
-- **Závažnost:** Nízká
+- **Závažnost:** Střední
+- **Sjednocení:** Závažnost zvýšena z Nízká na Střední (2026-03-13); extra SELECT se spouští při každém uložení záznamu a jde o architektonický anti-pattern — odpovídá zařazení ORM-01 do Vysoké priority v refactoring_backlog.md.
 - **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
 - **Popis:** Model `SamostatnyNalez` má property `initial_pristupnost`, ale v metodě `save()` stále bezpodmínečně volá `SamostatnyNalez.objects.get(pk=self.pk)` při každém uložení záznamu (kde `pk is not None`). Správný vzor ukládá počáteční hodnotu v `__init__()`, čímž extra SELECT odpadá.
 - **Navrhovaná oprava:** Přidat do `__init__()`: `self._initial_pristupnost = self.pristupnost`. V `save()` porovnat `self._initial_pristupnost != self.pristupnost` bez extra SELECT.

@@ -2,6 +2,13 @@
 
 > Všechny záznamy jsou psány v češtině.
 > Strukturální zlepšení objevená během auditu.
+>
+> **Poznámka k prioritě vs. závažnosti:** Sekce priorit (Vysoká / Střední / Nízká)
+> odrážejí **prioritu refaktoringu** (dopad na architekturu a business logiku).
+> Tato klasifikace se může lišit od **závažnosti bugu** v `bugs.md`, která odráží
+> technické riziko samotného defektu. Pokud položka křížově odkazuje na BUG-XXX,
+> oba údaje jsou záměrné — priorita refaktoringu a závažnost bugu mají odlišný
+> hodnoticí rámec.
 
 ---
 
@@ -215,7 +222,7 @@
 - **Doporučení:** Přidat konkrétní verzi.
 - **Náročnost:** S
 
-### [T02] ARCH-04: cron a notifikace_projekty bez testů
+### [T01] ARCH-04: cron a notifikace_projekty bez testů
 - **Soubory:** `webclient/cron/`, `webclient/notifikace_projekty/`
 - **Popis:** Obě aplikace nemají žádné testy, přestože cron importuje 6 jiných aplikací.
 - **Doporučení:** Přidat unit testy pro Celery tasky.

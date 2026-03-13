@@ -28,6 +28,7 @@
 - **Chybějící Django security headers** — SECURE_HSTS_SECONDS, SESSION_COOKIE_SECURE, CSRF_COOKIE_SECURE, SECURE_CONTENT_TYPE_NOSNIFF nejsou v production.py. Viz security_analysis.json SEC-03.
 - **mark_safe() s hodnotami z DB** — ve `vypis/fields.py` a `vypis/views.py` na hodnotách z modelů; potenciální XSS. Viz BUG-012, security_analysis.json XSS-02 až XSS-04.
 - **Mailtrap credentials v commitu** — sample_secrets_mail_client.json obsahuje zdánlivě reálné přihlašovací údaje. Viz BUG-011, SEC-02.
+- **eval() v generátorech identifikátorů** — 3 místa v projekt/models.py a arch_z/models.py používají `eval(i)` na hodnotách z DB. Viz BUG-001, orm_analysis.json SEC-ORM-001, SEC-ORM-002, SEC-ORM-003.
 
 **Nízká / doporučení**
 
@@ -62,7 +63,7 @@ Viz dependency_graph.json tightly_coupled_modules a architectural_issues.
 - **len(queryset.all()) místo .count()** — v Projekt.check_pred_smazanim/check_pred_navrzeni_k_zruseni. Viz orm_analysis.json NP1-003.
 - **Deprecated .extra()** — arch_z/filters.py pro ST_Z(geom). Viz orm_analysis.json raw_sql_usage, refactoring_backlog ORM-06.
 
-Kompletní přehled: orm_analysis.json n_plus_one_candidates, missing_prefetch_candidates.
+Další N+1 a ORM kandidáti (nízká až střední závažnost): NP1-001 (check_pred_archivaci), NP1-004 (set_pristupnost), NP1-005 (datum_oznameni property), NP1-007 (_set_connected_records_ident bulk_update), NP1-009 (User.save), NP1-010 (moje_spolupracujici_organizace), NP1-011 (Pian.pristupnost_pom), NP1-013 (Pian.get_create_org triple-hop), NP1-014 (ModelWithMetadata.record_deletion). Kompletní přehled: orm_analysis.json n_plus_one_candidates, missing_prefetch_candidates.
 
 ---
 
@@ -83,7 +84,7 @@ Kompletní přehled: orm_analysis.json n_plus_one_candidates, missing_prefetch_c
 - **Verze** — ELK prod 9.3.1 vs dev 8.19.0 (major gap); memcached:latest v dev (floating tag). Viz docker_analysis.json version_inconsistencies.
 - **Selenium v produkčním compose** — služba by měla být pouze v docker-compose-test.yml. Viz docker_analysis.json docker_compose_services issues DCD-07.
 
-Detail: docker_analysis.json, refactoring_backlog DOCKER-*.
+Další Docker compose problémy: DCD-01 (logstash bez depends_on), DCD-02 (celery -l DEBUG v produkci), DCD-06 (monitoring exponován bez izolace), DCD-08 až DCD-13 (xpack nekonzistence, floating tags, hardcoded hesla). Optimalizace: OPT-D02 (compileall duplicita), OPT-D03 (3× apt-get update). Kompletní detail: docker_analysis.json, refactoring_backlog DOCKER-*.
 
 ---
 
@@ -139,7 +140,7 @@ Pozitiva: Docker Scout na PR do dev; publish_images s cosign, SLSA, Trivy, SARIF
 | 6 | sudo v produkčním Docker image | BUG-009, SEC-D01 | Eskalace oprávnění při exploitaci. |
 | 7 | Chybějící db_index na Heslar.nazev_heslare | BUG-005 | Table scany při každém formuláři s limit_choices_to na hesláři. |
 | 8 | Celery tasky bez error handlingu (Redis snapshots, materialized views) | CELERY-01 | Selhání uprostřed dávky bez shrnutí a bez retry. |
-| 9 | Deploy a restore skripty bez set -e a validace env | T10-SH-01, T10-SH-03, BUG-013 | Selhání příkazu může být přehlédnuto; restore_database.sh riskantní bez kontroly DBNAME. |
+| 9 | Deploy a restore skripty bez set -e a validace env | SCRIPTS-01, SCRIPTS-03 (T10-SH-01, T10-SH-03), BUG-013 | Selhání příkazu může být přehlédnuto; restore_database.sh riskantní bez kontroly DBNAME. |
 | 10 | Extra SELECT v save() u ArcheologickyZaznam a SamostatnyNalez | ORM-01, BUG-004 | Zbytečné dotazy při každém uložení záznamu. |
 
 ---
@@ -194,3 +195,38 @@ Podrobnosti a náročnost: refactoring_backlog.md (Vysoká / Střední / Nízká
 ---
 
 *Finální audit vznikl syntézou výstupů úloh T01–T10. Pro detailní evidence viz uvedené JSON soubory v .agents/analysis/, reporty T01.md–T10.md a .agents/reports/bugs.md a refactoring_backlog.md.*
+
+---
+
+## Changelog
+
+### 2026-03-13 — Křížová validace a inkrementální aktualizace
+
+**Zdroj:** Křížová validace (U03) + inkrementální aktualizace (U01–U06).
+
+**Detekce změn:** 43 z 61 sledovaných souborů změněno (T01: 18, T02: 7, T04: 10, T05: 8). Žádné soubory smazány ani nově přidány.
+
+**Opravené nekonzistence:**
+
+- ARCH-04: prefix opraven `[T02]` → `[T01]` v refactoring_backlog.md (zdroj nálezu je T01, ne T02).
+- BUG-004: závažnost zvýšena z Nízká na Střední v bugs.md (sjednocení s ORM-01 backlog prioritou — extra SELECT v save() je architektonický anti-pattern).
+- BUG-005 / ORM-03: ponecháno Střední — rozdíl oproti backlogu (Vysoká priorita) je záměrný a zdokumentován (priorita refaktoringu ≠ závažnost bugu).
+
+**Mezery v pokrytí:**
+
+- **T03 (ORM):** 10 Django aplikací (28 modelů, ~2 841 řádků) nebylo zahrnuto do orm_analysis.json.
+  - Kritické: `dokument` (1 198 řádků, 10 modelů, 19 migrací), `historie` (314 řádků, HistorieVazby — architektonický dopad).
+  - Další: `ez` (368 ř., 4 modely), `xml_generator` (578 ř., 2 modely — částečně pokryto NP1-014), `komponenta` (208 ř., 3 modely), `lokalita` (196 ř., 1 model), `nalez` (142 ř., 2 modely), `dj` (122 ř., 1 model), `neidentakce` (64 ř., 2 modely), `notifikace_projekty` (51 ř., 1 model).
+  - Doporučení: Spustit T03c/T03d sub-tasky.
+- **T07 (Frontend):** 29 vlastních JS souborů (~33 500 řádků) nebylo analyzováno.
+  - ~10 souborů jsou pravděpodobně vendorované Leaflet pluginy umístěné v kořeni `static/js/` (leaflet.markercluster-src.js, leaflet-search.js, simpleheat.js, HeatLayer.js aj.) — doporučeno aktualizovat vendored_exclusions.
+  - Prioritní: `mapa_arch_z.js` (1 303 ř.), `timer.js` (627 ř.), `mapa_pas.js` (501 ř.), `dz.js` (424 ř.), `mapa_projekty.js` (396 ř.).
+  - `html-to-rtf-browser.js` (25 046 ř.) je pravděpodobně třetí strana — vyloučit z budoucí analýzy.
+
+**Ověření bugů:** Všech 14 bugů (BUG-001 až BUG-014) potvrzeno jako stále přítomné (spot-check 7 z nich, žádný opraven).
+
+**Architektonické nálezy ověřeny:** CIRC-01, CIRC-02, ARCH-01 potvrzeny; `core` narostl na 78 .py souborů (ze 77).
+
+**ID doplněná do finálního auditu:** SEC-ORM-001/002/003 (§2), NP1-001/004/005/007/009/010/011/013/014 (§5), DCD-01/02/06/08–13, OPT-D02/D03 (§7), SCRIPTS-01/SCRIPTS-03 (§12 TOP 10 #9).
+
+**Prompt evolution:** 42/42 návrhů začleněno do review_codebase.md (zbývající 2 — tabulka doménových entit a core warning — doplněny v rámci této aktualizace).
