@@ -27,7 +27,13 @@ from core.constants import (
 )
 from core.forms import ImportDataAdminForm
 from core.ident_cely import get_record_from_ident
-from core.import_data_mappers import ImportModelMapper, SouborMapper, UzivatelNotifikaceMapper, UzivatelOpravneniMapper
+from core.import_data_mappers import (
+    ImportDataError,
+    ImportModelMapper,
+    SouborMapper,
+    UzivatelNotifikaceMapper,
+    UzivatelOpravneniMapper,
+)
 from core.models import Soubor, SouborVazby
 from core.repository_connector import (
     DryRunFedoraTransaction,
@@ -59,6 +65,8 @@ from uzivatel.models import Osoba, User, UserNotificationType
 from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
+
+IMPORT_DATA_EXPIRATION_SECONDS = 300
 
 
 @shared_task
@@ -553,6 +561,8 @@ def run_data_import(job_id, user_id):
                     mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
                     mapper_classes[record_id] = mapper_class
                     records = mapper_class(serialized_record).create_records(performed_action)
+                    if ImportDataAdminForm.PERFORMED_ACTION_UPDATE and not mapper_class.allow_update:
+                        raise ImportDataError(_("cron.tasks.run_data_import.update_now_allowed"))
                     if mapper_class == SouborMapper:
                         import_files_list += records
                         record: Soubor = records[0]
@@ -894,13 +904,12 @@ def run_data_import(job_id, user_id):
     if not stopped and not failed:
         redis_connector.set(f"import_data_progress_files_{job_id}", 1)
         redis_connector.set(f"import_data_status_message_{job_id}", _("cron.tasks.run_data_import.finished"))
-    expiration_seconds = 300
-    redis_connector.expire(f"import_data_count_{job_id}", expiration_seconds)
-    redis_connector.expire(f"import_data_files_{job_id}", expiration_seconds)
-    redis_connector.expire(f"import_data_progress_files_{job_id}", expiration_seconds)
-    redis_connector.expire(f"import_data_status_message_{job_id}", expiration_seconds)
+    redis_connector.expire(f"import_data_count_{job_id}", IMPORT_DATA_EXPIRATION_SECONDS)
+    redis_connector.expire(f"import_data_files_{job_id}", IMPORT_DATA_EXPIRATION_SECONDS)
+    redis_connector.expire(f"import_data_progress_files_{job_id}", IMPORT_DATA_EXPIRATION_SECONDS)
+    redis_connector.expire(f"import_data_status_message_{job_id}", IMPORT_DATA_EXPIRATION_SECONDS)
     for record_id in range(record_count):
-        redis_connector.expire(f"import_data_{job_id}_record_{record_id}", expiration_seconds)
+        redis_connector.expire(f"import_data_{job_id}_record_{record_id}", IMPORT_DATA_EXPIRATION_SECONDS)
 
     redis_connector.set("import_data_running", "false")
     logger.debug(

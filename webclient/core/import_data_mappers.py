@@ -192,21 +192,28 @@ class ImportDataMissingReferencedValueError(ImportDataError):
     Výjimka vyvolaná při chybějící hodnotě referencovaného záznamu — buď v databázi, nebo v importovaných datech.
     """
 
-    def __init__(self, missing_value_id, missing_model_name=None):
+    def __init__(self, missing_value_id, missing_model_name=None, missing_field_name=None):
         """
         Inicializuje instanci třídy.
 
         :param missing_value_id: Identifikátor objektu ``missing_value``.
-        :param missing_model_name: Parametr ``missing_model_name`` předává se do volání ``__init__()``.
+        :param missing_model_name: Název modelu, ve kterém lookup selhal.
+        :param missing_field_name: Název pole, ve kterém lookup selhal.
         """
         self.missing_value_id = missing_value_id
         self.missing_model_name = missing_model_name
+        self.missing_field_name = missing_field_name
         super().__init__(
             f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_1")} '
             + f'{missing_value_id} {_("core_admin.ImportDataMissingReferencedValueError.message.part_2")} '
             + (
                 f'{missing_model_name} {_("core_admin.ImportDataMissingReferencedValueError.message.part_3")} '
                 if missing_model_name
+                else ""
+            )
+            + (
+                f'{_("core_admin.ImportDataMissingReferencedValueError.message.part_4")} {missing_field_name}'
+                if missing_field_name
                 else ""
             )
         )
@@ -827,7 +834,9 @@ class LookupImportField(BaseImportField):
                 self._instance_value = filtered_records[0]
                 return value
         raise ImportDataMissingReferencedValueError(
-            value, ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list])
+            value,
+            ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list]),
+            self.lookup_field_name,
         )
 
 
@@ -898,7 +907,7 @@ class VazbaLookupImportField(LookupImportField):
         if len(filtered_records) == 1:
             self._instance_value = filtered_records[0].historie
             return value
-        raise ImportDataMissingReferencedValueError(value)
+        raise ImportDataMissingReferencedValueError(value, missing_field_name=self.lookup_field_name)
 
 
 class GeomImportField(BaseImportField):
@@ -986,7 +995,9 @@ class GenericForeignKeyImportField(LookupImportField):
                 self._instance_value = value
                 return value
         raise ImportDataMissingReferencedValueError(
-            value, ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list])
+            value,
+            ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list]),
+            self.lookup_field_name,
         )
 
 
@@ -1533,6 +1544,8 @@ class MultipleClassImportModelMapper(ImportModelMapper):
         Ověří existenci více-modelového záznamu podle ``ident_cely`` hlavního archeologického záznamu.
 
         :param performed_action: Typ prováděné operace importu.
+        :param args: Další poziční argumenty předané nadřazené implementaci.
+        :param kwargs: Další klíčové argumenty předané nadřazené implementaci.
         :return: Slovník filtračních podmínek pro dohledání cílového záznamu.
         :raises ImportDataIntegrityError: Vyvolá se, pokud záznam při insertu již existuje nebo při updatu či mazání chybí.
         """

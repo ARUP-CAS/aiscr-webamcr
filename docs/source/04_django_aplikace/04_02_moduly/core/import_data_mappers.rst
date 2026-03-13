@@ -64,7 +64,8 @@ Třídy
       Inicializuje instanci třídy.
 
       :param missing_value_id: Identifikátor objektu ``missing_value``.
-      :param missing_model_name: Parametr ``missing_model_name`` předává se do volání ``__init__()``.
+      :param missing_model_name: Název modelu, ve kterém lookup selhal.
+      :param missing_field_name: Název pole, ve kterém lookup selhal.
 
 
 .. py:class:: ImportDataIntegrityError
@@ -776,6 +777,8 @@ Třídy
       Ověří existenci více-modelového záznamu podle ``ident_cely`` hlavního archeologického záznamu.
 
       :param performed_action: Typ prováděné operace importu.
+      :param args: Další poziční argumenty předané nadřazené implementaci.
+      :param kwargs: Další klíčové argumenty předané nadřazené implementaci.
       :return: Slovník filtračních podmínek pro dohledání cílového záznamu.
       :raises ImportDataIntegrityError: Vyvolá se, pokud záznam při insertu již existuje nebo při updatu či mazání chybí.
 
