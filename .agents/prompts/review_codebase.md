@@ -101,7 +101,8 @@ Analyze:
     dependency) from **lazy imports** (inside functions — lower risk, but
     still an architectural smell worth noting separately).
 - Docker service dependencies (does X depend on Y at startup?)
-- external libraries from `requirements.txt` and `pyproject.toml`
+- external libraries from `requirements.txt` (and `pyproject.toml` if present —
+  this repo currently has no `pyproject.toml`)
 - npm dependencies from `package.json` (if absent, record as N/A and delegate
   CDN dependency analysis to T07)
 
@@ -157,6 +158,11 @@ Detect:
   `self._initial_<field> = self.<field>` in `__init__()` and compare in `save()`
 - imports from non-standard libraries where stdlib or Django equivalents exist
   (e.g. `cached_property` from `distlib.util` instead of `functools`)
+- `eval()` on data derived from the database (e.g. identifier generators using
+  `eval(i)` on `ident_cely` segments) — search all apps, not only `projekt`
+  and `arch_z`; the pattern recurs in `dokument`, `ez`, and potentially others
+- `__init__` typos (`__init_`, `_init__`, etc.) — Python does not raise an error
+  for misspelled dunder methods; the custom initialisation silently never runs
 - deprecated ORM methods: `.extra()` (deprecated Django 4.0), `raw()` without
   parameters, `select_related` called without field names on large querysets
 - unindexed fields used in filters
@@ -293,6 +299,9 @@ Inspect:
   debug views
 - `webclient/core/middleware.py` (or `middleware/` directory if split) — custom
   middleware can introduce or remove security controls
+- Django framework version — determine from `requirements.txt` (currently Django 5.2);
+  version-specific security defaults may affect findings (e.g. `SECURE_*` defaults
+  changed between major versions); cite the relevant Django docs when documenting gaps
 - CORS configuration
 - CSRF protection
 - SQL injection risks (raw queries, `extra()`, `RawSQL()`)
@@ -390,6 +399,9 @@ libraries that developers have not modified are out of scope and must not be eva
 **Vendored file detection:** Skip files matching `review_config.yaml` →
 `vendored_exclusions` (directories, file patterns, copyright headers, explicit
 filenames). Also skip unmodified production dependencies from `package.json`.
+Note: files without the standard `/*!` minified header but with a `/**` JSDoc
+header (e.g. `datepicker-cs.js`) may still be vendored — check manually and add
+to `vendored_exclusions.filenames` if confirmed.
 Run `review_tools.py coverage-gaps` to verify classification.
 
 **Analyse these files:**
@@ -414,6 +426,12 @@ Run `review_tools.py coverage-gaps` to verify classification.
 ### What to detect
 
 - logic errors or anti-patterns in custom JS code
+- **Leaflet API correctness**: verify that map methods (`clearLayers`, `addData`,
+  `getBounds`, `fitBounds`) are called on the correct layer type
+  (FeatureGroup vs GeoJSON vs LayerGroup); mismatches cause silent failures
+- **logical operator errors** (`||` vs `&&`): De Morgan mistakes in conditions
+  are common and hard to spot — specifically check disable/enable guards and
+  visibility toggles
 - inline scripts in templates suitable for extraction into separate files
 - missing SRI integrity attributes on `<script src="...">` and `<link>` tags
   loaded from external CDNs (this concerns template configuration, not library content)
@@ -533,6 +551,11 @@ Detect:
 - suboptimal use of GitHub Actions cache
 - pre-commit hooks that may fail in CI
 - missing security scanning (Dependabot, CodeQL, image-level scanning)
+
+In the `security_scanning` section of `cicd_analysis.json`, record not only
+presence/absence of tools but also a brief summary of how the CI/CD pipeline
+supports supply-chain security (image signing, SBOM, SARIF upload, provenance
+attestation) — this makes it easier for T05 and T11 to cross-reference.
 
 ```json
 {
@@ -695,6 +718,12 @@ cross-validation.
 
 Each completed task must produce: `.agents/reports/review_reports/<task_id>.md`
 
+**Sub-tasks** (e.g. T03a, T03c, T07b) must also produce individual report
+files following the same naming convention (e.g. `T03c.md`). Each sub-task
+entry in `review_cache.json` must include `report_path` pointing to the
+report file. Do not defer report creation — write the report as part of the
+sub-task, not as a separate follow-up step.
+
 The report must be written in Czech and include:
 
 **Datum** and any timestamps in analysis JSON or cache must be set per IMPORTANT RULES rule 4 (git or Python, never guessed).
@@ -722,6 +751,39 @@ The report must be written in Czech and include:
 ```
 
 Also update relevant analysis JSON files, `bugs.md`, and `refactoring_backlog.md`.
+
+---
+
+## COVERAGE GAP RESOLUTION
+
+When `review_tools.py coverage-gaps` or a review update (U02) identifies
+files or apps that were missed by the initial review cycle, follow this
+workflow:
+
+1. **Create sub-tasks** — Name them sequentially (e.g. T03c, T03d, T07b).
+   Each sub-task should cover a cohesive group of files small enough to
+   analyse in one pass (respect `max_lines_per_task` from `review_config.yaml`).
+
+2. **Analyse** — Read every file in scope directly (DONE MEANS DONE rule).
+   Record findings in the relevant analysis JSON (append, do not overwrite).
+
+3. **Write the sub-task report** — Create
+   `.agents/reports/review_reports/<sub_task_id>.md` using the standard
+   REPORT OUTPUT template. Include a § 5 prompt evolution section.
+
+4. **Update all artifacts atomically** — In a single pass, update:
+   - The analysis JSON (new models, issues, patterns)
+   - `bugs.md` (new bugs, expansions of existing bugs)
+   - `refactoring_backlog.md` (new backlog items)
+   - `review_cache.json` (sub-task entry with `status`, `completed_at`,
+     `scope`, `report_path`)
+   - `final_audit.md` — **both** the body sections (§1–§14) and the
+     changelog
+
+5. **Validate** — Run `review_tools.py all` and fix any errors.
+
+Common pitfall: updating only the changelog in `final_audit.md` while
+leaving body sections (§1–§14) stale. Always update both.
 
 ---
 
@@ -782,6 +844,14 @@ Before finalizing, run `review_tools.py all` to detect inconsistencies
 
 The final audit must include a `## Changelog` section. Incremental updates
 (via `review_update.md`) append entries there instead of creating separate files.
+
+**Body sections must reflect the current state of findings.** When an
+incremental update or coverage-gap resolution adds new findings (bugs,
+N+1 candidates, security issues, backlog items), the agent must update
+the relevant body sections (§1–§14) — not only the changelog. The
+changelog records *what changed and when*; the body sections record *the
+current consolidated picture*. Readers must be able to read §1–§14 alone
+and get a complete view without scanning changelogs.
 
 ---
 

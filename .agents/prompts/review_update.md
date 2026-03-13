@@ -108,7 +108,9 @@ covered by the initial review cycle.
 3. **Scripts coverage (T10):**
    - Review `[T10]` gaps from the `coverage-gaps` output.
    - Config files (e.g. `crontab.txt`, `uwsgi_site.ini`) may appear as
-     gaps; note them as documented in review_codebase.md T10.
+     gaps; they are not analysed as scripts — verify they are documented
+     in `scripts_analysis.json` → `config_notes` and tracked in
+     `review_cache.json`. If so, they are not a coverage gap.
 
 4. **Repository map freshness (T01):**
    - Review `repo-structure` output for new directories not in
@@ -131,6 +133,19 @@ Record under `## U02 — Audit pokrytí`:
 ### Mezery v pokrytí
 - ...
 ```
+
+### Resolving gaps
+
+For each coverage gap found, decide:
+
+- **Resolve in-session** if the gap is small (≤ `max_lines_per_task` from
+  `review_config.yaml`): follow the COVERAGE GAP RESOLUTION workflow in
+  `review_codebase.md` — create sub-tasks, analyse, write reports, update
+  all artifacts and body sections.
+- **Defer** if the gap is large or requires a full task re-run: document
+  the gap in the changelog and recommend re-running the specific task
+  using `review_codebase.md`. Do not leave it unresolved without a clear
+  action item.
 
 ---
 
@@ -239,6 +254,22 @@ incorporated into `review_codebase.md` and which are still pending.
 
 2. Produce a prioritized list of pending suggestions.
 
+3. Also classify proposals from sub-task reports (e.g. T03c.md § 5)
+   that may not have separate `prompt_evolution/` files.
+
+### Who applies pending proposals
+
+Agents must **not** self-modify `review_codebase.md` during an update
+session (rule 5 of this prompt). The agent's responsibility is to:
+
+- accurately classify each proposal,
+- record the classification in the changelog, and
+- provide a concrete, copy-pasteable diff or instruction so the human
+  reviewer can apply changes quickly.
+
+If the human explicitly asks the agent to apply pending proposals
+(outside of a `review_update.md` session), the agent may do so.
+
 ### Output
 
 Record under `## U05 — Prompt evolution`:
@@ -283,8 +314,15 @@ Record under `## U05 — Prompt evolution`:
    - Add new items if coverage gaps (U02) reveal significant issues.
    - Update priorities if the update review changes the assessment.
 
-5. **`final_audit.md`:** Add a changelog entry per the OUTPUT section template.
-   If the TOP 10 ranking changed, update section 12 directly.
+5. **`final_audit.md`:** Update in two passes:
+   a) **Body sections (§1–§14):** For every new finding (bug, N+1 candidate,
+      security issue, backlog item, architectural observation), update the
+      relevant body section so it reflects the current consolidated state.
+      Do not leave new findings only in the changelog.
+   b) **Changelog:** Add a dated entry per the OUTPUT section template,
+      summarising what changed and why.
+   If the TOP 10 ranking changed, update section 12. If new items enter the
+   refactoring plan, update section 13.
 
 ### Constraints
 
@@ -299,9 +337,14 @@ Record under `## U05 — Prompt evolution`:
 
 **Do NOT create a separate update report file.** All findings from U01–U06
 are recorded directly in `final_audit.md` by updating it.
-Each update session adds a new dated subsection in `## Changelog` section.
 
-The `## Changelog` section serves as the audit trail.
+**Two-pass update rule:** When U06 updates `final_audit.md`:
+
+1. **Body sections (§1–§14)** must be updated to reflect the current
+   consolidated state of all findings. A reader of §1–§14 alone must get
+   the complete picture without needing to read changelogs.
+2. **Changelog (§ Changelog)** must receive a new dated entry summarising
+   *what changed and when*. The changelog serves as the audit trail.
 
 Template for a changelog entry:
 

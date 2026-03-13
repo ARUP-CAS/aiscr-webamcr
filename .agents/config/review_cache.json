@@ -1,7 +1,7 @@
 {
   "schema_version": "2",
   "initialized_at": "2026-03-09",
-  "last_updated": "2026-03-13T00:58:09Z",
+  "last_updated": "2026-03-13T12:00:00Z",
   "tasks": {
     "T01": {
       "status": "done",
@@ -29,6 +29,18 @@
           "completed_at": "2026-03-10T00:05:15Z",
           "scope": "Modely přímo přečteny: heslar, pian, pas, adb, oznameni, xml_generator. ORM vzory ve views (cílené Grep). GitHub Issues: nedostupné bez autentizace, zdokumentováno.",
           "report_path": ".agents/reports/review_reports/T03b.md"
+        },
+        "T03c": {
+          "status": "done",
+          "completed_at": "2026-03-13T12:00:00Z",
+          "scope": "Modely přímo přečteny: dokument (10 modelů), historie (2 modely), ez (4 modely), xml_generator (2 abstraktní modely). Nové nálezy: SEC-ORM-004/005, NP1-015 až NP1-019.",
+          "report_path": ".agents/reports/review_reports/T03c.md"
+        },
+        "T03d": {
+          "status": "done",
+          "completed_at": "2026-03-13T12:00:00Z",
+          "scope": "Modely přímo přečteny: komponenta (3 modely), lokalita (1 model), nalez (2 modely), dj (1 model), neidentakce (2 modely), notifikace_projekty (1 model). Nové nálezy: NP1-020, BUG-015 (__init_ typo).",
+          "report_path": ".agents/reports/review_reports/T03d.md"
         }
       }
     },
@@ -50,7 +62,15 @@
     "T07": {
       "status": "done",
       "completed_at": "2026-03-11T02:15:57Z",
-      "report_path": ".agents/reports/review_reports/T07.md"
+      "report_path": ".agents/reports/review_reports/T07.md",
+      "sub_tasks": {
+        "T07b": {
+          "status": "done",
+          "completed_at": "2026-03-13T12:00:00Z",
+          "scope": "20 custom JS souborů analyzováno (~3 846 řádků). Vendored exclusions aktualizovány (timer.js, datepicker-cs.js). Nové nálezy: BUG-016 (form_fields_disabling), BUG-017 (coor_precision), FRONT-03 až FRONT-06 (backlog).",
+          "report_path": ".agents/reports/review_reports/T07b.md"
+        }
+      }
     },
     "T08": {
       "status": "done",

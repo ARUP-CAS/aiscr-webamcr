@@ -162,7 +162,7 @@ key_django_apps:
 
 important_directories:
   - webclient
-  - webclient/locale
+  # webclient/locale — removed: directory does not exist in the repository (T01 prompt evolution)
   - webclient/static
   - webclient/templates
   - scripts
@@ -241,6 +241,8 @@ vendored_exclusions:
     - HeatLayer.js
     - html-to-rtf-browser.js
     - coordTransform.js
+    - timer.js
+    - datepicker-cs.js
   note: >
     Vendorované soubory nesmí být hodnoceny pro interní kvalitu kódu v žádném tasku.
     Mohou být referencovány (např. kontrola SRI atributů v šablonách).

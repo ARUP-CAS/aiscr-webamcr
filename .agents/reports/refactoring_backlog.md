@@ -274,3 +274,31 @@
 - **Popis:** Vlastní JavaScript (mapové skripty, helpery, theme-toggle) je servírován jako více samostatných souborů bez bundleru a minifikace. V produkci to zvyšuje počet HTTP požadavků a velikost assetů.
 - **Doporučení:** Zvážit nasazení lehkého bundleru (např. Webpack/Vite/rollup) nebo alespoň minifikačního kroku v rámci stávajícího `django-compressor` nastavení pro vlastní JS.
 - **Náročnost:** M
+
+### [T07b] FRONT-03: Přidat XHR onerror handlery ve všech mapových skriptech
+- **Soubory:** `webclient/static/js/mapa_arch_z.js`, `mapa_pas.js`, `mapa_projekty.js`, `mapa_doc.js`, `mapa_oznameni.js`
+- **Popis:** Žádný z mapových skriptů neimplementuje `xhr.onerror` handler — selhání sítě je tiché. Uživatel nedostane zpětnou vazbu při výpadku backendu.
+- **Doporučení:** Přidat konzistentní error handling (onerror + onreadystatechange s kontrolou statusu) s uživatelskou hláškou. Zvážit centrální helper funkci pro XHR volání.
+- **Náročnost:** S
+- **Závažnost:** Střední
+
+### [T07b] FRONT-04: Obalit JSON.parse do try/catch v mapových a modal skriptech
+- **Soubory:** `webclient/static/js/mapa_arch_z.js`, `mapa_pas.js`, `mapa_projekty.js`, `mapa_doc.js`, `mapa_oznameni.js`, `modal_forms_class.js`
+- **Popis:** JSON.parse(this.responseText) se volá bez try/catch — nevalidní JSON (např. 500 HTML stránka) způsobí nekontrolované selhání.
+- **Doporučení:** Obalit do try/catch a logovat/zobrazit chybu.
+- **Náročnost:** S
+- **Závažnost:** Střední
+
+### [T07b] FRONT-05: Refaktorovat mapa_pins.js — factory funkce místo duplikace
+- **Soubory:** `webclient/static/js/mapa_pins.js`
+- **Popis:** 235 řádků definuje 4 barevné varianty ikon s rozsáhlou duplikací (copy-paste s jedinou změnou barvy).
+- **Doporučení:** Nahradit factory funkcí `createPinIcon(color)` a redukovat na ~50 řádků.
+- **Náročnost:** S
+- **Závažnost:** Nízká
+
+### [T07b] FRONT-06: Eliminovat implicitní globální proměnné v mapových skriptech
+- **Soubory:** `webclient/static/js/mapa_arch_z.js`, `mapa_pas.js`
+- **Popis:** Proměnné jako `rs`, `geom`, `zoomed`, `coor`, `akce_ident_cely` nejsou deklarovány s let/const/var — stávají se implicitními globály.
+- **Doporučení:** Přidat deklarace `let`/`const` a zvážit ESLint `no-undef` pravidlo.
+- **Náročnost:** S
+- **Závažnost:** Střední

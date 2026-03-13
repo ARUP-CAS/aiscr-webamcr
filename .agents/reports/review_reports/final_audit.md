@@ -2,15 +2,16 @@
 
 **Datum:** 2026-03-13  
 **Účel:** Syntéza výsledků úloh T01–T10 technického review repozitáře.  
-**Zdrojové artefakty:** `.agents/analysis/*.json`, `.agents/reports/review_reports/T01.md`–`T10.md`, `bugs.md`, `refactoring_backlog.md`.
+**Zdrojové artefakty:** `.agents/analysis/*.json`, `.agents/reports/review_reports/T01.md`–`T10.md` (vč. T03c, T03d, T07b), `bugs.md`, `refactoring_backlog.md`.
 
 ---
 
 ## 1. Hlavní architektonické problémy
 
-- **Přebujelá aplikace `core`** — 77 Python souborů, 26 migrací, importována 16+ aplikacemi. Sdružuje middleware, permissions, constants, signals, logging, konektory (Fedora, Redis), koordinátové transformace a management commands. Jakákoli změna má globální dopad. Viz refactoring_backlog ARCH-01.
-- **Aplikace `dokument`** — nejvyšší fan-out (8 cross-app importů). Potenciální porušení principu jedné zodpovědnosti. Viz refactoring_backlog ARCH-02.
-- **Dualita `xml_generator`** — slouží jako knihovna base modelů (BaseAmcrModel, ModelWithMetadata) i jako generátor XML; importována 10 aplikacemi a zároveň v cirkulární závislosti s `adb`. Viz ARCH-03, CIRC-02.
+- **Přebujelá aplikace `core`** — 78 Python souborů, 26 migrací, importována 16+ aplikacemi. Sdružuje middleware, permissions, constants, signals, logging, konektory (Fedora, Redis), koordinátové transformace a management commands. Jakákoli změna má globální dopad. Viz refactoring_backlog ARCH-01.
+- **Aplikace `dokument`** — nejvyšší fan-out (8 cross-app importů), 10 modelů (vč. 5 M2M through tabulek), 18 migrací. Obsahuje eval() na datech z DB (SEC-ORM-004). Viz refactoring_backlog ARCH-02.
+- **Dualita `xml_generator`** — slouží jako knihovna base modelů (BaseAmcrModel, ModelWithMetadata) i jako generátor XML; importována 10 aplikacemi a zároveň v cirkulární závislosti s `adb`. `record_ident_change` obsahuje 7 isinstance větví pro kaskádové metadata uložení — architektonicky kritický kód. Viz ARCH-03, CIRC-02.
+- **`historie.HistorieVazby`** — architektonicky kritický model; používán jako OneToOne FK z Projekt, Dokument, ArcheologickyZaznam, SamostatnyNalez, Pian, ExterniZdroj, User. Centrální audit log s 42 typy změn.
 - **Aplikace bez testů** — `cron`, `notifikace_projekty`, `fedora_management`, `healthcheck`, `neidentakce`, `services`, `vypis`, `xml_generator`. U `cron` a `notifikace_projekty` jde o Celery tasky bez testovací sítě. Viz repository_map.json, refactoring_backlog ARCH-04.
 
 ---
@@ -28,7 +29,7 @@
 - **Chybějící Django security headers** — SECURE_HSTS_SECONDS, SESSION_COOKIE_SECURE, CSRF_COOKIE_SECURE, SECURE_CONTENT_TYPE_NOSNIFF nejsou v production.py. Viz security_analysis.json SEC-03.
 - **mark_safe() s hodnotami z DB** — ve `vypis/fields.py` a `vypis/views.py` na hodnotách z modelů; potenciální XSS. Viz BUG-012, security_analysis.json XSS-02 až XSS-04.
 - **Mailtrap credentials v commitu** — sample_secrets_mail_client.json obsahuje zdánlivě reálné přihlašovací údaje. Viz BUG-011, SEC-02.
-- **eval() v generátorech identifikátorů** — 3 místa v projekt/models.py a arch_z/models.py používají `eval(i)` na hodnotách z DB. Viz BUG-001, orm_analysis.json SEC-ORM-001, SEC-ORM-002, SEC-ORM-003.
+- **eval() v generátorech identifikátorů** — 5 míst v projekt/models.py, arch_z/models.py, dokument/models.py a ez/models.py používá `eval(i)` na hodnotách z DB. Viz BUG-001, orm_analysis.json SEC-ORM-001–SEC-ORM-005.
 
 **Nízká / doporučení**
 
@@ -45,7 +46,7 @@
 
 ## 4. Moduly s vysokou komplexitou
 
-- **core** — fan-in 16, největší počet zodpovědností (middleware, permissions, signals, logging, konektory, ident_cely, management commands). Doporučeno dekomponovat na core.permissions, core.logging, core.middleware, core.signals.
+- **core** — fan-in 16, 78 .py souborů, největší počet zodpovědností (middleware, permissions, signals, logging, konektory, ident_cely, management commands). Doporučeno dekomponovat na core.permissions, core.logging, core.middleware, core.signals.
 - **heslar** — fan-in 16; centrální číselníky, vazba přirozená, ale kritická pro výkon (viz chybějící index na nazev_heslare — BUG-005).
 - **xml_generator** — fan-in 10; kombinace base modelů a generátoru XML.
 - **uzivatel** — fan-in 11.
@@ -63,16 +64,20 @@ Viz dependency_graph.json tightly_coupled_modules a architectural_issues.
 - **len(queryset.all()) místo .count()** — v Projekt.check_pred_smazanim/check_pred_navrzeni_k_zruseni. Viz orm_analysis.json NP1-003.
 - **Deprecated .extra()** — arch_z/filters.py pro ST_Z(geom). Viz orm_analysis.json raw_sql_usage, refactoring_backlog ORM-06.
 
-Další N+1 a ORM kandidáti (nízká až střední závažnost): NP1-001 (check_pred_archivaci), NP1-004 (set_pristupnost), NP1-005 (datum_oznameni property), NP1-007 (_set_connected_records_ident bulk_update), NP1-009 (User.save), NP1-010 (moje_spolupracujici_organizace), NP1-011 (Pian.pristupnost_pom), NP1-013 (Pian.get_create_org triple-hop), NP1-014 (ModelWithMetadata.record_deletion). Kompletní přehled: orm_analysis.json n_plus_one_candidates, missing_prefetch_candidates.
+Další N+1 a ORM kandidáti (nízká až střední závažnost): NP1-001 (check_pred_archivaci), NP1-004 (set_pristupnost), NP1-005 (datum_oznameni property), NP1-007 (_set_connected_records_ident bulk_update), NP1-009 (User.save), NP1-010 (moje_spolupracujici_organizace), NP1-011 (Pian.pristupnost_pom), NP1-013 (Pian.get_create_org triple-hop), NP1-014 (ModelWithMetadata.record_deletion), NP1-015 (Dokument.check_pred_odeslanim — iterace DJ bez prefetch), NP1-016 (ExterniZdroj.check_pred_odeslanim — iterace vazeb), NP1-017 (ExterniZdrojSekvence.save — extra SELECT na get(pk=pk) pro pristupnost), NP1-018 (Komponenta.check_pred_odeslanim — 3 poddotazy na nálezy), NP1-019 (KomponentaVazby — kaskádové FK bez select_related), NP1-020 (Lokalita.set_snapshots — filter+iterate vzorec). Kompletní přehled: orm_analysis.json n_plus_one_candidates, missing_prefetch_candidates.
+
+**Chybné přetížení metod:**
+
+- **BUG-015: NalezPredmet.__init_ typo** — `__init_` místo `__init__` (chybí jedno podtržítko) v nalez/models.py:116. Custom inicializace se nikdy nespustí; proměnné `initial_druh` atd. zůstanou nedefinované. Viz bugs.md BUG-015.
 
 ---
 
 ## 6. Databázová rizika
 
-- **Migrace** — celkem ~152 migrací; uzivatel (31), core (26), arch_z (20), dokument (19) jsou kandidáti na squash. Viz orm_analysis.json migration_summary, refactoring_backlog ORM-07.
+- **Migrace** — celkem ~213 migrací; uzivatel (31), core (26), arch_z (20), dokument (19), heslar (17), historie (16) jsou kandidáti na squash. Viz orm_analysis.json migration_summary, refactoring_backlog ORM-07.
 - **Heslar.nazev_heslare** — FK bez db_index při masivním použití v limit_choices_to → table scany při formulářích. Viz BUG-005.
 - **Raw SQL** — parametrizované použití v core/utils.py a arch_z/filters.py; management command transform_to_sjtsk používá raw bez parametrů (interní admin). Viz orm_analysis.json raw_sql_usage, security_analysis.json raw_sql_usage.
-- **eval() na segmentech ident_cely** — projekt/models.py, arch_z/models.py; bezpečnostní a robustnostní riziko. Viz BUG-001.
+- **eval() na segmentech ident_cely** — projekt/models.py, arch_z/models.py, dokument/models.py, ez/models.py (celkem 5 míst); bezpečnostní a robustnostní riziko. Viz BUG-001, SEC-ORM-001–SEC-ORM-005.
 
 ---
 
@@ -91,7 +96,15 @@ Další Docker compose problémy: DCD-01 (logstash bez depends_on), DCD-02 (cele
 ## 8. Frontend a JavaScript rizika
 
 - **Inline skripty v base.html** — inicializace datepickerů, checkUserAuthentication (polling 60 s), jazykový přepínač; kandidáti na extrakci do samostatných JS souborů. Viz frontend_analysis.json template_inline_scripts.extraction_candidates, refactoring_backlog FRONT-01.
-- **Vlastní JS bez minifikace/bundleru** — mapa a helpery servírovány jako více souborů; větší počet requestů a velikost. Viz frontend_analysis.json build_pipeline, refactoring_backlog FRONT-02.
+- **Vlastní JS bez minifikace/bundleru** — mapa a helpery servírovány jako více souborů; větší počet requestů a velikost. Celkem 24 custom JS souborů (~5 600 řádků) analyzováno. Viz frontend_analysis.json build_pipeline, refactoring_backlog FRONT-02.
+- **Mapové skripty — crash při prázdných vrstvách** (Vysoká) — `poi_sugest.getLayers()[0]._latlng` v mapa_arch_z.js, mapa_pas.js, mapa_projekty.js a dalších: crash pokud vrstva nemá geometrii. Přístup `coordinates[0][0]` bez kontroly délky pole. Viz frontend_analysis.json custom_javascript.issues.
+- **XHR bez onerror** (Vysoká) — žádný z mapových skriptů (mapa_arch_z.js, mapa_pas.js, mapa_projekty.js, mapa_doc.js, mapa_oznameni.js) nemá `xhr.onerror` handler; síťová chyba je tiše ignorována. Viz refactoring_backlog FRONT-03.
+- **JSON.parse bez try/catch** (Střední) — mapa_arch_z.js, mapa_pas.js, dz.js, mapa_oznameni.js parsují serverové odpovědi bez ochrany; poškozená odpověď rozbije celý skript. Viz refactoring_backlog FRONT-04.
+- **BUG-016: Invertovaná podmínka** (Střední) — form_fields_disabling.js řádek 64: `||` místo `&&`; podmínka pro disable formulářových polí je vždy pravdivá. Viz bugs.md BUG-016.
+- **BUG-017: Chybná přesnost souřadnic** (Střední) — coor_precision.js řádek 31: JTSK přesnost používá konstantu pro WGS84 (6 des. míst místo 2). Viz bugs.md BUG-017.
+- **dz.js — Leaflet API nesoulad** (Vysoká) — volání `clearLayers()` na `L.geoJSON` objekt, ale správná metoda je na FeatureGroup/LayerGroup. `addData()` po `clearLayers()` může nefungovat dle očekávání.
+- **Implicitní globální proměnné** — map_functions, mapa_pins.js a většina mapových skriptů deklarují proměnné bez `var`/`let`/`const`; hrozí konflikty jmen při společném načtení. Viz refactoring_backlog FRONT-06.
+- **Duplicitní pin-factory vzor** — mapa_pins.js opakuje ~30 řádkový blok pro každou kategorii pinů; kandidát na generické řešení tovární funkcí. Viz refactoring_backlog FRONT-05.
 - **Drobné chyby** — mapa_basic_functions.js: nedefinovaná proměnná v getLocation(); ajax_functions.js: GET bez ošetření síťových chyb. Viz frontend_analysis.json custom_javascript.issues.
 - **CDN/SRI** — Google Tag Manager bez SRI; u first-party nástrojů zdokumentováno jako přijatelné. Viz frontend_analysis.json cdn_sri_issues.
 
@@ -133,15 +146,15 @@ Pozitiva: Docker Scout na PR do dev; publish_images s cosign, SLSA, Trivy, SARIF
 | # | Položka | Zdroj | Odůvodnění |
 |---|--------|-------|------------|
 | 1 | DEBUG fallback "True" v production.py | BUG-010, SEC-01 | Při chybějícím secretu běží produkce s DEBUG=True — kritické bezpečnostní riziko. |
-| 2 | Cirkulární závislost projekt ↔ oznameni | CIRC-01 | Nestabilní architektura, riziko ImportError při rozšíření. |
-| 3 | N+1 v check_pred_uzavrenim / check_pred_odeslanim | BUG-002, ORM-02 | Desítky dotazů při každém pokusu o změnu stavu projektu/záznamu. |
-| 4 | Přebujelá aplikace core (77 .py, 16+ závislých) | ARCH-01 | Globální dopad změn, obtížná údržba a testování. |
-| 5 | Secret injection Grafana/Elasticsearch/Logstash | BUG-007, BUG-008, SEC-D02/D03 | Hesla nejsou z Docker secrets správně načtena. |
-| 6 | sudo v produkčním Docker image | BUG-009, SEC-D01 | Eskalace oprávnění při exploitaci. |
-| 7 | Chybějící db_index na Heslar.nazev_heslare | BUG-005 | Table scany při každém formuláři s limit_choices_to na hesláři. |
-| 8 | Celery tasky bez error handlingu (Redis snapshots, materialized views) | CELERY-01 | Selhání uprostřed dávky bez shrnutí a bez retry. |
-| 9 | Deploy a restore skripty bez set -e a validace env | SCRIPTS-01, SCRIPTS-03 (T10-SH-01, T10-SH-03), BUG-013 | Selhání příkazu může být přehlédnuto; restore_database.sh riskantní bez kontroly DBNAME. |
-| 10 | Extra SELECT v save() u ArcheologickyZaznam a SamostatnyNalez | ORM-01, BUG-004 | Zbytečné dotazy při každém uložení záznamu. |
+| 2 | eval() na datech z DB v generátorech identifikátorů (5 míst) | BUG-001, SEC-ORM-001–005 | Arbitrary code execution; rozšířeno ze 3 na 5 míst (+ dokument, ez). |
+| 3 | Cirkulární závislost projekt ↔ oznameni | CIRC-01 | Nestabilní architektura, riziko ImportError při rozšíření. |
+| 4 | N+1 v check_pred_* metodách (20 kandidátů) | BUG-002, ORM-02, NP1-* | Desítky dotazů při každém pokusu o změnu stavu; rozšířeno z 14 na 20 kandidátů. |
+| 5 | Přebujelá aplikace core (78 .py, 16+ závislých) | ARCH-01 | Globální dopad změn, obtížná údržba a testování. |
+| 6 | Secret injection Grafana/Elasticsearch/Logstash | BUG-007, BUG-008, SEC-D02/D03 | Hesla nejsou z Docker secrets správně načtena. |
+| 7 | sudo v produkčním Docker image | BUG-009, SEC-D01 | Eskalace oprávnění při exploitaci. |
+| 8 | Chybějící db_index na Heslar.nazev_heslare | BUG-005 | Table scany při každém formuláři s limit_choices_to na hesláři. |
+| 9 | Mapové skripty — crash + chybějící error handling | BUG-016, BUG-017, FRONT-03–06 | 7 vysokých issues; XHR bez onerror, crash na prázdných vrstvách, JSON.parse bez ochrany. |
+| 10 | Celery tasky bez error handlingu (Redis snapshots, materialized views) | CELERY-01 | Selhání uprostřed dávky bez shrnutí a bez retry. |
 
 ---
 
@@ -151,6 +164,7 @@ Pozitiva: Docker Scout na PR do dev; publish_images s cosign, SLSA, Trivy, SARIF
 
 - Opravit DEBUG fallback na "False" v production.py (S).
 - Opravit secret injection pro Grafana (GF_*__FILE), Elasticsearch a Logstash (entrypoint wrapper) (S).
+- Nahradit eval() v generátorech identifikátorů bezpečným parsováním (5 míst: projekt, arch_z, dokument, ez) (S). Viz BUG-001.
 - Odebrat sudo z produkčního uživatele v Dockerfile (S).
 - Přidat Django security headers a zařadit `manage.py check --deploy` do CI (S).
 - restore_database.sh: set -e a validace DBNAME, USED_DB_BACKUP, DB_FLAG_ROLE (S).
@@ -158,25 +172,32 @@ Pozitiva: Docker Scout na PR do dev; publish_images s cosign, SLSA, Trivy, SARIF
 **Druhá vlna (architektura a ORM)**
 
 - Rozhodnout o rozbití cirkulární závislosti projekt ↔ oznameni (sloučit nebo extrahovat do core) (L).
-- Prefetch v místech volání check_pred_uzavrenim/check_pred_odeslanim; případně refaktor check metod na přijímání prefetchovaných dat (M).
-- Doplnit initial_pristupnost v __init__() a odstranit extra SELECT v save() u ArcheologickyZaznam a SamostatnyNalez (S).
+- Prefetch v místech volání check_pred_uzavrenim/check_pred_odeslanim; případně refaktor check metod na přijímání prefetchovaných dat (M). Nově zahrnuje i Dokument.check_pred_odeslanim (NP1-015), ExterniZdroj.check_pred_odeslanim (NP1-016), Komponenta.check_pred_odeslanim (NP1-018).
+- Doplnit initial_pristupnost v __init__() a odstranit extra SELECT v save() u ArcheologickyZaznam, SamostatnyNalez a ExterniZdrojSekvence (S). Viz NP1-017.
+- Opravit NalezPredmet.__init_ typo (chybí podtržítko) — custom inicializace se nespustí (S). Viz BUG-015.
 - Přidat db_index na Heslar.nazev_heslare a na pas.SamostatnyNalez (projekt, katastr, pristupnost, stav) (S).
 
-**Třetí vlna (Celery, skripty, CI)**
+**Třetí vlna (Celery, skripty, frontend, CI)**
 
 - Error handling a shrnutí v update_all_redis_snapshots, update_materialized_views, update_single_redis_snapshot (S).
 - Timeout a try/except pro call_digiarchiv_update_task; omezení pollingu v check_hlidaci_pes (S/M).
 - set -e v deploy a maintenance skriptech; common.sh pro sdílené funkce (S/M).
 - db_connection_from_docker-web.py: čtení DB_PORT ze secretu (S). Viz BUG-014.
 - Dependabot + volitelně CodeQL pro Python (S).
+- Přidat XHR onerror handlery do mapových skriptů (S). Viz FRONT-03.
+- Přidat try/catch kolem JSON.parse v mapových skriptech a dz.js (S). Viz FRONT-04.
+- Opravit invertovanou podmínku v form_fields_disabling.js (S). Viz BUG-016.
+- Opravit přesnostní konstantu JTSK v coor_precision.js (S). Viz BUG-017.
 
 **Čtvrtá vlna (dlouhodobé)**
 
 - Dekompozice core na menší moduly (XL).
 - Rozdělení xml_generator na amcr_base a generátor; odstranění CIRC-02 (M).
-- Squash migrací u uzivatel, core, arch_z, dokument (M).
+- Squash migrací u uzivatel, core, arch_z, dokument, heslar, historie (M). Nově 213 migrací (rozšířen scope).
 - Oddělení requirements (prod / dev / test / docs); DOCS requirements pro Read the Docs (S).
 - Extrakce inline skriptů z base.html; zvážení bundleru pro vlastní JS (S/M).
+- Refaktor mapa_pins.js — tovární funkce místo opakovaného bloku (S). Viz FRONT-05.
+- Eliminace implicitních globálních proměnných v mapových skriptech (M). Viz FRONT-06.
 
 Podrobnosti a náročnost: refactoring_backlog.md (Vysoká / Střední / Nízká priorita).
 
@@ -194,7 +215,7 @@ Podrobnosti a náročnost: refactoring_backlog.md (Vysoká / Střední / Nízká
 
 ---
 
-*Finální audit vznikl syntézou výstupů úloh T01–T10. Pro detailní evidence viz uvedené JSON soubory v .agents/analysis/, reporty T01.md–T10.md a .agents/reports/bugs.md a refactoring_backlog.md.*
+*Finální audit vznikl syntézou výstupů úloh T01–T10 (vč. sub-tasků T03c, T03d, T07b). Pro detailní evidence viz uvedené JSON soubory v .agents/analysis/, reporty T01.md–T10.md (vč. T03c.md, T03d.md, T07b.md), .agents/reports/bugs.md (17 bugů) a refactoring_backlog.md.*
 
 ---
 
@@ -214,19 +235,68 @@ Podrobnosti a náročnost: refactoring_backlog.md (Vysoká / Střední / Nízká
 
 **Mezery v pokrytí:**
 
-- **T03 (ORM):** 10 Django aplikací (28 modelů, ~2 841 řádků) nebylo zahrnuto do orm_analysis.json.
-  - Kritické: `dokument` (1 198 řádků, 10 modelů, 19 migrací), `historie` (314 řádků, HistorieVazby — architektonický dopad).
-  - Další: `ez` (368 ř., 4 modely), `xml_generator` (578 ř., 2 modely — částečně pokryto NP1-014), `komponenta` (208 ř., 3 modely), `lokalita` (196 ř., 1 model), `nalez` (142 ř., 2 modely), `dj` (122 ř., 1 model), `neidentakce` (64 ř., 2 modely), `notifikace_projekty` (51 ř., 1 model).
-  - Doporučení: Spustit T03c/T03d sub-tasky.
-- **T07 (Frontend):** 29 vlastních JS souborů (~33 500 řádků) nebylo analyzováno.
-  - ~10 souborů jsou pravděpodobně vendorované Leaflet pluginy umístěné v kořeni `static/js/` (leaflet.markercluster-src.js, leaflet-search.js, simpleheat.js, HeatLayer.js aj.) — doporučeno aktualizovat vendored_exclusions.
-  - Prioritní: `mapa_arch_z.js` (1 303 ř.), `timer.js` (627 ř.), `mapa_pas.js` (501 ř.), `dz.js` (424 ř.), `mapa_projekty.js` (396 ř.).
-  - `html-to-rtf-browser.js` (25 046 ř.) je pravděpodobně třetí strana — vyloučit z budoucí analýzy.
+- **T03 (ORM):** ✅ VYŘEŠENO (T03c/T03d, 2026-03-13). Všech 10 chybějících Django aplikací (28 modelů, ~2 793 řádků) bylo analyzováno a přidáno do `orm_analysis.json`. Nové nálezy: SEC-ORM-004, SEC-ORM-005 (2 další eval() výskyty v dokument/ez — rozšiřuje BUG-001 ze 3 na 5 míst), NP1-015 až NP1-020 (6 nových N+1 kandidátů), BUG-015 (typo `__init_` v nalez/NalezPredmet).
+- **T07 (Frontend):** ✅ VYŘEŠENO (T07b, 2026-03-13). Vendored exclusions aktualizovány (timer.js, datepicker-cs.js). 20 vlastních JS souborů (~3 846 řádků) analyzováno a přidáno do `frontend_analysis.json`. Nové nálezy: BUG-016 (invertovaná podmínka form_fields_disabling.js), BUG-017 (chybná přesnost coor_precision.js), 4 backlog položky (FRONT-03 až FRONT-06). Vysoká závažnost u 7 issues v mapových skriptech a dz.js.
 
-**Ověření bugů:** Všech 14 bugů (BUG-001 až BUG-014) potvrzeno jako stále přítomné (spot-check 7 z nich, žádný opraven).
+**Ověření bugů:** Všech 14 původních bugů (BUG-001 až BUG-014) potvrzeno jako stále přítomné (spot-check 7 z nich, žádný opraven). Přibyly 3 nové bugy: BUG-015, BUG-016, BUG-017.
 
 **Architektonické nálezy ověřeny:** CIRC-01, CIRC-02, ARCH-01 potvrzeny; `core` narostl na 78 .py souborů (ze 77).
 
 **ID doplněná do finálního auditu:** SEC-ORM-001/002/003 (§2), NP1-001/004/005/007/009/010/011/013/014 (§5), DCD-01/02/06/08–13, OPT-D02/D03 (§7), SCRIPTS-01/SCRIPTS-03 (§12 TOP 10 #9).
 
 **Prompt evolution:** 42/42 návrhů začleněno do review_codebase.md (zbývající 2 — tabulka doménových entit a core warning — doplněny v rámci této aktualizace).
+
+### 2026-03-13 — Uzavření coverage gaps (T03c/T03d + T07b)
+
+**Zdroj:** Cílená analýza pro uzavření mezer v pokrytí identifikovaných v předchozím changelogu.
+
+**Detekce změn:** 0 sledovaných souborů v repozitáři změněno. Změny pouze v `.agents/` artefaktech.
+
+**Opravené nekonzistence:**
+- BUG-001: rozšířen ze 3 na 5 výskytů eval() (přidány dokument/models.py:441 a ez/models.py:301).
+
+**Mezery v pokrytí:**
+- **T03 (ORM):** ✅ UZAVŘENO. T03c analyzoval 4 kritické aplikace (dokument — 10 modelů, historie — 2 modely, ez — 4 modely, xml_generator — 2 abstraktní modely). T03d analyzoval 6 menších aplikací (komponenta — 3, lokalita — 1, nalez — 2, dj — 1, neidentakce — 2, notifikace_projekty — 1). Celkem přidáno 26 nových model entries do orm_analysis.json.
+- **T07 (Frontend):** ✅ UZAVŘENO. Vendored exclusions aktualizovány (+2: timer.js, datepicker-cs.js). 20 custom JS souborů analyzováno a přidáno do frontend_analysis.json (celkem 24 souborů pokryto).
+- **T10:** ✅ UZAVŘENO. Konfigurační soubory (crontab.txt, uwsgi_site.ini) zdokumentovány v `scripts_analysis.json` → `config_notes`; sledovány v `review_cache.json` s `task_id: T10`.
+
+**Ověření bugů:** Všech 17 bugů (BUG-001 až BUG-017) potvrzeno jako přítomné. Spot-check: BUG-015 (nalez/models.py:116 `__init_`), BUG-016 (form_fields_disabling.js:64 `||` místo `&&`), BUG-017 (coor_precision.js:31 `wgs84` místo `jtsk`), SEC-ORM-004 (dokument/models.py:441 `eval(i)`), SEC-ORM-005 (ez/models.py:301 `eval(i)`) — vše ověřeno přímým čtením souborů.
+
+**Nové nálezy:**
+- BUG-015: `__init_` typo v nalez/NalezPredmet — custom init se nespustí (Střední)
+- BUG-016: invertovaná podmínka `||` místo `&&` v form_fields_disabling.js (Střední)
+- BUG-017: chybná přesnost JTSK používá WGS84 konstantu v coor_precision.js (Střední)
+- SEC-ORM-004, SEC-ORM-005: 2 nové výskyty eval() na datech z DB (Střední)
+- NP1-015 až NP1-020: 6 nových N+1 kandidátů v dokument, ez, lokalita
+- FRONT-03 až FRONT-06: 4 nové backlog položky (XHR onerror, JSON.parse try/catch, pin factory, implicitní globály)
+
+**Prompt evolution:** 57/57 návrhů začleněno. Zbývajících 6 (T01 scope, T05 credentials, T09 CI, T10 scripty) doplněno — viz changelog „Doplnění prompt evolution".
+
+**Křížová validace:** review_tools.py all: 0 errors, 0 nových warnings. lint-artifacts: 0 chyb. id-inventory: SEC-ORM-005 nyní referencován ve final_audit.
+
+### 2026-03-13 — Aktualizace těla auditu (§1–§14)
+
+Předchozí dva changelogy aktualizovaly pouze sekci Changelog a řádky 215-219 (coverage gaps). Tato aktualizace promítá nálezy T03c/T03d/T07b do všech relevantních sekcí hlavního těla auditu:
+
+- **§1:** core 77→78 .py; dokument rozšířen o model count + SEC-ORM-004; xml_generator doplněn o record_ident_change; nový bod: historie.HistorieVazby jako architektonicky kritický model.
+- **§2:** eval() rozšířen ze 3 na 5 míst (+ dokument, ez); SEC-ORM-001–005.
+- **§4:** core 78 .py (opraven count).
+- **§5:** Přidáno NP1-015 až NP1-020 do seznamu dalších kandidátů; nový pododdíl „Chybné přetížení metod" s BUG-015.
+- **§6:** Migrace ~152→~213; eval() rozšířen na 5 míst; heslar a historie přidány jako squash kandidáti.
+- **§8:** Kompletně přepracováno — přidáno 9 nových bodů (crash na prázdných vrstvách, XHR bez onerror, JSON.parse, BUG-016, BUG-017, Leaflet API nesoulad, implicitní globály, pin-factory duplikace); celkový souhrn analyzovaných souborů 24 (~5 600 řádků).
+- **§12 (TOP 10):** Přeuspořádáno — eval() povýšen na #2, N+1 rozšířen na 20 kandidátů (#4), mapové skripty vstupují na #9; deploy skripty a extra SELECT vypadly z TOP 10.
+- **§13:** eval() fix přidán do první vlny; druhá vlna rozšířena o NP1-015/016/017/018 a BUG-015; třetí vlna rozšířena o FRONT-03/04 a BUG-016/017; čtvrtá vlna rozšířena o FRONT-05/06 a squash scope.
+- **Závěrečný odstavec:** Aktualizován na 17 bugů a explicitní odkaz na T03c/T03d/T07b reporty.
+
+### 2026-03-13 — Doplnění prompt evolution a uzavření T10
+
+**Prompt evolution:** Zbývajících 6 návrhů z T01/T03c/T03d/T05/T07b/T09 začleněno do `review_codebase.md`. Celkový stav: 57/57 návrhů začleněno.
+
+Konkrétní změny v `review_codebase.md`:
+- **T01 scope:** `pyproject.toml` doplněn o poznámku, že v repozitáři neexistuje (T02 section, line „external libraries"). `webclient/locale` odstraněn z `review_config.yaml` → `important_directories` (adresář neexistuje).
+- **T03 (ORM):** Přidána detekce `eval()` vzorů ve všech generátorech identifikátorů (nejen projekt/arch_z). Přidána kontrola `__init__` překlepů (chybějící podtržítko).
+- **T05 (Security):** Přidán požadavek na zjištění verze Django frameworku z `requirements.txt` a citaci verze-specifických security defaults.
+- **T07 (Frontend):** Přidána kontrola správnosti Leaflet API (clearLayers, addData na správném typu vrstvy). Přidána detekce De Morgan chyb v logických operátorech (`||` vs `&&`). Přidána poznámka o vendored souborech bez `/*!` hlavičky ale s `/**` JSDoc hlavičkou.
+- **T09 (CI/CD):** Přidán požadavek na shrnutí supply-chain security capabilities (signing, SBOM, SARIF, provenance) v `security_scanning` sekci.
+
+**T10:** Přehodnocen na ✅ UZAVŘENO — konfigurační soubory (crontab.txt, uwsgi_site.ini) jsou již zdokumentovány v `scripts_analysis.json` → `config_notes` a sledovány v `review_cache.json`.
