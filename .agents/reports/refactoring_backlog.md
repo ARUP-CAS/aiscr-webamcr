@@ -97,6 +97,12 @@
 - **Doporučení:** Kontrolovat `returncode` a obalit `json.loads` do `try/except` s jasnou chybovou zprávou (např. chybějící `pip-licenses`), případně vracet nenulový exit kód pro jasné selhání v CI.
 - **Náročnost:** S
 
+### [T10] SCRIPTS-01: Sjednotit fail-fast chování a wrappery v deploy skriptech
+- **Soubory:** `scripts/prod_deploy.sh`, `scripts/dev_deploy.sh`, `scripts/test_deploy.sh`, `scripts/git_prod_deploy.sh`
+- **Popis:** Deploy skripty používají vlastní wrapper er() pro logování a propagaci chyb, ale globálně nepoužívají `set -e`/`set -u`. Chyby v příkazech mimo er() se mohou projevit až zprostředkovaně (např. v následných krocích nebo pouze v logu).
+- **Doporučení:** Přidat `set -e` (případně `set -u`) a přezkoumat, které příkazy mají být obaleny er() a které mohou selhat „měkce“. Zároveň sjednotit strukturu helper funkcí v jednotlivých skriptech, aby byly jednoduše udržovatelné.
+- **Náročnost:** S
+
 ### [T08] DOCS-03: Vynutit úplnost docstringů pro Selenium testy
 - **Soubory:** `docs/generate_selenium_test_docs.py`
 - **Popis:** Generátor Selenium dokumentace počítá s tím, že všechny testy mají docstring a povinné sekce `Steps` a `Expected`. Chybějící sekce vede k neúplné dokumentaci bez jasného upozornění.
@@ -107,6 +113,24 @@
 - **Soubory:** `.github/` (nové workflow a konfigurace)
 - **Popis:** Aktuální pipeline používá Docker Scout a Trivy pro skenování Docker image, ale nemá samostatnou kontrolu Python závislostí (Dependabot) ani statickou analýzu kódu (CodeQL). Riziko, že zranitelné knihovny v kódu projdou bez upozornění, je vyšší.
 - **Doporučení:** Přidat `.github/dependabot.yml` pro Python a GitHub Actions a jednoduchý CodeQL workflow pro Python (např. běh na push/PR do větve `dev`), aby doplnil image-level scanning.
+- **Náročnost:** S
+
+### [T10] SCRIPTS-01: Přidat set -e do deploy a maintenance skriptů
+- **Soubory:** `scripts/prod_deploy.sh`, `scripts/dev_deploy.sh`, `scripts/test_deploy.sh`, `scripts/git_prod_deploy.sh`, `scripts/restore_database.sh`, `scripts/build_prod_image.sh`, `scripts/ci_deployment/deploy_server.sh`, `scripts/ci_deployment/deploy_test_server.sh`
+- **Popis:** Většina skriptů nemá `set -e`; selhání příkazu mimo wrapper `er()` může být přehlédnuto. `restore_database.sh` provádí DROP/CREATE databáze bez zastavení při chybě.
+- **Doporučení:** Na začátek každého skriptu přidat `set -e` (a volitelně `set -o pipefail`); u interaktivních bloků zvážit dočasné vypnutí. V `restore_database.sh` navíc ověřit povinné proměnné prostředí před spuštěním.
+- **Náročnost:** S
+
+### [T10] SCRIPTS-02: Extrahovat společné funkce deploy skriptů do scripts/common.sh
+- **Soubory:** `scripts/prod_deploy.sh`, `scripts/dev_deploy.sh`, `scripts/test_deploy.sh`, `scripts/git_prod_deploy.sh`
+- **Popis:** Funkce `ask_continue`, `echo_dec`, `er()`, `check_create_network`, `check_stack_exists`, `check_file_exist` se opakují ve čtyřech skriptech; údržba a konzistence jsou ztížené.
+- **Doporučení:** Vytvořit `scripts/common.sh` se sdílenými funkcemi a v deploy skriptech načítat pomocí `source "$(dirname "$0")/common.sh"` (nebo relativní cestou od kořene repozitáře).
+- **Náročnost:** M
+
+### [T10] SCRIPTS-03: Opravit db_connection_from_docker-web.py — použít DB_PORT ze secretu
+- **Soubory:** `scripts/db/db_connection_from_docker-web.py`
+- **Popis:** Skript načte z JSON secretu `DB_NAME`, `DB_PASS`, `DB_USER`, `DB_HOST`, ale ne `DB_PORT`; připojení k DB tedy vždy používá výchozí port 5432. Při nestandardním portu je health check nesprávný.
+- **Doporučení:** Přidat načtení `DB_PORT` (s výchozí hodnotou 5432) a předat `port=...` do `psycopg2.connect()`. Viz BUG-014.
 - **Náročnost:** S
 
 ## Nízká priorita

@@ -1,13 +1,13 @@
 {
   "schema_version": "1",
-  "generated_at": "2026-03-08",
+  "generated_at": "2026-03-10T00:05:15Z",
   "task_id": "T01",
   "repository": "ARUP-CAS/aiscr-webamcr",
   "branch": "test",
   "description": "Produkční Django webová aplikace Archeologické mapy České republiky (AMČR), součást infrastruktury AIS CR spravované ARUP-CAS.",
   "meta": {
-    "status": "dokončeno — T01",
-    "note": "Vygenerováno agentem při T01 dne 2026-03-08. Předchozí inicializační záznam byl nahrazen."
+  "status": "dokončeno — T01",
+  "note": "Vygenerováno agentem při T01; datum dle git log -1 --format=%ci -- .agents/analysis/repository_map.json."
   },
 
   "repository_stats": {

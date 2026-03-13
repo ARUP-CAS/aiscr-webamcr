@@ -5,7 +5,7 @@
   },
   "sphinx_docs": {
     "location": "docs/",
-    "readthedocs_config": "readthedocs.yaml",
+    "readthedocs_config": "docs/source/conf.py",
     "readthedocs_url": "https://aiscr-webamcr.readthedocs.io/cs/stable/",
     "issues": [
       {

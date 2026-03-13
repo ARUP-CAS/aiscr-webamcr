@@ -105,12 +105,17 @@ automatically.
 Agents must:
 
 - gather repository context before starting work
+- write all prompts, task descriptions, and high-level plans in English, regardless of surrounding documentation language
 - avoid repeating previously recorded work
 - prefer incremental improvements
 - record findings in `.agents/`
 - follow repository coding standards
 - keep changes minimal and reviewable
 - suggest improvements to this file when appropriate
+
+### Planning phase and plans (fixed rule)
+
+The **planning phase** must be conducted **in English**. Any plan produced (task breakdown, steps, design notes, or similar) must be **written in English**. This applies regardless of the language used in the rest of the repository (e.g. Czech docstrings or UI). No exception.
 
 Agents must not perform large refactors without explicit instruction.
 

@@ -1,8 +1,8 @@
 {
   "schema_version": "2",
-  "generated_at": "2026-03-08T14:00:00Z",
+  "generated_at": "2026-03-09T21:13:14Z",
   "task_id": "T03+T03b",
-  "note": "Kompletní analýza všech modelů. T03a pokryla: core, projekt, arch_z, uzivatel (přímé čtení). T03b doplnila: heslar, pian, pas, adb, oznameni, xml_generator (přímé čtení) + ORM vzory ve views.",
+  "note": "Kompletní analýza všech modelů. T03a pokryla: core, projekt, arch_z, uzivatel (přímé čtení). T03b doplnila: heslar, pian, pas, adb, oznameni, xml_generator (přímé čtení) + ORM vzory ve views. Datum dle git log pro orm_analysis.json.",
   "github_issues_crossref": "GitHub Issues nebyly přístupné bez autentizace. Bugy označeny 'nelze ověřit'. Doporučeno ruční prohledání před vytvořením issues.",
 
   "models": {

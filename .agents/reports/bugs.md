@@ -153,3 +153,25 @@
 - **Popis:** Tři místa v `vypis/` aplikují `mark_safe()` na hodnoty odvozené z databázových instancí nebo model properties. Pokud tyto hodnoty nejsou správně escapovány před zabalením do `mark_safe()`, může dojít ke stored XSS. Ident_cely hodnoty mají řízenou strukturu, ale vzor je architektonicky nebezpečný a vyžaduje explicitní ověření.
 - **Navrhovaná oprava:** Auditovat `get_ident_cely_link` property, `get_name()` implementace a Dokument.extra_data atribut. Přepsat na `format_html()` nebo zajistit `escape()` před `mark_safe()`.
 - **Task:** T05
+
+---
+
+### BUG-013: restore_database.sh neověřuje povinné proměnné prostředí před DROP DATABASE
+
+- **Soubory:** `scripts/restore_database.sh`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** Skript používá `${DBNAME}`, `${USED_DB_BACKUP}`, `${DB_FLAG_ROLE}` bez kontroly, zda jsou nastaveny. Při prázdných hodnotách může dojít k nechtěnému DROP/CREATE (např. prázdné jméno databáze) nebo k nejasné chybě při pg_restore.
+- **Navrhovaná oprava:** Na začátku skriptu ověřit, že `DBNAME`, `USED_DB_BACKUP`, `DB_FLAG_ROLE` jsou neprázdné; při chybě vypsat usage a ukončit s exit 1. Přidat `set -e`.
+- **Task:** T10
+
+---
+
+### BUG-014: db_connection_from_docker-web.py ignoruje DB_PORT ze secretu
+
+- **Soubory:** `scripts/db/db_connection_from_docker-web.py`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** Skript načte z `/run/secrets/db_conf` pouze `DB_NAME`, `DB_PASS`, `DB_USER`, `DB_HOST`. Připojení k PostgreSQL tedy vždy používá výchozí port 5432. Pokud je databáze na jiném portu, health check selže nebo kontroluje jinou instanci.
+- **Navrhovaná oprava:** Načíst z JSON i `DB_PORT` (s výchozí hodnotou 5432) a předat do `psycopg2.connect(..., port=db_port)`.
+- **Task:** T10

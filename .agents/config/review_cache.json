@@ -1,61 +1,69 @@
 {
   "schema_version": "2",
-  "initialized_at": "2026-03-07",
-  "last_updated": "2026-03-11T12:00:00Z",
+  "initialized_at": "2026-03-09",
+  "last_updated": "2026-03-11T02:15:57Z",
   "tasks": {
     "T01": {
       "status": "done",
-      "completed_at": "2026-03-08",
+      "completed_at": "2026-03-10T00:05:15Z",
       "report_path": ".agents/reports/review_reports/T01.md"
     },
     "T02": {
       "status": "done",
-      "completed_at": "2026-03-08",
+      "completed_at": "2026-03-10T00:05:15Z",
       "report_path": ".agents/reports/review_reports/T02.md"
     },
     "T03": {
       "status": "done",
-      "completed_at": "2026-03-08",
+      "completed_at": "2026-03-09T21:13:14Z",
       "report_path": ".agents/reports/review_reports/T03b.md",
       "sub_tasks": {
         "T03a": {
           "status": "done",
-          "completed_at": "2026-03-08",
+          "completed_at": "2026-03-09T21:13:14Z",
           "scope": "Modely přímo přečteny: core, projekt, arch_z, uzivatel. Raw SQL / extra() vyhledávání celým repozitářem.",
           "report_path": ".agents/reports/review_reports/T03.md"
         },
         "T03b": {
           "status": "done",
-          "completed_at": "2026-03-08",
+          "completed_at": "2026-03-10T00:05:15Z",
           "scope": "Modely přímo přečteny: heslar, pian, pas, adb, oznameni, xml_generator. ORM vzory ve views (cílené Grep). GitHub Issues: nedostupné bez autentizace, zdokumentováno.",
           "report_path": ".agents/reports/review_reports/T03b.md"
         }
       }
     },
-    "T04": { "status": "done", "completed_at": "2026-03-08", "report_path": ".agents/reports/review_reports/T04.md" },
-    "T05": { "status": "done", "completed_at": "2026-03-08", "report_path": ".agents/reports/review_reports/T05.md" },
+    "T04": { "status": "done", "completed_at": "2026-03-10T00:05:15Z", "report_path": ".agents/reports/review_reports/T04.md" },
+    "T05": { "status": "done", "completed_at": "2026-03-10T00:05:15Z", "report_path": ".agents/reports/review_reports/T05.md" },
     "T06": {
       "status": "done",
-      "completed_at": "2026-03-11",
+      "completed_at": "2026-03-11T02:15:57Z",
       "report_path": ".agents/reports/review_reports/T06.md"
     },
     "T07": {
       "status": "done",
-      "completed_at": "2026-03-11",
+      "completed_at": "2026-03-11T02:15:57Z",
       "report_path": ".agents/reports/review_reports/T07.md"
     },
     "T08": {
       "status": "done",
-      "completed_at": "2026-03-11",
+      "completed_at": "2026-03-11T02:15:57Z",
       "report_path": ".agents/reports/review_reports/T08.md"
     },
     "T09": {
       "status": "done",
-      "completed_at": "2026-03-11",
+      "completed_at": "2026-03-11T02:15:57Z",
       "report_path": ".agents/reports/review_reports/T09.md"
     },
-    "T10": { "status": "pending", "completed_at": null, "report_path": null },
-    "T11": { "status": "blocked", "completed_at": null, "report_path": null }
+    "T10": {
+      "status": "done",
+      "completed_at": "2026-03-11T02:15:57Z",
+      "report_path": ".agents/reports/review_reports/T10.md"
+    },
+    "T11": {
+      "status": "done",
+      "completed_at": "2026-03-11T02:15:57Z",
+      "report_path": ".agents/reports/review_reports/final_audit.md"
+    }
   },
   "file_hashes": {
     "AGENTS.md": {
@@ -190,52 +198,52 @@
     },
     "docker-compose-dev-local-db-all-containers.yml": {
       "sha256": "4a8b7f070012bc8c11e0e7e706b6b30e9c7d600ab9a897a3060b19b78e64b0da",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "proxy/Dockerfile": {
       "sha256": "b8530bdadc35819e629954f23cc44d84f9cb5b8b2561560573105681e495dbec",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "proxy/default.conf": {
       "sha256": "cad79708a177c14c2926394f4fd5e9975ae159ba2de1c8a2014a6010bc7193ec",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "redis/Dockerfile": {
       "sha256": "2a75489a99e4b298961268ce2a1c5b4058ac8c0013df0e29e0599ec8622844d2",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "redis/redis.conf": {
       "sha256": "00ab1d01d81542b342135b314f991ca7d13d34ced2c29ef2d89b6ac22634b9e9",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "fedora/Dockerfile": {
       "sha256": "0f1b7a97975536702e3f27cb7d71a8c4eb32c1c07a046781d03fb038c2078429",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "elasticsearch/elasticsearch.example.yml": {
       "sha256": "979be0c5382fcd9c1e8d0fe5a95c6c81f4f9333c5682dd99dad8474f2830b03c",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "kibana/kibana.example.yml": {
       "sha256": "a7066ca3d28e144e6d552720145c17532cffa2c327c652984a65ac1a9d6a4554",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "logstash/logstash.example.conf": {
       "sha256": "7af9ecc236a202ab3b5a26997b10961c73d8bf15c510c5930bf7bcc375252f50",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "prometheus/prometheus.example.yml": {
       "sha256": "ca573c8523bcfea2737229b4bfe0afd33211b93530f51c18f818c4beedd7642b",
-      "last_reviewed": "2026-03-08",
+      "last_reviewed": "2026-03-12",
       "task_id": "T04"
     },
     "webclient/webclient/settings/production.py": {
@@ -277,6 +285,96 @@
       "sha256": "6e91e435851277af36c7e40b424285d2d56d3e6a31eaabf09bf70314bf882bf2",
       "last_reviewed": "2026-03-08",
       "task_id": "T05"
+    },
+    "scripts/prod_deploy.sh": {
+      "sha256": "c275428bb870c2b7d49a885b9063e2aad0e24eb457b9fef06aa87c434362f061",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/dev_deploy.sh": {
+      "sha256": "f0304d7ba924b3ea96c4530c4ec3115318d95ee7552527778d38c1ef5323bc3e",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/test_deploy.sh": {
+      "sha256": "5f9890e5ce8e47f65790186c0b8a096c271f7ce87b2a89988d9679f8637d24a1",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/git_prod_deploy.sh": {
+      "sha256": "8f95d871b670ff95eb89cb60728d3bd13c6ca2c784316c8c7a16bcd7aa12565e",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/build_prod_image.sh": {
+      "sha256": "b3957c9b9e1f922987047562a3504ff6fd7a611f1640810f2050378189dd8861",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/entrypoint.sh": {
+      "sha256": "981b0ade5ba48ba876fdc5870c3bf16598f4bdc454926b96615172f62f2b34c6",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/entrypoint.dev.sh": {
+      "sha256": "5fb6d0001a3f9da6186983da4bfbeeda2d6b9f69ee9ed33c67d279a1e819a3d0",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/healthcheck.sh": {
+      "sha256": "b2fb6ef660319b889e74d899f3c99b7ac195db21f9c342b379ffcb95d8baa444",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/run-healthcheck.sh": {
+      "sha256": "d3a0114f2461c76b11ccc742bdd4d066a4a3a904442520ce308f04afe98b9a82",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/run-healthcheck_celery.sh": {
+      "sha256": "2b60b1877d8490f605291b1945cf4dfad50b893a397516426de9f8af8aab46eb",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/restore_database.sh": {
+      "sha256": "93d6ca30419fb91b0111b6e9b002846d6734063865033a09677b462fb516150d",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/start_selenium_tests.sh": {
+      "sha256": "e3459cd8b5d9e32d1e5156bf49539229f0141f131ef1cfd9a638dbc2eb9988f4",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/ci_deployment/deploy_server.sh": {
+      "sha256": "d75f176a052ad3b8009d9a2c0ea54952bf382ed40d924d7e2234b3b30ad0b103",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/ci_deployment/deploy_test_server.sh": {
+      "sha256": "acaf2c2156312b447c107e655ccb23143968f016e8b91516ceae6fca331a5c23",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/crontab.txt": {
+      "sha256": "390bf4eb866ded74b23596c753d7fdcce031d2f39ab50ec9015c20e7fd660947",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/uwsgi_site.ini": {
+      "sha256": "cc55c225eecb0c8b3f030082cb18361bdb845df3cf07d3f641f2002fa1dcc5c9",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/db/clone_test_db.py": {
+      "sha256": "935cff6fb8d53827978905a1d9b5b4756d5e13b68524831fc06b04e906b36530",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/db/db_connection_from_docker-web.py": {
+      "sha256": "d6da75becdb3153741136883bc8aa5010251c558a0a15919870753af2055d73b",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
     }
   }
 }
