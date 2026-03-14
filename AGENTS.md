@@ -121,6 +121,27 @@ Agents must not perform large refactors without explicit instruction.
 
 ------------------------------------------------------------------------
 
+## Verification Sources
+
+When verifying behaviour or documentation, the following priority
+applies:
+
+1. live systems or APIs
+2. source code repositories
+3. official technical documentation
+4. repository documentation
+
+Examples:
+
+- Django behaviour should be verified against official Django
+    documentation
+- Docker image metadata should be verified against container
+    registries
+- Elasticsearch and Redis behaviour should be verified against
+    upstream documentation
+
+------------------------------------------------------------------------
+
 ## Scope
 
 ### In Scope
@@ -157,27 +178,6 @@ Agents must not modify generated artefacts or runtime data such as:
 
 Generated documentation blocks must not be edited manually if scripts
 exist.
-
-------------------------------------------------------------------------
-
-## Verification Sources
-
-When verifying behaviour or documentation, the following priority
-applies:
-
-1. live systems or APIs
-2. source code repositories
-3. official technical documentation
-4. repository documentation
-
-Examples:
-
-- Django behaviour should be verified against official Django
-    documentation
-- Docker image metadata should be verified against container
-    registries
-- Elasticsearch and Redis behaviour should be verified against
-    upstream documentation
 
 ------------------------------------------------------------------------
 
@@ -244,7 +244,7 @@ are in `.gitignore`; do not use them for anything that should be shared.
 - **Review config and task definitions:** `.agents/config/` (e.g.
   `review_config.yaml`)
 - **Prompts and automation recommendations:** `.agents/prompts/`,
-  `.agents/reports/` (e.g. `claude_automation_recommendations.md`)
+  `.agents/reports/` (e.g. `automation_recommendations.md`)
 
 Document recommended hooks, MCP servers, and subagents in `AGENTS.md` or
 `.agents/`; local implementation may remain in `.cursor/` or `.claude/` per

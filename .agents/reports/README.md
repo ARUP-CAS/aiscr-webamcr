@@ -16,7 +16,7 @@ Lidsky čitelné výstupy dlouhodobého technického review.
   - backlog strukturálních / architektonických vylepšení,  
   - členění podle priority (vysoká / střední / nízká).
 
-- `claude_automation_recommendations.md`  
+- `automation_recommendations.md`  
   - doporučení pro nastavení Claude Code / Cursor automations (MCP servery, hooks, skills),  
   - sdílená pravidla mají žít zde a v `AGENTS.md` / `.agents/`, nikoli v `.cursor/` nebo `.claude/`.
 
