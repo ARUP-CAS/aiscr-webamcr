@@ -13,6 +13,8 @@ Archeologická mapa České republiky (AMČR) je informační systém pro sběr,
 - **Produkční aplikace:** <https://amcr.aiscr.cz/>
 - **AIS CR:** <https://www.aiscr.cz/>
 
+**Externí API:** Aplikace připravuje data pro Digiarchiv (File API) a odkazuje na schéma AMCR (OAI-PMH). Kanonická dokumentace API a zdroje pravdy pro endpointy jsou v repozitáři [aiscr-api-home](https://github.com/ARUP-CAS/aiscr-api-home) a na <https://api.aiscr.cz/>.
+
 ---
 
 ## Technologický stack

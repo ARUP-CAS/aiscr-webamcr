@@ -259,3 +259,14 @@ This repository is part of the AIS CR ecosystem maintained by ARUP-CAS.
 Related repositories: aiscr-digiarchiv-2, aiscr-webamcr-help, aiscr-api-home, aiscr-home, aiscr-amcr-home.
 Agents working across repositories should preserve consistency in
 documentation and review processes.
+
+### External APIs consumed
+
+This application **exposes** the Auth API (production: <https://amcr.aiscr.cz/>). It **consumes** the following external services:
+
+| Service | Purpose | Canonical documentation |
+|--------|---------|--------------------------|
+| Digiarchiv (File API) | File URLs (`DIGIARCHIV_SERVER_URL`, `DIGIARCHIV_URL`), cron trigger `call_digiarchiv_update_task` | [aiscr-api-home](https://github.com/ARUP-CAS/aiscr-api-home) — [File API](https://api.aiscr.cz/file-api/) |
+| AMCR schema (OAI-PMH) | XML namespace/XSD for AMCR format (`api.aiscr.cz/schema/amcr/2.2/`) | [aiscr-api-home](https://github.com/ARUP-CAS/aiscr-api-home) — [OAI-PMH](https://api.aiscr.cz/oai-pmh/) |
+
+Do not duplicate endpoint definitions or base URLs here; refer to aiscr-api-home (and its `.agents/config/review_config.yaml`) as the source of truth for live endpoints and verification.
