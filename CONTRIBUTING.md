@@ -262,7 +262,7 @@ Technický dluh a auditní výstupy jsou evidovány v `.agents/`.
 Otevřete nový kontext AI agenta a jako první zprávu vložte:
 
 ```
-Přečti .agents/prompts/review_codebase.md a pokračuj v review.
+Read .agents/prompts/review_codebase.md and continue the review.
 ```
 
 Agent si načte `AGENTS.md`, stav z `.agents/config/review_cache.json` a zahájí

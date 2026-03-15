@@ -271,21 +271,20 @@ def delete_unsubmited_projects():
     )
     for item in projekt_query:
         item: Projekt
+        logger.debug("core.cron.delete_unsubmited_projects.delete_projekt", extra={"ident_cely": item.ident_cely})
         fedora_transaction = FedoraTransaction()
         item.active_transaction = fedora_transaction
         try:
-            has_soubory = False
             if isinstance(item.soubory, SouborVazby):
                 for item_file in item.soubory.soubory.all():
                     item.active_transaction = fedora_transaction
                     item_file.delete()
-                    has_soubory = True
                 item.soubory.delete()
                 item.soubory = None
             item.suppress_signal = True
             item.delete()
-            if has_soubory:
-                con = FedoraRepositoryConnector(item, fedora_transaction)
+            con = FedoraRepositoryConnector(item, fedora_transaction)
+            if con.container_exists():
                 con.delete_container(delete_tombstone=False)
             fedora_transaction.mark_transaction_as_closed()
         except Exception as err:

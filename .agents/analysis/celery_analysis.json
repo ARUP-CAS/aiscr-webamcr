@@ -1,5 +1,8 @@
 {
   "_meta": {
+    "schema_version": "1",
+    "task_id": "T06",
+    "generated_at": "2026-03-11T02:15:57Z",
     "status": "done — T06",
     "needs_agent_update": false
   },

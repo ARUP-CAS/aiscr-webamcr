@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "status": "done — T07",
+    "status": "done — T07+T07b",
     "needs_agent_update": false
   },
   "scope_note": "Pouze vlastní kód vývojářů AMČR. Vendorované knihovny (*.min.js, vendor/, atd.) jsou vyloučeny z hodnocení kvality.",
@@ -28,13 +28,37 @@
       "webclient/static/js/mapa_basic_functions.js",
       "webclient/static/js/mapa_functions.js",
       "webclient/static/js/ajax_functions.js",
-      "webclient/static/js/theme-toggle.js"
+      "webclient/static/js/theme-toggle.js",
+      "webclient/static/js/mapa_arch_z.js",
+      "webclient/static/js/mapa_pas.js",
+      "webclient/static/js/dz.js",
+      "webclient/static/js/mapa_projekty.js",
+      "webclient/static/js/mapa_pins.js",
+      "webclient/static/js/modal_forms_class.js",
+      "webclient/static/js/mapa_doc.js",
+      "webclient/static/js/form_fields_disabling.js",
+      "webclient/static/js/coor_precision.js",
+      "webclient/static/js/dz_import_pian.js",
+      "webclient/static/js/mapa_settings_jtsk.js",
+      "webclient/static/js/mapa_oznameni.js",
+      "webclient/static/js/pridani_title_pro_disabled.js",
+      "webclient/static/js/datepicker-scroll-fix.js",
+      "webclient/static/js/create_osoba_modal.js",
+      "webclient/static/js/daterangepicker-init.js",
+      "webclient/static/js/mapa_settings_mercator.js",
+      "webclient/static/js/submit_button.js",
+      "webclient/static/js/copyIdentLink.js",
+      "webclient/static/js/create_message.js"
     ],
     "patterns": [
       "Mapové obrazovky staví na Leafletu a vlastních helper funkcích; stav mapy (aktivní vrstvy, vyhledávací dotaz) se perzistuje v localStorage pod prefixem mapy.",
       "AJAX helpery používají kombinaci jQuery (pro `changed.bs.select` eventy a selectpicker) a `XMLHttpRequest`/`fetch`; CSRF token je předáván buď přes globální proměnnou nebo Django šablonu.",
       "Dark / light režim je implementován skrz třídu `ThemeManager`, která nastavuje `data-theme` na `<html>` a třídy na `<body>`, reaguje na `prefers-color-scheme` a ukládá manuální volbu do localStorage.",
-      "Šablona `base.html` obsahuje inline skript pro inicializaci datepickerů, automatické zavírání flash zpráv a periodický polling endpointu `core:check_authentication` pro přesměrování po SSO loginu."
+      "Šablona `base.html` obsahuje inline skript pro inicializaci datepickerů, automatické zavírání flash zpráv a periodický polling endpointu `core:check_authentication` pro přesměrování po SSO loginu.",
+      "Mapové soubory (mapa_arch_z, mapa_pas, mapa_projekty, mapa_doc, mapa_oznameni) sdílejí společný vzor: globální proměnné pro stav mapy, XHR pro dynamické načítání vrstev, Leaflet události (draw:created, moveend, overlayadd), heatmap overlay. Žádný z nich nepoužívá onerror handler na XHR.",
+      "Dropzone integrace (dz.js, dz_import_pian.js) používá Dropzone.autoDiscover=false a konfiguraci přes CSRF z Django šablony. Soubory závisí na globálních proměnných z šablon (object_id, typ_uploadu, dz_trans).",
+      "Ikony pinů (mapa_pins.js) definují 4 barevné varianty ikon s rozsáhlou duplikací — kandidát na refaktor do factory funkce.",
+      "Modal formuláře (modal_forms_class.js) implementují AJAX podání s JSON odpovědí a redirect; JSON.parse bez try/catch."
     ],
     "issues": [
       {
@@ -52,8 +76,85 @@
       {
         "file": "webclient/templates/base.html",
         "severity": "Střední",
-        "description": "Inline skript `checkUserAuthentication` volá periodicky (každých 60 s) endpoint `core:check_authentication` a při přechodu z login stránky s parametrem `next` provádí přesměrování. V případě výpadku sítě se chová korektně (jen loguje do konzole), ale dochází k duplikaci přesměrovací logiky mezi backendem a frontendem.",
+        "description": "Inline skript `checkUserAuthentication` volá periodicky (každých 60 s) endpoint `core:check_authentication` a při přechodu z login stránky s parametrem `next` provádí přesměrování. V případě výpadku sítě se chově korektně (jen loguje do konzole), ale dochází k duplikaci přesměrovací logiky mezi backendem a frontendem.",
         "recommendation": "Zvážit přesun přesměrovací logiky do backendu (např. po úspěšném CAS loginu) a na frontendu ponechat pouze jemný UX enhancement, nebo naopak jasně zdokumentovat, že frontend je autoritativní."
+      },
+      {
+        "file": "webclient/static/js/mapa_arch_z.js",
+        "severity": "Vysoká",
+        "description": "Řádek 103: `poi_sugest.getLayers()[0]._latlng` — crash pokud je vrstva prázdná. Řádek 305: `coordinates[0][0]` — crash při degenerovaném polygonu.",
+        "recommendation": "Přidat guard `getLayers().length > 0` a `coordinates.length > 0` před přístupem.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/mapa_arch_z.js",
+        "severity": "Střední",
+        "description": "Implicitní globální proměnné (rs, akce_ident_cely, zoomed, coor, geom) na řádcích 404, 753, 810, 812, 883. XHR handlery bez onerror. JSON.parse bez try/catch.",
+        "recommendation": "Deklarovat proměnné s let/const. Přidat xhr.onerror handlery a obalit JSON.parse do try/catch.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/mapa_projekty.js",
+        "severity": "Vysoká",
+        "description": "Řádek 269: `bounds.northWest` — LatLngBounds nemá vlastnost northWest, správně je getNorthWest(). Řádek 364: `poi_pian.clearLayers(poi_pian)` — clearLayers() nepřijímá argumenty.",
+        "recommendation": "Použít bounds.getNorthWest() a poi_pian.clearLayers() bez argumentů.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/dz.js",
+        "severity": "Vysoká",
+        "description": "Řádky 272–274: po nahrazení tlačítka clonem se delete error handler odkazuje na původní `btn` místo `clone` — nastavení stylu a textu cílí na nesprávný element.",
+        "recommendation": "V delete error handleru použít `clone` místo `btn`.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/form_fields_disabling.js",
+        "severity": "Vysoká",
+        "description": "Řádek 65: podmínka `element.type != 'select-multiple' || element.type != 'select-one'` je vždy true (OR s negacemi) — logické invertování select/non-select větví. Správně má být &&.",
+        "recommendation": "Nahradit `||` za `&&` v podmínce na řádku 65.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/coor_precision.js",
+        "severity": "Vysoká",
+        "description": "Řádek 31: funkce `amcr_static_coordinate_precision_jtsk` pro ne-array vstup chybně používá `global_fixed_precision.wgs84` místo `global_fixed_precision.jtsk`.",
+        "recommendation": "Opravit na `global_fixed_precision.jtsk`.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/mapa_pas.js",
+        "severity": "Vysoká",
+        "description": "Řádek 326: `boundsLock.topLeft` — proměnná inicializována jako false, pak jako objekt; první použití může vyvolat TypeError.",
+        "recommendation": "Inicializovat boundsLock jako null a přidat guard `if (boundsLock)` před přístupem k vlastnostem.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/mapa_pas.js",
+        "severity": "Střední",
+        "description": "Implicitní globál `geom` v forEach (řádek 362). XHR v fill_katastr a switchMap bez onerror. JSON.parse bez try/catch.",
+        "recommendation": "Deklarovat `let geom`, přidat onerror handlery, obalit JSON.parse do try/catch.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/mapa_doc.js",
+        "severity": "Střední",
+        "description": "poi_all.clearLayers(poi_all) — clearLayers() nepřijímá argumenty. i.geom.split('(')[1] bez kontroly formátu. JSON.parse bez try/catch.",
+        "recommendation": "Použít clearLayers() bez argumentů. Přidat kontroly formátu geometrie a obalit JSON.parse.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/modal_forms_class.js",
+        "severity": "Střední",
+        "description": "JSON.parse(response) na řádku 64 může selhat pokud odpověď není JSON (např. 403 HTML stránka). Prázdný if blok na řádku 96.",
+        "recommendation": "Obalit JSON.parse do try/catch a ošetřit HTML odpovědi.",
+        "added_by": "T07b"
+      },
+      {
+        "file": "webclient/static/js/copyIdentLink.js",
+        "severity": "Střední",
+        "description": "navigator.clipboard.writeText() vrací Promise bez await/then — chyby jsou neošetřené. Clipboard API vyžaduje HTTPS.",
+        "recommendation": "Přidat .then()/.catch() nebo async/await s uživatelskou zpětnou vazbou.",
+        "added_by": "T07b"
       }
     ]
   },

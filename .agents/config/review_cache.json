@@ -1,282 +1,404 @@
 {
   "schema_version": "2",
-  "initialized_at": "2026-03-07",
-  "last_updated": "2026-03-11T12:00:00Z",
+  "initialized_at": "2026-03-09",
+  "last_updated": "2026-03-13T12:00:00Z",
   "tasks": {
     "T01": {
       "status": "done",
-      "completed_at": "2026-03-08",
+      "completed_at": "2026-03-10T00:05:15Z",
       "report_path": ".agents/reports/review_reports/T01.md"
     },
     "T02": {
       "status": "done",
-      "completed_at": "2026-03-08",
+      "completed_at": "2026-03-10T00:05:15Z",
       "report_path": ".agents/reports/review_reports/T02.md"
     },
     "T03": {
       "status": "done",
-      "completed_at": "2026-03-08",
+      "completed_at": "2026-03-09T21:13:14Z",
       "report_path": ".agents/reports/review_reports/T03b.md",
       "sub_tasks": {
         "T03a": {
           "status": "done",
-          "completed_at": "2026-03-08",
+          "completed_at": "2026-03-09T21:13:14Z",
           "scope": "Modely přímo přečteny: core, projekt, arch_z, uzivatel. Raw SQL / extra() vyhledávání celým repozitářem.",
           "report_path": ".agents/reports/review_reports/T03.md"
         },
         "T03b": {
           "status": "done",
-          "completed_at": "2026-03-08",
+          "completed_at": "2026-03-10T00:05:15Z",
           "scope": "Modely přímo přečteny: heslar, pian, pas, adb, oznameni, xml_generator. ORM vzory ve views (cílené Grep). GitHub Issues: nedostupné bez autentizace, zdokumentováno.",
           "report_path": ".agents/reports/review_reports/T03b.md"
+        },
+        "T03c": {
+          "status": "done",
+          "completed_at": "2026-03-13T12:00:00Z",
+          "scope": "Modely přímo přečteny: dokument (10 modelů), historie (2 modely), ez (4 modely), xml_generator (2 abstraktní modely). Nové nálezy: SEC-ORM-004/005, NP1-015 až NP1-019.",
+          "report_path": ".agents/reports/review_reports/T03c.md"
+        },
+        "T03d": {
+          "status": "done",
+          "completed_at": "2026-03-13T12:00:00Z",
+          "scope": "Modely přímo přečteny: komponenta (3 modely), lokalita (1 model), nalez (2 modely), dj (1 model), neidentakce (2 modely), notifikace_projekty (1 model). Nové nálezy: NP1-020, BUG-015 (__init_ typo).",
+          "report_path": ".agents/reports/review_reports/T03d.md"
         }
       }
     },
-    "T04": { "status": "done", "completed_at": "2026-03-08", "report_path": ".agents/reports/review_reports/T04.md" },
-    "T05": { "status": "done", "completed_at": "2026-03-08", "report_path": ".agents/reports/review_reports/T05.md" },
+    "T04": {
+      "status": "done",
+      "completed_at": "2026-03-10T00:05:15Z",
+      "report_path": ".agents/reports/review_reports/T04.md"
+    },
+    "T05": {
+      "status": "done",
+      "completed_at": "2026-03-10T00:05:15Z",
+      "report_path": ".agents/reports/review_reports/T05.md"
+    },
     "T06": {
       "status": "done",
-      "completed_at": "2026-03-11",
+      "completed_at": "2026-03-11T02:15:57Z",
       "report_path": ".agents/reports/review_reports/T06.md"
     },
     "T07": {
       "status": "done",
-      "completed_at": "2026-03-11",
-      "report_path": ".agents/reports/review_reports/T07.md"
+      "completed_at": "2026-03-11T02:15:57Z",
+      "report_path": ".agents/reports/review_reports/T07.md",
+      "sub_tasks": {
+        "T07b": {
+          "status": "done",
+          "completed_at": "2026-03-13T12:00:00Z",
+          "scope": "20 custom JS souborů analyzováno (~3 846 řádků). Vendored exclusions aktualizovány (timer.js, datepicker-cs.js). Nové nálezy: BUG-016 (form_fields_disabling), BUG-017 (coor_precision), FRONT-03 až FRONT-06 (backlog).",
+          "report_path": ".agents/reports/review_reports/T07b.md"
+        }
+      }
     },
     "T08": {
       "status": "done",
-      "completed_at": "2026-03-11",
+      "completed_at": "2026-03-11T02:15:57Z",
       "report_path": ".agents/reports/review_reports/T08.md"
     },
     "T09": {
       "status": "done",
-      "completed_at": "2026-03-11",
+      "completed_at": "2026-03-11T02:15:57Z",
       "report_path": ".agents/reports/review_reports/T09.md"
     },
-    "T10": { "status": "pending", "completed_at": null, "report_path": null },
-    "T11": { "status": "blocked", "completed_at": null, "report_path": null }
+    "T10": {
+      "status": "done",
+      "completed_at": "2026-03-11T02:15:57Z",
+      "report_path": ".agents/reports/review_reports/T10.md"
+    },
+    "T11": {
+      "status": "done",
+      "completed_at": "2026-03-11T02:15:57Z",
+      "report_path": ".agents/reports/review_reports/final_audit.md"
+    }
   },
   "file_hashes": {
     "AGENTS.md": {
-      "sha256": "f4393081af3541efb8e4001acd50affc8a3fa3b194c01d8173eef058ff7475f0",
-      "last_reviewed": "2026-03-11",
+      "sha256": "9fbfbf47a8a6d58d128408be29eb1d5759409a4dc1e3bb0830e6e14d8b74d03c",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "Dockerfile": {
-      "sha256": "dfa43cbb0e5d08b689df49a29c226b618a7f14d54bf34c07bd5c8530405d9371",
-      "last_reviewed": "2026-03-08",
+      "sha256": "e5d2240888664da30103eedfd713f628c3497cc74174219957fa150d38eaa841",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "Dockerfile-DB": {
-      "sha256": "d0b1f60fcfd7ffe9e743e7bf5f180367a752787ecec5eaef992259d4f848ad6e",
-      "last_reviewed": "2026-03-08",
+      "sha256": "003b4662294cb85801ab98c8b31a6c9b4c9e95e07844ac993725c1f31f7b9b6d",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "Dockerfile-DEV": {
-      "sha256": "174b089fe2e983e9f2fa471ac21ac5262c0b76427c3c4ba7bb3be5520192d63e",
-      "last_reviewed": "2026-03-08",
+      "sha256": "66fd13993a9b473a418c711cff9aa442ccb0ce383b340af63cd9eb3739fd4043",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "docker-compose.yml": {
-      "sha256": "3b03a31e1c8e7a1a2bf9edce77013b4367507e9d44ab3a25c44f55530c7df4cc",
-      "last_reviewed": "2026-03-08",
+      "sha256": "56ca62e07966c7bb268b4d4a3a85062387cc3b1963c163ff3c2a40829fff7328",
+      "last_reviewed": "2026-03-13",
       "task_id": "T02"
     },
     "docker-compose-dev-local-db.yml": {
-      "sha256": "805576a72a777a1192a9d3e64f6a77bcda89eec62d4ece2d9d6e68251563c194",
-      "last_reviewed": "2026-03-08",
+      "sha256": "9a32fba5a1d2f5492978b59a39bfdc6499c3da4d3c289cbfd0946c0329f66c25",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "docker-compose-proxy.yml": {
-      "sha256": "72bc78553b1817e5bdb9c8f961baa05a5db36109e8213c2a465a43a66927db62",
-      "last_reviewed": "2026-03-08",
+      "sha256": "48e75c5cb7359cb1e746a7369b01025a104bf2fe412c351f34c09fadbbecfa8a",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "docker-compose-test.yml": {
-      "sha256": "4bcdf7853606d850f8233771873b302558845d0bd2a54d9cce514938cf638327",
-      "last_reviewed": "2026-03-08",
+      "sha256": "1987bbb667e79a13426cdf67025ecf213191da4495f2651a38d25627ba76350c",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "git_docker-compose.yml": {
-      "sha256": "d3e259535097bc9c4634d479cefe70d2599172b09b5f3b7f9ec0f696916ec36e",
-      "last_reviewed": "2026-03-08",
+      "sha256": "e2fcf82f989f8c050a87ae56cff4da85407e260933d2a70c034e700a5fd478e3",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "git_docker-compose.override.yml": {
-      "sha256": "8e516e7ac8c199d8752dfd096f5a49ed2e47ef9d418e596eba1e88780cbc2b80",
-      "last_reviewed": "2026-03-08",
+      "sha256": "a8397ef7994dc2f70b0cc295a8f4ca81255568555feeb8d3a429561b6dcf903a",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "git_docker-compose-proxy.yml": {
-      "sha256": "7bb50f27ab6868d47f0b260dcae47571d312a9c153d23e17ec83c5ad3c5871dd",
-      "last_reviewed": "2026-03-08",
+      "sha256": "f976fd03592435565a75b9220527307c6c65642034714be063389ac7879a66b0",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "readthedocs.yaml": {
-      "sha256": "b57bcee713bc5c278368c4da165b8b90cea5707c235f0550601e316b1d4a7b97",
-      "last_reviewed": "2026-03-08",
+      "sha256": "c14139e78fcc638c0129d9544fbc55097fb4c4539b3e45fb6bcba2046d036398",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     ".pre-commit-config.yaml": {
-      "sha256": "46877e36dd41ac12f54d7974feb047e241261a0786b954bb514bbe02cd338833",
-      "last_reviewed": "2026-03-08",
+      "sha256": "bcc8163c5d100ee3ab8f50b33d7d8421e01097f8bef2f943e67f50fc74b7ac27",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     ".flake8": {
-      "sha256": "6a5bd13949eb295dff601d9bf4e0e315b3066306f9b00a47c0b5b3b6c35436bf",
-      "last_reviewed": "2026-03-08",
+      "sha256": "d7586bd204d10ea171748e9030131a59e149ca5a48520d22a1e4ca0b9529d5c7",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     ".isort.cfg": {
-      "sha256": "c0a628ba0b13fb79b393328a8a0e2ba172ff40528742b761340e12b92321f3fc",
-      "last_reviewed": "2026-03-08",
+      "sha256": "c3be547fefd0f2673cf4e98e9614d7bb4b60495b9c178c4e7c08e2070c6b2ea9",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "webclient/manage.py": {
-      "sha256": "28fadc9c9ea2c1949f2bb016a0d9c5e030df55093a4842aa927d14f380396a76",
-      "last_reviewed": "2026-03-08",
+      "sha256": "f1819e91e701e649bafe9a8ba15c390f972909a60f0cfa95a8553fa9ba79ebfb",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "webclient/requirements.txt": {
-      "sha256": "f4d94a593752f7a9044f7f98251860f2a72c0d2f1a0b5b55ac0058c09209aceb",
-      "last_reviewed": "2026-03-08",
+      "sha256": "ab3ac70ef35306345eacf235c800fc0161ab124a05b87be9ce6586b1a3904bbd",
+      "last_reviewed": "2026-03-13",
       "task_id": "T02"
     },
     "webclient/webclient/settings/base.py": {
-      "sha256": "2d00af2db1b765375249b4b7833bac438ccdd6fc694f88b5724f822ab63fb204",
-      "last_reviewed": "2026-03-08",
+      "sha256": "9280aae13d4542f8b2abcdf87e333f95f198bb56955290bbde19d50c7cafd00a",
+      "last_reviewed": "2026-03-13",
       "task_id": "T02"
     },
     "webclient/webclient/settings/dev.py": {
-      "sha256": "0016fd1a1e015eb3681cb8fecf9b8e9fc817a2b8c42ce46a9369e79af366cad6",
-      "last_reviewed": "2026-03-08",
+      "sha256": "84a20f7b4699b1133d457d015238da0c048ff803b306e05a9e644b474d05e363",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "webclient/webclient/settings/production.py": {
-      "sha256": "aee569e98d7459c3a16a454258038960a793b6d99e0a7e2bb859639b6f27fedc",
-      "last_reviewed": "2026-03-08",
-      "task_id": "T01"
+      "sha256": "4110e5ae5bb691c088713671b81cc5ecbfcefca8ffe3a16b601b75023c34ac17",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T05"
     },
     "webclient/webclient/celery.py": {
-      "sha256": "cf3fd9aabf6374bc57902246102a11f7aff85225b6adb03ec4875f6d96e54be1",
-      "last_reviewed": "2026-03-08",
+      "sha256": "72fc5e2170cdb84865a71d1b52751967714c5faf34fba66cffc360c13ce9633c",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "webclient/webclient/urls.py": {
-      "sha256": "395ce5da91c6f91de1ca79ba7b0084c0933d9aa0cff708e02624128bd335ddee",
-      "last_reviewed": "2026-03-08",
+      "sha256": "bd3bab88491701a321e5ca2cdb1702d77af00d6a484056c4cf2e48c598482e0f",
+      "last_reviewed": "2026-03-13",
       "task_id": "T01"
     },
     "webclient/oznameni/models.py": {
-      "sha256": "274e5ea63b092fc1f64159ef4470b362c2feb837dd89bfd7ff713eb702855dea",
-      "last_reviewed": "2026-03-08",
+      "sha256": "24b77ba650801c702937269d596819bd4e7bf6ece9e5fddc8424b0dccbbb9510",
+      "last_reviewed": "2026-03-13",
       "task_id": "T02"
     },
     "webclient/projekt/forms.py": {
-      "sha256": "c37ee99d781bc311188db5da01cd9319bf6a81ca957ee705f645a376c4090798",
-      "last_reviewed": "2026-03-08",
+      "sha256": "3c9781cc1be5240f9d95713f30b3a5c652a4f26ef906db363f91e5dfe3835cdf",
+      "last_reviewed": "2026-03-13",
       "task_id": "T02"
     },
     "webclient/adb/models.py": {
-      "sha256": "d37ec5c937748ab2908c90966cf1bdae0e63581f440ef452a5b48b7bdce97788",
-      "last_reviewed": "2026-03-08",
+      "sha256": "fa557ebbe0ac6eb9d0e9b358f866cb985fc76f05f53d65fb505c539396706819",
+      "last_reviewed": "2026-03-13",
       "task_id": "T02"
     },
     "webclient/xml_generator/generator.py": {
-      "sha256": "1bcd11e5f81f806ad628c16ca33792e321f9cfdc7e4d5a15bb5df56b5de2b588",
-      "last_reviewed": "2026-03-08",
+      "sha256": "4614a42a41482d177199518fe130b64d4d550f157eac8c9c3a2f193f5befc186",
+      "last_reviewed": "2026-03-13",
       "task_id": "T02"
     },
     "docker-compose-dev-local-db-all-containers.yml": {
-      "sha256": "4a8b7f070012bc8c11e0e7e706b6b30e9c7d600ab9a897a3060b19b78e64b0da",
-      "last_reviewed": "2026-03-08",
+      "sha256": "58013431c29e89b7041ee672d53c0d56ec827ed91024651a56e77ab0002018d9",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "proxy/Dockerfile": {
-      "sha256": "b8530bdadc35819e629954f23cc44d84f9cb5b8b2561560573105681e495dbec",
-      "last_reviewed": "2026-03-08",
+      "sha256": "4479bba3e9dbd9cc9a0e38de1821cefd3c3b919c65633eb757449e8caa032ec0",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "proxy/default.conf": {
-      "sha256": "cad79708a177c14c2926394f4fd5e9975ae159ba2de1c8a2014a6010bc7193ec",
-      "last_reviewed": "2026-03-08",
+      "sha256": "cced434c890fb419c1fefcdfb42003ba407a93cc7ce2ff8a88e415489e83f42d",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "redis/Dockerfile": {
-      "sha256": "2a75489a99e4b298961268ce2a1c5b4058ac8c0013df0e29e0599ec8622844d2",
-      "last_reviewed": "2026-03-08",
+      "sha256": "a9776e3132d6acc02e7af386ea597c7e11bdf08fe813df80a4cae2ef7a27b0ed",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "redis/redis.conf": {
-      "sha256": "00ab1d01d81542b342135b314f991ca7d13d34ced2c29ef2d89b6ac22634b9e9",
-      "last_reviewed": "2026-03-08",
+      "sha256": "5340c2f2a8e9791015d27e6e2b8c9c356751138ed2409e7e2d4ae580e35d2c4f",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "fedora/Dockerfile": {
-      "sha256": "0f1b7a97975536702e3f27cb7d71a8c4eb32c1c07a046781d03fb038c2078429",
-      "last_reviewed": "2026-03-08",
+      "sha256": "8296fd0ee766114ef515a3ea97ca3d7dc9a37dd399bb0fcd20fe42be42acfdc0",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "elasticsearch/elasticsearch.example.yml": {
-      "sha256": "979be0c5382fcd9c1e8d0fe5a95c6c81f4f9333c5682dd99dad8474f2830b03c",
-      "last_reviewed": "2026-03-08",
+      "sha256": "94fe644e84e053f52b73087b829c86bc08d9919e7251363a3464432743eed756",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "kibana/kibana.example.yml": {
-      "sha256": "a7066ca3d28e144e6d552720145c17532cffa2c327c652984a65ac1a9d6a4554",
-      "last_reviewed": "2026-03-08",
+      "sha256": "08783258a5f2198b9f6feb246d2523e91164389820b575cb084b2c2cc0678e49",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "logstash/logstash.example.conf": {
-      "sha256": "7af9ecc236a202ab3b5a26997b10961c73d8bf15c510c5930bf7bcc375252f50",
-      "last_reviewed": "2026-03-08",
+      "sha256": "bc77b3620bff6988084f78adcfbac79cf573c8c53f11f1dfdb6b56d805689693",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
     "prometheus/prometheus.example.yml": {
-      "sha256": "ca573c8523bcfea2737229b4bfe0afd33211b93530f51c18f818c4beedd7642b",
-      "last_reviewed": "2026-03-08",
+      "sha256": "6ed5b3fde79140386266df1bd4f9a1f56cfc003e7d317c3cf529d696d130e1fd",
+      "last_reviewed": "2026-03-13",
       "task_id": "T04"
     },
-    "webclient/webclient/settings/production.py": {
-      "sha256": "aee569e98d7459c3a16a454258038960a793b6d99e0a7e2bb859639b6f27fedc",
-      "last_reviewed": "2026-03-08",
-      "task_id": "T05"
-    },
     "webclient/webclient/settings/sample_secrets_db.json": {
-      "sha256": "f67216d473cdeae26ec74c993a8e1ad581ae24e85ef95cc16a1e1596d5cfe596",
-      "last_reviewed": "2026-03-08",
+      "sha256": "29fd7770a05d9a315fb890ab76331d05296bc3dcc242c0807b37583541f6036e",
+      "last_reviewed": "2026-03-13",
       "task_id": "T05"
     },
     "webclient/webclient/settings/sample_secrets_mail_client.json": {
-      "sha256": "599443f4f50f0fec1081f6b6bbef8b04dfeb453720600bf2425ce2a9529b1bf2",
-      "last_reviewed": "2026-03-08",
+      "sha256": "f921291f321851f4a9df96229ff1c7eab977c40bb810221a1e7780e0fe6952a4",
+      "last_reviewed": "2026-03-13",
       "task_id": "T05"
     },
     "webclient/core/authenticators.py": {
-      "sha256": "6622f87eba213642b42e1361c18a1f5d9719abee626a2fe4a8b225ce54260d94",
-      "last_reviewed": "2026-03-08",
+      "sha256": "4af3ec87147ce4b09cc2f176f3303d624060ed9724d0ef26a3bc8b60beed740c",
+      "last_reviewed": "2026-03-13",
       "task_id": "T05"
     },
     "webclient/core/context_processors.py": {
-      "sha256": "248645fa95a6032bc6481bac8a0b02c138e0976d0157efa563f8f1bf0ea62563",
-      "last_reviewed": "2026-03-08",
+      "sha256": "7facfc166d9e864891940b6bab83db1c0d57ae5a5a3a56a21224b79f5ebadca3",
+      "last_reviewed": "2026-03-13",
       "task_id": "T05"
     },
     "webclient/core/templatetags/template_tags.py": {
-      "sha256": "58074f0e244b224fece4d35fccfef137363159e46d055bd3631539d0137bb815",
-      "last_reviewed": "2026-03-08",
+      "sha256": "4b379f0e6f2b77060a6f28f26915e13b6edb52d0bed7a2f42df302b4c0628162",
+      "last_reviewed": "2026-03-13",
       "task_id": "T05"
     },
     "webclient/vypis/fields.py": {
-      "sha256": "606a216e467b93cd946a0810d89243fec4fa65f90ae3529acb13ac776196c3b8",
-      "last_reviewed": "2026-03-08",
+      "sha256": "6165c12934c3f94c04a4d003d52cd08a0a9a419418ccdf3646e943429e2789fb",
+      "last_reviewed": "2026-03-13",
       "task_id": "T05"
     },
     "webclient/vypis/views.py": {
-      "sha256": "6e91e435851277af36c7e40b424285d2d56d3e6a31eaabf09bf70314bf882bf2",
-      "last_reviewed": "2026-03-08",
+      "sha256": "578a79f0cac25e49a3636064ae6e6091fbb85ba174adc9d3801670f17bfda0f3",
+      "last_reviewed": "2026-03-13",
       "task_id": "T05"
+    },
+    "scripts/prod_deploy.sh": {
+      "sha256": "c275428bb870c2b7d49a885b9063e2aad0e24eb457b9fef06aa87c434362f061",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/dev_deploy.sh": {
+      "sha256": "f0304d7ba924b3ea96c4530c4ec3115318d95ee7552527778d38c1ef5323bc3e",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/test_deploy.sh": {
+      "sha256": "5f9890e5ce8e47f65790186c0b8a096c271f7ce87b2a89988d9679f8637d24a1",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/git_prod_deploy.sh": {
+      "sha256": "8f95d871b670ff95eb89cb60728d3bd13c6ca2c784316c8c7a16bcd7aa12565e",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/build_prod_image.sh": {
+      "sha256": "b3957c9b9e1f922987047562a3504ff6fd7a611f1640810f2050378189dd8861",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/entrypoint.sh": {
+      "sha256": "981b0ade5ba48ba876fdc5870c3bf16598f4bdc454926b96615172f62f2b34c6",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/entrypoint.dev.sh": {
+      "sha256": "5fb6d0001a3f9da6186983da4bfbeeda2d6b9f69ee9ed33c67d279a1e819a3d0",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/healthcheck.sh": {
+      "sha256": "b2fb6ef660319b889e74d899f3c99b7ac195db21f9c342b379ffcb95d8baa444",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/run-healthcheck.sh": {
+      "sha256": "d3a0114f2461c76b11ccc742bdd4d066a4a3a904442520ce308f04afe98b9a82",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/run-healthcheck_celery.sh": {
+      "sha256": "2b60b1877d8490f605291b1945cf4dfad50b893a397516426de9f8af8aab46eb",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/restore_database.sh": {
+      "sha256": "93d6ca30419fb91b0111b6e9b002846d6734063865033a09677b462fb516150d",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/start_selenium_tests.sh": {
+      "sha256": "e3459cd8b5d9e32d1e5156bf49539229f0141f131ef1cfd9a638dbc2eb9988f4",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/ci_deployment/deploy_server.sh": {
+      "sha256": "d75f176a052ad3b8009d9a2c0ea54952bf382ed40d924d7e2234b3b30ad0b103",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/ci_deployment/deploy_test_server.sh": {
+      "sha256": "acaf2c2156312b447c107e655ccb23143968f016e8b91516ceae6fca331a5c23",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/crontab.txt": {
+      "sha256": "390bf4eb866ded74b23596c753d7fdcce031d2f39ab50ec9015c20e7fd660947",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/uwsgi_site.ini": {
+      "sha256": "cc55c225eecb0c8b3f030082cb18361bdb845df3cf07d3f641f2002fa1dcc5c9",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/db/clone_test_db.py": {
+      "sha256": "935cff6fb8d53827978905a1d9b5b4756d5e13b68524831fc06b04e906b36530",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
+    },
+    "scripts/db/db_connection_from_docker-web.py": {
+      "sha256": "d6da75becdb3153741136883bc8aa5010251c558a0a15919870753af2055d73b",
+      "last_reviewed": "2026-03-13",
+      "task_id": "T10"
     }
-  }
+  },
+  "last_validated": "2026-03-13T00:58:09Z"
 }

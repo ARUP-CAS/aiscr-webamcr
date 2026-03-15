@@ -162,7 +162,7 @@ key_django_apps:
 
 important_directories:
   - webclient
-  - webclient/locale
+  # webclient/locale — removed: directory does not exist in the repository (T01 prompt evolution)
   - webclient/static
   - webclient/templates
   - scripts
@@ -228,6 +228,21 @@ vendored_exclusions:
     - "* @license"
     - "* jQuery"
     - "* Bootstrap"
+  filenames:
+    - leaflet.markercluster-src.js
+    - leaflet-search.js
+    - leaflet-search-geocoder.js
+    - leaflet.measure.js
+    - leaflet-grayscale.js
+    - leaflet_subgroup.js
+    - leaflet.coor.js
+    - leaflet.EditCoordControl.js
+    - simpleheat.js
+    - HeatLayer.js
+    - html-to-rtf-browser.js
+    - coordTransform.js
+    - timer.js
+    - datepicker-cs.js
   note: >
     Vendorované soubory nesmí být hodnoceny pro interní kvalitu kódu v žádném tasku.
     Mohou být referencovány (např. kontrola SRI atributů v šablonách).
@@ -240,3 +255,17 @@ prompt_evolution:
     Suggestions accumulate in prompt_evolution/ across sessions.
     A human reviewer applies accepted suggestions to .agents/prompts/review_codebase.md
     before starting a new audit cycle.
+
+follow_up:
+  prompt: .agents/prompts/review_update.md
+  phases: [U01, U02, U03, U04, U05, U06]
+  output: .agents/reports/review_reports/final_audit.md  # Changelog section
+  tools: .agents/scripts/review_tools.py
+  note: >
+    Incremental update prompt — detects changes, coverage gaps,
+    cross-validation issues, and spot-checks existing findings.
+    Output goes into final_audit.md Changelog section (not separate files).
+    Does not replace the full T01-T11 audit cycle.
+    review_tools.py provides: hash, cross-validate, coverage-gaps,
+    id-inventory, lint-artifacts, prompt-evolution, repo-structure, status.
+    Script is repo-agnostic and config-driven (uses review_config.yaml).

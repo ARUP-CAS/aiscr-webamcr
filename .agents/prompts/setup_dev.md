@@ -1,33 +1,33 @@
 # Setup dev / onboarding — AMČR
 
-Checklist pro nastavení vývojového prostředí a pro agenty, které provádějí kroky na stroji vývojáře.
+Checklist for setting up the development environment and for agents that execute steps on the developer’s machine.
 
-## Prostředí
+## Environment
 
-- **OS:** Windows 11 (používat Unixovou syntaxi v bashe/skriptech kde možno).
-- **Python venv:** `.venv\Scripts\python.exe` (kořen repozitáře).
-- **Django project root:** `webclient/` — ne kořen repozitáře.
+- **OS:** Windows 11 (use Unix-style syntax in bash/scripts where possible).
+- **Python venv:** `.venv\Scripts\python.exe` (repository root).
+- **Django project root:** `webclient/` — not the repository root.
 
-## Základní příkazy
+## Basic commands
 
-| Účel | Příkaz |
-|------|--------|
-| Kontrola syntaxe | `.venv\Scripts\python.exe -m compileall -q webclient` |
-| Formátování + lint | `pre-commit run --all-files` |
+| Purpose | Command |
+|--------|---------|
+| Syntax check | `.venv\Scripts\python.exe -m compileall -q webclient` |
+| Formatting + lint | `pre-commit run --all-files` |
 | Django manage | `cd webclient && ..\.venv\Scripts\python.exe manage.py <command>` |
-| Testy | dle CONTRIBUTING.md § Testování (typicky z `webclient/`) |
+| Tests | see `CONTRIBUTING.md` § Testing (typically from `webclient/`) |
 
-## Před prvním commitem
+## Before the first commit
 
-1. Větev z `test`: `git checkout test && git pull && git checkout -b feature/<issue>`.
-2. Ověřit, že pre-commit projde: `pre-commit run --all-files`.
-3. Nepřidávat do commitu: `local_settings.py`, `secrets.json`, `webclient_env_var.sh` (jsou v `.gitignore`).
+1. Branch from `test`: `git checkout test && git pull && git checkout -b feature/<issue>`.
+2. Verify that pre-commit passes: `pre-commit run --all-files`.
+3. Do not add to commits: `local_settings.py`, `secrets.json`, `webclient_env_var.sh` (they are in `.gitignore`).
 
-## Pro agenty
+## For agents
 
-- Číst nejprve `AGENTS.md` a `.agents/config/review_cache.json`. Konvence kódu: [project_conventions.md](project_conventions.md). Plné znění: CONTRIBUTING.md, CLAUDE.md (v kořeni repozitáře).
+- Read `AGENTS.md` and `.agents/config/review_cache.json` first. Code conventions: `[project_conventions.md](project_conventions.md)`. Full wording: `CONTRIBUTING.md`, `CLAUDE.md` (in the repository root).
 
-## Další dokumentace
+## Further documentation
 
-- Instalace a nasazení: `docs/02_instalace_nasazeni/`
-- Vývoj a standardy: `docs/03_vyvoj/`, CONTRIBUTING.md
+- Installation and deployment: `docs/02_instalace_nasazeni/`
+- Development and standards: `docs/03_vyvoj/`, `CONTRIBUTING.md`
