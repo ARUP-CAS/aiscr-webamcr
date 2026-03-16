@@ -19,6 +19,14 @@ Třídy
    - ``primary_key_table``: Primární klíč záznamu v databázi.
    - ``validation_result``: Textový popis výsledku validace (úspěch nebo chybová zpráva).
 
+   **Metody:**
+
+   .. py:method:: to_dict()
+
+      Serializuje instanci do slovníku vhodného pro uložení jako JSON.
+
+      :return: Slovník s atributy instance.
+
 
 .. py:class:: ImportDataError
 

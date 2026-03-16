@@ -123,6 +123,20 @@ class ImportDataValidationResult:
     primary_key_table: str = ""
     validation_result: str = ""
 
+    def to_dict(self) -> dict:
+        """
+        Serializuje instanci do slovníku vhodného pro uložení jako JSON.
+
+        :return: Slovník s atributy instance.
+        """
+        return {
+            "item_order": self.item_order,
+            "file_name": self.file_name,
+            "primary_key_import": self.primary_key_import,
+            "primary_key_table": self.primary_key_table,
+            "validation_result": self.validation_result,
+        }
+
 
 class ImportDataError(Exception):
     """Základní výjimka pro chyby při importu dat."""

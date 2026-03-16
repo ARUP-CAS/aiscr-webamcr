@@ -2370,6 +2370,10 @@ class DataImportProgress(LoginRequiredMixin, View):
             import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
             serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}") or "{}")
             serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
+            import_history_record_result = json.loads(
+                redis_connector.get(f"import_data_history_record_result_{job_id}") or "{}"
+            )
+            import_fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
 
             progress_data = math.floor((len(serialized_results) / record_count) * 100)
             progress_files = math.floor(import_data_progress_files * 100)
@@ -2386,6 +2390,8 @@ class DataImportProgress(LoginRequiredMixin, View):
                 "finished_record_count": len(serialized_results),
                 "serialized_results": serialized_results,
                 "primary_keys": import_data_primary_keys,
+                "history_record_result": import_history_record_result,
+                "fedora_update_result": import_fedora_update_result,
                 "status": status,
                 "serialized_results_files": serialized_results_files,
                 "status_message": status_message or _("core.templates.admin.import_data.starting"),
@@ -2419,12 +2425,72 @@ class DataImportStop(LoginRequiredMixin, View):
         return JsonResponse({"result": "ok"})
 
 
-class DataImportStart(LoginRequiredMixin, View):
-    """Implementuje komponentu ``DataImportStart`` v rámci aplikace."""
+class DataImportProgressReportView(LoginRequiredMixin, View):
+    """Exportuje výsledky importu dat jako soubor Excel."""
 
     def get(self, request, **kwargs):
         """
-        Vrací výsledek operace.
+        Sestaví a vrátí Excel report s výsledky validace a průběhu importu.
+
+        :param request: HTTP požadavek, ověřuje se právo superuživatele.
+        :param kwargs: Obsahuje ``job_id`` identifikující danou importní úlohu.
+        :return: Soubor Excel (``application/vnd.openxmlformats-officedocument.spreadsheetml.sheet``) ke stažení.
+        :raises PermissionDenied: Vyvolá se, pokud přihlášený uživatel není superuživatel.
+        """
+        if not request.user.is_superuser:
+            raise PermissionDenied
+        job_id = kwargs.get("job_id")
+        redis_connector = RedisConnector().get_connection_decode()
+
+        validation_results = json.loads(redis_connector.get(f"import_data_validation_results_{job_id}") or "[]")
+        primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
+        serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}") or "{}")
+        history_record_result = json.loads(redis_connector.get(f"import_data_history_record_result_{job_id}") or "{}")
+        fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
+
+        def build_row(item):
+            """
+            Sestaví řádek reportu z jednoho záznamu výsledku validace.
+
+            :param item: Slovník s daty validačního výsledku záznamu importu.
+            :return: Slovník s přeloženými názvy sloupců a hodnotami pro export do Excelu.
+            """
+            i = item["item_order"]
+            return {
+                _("core.templates.admin.import_data.import_order"): i + 1,
+                _("core.templates.admin.import_data.fila_name"): item.get("file_name", ""),
+                _("core.templates.admin.import_data.primary_key_import"): item.get("primary_key_import", ""),
+                _("core.templates.admin.import_data.primary_key_database"): primary_keys.get(str(i), ""),
+                _("core.templates.admin.validation_result"): item.get("validation_result", ""),
+                _("core.templates.admin.status"): serialized_results.get(str(i), ""),
+                _("core.templates.admin.import_data.history_record_result"): history_record_result.get(str(i), ""),
+                _("core.templates.admin.import_data.fedora_update_result"): ", ".join(
+                    fedora_update_result.get(str(i), [])
+                ),
+            }
+
+        rows = [build_row(item) for item in validation_results]
+
+        df = pandas.DataFrame(rows)
+        output = BytesIO()
+        with pandas.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Import")
+        output.seek(0)
+
+        response = HttpResponse(
+            output.read(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="import_report_{job_id}.xlsx"'
+        return response
+
+
+class DataImportStart(LoginRequiredMixin, View):
+    """Implementuje komponentu ``DataImportStart`` v rámci aplikace."""
+
+    def post(self, request, **kwargs):
+        """
+        Spustí Celery task pro import dat.
 
         :param request: Parametr ``request`` předává se do volání ``delay()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
         :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.

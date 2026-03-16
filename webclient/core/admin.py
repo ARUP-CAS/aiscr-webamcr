@@ -567,6 +567,9 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 class FedoraCustomAdminSite(admin.AdminSite):
     """Implementuje komponentu ``FedoraCustomAdminSite`` v rámci aplikace."""
 
+    IMPORT_DATA_REDIS_EXPIRATION = 6 * 60**2
+    IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE = 2**30
+
     redis_connector = RedisConnector().get_connection_decode()
 
     @staticmethod
@@ -738,6 +741,9 @@ class FedoraCustomAdminSite(admin.AdminSite):
                     if not normalized_imported_file_names.issubset(allowed_file_names):
                         raise ImportDataUnsupportedFilesError(normalized_imported_file_names - allowed_file_names)
                     file_names.sort(key=lambda fn: mapper_key_order.get(normalize_file_name(fn), len(mapper_key_order)))
+                    total_uncompressed_size = sum(zf.getinfo(fn).file_size for fn in file_names)
+                    if total_uncompressed_size > self.IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE:
+                        raise ValueError(_("core.admin.import_data.error.zip_too_large"))
                     for file_name in file_names:
                         with zf.open(file_name) as file:
                             sheet = pd.read_csv(file)
@@ -818,16 +824,32 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 LookupImportField.records = []
                 LookupImportField.clear_cache()
             records_count = record_id
-            self.redis_connector.set(f"import_data_count_{job_id}", records_count)
-            self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
-            self.redis_connector.set(f"import_data_progress_{job_id}", json.dumps({}))
-            self.redis_connector.set(f"import_data_primary_keys_{job_id}", json.dumps({}))
-            self.redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
-            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0)
+            self.redis_connector.set(f"import_data_count_{job_id}", records_count, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
             self.redis_connector.set(
-                f"import_data_status_message_{job_id}", _("core.templates.admin.import_data.starting")
+                f"import_performed_action_{job_id}", performed_action, ex=self.IMPORT_DATA_REDIS_EXPIRATION
+            )
+            self.redis_connector.set(
+                f"import_data_progress_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
+            )
+            self.redis_connector.set(
+                f"import_data_primary_keys_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
+            )
+            self.redis_connector.set(
+                f"import_data_files_{job_id}", json.dumps([]), ex=self.IMPORT_DATA_REDIS_EXPIRATION
+            )
+            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
+            self.redis_connector.set(
+                f"import_data_status_message_{job_id}",
+                _("core.templates.admin.import_data.starting"),
+                ex=self.IMPORT_DATA_REDIS_EXPIRATION,
+            )
+            self.redis_connector.set(
+                f"import_data_validation_results_{job_id}",
+                json.dumps([r.to_dict() for r in validation_results]),
+                ex=self.IMPORT_DATA_REDIS_EXPIRATION,
             )
             context["records_count"] = records_count
+            context["job_id"] = job_id
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
             try:

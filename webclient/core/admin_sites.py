@@ -458,7 +458,12 @@ class AmcrCustomAdminSite(admin.AdminSite):
             self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
             self.redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
             self.redis_connector.set(f"import_data_progress_files_{job_id}", 0)
+            self.redis_connector.set(
+                f"import_data_validation_results_{job_id}",
+                json.dumps([r.to_dict() for r in validation_results]),
+            )
             context["records_count"] = records_count
+            context["job_id"] = job_id
             context["validation_results"] = validation_results
             context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
             try:

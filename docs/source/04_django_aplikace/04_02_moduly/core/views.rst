@@ -720,15 +720,31 @@ Třídy
       :raises PermissionDenied: Vyvolá se při splnění podmínky ``not request.user.is_superuser``.
 
 
+.. py:class:: DataImportProgressReportView
+
+   Exportuje výsledky importu dat jako soubor Excel.
+
+   **Metody:**
+
+   .. py:method:: get()
+
+      Sestaví a vrátí Excel report s výsledky validace a průběhu importu.
+
+      :param request: HTTP požadavek, ověřuje se právo superuživatele.
+      :param kwargs: Obsahuje ``job_id`` identifikující danou importní úlohu.
+      :return: Soubor Excel (``application/vnd.openxmlformats-officedocument.spreadsheetml.sheet``) ke stažení.
+      :raises PermissionDenied: Vyvolá se, pokud přihlášený uživatel není superuživatel.
+
+
 .. py:class:: DataImportStart
 
    Implementuje komponentu ``DataImportStart`` v rámci aplikace.
 
    **Metody:**
 
-   .. py:method:: get()
+   .. py:method:: post()
 
-      Vrací výsledek operace.
+      Spustí Celery task pro import dat.
 
       :param request: Parametr ``request`` předává se do volání ``delay()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
       :param kwargs: Parametr ``kwargs`` pracuje se s atributy ``get``.

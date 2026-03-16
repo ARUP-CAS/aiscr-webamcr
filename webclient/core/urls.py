@@ -109,4 +109,9 @@ urlpatterns = [
         views.DataImportStart.as_view(),
         name="data-import-start",
     ),
+    path(
+        "data-import-progress-report/<str:job_id>",
+        views.DataImportProgressReportView.as_view(),
+        name="data-import-progress-report",
+    ),
 ]
