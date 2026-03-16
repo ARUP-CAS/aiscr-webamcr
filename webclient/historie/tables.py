@@ -71,7 +71,7 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
                 "rel": "",
                 "title": "",
             },
-            "th": {"class": "col-stahnout"},
+            "th": {"class": "col-no-orderable col-stahnout"},
         },
         orderable=False,
     )
