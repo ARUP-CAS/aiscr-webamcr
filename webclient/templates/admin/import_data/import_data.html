@@ -91,6 +91,8 @@
                  value="{% trans "core.templates.admin.import_data.start_import" %}"{% if invalid_records %} disabled{% endif %}>
           <input type="submit" id="stopRequests" class="default"
                  value="{% trans "core.templates.admin.import_data.stop_request" %}" disabled>
+          <input type="button" id="downloadReport" class="default"
+                 value="{% trans "core.templates.admin.import_data.download_report" %}">
         </p>
       </div>
       <p id="processFinishedParagraph" style="display: none">
@@ -101,11 +103,6 @@
           <strong>{% trans "core.templates.admin.import_data.invalid_records" %}</strong>: {{ invalid_records }}
         </p>
       {% endif %}
-      <p>
-        <a href="{% url 'core:data-import-progress-report' job_id %}" class="button">
-          {% trans "core.templates.admin.import_data.download_report" %}
-        </a>
-      </p>
       <table id="result_list" class="table table-bordered table-striped">
         <tr>
           <th>{% trans "core.templates.admin.import_data.import_order" %}</th>
@@ -178,6 +175,12 @@
       }
       const requestUrl = "{{ url }}"
       const stopRequestUrl = "{{ url_stop }}"
+      {% if job_id %}
+      const downloadReportUrl = "{% url 'core:data-import-progress-report' job_id %}"
+      document.getElementById("downloadReport").addEventListener("click", () => {
+          window.location.href = downloadReportUrl
+      })
+      {% endif %}
       const startRequestUrl = "{{ url_start }}"
       const csrfToken = document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1]
       let stopRequests = {% if stop_request is True %}true{% else %}false{% endif %}
