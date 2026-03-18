@@ -748,8 +748,8 @@ class FedoraCustomAdminSite(admin.AdminSite):
                         with zf.open(file_name) as file:
                             sheet = pd.read_csv(file)
                         file_name = normalize_file_name(file_name)
+                        mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
                         for idx, row in sheet.iterrows():
-                            mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
 
                             def format_primary_key(pk):
                                 """
@@ -812,6 +812,10 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 context["error_message_details"] = _("core.admin.import_data.error.bad_zip_file")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             except ImportDataUnsupportedFilesError as err:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = str(err)
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            except ImportDataUnsupportedFileError as err:
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = str(err)
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)

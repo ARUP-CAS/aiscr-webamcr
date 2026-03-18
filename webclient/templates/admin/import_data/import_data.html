@@ -301,9 +301,18 @@
       }
 
       async function process() {
+          const MAX_TICKS = 3600;
+          let ticks = 0;
           do {
               await sendRequest(requestUrl);
               await new Promise(resolve => setTimeout(resolve, 1000));
+              ticks++;
+              if (ticks >= MAX_TICKS) {
+                  stopRequests = true;
+                  document.getElementById("stopRequests").disabled = true;
+                  document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.timeout_error' %}";
+                  console.error("Import polling timed out after", MAX_TICKS, "seconds.");
+              }
           } while (stopRequests === false);
       }
 
