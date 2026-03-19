@@ -903,6 +903,3 @@ class FedoraCustomAdminSite(admin.AdminSite):
                 name="import_data",
             ),
         ] + super().get_urls()
-
-
-admin.site.__class__ = FedoraCustomAdminSite
