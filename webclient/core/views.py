@@ -2368,7 +2368,9 @@ class DataImportProgress(LoginRequiredMixin, View):
             stopped = redis_connector.get(f"import_data_stop_{job_id}") is not None
 
             import_data_primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
-            serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}") or "{}")
+            progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
+            progress_details = redis_connector.lrange(f"import_data_progress_details_{job_id}", 0, -1)
+            serialized_results = dict(zip(progress_ids, progress_details))
             serialized_results_files = json.loads(redis_connector.get(f"import_data_files_{job_id}") or "[]")
             import_history_record_result = json.loads(
                 redis_connector.get(f"import_data_history_record_result_{job_id}") or "{}"
@@ -2444,7 +2446,9 @@ class DataImportProgressReportView(LoginRequiredMixin, View):
 
         validation_results = json.loads(redis_connector.get(f"import_data_validation_results_{job_id}") or "[]")
         primary_keys = json.loads(redis_connector.get(f"import_data_primary_keys_{job_id}") or "{}")
-        serialized_results = json.loads(redis_connector.get(f"import_data_progress_{job_id}") or "{}")
+        progress_ids = redis_connector.lrange(f"import_data_progress_ids_{job_id}", 0, -1)
+        progress_details = redis_connector.lrange(f"import_data_progress_details_{job_id}", 0, -1)
+        serialized_results = dict(zip(progress_ids, progress_details))
         history_record_result = json.loads(redis_connector.get(f"import_data_history_record_result_{job_id}") or "{}")
         fedora_update_result = json.loads(redis_connector.get(f"import_fedora_result_{job_id}") or "{}")
 

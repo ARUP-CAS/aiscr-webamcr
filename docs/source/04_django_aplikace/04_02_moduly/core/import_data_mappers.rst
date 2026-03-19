@@ -576,6 +576,13 @@ Třídy
 
    **Metody:**
 
+   .. py:method:: register()
+
+      Dekorátor pro registraci třídy mapperu pod daným klíčem souboru.
+
+      :param file_key: Klíč (název souboru bez přípony), pod kterým se mapper registruje.
+      :return: Vrací dekorátor přijímající třídu mapperu.
+
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
@@ -586,7 +593,7 @@ Třídy
 
       Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů.
 
-      :return: Vrací slovník.
+      :return: Vrací slovník registrovaných mapperů.
 
    .. py:method:: get_import_data_mapper()
 
@@ -1907,7 +1914,7 @@ Třídy
 
    .. py:method:: create_records()
 
-      Vytvoří records. v aplikaci.
+      Vytvoří záznamy v aplikaci.
 
       :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
       :return: Nově vytvořená hodnota připravená touto funkcí.

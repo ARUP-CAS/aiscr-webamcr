@@ -521,16 +521,14 @@ def run_data_import(job_id, user_id):
     redis_connector.set("import_data_running", "true")
     record_count = int(redis_connector.get(f"import_data_count_{job_id}").decode("utf-8"))
     performed_action = redis_connector.get(f"import_performed_action_{job_id}").decode("utf-8")
-    redis_connector.set(f"import_data_progress_{job_id}", json.dumps([]))
+    redis_connector.delete(f"import_data_progress_ids_{job_id}", f"import_data_progress_details_{job_id}")
     redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
     redis_connector.set(f"import_data_history_record_result_{job_id}", json.dumps({}))
     redis_connector.set(f"import_fedora_result_{job_id}", json.dumps({}))
     failed = False
-    import_results = {}
     import_primary_keys = {}
     import_history_record_result = {}
     mapper_classes = {}
-    all_records = []
     import_files_list: list[Soubor] = []
     stopped = False
     fedora_update_targets_set = set()
@@ -586,8 +584,10 @@ def run_data_import(job_id, user_id):
                     if mapper_class == SouborMapper:
                         import_files_list += records
                         record: Soubor = records[0]
-                        import_results[record_id] = "cron.tasks.run_data_import.file"
-                        redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
+                        redis_connector.rpush(f"import_data_progress_ids_{job_id}", record_id)
+                        redis_connector.rpush(
+                            f"import_data_progress_details_{job_id}", "cron.tasks.run_data_import.file"
+                        )
                         continue
                     for record in records:
                         record.active_transaction = fedora_transaction
@@ -599,7 +599,6 @@ def run_data_import(job_id, user_id):
                             primary_key_record = record
                         elif hasattr(record, "ident_cely") and primary_key_record is None:
                             primary_key_record = record
-                        all_records.append(record)
                         if mapper_class == UzivatelOpravneniMapper:
                             record: User
                             group = Group.objects.get(name=serialized_record["skupina"])
@@ -683,12 +682,14 @@ def run_data_import(job_id, user_id):
 
                     add_item_fedora_update_targets_set(fedora_transaction.updated_ident_cely, record_id)
                     logger.info("cron.tasks.run_data_import.success", extra={"record_id": record_id, "job_id": job_id})
-                    import_results[record_id] = _("cron.tasks.run_data_import.success")
+                    redis_connector.rpush(f"import_data_progress_ids_{job_id}", record_id)
+                    redis_connector.rpush(
+                        f"import_data_progress_details_{job_id}", _("cron.tasks.run_data_import.success")
+                    )
                     if primary_key_record:
                         import_primary_keys[record_id] = f"ident_cely: {primary_key_record.ident_cely}"
                     else:
                         import_primary_keys[record_id] = records[0].pk
-                    redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
                     redis_connector.set(f"import_data_primary_keys_{job_id}", json.dumps(import_primary_keys))
                 except Exception as err:
                     logger.info(
@@ -697,7 +698,9 @@ def run_data_import(job_id, user_id):
                     )
                     fedora_transaction.rollback_transaction()
                     transaction.set_rollback(True)
-                    import_results[record_id] = (
+                    redis_connector.rpush(f"import_data_progress_ids_{job_id}", record_id)
+                    redis_connector.rpush(
+                        f"import_data_progress_details_{job_id}",
                         _("cron.tasks.run_data_import.error.part_1")
                         + ": "
                         + str(err)
@@ -709,9 +712,8 @@ def run_data_import(job_id, user_id):
                         + _("cron.tasks.run_data_import.error.part_3")
                         + " "
                         + str(performed_action)
-                        + traceback.format_exc()
+                        + traceback.format_exc(),
                     )
-                    redis_connector.set(f"import_data_progress_{job_id}", json.dumps(import_results))
                     fedora_update_targets_set = set()
                     updated_history_dict = defaultdict(set)
                     failed = True
@@ -733,7 +735,11 @@ def run_data_import(job_id, user_id):
         redis_connector.set(f"import_data_stop_{job_id}", 1)
         logger.error("cron.tasks.run_data_import.database_error", extra={"error": err, "job_id": job_id})
         for record_id in range(record_count):
-            import_results[record_id] = f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, "
+            redis_connector.rpush(f"import_data_progress_ids_{job_id}", record_id)
+            redis_connector.rpush(
+                f"import_data_progress_details_{job_id}",
+                f"{_('cron.tasks.run_data_import.error.database_error')}: {err}, ",
+            )
         failed = True
         fedora_update_targets_set = set()
         updated_history_dict = defaultdict(set)

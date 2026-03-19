@@ -490,11 +490,10 @@ class IntegerImportField(BaseImportField):
             value = str(value)
         elif isinstance(value, bytes):
             value = value.decode("utf-8")
-        value = self.pattern.search(value).group()
-        if value:
-            return int(value) if value is not None else None
-        else:
-            raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
+        match = self.pattern.search(value)
+        if match:
+            return int(match.group())
+        raise ImportDataError(f"{_('core_admin.ImportDataError.message.invalid_integer_value')}: {value}")
 
 
 class PositiveIntegerImportField(BaseImportField):
@@ -537,11 +536,10 @@ class DecimalImportField(BaseImportField):
             value = str(value)
         elif isinstance(value, bytes):
             value = value.decode("utf-8")
-        value = self.pattern.search(value).group()
-        if value:
-            return float(value) if value is not None else None
-        else:
-            raise ImportDataError(f"{_('core_admin.DecimalImportField.message.invalid_decimal_value')}: {value}")
+        match = self.pattern.search(value)
+        if match:
+            return float(match.group())
+        raise ImportDataError(f"{_('core_admin.DecimalImportField.message.invalid_decimal_value')}: {value}")
 
 
 class BooleanImportField(BaseImportField):
@@ -1034,6 +1032,22 @@ class ImportModelMapper(ABC):
     primary_key_prefix = None
     allow_update = True
 
+    _registry: dict[str, type["ImportModelMapper"]] = {}
+
+    @classmethod
+    def register(cls, file_key: str):
+        """Dekorátor pro registraci třídy mapperu pod daným klíčem souboru.
+
+        :param file_key: Klíč (název souboru bez přípony), pod kterým se mapper registruje.
+        :return: Vrací dekorátor přijímající třídu mapperu.
+        """
+
+        def decorator(mapper_cls: type["ImportModelMapper"]) -> type["ImportModelMapper"]:
+            cls._registry[file_key] = mapper_cls
+            return mapper_cls
+
+        return decorator
+
     def __init__(self, value_dict):
         """
         Inicializuje instanci třídy.
@@ -1048,55 +1062,10 @@ class ImportModelMapper(ABC):
     def get_import_data_mapper_dict(cls):
         """Vrátí slovník mapující názvy importních souborů na příslušné třídy mapperů.
 
-        :return: Vrací slovník.
+        :return: Vrací slovník registrovaných mapperů.
         """
 
-        return {
-            "heslar": HeslarMapper,
-            "heslar_datace": HeslarDataceMapper,
-            "heslar_dokument_typ_material_rada": HeslarDokumentTypMaterialRadaMapper,
-            "heslar_hierarchie": HeslarHierarchieMapper,
-            "heslar_odkazy": HeslarOdkazMapper,
-            "organizace": OrganizaceMapper,
-            "osoby": OsobaMapper,
-            "projekty": ProjektMapper,
-            "projekty_katastry": ProjektKatastrMapper,
-            "projekty_oznamovatele": ProjektOznamovatelMapper,
-            "samostatne_nalezy": SamostatnyNalezMapper,
-            "az_akce": ArcheologickyZaznamAkceMapper,
-            "az_lokality": LokalitaMapper,
-            "az_akce_vedouci": AkceVedouciMapper,
-            "az_katastry": ArcheologickyZaznamKatastrMapper,
-            "az_pian": PianMapper,
-            "az_dokumentacni_jednotky": DokumentacniJednotkaMapper,
-            "az_adb": AdbMapper,
-            "az_adb_vyskove_body": AdbVyskovyBod,
-            "dokumenty_lety": DokumentLetMapper,
-            "dokumenty": DokumentMapper,
-            "dokumenty_autori": DokumentAutorMapper,
-            "dokumenty_jazyky": DokumentJazykMapper,
-            "dokumenty_osoby": DokumentOsobaMapper,
-            "dokumenty_posudky": DokumentPosudekMapper,
-            "dokumenty_tvary": TvarMapper,
-            "dokumenty_casti": DokumentCastMapper,
-            "dokumenty_neident_akce": NeidentAkceMapper,
-            "dokumenty_neident_akce_vedouci": NeidentAkceVedouciMapper,
-            "komponenty": KomponentaMapper,
-            "komponenty_aktivity": KomponentaAktivitaMapper,
-            "komponenty_nalezy_objekty": NalezObjektMapper,
-            "komponenty_nalezy_predmety": NalezPredmetMapper,
-            "externi_zdroje": ExterniZdrojMapper,
-            "externi_zdroje_autori": ExterniZdrojAutorMapper,
-            "externi_zdroje_editori": ExterniZdrojEditorMapper,
-            "externi_odkazy": ExterniOdkazMapper,
-            "uzivatele": UzivatelMapper,
-            "uzivatele_notifikace_projekty": UzivatelNotifikaceProjektMapper,
-            "uzivatele_spoluprace": UzivatelSpolupraceMapper,
-            "uzivatele_opravneni": UzivatelOpravneniMapper,
-            "uzivatele_notifikace": UzivatelNotifikaceMapper,
-            "soubory": SouborMapper,
-            "historie": HistorieMapper,
-        }
+        return cls._registry
 
     @classmethod
     def get_import_data_mapper(cls, file_name):
@@ -1640,6 +1609,7 @@ class MultipleClassImportModelMapper(ImportModelMapper):
         return False
 
 
+@ImportModelMapper.register("heslar")
 class HeslarMapper(ImportModelMapper):
     """Mapovač pro model Heslar."""
 
@@ -1669,6 +1639,7 @@ class HeslarMapper(ImportModelMapper):
         return field_mapping
 
 
+@ImportModelMapper.register("heslar_datace")
 class HeslarDataceMapper(ImportModelMapper):
     """Mapovač pro model HeslarDatace."""
 
@@ -1707,6 +1678,7 @@ class HeslarDataceMapper(ImportModelMapper):
         return [record.obdobi]
 
 
+@ImportModelMapper.register("heslar_dokument_typ_material_rada")
 class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
     """Mapovač pro model HeslarDokumentTypMaterialRada."""
 
@@ -1746,6 +1718,7 @@ class HeslarDokumentTypMaterialRadaMapper(ImportModelMapper):
         return [record.dokument_rada]
 
 
+@ImportModelMapper.register("heslar_hierarchie")
 class HeslarHierarchieMapper(ImportModelMapper):
     """Mapovač pro model HeslarHierarchie."""
 
@@ -1779,6 +1752,7 @@ class HeslarHierarchieMapper(ImportModelMapper):
         return [record.heslo_nadrazene, record.heslo_podrazene]
 
 
+@ImportModelMapper.register("heslar_odkazy")
 class HeslarOdkazMapper(ImportModelMapper):
     """Mapovač pro model HeslarOdkaz."""
 
@@ -1818,6 +1792,7 @@ class HeslarOdkazMapper(ImportModelMapper):
         return [record.heslo]
 
 
+@ImportModelMapper.register("organizace")
 class OrganizaceMapper(ImportModelMapper):
     """Mapovač pro model Organizace."""
 
@@ -1872,6 +1847,7 @@ class OrganizaceMapper(ImportModelMapper):
         return [record]
 
 
+@ImportModelMapper.register("osoby")
 class OsobaMapper(ImportModelMapper):
     """Mapovač pro model Osoba."""
 
@@ -1891,6 +1867,7 @@ class OsobaMapper(ImportModelMapper):
     require_primary_key_value = True
 
 
+@ImportModelMapper.register("projekty")
 class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
     """Mapovač pro model Projekt."""
 
@@ -1960,6 +1937,7 @@ class ProjektMapper(ImportModelMapper, GeometryTransformMixin):
         return record
 
 
+@ImportModelMapper.register("projekty_katastry")
 class ProjektKatastrMapper(ImportModelMapper):
     """Mapovač pro model ProjektKatastr."""
 
@@ -2004,6 +1982,7 @@ class ProjektKatastrMapper(ImportModelMapper):
         return record.projekt
 
 
+@ImportModelMapper.register("projekty_oznamovatele")
 class ProjektOznamovatelMapper(ImportModelMapper):
     """Mapovač pro model Oznamovatel."""
 
@@ -2046,6 +2025,7 @@ class ProjektOznamovatelMapper(ImportModelMapper):
         return record.projekt
 
 
+@ImportModelMapper.register("samostatne_nalezy")
 class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
     """Mapovač pro model SamostatnyNalez."""
 
@@ -2129,6 +2109,7 @@ class SamostatnyNalezMapper(ImportModelMapper, GeometryTransformMixin):
         return record
 
 
+@ImportModelMapper.register("az_akce")
 class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
     """Mapovač pro modely ArcheologickyZaznam a Akce."""
 
@@ -2253,6 +2234,7 @@ class ArcheologickyZaznamAkceMapper(MultipleClassImportModelMapper):
             return record.archeologicky_zaznam
 
 
+@ImportModelMapper.register("az_lokality")
 class LokalitaMapper(MultipleClassImportModelMapper):
     """Mapovač pro modely ArcheologickyZaznam a Lokalita."""
 
@@ -2338,6 +2320,7 @@ class LokalitaMapper(MultipleClassImportModelMapper):
             return record
 
 
+@ImportModelMapper.register("az_akce_vedouci")
 class AkceVedouciMapper(ImportModelMapper):
     """Mapovač pro model AkceVedouci."""
 
@@ -2381,6 +2364,7 @@ class AkceVedouciMapper(ImportModelMapper):
         return [record.akce.archeologicky_zaznam]
 
 
+@ImportModelMapper.register("az_katastry")
 class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
     """Mapovač pro model ArcheologickyZaznamKatastr."""
 
@@ -2425,6 +2409,7 @@ class ArcheologickyZaznamKatastrMapper(ImportModelMapper):
         return record.archeologicky_zaznam
 
 
+@ImportModelMapper.register("az_pian")
 class PianMapper(ImportModelMapper, GeometryTransformMixin):
     """Mapovač pro model Pian."""
 
@@ -2472,6 +2457,7 @@ class PianMapper(ImportModelMapper, GeometryTransformMixin):
         return record
 
 
+@ImportModelMapper.register("az_dokumentacni_jednotky")
 class DokumentacniJednotkaMapper(ImportModelMapper):
     """Mapovač pro model DokumentacniJednotka."""
 
@@ -2534,6 +2520,7 @@ class DokumentacniJednotkaMapper(ImportModelMapper):
         return record.archeologicky_zaznam
 
 
+@ImportModelMapper.register("az_adb")
 class AdbMapper(ImportModelMapper):
     """Mapovač pro model Adb."""
 
@@ -2590,6 +2577,7 @@ class AdbMapper(ImportModelMapper):
         return record.dokumentacni_jednotka.archeologicky_zaznam
 
 
+@ImportModelMapper.register("az_adb_vyskove_body")
 class AdbVyskovyBod(ImportModelMapper):
     """Mapovač pro model VyskovyBod."""
 
@@ -2632,6 +2620,7 @@ class AdbVyskovyBod(ImportModelMapper):
         return record.adb.dokumentacni_jednotka.archeologicky_zaznam
 
 
+@ImportModelMapper.register("dokumenty_lety")
 class DokumentLetMapper(ImportModelMapper):
     """Mapovač pro model Let."""
 
@@ -2667,6 +2656,7 @@ class DokumentLetMapper(ImportModelMapper):
         return field_mapping
 
 
+@ImportModelMapper.register("dokumenty")
 class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
     """Mapovač pro modely Dokument a DokumentExtraData."""
 
@@ -2837,6 +2827,7 @@ class DokumentMapper(MultipleClassImportModelMapper, GeometryTransformMixin):
             return record.dokument
 
 
+@ImportModelMapper.register("dokumenty_autori")
 class DokumentAutorMapper(ImportModelMapper):
     """Mapovač pro model DokumentAutor."""
 
@@ -2881,6 +2872,7 @@ class DokumentAutorMapper(ImportModelMapper):
         return record.dokument
 
 
+@ImportModelMapper.register("dokumenty_jazyky")
 class DokumentJazykMapper(ImportModelMapper):
     """Mapovač pro model DokumentJazyk."""
 
@@ -2924,6 +2916,7 @@ class DokumentJazykMapper(ImportModelMapper):
         return record.dokument
 
 
+@ImportModelMapper.register("dokumenty_osoby")
 class DokumentOsobaMapper(ImportModelMapper):
     """Mapovač pro model DokumentOsoba."""
 
@@ -2967,6 +2960,7 @@ class DokumentOsobaMapper(ImportModelMapper):
         return record.dokument
 
 
+@ImportModelMapper.register("dokumenty_posudky")
 class DokumentPosudekMapper(ImportModelMapper):
     """Mapovač pro model DokumentPosudek."""
 
@@ -3010,6 +3004,7 @@ class DokumentPosudekMapper(ImportModelMapper):
         return record.dokument
 
 
+@ImportModelMapper.register("dokumenty_tvary")
 class TvarMapper(ImportModelMapper):
     """Mapovač pro model Tvar."""
 
@@ -3053,6 +3048,7 @@ class TvarMapper(ImportModelMapper):
         return record.dokument
 
 
+@ImportModelMapper.register("dokumenty_casti")
 class DokumentCastMapper(ImportModelMapper):
     """Mapovač pro model DokumentCast."""
 
@@ -3097,6 +3093,7 @@ class DokumentCastMapper(ImportModelMapper):
         return record.dokument
 
 
+@ImportModelMapper.register("dokumenty_neident_akce")
 class NeidentAkceMapper(ImportModelMapper):
     """Mapovač pro model NeidentAkce."""
 
@@ -3140,6 +3137,7 @@ class NeidentAkceMapper(ImportModelMapper):
         return record.dokument_cast.dokument
 
 
+@ImportModelMapper.register("dokumenty_neident_akce_vedouci")
 class NeidentAkceVedouciMapper(ImportModelMapper):
     """Mapovač pro model NeidentAkceVedouci."""
 
@@ -3183,6 +3181,7 @@ class NeidentAkceVedouciMapper(ImportModelMapper):
         return record.neident_akce.dokument_cast.dokument
 
 
+@ImportModelMapper.register("komponenty")
 class KomponentaMapper(ImportModelMapper):
     """Mapovač pro model Komponenta."""
 
@@ -3244,6 +3243,7 @@ class KomponentaMapper(ImportModelMapper):
             return navazany_objekt.archeologicky_zaznam
 
 
+@ImportModelMapper.register("komponenty_aktivity")
 class KomponentaAktivitaMapper(ImportModelMapper):
     """Mapovač pro model KomponentaAktivita."""
 
@@ -3318,6 +3318,7 @@ class NalezMapper(ImportModelMapper):
         return KomponentaMapper.get_record_history(komponenta)
 
 
+@ImportModelMapper.register("komponenty_nalezy_objekty")
 class NalezObjektMapper(NalezMapper):
     """Mapovač pro model NalezObjekt."""
 
@@ -3342,6 +3343,7 @@ class NalezObjektMapper(NalezMapper):
         return field_mapping
 
 
+@ImportModelMapper.register("komponenty_nalezy_predmety")
 class NalezPredmetMapper(NalezMapper):
     """Mapovač pro model NalezPredmet."""
 
@@ -3366,6 +3368,7 @@ class NalezPredmetMapper(NalezMapper):
         return field_mapping
 
 
+@ImportModelMapper.register("externi_zdroje")
 class ExterniZdrojMapper(ImportModelMapper):
     """Mapovač pro model ExterniZdroj."""
 
@@ -3419,6 +3422,7 @@ class ExterniZdrojMapper(ImportModelMapper):
         return record
 
 
+@ImportModelMapper.register("externi_zdroje_autori")
 class ExterniZdrojAutorMapper(ImportModelMapper):
     """Mapovač pro model ExterniZdrojAutor."""
 
@@ -3463,6 +3467,7 @@ class ExterniZdrojAutorMapper(ImportModelMapper):
         return record.externi_zdroj
 
 
+@ImportModelMapper.register("externi_zdroje_editori")
 class ExterniZdrojEditorMapper(ImportModelMapper):
     """Mapovač pro model ExterniZdrojEditor."""
 
@@ -3507,6 +3512,7 @@ class ExterniZdrojEditorMapper(ImportModelMapper):
         return record.externi_zdroj
 
 
+@ImportModelMapper.register("externi_odkazy")
 class ExterniOdkazMapper(ImportModelMapper):
     """Mapovač pro model ExterniOdkaz."""
 
@@ -3550,6 +3556,7 @@ class ExterniOdkazMapper(ImportModelMapper):
         return record.externi_zdroj
 
 
+@ImportModelMapper.register("uzivatele")
 class UzivatelMapper(ImportModelMapper):
     """Mapovač pro model User."""
 
@@ -3611,6 +3618,7 @@ class UzivatelMapper(ImportModelMapper):
         return super().import_validation(performed_action)
 
 
+@ImportModelMapper.register("uzivatele_notifikace_projekty")
 class UzivatelNotifikaceProjektMapper(ImportModelMapper):
     """Mapovač pro model Pes (notifikace uživatele vázané na projekt či územní jednotku RUIAN)."""
 
@@ -3663,7 +3671,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
 
     def create_records(self, performed_action) -> list:
         """
-        Vytvoří records. v aplikaci.
+        Vytvoří záznamy v aplikaci.
 
         :param performed_action: Parametr ``performed_action`` předává se do volání ``map()``.
         :return: Nově vytvořená hodnota připravená touto funkcí.
@@ -3744,6 +3752,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         return record.user
 
 
+@ImportModelMapper.register("uzivatele_spoluprace")
 class UzivatelSpolupraceMapper(ImportModelMapper):
     """Mapovač pro model UzivatelSpoluprace."""
 
@@ -3787,6 +3796,7 @@ class UzivatelSpolupraceMapper(ImportModelMapper):
         return record
 
 
+@ImportModelMapper.register("uzivatele_opravneni")
 class UzivatelOpravneniMapper(ImportModelMapper):
     """Mapovač pro přiřazení skupinových oprávnění uživateli (model User)."""
 
@@ -3855,6 +3865,7 @@ class UzivatelOpravneniMapper(ImportModelMapper):
         return [record]
 
 
+@ImportModelMapper.register("soubory")
 class SouborMapper(ImportModelMapper):
     """Mapovač pro model Soubor."""
 
@@ -3898,6 +3909,7 @@ class SouborMapper(ImportModelMapper):
         return record
 
 
+@ImportModelMapper.register("uzivatele_notifikace")
 class UzivatelNotifikaceMapper(ImportModelMapper):
     """Mapovač pro přiřazení typů notifikací uživateli (model User)."""
 
@@ -3966,6 +3978,7 @@ class UzivatelNotifikaceMapper(ImportModelMapper):
         return [record]
 
 
+@ImportModelMapper.register("historie")
 class HistorieMapper(ImportModelMapper):
     """Mapovač pro model Historie."""
 
