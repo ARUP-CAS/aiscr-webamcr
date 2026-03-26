@@ -799,7 +799,7 @@ Funkce
    :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
    :return: Seznam názvů polí, která mají být v daném stavu povinná.
 
-.. py:function:: get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
+.. py:function:: get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely, session)
 
    Funkce pro získaní formsetu predmetu a objektu pro komponentu.
 
@@ -807,6 +807,7 @@ Funkce
    :param show: Parametr ``show`` se předává do volání ``inlineformset_factory()``, ``create_nalez_objekt_form()``.
    :param old_nalez_post: Parametr ``old_nalez_post`` se předává do volání ``NalezObjektFormset()``, ``NalezPredmetFormset()``.
    :param komp_ident_cely: Identifikátor ``komp_ident_cely`` používaný pro dohledání cílového záznamu.
+   :param session: Volitelná Django session pro načtení dat souběžné editace.
 
    :return: Vrací proměnná ``komponenta_form_detail``.
 

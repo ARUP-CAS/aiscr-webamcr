@@ -55,6 +55,15 @@ Třídy
 
    Hlavní formulář pro vytvoření oznámení.
 
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje instanci třídy a přidá pole optimistického zamykání do layoutu.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: OznamovatelProjektCreateForm
 

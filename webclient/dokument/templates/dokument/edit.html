@@ -11,6 +11,7 @@
 {% block content %}
   <div class="app-entity-dokument">
     {% include "toolbar_dokument.html" with is_3d=False is_edit=True d=dokument%}
+    {% include "core/concurrent_changes_modal.html" with concurrent_changes=concurrent_changes fresh_form_url=fresh_form_url %}
     <form method="post" class="submit-spinner">
       <div>
         <div class="card app-card-form">

@@ -128,6 +128,25 @@ def edit_nalez(request, typ_vazby, komp_ident_cely):
     )
     formset_predmet = NalezPredmetFormset(request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p")
     if formset_objekt.is_valid() and formset_predmet.is_valid():
+        conflicting_fields = []
+        for fs_form in list(formset_objekt.forms) + list(formset_predmet.forms):
+            conflicting_fields += fs_form.get_conflicting_fields()
+        if conflicting_fields:
+            conflicting_labels = list(
+                dict.fromkeys(
+                    str(fs_form.fields[f].label)
+                    for fs_form in list(formset_objekt.forms) + list(formset_predmet.forms)
+                    for f in fs_form.get_conflicting_fields()
+                    if f in fs_form.fields
+                )
+            )
+            request.session[f"komp_concurrent_changes_{komp_ident_cely}"] = conflicting_labels
+            request.session["_old_nalez_post"] = request.POST
+            request.session["komp_ident_cely"] = komp_ident_cely
+            safe_redirect = request.META.get("HTTP_REFERER")
+            if url_has_allowed_host_and_scheme(safe_redirect, allowed_hosts=settings.ALLOWED_HOSTS):
+                return redirect(safe_redirect)
+            return redirect(reverse("core:home"))
         logger.debug("nalez.views.edit_nalez.form_valid", extra={"typ_vazby": komponenta.komponenta_vazby.typ_vazby})
         formset_predmet.save()
         formset_objekt.save()

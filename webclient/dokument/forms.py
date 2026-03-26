@@ -1,7 +1,7 @@
 import logging
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
-from core.forms import BaseFilterForm
+from core.forms import BaseFilterForm, OptimisticLockingMixin
 from core.widgets import AutocompleteModelSelect2Multiple, AutocompleteSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -93,8 +93,10 @@ class CoordinatesDokumentForm(forms.Form):
     coordinate_system = forms.CharField(required=False, widget=HiddenInput(), initial="4326")
 
 
-class EditDokumentExtraDataForm(forms.ModelForm):
+class EditDokumentExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_dok_extra"
 
     rada = forms.CharField(
         label=_("dokument.forms.editDokumentExtraDataForm.rada.label"),
@@ -320,6 +322,8 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -343,8 +347,10 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         self.fields["rada"].disabled = edit_prohibited
 
 
-class EditDokumentForm(forms.ModelForm):
+class EditDokumentForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_dok"
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -531,6 +537,8 @@ class EditDokumentForm(forms.ModelForm):
                 css_class="row",
             ),
         )
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -567,8 +575,10 @@ class EditDokumentForm(forms.ModelForm):
             self.fields["region"].required = True
 
 
-class CreateModelDokumentForm(forms.ModelForm):
+class CreateModelDokumentForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_model_dok"
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -679,8 +689,11 @@ class CreateModelDokumentForm(forms.ModelForm):
         )
 
 
-class CreateModelExtraDataForm(forms.ModelForm):
+class CreateModelExtraDataForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_model_extra"
+    optimistic_lock_instance_fields = ["geom"]
 
     coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
@@ -865,7 +878,7 @@ def create_tvar_form(not_readonly=True):
         :return: Vrací proměnná ``TvarForm``.
     """
 
-    class TvarForm(forms.ModelForm):
+    class TvarForm(OptimisticLockingMixin, forms.ModelForm):
         """Implementuje komponentu ``TvarForm`` v rámci aplikace."""
 
         class Meta:

@@ -637,7 +637,7 @@ Funkce
 
    :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
-.. py:function:: get_dj_form_detail(app, jednotka, jednotky, show, old_adb_post, user)
+.. py:function:: get_dj_form_detail(app, jednotka, jednotky, show, old_adb_post, user, session)
 
    Funkce pro získaní dictionary contextu dokumentační jednotky.
 
@@ -647,5 +647,6 @@ Funkce
    :param show: dictionary pro zobrazení možnosti uživatele na stránce.
    :param old_adb_post: staré volání CreateADBForm pro správně zobrazení chyb formuláře.
    :param user: Parametr ``user`` se předává do volání ``check_permissions()``, pracuje se s atributy ``hlavni_role``, ovlivňuje větvení podmínek.
+   :param session: Volitelná Django session pro načtení dat souběžné editace ADB formuláře.
 
    :return: dictionary kontextu DJ pro správné zobrazení stránky.

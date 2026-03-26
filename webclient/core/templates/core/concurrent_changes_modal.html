@@ -1,0 +1,35 @@
+{% load i18n %}
+{% if concurrent_changes %}
+<div class="modal fade" id="concurrent-changes-modal" tabindex="-1" role="dialog" aria-labelledby="concurrent-changes-modal-label" aria-modal="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="concurrent-changes-modal-label">{% trans "core.templates.concurrentChangesModal.title" %}</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'core.templates.concurrentChangesModal.closeButton' %}"></button>
+			</div>
+			<div class="modal-body">
+				<p>{% trans "core.templates.concurrentChangesModal.body" %}</p>
+				<ul>
+					{% for label in concurrent_changes %}
+					<li>{{ label }}</li>
+					{% endfor %}
+				</ul>
+				<p>
+					<a href="{{ fresh_form_url }}" target="_blank" rel="noopener noreferrer">
+						{% trans "core.templates.concurrentChangesModal.openFreshLink" %}
+					</a>
+				</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "core.templates.concurrentChangesModal.closeButton" %}</button>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		var modal = new bootstrap.Modal(document.getElementById("concurrent-changes-modal"));
+		modal.show();
+	});
+</script>
+{% endif %}

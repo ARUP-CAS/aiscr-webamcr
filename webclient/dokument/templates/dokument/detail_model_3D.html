@@ -140,6 +140,7 @@
         </div>
       </div>
       <div class="card-body formset-table">
+        {% include "core/concurrent_changes_modal.html" with concurrent_changes=nalez_concurrent_changes fresh_form_url=request.path %}
         <h5>{% trans "dokument.templates.detail_model_3D.predmetyObjekty.Objekty" %}</h5>
         <form class="mb-3 submit-spinner" method="POST" action="{% url 'nalez:edit_nalez' 'dokument' komponenta.ident_cely %}">
           {% if formset.objekt.forms %}
