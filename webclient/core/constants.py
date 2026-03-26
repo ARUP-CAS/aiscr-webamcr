@@ -182,7 +182,7 @@ PERMISSIONS_SHEET_URL_NAME = "URL"
 PERMISSIONS_SHEET_ACTION_NAME = "action"
 
 UDAJ_ODSTRANEN = "údaj odstraněn"  # POZOR - neměnit - po změně by se v rámci periodických úloh všechny výskyty přepisovaly znovu, tj. vznikly nové verze všech dotčených projektů
-STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u kterých již nelze očekávat zahájení."
+STARY_PROJEKT_ZRUSEN = "Automatické zrušení projektů starších tří let, u kterých již nelze očekávat zahájení archeologického výzkumu. V případě, že zahájení stavby stále předpokládáte, prosíme o zaslání informace o aktuálně plánovaném termínu zahájení prací a projekt bude obnoven."
 
 PRISTUPNOST_MIN_RAZENI = 1  # Nejnižší hodnota přístupnosti podle řazení.
 
