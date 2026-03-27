@@ -7,6 +7,7 @@ from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_dj_ident
 from core.message_constants import (
+    DJ_TYP_CELEK_JIZ_EXISTUJE,
     MAXIMUM_DJ_DOSAZENO,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
@@ -240,6 +241,11 @@ def zapsat(request, arch_z_ident_cely):
     form = CreateDJForm(request.POST)
     if form.is_valid():
         logger.debug("dj.views.detail.zapsat.form_valid")
+        typ = form.cleaned_data.get("typ")
+        if typ and typ.id == TYP_DJ_CELEK and az.dokumentacni_jednotky_akce.filter(typ__id=TYP_DJ_CELEK).exists():
+            logger.debug("dj.views.detail.zapsat.celek_already_exists", extra={"arch_z": arch_z_ident_cely})
+            messages.add_message(request, messages.ERROR, DJ_TYP_CELEK_JIZ_EXISTUJE)
+            return az.get_redirect()
         vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
         vazba.save()  # TODO: přesunout do signálů.
 

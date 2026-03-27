@@ -46,6 +46,9 @@ MAXIMUM_AKCII_DOSAZENO: Final = _(
 MAXIMUM_DJ_DOSAZENO: Final = _(
     "common.message.MAXIMUM_DJ_DOSAZENO.text"
 )  # Byl překročen limit dokumentačních jednotek pro jednu akci.
+DJ_TYP_CELEK_JIZ_EXISTUJE: Final = _(
+    "common.message.DJ_TYP_CELEK_JIZ_EXISTUJE.text"
+)  # Dokumentační jednotka typu celek pro tento archeologický záznam již existuje.
 MAXIMUM_KOMPONENT_DOSAZENO: Final = _(
     "common.message.MAXIMUM_KOMPONENT_DOSAZENO.text"
 )  # Byl překročen limit komponent pro dokumentační jednotky.
