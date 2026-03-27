@@ -24,6 +24,7 @@ from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Q, RestrictedError
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
@@ -240,7 +241,15 @@ def zapsat(request, arch_z_ident_cely):
         :return: Vrací proměnná ``redirect``.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
-    form = CreateDJForm(request.POST)
+    jednotky = DokumentacniJednotka.objects.filter(archeologicky_zaznam=az)
+    typ_arch_z = az.typ_zaznamu
+    typ_akce = None
+    try:
+        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            typ_akce = az.akce.typ
+    except Exception as err:
+        logger.debug("dj.views.detail.zapsat.cannot_get_typ_akce", extra={"error": err})
+    form = CreateDJForm(request.POST, jednotky=jednotky, typ_arch_z=typ_arch_z, typ_akce=typ_akce)
     if form.is_valid():
         logger.debug("dj.views.detail.zapsat.form_valid")
         typ = form.cleaned_data.get("typ")
@@ -249,41 +258,43 @@ def zapsat(request, arch_z_ident_cely):
             TYP_DJ_KATASTR: DJ_TYP_KATASTR_JIZ_EXISTUJE,
             TYP_DJ_LOKALITA: DJ_TYP_LOKALITA_JIZ_EXISTUJE,
         }
-        if typ and typ.id in _unique_typy:
-            existujici = (
-                DokumentacniJednotka.objects.filter(archeologicky_zaznam=az, typ__id__in=list(_unique_typy.keys()))
-                .values_list("typ__id", flat=True)
-                .first()
-            )
-            if existujici is not None:
-                logger.debug(
-                    "dj.views.detail.zapsat.unique_typ_already_exists",
-                    extra={"arch_z": arch_z_ident_cely, "existujici_typ": existujici, "novy_typ": typ.id},
+        with transaction.atomic():
+            if typ and typ.id in _unique_typy:
+                ArcheologickyZaznam.objects.select_for_update().get(pk=az.pk)
+                existujici = (
+                    DokumentacniJednotka.objects.filter(archeologicky_zaznam=az, typ__id__in=list(_unique_typy.keys()))
+                    .values_list("typ__id", flat=True)
+                    .first()
                 )
-                messages.add_message(request, messages.ERROR, _unique_typy.get(existujici, _unique_typy[typ.id]))
-                return az.get_redirect()
-        vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
-        vazba.save()  # TODO: přesunout do signálů.
+                if existujici is not None:
+                    logger.debug(
+                        "dj.views.detail.zapsat.unique_typ_already_exists",
+                        extra={"arch_z": arch_z_ident_cely, "existujici_typ": existujici, "novy_typ": typ.id},
+                    )
+                    messages.add_message(request, messages.ERROR, _unique_typy.get(existujici, _unique_typy[typ.id]))
+                    return az.get_redirect()
+            vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
+            vazba.save()  # TODO: přesunout do signálů.
 
-        dj = form.save(commit=False)
-        try:
-            ident_cely = get_dj_ident(az)
-            dj.ident_cely = ident_cely
-            redirect = az.get_redirect(dj.ident_cely)
-        except MaximalIdentNumberError:
-            messages.add_message(request, messages.ERROR, MAXIMUM_DJ_DOSAZENO)
-            redirect = az.get_redirect()
-        else:
-            dj.komponenty = vazba
-            dj.archeologicky_zaznam = az
-            fedora_transaction = az.create_transaction(
-                request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
-            )
-            fedora_transaction.redirect_url = az.get_redirect()
-            dj.active_transaction = fedora_transaction
-            dj.close_active_transaction_when_finished = True
-            resp = dj.save()
-            logger.debug("dj.views.detail.zapsat.dj_resp", {"value": resp})
+            dj = form.save(commit=False)
+            try:
+                ident_cely = get_dj_ident(az)
+                dj.ident_cely = ident_cely
+                redirect = az.get_redirect(dj.ident_cely)
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.ERROR, MAXIMUM_DJ_DOSAZENO)
+                redirect = az.get_redirect()
+            else:
+                dj.komponenty = vazba
+                dj.archeologicky_zaznam = az
+                fedora_transaction = az.create_transaction(
+                    request.user, ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
+                )
+                fedora_transaction.redirect_url = az.get_redirect()
+                dj.active_transaction = fedora_transaction
+                dj.close_active_transaction_when_finished = True
+                resp = dj.save()
+                logger.debug("dj.views.detail.zapsat.dj_resp", {"value": resp})
     else:
         logger.debug("dj.views.detail.zapsat.form_not_valid", {"error": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
