@@ -10,7 +10,7 @@
     </div>
   </div>
   <div class="card-body">
-    {% include "core/concurrent_changes_modal.html" with concurrent_changes=pian_concurrent_changes fresh_form_url=pian_fresh_form_url %}
+    {% with modal_id="ccm-pian-"|add:pian_ident_cely %}{% include "core/concurrent_changes_modal.html" with concurrent_changes=pian_concurrent_changes fresh_form_url=pian_fresh_form_url modal_id=modal_id %}{% endwith %}
     <form class="mb-3 submit-spinner" method="POST" action="{% url 'pian:detail' pian_ident_cely %}">
       {% crispy pian_form_update %}
       {% if show.editovat %}

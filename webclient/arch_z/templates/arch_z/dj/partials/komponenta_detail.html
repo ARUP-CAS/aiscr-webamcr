@@ -3,7 +3,7 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
-{% include "core/concurrent_changes_modal.html" with concurrent_changes=k.concurrent_changes fresh_form_url=k.fresh_form_url %}
+{% with modal_id="ccm-komp-"|add:k.ident_cely %}{% include "core/concurrent_changes_modal.html" with concurrent_changes=k.concurrent_changes fresh_form_url=k.fresh_form_url modal_id=modal_id %}{% endwith %}
 <div class="card app-card-form" id="detail_komponenta_form_{{ k.ident_cely }}">
   <div class="card-header">
     <div class="app-fx app-left">

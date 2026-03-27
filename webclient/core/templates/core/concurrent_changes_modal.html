@@ -1,10 +1,11 @@
 {% load i18n %}
 {% if concurrent_changes %}
-<div class="modal fade" id="concurrent-changes-modal" tabindex="-1" role="dialog" aria-labelledby="concurrent-changes-modal-label" aria-modal="true">
+{% with mid=modal_id|default:"concurrent-changes-modal" %}
+<div class="modal fade" id="{{ mid }}" tabindex="-1" role="dialog" aria-labelledby="{{ mid }}-label" aria-modal="true">
 	<div class="modal-dialog" role="document">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h5 class="modal-title" id="concurrent-changes-modal-label">{% trans "core.templates.concurrentChangesModal.title" %}</h5>
+				<h5 class="modal-title" id="{{ mid }}-label">{% trans "core.templates.concurrentChangesModal.title" %}</h5>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'core.templates.concurrentChangesModal.closeButton' %}"></button>
 			</div>
 			<div class="modal-body">
@@ -28,8 +29,9 @@
 </div>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-		var modal = new bootstrap.Modal(document.getElementById("concurrent-changes-modal"));
+		var modal = new bootstrap.Modal(document.getElementById("{{ mid }}"));
 		modal.show();
 	});
 </script>
+{% endwith %}
 {% endif %}

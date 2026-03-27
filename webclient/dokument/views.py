@@ -1723,29 +1723,15 @@ def edit_model_3D(request, ident_cely):
                 if f in form_d.fields or f in form_komponenta.fields
             ] + extra_conflicting
             if conflicting_labels:
-                form_d_get = CreateModelDokumentForm(
-                    instance=dokument, required=required_fields, required_next=required_fields_next
-                )
-                form_extra_get = CreateModelExtraDataForm(
-                    instance=form_extra.instance, required=required_fields, required_next=required_fields_next
-                )
-                form_komponenta_get = CreateKomponentaForm(
-                    obdobi_choices,
-                    areal_choices,
-                    instance=dokument.get_komponenta(),
-                    required=required_fields,
-                    required_next=required_fields_next,
-                    prefix="komponenta",
-                )
                 return render(
                     request,
                     "dokument/create_model_3D.html",
                     {
                         "object": dokument,
                         "global_map_can_edit": True,
-                        "formDokument": form_d_get,
-                        "formExtraData": form_extra_get,
-                        "formKomponenta": form_komponenta_get,
+                        "formDokument": form_d,
+                        "formExtraData": form_extra,
+                        "formKomponenta": form_komponenta,
                         "title": _("dokument.views.edit_model_3D.title"),
                         "header": _("dokument.views.edit_model_3D.header"),
                         "button": _("dokument.views.edit_model_3D.submitButton.text"),

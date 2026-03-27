@@ -496,7 +496,10 @@ class OptimisticLockingMixin:
             original_data = json.loads(lock_data_str)
         except (json.JSONDecodeError, ValueError):
             return []
-        fresh_instance = self._meta.model.objects.get(pk=self.instance.pk)
+        try:
+            fresh_instance = self._meta.model.objects.get(pk=self.instance.pk)
+        except self._meta.model.DoesNotExist:
+            return list(original_data.keys())
         current_data = json.loads(self._serialize_instance_for_lock(fresh_instance))
         return [
             field_name

@@ -419,26 +419,14 @@ def edit(request, ident_cely):
                     for f in conflicting_fields
                     if f == "geom" or f in form.fields
                 ]
-                form_get = CreateSamostatnyNalezForm(
-                    instance=sn,
-                    user=request.user,
-                    required=required_fields,
-                    required_next=required_fields_next,
-                    **kwargs,
-                )
-                form_coor_get = (
-                    CoordinatesDokumentForm(initial=sn.generate_coord_forms_initial())
-                    if sn.geom
-                    else CoordinatesDokumentForm()
-                )
                 return render(
                     request,
                     "pas/edit.html",
                     {
                         "sn": sn,
                         "global_map_can_edit": True,
-                        "formCoor": form_coor_get,
-                        "form": form_get,
+                        "formCoor": form_coor,
+                        "form": form,
                         "concurrent_changes": conflicting_labels,
                         "fresh_form_url": reverse("pas:edit", kwargs={"ident_cely": ident_cely}),
                     },
