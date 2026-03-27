@@ -6,7 +6,7 @@ from core.utils import SearchTable
 from django.utils.translation import gettext_lazy as _
 from psycopg2._range import DateRange
 
-from .models import Projekt
+from .models import Projekt, get_show_oznamovatel
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,15 @@ class ProjektTable(SearchTable):
     oznaceni_stavby = tables.columns.Column(
         verbose_name=_("projekt.tables.ProjektTable.oznaceni_stavby.label"), default=""
     )
+    oznamovatel_oznamovatel = tables.columns.Column(
+        verbose_name=_("projekt.tables.ProjektTable.oznamovatel_oznamovatel.label"),
+        default="",
+        accessor="oznamovatel__oznamovatel",
+        attrs={
+            "th": {"class": "col-no-orderable"},
+        },
+        orderable=False,
+    )
     columns_to_hide = (
         "uzivatelske_oznaceni",
         "hlavni_katastr__okres",
@@ -68,6 +77,7 @@ class ProjektTable(SearchTable):
         "parcelni_cislo",
         "vedouci_projektu",
         "kulturni_pamatka",
+        "oznamovatel_oznamovatel",
     )
     app = "projekt"
 
@@ -123,6 +133,7 @@ class ProjektTable(SearchTable):
             "datum_ukonceni",
             "termin_odevzdani_nz",
             "kulturni_pamatka",
+            "oznamovatel_oznamovatel",
         )
 
     def render_planovane_zahajeni(self, value):
@@ -146,7 +157,30 @@ class ProjektTable(SearchTable):
         Inicializuje instanci třídy.
 
         :param args: Parametr ``args`` se předává do volání ``__init__()``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``. Může obsahovat klíč ``user`` s instancí přihlášeného uživatele, který se používá pro řízení viditelnosti oznamovatele na úrovni řádku.
         """
+        self._user = kwargs.pop("user", None)
         super(ProjektTable, self).__init__(*args, **kwargs)
         # self.set_hideable_columns(['ident_cely', 'stav']) Odkomentovat, až bude podpora dostupná.
+
+    def render_oznamovatel_oznamovatel(self, value, record):
+        """
+        Vyrenderuje oznamovatele s ohledem na pravidla viditelnosti.
+
+        Implementuje plnou logiku ``get_show_oznamovatel``, včetně časových podmínek závislých na datu
+        přihlášení (30 dní) a uzavření (90 dní). Tato data jsou předpočítána jako anotace querysetu
+        (``datum_prihlaseni``, ``datum_uzavreni``) a přístupná přes ``getattr`` na záznamu modelu.
+        Pokud není uživatel k dispozici (kontext generování Redis snapshotu), vrátí hodnotu bez filtrování.
+
+        :param value: Hodnota pole ``oznamovatel.oznamovatel`` z přidruženého záznamu.
+        :param record: Instance projektu z aktuálního řádku tabulky.
+        :return: Hodnota oznamovatele, přeložený label ``oznamovatel_oznamovatel.hidden`` pokud uživatel
+            nemá oprávnění ji zobrazit, nebo prázdný řetězec pokud projekt nemá oznamovatele.
+        """
+        if not value:
+            return ""
+        if self._user is None:
+            # Kontext generování Redis snapshotu – uživatel není k dispozici, vrátíme surovou hodnotu.
+            return value
+        show = get_show_oznamovatel(record, self._user)
+        return value if show else _("projekt.tables.ProjektTable.oznamovatel_oznamovatel.hidden")

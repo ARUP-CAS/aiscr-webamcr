@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import simplejson as json
 from arch_z.models import Akce
@@ -134,7 +134,7 @@ from projekt.forms import (
     ZahajitVTerenuForm,
     ZruseniProjektForm,
 )
-from projekt.models import Projekt
+from projekt.models import Projekt, get_show_oznamovatel
 from projekt.tables import ProjektTable
 from services.mailer import Mailer
 from uzivatel.forms import OsobaForm
@@ -704,6 +704,81 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         context["has_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
         return context
 
+    def get_table_kwargs(self):
+        """
+        Předá aktuálního uživatele konstruktoru tabulky.
+
+        ``ProjektTable`` potřebuje uživatele pro metodu ``render_oznamovatel_oznamovatel``,
+        která aplikuje pravidla viditelnosti oznamovatele per-řádek.
+
+        :return: Slovník kwargs předávaných konstruktoru tabulky.
+        """
+        return {"user": self.request.user}
+
+    def postprocess_export_dataframe(self, df):
+        """
+        Aplikuje oprávnění na sloupec ``oznamovatel_oznamovatel`` v exportním DataFrame.
+
+        Pro archivující uživatele vrací DataFrame beze změny.
+        Pro archeology a ostatní role je DB dotazem sestaven set identifikátorů projektů,
+        u nichž má aktuální uživatel právo vidět oznamovatele (dle pravidel ``get_show_oznamovatel``).
+        Hodnota oznamovatele je v nepřístupných řádcích nahrazena prázdným řetězcem.
+
+        Časová kritéria jsou vyhodnocována přímo z polí ``datum_uzavreni`` a ``datum_prihlaseni``
+        na modelu ``Projekt``. DB provede filtrování viditelnosti a vrátí pouze relevantní
+        identifikátory; Python-level smyčka přes všechny projekty je vyloučena.
+
+        :param df: DataFrame sestavený z Redis snapshotů se strojovými názvy sloupců.
+        :return: Upravený DataFrame s aplikovanými pravidly viditelnosti oznamovatele.
+        """
+        user = self.request.user
+        if user.is_archiver_or_more or "oznamovatel_oznamovatel" not in df.columns:
+            return df
+        if user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
+            today = date.today()
+            visible_idents = set(
+                self.get_table_data()
+                .filter(
+                    typ_projektu_id=TYP_PROJEKTU_ZACHRANNY_ID,
+                    oznamovatel__isnull=False,
+                )
+                .filter(
+                    Q(stav=PROJEKT_STAV_ZAPSANY)
+                    | Q(
+                        organizace_id=user.organizace_id,
+                        stav__in=[
+                            PROJEKT_STAV_PRIHLASENY,
+                            PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                            PROJEKT_STAV_UKONCENY_V_TERENU,
+                        ],
+                    )
+                    | Q(
+                        organizace_id=user.organizace_id,
+                        stav=PROJEKT_STAV_UZAVRENY,
+                        datum_uzavreni__gte=today - timedelta(days=90),
+                    )
+                    | Q(
+                        ~Q(organizace_id=user.organizace_id),
+                        stav__in=[
+                            PROJEKT_STAV_PRIHLASENY,
+                            PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                            PROJEKT_STAV_UKONCENY_V_TERENU,
+                            PROJEKT_STAV_UZAVRENY,
+                        ],
+                        datum_prihlaseni__gte=today - timedelta(days=30),
+                    )
+                )
+                .order_by()
+                .values_list("ident_cely", flat=True)
+            )
+        else:
+            visible_idents = set()
+        hidden_label = _("projekt.tables.ProjektTable.oznamovatel_oznamovatel.hidden")
+        has_value = df["oznamovatel_oznamovatel"].astype(bool)
+        is_visible = df["ident_cely"].isin(visible_idents)
+        df["oznamovatel_oznamovatel"] = df["oznamovatel_oznamovatel"].where(~has_value | is_visible, other=hidden_label)
+        return df
+
     def get_queryset(self):
         """Vrací queryset. v aplikaci.
 
@@ -720,6 +795,7 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
                 "organizace",
                 "vedouci_projektu",
                 "hlavni_katastr__okres__kraj",
+                "oznamovatel",
             )
             .prefetch_related("katastry__okres__kraj")
             .defer("geom")
@@ -1644,47 +1720,6 @@ def get_detail_template_shows(projekt, user):
         "vypis": check_permissions(p.actionChoices.vypis_projekt, user, projekt.ident_cely),
     }
     return show
-
-
-def get_show_oznamovatel(projekt, user):
-    """
-    Vrací show oznamovatel.
-
-    :param projekt: Parametr ``projekt`` pracuje se s atributy ``typ_projektu``, ``has_oznamovatel``, ovlivňuje větvení podmínek.
-    :param user: Parametr ``user`` pracuje se s atributy ``is_archiver_or_more``, ``hlavni_role``, ovlivňuje větvení podmínek.
-    :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
-    """
-    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
-        if user.is_archiver_or_more:
-            return True
-        elif user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
-            if projekt.stav == PROJEKT_STAV_ZAPSANY:
-                return True
-            elif projekt.organizace == user.organizace:
-                if projekt.stav in [
-                    PROJEKT_STAV_PRIHLASENY,
-                    PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                    PROJEKT_STAV_UKONCENY_V_TERENU,
-                ]:
-                    return True
-                elif projekt.stav == PROJEKT_STAV_UZAVRENY:
-                    last_uzavreni = projekt.historie.get_last_transaction_date(UZAVRENI_PROJ)
-                    if last_uzavreni and last_uzavreni["datum"] >= datetime.now(
-                        last_uzavreni["datum"].tzinfo
-                    ) - timedelta(days=90):
-                        return True
-            elif projekt.stav in [
-                PROJEKT_STAV_PRIHLASENY,
-                PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                PROJEKT_STAV_UKONCENY_V_TERENU,
-                PROJEKT_STAV_UZAVRENY,
-            ]:
-                last_prihlaseni = projekt.historie.get_last_transaction_date(PRIHLASENI_PROJ)
-                if last_prihlaseni and last_prihlaseni["datum"] >= datetime.now(
-                    last_prihlaseni["datum"].tzinfo
-                ) - timedelta(days=30):
-                    return True
-    return False
 
 
 def get_required_fields(zaznam=None, next=0):
