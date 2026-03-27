@@ -8,6 +8,8 @@ from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_dj_ident
 from core.message_constants import (
     DJ_TYP_CELEK_JIZ_EXISTUJE,
+    DJ_TYP_KATASTR_JIZ_EXISTUJE,
+    DJ_TYP_LOKALITA_JIZ_EXISTUJE,
     MAXIMUM_DJ_DOSAZENO,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
@@ -242,10 +244,24 @@ def zapsat(request, arch_z_ident_cely):
     if form.is_valid():
         logger.debug("dj.views.detail.zapsat.form_valid")
         typ = form.cleaned_data.get("typ")
-        if typ and typ.id == TYP_DJ_CELEK and az.dokumentacni_jednotky_akce.filter(typ__id=TYP_DJ_CELEK).exists():
-            logger.debug("dj.views.detail.zapsat.celek_already_exists", extra={"arch_z": arch_z_ident_cely})
-            messages.add_message(request, messages.ERROR, DJ_TYP_CELEK_JIZ_EXISTUJE)
-            return az.get_redirect()
+        _unique_typy = {
+            TYP_DJ_CELEK: DJ_TYP_CELEK_JIZ_EXISTUJE,
+            TYP_DJ_KATASTR: DJ_TYP_KATASTR_JIZ_EXISTUJE,
+            TYP_DJ_LOKALITA: DJ_TYP_LOKALITA_JIZ_EXISTUJE,
+        }
+        if typ and typ.id in _unique_typy:
+            existujici = (
+                DokumentacniJednotka.objects.filter(archeologicky_zaznam=az, typ__id__in=list(_unique_typy.keys()))
+                .values_list("typ__id", flat=True)
+                .first()
+            )
+            if existujici is not None:
+                logger.debug(
+                    "dj.views.detail.zapsat.unique_typ_already_exists",
+                    extra={"arch_z": arch_z_ident_cely, "existujici_typ": existujici, "novy_typ": typ.id},
+                )
+                messages.add_message(request, messages.ERROR, _unique_typy.get(existujici, _unique_typy[typ.id]))
+                return az.get_redirect()
         vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
         vazba.save()  # TODO: přesunout do signálů.
 

@@ -49,6 +49,12 @@ MAXIMUM_DJ_DOSAZENO: Final = _(
 DJ_TYP_CELEK_JIZ_EXISTUJE: Final = _(
     "common.message.DJ_TYP_CELEK_JIZ_EXISTUJE.text"
 )  # Dokumentační jednotka typu celek pro tento archeologický záznam již existuje.
+DJ_TYP_KATASTR_JIZ_EXISTUJE: Final = _(
+    "common.message.DJ_TYP_KATASTR_JIZ_EXISTUJE.text"
+)  # Dokumentační jednotka typu katastr pro tento archeologický záznam již existuje.
+DJ_TYP_LOKALITA_JIZ_EXISTUJE: Final = _(
+    "common.message.DJ_TYP_LOKALITA_JIZ_EXISTUJE.text"
+)  # Dokumentační jednotka typu lokalita pro tento archeologický záznam již existuje.
 MAXIMUM_KOMPONENT_DOSAZENO: Final = _(
     "common.message.MAXIMUM_KOMPONENT_DOSAZENO.text"
 )  # Byl překročen limit komponent pro dokumentační jednotky.
