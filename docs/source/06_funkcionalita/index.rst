@@ -16,6 +16,7 @@ Tato sekce popisuje funkcionalitu aplikace WebAMČR.
    notifikace
    preklady
    cookies
+   tmavy_rezim
    chybove_stranky
    administrace
 
