@@ -56,11 +56,14 @@ Funkce
 
    Aktualizuje snapshot fields.
 
-.. py:function:: update_all_redis_snapshots(rewrite_existing)
+.. py:function:: update_all_redis_snapshots(rewrite_existing, classes)
 
-   Aktualizuje all redis snapshots.
+   Aktualizuje Redis snapshots pro všechny nebo vybrané třídy modelů.
 
-   :param rewrite_existing: Číselná hodnota ``rewrite_existing`` použitá při výpočtu nebo transformaci.
+   :param rewrite_existing: Pokud je ``True``, přepíše i existující záznamy v Redis. Výchozí hodnota je ``False``.
+   :param classes: Volitelný seznam tříd modelů, pro které se mají Redis snapshot záznamy aktualizovat.
+   Pokud není zadán, použijí se výchozí třídy
+   (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
 
 .. py:function:: update_single_redis_snapshot(class_name, record_pk)
 

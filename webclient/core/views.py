@@ -1680,6 +1680,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             data = pandas.DataFrame(data)
             filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
             data = data[filtered_column_order]
+            data = self.postprocess_export_dataframe(data)
             column_names = {str(column.name): str(column.verbose_name) for column in self.get_table().columns}
             data = data.rename(columns=column_names)
             if export_format == TableExport.CSV:
@@ -1715,6 +1716,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 return HttpResponse()
             response["X-Accel-Buffering"] = "no"  # Zakázání bufferování v NGINX
             return response
+
+    def postprocess_export_dataframe(self, df):
+        """
+        Hook pro post-processing exportního DataFrame před přejmenováním sloupců.
+
+        Metoda je volána v ``create_export`` po sestavení DataFramu z Redis snapshotů
+        a po aplikaci ``filtered_column_order``, ale před přejmenováním sloupců na verbose names.
+        Sloupce jsou v tuto chvíli identifikovány strojovými názvy (shodné s názvy v tabulce).
+
+        Výchozí implementace vrací DataFrame beze změny. Podtřídy mohou přepsat tuto metodu
+        pro aplikaci oprávnění nebo jiné úpravy dat.
+
+        :param df: DataFrame sestavený z Redis snapshotů se strojovými názvy sloupců.
+        :return: Upravený (nebo nezměněný) DataFrame.
+        """
+        return df
 
     def init_translations(self):
         """Provádí operaci init translations."""

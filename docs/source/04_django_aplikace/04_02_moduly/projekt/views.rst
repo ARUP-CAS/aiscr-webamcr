@@ -79,6 +79,31 @@ Třídy
 
       :return: Vrací proměnná ``context``.
 
+   .. py:method:: get_table_kwargs()
+
+      Předá aktuálního uživatele konstruktoru tabulky.
+
+      ``ProjektTable`` potřebuje uživatele pro metodu ``render_oznamovatel_oznamovatel``,
+      která aplikuje pravidla viditelnosti oznamovatele per-řádek.
+
+      :return: Slovník kwargs předávaných konstruktoru tabulky.
+
+   .. py:method:: postprocess_export_dataframe()
+
+      Aplikuje oprávnění na sloupec ``oznamovatel_oznamovatel`` v exportním DataFrame.
+
+      Pro archivující uživatele vrací DataFrame beze změny.
+      Pro archeology a ostatní role je DB dotazem sestaven set identifikátorů projektů,
+      u nichž má aktuální uživatel právo vidět oznamovatele (dle pravidel ``get_show_oznamovatel``).
+      Hodnota oznamovatele je v nepřístupných řádcích nahrazena prázdným řetězcem.
+
+      Časová kritéria jsou vyhodnocována přímo z polí ``datum_uzavreni`` a ``datum_prihlaseni``
+      na modelu ``Projekt``. DB provede filtrování viditelnosti a vrátí pouze relevantní
+      identifikátory; Python-level smyčka přes všechny projekty je vyloučena.
+
+      :param df: DataFrame sestavený z Redis snapshotů se strojovými názvy sloupců.
+      :return: Upravený DataFrame s aplikovanými pravidly viditelnosti oznamovatele.
+
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
@@ -490,14 +515,6 @@ Funkce
 
    :param projekt: Parametr ``projekt`` předává se do volání ``get_show_oznamovatel()``, ``check_permissions()``, pracuje se s atributy ``typ_projektu``, ``ident_cely``, ovlivňuje větvení podmínek.
    :param user: Parametr ``user`` se předává do volání ``get_show_oznamovatel()``, ``check_permissions()``, pracuje se s atributy ``organizace``.
-   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
-
-.. py:function:: get_show_oznamovatel(projekt, user)
-
-   Vrací show oznamovatel.
-
-   :param projekt: Parametr ``projekt`` pracuje se s atributy ``typ_projektu``, ``has_oznamovatel``, ovlivňuje větvení podmínek.
-   :param user: Parametr ``user`` pracuje se s atributy ``is_archiver_or_more``, ``hlavni_role``, ovlivňuje větvení podmínek.
    :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
 
 .. py:function:: get_required_fields(zaznam, next)
