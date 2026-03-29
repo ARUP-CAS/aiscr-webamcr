@@ -593,5 +593,6 @@ DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv.aiscr.cz/id/")
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 EMAIL_ZADOST_UDAJE_OZNAMOVATELE = "info@amapa.cz"

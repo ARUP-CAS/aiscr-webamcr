@@ -737,12 +737,10 @@ input.coordInput {
       }
 
     }
-
-    th.col-stahnout {
-      color: white !important;
-    }
   }
-
+  th.col-no-orderable {
+    color: white !important;
+  }
   &.app-entity-historie.app-entity-soubor {
     //height: 85% !important;
     padding-bottom: 59px;

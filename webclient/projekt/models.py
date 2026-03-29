@@ -20,6 +20,7 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
+    ROLE_ARCHEOLOG_ID,
     RUSENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
     UKONCENI_V_TERENU_PROJ,
@@ -173,6 +174,16 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         null=True,
         related_name="projekty",
     )
+    datum_uzavreni = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=_("projekt.models.projekt.datumUzavreni.label"),
+    )
+    datum_prihlaseni = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=_("projekt.models.projekt.datumPrihlaseni.label"),
+    )
 
     @property
     def datum_oznameni(self):
@@ -320,6 +331,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         :param user: Parametr ``user`` se předává do volání ``Historie()``.
         """
         self.stav = PROJEKT_STAV_PRIHLASENY
+        self.datum_prihlaseni = datetime.date.today()
         Historie(
             typ_zmeny=PRIHLASENI_PROJ,
             uzivatel=user,
@@ -366,6 +378,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         :param user: Parametr ``user`` se předává do volání ``Historie()``.
         """
         self.stav = PROJEKT_STAV_UZAVRENY
+        self.datum_uzavreni = datetime.date.today()
         Historie(
             typ_zmeny=UZAVRENI_PROJ,
             uzivatel=user,
@@ -916,7 +929,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         from projekt.tables import ProjektTable
 
-        data = Projekt.objects.filter(pk=self.pk)
+        data = Projekt.objects.filter(pk=self.pk).select_related("oznamovatel", "typ_projektu")
         table = ProjektTable(data=data)
         data = RedisConnector.prepare_model_for_redis(table)
         return self.redis_snapshot_id, data
@@ -931,6 +944,51 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         )
         kraje = RuianKraj.objects.filter(ruianokres__ruiankatastr__in=all_katastre).distinct()
         return kraje.filter(email__isnull=False).exclude(email="")
+
+
+def get_show_oznamovatel(projekt, user):
+    """
+    Vrátí, zda má být sekce oznamovatele zobrazena danému uživateli.
+
+    Implementuje pravidla viditelnosti oznamovatele. Časová kritéria jsou vyhodnocována
+    z polí ``projekt.datum_uzavreni`` a ``projekt.datum_prihlaseni``, která jsou udržována
+    přímo na modelu (viz ``Projekt.set_uzavreny`` a ``Projekt.set_prihlaseny``).
+
+    :param projekt: Instance projektu, pro nějž se oprávnění vyhodnocuje.
+    :param user: Přihlášený uživatel.
+    :return: ``True``, pokud má být sekce oznamovatele zobrazena, jinak ``False``.
+    """
+    if projekt.typ_projektu_id != TYP_PROJEKTU_ZACHRANNY_ID or not projekt.has_oznamovatel():
+        return False
+    if user.is_archiver_or_more:
+        return True
+    if user.hlavni_role.id == ROLE_ARCHEOLOG_ID:
+        if projekt.stav == PROJEKT_STAV_ZAPSANY:
+            return True
+        if projekt.organizace_id == user.organizace_id:
+            if projekt.stav in [
+                PROJEKT_STAV_PRIHLASENY,
+                PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                PROJEKT_STAV_UKONCENY_V_TERENU,
+            ]:
+                return True
+            if projekt.stav == PROJEKT_STAV_UZAVRENY and projekt.datum_uzavreni:
+                if projekt.datum_uzavreni >= datetime.date.today() - datetime.timedelta(days=90):
+                    return True
+        else:
+            if (
+                projekt.stav
+                in [
+                    PROJEKT_STAV_PRIHLASENY,
+                    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                    PROJEKT_STAV_UKONCENY_V_TERENU,
+                    PROJEKT_STAV_UZAVRENY,
+                ]
+                and projekt.datum_prihlaseni
+            ):
+                if projekt.datum_prihlaseni >= datetime.date.today() - datetime.timedelta(days=30):
+                    return True
+    return False
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
