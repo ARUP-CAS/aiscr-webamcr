@@ -27,13 +27,16 @@ Téma je řízeno dvěma DOM atributy nastavenými současně:
 
 Přepínání zajišťuje třída **ThemeManager** v ``webclient/static/js/theme-toggle.js``:
 
-1. Při načtení stránky čte ``localStorage('app-theme')``; pokud není nastaveno,
-   použije preferenci operačního systému (``prefers-color-scheme: dark``).
+1. Při načtení stránky čte ``localStorage.getItem('app-theme')``; pokud není
+   nastaveno, použije preferenci operačního systému
+   (``prefers-color-scheme: dark``).
 2. Nastaví ``data-theme`` na ``<html>`` a přepne třídy
    ``app-dark-theme`` / ``app-light-theme`` na ``<body>``.
 3. Sleduje změny ``prefers-color-scheme`` a automaticky přepíná,
    **pokud** uživatel ručně nezvolil téma.
-4. Dispatchuje ``CustomEvent`` ``theme-changed``, na který reagují
+4. Při ruční změně tématu ukládá volbu přes
+   ``localStorage.setItem('app-theme', theme)``.
+5. Dispatchuje ``CustomEvent`` ``theme-changed``, na který reagují
    další komponenty (např. ikona tlačítka).
 
 Tlačítko přepínání používá Material Icons ikonu (``dark_mode`` / ``light_mode``)
@@ -46,8 +49,9 @@ a nachází se v:
 - **Oznámení (veřejné stránky):** ``webclient/oznameni/templates/oznameni/header.html``,
   ``index.html``, ``index_2.html``, ``success.html``
 - **Chybové stránky proxy (statické HTML):** ``proxy/custom_html/{cs,en}/*.html``
-  — obsahují inline JS, který čte ``localStorage('app-theme')`` a nastaví
-  ``data-theme`` přímo.
+  - obsahují inline JS, který používá pouze
+    ``window.matchMedia('(prefers-color-scheme: dark)')`` a podle něj nastaví
+    ``data-theme``; ``app-theme`` z ``localStorage`` nečtou.
 
 Struktura souborů
 -----------------
