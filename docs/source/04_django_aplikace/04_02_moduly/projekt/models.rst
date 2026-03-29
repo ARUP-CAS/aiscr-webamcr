@@ -330,3 +330,18 @@ Třídy
 
       :return: Vrací hodnotu podle větve zpracování.
 
+
+Funkce
+------
+
+.. py:function:: get_show_oznamovatel(projekt, user)
+
+   Vrátí, zda má být sekce oznamovatele zobrazena danému uživateli.
+
+   Implementuje pravidla viditelnosti oznamovatele. Časová kritéria jsou vyhodnocována
+   z polí ``projekt.datum_uzavreni`` a ``projekt.datum_prihlaseni``, která jsou udržována
+   přímo na modelu (viz ``Projekt.set_uzavreny`` a ``Projekt.set_prihlaseny``).
+
+   :param projekt: Instance projektu, pro nějž se oprávnění vyhodnocuje.
+   :param user: Přihlášený uživatel.
+   :return: ``True``, pokud má být sekce oznamovatele zobrazena, jinak ``False``.
