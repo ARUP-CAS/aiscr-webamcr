@@ -269,21 +269,20 @@ def delete_unsubmited_projects():
     )
     for item in projekt_query:
         item: Projekt
+        logger.debug("core.cron.delete_unsubmited_projects.delete_projekt", extra={"ident_cely": item.ident_cely})
         fedora_transaction = FedoraTransaction()
         item.active_transaction = fedora_transaction
         try:
-            has_soubory = False
             if isinstance(item.soubory, SouborVazby):
                 for item_file in item.soubory.soubory.all():
                     item.active_transaction = fedora_transaction
                     item_file.delete()
-                    has_soubory = True
                 item.soubory.delete()
                 item.soubory = None
             item.suppress_signal = True
             item.delete()
-            if has_soubory:
-                con = FedoraRepositoryConnector(item, fedora_transaction)
+            con = FedoraRepositoryConnector(item, fedora_transaction)
+            if con.container_exists():
                 con.delete_container(delete_tombstone=False)
             fedora_transaction.mark_transaction_as_closed()
         except Exception as err:
@@ -377,15 +376,19 @@ def update_snapshot_fields():
 
 
 @shared_task
-def update_all_redis_snapshots(rewrite_existing=False):
+def update_all_redis_snapshots(rewrite_existing=False, classes=None):
     """
-    Aktualizuje all redis snapshots.
+    Aktualizuje Redis snapshots pro všechny nebo vybrané třídy modelů.
 
-    :param rewrite_existing: Číselná hodnota ``rewrite_existing`` použitá při výpočtu nebo transformaci.
+    :param rewrite_existing: Pokud je ``True``, přepíše i existující záznamy v Redis. Výchozí hodnota je ``False``.
+    :param classes: Volitelný seznam tříd modelů, pro které se mají Redis snapshot záznamy aktualizovat.
+        Pokud není zadán, použijí se výchozí třídy
+        (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez).
     """
     logger.debug("cron.tasks.update_all_redis_snapshots.start")
     r = RedisConnector.get_connection()
-    classes_list = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
+    default_classes = (Akce, Projekt, Dokument, Lokalita, ExterniZdroj, UzivatelSpoluprace, SamostatnyNalez)
+    classes_list = classes if classes is not None else default_classes
     for current_class in classes_list:
         logger.debug("cron.tasks.update_all_redis_snapshots.class_start", extra={"class_name": current_class.__name__})
         pipe = r.pipeline()

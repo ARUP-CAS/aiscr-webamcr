@@ -156,7 +156,7 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "core.apps.AmcrAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -218,6 +218,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.InactiveUserMiddleware",
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
@@ -592,5 +593,6 @@ DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv.aiscr.cz/id/")
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 EMAIL_ZADOST_UDAJE_OZNAMOVATELE = "info@amapa.cz"

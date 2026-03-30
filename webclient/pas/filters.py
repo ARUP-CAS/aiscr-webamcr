@@ -50,7 +50,9 @@ logger = logging.getLogger(__name__)
 
 
 class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
-    """Třída pro zakladní filtrování samostatného nálezu a jejich potomků."""
+    """
+    Třída pro základní filtrování samostatného nálezu a jejich potomků.
+    """
 
     TYP_VAZBY = SAMOSTATNY_NALEZ_RELATION_TYPE
     HISTORIE_TYP_ZMENY_STARTS_WITH = "SN"
@@ -300,6 +302,8 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
                 queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            if "poznamka__icontains" in historie:
+                queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
             queryset = queryset.filter(queryset_history)
 
         return queryset
@@ -360,7 +364,9 @@ class SamostatnyNalezFilter(HistorieFilter, filters.FilterSet):
 
 
 class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
-    """Třída pro zakladní filtrování uživatelské spolupráce a jejich potomků."""
+    """
+    Třída pro základní filtrování uživatelské spolupráce a jejich potomků.
+    """
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = "SP"
     TYP_VAZBY = UZIVATEL_SPOLUPRACE_RELATION_TYPE
@@ -468,6 +474,8 @@ class UzivatelSpolupraceFilter(HistorieFilter, filters.FilterSet):
                 queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            if "poznamka__icontains" in historie:
+                queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
             queryset = queryset.filter(queryset_history)
         return queryset
 
@@ -523,9 +531,10 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),
@@ -570,9 +579,10 @@ class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),

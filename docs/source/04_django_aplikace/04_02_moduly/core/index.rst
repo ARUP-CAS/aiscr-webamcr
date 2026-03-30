@@ -13,6 +13,7 @@ Dokumentace modulu core.
    signals
    admin
    widgets
+   admin_sites
    authenticators
    connectors
    constants

@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: ExterniZdrojFilter
 
-   Třída pro zakladní filtrování externího zdroju a jejich potomků.
+   Třída pro základní filtrování externího zdroju a jejich potomků.
 
    **Metody:**
 

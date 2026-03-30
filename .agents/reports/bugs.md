@@ -17,10 +17,12 @@
   - `webclient/projekt/models.py:663` — `Projekt.set_permanent_ident_cely()`
   - `webclient/arch_z/models.py:331` — `ArcheologickyZaznam.set_lokalita_permanent_ident_cely()`
   - `webclient/arch_z/models.py:889` — `get_akce_ident()`
+  - `webclient/dokument/models.py:441` — `Dokument.set_permanent_ident_cely()` *(nalezeno T03c)*
+  - `webclient/ez/models.py:301` — `get_perm_ez_ident()` *(nalezeno T03c)*
 - **Závažnost:** Střední
 - **GitHub Issue:** nový kandidát na issue
-- **Popis:** Všechna tři místa používají `eval(i)` pro převod textového čísla (segmentu `ident_cely` z DB) na integer. Ačkoliv jsou hodnoty interně generované a jejich formát je řízen aplikací, `eval()` je inherentně nebezpečná funkce — pokud by byl formát ident_cely narušen (např. chybnou migrací dat), mohl by být spuštěn libovolný Python kód.
-- **Navrhovaná oprava:** Nahradit `eval(i)` za `int(i)` na všech třech místech. Přidat validaci formátu před konverzí (např. `i.isdigit()`).
+- **Popis:** Všech pět míst používá `eval(i)` pro převod textového čísla (segmentu `ident_cely` z DB) na integer. Ačkoliv jsou hodnoty interně generované a jejich formát je řízen aplikací, `eval()` je inherentně nebezpečná funkce — pokud by byl formát ident_cely narušen (např. chybnou migrací dat), mohl by být spuštěn libovolný Python kód. Viz SEC-ORM-001 až SEC-ORM-005 v `orm_analysis.json`.
+- **Navrhovaná oprava:** Nahradit `eval(i)` za `int(i)` na všech pěti místech. Přidat validaci formátu před konverzí (např. `i.isdigit()`).
 - **Task:** T03
 
 ---
@@ -52,7 +54,8 @@
 ### BUG-004: Extra SELECT v SamostatnyNalez.save() — initial_pristupnost vzor je neúplný
 
 - **Soubor:** `webclient/pas/models.py:182-186`
-- **Závažnost:** Nízká
+- **Závažnost:** Střední
+- **Sjednocení:** Závažnost zvýšena z Nízká na Střední (2026-03-13); extra SELECT se spouští při každém uložení záznamu a jde o architektonický anti-pattern — odpovídá zařazení ORM-01 do Vysoké priority v refactoring_backlog.md.
 - **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
 - **Popis:** Model `SamostatnyNalez` má property `initial_pristupnost`, ale v metodě `save()` stále bezpodmínečně volá `SamostatnyNalez.objects.get(pk=self.pk)` při každém uložení záznamu (kde `pk is not None`). Správný vzor ukládá počáteční hodnotu v `__init__()`, čímž extra SELECT odpadá.
 - **Navrhovaná oprava:** Přidat do `__init__()`: `self._initial_pristupnost = self.pristupnost`. V `save()` porovnat `self._initial_pristupnost != self.pristupnost` bez extra SELECT.
@@ -153,3 +156,58 @@
 - **Popis:** Tři místa v `vypis/` aplikují `mark_safe()` na hodnoty odvozené z databázových instancí nebo model properties. Pokud tyto hodnoty nejsou správně escapovány před zabalením do `mark_safe()`, může dojít ke stored XSS. Ident_cely hodnoty mají řízenou strukturu, ale vzor je architektonicky nebezpečný a vyžaduje explicitní ověření.
 - **Navrhovaná oprava:** Auditovat `get_ident_cely_link` property, `get_name()` implementace a Dokument.extra_data atribut. Přepsat na `format_html()` nebo zajistit `escape()` před `mark_safe()`.
 - **Task:** T05
+
+---
+
+### BUG-013: restore_database.sh neověřuje povinné proměnné prostředí před DROP DATABASE
+
+- **Soubory:** `scripts/restore_database.sh`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** Skript používá `${DBNAME}`, `${USED_DB_BACKUP}`, `${DB_FLAG_ROLE}` bez kontroly, zda jsou nastaveny. Při prázdných hodnotách může dojít k nechtěnému DROP/CREATE (např. prázdné jméno databáze) nebo k nejasné chybě při pg_restore.
+- **Navrhovaná oprava:** Na začátku skriptu ověřit, že `DBNAME`, `USED_DB_BACKUP`, `DB_FLAG_ROLE` jsou neprázdné; při chybě vypsat usage a ukončit s exit 1. Přidat `set -e`.
+- **Task:** T10
+
+---
+
+### BUG-014: db_connection_from_docker-web.py ignoruje DB_PORT ze secretu
+
+- **Soubory:** `scripts/db/db_connection_from_docker-web.py`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue — nelze ověřit, GitHub Issues nedostupné bez autentizace
+- **Popis:** Skript načte z `/run/secrets/db_conf` pouze `DB_NAME`, `DB_PASS`, `DB_USER`, `DB_HOST`. Připojení k PostgreSQL tedy vždy používá výchozí port 5432. Pokud je databáze na jiném portu, health check selže nebo kontroluje jinou instanci.
+- **Navrhovaná oprava:** Načíst z JSON i `DB_PORT` (s výchozí hodnotou 5432) a předat do `psycopg2.connect(..., port=db_port)`.
+- **Task:** T10
+
+---
+
+### BUG-015: NalezPredmet.__init_ — překlep v názvu metody (chybí jedno podtržítko)
+
+- **Soubory:** `webclient/nalez/models.py:116`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue
+- **Popis:** Metoda je definována jako `def __init_(self, ...)` s jedním podtržítkem na konci místo `__init__` se dvěma. Python tuto metodu nevolá jako konstruktor, takže vlastní inicializace (`close_active_transaction_when_finished = False`, `active_transaction = None`) se nikdy neprovede. Sesterský model `NalezObjekt` má správně `__init__`. Dopady závisí na tom, zda tyto atributy jsou používány jinde (signály, transakce).
+- **Navrhovaná oprava:** Přejmenovat `__init_` na `__init__`.
+- **Task:** T03d
+
+---
+
+### BUG-016: form_fields_disabling.js — invertovaná podmínka pro select/non-select prvky
+
+- **Soubory:** `webclient/static/js/form_fields_disabling.js:65`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue
+- **Popis:** Podmínka `element.type != 'select-multiple' || element.type != 'select-one'` je logicky vždy pravdivá (de Morganův zákon — OR s negacemi). Větve pro select a non-select formulářové prvky jsou tím invertovány. Projeví se nesprávným povolováním/zakazováním polí při změně nadřazeného selectu.
+- **Navrhovaná oprava:** Nahradit `||` operátor za `&&`.
+- **Task:** T07b
+
+---
+
+### BUG-017: coor_precision.js — chybná konstanta přesnosti pro JTSK (používá WGS84)
+
+- **Soubory:** `webclient/static/js/coor_precision.js:31`
+- **Závažnost:** Střední
+- **GitHub Issue:** nový kandidát na issue
+- **Popis:** Funkce `amcr_static_coordinate_precision_jtsk` pro ne-array vstup používá `global_fixed_precision.wgs84` místo `global_fixed_precision.jtsk`. JTSK souřadnice jsou zaokrouhlovány s přesností WGS84, což vede k nesprávnému zaokrouhlení (typicky 6 desetinných míst pro WGS84 vs 2 pro JTSK).
+- **Navrhovaná oprava:** Na řádku 31 nahradit `global_fixed_precision.wgs84` za `global_fixed_precision.jtsk`.
+- **Task:** T07b

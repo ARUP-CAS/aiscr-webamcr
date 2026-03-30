@@ -1316,13 +1316,20 @@ def check_stav_changed(request, zaznam):
 def redirect_ident_view(request, ident_cely):
     """
     Přesměruje uživatele na detail záznamu nalezeného podle identifikátoru.
+    Pokud identifikátor není nalezen mezi aktuálními, pokusí se hledat mezi dočasnými v historii.
 
     :param request: Parametr ``request`` předává se do volání ``redirect()``, ``get_absolute_url()``, vstupuje do návratové hodnoty.
     :param ident_cely: Hledaný identifikátor záznamu.
 
         :return: Vrací výsledek volání ``redirect()``.
     """
-    object = get_record_from_ident(ident_cely)
+    try:
+        object = get_record_from_ident(ident_cely)
+    except Http404:
+        h = next(
+            iter(Historie.objects.select_related("vazba").filter(poznamka__icontains=ident_cely).order_by()[:1]), None
+        )
+        object = h.vazba.navazany_objekt if h and h.vazba else None
     if object:
         try:
             if isinstance(object, Pian):
@@ -1673,6 +1680,7 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             data = pandas.DataFrame(data)
             filtered_column_order = [col.name for col in self.get_table().columns if col.name in data.columns]
             data = data[filtered_column_order]
+            data = self.postprocess_export_dataframe(data)
             column_names = {str(column.name): str(column.verbose_name) for column in self.get_table().columns}
             data = data.rename(columns=column_names)
             if export_format == TableExport.CSV:
@@ -1708,6 +1716,22 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
                 return HttpResponse()
             response["X-Accel-Buffering"] = "no"  # Zakázání bufferování v NGINX
             return response
+
+    def postprocess_export_dataframe(self, df):
+        """
+        Hook pro post-processing exportního DataFrame před přejmenováním sloupců.
+
+        Metoda je volána v ``create_export`` po sestavení DataFramu z Redis snapshotů
+        a po aplikaci ``filtered_column_order``, ale před přejmenováním sloupců na verbose names.
+        Sloupce jsou v tuto chvíli identifikovány strojovými názvy (shodné s názvy v tabulce).
+
+        Výchozí implementace vrací DataFrame beze změny. Podtřídy mohou přepsat tuto metodu
+        pro aplikaci oprávnění nebo jiné úpravy dat.
+
+        :param df: DataFrame sestavený z Redis snapshotů se strojovými názvy sloupců.
+        :return: Upravený (nebo nezměněný) DataFrame.
+        """
+        return df
 
     def init_translations(self):
         """Provádí operaci init translations."""

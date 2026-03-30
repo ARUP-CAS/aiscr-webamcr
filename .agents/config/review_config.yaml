@@ -1,25 +1,16 @@
 repository: aiscr-webamcr
 branch: test
 github_url: https://github.com/ARUP-CAS/aiscr-webamcr/tree/test
-open_issues: 113  # k datu inicializace (07-03-2026)
+open_issues: 113 # k datu inicializace (07-03-2026)
 
-review_priorities:
-  - architecture
-  - security
-  - dependency_graph
-  - django_apps
-  - orm_analysis
-  - celery_analysis
-  - docker_analysis
-  - frontend_analysis
-  - documentation_analysis
-  - cicd_analysis
-  - scripts
+# Task priority and execution order is defined by the `priority` field on each task.
+# Do not add a separate review_priorities list — it would conflict with task priority fields.
+# Task status is tracked in review_cache.json, not here.
 
 task_size_limits:
   max_files_per_task: 20
-  max_lines_per_task: 6000    # celkový budget úlohy
-  max_lines_per_file: 2000    # práh pro jednotlivý soubor
+  max_lines_per_task: 6000 # celkový budget úlohy
+  max_lines_per_file: 2000 # práh pro jednotlivý soubor
   large_file_strategy: split_task
   # Pokud soubor překročí max_lines_per_file:
   #   split_task        → rozděl úlohu na sub-tasky (T03a, T03b, ...)
@@ -41,21 +32,18 @@ tasks:
     description: Mapování struktury repozitáře
     target_file: .agents/analysis/repository_map.json
     priority: 1
-    status: pending
 
   - id: T02
     name: dependency_graph
     description: Graf interních a externích závislostí
     target_file: .agents/analysis/dependency_graph.json
     priority: 2
-    status: pending
 
   - id: T03
     name: orm_analysis
     description: Analýza Django modelů, migrací a ORM vzorů
     target_file: .agents/analysis/orm_analysis.json
     priority: 3
-    status: pending
     note: >
       Pokud je Django aplikace rozsáhlá, vytvoř sub-tasky T03a, T03b atd.
       Doménové entity AMČR: Projekt, Akce, Lokalita, Dokument, PAS,
@@ -70,90 +58,129 @@ tasks:
     description: Analýza všech Dockerfile a docker-compose souborů
     target_file: .agents/analysis/docker_analysis.json
     priority: 4
-    status: pending
 
   - id: T05
     name: security_analysis
     description: Bezpečnostní audit (settings, secrets, autentizace, CORS)
     target_file: .agents/analysis/security_analysis.json
     priority: 5
-    status: pending
     key_files:
-      - webclient/webclient/settings/base.py     # hlavní Django settings (596 řádků)
+      - webclient/webclient/settings/base.py # hlavní Django settings (596 řádků)
       - webclient/webclient/settings/production.py
       - webclient/webclient/settings/dev.py
       - webclient/webclient/settings/sample_secrets_db.json
       - webclient/webclient/settings/sample_secrets_mail_client.json
       - webclient/core/authenticators.py
-      - webclient/uzivatel/models.py              # uživatelé a oprávnění
+      - webclient/uzivatel/models.py # uživatelé a oprávnění
 
   - id: T06
     name: celery_analysis
     description: Analýza Celery tasků, beat schedule a async vzorů
     target_file: .agents/analysis/celery_analysis.json
     priority: 6
-    status: pending
     key_files:
-      - webclient/webclient/celery.py             # Celery app a konfigurace
-      - webclient/cron/tasks.py                   # Celery beat schedule (bez testů!)
-      - webclient/notifikace_projekty/tasks.py    # e-mailové notifikace (bez testů!)
-      - webclient/webclient/settings/base.py      # CELERY_* nastavení jsou zde
+      - webclient/webclient/celery.py # Celery app a konfigurace
+      - webclient/cron/tasks.py # Celery beat schedule (bez testů!)
+      - webclient/notifikace_projekty/tasks.py # e-mailové notifikace (bez testů!)
+      - webclient/webclient/settings/base.py # CELERY_* nastavení jsou zde
 
   - id: T07
     name: frontend_analysis
     description: Analýza vlastního JS/SCSS kódu vývojářů AMČR (vendorované knihovny jsou vyloučeny)
     target_file: .agents/analysis/frontend_analysis.json
     priority: 7
-    status: pending
 
   - id: T08
     name: documentation_analysis
     description: Analýza Sphinx dokumentace a dokumentačních generátorů
     target_file: .agents/analysis/documentation_analysis.json
     priority: 8
-    status: pending
 
   - id: T09
     name: cicd_analysis
     description: Analýza GitHub Actions, pre-commit hooků a CI pipeline
     target_file: .agents/analysis/cicd_analysis.json
     priority: 9
-    status: pending
 
   - id: T10
     name: scripts_analysis
     description: Analýza skriptů v scripts/
     target_file: .agents/analysis/scripts_analysis.json
     priority: 10
-    status: pending
 
   - id: T11
     name: final_audit
     description: Finální souhrnný audit všech zjištění
     target_file: .agents/reports/review_reports/final_audit.md
     priority: 11
-    status: blocked
     requires: [T01, T02, T03, T04, T05, T06, T07, T08, T09, T10]
+
+tech_stack:
+  backend: [Python, "Django 5.2"]
+  database: [PostgreSQL]
+  async: [Celery, Redis]
+  docs: [Sphinx, "Read the Docs"]
+  infrastructure: [Docker, docker-compose]
+  observability: [Elasticsearch, Kibana, Logstash, Prometheus]
+  document_storage: ["Fedora Repository"]
+  frontend: ["JavaScript (~37%)", SCSS, HTML]
+  proxy: [NGINX]
+  testing: ["Django test framework", "Selenium tests"]
+  code_quality: [black, isort, flake8, pre-commit]
+
+key_django_apps:
+  - dir: webclient/core/
+    name: Core
+    note: "Shared infrastructure — 77 .py, 26 migrations. Largest app."
+  - dir: webclient/projekt/
+    name: Projekt
+    note: "Primary domain entity (archaeological projects)"
+  - dir: webclient/arch_z/
+    name: Archeologický záznam
+    note: "Archaeological records — 33 .py, 20 migrations"
+  - dir: webclient/uzivatel/
+    name: Uživatel
+    note: "Users, organisations, permissions, CAS SSO — 43 .py, 31 migrations"
+  - dir: webclient/dokument/
+    name: Dokument
+    note: "Documents and attachments — 31 .py"
+  - dir: webclient/heslar/
+    name: Hesláře
+    note: "Controlled vocabularies / domain value lists"
+  - dir: webclient/pian/
+    name: PIAN
+    note: "Spatial identification of finds — geometry, coordinate transforms"
+  - dir: webclient/pas/
+    name: PAS
+    note: "Amateur metal-detector finds cooperation"
+  - dir: webclient/cron/
+    name: Cron
+    note: "Celery beat schedule — no tests"
+  - dir: webclient/notifikace_projekty/
+    name: Notifikace projektů
+    note: "E-mail notifications via Celery — no tests"
 
 important_directories:
   - webclient
+  # webclient/locale — removed: directory does not exist in the repository (T01 prompt evolution)
+  - webclient/static
+  - webclient/templates
   - scripts
   - docs
   - .github
-  - proxy          # NGINX proxy (adresář "nginx" v repozitáři neexistuje)
+  - proxy # NGINX proxy (adresář "nginx" v repozitáři neexistuje)
   - elasticsearch
   - logstash
   - kibana
   - prometheus
   - redis
   - fedora
-  - cert
-  # Poznámka: adresáře "locale", "static" a "templates" jsou zanořeny v webclient/,
-  # nikoli v kořeni repozitáře. Použij cesty webclient/static/ a webclient/templates/.
+  - cert # self-signed dev certificates — intentionally committed
 
 important_files:
   - AGENTS.md
-  - webclient/manage.py                          # Django project root je webclient/, ne repo kořen
+  - CONTRIBUTING.md
+  - webclient/manage.py # Django project root je webclient/, ne repo kořen
   - Dockerfile
   - Dockerfile-DB
   - Dockerfile-DEV
@@ -169,7 +196,7 @@ important_files:
   - .pre-commit-config.yaml
   - .flake8
   - .isort.cfg
-  - webclient/requirements.txt                   # requirements je v webclient/, ne v kořeni repozitáře
+  - webclient/requirements.txt # requirements je v webclient/, ne v kořeni repozitáře
 
 ignored_directories:
   - .git
@@ -201,6 +228,44 @@ vendored_exclusions:
     - "* @license"
     - "* jQuery"
     - "* Bootstrap"
+  filenames:
+    - leaflet.markercluster-src.js
+    - leaflet-search.js
+    - leaflet-search-geocoder.js
+    - leaflet.measure.js
+    - leaflet-grayscale.js
+    - leaflet_subgroup.js
+    - leaflet.coor.js
+    - leaflet.EditCoordControl.js
+    - simpleheat.js
+    - HeatLayer.js
+    - html-to-rtf-browser.js
+    - coordTransform.js
+    - timer.js
+    - datepicker-cs.js
   note: >
     Vendorované soubory nesmí být hodnoceny pro interní kvalitu kódu v žádném tasku.
     Mohou být referencovány (např. kontrola SRI atributů v šablonách).
+
+prompt_evolution:
+  suggestions_path: .agents/prompts/prompt_evolution/
+  apply_manually: true
+  reviewer: human
+  note: >
+    Suggestions accumulate in prompt_evolution/ across sessions.
+    A human reviewer applies accepted suggestions to .agents/prompts/review_codebase.md
+    before starting a new audit cycle.
+
+follow_up:
+  prompt: .agents/prompts/review_update.md
+  phases: [U01, U02, U03, U04, U05, U06]
+  output: .agents/reports/review_reports/final_audit.md  # Changelog section
+  tools: .agents/scripts/review_tools.py
+  note: >
+    Incremental update prompt — detects changes, coverage gaps,
+    cross-validation issues, and spot-checks existing findings.
+    Output goes into final_audit.md Changelog section (not separate files).
+    Does not replace the full T01-T11 audit cycle.
+    review_tools.py provides: hash, cross-validate, coverage-gaps,
+    id-inventory, lint-artifacts, prompt-evolution, repo-structure, status.
+    Script is repo-agnostic and config-driven (uses review_config.yaml).

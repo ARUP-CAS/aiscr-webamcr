@@ -414,6 +414,20 @@ Třídy
 
       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponse()``, proměnná ``response``.
 
+   .. py:method:: postprocess_export_dataframe()
+
+      Hook pro post-processing exportního DataFrame před přejmenováním sloupců.
+
+      Metoda je volána v ``create_export`` po sestavení DataFramu z Redis snapshotů
+      a po aplikaci ``filtered_column_order``, ale před přejmenováním sloupců na verbose names.
+      Sloupce jsou v tuto chvíli identifikovány strojovými názvy (shodné s názvy v tabulce).
+
+      Výchozí implementace vrací DataFrame beze změny. Podtřídy mohou přepsat tuto metodu
+      pro aplikaci oprávnění nebo jiné úpravy dat.
+
+      :param df: DataFrame sestavený z Redis snapshotů se strojovými názvy sloupců.
+      :return: Upravený (nebo nezměněný) DataFrame.
+
    .. py:method:: init_translations()
 
       Provádí operaci init translations.
@@ -801,6 +815,7 @@ Funkce
 .. py:function:: redirect_ident_view(request, ident_cely)
 
    Přesměruje uživatele na detail záznamu nalezeného podle identifikátoru.
+   Pokud identifikátor není nalezen mezi aktuálními, pokusí se hledat mezi dočasnými v historii.
 
    :param request: Parametr ``request`` předává se do volání ``redirect()``, ``get_absolute_url()``, vstupuje do návratové hodnoty.
    :param ident_cely: Hledaný identifikátor záznamu.

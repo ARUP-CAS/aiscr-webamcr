@@ -6,10 +6,10 @@ The Archaeological Map of the Czech Republic (AMCR) is an information system for
 
 ## Links
 
-- **Documentation:** https://aiscr-webamcr.readthedocs.io/cs/stable/
-- **Changelog:** https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog
-- **Production application:** https://amcr.aiscr.cz/
-- **AIS CR:** https://www.aiscr.cz/
+- **Documentation:** <https://aiscr-webamcr.readthedocs.io/cs/stable/>
+- **Changelog:** <https://github.com/ARUP-CAS/aiscr-webamcr/wiki/Changelog>
+- **Production application:** <https://amcr.aiscr.cz/>
+- **AIS CR:** <https://www.aiscr.cz/>
 
 ---
 
@@ -91,7 +91,7 @@ celery -A webclient worker -l info
 ```
 
 Detailed installation guide:  
-https://aiscr-webamcr.readthedocs.io/cs/stable/
+<https://aiscr-webamcr.readthedocs.io/cs/stable/>
 
 ---
 
@@ -112,42 +112,9 @@ Use:
 
 ## Testing
 
-```bash
-# Python compilation — minimum before every commit
-.venv/Scripts/python.exe -m compileall -q webclient
+Minimum before every commit: `pre-commit run --all-files`
 
-# Pre-commit hooks
-pre-commit run --all-files
-
-# Django unit tests
-python manage.py test <app_name>
-
-# Selenium tests (only when relevant and after agreement)
-bash scripts/start_selenium_tests.sh
-```
-
-Always describe test results in the PR:
-
-- what was executed
-- what passed
-- what could not be executed
-
----
-
-## Branches and workflow
-
-| Branch | Environment | Description |
-| --- | --- | --- |
-| `test` | Staging | Base branch for all development. Always branch from `test`. |
-| `dev` | Stable / integration | Merged exclusively by a human reviewer. |
-
-New features and fixes are developed in `test`.
-
-Merges into `dev` happen only after stabilization — **exclusively by a human reviewer**.
-
-Releases are created from **tagged commits on `dev`**.
-
-See `CONTRIBUTING.md` for the detailed development workflow.
+For testing, branching, and workflow details, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 

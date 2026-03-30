@@ -1,7 +1,7 @@
 {
   "meta": {
     "task": "T05",
-    "completed_at": "2026-03-08",
+    "completed_at": "2026-03-09T21:13:14Z",
     "audited_files": [
       "webclient/webclient/settings/base.py",
       "webclient/webclient/settings/production.py",
@@ -25,7 +25,7 @@
       "webclient/core/utils.py (relevantní řádky)",
       "webclient/cron/tasks.py (relevantní řádky)"
     ],
-    "note": "GitHub Issues nebyly dostupné bez autentizace — cross-reference nebylo možné provést. CVE kontrola vyžaduje přístup k externím databázím."
+    "note": "GitHub Issues nebyly dostupné bez autentizace — cross-reference nebylo možné provést. CVE kontrola vyžaduje přístup k externím databázím. Kontejnerové a infrastrukturové bezpečnostní nálezy jsou vedeny zvlášť v .agents/analysis/docker_analysis.json (SEC-Dxx) a nejsou zde duplicitně rozepisovány."
   },
   "django_security_settings": {
     "DEBUG": {
@@ -151,6 +151,10 @@
       "note": "Kontrola CVE vyžaduje přístup k externím databázím (pip audit, safety check, OSV) — nebylo možné provést offline.",
       "recommendation": "Spustit 'pip audit' nebo 'safety check -r webclient/requirements.txt' v CI pipeline pro kontinuální CVE monitoring.",
       "priority": "Vysoká"
+    },
+    {
+      "note": "Další bezpečnostní nálezy na úrovni Docker image a infrastruktury (otevřené porty, verze obrazů, injekce secrets) jsou popsány v .agents/analysis/docker_analysis.json pod identifikátory SEC-D01…SEC-D06 a jsou považovány za součást celkové bezpečnostní stopy systému.",
+      "severity": "Střední"
     },
     {
       "package": "distlib",

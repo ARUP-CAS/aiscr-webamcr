@@ -5,7 +5,7 @@ var point_global_JTSK = [0, 0];
 var poi_model= L.layerGroup();
 var poi_all = L.markerClusterGroup({ disableClusteringAtZoom: 20 })
 
-var map = L.map('projectMap',{attributionControl:false,zoomControl:false, layers: [osmGrey,poi_model]}).setView(init_position, init_zoom_mercator);
+var map = L.map('projectMap',{attributionControl:true,zoomControl:false, layers: [osmGrey,poi_model]}).setView(init_position, init_zoom_mercator);
 
 var baseLayers = {
     [map_translations['cuzkzakladniMapyCr']]: cuzkZM,
