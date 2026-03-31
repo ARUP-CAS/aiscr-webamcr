@@ -1,42 +1,71 @@
-# Metadata for Docker images used in the project.
+# Metadata Docker image používaných v projektu.
 #
-# Fields per entry:
-#   image         - Base image name without tag (lookup key). Use ${...} form for variable images.
-#   verze_override - If set, skip docker-compose version lookup and use this string directly.
-#                    Use for images referenced by compose variables (${amcr_image} etc.)
-#   display_name  - Optional: override the Image column in the RST table (e.g. for dual-name entries).
-#   licence       - Licence string. Overrides any value fetched from Docker Hub.
-#   odkaz         - URL. Overrides any value fetched from Docker Hub.
-#   popis         - Czech description shown in the RST table (always manual).
+# POZOR: Tento soubor je třeba aktualizovat ručně při každé změně Docker image.
+#
+# Pole každého záznamu:
+#   image         - Název bázového image bez tagu (klíč pro vyhledávání). Pro proměnné image použijte tvar ${...}.
+#   verze_override - Pokud je nastaveno, přeskočí vyhledávání verze v docker-compose a použije tento řetězec přímo.
+#                    Používá se pro image odkazované přes proměnné compose (${amcr_image} apod.)
+#   display_name  - Nepovinné: přepíše sloupec Image v tabulce RST (např. pro záznamy se dvěma názvy).
+#   licence       - Řetězec s licencí. Přepíše hodnotu získanou z Docker Hub.
+#   odkaz         - URL nebo seznam URL. Přepíše hodnotu získanou z Docker Hub.
+#   base_image    - Nepovinné: pro vlastní sestavené image popisuje upstream bázový image.
+#                    Podpole: image, licence, odkaz.
+#   popis         - Český popis zobrazený v tabulce RST (vždy ruční).
 
 images:
   - image: "${amcr_image}"
     verze_override: "proměnná"
-    licence: "MIT License"
-    odkaz: "https://github.com/OSGeo/gdal/pkgs/container/gdal"
+    licence: "GPL-3.0-or-later"
+    odkaz:
+      - "https://github.com/ARUP-CAS/aiscr-webamcr/pkgs/container/aiscr-webamcr"
+      - "https://hub.docker.com/repository/docker/aiscr/webamcr"
+    base_image:
+      image: "ghcr.io/osgeo/gdal"
+      licence: "MIT License"
+      odkaz: "https://github.com/OSGeo/gdal/pkgs/container/gdal"
     popis: >-
       Vlastní image aplikace AMCR postavená na bázi GDAL. Obsahuje Django aplikaci
       a všechny potřebné závislosti pro provoz webové aplikace.
 
   - image: "${proxy_image}"
     verze_override: "proměnná"
-    licence: "BSD 2 License"
-    odkaz: "https://github.com/nginxinc/docker-nginx"
+    licence: "GPL-3.0-or-later"
+    odkaz:
+      - "https://github.com/ARUP-CAS/aiscr-webamcr/pkgs/container/aiscr-webamcr-proxy"
+      - "https://hub.docker.com/repository/docker/aiscr/webamcr-proxy"
+    base_image:
+      image: "nginxinc/nginx-unprivileged"
+      licence: "BSD 2 License"
+      odkaz: "https://github.com/nginxinc/docker-nginx"
     popis: >-
       Vlastní image Nginx proxy serveru založená na nginxinc/nginx-unprivileged.
       Zajišťuje reverzní proxy a servování statických souborů.
 
   - image: "${redis_image}"
-    verze_override: "proměnná / latest"
-    display_name: "${redis_image} / aiscr/webamcr-redis:latest"
-    licence: "RSALv2, SSPLv1"
-    odkaz: "https://github.com/redis/redis"
+    verze_override: "proměnná"
+    display_name: "${redis_image} / aiscr/webamcr-redis"
+    licence: "GPL-3.0-or-later"
+    odkaz:
+      - "https://github.com/ARUP-CAS/aiscr-webamcr/pkgs/container/aiscr-webamcr-redis"
+      - "https://hub.docker.com/repository/docker/aiscr/webamcr-redis"
+    base_image:
+      image: "redis"
+      licence: "RSALv2, SSPLv1"
+      odkaz: "https://github.com/redis/redis"
     popis: >-
       Vlastní Redis image založená na oficiálním Redis image. Používá se pro
       ukládání cache a jako message broker pro Celery.
 
+  - image: "redis"
+    licence: "RSALv2, SSPLv1"
+    odkaz: "https://github.com/redis/redis"
+    popis: >-
+      Oficiální Redis image. Používá se v lokálním vývojovém prostředí jako
+      přímá náhrada za vlastní AMCR Redis image.
+
   - image: "postgis/postgis"
-    # Version comes from Dockerfile-DB (FROM postgis/postgis:16-3.4)
+    # Verze pochází z Dockerfile-DB (FROM postgis/postgis:16-3.4)
     licence: "MIT License"
     odkaz: "https://github.com/postgis/docker-postgis"
     popis: >-

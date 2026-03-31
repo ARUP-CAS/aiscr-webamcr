@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-Script to generate Sphinx documentation for all Django modules in webclient/
-and save them to docs/source/04_django_aplikace/04_02_moduly/
+Skript pro generování Sphinx dokumentace pro všechny Django moduly v webclient/
+a jejich uložení do docs/source/04_django_aplikace/04_02_moduly/
 
-This script extracts docstrings from modules and generates detailed
-reStructuredText documentation for each module directory.
+Skript extrahuje docstringy z modulů a generuje podrobnou
+reStructuredText dokumentaci pro každý adresář modulu.
 
-Usage:
+Použití:
     python3 generate_module_docs.py [--build] [--mode MODE] [--module MODULE]
 
-    Options:
-        --build         Also build the HTML documentation (requires sphinx-build)
-        --mode MODE     Generation mode: 'autodoc' (default) or 'explicit'
-                       - autodoc: Uses Sphinx autodoc directives
-                       - explicit: Writes docstrings directly to RST
-        --module MODULE Specific module to process (e.g., 'adb', 'core')
-                       If not specified, processes all modules
+    Volby:
+        --build         Také sestaví HTML dokumentaci (vyžaduje sphinx-build)
+        --mode MODE     Režim generování: 'autodoc' (výchozí) nebo 'explicit'
+                       - autodoc: Používá direktivy Sphinx autodoc
+                       - explicit: Zapisuje docstringy přímo do RST
+        --module MODULE Konkrétní modul ke zpracování (např. 'adb', 'core')
+                       Pokud není zadáno, zpracuje všechny moduly
 
-    Example with virtual environment:
+    Příklad s virtuálním prostředím:
         source .venv/bin/activate && python3 generate_module_docs.py --build
         source .venv/bin/activate && python3 generate_module_docs.py --module core
 """
@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
+
 sys.stdout.reconfigure(encoding="utf-8")
 
 # Define paths
@@ -302,7 +303,7 @@ def extract_signals(signals_file: Path) -> List[Dict[str, str]]:
 
 
 def parse_receiver_decorator(decorator: ast.Call, function_name: str) -> Optional[Dict[str, str]]:
-    """Analyzujte dekorátor @receiver(), abyste extrahovali informace o signálu.
+    """Analyzuje dekorátor @receiver() pro extrakci informací o signálu.
 
     :param decorator: AST Volací uzel představující @receiver()
     :param function_name: Název dekorované funkce
@@ -2135,14 +2136,12 @@ def build_docs() -> bool:
 
 
 def _fetch_dockerhub_odkaz(image: str) -> str:
-    """
-    Fetch source URL for a Docker Hub image (best-effort, no auth).
+    """Načte zdrojovou URL pro Docker Hub image (best-effort, bez autentizace).
 
-    Args:
-        image: Base image name, e.g. "grafana/grafana-enterprise"
-
-    Returns:
-        Source URL string, or empty string on failure or unsupported registry
+    :param image: Základní název image, např. ``grafana/grafana-enterprise``.
+    :type image: str
+    :return: Řetězec zdrojové URL, nebo prázdný řetězec při chybě nebo nepodporovaném registru.
+    :rtype: str
     """
     if image.startswith(("gcr.io/", "docker.elastic.co/", "ghcr.io/")):
         return ""
@@ -2174,13 +2173,34 @@ def _fetch_dockerhub_odkaz(image: str) -> str:
 
 
 class DockerImageScanner:
-    """Scan project files for Docker image tags."""
+    """Prohledává soubory projektu a sbírá tagy Docker image.
+
+    Prochází všechny soubory ``docker-compose*.yml`` v kořenovém adresáři projektu
+    a soubor ``Dockerfile-DB``. Výsledkem je slovník mapující základní název image
+    (bez tagu) na jeho plný tag.
+
+    :param project_root: Kořenový adresář projektu.
+    :type project_root: Path
+    """
 
     def __init__(self, project_root: Path):
+        """Inicializuje scanner s kořenovým adresářem projektu.
+
+        :param project_root: Kořenový adresář projektu.
+        :type project_root: Path
+        """
         self.project_root = project_root
 
     def collect_versions(self) -> Dict[str, str]:
-        """Collect image versions from docker-compose files and Dockerfile-DB."""
+        """Shromáždí verze image ze souborů docker-compose a Dockerfile-DB.
+
+        Prochází nejprve compose soubory, poté ``Dockerfile-DB``. Pro každý
+        základní název image je uložen první nalezený plný tag (produkční soubory
+        mají přednost díky pořadí vrácenému metodou :meth:`_ordered_compose_files`).
+
+        :return: Slovník ``{základní název image: plný tag}``.
+        :rtype: Dict[str, str]
+        """
         versions: Dict[str, str] = {}
 
         for image in self._compose_images():
@@ -2194,7 +2214,14 @@ class DockerImageScanner:
         return versions
 
     def _compose_images(self) -> List[str]:
-        """Extract image tags from docker-compose files."""
+        """Extrahuje plné tagy image ze souborů docker-compose.
+
+        Přeskočí proměnné (``${...}``) a testovací image
+        (``docker.io/library/test_*``).
+
+        :return: Seznam plných tagů image (např. ``redis:8.4.0``).
+        :rtype: List[str]
+        """
         images: List[str] = []
         image_re = re.compile(r"^\s+image:\s*(.+)")
 
@@ -2219,7 +2246,13 @@ class DockerImageScanner:
         return images
 
     def _dockerfile_images(self) -> List[str]:
-        """Extract FROM images from Dockerfile-DB."""
+        """Extrahuje image z direktiv FROM v souboru Dockerfile-DB.
+
+        Pokud soubor ``Dockerfile-DB`` neexistuje, vrátí prázdný seznam.
+
+        :return: Seznam plných tagů image z direktiv FROM.
+        :rtype: List[str]
+        """
         dockerfile_db = self.project_root / "Dockerfile-DB"
         if not dockerfile_db.exists():
             return []
@@ -2235,7 +2268,15 @@ class DockerImageScanner:
         return images
 
     def _ordered_compose_files(self) -> List[Path]:
-        """Return docker-compose files with production files first."""
+        """Vrátí seznam souborů docker-compose seřazených podle priority.
+
+        Produkční soubory (``docker-compose.yml``, ``docker-compose-proxy.yml``)
+        jsou řazeny jako první, aby jejich verze image měly přednost při volání
+        :meth:`collect_versions`.
+
+        :return: Seřazený seznam cest k souborům docker-compose.
+        :rtype: List[Path]
+        """
         priority_files = ["docker-compose.yml", "docker-compose-proxy.yml"]
 
         all_compose = sorted(self.project_root.glob("docker-compose*.yml"))
@@ -2254,36 +2295,87 @@ class DockerImageScanner:
 
     @staticmethod
     def _base_image(full_tag: str) -> str:
-        """Return base image name without tag."""
+        """Vrátí základní název image bez tagu.
+
+        :param full_tag: Plný tag image (např. ``redis:8.4.0``).
+        :type full_tag: str
+        :return: Název image bez tagu (např. ``redis``).
+        :rtype: str
+        """
         return full_tag.rsplit(":", 1)[0] if ":" in full_tag else full_tag
 
 
 def _parse_compose_versions(project_root: Path) -> Dict[str, str]:
-    """
-    Parse all docker-compose*.yml files and Dockerfile-DB in project_root
-    for image: directives. Returns dict mapping base image name to full tag.
+    """Parsuje všechny soubory docker-compose*.yml a Dockerfile-DB v project_root
+    a hledá direktivy image:. Vrátí slovník mapující základní název image na plný tag.
 
-    Priority: docker-compose.yml / docker-compose-proxy.yml (production) first,
-    then other files.
+    Priorita: docker-compose.yml / docker-compose-proxy.yml (produkce) jako první,
+    poté ostatní soubory.
+
+    :param project_root: Kořenový adresář projektu.
+    :type project_root: Path
+    :return: Slovník ``{základní název image: plný tag}``.
+    :rtype: Dict[str, str]
     """
     return DockerImageScanner(project_root).collect_versions()
+
+
+def _check_missing_meta_images(
+    versions: Dict[str, str],
+    images_meta: List[Dict[str, str]],
+) -> List[str]:
+    """Vrátí seznam základních názvů image nalezených v docker-compose / Dockerfile-DB,
+    které nejsou pokryty žádným záznamem v docker_images_meta.yaml.
+
+    Proměnné reference na image (``${...}``) v compose souborech jsou již filtrovány
+    třídou DockerImageScanner, takže jsou kontrolovány pouze konkrétní názvy image.
+
+    :param versions: Slovník ``{základní název image: plný tag}`` z docker-compose souborů.
+    :type versions: Dict[str, str]
+    :param images_meta: Seznam metadatových záznamů z docker_images_meta.yaml.
+    :type images_meta: List[Dict[str, str]]
+    :return: Seřazený seznam základních názvů image chybějících v metadatech.
+    :rtype: List[str]
+    """
+    meta_keys = {e.get("image", "") for e in images_meta}
+    return sorted(image for image in versions if image not in meta_keys)
 
 
 ODKAZ_CACHE_FILE = docs_dir / "docker_images_odkaz_cache.yaml"
 
 
 def _load_odkaz_cache() -> Dict[str, str]:
+    """Načte mezipaměť odkazů DockerHub ze souboru ``docker_images_odkaz_cache.yaml``.
+
+    Pokud soubor neexistuje, vrátí prázdný slovník.
+
+    :return: Slovník ``{název image: URL}`` s dříve uloženými odkazy.
+    :rtype: Dict[str, str]
+    """
     if ODKAZ_CACHE_FILE.exists():
         return yaml.safe_load(ODKAZ_CACHE_FILE.read_text(encoding="utf-8")) or {}
     return {}
 
 
 def _save_odkaz_cache(cache: Dict[str, str]) -> None:
+    """Uloží mezipaměť odkazů DockerHub do souboru ``docker_images_odkaz_cache.yaml``.
+
+    :param cache: Slovník ``{název image: URL}`` k uložení.
+    :type cache: Dict[str, str]
+    """
     ODKAZ_CACHE_FILE.write_text(yaml.dump(cache, allow_unicode=True), encoding="utf-8")
 
 
 def _fetch_missing_links(image_keys: List[str], cache: Dict[str, str]) -> Dict[str, str]:
-    """Fetch DockerHub links only for images not yet in cache, in parallel."""
+    """Načte DockerHub odkazy pouze pro image, které ještě nejsou v mezipaměti, paralelně.
+
+    :param image_keys: Seznam základních názvů image, pro které se mají načíst odkazy.
+    :type image_keys: List[str]
+    :param cache: Existující mezipaměť odkazů ``{název image: URL}``.
+    :type cache: Dict[str, str]
+    :return: Aktualizovaná mezipaměť včetně nově načtených odkazů.
+    :rtype: Dict[str, str]
+    """
     missing = [img for img in image_keys if img not in cache and not img.startswith("${")]
 
     if not missing:
@@ -2305,7 +2397,11 @@ def _fetch_missing_links(image_keys: List[str], cache: Dict[str, str]) -> Dict[s
 
 
 def generate_docker_images_rst() -> bool:
-    """Generate Docker images documentation."""
+    """Vygeneruje dokumentaci Docker image.
+
+    :return: True v případě úspěchu, False v opačném případě.
+    :rtype: bool
+    """
     global changes_detected
 
     output_file = docs_dir / "source/12_zavislosti/docker_images.rst"
@@ -2326,6 +2422,17 @@ def generate_docker_images_rst() -> bool:
         return False
 
     versions = _parse_compose_versions(project_root)
+
+    # Ověří, zda jsou všechny image z docker-compose souborů zahrnuty v metadatech.
+    missing = _check_missing_meta_images(versions, images_meta)
+    if missing:
+        print("  ✗ Následující Docker image chybí v docker_images_meta.yaml:")
+        for img in missing:
+            print(f"      - {img}")
+        print("  Přidejte chybějící záznamy do docs/docker_images_meta.yaml.")
+        global changes_detected
+        changes_detected = True
+        return False
 
     # Load cache, fetch only what's missing (in parallel), save back
     hub_cache = _load_odkaz_cache()
@@ -2364,7 +2471,15 @@ def generate_docker_images_rst() -> bool:
 
 
 def _build_section_header(title: str, description: str) -> List[str]:
-    """Create section header."""
+    """Vytvoří záhlaví sekce RST.
+
+    :param title: Název sekce.
+    :type title: str
+    :param description: Popis sekce.
+    :type description: str
+    :return: Seznam řádků RST záhlaví sekce.
+    :rtype: List[str]
+    """
     return [
         title,
         "-" * len(title),
@@ -2379,7 +2494,17 @@ def _build_image_block(
     versions: Dict[str, str],
     hub_cache: Dict[str, str],
 ) -> List[str]:
-    """Build RST block for a single Docker image."""
+    """Sestaví RST blok pro jeden Docker image.
+
+    :param entry: Metadatový záznam image z docker_images_meta.yaml.
+    :type entry: Dict[str, str]
+    :param versions: Slovník ``{základní název image: plný tag}`` z docker-compose souborů.
+    :type versions: Dict[str, str]
+    :param hub_cache: Mezipaměť odkazů DockerHub ``{název image: URL}``.
+    :type hub_cache: Dict[str, str]
+    :return: Seznam řádků RST bloku pro daný image.
+    :rtype: List[str]
+    """
 
     image_key = entry.get("image", "")
     display_name = entry.get("display_name", image_key)
@@ -2390,8 +2515,13 @@ def _build_image_block(
         verze = _extract_version(full_tag)
 
     licence = entry.get("licence", "")
-    odkaz = entry.get("odkaz") or hub_cache.get(image_key, "")  # ← jen čte, nikdy nefetchuje
+    odkaz_raw = entry.get("odkaz") or hub_cache.get(image_key, "")
+    if isinstance(odkaz_raw, list):
+        odkaz = ", ".join(odkaz_raw)
+    else:
+        odkaz = odkaz_raw
     popis = entry.get("popis", "")
+    base_image = entry.get("base_image")
 
     lines = [
         display_name,
@@ -2402,6 +2532,17 @@ def _build_image_block(
         f"- **Odkaz:** {odkaz}" if odkaz else "- **Odkaz:**",
     ]
 
+    if base_image:
+        base_name = base_image.get("image", "")
+        base_licence = base_image.get("licence", "")
+        base_odkaz = base_image.get("odkaz", "")
+        lines += [
+            "",
+            f"- **Bázový image:** {base_name}" if base_name else "- **Bázový image:**",
+            f"- **Licence bázového image:** {base_licence}" if base_licence else "- **Licence bázového image:**",
+            f"- **Odkaz na bázový image:** {base_odkaz}" if base_odkaz else "- **Odkaz na bázový image:**",
+        ]
+
     if popis:
         lines += ["", popis]
 
@@ -2410,7 +2551,13 @@ def _build_image_block(
 
 
 def _extract_version(full_tag: str) -> str:
-    """Extract tag version from docker image."""
+    """Extrahuje verzi tagu z plného tagu Docker image.
+
+    :param full_tag: Plný tag image (např. ``redis:8.4.0``).
+    :type full_tag: str
+    :return: Verze tagu (např. ``8.4.0``), nebo ``latest`` pokud tag není přítomen.
+    :rtype: str
+    """
     if not full_tag:
         return ""
     return full_tag.rsplit(":", 1)[-1] if ":" in full_tag else "latest"
@@ -2422,6 +2569,18 @@ END_MARKER = ".. END GENERATED NODEJS LIBRARIES"
 
 @dataclass
 class JsLibrary:
+    """Datová třída reprezentující jednu Node.js knihovnu.
+
+    :param name: Název balíčku (např. ``bootstrap``).
+    :type name: str
+    :param version: Verze balíčku (např. ``5.3.8``).
+    :type version: str
+    :param license: Identifikátor licence (např. ``MIT``).
+    :type license: str
+    :param homepage: URL domovské stránky nebo repozitáře knihovny.
+    :type homepage: str
+    """
+
     name: str
     version: str
     license: str
@@ -2429,11 +2588,25 @@ class JsLibrary:
 
 
 def load_json(path: Path) -> dict:
+    """Načte a vrátí obsah JSON souboru.
+
+    :param path: Cesta k JSON souboru.
+    :type path: Path
+    :return: Deserializovaný obsah JSON souboru.
+    :rtype: dict
+    """
     with path.open(encoding="utf-8") as f:
         return json.load(f)
 
 
 def normalize_repo_url(url: str) -> str:
+    """Normalizuje URL repozitáře odstraněním prefixu ``git+`` a suffixu ``.git``.
+
+    :param url: Surová URL repozitáře (např. ``git+https://github.com/foo/bar.git``).
+    :type url: str
+    :return: Normalizovaná URL (např. ``https://github.com/foo/bar``).
+    :rtype: str
+    """
     if url.startswith("git+"):
         url = url[4:]
     if url.endswith(".git"):
@@ -2442,10 +2615,27 @@ def normalize_repo_url(url: str) -> str:
 
 
 def load_dependencies(package_json: dict) -> Dict[str, str]:
+    """Načte produkční závislosti ze slovníku ``package.json``.
+
+    :param package_json: Deserializovaný obsah souboru ``package.json``.
+    :type package_json: dict
+    :return: Slovník ``{název balíčku: verze}`` z pole ``dependencies``.
+    :rtype: Dict[str, str]
+    """
     return package_json.get("dependencies", {})
 
 
 def load_lock_licenses(lock_file: Path) -> Dict[str, str]:
+    """Načte licence balíčků ze souboru ``package-lock.json``.
+
+    Prochází sekci ``packages`` lock souboru a extrahuje pole ``license``
+    pro každý záznam pod klíčem ``node_modules/<název>``.
+
+    :param lock_file: Cesta k souboru ``package-lock.json``.
+    :type lock_file: Path
+    :return: Slovník ``{název balíčku: licence}``.
+    :rtype: Dict[str, str]
+    """
     licenses: Dict[str, str] = {}
 
     if not lock_file.exists():
@@ -2465,6 +2655,18 @@ def load_lock_licenses(lock_file: Path) -> Dict[str, str]:
 
 
 def read_node_module_metadata(project_root: Path, name: str) -> tuple[str, str]:
+    """Načte licenci a URL domovské stránky balíčku z adresáře ``node_modules``.
+
+    Pokud soubor ``package.json`` daného balíčku neexistuje, vrátí dvojici
+    prázdných řetězců. URL repozitáře je normalizována pomocí :func:`normalize_repo_url`.
+
+    :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
+    :type project_root: Path
+    :param name: Název balíčku (např. ``bootstrap``).
+    :type name: str
+    :return: Dvojice ``(licence, homepage_url)``.
+    :rtype: tuple[str, str]
+    """
 
     nm_pkg = project_root / "node_modules" / name / "package.json"
 
@@ -2494,6 +2696,22 @@ def collect_libraries(
     dependencies: Dict[str, str],
     lock_licenses: Dict[str, str],
 ) -> List[JsLibrary]:
+    """Sestaví seznam Node.js knihoven obohacený o licence a URL.
+
+    Pro každou závislost z ``dependencies`` nejprve hledá licenci v ``lock_licenses``
+    (ze souboru ``package-lock.json``), a pokud ji nenajde, čte ji přímo
+    ze souboru ``package.json`` v ``node_modules``. Homepage je vždy čtena
+    z ``node_modules``. Záznamy jsou seřazeny abecedně podle názvu balíčku.
+
+    :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
+    :type project_root: Path
+    :param dependencies: Slovník ``{název balíčku: verze}`` z ``package.json``.
+    :type dependencies: Dict[str, str]
+    :param lock_licenses: Slovník ``{název balíčku: licence}`` z ``package-lock.json``.
+    :type lock_licenses: Dict[str, str]
+    :return: Seřazený seznam objektů :class:`JsLibrary`.
+    :rtype: List[JsLibrary]
+    """
 
     rows: List[JsLibrary] = []
 
@@ -2515,6 +2733,17 @@ def collect_libraries(
 
 
 def build_rst_table(rows: List[JsLibrary]) -> str:
+    """Sestaví RST blok s tabulkou Node.js knihoven.
+
+    Vygeneruje sekci dokumentace ve formátu ``list-table`` ohraničenou
+    značkami ``BEGIN_MARKER`` a ``END_MARKER``, která obsahuje sloupce
+    Název knihovny, Verze, Licence a Odkaz.
+
+    :param rows: Seznam záznamů Node.js knihoven k zobrazení v tabulce.
+    :type rows: List[JsLibrary]
+    :return: Řetězec s RST obsahem tabulky včetně ohraničujících značek.
+    :rtype: str
+    """
 
     lines = [
         BEGIN_MARKER,
@@ -2557,8 +2786,10 @@ def insert_generated_block(content: str, block: str) -> str:
 
 
 def generate_js_libraries_rst() -> bool:
-    """
-    Generate Node.js JavaScript libraries table for javascript_knihovny.rst.
+    """Vygeneruje tabulku Node.js JavaScript knihoven pro javascript_knihovny.rst.
+
+    :return: True v případě úspěchu, False v opačném případě.
+    :rtype: bool
     """
 
     global changes_detected

@@ -23,9 +23,9 @@ RUN echo $TZ > /etc/timezone && \
         postgresql-client \
         curl \
         libmagic1 \
-        redis-tools \
-        nodejs \
-        npm && \
+        redis-tools && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

@@ -22,8 +22,9 @@ RUN echo $TZ > /etc/timezone && \
         unrar \
         redis-tools \
         libmagic1 \
-        nodejs \
-        npm && \
+        curl && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

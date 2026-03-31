@@ -28,6 +28,7 @@ repos:
         language: python
         pass_filenames: false
         always_run: true
+        additional_dependencies: [pyyaml]
       - id: generate-selenium-test-docs
         name: Generate selenium test documentation
         entry: python3 docs/generate_selenium_test_docs.py

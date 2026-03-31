@@ -10,8 +10,12 @@ ${amcr_image}
 ~~~~~~~~~~~~~
 
 - **Verze:** proměnná
-- **Licence:** MIT License
-- **Odkaz:** https://github.com/OSGeo/gdal/pkgs/container/gdal
+- **Licence:** GPL-3.0-or-later
+- **Odkaz:** https://github.com/ARUP-CAS/aiscr-webamcr/pkgs/container/aiscr-webamcr, https://hub.docker.com/repository/docker/aiscr/webamcr
+
+- **Bázový image:** ghcr.io/osgeo/gdal
+- **Licence bázového image:** MIT License
+- **Odkaz na bázový image:** https://github.com/OSGeo/gdal/pkgs/container/gdal
 
 Vlastní image aplikace AMCR postavená na bázi GDAL. Obsahuje Django aplikaci a všechny potřebné závislosti pro provoz webové aplikace.
 
@@ -19,17 +23,25 @@ ${proxy_image}
 ~~~~~~~~~~~~~~
 
 - **Verze:** proměnná
-- **Licence:** BSD 2 License
-- **Odkaz:** https://github.com/nginxinc/docker-nginx
+- **Licence:** GPL-3.0-or-later
+- **Odkaz:** https://github.com/ARUP-CAS/aiscr-webamcr/pkgs/container/aiscr-webamcr-proxy, https://hub.docker.com/repository/docker/aiscr/webamcr-proxy
+
+- **Bázový image:** nginxinc/nginx-unprivileged
+- **Licence bázového image:** BSD 2 License
+- **Odkaz na bázový image:** https://github.com/nginxinc/docker-nginx
 
 Vlastní image Nginx proxy serveru založená na nginxinc/nginx-unprivileged. Zajišťuje reverzní proxy a servování statických souborů.
 
-${redis_image} / aiscr/webamcr-redis:latest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+${redis_image} / aiscr/webamcr-redis
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** proměnná / latest
-- **Licence:** RSALv2, SSPLv1
-- **Odkaz:** https://github.com/redis/redis
+- **Verze:** proměnná
+- **Licence:** GPL-3.0-or-later
+- **Odkaz:** https://github.com/ARUP-CAS/aiscr-webamcr/pkgs/container/aiscr-webamcr-redis, https://hub.docker.com/repository/docker/aiscr/webamcr-redis
+
+- **Bázový image:** redis
+- **Licence bázového image:** RSALv2, SSPLv1
+- **Odkaz na bázový image:** https://github.com/redis/redis
 
 Vlastní Redis image založená na oficiálním Redis image. Používá se pro ukládání cache a jako message broker pro Celery.
 
@@ -37,6 +49,15 @@ Generické image
 ---------------
 
 Tyto image jsou standardní open-source image používané pro provoz podpůrných služeb.
+
+redis
+~~~~~
+
+- **Verze:** 8.4.0
+- **Licence:** RSALv2, SSPLv1
+- **Odkaz:** https://github.com/redis/redis
+
+Oficiální Redis image. Používá se v lokálním vývojovém prostředí jako přímá náhrada za vlastní AMCR Redis image.
 
 postgis/postgis
 ~~~~~~~~~~~~~~~
@@ -68,7 +89,7 @@ Image pro synchronizaci souborů pomocí rsync. Používá se pro zálohování 
 oliver006/redis_exporter
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** v1.81.0-alpine
+- **Verze:** v1.82.0-alpine
 - **Licence:** MIT license
 - **Odkaz:** https://github.com/oliver006/redis_exporter
 
@@ -86,7 +107,7 @@ Exportér metrik pro Celery úlohy pro Prometheus. Monitoruje stav a výkon asyn
 grafana/grafana-enterprise
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 12.4.0
+- **Verze:** 12.4.2
 - **Licence:** AGPL-3.0 License
 - **Odkaz:** https://github.com/grafana/grafana
 
@@ -104,7 +125,7 @@ Prometheus pro sběr a ukládání metrik. Slouží jako centrální systém pro
 docker.elastic.co/logstash/logstash
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.0
+- **Verze:** 9.3.2
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/logstash
 
@@ -113,7 +134,7 @@ Logstash pro zpracování a transformaci logů. Zajišťuje parsování a indexo
 docker.elastic.co/elasticsearch/elasticsearch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.0
+- **Verze:** 9.3.2
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/elasticsearch
 
@@ -122,7 +143,7 @@ Elasticsearch pro fulltextové vyhledávání a analýzu logů. Ukládá a index
 docker.elastic.co/kibana/kibana
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- **Verze:** 9.3.0
+- **Verze:** 9.3.2
 - **Licence:** SSPL, Elastic License 2.0, Apache License 2.0
 - **Odkaz:** https://github.com/elastic/kibana
 
