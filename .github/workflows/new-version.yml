@@ -44,7 +44,7 @@ jobs:
           fi
       
       - name: Log-in as AMCR app
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
@@ -104,7 +104,7 @@ jobs:
       name: ${{ inputs.environment }}
     steps:
       - name: Log-in as AMCR app
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ vars.AISCR_AMCR_ACTIONS_APP_ID }}
@@ -140,6 +140,8 @@ jobs:
       packages: write
       contents: read
       attestations: write
+      security-events: write
+      artifact-metadata: write
     uses: ./.github/workflows/publish_images.yml
     with:
       tag: ${{ inputs.new_tag }}

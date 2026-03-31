@@ -9,9 +9,7 @@ from uzivatel.models import User
 
 
 class HistorieTable(ColumnShiftTableBootstrap4):
-    """
-    Class pro definování tabulky pro zobrazení historie.
-    """
+    """Definuje tabulku pro zobrazení historie změn."""
 
     datum_zmeny = columns.DateTimeColumn(
         format="Y-m-d, H:i", default="", verbose_name=_("core.tables.HistorieTable.datum_zmeny")
@@ -23,11 +21,20 @@ class HistorieTable(ColumnShiftTableBootstrap4):
     )
 
     def render_uzivatel_custom(self, record):
+        """
+        Vyrenderuje uzivatel custom.
+
+        :param record: Parametr ``record`` pracuje se s atributy ``uzivatel``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``display_name()``.
+        """
         if not record.uzivatel:
             return ""
         return record.uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Historie
         fields = (
             "typ_zmeny",
@@ -36,26 +43,20 @@ class HistorieTable(ColumnShiftTableBootstrap4):
             "poznamka",
         )
 
-    # TODO: This form of printing does not respect django timezone
-    # @staticmethod
-    # def render_datum_zmeny(value):
-    #     if value:
-    #         return value.strftime("%Y-%m-%d, %H:%M:%S")
-    #     else:
-    #         return "—"
-
 
 class SimpleHistoryTable(ColumnShiftTableBootstrap4):
+    """Implementuje komponentu ``SimpleHistoryTable`` v rámci aplikace."""
+
     history_date = columns.DateTimeColumn(format="Y-m-d, H:i", default="")
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         fields = ("history_date",)
 
 
 class FedoraHistorieTable(ColumnShiftTableBootstrap4):
-    """
-    Class pro definování tabulky pro zobrazení fedora verzí metadat nebo souborů na stránce pod historií.
-    """
+    """Definuje tabulku verzí metadat a souborů z Fedory na stránce historie."""
 
     column_excluded = ["url"]
     datum = tables.DateTimeColumn(
@@ -70,7 +71,7 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
                 "rel": "",
                 "title": "",
             },
-            "th": {"class": "col-stahnout"},
+            "th": {"class": "col-no-orderable col-stahnout"},
         },
         orderable=False,
     )
@@ -81,12 +82,27 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
     )
 
     def render_uzivatel(self, record):
+        """
+        Vyrenderuje uzivatel. v aplikaci.
+
+        :param record: Parametr ``record`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``display_name()``.
+        """
         uzivatel = User.objects.filter(ident_cely=record["uzivatel"]).first()
         if uzivatel is None:
             return record["uzivatel"]
         return uzivatel.display_name(viewer=self.request.user if hasattr(self, "request") else None)
 
     def render_url(self, value, record):
+        """
+        Vyrenderuje url. v aplikaci.
+
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_url``.
+        :param record: Parametr ``record`` předává se do volání ``format_html()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``format_html()``.
+        """
         return format_html(
             '<a href="{}" class="btn-sm" target="_blank">'
             '<span class="material-icons" style="vertical-align:middle;">download</span>'
@@ -95,9 +111,19 @@ class FedoraHistorieTable(ColumnShiftTableBootstrap4):
         )
 
     def value_url(self, value, record):
+        """
+        Provádí operaci value url.
+
+        :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``value_url``.
+        :param record: Parametr ``record`` vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování.
+        """
         return f"{settings.SITE_URL}{record['url']}"
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         attrs = {"class": "table-shifter table fedora-table"}
         fields = ("url", "datum", "uzivatel")
         order_by = ("-datum",)

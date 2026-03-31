@@ -8,108 +8,160 @@ Třídy
 
 .. py:class:: PianNotInKladysm5Error
 
-   Popis není k dispozici.
+   Implementuje komponentu ``PianNotInKladysm5Error`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param pian: Parametr ``pian`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: MaximalIdentNumberError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``MaximalIdentNumberError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param number: Parametr ``number`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: DJNemaPianError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DJNemaPianError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param dj: Parametr ``dj`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: NelzeZjistitRaduError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NelzeZjistitRaduError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: NeocekavanaRadaError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NeocekavanaRadaError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: WrongSheetError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``WrongSheetError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: NeznamaGeometrieError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``NeznamaGeometrieError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: UnexpectedDataRelations
 
-   Popis není k dispozici.
+   Implementuje komponentu ``UnexpectedDataRelations`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: MaximalEventCount
 
-   Popis není k dispozici.
+   Implementuje komponentu ``MaximalEventCount`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param number: Parametr ``number`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: WrongCSVError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``WrongCSVError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: ZaznamSouborNotmatching
 
-   Popis není k dispozici.
+   Implementuje komponentu ``ZaznamSouborNotmatching`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 
 
 .. py:class:: StateChangedError
 
-   Popis není k dispozici.
+   Implementuje komponentu ``StateChangedError`` v rámci aplikace.
 
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
 

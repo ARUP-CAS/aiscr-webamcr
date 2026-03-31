@@ -1,0 +1,472 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-03-10T00:05:15Z",
+  "task_id": "T01",
+  "repository": "ARUP-CAS/aiscr-webamcr",
+  "branch": "test",
+  "description": "Produkční Django webová aplikace Archeologické mapy České republiky (AMČR), součást infrastruktury AIS CR spravované ARUP-CAS.",
+  "meta": {
+  "status": "dokončeno — T01",
+  "note": "Vygenerováno agentem při T01; datum dle git log -1 --format=%ci -- .agents/analysis/repository_map.json."
+  },
+
+  "repository_stats": {
+    "name": "aiscr-webamcr",
+    "branch": "test",
+    "language_breakdown": {
+      "Python": "47.2%",
+      "JavaScript": "36.8%",
+      "HTML": "10.6%",
+      "SCSS": "3.9%",
+      "CSS": "0.7%",
+      "Shell": "0.7%",
+      "Dockerfile": "0.1%"
+    },
+    "commits": 5022,
+    "releases": 29,
+    "latest_release": "v1.2.0",
+    "open_issues": 113,
+    "open_prs": 10
+  },
+
+  "root_directories": {
+    ".git": { "purpose": "Git metadata", "in_scope": false },
+    ".github": { "purpose": "GitHub Actions workflows a CI/CD konfigurace (7 workflows)", "in_scope": true },
+    "cert": { "purpose": "Samopodepsané SSL certifikáty pro lokální vývoj — záměrně commitovány, nejsou bezpečnostním rizikem", "in_scope": false },
+    "docs": { "purpose": "Sphinx dokumentace projektu (~261+ RST/MD souborů, 13 tematických sekcí)", "in_scope": true },
+    ".agents": { "purpose": "Persistentní stav AI-asistovaného technického review (analýzy, cache, backlog)", "in_scope": false },
+    "elasticsearch": { "purpose": "Konfigurační soubory pro Elasticsearch (elasticsearch.example.yml)", "in_scope": true },
+    "fedora": { "purpose": "Fedora Commons repository management — Dockerfile, ACL TTL (18 souborů), LDP TTL (15 souborů), init skript", "in_scope": true },
+    "kibana": { "purpose": "Konfigurační soubory pro Kibana dashboarding (kibana.example.yml)", "in_scope": true },
+    "logstash": { "purpose": "Konfigurační soubory pro Logstash pipeline (logstash.example.conf)", "in_scope": true },
+    "prometheus": { "purpose": "Konfigurační soubory pro Prometheus monitoring (prometheus.example.yml, collectors/pg_stat_statements.yaml)", "in_scope": true },
+    "proxy": { "purpose": "Nginx reverse proxy — Dockerfile, default.conf, uwsgi_params, custom chybové stránky cs/en (500, 502, 503)", "in_scope": true },
+    "redis": { "purpose": "Redis cache — Dockerfile, redis.conf, docker-entrypoint.sh, run-healthcheck_redis.sh", "in_scope": true },
+    "scripts": { "purpose": "Deployment, maintenance a pomocné operační skripty (18 souborů)", "in_scope": true },
+    "webclient": { "purpose": "Hlavní Django aplikace — 23 Django apps, nastavení, šablony, statické soubory, requirements", "in_scope": true }
+  },
+
+  "infrastructure_components": {
+    "elasticsearch": {
+      "config_files": ["elasticsearch/elasticsearch.example.yml"],
+      "role": "Fulltextové vyhledávání a agregace logů (součást ELK stacku)"
+    },
+    "kibana": {
+      "config_files": ["kibana/kibana.example.yml"],
+      "role": "Vizualizace dat z Elasticsearch / Logstash"
+    },
+    "logstash": {
+      "config_files": ["logstash/logstash.example.conf"],
+      "role": "Log pipeline — sběr a transformace logů"
+    },
+    "prometheus": {
+      "config_files": ["prometheus/prometheus.example.yml", "prometheus/collectors/pg_stat_statements.yaml"],
+      "role": "Metrics sběr (včetně PostgreSQL statistik) a alerting"
+    },
+    "redis": {
+      "config_files": ["redis/Dockerfile", "redis/redis.conf", "redis/docker-entrypoint.sh", "redis/run-healthcheck_redis.sh"],
+      "role": "Cache backend a Celery message broker"
+    },
+    "fedora": {
+      "config_files": [
+        "fedora/Dockerfile", "fedora/fedora-init.py", "fedora/readme.txt",
+        "fedora/conf/fcrepo.properties", "fedora/conf/tomcat-users.xml"
+      ],
+      "inputs": {
+        "acl": "18 TTL souborů pro Access Control Lists (m-*.ttl, record.ttl, repo.ttl, root-authorization.ttl, deleted.ttl)",
+        "ldp": "15 TTL souborů pro Linked Data Platform (indir-*.ttl)"
+      },
+      "role": "Fedora Commons repository pro správu digitálních objektů — artefakty, dokumenty"
+    },
+    "proxy": {
+      "config_files": [
+        "proxy/Dockerfile", "proxy/default.conf", "proxy/uwsgi_params", "proxy/run-healthcheck_proxy.sh"
+      ],
+      "custom_html": {
+        "cs": ["custom_500.html", "custom_502.html", "custom_503.html"],
+        "en": ["custom_500.html", "custom_502.html", "custom_503.html"]
+      },
+      "role": "Nginx reverse proxy před Django/uWSGI aplikací"
+    }
+  },
+
+  "django_project": {
+    "project_root": "webclient/",
+    "settings_module": "webclient/webclient/settings/",
+    "settings_files": {
+      "base.py": { "lines": 596, "purpose": "Základní Django nastavení sdílená všemi prostředími" },
+      "dev.py": { "lines": 75, "purpose": "Vývojové prostředí" },
+      "dev_test.py": { "purpose": "Vývojové testovací prostředí" },
+      "docs.py": { "purpose": "Read the Docs build" },
+      "github_ci.py": { "purpose": "GitHub Actions CI prostředí" },
+      "local_test.py": { "purpose": "Lokální testování" },
+      "production.py": { "lines": 17, "purpose": "Produkční prostředí (minimální overrides base.py)" },
+      "sample_secrets_db.json": { "purpose": "Vzorový soubor secrets pro databázi" },
+      "sample_secrets_mail_client.json": { "purpose": "Vzorový soubor secrets pro e-mail" }
+    },
+    "key_modules": {
+      "celery.py": { "path": "webclient/webclient/celery.py", "lines": 17, "purpose": "Celery aplikace a konfigurace" },
+      "urls.py": { "path": "webclient/webclient/urls.py", "lines": 101, "purpose": "Hlavní URL routing" },
+      "wsgi.py": { "path": "webclient/webclient/wsgi.py", "purpose": "WSGI entrypoint" },
+      "asgi.py": { "path": "webclient/webclient/asgi.py", "purpose": "ASGI entrypoint" },
+      "hashers.py": { "path": "webclient/webclient/hashers.py", "purpose": "Vlastní Django password hashery" }
+    }
+  },
+
+  "django_applications": {
+    "adb": {
+      "full_name": "Archeologická databáze",
+      "python_files": 16,
+      "migrations": 7,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa archeologické databáze"
+    },
+    "arch_z": {
+      "full_name": "Archeologický záznam",
+      "python_files": 33,
+      "migrations": 20,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa archeologických záznamů"
+    },
+    "core": {
+      "full_name": "Core — sdílená infrastruktura",
+      "python_files": 77,
+      "migrations": 26,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Sdílené modely, utility, middleware, autentizace, konektory (Fedora, Redis), koordinátové transformace, management commands",
+      "notable_modules": [
+        "authenticators.py", "connectors.py", "constants.py", "context_processors.py",
+        "coordTransform.py", "decorators.py", "exceptions.py", "ident_cely.py",
+        "import_data_mappers.py", "log_middleware.py", "logging_filters.py",
+        "message_constants.py", "middleware.py", "mixins.py", "repository_connector.py",
+        "services.py", "setting_models.py", "signals.py", "utils.py", "validators.py", "widgets.py"
+      ],
+      "management_commands": [
+        "check_pian_properties", "generate_metadata", "generate_thumbs",
+        "import_permissions", "remove_gps_data", "save_files_from_storage",
+        "save_single_file_from_storage", "send_test_emails", "transform_to_sjtsk",
+        "update_pristupnost_snapshot", "update_snapshot_fields", "write_value_to_redis"
+      ]
+    },
+    "cron": {
+      "full_name": "Cron — plánované Celery tasky",
+      "python_files": 2,
+      "migrations": 0,
+      "modules": { "models": false, "views": false, "forms": false, "urls": false, "tasks": true, "serializers": false, "admin": false, "tests": false },
+      "responsibility": "Definice Celery beat schedule a plánovaných asynchronních úloh"
+    },
+    "dj": {
+      "full_name": "DJ — Dokumentační jednotka",
+      "python_files": 16,
+      "migrations": 7,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa dokumentačních jednotek"
+    },
+    "dokument": {
+      "full_name": "Dokument",
+      "python_files": 31,
+      "migrations": 19,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa dokumentů a příloh (terénní zprávy, fotografie, 3D modely)"
+    },
+    "ez": {
+      "full_name": "Externí zdroj",
+      "python_files": 24,
+      "migrations": 12,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa externích zdrojů a bibliografických odkazů"
+    },
+    "fedora_management": {
+      "full_name": "Fedora Management",
+      "python_files": 10,
+      "migrations": 1,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": false },
+      "responsibility": "Admin UI pro správu Fedora Commons repository — synchronizace, importy, monitoring"
+    },
+    "healthcheck": {
+      "full_name": "Health Check",
+      "python_files": 3,
+      "migrations": 0,
+      "modules": { "models": false, "views": true, "forms": false, "urls": true, "tasks": false, "serializers": false, "admin": false, "tests": false },
+      "responsibility": "HTTP health check endpoint pro Docker a load balancer"
+    },
+    "heslar": {
+      "full_name": "Hesláře (číselníky)",
+      "python_files": 24,
+      "migrations": 12,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa heslářů a číselníků — řízené slovníky doménových hodnot AMČR"
+    },
+    "historie": {
+      "full_name": "Historie",
+      "python_files": 21,
+      "migrations": 11,
+      "modules": { "models": true, "views": true, "forms": false, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Auditní log a historie změn entit"
+    },
+    "komponenta": {
+      "full_name": "Komponenta",
+      "python_files": 12,
+      "migrations": 3,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa komponent (součástí) archeologických záznamů"
+    },
+    "lokalita": {
+      "full_name": "Lokalita",
+      "python_files": 16,
+      "migrations": 4,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa archeologických lokalit"
+    },
+    "nalez": {
+      "full_name": "Nález",
+      "python_files": 14,
+      "migrations": 5,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa nálezů z terénních akcí"
+    },
+    "neidentakce": {
+      "full_name": "Neidentifikovaná akce",
+      "python_files": 14,
+      "migrations": 5,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": false },
+      "responsibility": "Správa neidentifikovaných terénních akcí"
+    },
+    "notifikace_projekty": {
+      "full_name": "Notifikace projektů",
+      "python_files": 12,
+      "migrations": 2,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": true, "serializers": false, "admin": true, "tests": false },
+      "responsibility": "E-mailové notifikace o stavech projektů — obsahuje Celery tasky"
+    },
+    "oznameni": {
+      "full_name": "Oznámení",
+      "python_files": 12,
+      "migrations": 3,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa oznámení o záměrech terénních akcí"
+    },
+    "pas": {
+      "full_name": "PAS — Povrchové sběry / amatérská spolupráce",
+      "python_files": 25,
+      "migrations": 13,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa nálezů detektory kovů a amatérská spolupráce"
+    },
+    "pian": {
+      "full_name": "PIAN — Prostorová identifikace archeologických nálezů",
+      "python_files": 17,
+      "migrations": 8,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Prostorová data a geolokace — geometrie, souřadnicové transformace"
+    },
+    "pid": {
+      "full_name": "PID — Perzistentní identifikátor",
+      "python_files": 13,
+      "migrations": 1,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": true, "admin": false, "tests": true },
+      "responsibility": "Správa a validace perzistentních identifikátorů (DOI, handle apod.)",
+      "notable_modules": ["client.py", "exceptions.py", "fields.py", "verificators.py", "model_serializers.py"]
+    },
+    "projekt": {
+      "full_name": "Projekt",
+      "python_files": 25,
+      "migrations": 11,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": false, "admin": true, "tests": true },
+      "responsibility": "Správa archeologických projektů — hlavní doménová entita AMČR"
+    },
+    "uzivatel": {
+      "full_name": "Uživatel",
+      "python_files": 43,
+      "migrations": 31,
+      "modules": { "models": true, "views": true, "forms": true, "urls": true, "tasks": false, "serializers": true, "admin": true, "tests": true },
+      "responsibility": "Správa uživatelů, organizací, oprávnění a CAS autentizace (SSO)"
+    },
+    "vypis": {
+      "full_name": "Výpis (export)",
+      "python_files": 5,
+      "migrations": 0,
+      "modules": { "models": false, "views": true, "forms": false, "urls": true, "tasks": false, "serializers": false, "admin": false, "tests": false },
+      "responsibility": "Export a výpis dat z AMČR",
+      "notable_modules": ["config.py", "fields.py"]
+    },
+    "xml_generator": {
+      "full_name": "XML generátor",
+      "python_files": 3,
+      "migrations": 0,
+      "modules": { "models": true, "views": false, "forms": false, "urls": false, "tasks": false, "serializers": false, "admin": false, "tests": false },
+      "responsibility": "Generování XML exportů (šablony v definitions/)",
+      "notable_modules": ["generator.py", "definitions/"]
+    },
+    "services": {
+      "full_name": "Services — sdílené utility",
+      "python_files": 4,
+      "migrations": 0,
+      "modules": { "models": false, "views": false, "forms": false, "urls": false, "tasks": false, "serializers": false, "admin": false, "tests": false },
+      "responsibility": "Sdílené servisní utility nezávislé na Django app kontextu",
+      "notable_modules": ["mailer.py", "mlstripper.py", "notfication_settings.py"]
+    }
+  },
+
+  "app_statistics": {
+    "total_django_apps": 23,
+    "apps_with_celery_tasks": ["cron", "notifikace_projekty"],
+    "apps_with_serializers": ["pid", "uzivatel"],
+    "apps_with_tests": [
+      "adb", "arch_z", "core", "dj", "dokument", "ez", "heslar", "historie",
+      "komponenta", "lokalita", "nalez", "oznameni", "pas", "pian", "pid", "projekt", "uzivatel"
+    ],
+    "apps_without_tests": [
+      "cron", "fedora_management", "healthcheck", "neidentakce",
+      "notifikace_projekty", "services", "vypis", "xml_generator"
+    ],
+    "largest_app_by_py_files": "core (77 .py souborů)",
+    "most_migrations": "uzivatel (31 migrací)",
+    "total_migrations_approx": 190,
+    "note_missing_tests": "8 aplikací nemá testy — notifikace_projekty a cron jsou zvláště rizikové (Celery tasky bez testů)"
+  },
+
+  "key_config_files": {
+    "AGENTS.md": { "path": "AGENTS.md", "sha256": "7980bd248e577e55d201f4466a79f45eb9e847ec26def83dd6ae8c049bffd4fd" },
+    "manage.py": { "path": "webclient/manage.py", "sha256": "28fadc9c9ea2c1949f2bb016a0d9c5e030df55093a4842aa927d14f380396a76" },
+    "Dockerfile": { "path": "Dockerfile", "size_bytes": 3789, "sha256": "dfa43cbb0e5d08b689df49a29c226b618a7f14d54bf34c07bd5c8530405d9371" },
+    "Dockerfile-DB": { "path": "Dockerfile-DB", "size_bytes": 722, "sha256": "d0b1f60fcfd7ffe9e743e7bf5f180367a752787ecec5eaef992259d4f848ad6e" },
+    "Dockerfile-DEV": { "path": "Dockerfile-DEV", "size_bytes": 2458, "sha256": "174b089fe2e983e9f2fa471ac21ac5262c0b76427c3c4ba7bb3be5520192d63e" },
+    "docker-compose.yml": { "path": "docker-compose.yml", "size_bytes": 7578, "sha256": "3b03a31e1c8e7a1a2bf9edce77013b4367507e9d44ab3a25c44f55530c7df4cc" },
+    "docker-compose-dev-local-db.yml": { "path": "docker-compose-dev-local-db.yml", "sha256": "805576a72a777a1192a9d3e64f6a77bcda89eec62d4ece2d9d6e68251563c194" },
+    "docker-compose-proxy.yml": { "path": "docker-compose-proxy.yml", "sha256": "72bc78553b1817e5bdb9c8f961baa05a5db36109e8213c2a465a43a66927db62" },
+    "docker-compose-test.yml": { "path": "docker-compose-test.yml", "sha256": "4bcdf7853606d850f8233771873b302558845d0bd2a54d9cce514938cf638327" },
+    "git_docker-compose.yml": { "path": "git_docker-compose.yml", "size_bytes": 6246, "sha256": "d3e259535097bc9c4634d479cefe70d2599172b09b5f3b7f9ec0f696916ec36e" },
+    "git_docker-compose.override.yml": { "path": "git_docker-compose.override.yml", "sha256": "8e516e7ac8c199d8752dfd096f5a49ed2e47ef9d418e596eba1e88780cbc2b80" },
+    "git_docker-compose-proxy.yml": { "path": "git_docker-compose-proxy.yml", "sha256": "7bb50f27ab6868d47f0b260dcae47571d312a9c153d23e17ec83c5ad3c5871dd" },
+    "readthedocs.yaml": { "path": "readthedocs.yaml", "sha256": "b57bcee713bc5c278368c4da165b8b90cea5707c235f0550601e316b1d4a7b97" },
+    ".pre-commit-config.yaml": { "path": ".pre-commit-config.yaml", "sha256": "46877e36dd41ac12f54d7974feb047e241261a0786b954bb514bbe02cd338833" },
+    ".flake8": { "path": ".flake8", "sha256": "6a5bd13949eb295dff601d9bf4e0e315b3066306f9b00a47c0b5b3b6c35436bf" },
+    ".isort.cfg": { "path": ".isort.cfg", "sha256": "c0a628ba0b13fb79b393328a8a0e2ba172ff40528742b761340e12b92321f3fc" },
+    "requirements.txt": { "path": "webclient/requirements.txt", "lines": 64, "sha256": "f4d94a593752f7a9044f7f98251860f2a72c0d2f1a0b5b55ac0058c09209aceb" },
+    "settings/base.py": { "path": "webclient/webclient/settings/base.py", "lines": 596, "sha256": "2d00af2db1b765375249b4b7833bac438ccdd6fc694f88b5724f822ab63fb204" },
+    "settings/dev.py": { "path": "webclient/webclient/settings/dev.py", "lines": 75, "sha256": "0016fd1a1e015eb3681cb8fecf9b8e9fc817a2b8c42ce46a9369e79af366cad6" },
+    "settings/production.py": { "path": "webclient/webclient/settings/production.py", "lines": 17, "sha256": "aee569e98d7459c3a16a454258038960a793b6d99e0a7e2bb859639b6f27fedc" },
+    "celery.py": { "path": "webclient/webclient/celery.py", "lines": 17, "sha256": "cf3fd9aabf6374bc57902246102a11f7aff85225b6adb03ec4875f6d96e54be1" },
+    "urls.py": { "path": "webclient/webclient/urls.py", "lines": 101, "sha256": "395ce5da91c6f91de1ca79ba7b0084c0933d9aa0cff708e02624128bd335ddee" }
+  },
+
+  "scripts": {
+    "deployment": {
+      "scripts/prod_deploy.sh": { "size_bytes": 9011, "purpose": "Produkční deploy skript" },
+      "scripts/dev_deploy.sh": { "size_bytes": 8397, "purpose": "Vývojový deploy skript" },
+      "scripts/git_prod_deploy.sh": { "size_bytes": 7373, "purpose": "Git-based produkční deploy" },
+      "scripts/test_deploy.sh": { "size_bytes": 6246, "purpose": "Test deployment" },
+      "scripts/build_prod_image.sh": { "size_bytes": 515, "purpose": "Build produkčního Docker image" },
+      "scripts/ci_deployment/deploy_server.sh": { "purpose": "CI deploy na server" },
+      "scripts/ci_deployment/deploy_test_server.sh": { "purpose": "CI deploy na testovací server" }
+    },
+    "runtime": {
+      "scripts/entrypoint.sh": { "size_bytes": 3686, "purpose": "Produkční Docker entrypoint" },
+      "scripts/entrypoint.dev.sh": { "size_bytes": 209, "purpose": "Vývojový Docker entrypoint" },
+      "scripts/healthcheck.sh": { "size_bytes": 177, "purpose": "Základní health check" },
+      "scripts/run-healthcheck.sh": { "size_bytes": 1843, "purpose": "Aplikační health check" },
+      "scripts/run-healthcheck_celery.sh": { "size_bytes": 943, "purpose": "Celery health check" },
+      "scripts/uwsgi_site.ini": { "size_bytes": 311, "purpose": "uWSGI konfigurace" },
+      "scripts/crontab.txt": { "size_bytes": 119, "purpose": "Cron job definice" }
+    },
+    "database": {
+      "scripts/restore_database.sh": { "size_bytes": 650, "purpose": "Obnova databáze ze zálohy" },
+      "scripts/db/clone_test_db.py": { "purpose": "Klonování testovací databáze" },
+      "scripts/db/db_connection_from_docker-web.py": { "purpose": "DB připojení z Docker kontejneru" }
+    },
+    "testing": {
+      "scripts/start_selenium_tests.sh": { "size_bytes": 1843, "purpose": "Spuštění Selenium testů" }
+    }
+  },
+
+  "github_actions_workflows": [
+    { "file": ".github/workflows/deployment.yml", "purpose": "Deployment workflow" },
+    { "file": ".github/workflows/docker_scout.yml", "purpose": "Docker Scout bezpečnostní skenování" },
+    { "file": ".github/workflows/new-version.yml", "purpose": "Release management nové verze" },
+    { "file": ".github/workflows/pre_commit.yml", "purpose": "Pre-commit checks v CI" },
+    { "file": ".github/workflows/pre_commit_update.yml", "purpose": "Automatická aktualizace pre-commit hooků" },
+    { "file": ".github/workflows/publish_images.yml", "purpose": "Publikace Docker images" },
+    { "file": ".github/workflows/run-tests.yml", "purpose": "Spuštění testů" }
+  ],
+
+  "frontend": {
+    "templates_root": "webclient/templates/",
+    "static_root": "webclient/static/",
+    "custom_js_note": "Vlastní JS kód mimo vendorované podadresáře — analyzovat v T07",
+    "custom_scss": ["webclient/static/scss/", "webclient/static/theme.scss"],
+    "vendored_libraries_excluded_from_audit": [
+      "static/js/Leaflet.EasyButton2.4.0/",
+      "static/js/Leaflet.contextmenu1.5.1/",
+      "static/js/Leaflet.draw1.0.4/",
+      "static/js/Leaflet.fullscreen1.0.1/",
+      "static/js/Leaflet.messagebox/",
+      "static/js/Leaflet1.9.4/",
+      "static/js/bootstrap-datepicker1.10.0/",
+      "static/js/bootstrap-select1.13.18/",
+      "static/js/bootstrap-select1.14.0-beta3/",
+      "static/js/daterangepicker3.1/",
+      "static/js/heatmap/",
+      "static/js/spin/",
+      "static/bootstrap5/",
+      "static/cookie-consent/",
+      "static/icons/bootstrap-icons-1.5.0/"
+    ],
+    "key_templates": [
+      "base.html", "base_logged_in.html", "base_error.html",
+      "map.html", "search_list.html",
+      "toolbar_*.html (akce, dokument, ext_zdroj, pas, projekt, spoluprace)"
+    ]
+  },
+
+  "documentation": {
+    "sphinx_root": "docs/",
+    "readthedocs_config": "readthedocs.yaml",
+    "total_rst_files_approx": 261,
+    "sections": [
+      "01_zaciname/ — Začínáme",
+      "02_instalace_nasazeni/ — Instalace a nasazení",
+      "03_vyvoj/ — Vývoj (kódovací standardy, docstring guide)",
+      "04_django_aplikace/ — Django aplikace",
+      "05_integrace/ — Integrace",
+      "06_funkcionalita/ — Funkcionalita",
+      "07_asynchroni_ulohy/ — Asynchronní úlohy (Celery)",
+      "08_monitoring_logging/ — Monitoring a logování",
+      "09_testovani/ — Testování (včetně Selenium)",
+      "10_bezpecnost/ — Bezpečnost",
+      "12_zavislosti/ — Závislosti",
+      "13_prispivani/ — Přispívání"
+    ],
+    "generators": [
+      "docs/generate_module_docs.py — generuje dokumentaci modulů",
+      "docs/generate_selenium_test_docs.py — generuje dokumentaci Selenium testů",
+      "docs/licenses/convert_to_rst.py — konverze licencí do RST"
+    ]
+  },
+
+  "tech_stack": {
+    "backend": "Python / Django 5.2",
+    "task_queue": "Celery + Redis broker",
+    "database": "PostgreSQL",
+    "search_and_logging": "Elasticsearch + Kibana + Logstash (ELK stack)",
+    "cache": "Redis",
+    "digital_repository": "Fedora Commons",
+    "proxy": "Nginx + uWSGI",
+    "monitoring": "Prometheus (collectors: pg_stat_statements)",
+    "authentication": "CAS (Central Authentication Service) + Django permissions",
+    "testing": "Django test framework + Selenium",
+    "code_quality": "black (line 120), isort (profile black), flake8, pre-commit",
+    "documentation": "Sphinx + Read the Docs",
+    "containerization": "Docker + docker-compose (5 variant: prod, dev, proxy, test, git-deploy)"
+  },
+
+  "external_integrations": {
+    "fedora_repository": "Produkční Fedora Commons repository — správa digitálních objektů",
+    "postgresql": "Primární relační databáze",
+    "elasticsearch": "Full-text vyhledávání a log agregace",
+    "redis": "Cache a Celery message broker",
+    "cas_sso": "Central Authentication Service — SSO pro uživatele",
+    "email": "SMTP e-mail pro notifikace",
+    "pid_service": "Služba pro přidělování perzistentních identifikátorů"
+  }
+}

@@ -1,0 +1,330 @@
+{
+  "schema_version": "1",
+  "task_id": "T04",
+  "analyzed_at": "2026-03-09T21:13:14Z",
+  "dockerfiles": [
+    {
+      "path": "Dockerfile",
+      "type": "production",
+      "base_image": "ghcr.io/osgeo/gdal:ubuntu-small-3.12.2",
+      "multi_stage": true,
+      "stages": ["python-builder", "app-builder", "runtime"],
+      "user": "user (non-root)",
+      "analyzed": true,
+      "notes": [
+        "Multi-stage build správně odděluje build-time deps (build-essential, gcc) od runtime",
+        "COPY --from=python-builder /wheels /wheels v app-builder je redundantní — app-builder dědí z python-builder (OPT-D01)",
+        "python3 -m compileall -b kopíruje .py i .pyc do runtime; PYTHONDONTWRITEBYTECODE=1 jen zabrání nové tvorbě — zdvojnásobení kódu (OPT-D02)",
+        "usermod -aG sudo user — produkční uživatel má sudo přístup (SEC-D01)",
+        "cron daemon spuštěn uvnitř kontejneru — anti-pattern pro Docker (OPT-D05)",
+        "libgdal-dev (dev balíček) v runtime — runtime knihovny by stačily",
+        "HEALTHCHECK definován — správně"
+      ]
+    },
+    {
+      "path": "Dockerfile-DB",
+      "type": "development-database",
+      "base_image": "postgis/postgis:16-3.4",
+      "multi_stage": false,
+      "user": "postgres (výchozí)",
+      "analyzed": true,
+      "notes": [
+        "chmod 777 /tmp/ — přehnaně permisivní oprávnění (SEC-D04)",
+        "chmod 777 /docker-entrypoint-initdb.d/restore_database.sh — world-executable skript",
+        "Jednoduchý Dockerfile pro dev DB"
+      ]
+    },
+    {
+      "path": "Dockerfile-DEV",
+      "type": "development",
+      "base_image": "ghcr.io/osgeo/gdal:ubuntu-small-3.12.2",
+      "multi_stage": true,
+      "stages": ["python-builder", "runtime"],
+      "user": "user (non-root)",
+      "analyzed": true,
+      "notes": [
+        "Přidává nano (dev nástroj) — ok pro dev",
+        "chmod 777 -R /cert/* — TLS klíče world-readable (dev-only, cert/ je self-signed — záměrné)",
+        "Kód se nemontuje v Dockerfile (volume mount z compose) — správný dev vzor",
+        "Narozdíl od prod Dockerfile nemá PATH=/scripts ani APP compileall — dev používá zdrojové .py"
+      ]
+    },
+    {
+      "path": "proxy/Dockerfile",
+      "type": "nginx-proxy",
+      "base_image": "nginxinc/nginx-unprivileged:1.27.3-alpine3.20",
+      "multi_stage": false,
+      "user": "nginx (non-root)",
+      "analyzed": true,
+      "notes": [
+        "Přepíná na USER root pro mkdir/chmod pak zpět na USER nginx — správný vzor",
+        "Pinned Alpine verze — deterministický build",
+        "nginx-unprivileged — správná bezpečnostní praxe"
+      ]
+    },
+    {
+      "path": "redis/Dockerfile",
+      "type": "redis",
+      "base_image": "redis:8.6.1",
+      "multi_stage": false,
+      "user": "redis (výchozí)",
+      "analyzed": true,
+      "notes": [
+        "Entrypoint dynamicky injectuje heslo ze secrets do redis.conf pomocí sed — bezpečný vzor",
+        "Pinned verze — deterministický build"
+      ]
+    },
+    {
+      "path": "fedora/Dockerfile",
+      "type": "fedora-repository",
+      "base_image": "fcrepo/fcrepo:6.5.1-tomcat9",
+      "multi_stage": false,
+      "user": "root (výchozí Tomcat)",
+      "analyzed": true,
+      "notes": [
+        "3× separátní RUN apt-get update bez apt-get clean — zvětšuje image (OPT-D03)",
+        "CMD spouští dva procesy bez PID 1 / signal handling: python3 fedora-init.py & catalina.sh run (OPT-D04)",
+        "Kopíruje amcr.xsd přímo z webclient/xml_generator — těsná vazba mezi images"
+      ]
+    }
+  ],
+  "docker_compose_services": {
+    "docker-compose.yml": {
+      "environment": "production",
+      "services": ["web", "sidecar", "redis", "redis-exporter", "celery_worker", "celery_beat", "celery_exporter", "grafana", "prometheus", "logstash", "elasticsearch", "kibana", "selenium", "cadvisor", "postgresql_exporter"],
+      "secrets_strategy": "Docker Swarm external secrets",
+      "analyzed": true,
+      "issues": [
+        "DCD-01: logstash chybí depends_on: elasticsearch — race condition při startu (viz také T02)",
+        "DCD-02: celery_worker spuštěn s -l DEBUG v produkci — nadměrné logování",
+        "DCD-03: GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password — env var obsahuje cestu, ne heslo",
+        "DCD-04: ELASTIC_PASSWORD=elastic_pass — obsahuje název secretu, ne jeho hodnotu",
+        "DCD-05: LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass — stejný problém jako DCD-04",
+        "DCD-06: Elasticsearch (9200), Kibana (5601), Grafana (3000), Prometheus (9090) exponovány bez izolace",
+        "DCD-07: selenium service v produkčním compose — mělo by být pouze v test compose"
+      ]
+    },
+    "docker-compose-test.yml": {
+      "environment": "test",
+      "services": ["web", "proxy", "sidecar", "redis", "redis-exporter", "celery_worker", "celery_beat", "celery_exporter", "grafana", "prometheus", "logstash", "elasticsearch", "kibana", "selenium", "cadvisor", "postgresql_exporter"],
+      "analyzed": true,
+      "issues": [
+        "Prakticky identický s docker-compose.yml — velká duplikace konfigurace",
+        "GF_SECURITY_ADMIN_PASSWORD stejný problém jako DCD-03",
+        "elasticsearch má navíc xpack.security.enabled=true — nekonzistentní s prod compose (DCD-08)"
+      ]
+    },
+    "docker-compose-dev-local-db.yml": {
+      "environment": "development-local",
+      "services": ["web", "livereload", "db", "redis", "celery_worker", "celery_beat"],
+      "analyzed": true,
+      "issues": [
+        "backup_file_db_v4.tar je hardcoded v compose ARG — ruční aktualizace při novém backupu",
+        "redis: build: ./redis + image: redis:8.4.0 — matoucí vzor tagování custom image jako official",
+        "ELK stack chybí — vývojáři nevidí logování v Elasticsearch"
+      ]
+    },
+    "docker-compose-dev-local-db-all-containers.yml": {
+      "environment": "development-full",
+      "services": ["web", "livereload", "db", "pgadmin", "memcached", "redis", "redis-exporter", "grafana", "prometheus", "celery_worker", "celery_beat", "celery_exporter", "selenium", "logstash", "elasticsearch", "kibana", "fcrepo", "fcrepo-postgres"],
+      "analyzed": true,
+      "issues": [
+        "DCD-09: memcached:latest — floating tag, nedeterministický build",
+        "DCD-10: ELK verze 8.19.0 vs. prod 9.3.1 — major version gap",
+        "DCD-11: fcrepo-postgres POSTGRES_PASSWORD=localdbpass1 — hardcoded heslo",
+        "redis-exporter v1.80.1 vs prod v1.81.0 — drobná nekonzistence",
+        "grafana 12.3.1 vs prod 12.4.0 — drobná nekonzistence",
+        "logstash chybí depends_on: elasticsearch (v dev má, v prod nemá — obrácená situace)"
+      ]
+    },
+    "git_docker-compose.yml": {
+      "environment": "git-deploy",
+      "services": ["web", "db", "redis", "redis-exporter", "celery_worker", "celery_beat", "celery_exporter", "grafana", "prometheus", "logstash", "elasticsearch", "kibana", "selenium"],
+      "analyzed": true,
+      "issues": [
+        "DCD-12: celery_worker a celery_beat buildují Dockerfile-DEV — nekonzistence s prod (Dockerfile)",
+        "DCD-13: celery_exporter v síti prod-net místo git-reverse-proxy — nekonzistentní síťová konfigurace",
+        "Secrets jako plain files — vyžaduje přípravu souborů před deploymentem"
+      ]
+    },
+    "git_docker-compose.override.yml": {
+      "environment": "git-deploy-override",
+      "analyzed": true,
+      "notes": "Minimalistický override přepisující secrets pro git deploy"
+    },
+    "docker-compose-proxy.yml": {
+      "environment": "production-proxy",
+      "analyzed": true,
+      "notes": "Samostatný proxy compose — správná separace proxy vrstvy"
+    },
+    "git_docker-compose-proxy.yml": {
+      "environment": "git-deploy-proxy",
+      "analyzed": true,
+      "notes": "Proxy pro git-deploy — builduje z proxy/ kontextu"
+    }
+  },
+  "base_images": {
+    "ghcr.io/osgeo/gdal:ubuntu-small-3.12.2": {
+      "services": ["web (prod)", "web (dev)", "app-builder"],
+      "pinned": true,
+      "notes": "Ubuntu-based GDAL image pro PostGIS/spatial support — vhodná volba pro geospatial aplikaci"
+    },
+    "postgis/postgis:16-3.4": {
+      "services": ["Dockerfile-DB", "db (git_docker-compose.yml)"],
+      "pinned": true,
+      "notes": "PostgreSQL 16 s PostGIS 3.4"
+    },
+    "nginxinc/nginx-unprivileged:1.27.3-alpine3.20": {
+      "services": ["proxy"],
+      "pinned": true,
+      "notes": "Alpine-based nginx bez root — bezpečná a malá image"
+    },
+    "redis:8.6.1": {
+      "services": ["redis (git_docker-compose.yml)"],
+      "pinned": true
+    },
+    "redis:8.4.0": {
+      "services": ["redis (dev local)"],
+      "pinned": true,
+      "notes": "Starší verze než v git deploy"
+    },
+    "fcrepo/fcrepo:6.5.1-tomcat9": {
+      "services": ["fcrepo"],
+      "pinned": true,
+      "notes": "Fedora Commons Repository — digitální archiv AMČR"
+    },
+    "docker.elastic.co/elasticsearch/elasticsearch:9.3.1": {
+      "services": ["elasticsearch (prod, test, git)"],
+      "pinned": true,
+      "notes": "9.3.1 v prod vs 8.19.0 v dev — major version gap"
+    },
+    "docker.elastic.co/logstash/logstash:9.3.1": {
+      "services": ["logstash (prod, test, git)"],
+      "pinned": true
+    },
+    "docker.elastic.co/kibana/kibana:9.3.1": {
+      "services": ["kibana (prod, test, git)"],
+      "pinned": true
+    },
+    "grafana/grafana-enterprise:12.4.0": {
+      "services": ["grafana (prod, git)"],
+      "pinned": true
+    },
+    "prom/prometheus:v3.10.0": {
+      "services": ["prometheus (prod, git)"],
+      "pinned": true
+    },
+    "selenium/standalone-chromium:145.0": {
+      "services": ["selenium (prod, test, git)"],
+      "pinned": true,
+      "notes": "145.0 v prod/test vs 143.0 v dev"
+    },
+    "memcached:latest": {
+      "services": ["memcached (dev-all-containers)"],
+      "pinned": false,
+      "notes": "Floating tag — nedeterministický build (DCD-09)"
+    }
+  },
+  "security_issues": [
+    {
+      "id": "SEC-D01",
+      "severity": "Střední",
+      "file": "Dockerfile:99",
+      "description": "usermod -aG sudo user — produkční kontejner má uživatele se sudo právy. Pokud dojde k exploitaci aplikace, útočník může eskalovat oprávnění.",
+      "recommendation": "Odebrat sudo skupinu z produkčního uživatele. Pokud jsou sudo příkazy nezbytné pro konkrétní operace, nastavit je v /etc/sudoers s NOPASSWD pouze pro nezbytné příkazy."
+    },
+    {
+      "id": "SEC-D02",
+      "severity": "Střední",
+      "file": "docker-compose.yml:149, docker-compose-test.yml:169, git_docker-compose.yml:144",
+      "description": "GF_SECURITY_ADMIN_PASSWORD nastaveno na cestu /run/secrets/grafana_admin_password místo skutečného hesla. Grafana nepodporuje automatické čtení Docker secrets tímto způsobem — admin heslo bude nastaveno na literální string cesty.",
+      "recommendation": "Použít GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password (Grafana podporuje __FILE suffix pro env vars)"
+    },
+    {
+      "id": "SEC-D03",
+      "severity": "Střední",
+      "file": "docker-compose.yml:180-181,201, git_docker-compose.yml",
+      "description": "ELASTIC_PASSWORD=elastic_pass a LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass — env vars obsahují název Docker secretu, ne jeho hodnotu. Elasticsearch a Logstash budou mít tato pole nastavena na literální stringy 'elastic_pass' resp. 'logstash_elastic_pass'.",
+      "recommendation": "Použít entrypoint skript, který načte secret ze souboru a nastaví env var: export ELASTIC_PASSWORD=$(cat /run/secrets/elastic_pass)"
+    },
+    {
+      "id": "SEC-D04",
+      "severity": "Nízká",
+      "file": "Dockerfile-DB:19",
+      "description": "chmod 777 /tmp/ — přehnaně permisivní oprávnění",
+      "recommendation": "Použít chmod 1777 /tmp/ (sticky bit, standardní Unix práva pro /tmp)"
+    },
+    {
+      "id": "SEC-D05",
+      "severity": "Nízká",
+      "file": "docker-compose-dev-local-db-all-containers.yml:265",
+      "description": "POSTGRES_PASSWORD=localdbpass1 — hardcoded heslo pro Fedora Postgres v dev",
+      "recommendation": "Použít Docker secret i v dev prostředí (file-based secret je ok pro dev)"
+    }
+  ],
+  "optimization_opportunities": [
+    {
+      "id": "OPT-D01",
+      "file": "Dockerfile:37",
+      "description": "COPY --from=python-builder /wheels /wheels v app-builder je redundantní — app-builder dědí z python-builder",
+      "recommendation": "Odstranit řádek 37 (redundantní COPY) v app-builder stage"
+    },
+    {
+      "id": "OPT-D02",
+      "file": "Dockerfile:44,66",
+      "description": "python3 -m compileall -b vytváří .pyc vedle .py; PYTHONDONTWRITEBYTECODE=1 zabrání psaní v runtime, ale .pyc soubory z compileall jsou zkopírovány — obojí v image",
+      "recommendation": "Pokud je cílem rychlejší startup, zkompilovat do odděleného adresáře a kopírovat pouze .pyc"
+    },
+    {
+      "id": "OPT-D03",
+      "file": "fedora/Dockerfile:3-5",
+      "description": "3× separátní RUN apt-get update bez apt-get clean — zbytečné cache vrstvy",
+      "recommendation": "Sloučit do jednoho RUN: apt-get update && apt-get install -y python3-pip python3-requests && apt-get clean && rm -rf /var/lib/apt/lists/*"
+    },
+    {
+      "id": "OPT-D04",
+      "file": "fedora/Dockerfile:18",
+      "description": "CMD spouští dva procesy (init + Tomcat) bez PID 1 process managementu — signály (SIGTERM) nebudou správně předány",
+      "recommendation": "Použít tini jako ENTRYPOINT nebo přesunout inicializaci do entrypoint skriptu s exec catalina.sh run"
+    },
+    {
+      "id": "OPT-D05",
+      "file": "Dockerfile:15",
+      "description": "cron daemon v produkčním kontejneru — anti-pattern. Cron úlohy by měly být nahrazeny Celery beat tasky.",
+      "recommendation": "Přesunout cron úlohy do Celery beat scheduly"
+    }
+  ],
+  "version_inconsistencies": [
+    {
+      "service": "ELK Stack",
+      "production": "9.3.1",
+      "development": "8.19.0",
+      "severity": "Střední",
+      "note": "Major version gap — API změny mezi ES 8.x a 9.x, výchozí nastavení xpack.security jsou odlišná"
+    },
+    {
+      "service": "Selenium",
+      "production_and_test": "145.0",
+      "development": "143.0",
+      "severity": "Nízká"
+    },
+    {
+      "service": "Redis",
+      "git_deploy": "8.6.1",
+      "dev_local": "8.4.0",
+      "severity": "Nízká"
+    },
+    {
+      "service": "Grafana",
+      "production": "12.4.0",
+      "development": "12.3.1",
+      "severity": "Nízká"
+    },
+    {
+      "service": "redis-exporter",
+      "production": "v1.81.0-alpine",
+      "development": "v1.80.1-alpine",
+      "severity": "Nízká"
+    }
+  ]
+}

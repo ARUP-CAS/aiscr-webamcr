@@ -1,7 +1,7 @@
 <tr id="{{prefix}}{{d.id}}">
   <td>
   {% if d.thumbnail_image %}
-      <img src="{% url 'core:download_thumbnail' 'dokument' d.ident_cely d.thumbnail_image %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'dokument' d.ident_cely d.thumbnail_image %}" loading="lazy" style="opacity:0" onload="this.style.opacity=100">
+      <img src="{% url 'core:download_thumbnail' 'dokument' d.ident_cely d.thumbnail_image %}" class="image-nahled" data-bs-toggle="modal" data-bs-target="#soubor-modal" data-fullsrc="{% url 'core:download_thumbnail_large' 'dokument' d.ident_cely d.thumbnail_image %}" loading="lazy" style="opacity:0" onload="this.style.opacity=100">
     {% endif %}
   </td>
     <td class="app-ident-cely">
@@ -15,7 +15,7 @@
     <td class="app-cell-badge">
       <div class="container">
           <span class="badge-span">
-            <span class="badge">{{ d.get_stav_display }}</span>
+            <span class="badge bg-primary">{{ d.get_stav_display }}</span>
           </span>
       </div>
     </td>

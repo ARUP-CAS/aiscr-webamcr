@@ -77,7 +77,7 @@
             <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.archivovat.label" %}</span>
           </button>
         {% endif %}
-        <button id="otherOptions" type="button" class="btn dropdown-toggle m-0" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button id="otherOptions" type="button" class="btn dropdown-toggle m-0" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           <span class="app-controls-other-menu-icon"><span class="material-icons">more_vert</span></span>
           <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.dalsiVolby.label" %}</span>
         </button>
@@ -90,13 +90,13 @@
             <button id="projekt-pridat-oznamovatele" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.pridatOznamovatele.label" %}</button>
           {% endif %}          
           {% if projekt.has_oznamovatel and show.generovat_potvrzeni %}
-            <a class="dropdown-item" data-toggle="modal" data-target="#nove_potvrzeni">{% trans "templates.toolbarProjekt.generovatNovePotvrzeni.label" %}</a>
+            <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#nove_potvrzeni">{% trans "templates.toolbarProjekt.generovatNovePotvrzeni.label" %}</a>
           {% endif %}
           {% if show.upravit_datum_oznameni %}
             <button id="upravit-datum-oznameni" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.upravitDatumOznameni.label" %}</button>
           {% endif %}
           {% if projekt.expert_list_can_be_created and show.generovat_exp_list %}
-            <a class="dropdown-item" data-toggle="modal" data-target="#expertni_list">{% trans "templates.toolbarProjekt.expertniList.label" %}</a>
+            <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#expertni_list">{% trans "templates.toolbarProjekt.expertniList.label" %}</a>
           {% endif %}          
           {% if show.arch_links%}
             <a class="dropdown-item" href="{{Digi_archiv_link|add:projekt.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarProjekt.digiArchivLink.label" %}</a>

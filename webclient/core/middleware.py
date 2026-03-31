@@ -5,9 +5,9 @@ from core.connectors import RedisConnector
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.repository_connector import FedoraError, FedoraTransaction, FedoraTransactionResult
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.utils import OperationalError
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy
 
 from redis import ResponseError
@@ -16,20 +16,37 @@ logger = logging.getLogger(__name__)
 
 
 class PermissionMiddleware:
-    """
-    Middleware třída užívaná pro kontrolu oprávnení.
-    """
+    """Middleware třída užívaná pro kontrolu oprávnení."""
 
     def __init__(self, get_response):
+        """
+        Inicializuje instanci třídy.
+
+        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        """
         self.get_response = get_response
 
     def __call__(self, request):
+        """
+        Provádí operaci call.
+
+        :param request: Parametr ``request`` předává se do volání ``get_response()``.
+
+            :return: Vrací proměnná ``response``.
+        """
         response = self.get_response(request)
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """
         Metoda pro kontrolu oprvávnení pro každý view.
+
+        :param request: Parametr ``request`` se předává do volání ``append()``, ``check_concrete_permission()``, pracuje se s atributy ``user``, ``resolver_match``, ovlivňuje větvení podmínek.
+        :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+        :param view_args: Dodatečné argumenty předané voláním.
+        :param view_kwargs: Dodatečné argumenty předané voláním.
+
+            :raises PermissionDenied: Vyvolá se při splnění podmínky ``any(tested)``.
         """
         from core.models import Permissions
 
@@ -69,14 +86,36 @@ class PermissionMiddleware:
 
 
 class ErrorMiddleware:
+    """Implementuje komponentu ``ErrorMiddleware`` v rámci aplikace."""
+
     def __init__(self, get_response):
+        """
+        Inicializuje instanci třídy.
+
+        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        """
         self.get_response = get_response
 
     def __call__(self, request):
+        """
+        Provádí operaci call.
+
+        :param request: Parametr ``request`` předává se do volání ``get_response()``.
+
+            :return: Vrací proměnná ``response``.
+        """
         response = self.get_response(request)
         return response
 
     def process_exception(self, request, exception):
+        """
+        Provádí operaci process exception.
+
+        :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+        :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
+
+            :return: Vrací výsledek volání ``render()``.
+        """
         if isinstance(exception, FedoraError):
             context = {"exception": exception}
             return render(request, "fedora_error.html", context, status=500)
@@ -86,19 +125,85 @@ class ErrorMiddleware:
             return render(request, "db_timeout_error.html", context, status=504)
 
 
+class InactiveUserMiddleware:
+    """
+    Middleware zachytávající ``ValidationError`` s kódem ``inactive``,
+    která může vzniknout při vyhodnocení ``request.user`` u deaktivovaného
+    uživatele s stále aktivní session.
+
+    Pokud k této chybě dojde, session se zruší a uživatel je přesměrován
+    na přihlašovací stránku s varovnou hláškou.
+    """
+
+    def __init__(self, get_response):
+        """
+        Inicializuje middleware.
+
+        :param get_response: Callable z middleware řetězce,
+                             který zpracuje požadavek a vrátí response.
+        """
+        self.get_response = get_response
+
+    def __call__(self, request):
+        """
+        Obalí zpracování požadavku a zachytí ``ValidationError`` s kódem
+        ``inactive``, která může vzniknout při vyhodnocení ``request.user``.
+
+        Pokud je chyba zachycena, session se zruší a uživatel je
+        přesměrován na přihlašovací stránku.
+
+        :param request: Instance ``HttpRequest``.
+        :return: Standardní ``response`` nebo přesměrování na login.
+        """
+        try:
+            return self.get_response(request)
+
+        except ValidationError as e:
+            if getattr(e, "code", None) == "inactive" or any(
+                err.code == "inactive" for err in getattr(e, "error_list", [])
+            ):
+                request.session.flush()
+                messages.warning(request, str(e))
+                return redirect("django_authentication_login")
+
+            raise
+
+
 class StatusMessageMiddleware:
+    """Implementuje komponentu ``StatusMessageMiddleware`` v rámci aplikace."""
+
     pattern = re.compile(r"[\w-]+\d+[A-Z]?")
 
     def __init__(self, get_response):
+        """
+        Inicializuje instanci třídy.
+
+        :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+        """
         self.get_response = get_response
         r = RedisConnector()
         self.redis_connection = r.get_connection()
 
     def __call__(self, request):
+        """
+        Provádí operaci call.
+
+        :param request: Parametr ``request`` předává se do volání ``get_response()``.
+
+            :return: Vrací proměnná ``response``.
+        """
         response = self.get_response(request)
         return response
 
     def _show_message(self, value, request, redis_key):
+        """
+               Provádí operaci show message.
+
+               :param value: Parametr ``value`` předává se do volání ``int()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek.
+               :param request: Parametr ``request`` předává se do volání ``add_message()``.
+               :param redis_key: Textový název nebo klíč ``redis_key`` používaný v rámci operace.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         value = int(value.decode("utf-8"))
         if value == FedoraTransactionResult.COMMITED.value:
             try:
@@ -125,6 +230,14 @@ class StatusMessageMiddleware:
         self.redis_connection.delete(redis_key)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
+        """
+        Provádí operaci process view.
+
+        :param request: Parametr ``request`` předává se do volání ``findall()``, ``get_transaction_redis_key()``, pracuje se s atributy ``path``, ``user``.
+        :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+        :param view_args: Dodatečné argumenty předané voláním.
+        :param view_kwargs: Dodatečné argumenty předané voláním.
+        """
         regex_result = self.pattern.findall(request.path)
         for item in regex_result:
             redis_key = FedoraTransaction.get_transaction_redis_key(item, request.user.id)

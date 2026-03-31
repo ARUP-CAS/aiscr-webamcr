@@ -18,7 +18,11 @@ logger = logging.getLogger(__name__)
 
 def get_project_type_notification(projekt_type):
     """
-    Vrací typ notifikace pro projekt podle typu.
+    Vrací project type notification.
+
+    :param projekt_type: Parametr ``projekt_type`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``get()``.
     """
     projekt_notifikace = {
         TYP_PROJEKTU_BADATELSKY_ID: "S-E-P-02a",
@@ -32,10 +36,14 @@ def get_project_type_notification(projekt_type):
 def check_hlidaci_pes(projekt_id):
     """
     Task pro celery pro skontrolování jestli je nastavený hlídací pes.
+
+    :param projekt_id: Identifikátor ``projekt_id`` používaný pro dohledání cílového záznamu.
+
+        :return: Vrací výsledek volání ``send_ep02()``.
     """
     logger.debug("cron.Notifications.collect_watchdogs.start")
     notification_type = UserNotificationType.objects.get(ident_cely="E-P-02")
-    # to wait for save in DB
+    # čekání na uložení do DB
     projekts = Projekt.objects.filter(pk=projekt_id)
     while projekts.count() < 1:
         time.sleep(0.5)

@@ -30,7 +30,7 @@ body {
 
 .app-entity-cards {
   .col {
-    @extend .pr-0;
+    @extend .pe-0  !optional;
     max-width: 220px;
     min-width: 220px;
     margin-bottom: 1rem;

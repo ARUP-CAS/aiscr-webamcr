@@ -14,6 +14,7 @@ def readCoef(table):
     """
     Načtení tabulky s opravamy
 
+    :param table: Parametr ``table`` slouží jako vstup pro logiku funkce ``readCoef``.
     """
 
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -28,12 +29,21 @@ CORRTABLE = {}
 readCoef(CORRTABLE)
 
 
-# Conversion from WGS-84 to JTSK
+# Převod z WGS-84 do JTSK
 def convertToJTSK(longitude, latitude, height=0):
+    """
+    Provádí operaci convertToJTSK.
+
+    :param longitude: Číselná hodnota ``longitude`` použitá při výpočtu nebo transformaci.
+    :param latitude: Číselná hodnota ``latitude`` použitá při výpočtu nebo transformaci.
+    :param height: Číselná hodnota ``height`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
+        :raises Exception: Vyvolá se při splnění podmínky ``latitude < 40 or latitude > 60 or longitude < 5 or (longitude > 25)``.
+    """
     if not isinstance(longitude, (int, float)) or not isinstance(latitude, (int, float)):
         return [None, None]
     if latitude < 40 or latitude > 60 or longitude < 5 or longitude > 25:
-        # return x,y
         raise Exception(f"convertToJTSK coordinates are out of range: longitude {longitude} latitude {latitude} ")
     else:
         [latitude, longitude] = wgs84_to_bessel(latitude, longitude, height)
@@ -42,8 +52,18 @@ def convertToJTSK(longitude, latitude, height=0):
         return [round(-Y, 2), round(-X, 2)]
 
 
-# Conversion from JTSK to WGS-84
+# Převod z JTSK do WGS-84
 def convertToWGS84(minusY, minusX, height=0):
+    """
+    Provádí operaci convertToWGS84.
+
+    :param minusY: Číselná hodnota ``minusY`` použitá při výpočtu nebo transformaci.
+    :param minusX: Číselná hodnota ``minusX`` použitá při výpočtu nebo transformaci.
+    :param height: Číselná hodnota ``height`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
+        :raises Exception: Vyvolá se při splnění podmínky ``minusY < -905000 or minusY > -400000 or minusX < -1230000 or (minusX > -930000)``.
+    """
     if not isinstance(minusY, (int, float)) or not isinstance(minusX, (int, float)):
         return [None, None]
     if minusY < -905000 or minusY > -400000 or minusX < -1230000 or minusX > -930000:
@@ -54,8 +74,17 @@ def convertToWGS84(minusY, minusX, height=0):
     return [round(longitude, 7), round(latitude, 7)]
 
 
-# Conversion from ellipsoid WGS-84 to Bessel's ellipsoid
+# Převod z elipsoidu WGS-84 na Besselův elipsoid
 def wgs84_to_bessel(latitude, longitude, altitude=0.0):
+    """
+    Provádí operaci wgs84 to bessel.
+
+    :param latitude: Číselná hodnota ``latitude`` použitá při výpočtu nebo transformaci.
+    :param longitude: Číselná hodnota ``longitude`` použitá při výpočtu nebo transformaci.
+    :param altitude: Parametr ``altitude`` slouží jako vstup pro logiku funkce ``wgs84_to_bessel``.
+
+        :return: Vrací seznam.
+    """
     b = math.radians(latitude)
     l = math.radians(longitude)
     h = altitude
@@ -73,6 +102,15 @@ def wgs84_to_bessel(latitude, longitude, altitude=0.0):
 
 
 def bessel_to_wgs84(latitude, longitude, altitude=0.0):
+    """
+    Provádí operaci bessel to wgs84.
+
+    :param latitude: Číselná hodnota ``latitude`` použitá při výpočtu nebo transformaci.
+    :param longitude: Číselná hodnota ``longitude`` použitá při výpočtu nebo transformaci.
+    :param altitude: Parametr ``altitude`` slouží jako vstup pro logiku funkce ``bessel_to_wgs84``.
+
+        :return: Vrací seznam.
+    """
     b = math.radians(latitude)
     l = math.radians(longitude)
     h = altitude
@@ -86,9 +124,16 @@ def bessel_to_wgs84(latitude, longitude, altitude=0.0):
     return [latitude, longitude]
 
 
-# Conversion from Bessel's lat/lon to jtsk05
+# Převod zeměpisné šířky/délky Bessel na JTSK05
 def bessel_to_jtsk(B, L):
+    """
+    Provádí operaci bessel to jtsk.
 
+    :param B: Geodetická hodnota vstupního parametru používaná ve výpočtu transformace.
+    :param L: Parametr ``L`` se předává do volání ``radians()``.
+
+        :return: Vrací seznam.
+    """
     B = math.radians(B)
     L = math.radians(L)
     fi0 = math.radians(49.5)
@@ -167,6 +212,14 @@ def bessel_to_jtsk(B, L):
 
 
 def jtsk_to_bessel(X05, Y05):
+    """
+    Provádí operaci jtsk to bessel.
+
+    :param X05: Číselná hodnota ``X05`` použitá při výpočtu nebo transformaci.
+    :param Y05: Číselná hodnota ``Y05`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
+    """
     Yc = Y05 - 5_000_000.0
     Xc = X05 - 5_000_000.0
 
@@ -249,9 +302,18 @@ def jtsk_to_bessel(X05, Y05):
     return [lat, lon]
 
 
-# Conversion from geodetic coordinates to Cartesian coordinates
+# Převod z geodetických souřadnic na kartézské souřadnice
 def blht_to_geo_coords_wgs(b, l, h):
     # WGS-84 ellipsoid parameters
+    """
+    Provádí operaci blht to geo coords wgs.
+
+    :param b: Geodetická hodnota vstupního parametru používaná ve výpočtu transformace.
+    :param l: Parametr ``l`` se předává do volání ``cos()``, ``sin()``.
+    :param h: Parametr ``h`` slouží jako vstup pro logiku funkce ``blht_to_geo_coords_wgs``.
+
+        :return: Vrací seznam.
+    """
     a = 6378137.0
     e2 = 0.006694380022901
     N = a / math.sqrt(1 - e2 * math.pow(math.sin(b), 2))
@@ -262,9 +324,18 @@ def blht_to_geo_coords_wgs(b, l, h):
     return [x, y, z]
 
 
-# Conversion from geodetic coordinates to Cartesian coordinates
+# Převod z geodetických souřadnic na kartézské souřadnice
 def blht_to_geo_coords_bessel(b, l, h):
     # Bessel's ellipsoid parameters
+    """
+    Provádí operaci blht to geo coords bessel.
+
+    :param b: Geodetická hodnota vstupního parametru používaná ve výpočtu transformace.
+    :param l: Parametr ``l`` se předává do volání ``cos()``, ``sin()``.
+    :param h: Parametr ``h`` slouží jako vstup pro logiku funkce ``blht_to_geo_coords_bessel``.
+
+        :return: Vrací seznam.
+    """
     a = 6377397.155
     e2 = 0.00667437223062
     N = a / math.sqrt(1 - e2 * math.pow(math.sin(b), 2))
@@ -275,9 +346,18 @@ def blht_to_geo_coords_bessel(b, l, h):
     return [x, y, z]
 
 
-# Conversion from Cartesian coordinates to geodetic coordinates
+# Převod z kartézských souřadnic na geodetické souřadnice
 def geo_coords_to_blh_bessel(X, Y, Z):
     # Bessel's ellipsoid parameters
+    """
+    Provádí operaci geo coords to blh bessel.
+
+    :param X: Číselná hodnota ``X`` použitá při výpočtu nebo transformaci.
+    :param Y: Číselná hodnota ``Y`` použitá při výpočtu nebo transformaci.
+    :param Z: Parametr ``Z`` se předává do volání ``atan()``.
+
+        :return: Vrací seznam.
+    """
     a = 6377397.155
     e2 = 0.00667437223062
     L = math.atan(Y / X)
@@ -295,9 +375,18 @@ def geo_coords_to_blh_bessel(X, Y, Z):
     return [B, L, Hel]
 
 
-# Conversion from Cartesian coordinates to geodetic coordinates
+# Převod z kartézských souřadnic na geodetické souřadnice
 def geo_coords_to_blh_wgs(X, Y, Z):
     # WGS-84 ellipsoid parameters
+    """
+    Provádí operaci geo coords to blh wgs.
+
+    :param X: Číselná hodnota ``X`` použitá při výpočtu nebo transformaci.
+    :param Y: Číselná hodnota ``Y`` použitá při výpočtu nebo transformaci.
+    :param Z: Parametr ``Z`` se předává do volání ``atan()``.
+
+        :return: Vrací seznam.
+    """
     a = 6378137.0
     e2 = 0.006694380022901
     L = math.atan(Y / X)
@@ -317,7 +406,16 @@ def geo_coords_to_blh_wgs(X, Y, Z):
 
 # Coordinates transformation
 def ETRF2JTSK05transform_coords(xs, ys, zs):
-    # coeficients of transformation from WGS-84 to JTSK
+    # koeficienty transformace z WGS-84 do JTSK
+    """
+    Provádí operaci ETRF2JTSK05transform coords.
+
+    :param xs: Číselná hodnota ``xs`` použitá při výpočtu nebo transformaci.
+    :param ys: Číselná hodnota ``ys`` použitá při výpočtu nebo transformaci.
+    :param zs: Parametr ``zs`` slouží jako vstup pro logiku funkce ``ETRF2JTSK05transform_coords``.
+
+        :return: Vrací seznam.
+    """
     p1 = -572.203
     p2 = -85.328
     p3 = -461.934
@@ -335,7 +433,16 @@ def ETRF2JTSK05transform_coords(xs, ys, zs):
 
 
 def JTSK052ETRFtransform_coords(xs, ys, zs):
-    # coeficients of transformation from WGS-84 to JTSK
+    # koeficienty transformace z WGS-84 do JTSK
+    """
+    Provádí operaci JTSK052ETRFtransform coords.
+
+    :param xs: Číselná hodnota ``xs`` použitá při výpočtu nebo transformaci.
+    :param ys: Číselná hodnota ``ys`` použitá při výpočtu nebo transformaci.
+    :param zs: Parametr ``zs`` slouží jako vstup pro logiku funkce ``JTSK052ETRFtransform_coords``.
+
+        :return: Vrací seznam.
+    """
     p1 = 572.213
     p2 = 85.334
     p3 = 461.940
@@ -353,6 +460,15 @@ def JTSK052ETRFtransform_coords(xs, ys, zs):
 
 
 def WGS2ETRFtransform_coords(xs, ys, zs):
+    """
+    Provádí operaci WGS2ETRFtransform coords.
+
+    :param xs: Číselná hodnota ``xs`` použitá při výpočtu nebo transformaci.
+    :param ys: Číselná hodnota ``ys`` použitá při výpočtu nebo transformaci.
+    :param zs: Parametr ``zs`` slouží jako vstup pro logiku funkce ``WGS2ETRFtransform_coords``.
+
+        :return: Vrací seznam.
+    """
     if "test" in sys.argv:
         today = date(2025, 6, 28)
     else:
@@ -374,6 +490,15 @@ def WGS2ETRFtransform_coords(xs, ys, zs):
 
 
 def ETRF2WGStransform_coords(xs, ys, zs):
+    """
+    Provádí operaci ETRF2WGStransform coords.
+
+    :param xs: Číselná hodnota ``xs`` použitá při výpočtu nebo transformaci.
+    :param ys: Číselná hodnota ``ys`` použitá při výpočtu nebo transformaci.
+    :param zs: Parametr ``zs`` slouží jako vstup pro logiku funkce ``ETRF2WGStransform_coords``.
+
+        :return: Vrací seznam.
+    """
     if "test" in sys.argv:
         today = date(2025, 6, 28)
     else:
@@ -395,6 +520,14 @@ def ETRF2WGStransform_coords(xs, ys, zs):
 
 
 def jtsk05_to_jtsk(x05, y05):
+    """
+    Provádí operaci jtsk05 to jtsk.
+
+    :param x05: Číselná hodnota ``x05`` použitá při výpočtu nebo transformaci.
+    :param y05: Číselná hodnota ``y05`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
+    """
     x05 -= 5000000
     y05 -= 5000000
     hy = int(y05 / 2000) * 2000
@@ -430,6 +563,14 @@ def jtsk05_to_jtsk(x05, y05):
 
 
 def jtsk_to_jtsk05(X, Y):
+    """
+    Provádí operaci jtsk to jtsk05.
+
+    :param X: Číselná hodnota ``X`` použitá při výpočtu nebo transformaci.
+    :param Y: Číselná hodnota ``Y`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací seznam.
+    """
     hy = int(Y / 2000) * 2000
     hx = int(X / 2000) * 2000
     try:
@@ -463,6 +604,13 @@ def jtsk_to_jtsk05(X, Y):
 
 
 def get_multi_transform_to_sjtsk(wgs_points):
+    """
+    Vrací multi transform to sjtsk.
+
+    :param wgs_points: Parametr ``wgs_points`` slouží jako vstup pro logiku funkce ``get_multi_transform_to_sjtsk``.
+
+        :return: Vrací proměnná ``my``.
+    """
     my = []
     for i in wgs_points:
         [x1, x2] = convertToJTSK(float(i[0]), float(i[1]))
@@ -471,6 +619,13 @@ def get_multi_transform_to_sjtsk(wgs_points):
 
 
 def get_multi_transform_to_wgs84(jtsk_points):
+    """
+    Vrací multi transform to wgs84.
+
+    :param jtsk_points: Parametr ``jtsk_points`` slouží jako vstup pro logiku funkce ``get_multi_transform_to_wgs84``.
+
+        :return: Vrací proměnná ``my``.
+    """
     my = []
     for i in jtsk_points:
         [x1, x2] = convertToWGS84(float(i[0]), float(i[1]))
@@ -479,12 +634,27 @@ def get_multi_transform_to_wgs84(jtsk_points):
 
 
 def contains_two_floats(text):
+    """
+    Provádí operaci contains two floats.
+
+    :param text: Číselná hodnota ``text`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací výsledek volání ``bool()``.
+    """
     pattern = r"^-?\d+(\.\d+)?\s+-?\d+(\.\d+)?$"
     match = re.match(pattern, text.strip())
     return bool(match)
 
 
 def transform_geom(geom, transFunc):
+    """
+    Transformuje geom. v aplikaci.
+
+    :param geom: Parametr ``geom`` předává se do volání ``isinstance()``, pracuje se s atributy ``find``, ``replace``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+    :param transFunc: Parametr ``transFunc`` slouží jako vstup pro logiku funkce ``transform_geom``.
+
+        :return: Vrací n-tici.
+    """
     if not isinstance(geom, str):
         return "", "Not strig"
     while geom.find("  ") != -1:
@@ -518,8 +688,22 @@ def transform_geom(geom, transFunc):
 
 
 def transform_geom_to_sjtsk(geom):
+    """
+    Transformuje geom to sjtsk.
+
+    :param geom: Parametr ``geom`` předává se do volání ``transform_geom()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``transform_geom()``.
+    """
     return transform_geom(geom, convertToJTSK)
 
 
 def transform_geom_to_wgs84(geom):
+    """
+    Transformuje geom to wgs84.
+
+    :param geom: Parametr ``geom`` předává se do volání ``transform_geom()``, vstupuje do návratové hodnoty.
+
+        :return: Vrací výsledek volání ``transform_geom()``.
+    """
     return transform_geom(geom, convertToWGS84)

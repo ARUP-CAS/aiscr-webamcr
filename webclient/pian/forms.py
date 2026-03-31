@@ -22,11 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 class PianCreateForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení pianu.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení pianu."""
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Pian
         fields = ("presnost", "geom", "geom_sjtsk", "geom_system")
         labels = {"presnost": _("pian.forms.pianCreateForm.presnost.label")}
@@ -43,6 +43,12 @@ class PianCreateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(PianCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -60,14 +66,21 @@ class PianCreateForm(forms.ModelForm):
         )
 
     def _instance_geom_wkt(self, field_name):
+        """
+               Provádí operaci instance geom wkt.
+
+               :param field_name: Textový název nebo klíč ``field_name`` používaný v rámci operace.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         g = getattr(self.instance, field_name, None)
         if not g:
             return None
         return g.wkt if hasattr(g, "wkt") else str(g)
 
     def run_loaded_validation(self):
-        """
-        Metoda pro validaci geometrií při potvrzení PIANu.
+        """Metoda pro validaci geometrií při potvrzení PIANu.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         self._errors = ErrorDict()
         self.cleaned_data = {}
@@ -86,12 +99,16 @@ class PianCreateForm(forms.ModelForm):
         return not bool(self.errors)
 
     def clean(self):
+        """Provádí operaci clean.
+
+        :raises forms.ValidationError: Vyvolá se při splnění podmínky ``isinstance(geom, Polygon)``; nebo při splnění podmínky ``zm10 is not None and zm50 is not None``.
+        """
         validation_geom = self.data.get("geom")
         self.validate_geom(validation_geom, "4326")
         validation_geom_jtsk = self.data.get("geom_sjtsk")
         self.validate_geom(validation_geom_jtsk, "5514")
         geom = self.cleaned_data.get("geom")
-        # Assign base map references
+        # Přiřaď referenční mapové listy.
         if isinstance(geom, Point):
             self.instance.typ = Heslar.objects.get(id=GEOMETRY_BOD)
             point = geom
@@ -113,6 +130,11 @@ class PianCreateForm(forms.ModelForm):
     def validate_geom(self, geom, epsg):
         """
         Metoda pro validaci PIAN pomocí funkce v postgres databázi.
+
+        :param geom: Parametr ``geom`` předává se do volání ``callproc()``, ``debug()``.
+        :param epsg: Parametr ``epsg`` se předává do volání ``callproc()``.
+
+            :raises forms.ValidationError: Vyvolá se při zpracování zachycené výjimky typu ``Exception``; nebo při splnění podmínky ``validation_results != 'valid'``.
         """
         c = connections["urgent"].cursor()
         logger.debug("pian.forms.validate_geom.start")

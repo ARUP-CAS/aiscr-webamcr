@@ -35,7 +35,7 @@
           <div class="btn-group" role="group">
             <a class="btn app-entity-dokument" id="NahratSoubory" href="{% url 'core:upload_file' 'dokument' dokument.ident_cely %}"
                rel="tooltip"
-               data-placement="top" title="{% trans 'dokument.templates.dok.detail.soubory.NahratSoubory.tooltip' %}">
+               data-bs-placement="top" title="{% trans 'dokument.templates.dok.detail.soubory.NahratSoubory.tooltip' %}">
               <span class="material-icons">publish</span>
             </a>
           </div>
@@ -63,7 +63,7 @@
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'dokument.templates.dok.detail.dokument.upravit.tooltip' %}">
+               data-bs-placement="top" title="{% trans 'dokument.templates.dok.detail.dokument.upravit.tooltip' %}">
               <span id="edit-btn" class="material-icons">edit</span>
             </a>
           </div>
@@ -103,7 +103,7 @@
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
                 <button id="button-add-cast" class="btn" href="{% url 'dokument:vytvorit-cast' dokument.ident_cely %}"
-                rel="tooltip" data-placement="top"
+                rel="tooltip" data-bs-placement="top"
                 title="{% trans 'dokument.templates.dok.detail.castiDokumentu.pridatDC.tooltip' %}">
                 <span class="material-icons">add</span>
                 </button>
@@ -117,7 +117,7 @@
                 <li class="list-group-item">
                   <div class="d-flex align-items-center" {% if dc.ident_cely == active_dc_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
                     <div class="cast-dokumentu-part1">
-                    <a href="{% url 'dokument:detail-cast' dokument.ident_cely dc.ident_cely %}" class="app-entity-color mr-1">
+                    <a href="{% url 'dokument:detail-cast' dokument.ident_cely dc.ident_cely %}" class="app-entity-color me-1">
                       <strong>{{ dc.ident_cely|last_x_letters:4 }}  </strong>
                     </a>
                     {% if dc.archeologicky_zaznam %}
@@ -145,10 +145,10 @@
                       {% for k in dc.komponenty.komponenty.all %}
                         <li id="el_li_komponenta_{{ k.ident_cely_safe }}">
                           <div class="d-flex align-items-baseline" {% if k.ident_cely == active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
-                            <a href="{% url 'dokument:detail-komponenta' dokument.ident_cely k.ident_cely%}" class="flex-fill mr-2 app-entity-color">
+                            <a href="{% url 'dokument:detail-komponenta' dokument.ident_cely k.ident_cely%}" class="flex-fill me-2 app-entity-color">
                               {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                             </a>
-                            <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                            <span class="badge bg-primary rounded-pill">{{ k.pocet_nalezu }}</span>
                           </div>
                         </li>
                       {% endfor %}

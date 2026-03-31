@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Generátor dokumentace Selenium testů z Google‑style docstringů.
+"""Generátor dokumentace Selenium testů z Google‑style docstringů.
 
 Pravidla:
 - Každá testovací metoda Selenium (funkce začínající na `test_`) musí mít docstring.
@@ -42,17 +41,21 @@ Doporučený formát docstringu (Google‑style):
         Notes:
             - Volitelné poznámky
         \"\"\"
+
 """
 
 from __future__ import annotations
 
 import ast
 import re
+import sys
 import textwrap
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+sys.stdout.reconfigure(encoding="utf-8")
 
 START_MARKER = ".. AUTO-GENERATED-SELENIUM-TESTS-START"
 END_MARKER = ".. AUTO-GENERATED-SELENIUM-TESTS-END"
@@ -76,6 +79,11 @@ REQUIRED_SECTIONS = ("steps", "expected")
 
 @dataclass(frozen=True)
 class TestDoc:
+    """Třída `TestDoc` v modulu `docs.generate_selenium_test_docs`.
+
+    Zapouzdřuje související data a chování v rámci dané části aplikace.
+    """
+
     app: str
     test_no: Optional[int]
     summary: str
@@ -88,14 +96,21 @@ class TestDoc:
 def _repo_root_from_script() -> Path:
     """Vrátí kořen repozitáře odvozený z umístění tohoto skriptu.
 
-    Předpoklad: skript leží v `<repo>/docs/...`, takže kořen je o dvě úrovně výš."""
+    Předpoklad: skript leží v `<repo>/docs/...`, takže kořen je o dvě úrovně výš.
+
+        :return: Vrací hodnotu typu ``Path`` (vybranou hodnotu z kolekce).
+    """
     return Path(__file__).resolve().parents[1]
 
 
 def _is_ignored_path(p: Path) -> bool:
     """Vrátí True, pokud cesta patří do adresářů, které při hledání ignorujeme.
 
-    Typicky `.git`, virtuální prostředí, cache, node_modules apod."""
+    Typicky `.git`, virtuální prostředí, cache, node_modules apod.
+
+        :param p: Parametr ``p`` předává se do volání ``set()``, pracuje se s atributy ``parts``.
+        :return: Vrací hodnotu typu ``bool`` (výsledek volání ``any()``).
+    """
     parts = set(p.parts)
     return any(x in parts for x in (".git", ".venv", "venv", "site-packages", "node_modules", "__pycache__"))
 
@@ -104,7 +119,12 @@ def _find_rst_file(root: Path) -> Path:
     """Najde cílový RST soubor `selenium_testy.rst`.
 
     Nejdřív zkusí preferovanou cestu (docs/source/09_testovani/selenium_testy.rst),
-    potom prohledá repozitář. Když soubor nenajde, vyhodí `FileNotFoundError`."""
+    potom prohledá repozitář. Když soubor nenajde, vyhodí `FileNotFoundError`.
+
+        :param root: Parametr ``root`` pracuje se s atributy ``rglob``.
+        :return: Vrací hodnotu typu ``Path``; podle větve může jít o: proměnná ``path``, proměnná ``c``.
+        :raises FileNotFoundError: Vyvolá se s textem "Nenalezen soubor selenium_testy.rst (zkontroluj umístění v repozitáři).".
+    """
     path = root / "docs" / "source" / "09_testovani" / "selenium_testy.rst"
     if path.exists():
         return path
@@ -118,7 +138,11 @@ def _iter_test_files(root: Path) -> List[Path]:
     """Vyhledá Python soubory se Selenium testy v repozitáři.
 
     Hledá `test_selenium.py` v adresářích obsahujících segment `tests` a ignoruje
-    typické „šumové“ adresáře (venv, node_modules, …)."""
+    typické „šumové“ adresáře (venv, node_modules, …).
+
+        :param root: Parametr ``root`` pracuje se s atributy ``rglob``.
+        :return: Vrací hodnotu typu ``List[Path]`` (výsledek volání ``sorted()``).
+    """
     files: List[Path] = []
     for p in root.rglob("test_selenium.py"):
         if _is_ignored_path(p):
@@ -132,7 +156,11 @@ def _iter_test_files(root: Path) -> List[Path]:
 def _get_app_name(file_path: Path) -> str:
     """Určí název Django appky podle cesty k souboru.
 
-    Jako appku bere adresář bezprostředně před segmentem `tests`."""
+    Jako appku bere adresář bezprostředně před segmentem `tests`.
+
+        :param file_path: Parametr ``file_path`` předává se do volání ``list()``, pracuje se s atributy ``parts``.
+        :return: Vrací hodnotu typu ``str``; podle větve může jít o: str, vybranou hodnotu z kolekce.
+    """
     parts = list(file_path.parts)
     if "tests" not in parts:
         return "Unknown"
@@ -145,7 +173,12 @@ def _get_app_name(file_path: Path) -> str:
 def _module_dotted(root: Path, file_path: Path) -> str:
     """Převede cestu k Python souboru na tečkovaný importní název modulu.
 
-    Např. `webclient/ez/tests/test_selenium.py` -> `webclient.ez.tests.test_selenium`."""
+    Např. `webclient/ez/tests/test_selenium.py` -> `webclient.ez.tests.test_selenium`.
+
+        :param root: Parametr ``root`` předává se do volání ``relative_to()``.
+        :param file_path: Parametr ``file_path`` pracuje se s atributy ``relative_to``.
+        :return: Vrací hodnotu typu ``str`` (výsledek volání ``join()``).
+    """
     rel = file_path.relative_to(root).with_suffix("")
     return ".".join(rel.parts)
 
@@ -153,7 +186,11 @@ def _module_dotted(root: Path, file_path: Path) -> str:
 def _extract_test_no(name: str) -> Optional[int]:
     """Vytáhne číslo testu z názvu funkce `test_###_...`.
 
-    Vrací int (např. 24) nebo None, pokud název neodpovídá vzoru."""
+    Vrací int (např. 24) nebo None, pokud název neodpovídá vzoru.
+
+        :param name: Parametr ``name`` předává se do volání ``match()``.
+        :return: Vrací hodnotu typu ``Optional[int]`` (hodnotu podle větve zpracování).
+    """
     m = RE_TEST_NO.match(name)
     return int(m.group(1)) if m else None
 
@@ -162,7 +199,11 @@ def _split_summary_and_rest(doc: str) -> Tuple[str, str]:
     """Rozdělí docstring na první řádek (summary) a zbytek.
 
     - Summary = první neprázdný řádek docstringu.
-    - Rest = zbytek textu (bez počátečních/prázdných okrajů)."""
+    - Rest = zbytek textu (bez počátečních/prázdných okrajů).
+
+        :param doc: Parametr ``doc`` předává se do volání ``dedent()``.
+        :return: Vrací hodnotu typu ``Tuple[str, str]`` (n-tici).
+    """
     cleaned = textwrap.dedent(doc).strip("\n")
     lines = cleaned.splitlines()
     while lines and not lines[0].strip():
@@ -181,7 +222,11 @@ def _parse_description_and_sections(rest: str) -> Tuple[str, Dict[str, str]]:
     Sekce jsou ve tvaru „NázevSekce:“ na samostatném řádku a obsah je odsazený.
 
     Vrací dvojici `(description, sections)` kde `sections` mapuje normalizovaný klíč
-    (`steps`, `expected`, `role`, …) na text obsahu sekce."""
+    (`steps`, `expected`, `role`, …) na text obsahu sekce.
+
+        :param rest: Parametr ``rest`` pracuje se s atributy ``strip``, ``splitlines``, ovlivňuje větvení podmínek.
+        :return: Vrací hodnotu typu ``Tuple[str, Dict[str, str]]`` (n-tici).
+    """
     if not rest.strip():
         return "", {}
 
@@ -192,7 +237,11 @@ def _parse_description_and_sections(rest: str) -> Tuple[str, Dict[str, str]]:
     seen_any_section = False
 
     def normalize(name_raw: str) -> str:
-        """Normalizuje název sekce z docstringu na interní klíč (např. Steps -> steps)."""
+        """Normalizuje název sekce z docstringu na interní klíč (např. Steps -> steps).
+
+        :param name_raw: Parametr ``name_raw`` pracuje se s atributy ``lower``.
+        :return: Vrací hodnotu typu ``str``; podle větve může jít o: str, proměnná ``name_norm``.
+        """
         name_norm = name_raw.lower().replace(" ", "").replace("_", "")
         if name_norm in ("precondition",):
             return "preconditions"
@@ -203,7 +252,11 @@ def _parse_description_and_sections(rest: str) -> Tuple[str, Dict[str, str]]:
         return name_norm
 
     def strip_blank_edges(buf: List[str]) -> List[str]:
-        """Ořízne prázdné řádky na začátku a na konci seznamu řádků."""
+        """Ořízne prázdné řádky na začátku a na konci seznamu řádků.
+
+        :param buf: Parametr ``buf`` pracuje se s atributy ``pop``, vstupuje do návratové hodnoty.
+        :return: Vrací hodnotu typu ``List[str]`` (proměnná ``buf``).
+        """
         while buf and not buf[0].strip():
             buf.pop(0)
         while buf and not buf[-1].strip():
@@ -240,9 +293,16 @@ def _parse_description_and_sections(rest: str) -> Tuple[str, Dict[str, str]]:
 
 
 def _summary_title_or_error(summary: str, test_no: Optional[int], origin: str) -> str:
-    """
-    Vrátí 'čistý' title bez 'Test XXX', ale současně validuje, že summary začíná 'Test XXX'
-    a že XXX odpovídá test_no (pokud je známé).
+    """Vrátí 'čistý' title bez 'Test XXX'.
+
+    Současně validuje, že summary začíná 'Test XXX' a že XXX odpovídá
+    test_no (pokud je známé).
+
+        :param summary: Parametr ``summary`` předává se do volání ``match()``.
+        :param test_no: Parametr ``test_no`` předává se do volání ``ValueError()``, ovlivňuje větvení podmínek.
+        :param origin: Parametr ``origin`` předává se do volání ``ValueError()``.
+        :return: Vrací hodnotu typu ``str`` (proměnná ``rest``).
+        :raises ValueError: Vyvolá se při splnění podmínky ``not m``; nebo při splnění podmínky ``not rest``.
     """
     m = RE_SUMMARY_PREFIX.match((summary or "").strip())
     if not m:
@@ -263,9 +323,12 @@ def _summary_title_or_error(summary: str, test_no: Optional[int], origin: str) -
 
 
 def _validate_unique_test_numbers(all_docs: List[TestDoc]) -> List[str]:
-    """
-    Vrátí seznam chyb, pokud se stejné číslo testu vyskytuje vícekrát.
+    """Vrátí seznam chyb, pokud se stejné číslo testu vyskytuje vícekrát.
+
     Testy bez čísla (test_no is None) ignoruje.
+
+        :param all_docs: Parametr ``all_docs`` slouží jako vstup pro logiku funkce ``_validate_unique_test_numbers``.
+        :return: Vrací hodnotu typu ``List[str]`` (proměnná ``errs``).
     """
     by_no: Dict[int, List[TestDoc]] = defaultdict(list)
     for t in all_docs:
@@ -292,7 +355,15 @@ def _validate(origin: str, summary: str, sections: Dict[str, str], has_docstring
     - že summary začíná `Test XXX ...` a číslo sedí s názvem funkce,
     - povinné sekce `Steps:` a `Expected:`.
 
-    Vrací seznam chybových hlášek."""
+    Vrací seznam chybových hlášek.
+
+        :param origin: Parametr ``origin`` předává se do volání ``append()``, ``_summary_title_or_error()``.
+        :param summary: Parametr ``summary`` předává se do volání ``_summary_title_or_error()``, pracuje se s atributy ``strip``, ovlivňuje větvení podmínek.
+        :param sections: Parametr ``sections`` ovlivňuje větvení podmínek.
+        :param has_docstring: Parametr ``has_docstring`` ovlivňuje větvení podmínek.
+        :param test_no: Parametr ``test_no`` předává se do volání ``_summary_title_or_error()``.
+        :return: Vrací hodnotu typu ``List[str]`` (proměnná ``errs``).
+    """
     errs: List[str] = []
     if not has_docstring:
         errs.append(f"{origin}: test nemá dokumentaci (docstring).")
@@ -312,19 +383,34 @@ def _validate(origin: str, summary: str, sections: Dict[str, str], has_docstring
 def _rst_title(text: str, underline: str) -> str:
     """Vytvoří reST nadpis (text + podtržení).
 
-    Parametr `underline` je znak použítý jako podtržení (např. '-', '~', '^')."""
+    Parametr `underline` je znak použítý jako podtržení (např. '-', '~', '^').
+
+        :param text: Parametr ``text`` předává se do volání ``len()``, vstupuje do návratové hodnoty.
+        :param underline: Parametr ``underline`` vstupuje do návratové hodnoty.
+        :return: Vrací hodnotu typu ``str`` (hodnotu podle větve zpracování).
+    """
     return f"{text}\n{underline * len(text)}\n"
 
 
 def _app_heading(app: str) -> str:
-    """Vytvoří nadpis pro sekci jedné Django appky v RST."""
+    """Vytvoří nadpis pro sekci jedné Django appky v RST.
+
+    :param app: Parametr ``app`` předává se do volání ``_rst_title()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+    :return: Vrací hodnotu typu ``str`` (výsledek volání ``_rst_title()``).
+    """
     return _rst_title(app.replace("_", " ").title(), "-")
 
 
 def _test_anchor(app: str, test_no: Optional[int], fallback_name: str) -> str:
     """Vytvoří stabilní RST kotvu (anchor) pro daný test.
 
-    Kotva se skládá z appky, čísla testu a „bezpečné“ části názvu."""
+    Kotva se skládá z appky, čísla testu a „bezpečné“ části názvu.
+
+        :param app: Parametr ``app`` předává se do volání ``sub()``, pracuje se s atributy ``lower``.
+        :param test_no: Parametr ``test_no`` slouží jako vstup pro logiku funkce ``_test_anchor``.
+        :param fallback_name: Parametr ``fallback_name`` předává se do volání ``sub()``, pracuje se s atributy ``lower``.
+        :return: Vrací hodnotu typu ``str`` (výsledek volání ``rstrip()``).
+    """
     no = f"{test_no:03d}" if test_no is not None else "na"
     safe_app = re.sub(r"[^a-z0-9]+", "-", app.lower()).strip("-")
     safe_fb = re.sub(r"[^a-z0-9]+", "-", fallback_name.lower()).strip("-")
@@ -332,7 +418,11 @@ def _test_anchor(app: str, test_no: Optional[int], fallback_name: str) -> str:
 
 
 def _first_nonempty_line(s: str) -> str:
-    """Vrátí první neprázdný řádek ze zadaného textu (ořezaný)."""
+    """Vrátí první neprázdný řádek ze zadaného textu (ořezaný).
+
+    :param s: Parametr ``s`` slouží jako vstup pro logiku funkce ``_first_nonempty_line``.
+    :return: Vrací hodnotu typu ``str``; podle větve může jít o: výsledek volání ``strip()``, str.
+    """
     for line in (s or "").splitlines():
         if line.strip():
             return line.strip()
@@ -340,14 +430,22 @@ def _first_nonempty_line(s: str) -> str:
 
 
 def _role_short(sections: Dict[str, str]) -> str:
-    """Vrátí krátký text role (první neprázdný řádek ze sekce Role)."""
+    """Vrátí krátký text role (první neprázdný řádek ze sekce Role).
+
+    :param sections: Parametr ``sections`` předává se do volání ``_first_nonempty_line()``, pracuje se s atributy ``get``, vstupuje do návratové hodnoty.
+    :return: Vrací hodnotu typu ``str`` (výsledek volání ``_first_nonempty_line()``).
+    """
     return _first_nonempty_line(sections.get("role", ""))
 
 
 def _popis_short(description: str) -> str:
     """Vrátí krátký popis (první neprázdný řádek) z description.
 
-    Používá se pro tooltip v přehledové tabulce; delší text zkrátí."""
+    Používá se pro tooltip v přehledové tabulce; delší text zkrátí.
+
+        :param description: Parametr ``description`` předává se do volání ``_first_nonempty_line()``.
+        :return: Vrací hodnotu typu ``str``; podle větve může jít o: hodnotu podle větve zpracování, proměnná ``line``.
+    """
     line = _first_nonempty_line(description)
     if len(line) > 120:
         return line[:117] + "..."
@@ -362,8 +460,11 @@ def _render_detail_for_test(t: TestDoc) -> str:
     - nadpis testu,
     - volitelný popis,
     - sekce (Role/Preconditions/TestData/Steps/Expected/Notes),
-    - a nakonec „Stav testu“ s cestou na implementaci."""
+    - a nakonec „Stav testu“ s cestou na implementaci.
 
+        :param t: Parametr ``t`` předává se do volání ``append()``, ``_rst_title()``, pracuje se s atributy ``anchor``, ``summary``, ovlivňuje větvení podmínek.
+        :return: Vrací hodnotu typu ``str`` (výsledek volání ``join()``).
+    """
     out: List[str] = []
     out.append(f".. _{t.anchor}:\n\n")
     out.append(_rst_title(t.summary, "~"))
@@ -373,7 +474,10 @@ def _render_detail_for_test(t: TestDoc) -> str:
         out.append(t.description.rstrip() + "\n\n")
 
     def render_section(key: str) -> None:
-        """Vloží do výstupu jednu sekci detailní dokumentace (pokud má obsah)."""
+        """Vloží do výstupu jednu sekci detailní dokumentace (pokud má obsah).
+
+        :param key: Parametr ``key`` předává se do volání ``get()``, ``append()``.
+        """
         content = t.sections.get(key, "").rstrip()
         if not content:
             return
@@ -409,7 +513,11 @@ def _render_summary_table(all_docs: List[TestDoc]) -> str:
     Tabulka je řazená podle čísla testu. Sloupec „Název“ je odkaz na detail testu
     a krátký popis se zobrazuje jako HTML tooltip při najetí myší.
 
-    Pozn.: funkce používá `.. raw:: html`, protože cílíme pouze na HTML výstup."""
+    Pozn.: funkce používá `.. raw:: html`, protože cílíme pouze na HTML výstup.
+
+        :param all_docs: Parametr ``all_docs`` předává se do volání ``sorted()``.
+        :return: Vrací hodnotu typu ``str`` (hodnotu podle větve zpracování).
+    """
     out: List[str] = []
     out.append(_rst_title("Přehled testů", "-"))
     out.append("\n")
@@ -427,17 +535,29 @@ def _render_summary_table(all_docs: List[TestDoc]) -> str:
     )
 
     def _clean_title_for_table(title: str) -> str:
-        """Odstraní prefixy typu 'Test 024', 'Scenar_24' z názvu pro zobrazení v tabulce."""
+        """Odstraní prefixy typu 'Test 024', 'Scenar_24' z názvu pro zobrazení v tabulce.
+
+        :param title: Parametr ``title`` předává se do volání ``sub()``, vstupuje do návratové hodnoty.
+        :return: Vrací hodnotu typu ``str`` (výsledek volání ``strip()``).
+        """
         return RE_TITLE_PREFIX.sub("", title).strip()
 
     def sort_key(t: TestDoc):
-        """Klíč řazení: testy bez čísla až na konec, jinak podle čísla testu."""
+        """Klíč řazení: testy bez čísla až na konec, jinak podle čísla testu.
+
+        :param t: Parametr ``t`` pracuje se s atributy ``test_no``, vstupuje do návratové hodnoty.
+        :return: Vrací n-tici.
+        """
         return (t.test_no is None, t.test_no if t.test_no is not None else 999999)
 
     def _role_lines(sections: Dict[str, str]) -> List[str]:
         """Rozdělí sekci Role na seznam rolí.
 
-        Podporuje více rolí oddělených čárkami i po řádcích. Odstraní odrážky a duplicity."""
+        Podporuje více rolí oddělených čárkami i po řádcích. Odstraní odrážky a duplicity.
+
+            :param sections: Parametr ``sections`` pracuje se s atributy ``get``.
+            :return: Vrací hodnotu typu ``List[str]``; podle větve může jít o: seznam, proměnná ``out``.
+        """
         raw = (sections.get("role", "") or "").strip()
         if not raw:
             return []
@@ -456,13 +576,23 @@ def _render_summary_table(all_docs: List[TestDoc]) -> str:
         return out
 
     def _escape_html_attr(s: str) -> str:
-        """Escapuje text pro použití v HTML atributu (např. title=...)."""
+        """Escapuje text pro použití v HTML atributu (např. title=...).
+
+        :param s: Parametr ``s`` vstupuje do návratové hodnoty.
+        :return: Vrací hodnotu typu ``str`` (výsledek volání ``replace()``).
+        """
         return (s or "").replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 
     def _html_link_with_tooltip(anchor: str, label: str, tooltip: str) -> str:
         """Vygeneruje reST blok `raw:: html` s odkazem a tooltipem (title).
 
-        Vrací text, který je potřeba správně odsadit do buňky list-table."""
+        Vrací text, který je potřeba správně odsadit do buňky list-table.
+
+            :param anchor: Parametr ``anchor`` vstupuje do návratové hodnoty.
+            :param label: Parametr ``label`` předává se do volání ``_escape_html_attr()``, vstupuje do návratové hodnoty.
+            :param tooltip: Parametr ``tooltip`` předává se do volání ``_escape_html_attr()``, vstupuje do návratové hodnoty.
+            :return: Vrací hodnotu typu ``str`` (hodnotu podle větve zpracování).
+        """
         tooltip = _escape_html_attr(tooltip)
         label = _escape_html_attr(label)
         # raw html blok musí být odsazený tak, aby byl "uvnitř" buňky list-table
@@ -492,12 +622,23 @@ def _render_summary_table(all_docs: List[TestDoc]) -> str:
 
 
 def _render(all_docs: List[TestDoc]) -> str:
-    """Sestaví celé tělo autogenerované části: přehled + detailní sekce podle appky."""
+    """Sestaví celé tělo autogenerované části: přehled + detailní sekce podle appky.
+
+    :param all_docs: Parametr ``all_docs`` slouží jako vstup pro logiku funkce ``_render``.
+    :return: Vrací hodnotu typu ``str`` (hodnotu podle větve zpracování).
+    """
     by_app: Dict[str, List[TestDoc]] = {}
     for d in all_docs:
         by_app.setdefault(d.app, []).append(d)
 
     def sort_key(t: TestDoc):
+        """Funkce `sort_key` v modulu `docs.generate_selenium_test_docs`.
+
+        Zajišťuje dílčí aplikační logiku pro tento modul.
+
+        :param t: Hodnota předaná callbacku pro převod nebo formátování.
+        :return: Výsledek odpovídající logice volání této funkce.
+        """
         return (t.test_no is None, t.test_no if t.test_no is not None else 999999, t.summary.lower())
 
     ordered_for_table: List[TestDoc] = []
@@ -522,7 +663,13 @@ def _render(all_docs: List[TestDoc]) -> str:
 def _replace_autoblock(original: str, generated: str) -> str:
     """Nahradí autogenerovaný blok mezi START/END markerem v `selenium_testy.rst`.
 
-    Pokud značky chybí, vyhodí `RuntimeError`."""
+    Pokud značky chybí, vyhodí `RuntimeError`.
+
+        :param original: Parametr ``original`` pracuje se s atributy ``split``, ovlivňuje větvení podmínek.
+        :param generated: Parametr ``generated`` pracuje se s atributy ``rstrip``.
+        :return: Vrací hodnotu typu ``str`` (hodnotu podle větve zpracování).
+        :raises RuntimeError: Vyvolá se při splnění podmínky ``START_MARKER not in original or END_MARKER not in original``.
+    """
     if START_MARKER not in original or END_MARKER not in original:
         raise RuntimeError(
             f"V selenium_testy.rst chybí značky:\n{START_MARKER}\n{END_MARKER}\n"
@@ -553,7 +700,10 @@ def main() -> int:
     Návratové kódy:
     - 0: vše OK a bez změn,
     - 1: chyba validace nebo došlo k přegenerování souboru (je třeba `git add`),
-    - 2: zásadní problém (nenalezeny soubory)."""
+    - 2: zásadní problém (nenalezeny soubory).
+
+    :return: Návratový kód procesu generování dokumentace selenium testů.
+    """
     root = _repo_root_from_script()
     rst_file = _find_rst_file(root)
     test_files = _iter_test_files(root)

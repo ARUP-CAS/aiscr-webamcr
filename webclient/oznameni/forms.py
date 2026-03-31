@@ -20,11 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 class DateRangeField(forms.DateField):
-    """
-    Třída pro správnu práci s date range.
-    """
+    """Třída pro správnu práci s date range."""
 
     def to_python(self, value):
+        """
+        Provádí operaci to python.
+
+        :param value: Parametr ``value`` předává se do volání ``isinstance()``, pracuje se s atributy ``split``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``value``, výsledek volání ``DateRange()``.
+            :raises ValidationError: Vyvolá se při splnění podmínky ``from_date is None or to_date is None``; nebo při zpracování zachycené výjimky typu ``Exception``.
+        """
         if isinstance(value, DateRange):
             return value
         values = value.split("-")
@@ -33,8 +39,8 @@ class DateRangeField(forms.DateField):
         else:
             from_date = super(DateRangeField, self).to_python(values[0].strip())
             to_date = super(DateRangeField, self).to_python(values[1].strip())
-        # add one day to the to_date since DateRangePicker has both bounds included 12/30/2020 - 12/30/2020 must be
-        # stored as 12/30/2020 - 12/31/2020, since postgres does not include upper bound to the range
+        # Přidá jeden den k `to_date`, protože DateRangePicker bere obě meze včetně; interval 12/30/2020 - 12/30/2020 musí být
+        # uložen jako 12/30/2020 - 12/31/2020, protože Postgres horní mez intervalu nezahrnuje.
         if from_date is None or to_date is None:
             raise ValidationError(self.error_messages["invalid"], code="invalid")
         try:
@@ -47,11 +53,16 @@ class DateRangeField(forms.DateField):
 
 
 class DateRangeWidget(forms.TextInput):
-    """
-    Třída pro správně zobrazení date range.
-    """
+    """Třída pro správně zobrazení date range."""
 
     def format_value(self, value):
+        """
+        Provádí operaci format value.
+
+        :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
+        """
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
@@ -62,16 +73,14 @@ class DateRangeWidget(forms.TextInput):
                 return (
                     value.lower.strftime(format_str)
                     + " - "
-                    + (value.upper - datetime.timedelta(days=1)).strftime(format_str)  # Now I must substract one day
+                    + (value.upper - datetime.timedelta(days=1)).strftime(format_str)  # Je potřeba odečíst jeden den.
                 )
 
         return str(value)
 
 
 class OznamovatelForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření oznámení oznamovatelem.
-    """
+    """Hlavní formulář pro vytvoření oznámení oznamovatelem."""
 
     telefon = forms.CharField(
         validators=[validate_phone_number],
@@ -85,6 +94,8 @@ class OznamovatelForm(forms.ModelForm):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Oznamovatel
         fields = ("oznamovatel", "odpovedna_osoba", "telefon", "email", "adresa", "poznamka")
         widgets = {
@@ -110,6 +121,12 @@ class OznamovatelForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        """
         self.uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         required = kwargs.pop("required", True)
         required_next = kwargs.pop("required_next", False)
@@ -169,9 +186,7 @@ class OznamovatelForm(forms.ModelForm):
 
 
 class OznamovatelProjektForm(OznamovatelForm):
-    """
-    Hlavní formulář pro vytvoření oznámení.
-    """
+    """Hlavní formulář pro vytvoření oznámení."""
 
     telefon = forms.CharField(
         help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
@@ -186,9 +201,7 @@ class OznamovatelProjektForm(OznamovatelForm):
 
 
 class OznamovatelProjektCreateForm(OznamovatelProjektForm):
-    """
-    Hlavní formulář pro vytvoření oznámení.
-    """
+    """Hlavní formulář pro vytvoření oznámení."""
 
     send_mail = forms.BooleanField(
         initial=True,
@@ -198,9 +211,19 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
     )
 
     def clean_send_mail(self):
+        """Provádí operaci clean send mail.
+
+        :return: Vrací výsledek volání ``get()``.
+        """
         return self.cleaned_data.get("send_mail", False)
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         if "send_mail" in self.data and self.data["send_mail"] == "":
             self.data = self.data.copy()
@@ -224,9 +247,7 @@ class OznamovatelProjektCreateForm(OznamovatelProjektForm):
 
 
 class ProjektOznameniForm(forms.ModelForm):
-    """
-    Hlavní formulář pro editaci a doplňení oznamovatele do projektu.
-    """
+    """Hlavní formulář pro editaci a doplňení oznamovatele do projektu."""
 
     planovane_zahajeni = DateRangeField(
         required=True,
@@ -247,6 +268,8 @@ class ProjektOznameniForm(forms.ModelForm):
     ident_cely = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Projekt
         fields = (
             "ident_cely",
@@ -281,6 +304,12 @@ class ProjektOznameniForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        """
         change = kwargs.pop("change", False)
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
         self.fields["ident_cely"].required = False
@@ -328,8 +357,6 @@ class ProjektOznameniForm(forms.ModelForm):
 
 
 class FormWithCaptcha(forms.Form):
-    """
-    Hlavní formulář pro captchu.
-    """
+    """Hlavní formulář pro captchu."""
 
     captcha = ReCaptchaField(widget=ReCaptchaV2Invisible, label="")

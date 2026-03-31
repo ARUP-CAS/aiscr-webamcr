@@ -6,9 +6,7 @@ from .models import ExterniZdroj
 
 
 class ExterniZdrojTable(SearchTable):
-    """
-    Class pro definování tabulky pro externí zdroj použitých pro zobrazení přehledu zdrojů a exportu.
-    """
+    """Definuje tabulku externích zdrojů pro přehled i export."""
 
     ident_cely = tables.Column(linkify=True, verbose_name=_("ez.tables.ezTable.ident_cely.label"))
     doi = tables.Column(verbose_name=_("ez.tables.ezTable.doi.label"), default="")
@@ -52,6 +50,8 @@ class ExterniZdrojTable(SearchTable):
     first_columns = None
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = ExterniZdroj
         fields = (
             "stav",

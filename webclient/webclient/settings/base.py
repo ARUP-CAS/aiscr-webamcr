@@ -10,11 +10,20 @@ LOG_PATH = "/run/logs/"
 
 
 def get_secret(setting, default_value=None):
+    """
+    Vrací tajnou hodnotu ze settings nebo dodanou výchozí hodnotu.
+
+    :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
+    :param default_value: Parametr ``default_value`` se předává do volání ``get()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``get()``.
+        :raises ImproperlyConfigured: Vyvolá se při zpracování zachycené výjimky typu ``KeyError``.
+    """
     file_path = (
         "/run/secrets/db_conf"
         if os.path.exists("/run/secrets/db_conf")
-        # else path will be used in case a docker secret is not used during instantiation.
-        # Doesn't catch case where docker secrets points to missing file on local disk.
+        # Jinak se použije cesta, pokud při inicializaci není použit Docker secret.
+        # Nezachytí případ, kdy Docker secret ukazuje na chybějící lokální soubor.
         else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_db.json")
     )
 
@@ -34,11 +43,20 @@ def get_secret(setting, default_value=None):
 
 
 def get_mail_secret(setting, default_value=None):
+    """
+    Vrací mail secret.
+
+    :param setting: Kolekce ``setting`` zpracovávaná touto funkcí.
+    :param default_value: Parametr ``default_value`` se předává do volání ``get()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``get()``.
+        :raises ImproperlyConfigured: Vyvolá se při zpracování zachycené výjimky typu ``KeyError``.
+    """
     file_mail_path = (
         "/run/secrets/mail_conf"
         if os.path.exists("/run/secrets/mail_conf")
-        # else path will be used in case a docker secret is not used during instantiation.
-        # Doesn't catch case where docker secrets points to missing file on local disk.
+        # Jinak se použije cesta, pokud při inicializaci není použit Docker secret.
+        # Nezachytí případ, kdy Docker secret ukazuje na chybějící lokální soubor.
         else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_mail_client.json")
     )
     with open(file_mail_path, "r") as file:
@@ -56,6 +74,13 @@ def get_mail_secret(setting, default_value=None):
 
 # REDIS SETTINGS
 def get_plain_redis_pass(default_value=""):
+    """
+    Vrací plain redis pass.
+
+    :param default_value: Parametr ``default_value`` vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``rstrip()``, proměnná ``default_value``.
+    """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
             return file.readline().rstrip()
@@ -64,6 +89,13 @@ def get_plain_redis_pass(default_value=""):
 
 
 def get_redis_pass(default_value=""):
+    """
+    Vrací redis pass.
+
+    :param default_value: Parametr ``default_value`` vstupuje do návratové hodnoty.
+
+        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``default_value``.
+    """
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
             return ":" + file.readline().rstrip() + "@"
@@ -124,7 +156,7 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "core.apps.AmcrAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -156,7 +188,6 @@ INSTALLED_APPS = [
     "django_tables2",
     "django_tables2_column_shifter",
     "crispy_forms",
-    "crispy_bootstrap4",
     "django_registration",
     "compressor",
     "django_recaptcha",
@@ -175,6 +206,7 @@ INSTALLED_APPS = [
     "fedora_management",
     "pid.apps.PidConfig",
     "vypis",
+    "crispy_bootstrap5",
 ]
 
 MIDDLEWARE = [
@@ -186,6 +218,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.InactiveUserMiddleware",
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
@@ -220,7 +253,7 @@ TEMPLATES = [
                 "core.context_processors.constants_import",
                 "core.context_processors.digi_links_from_settings",
                 "core.context_processors.logout_next_url",
-                "core.context_processors.auto_logout_client",  # for auto logout aftert idle
+                "core.context_processors.auto_logout_client",  # pro automatické odhlášení po nečinnosti
                 "core.context_processors.main_shows",
             ],
         },
@@ -272,6 +305,13 @@ ROSETTA_UWSGI_AUTO_RELOAD = False
 
 
 def rosetta_translation_rights(user):
+    """
+    Provádí operaci rosetta translation rights.
+
+    :param user: Parametr ``user`` pracuje se s atributy ``groups``, vstupuje do návratové hodnoty.
+
+        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    """
     from core.constants import ROLE_UPRAVA_TEXTU
 
     return user.groups.filter(id=ROLE_UPRAVA_TEXTU).count() > 0
@@ -286,8 +326,8 @@ MEDIA_URL = "/static/media/"
 STATIC_ROOT = "/vol/web/static"
 MEDIA_ROOT = "/vol/web/media"
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 AUTH_USER_MODEL = "uzivatel.User"
 
 LOGIN_REDIRECT_URL = "/"
@@ -553,5 +593,6 @@ DIGIARCHIV_URL = get_secret("DIGIARCHIV_URL", "https://digiarchiv.aiscr.cz/id/")
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 EMAIL_ZADOST_UDAJE_OZNAMOVATELE = "info@amapa.cz"

@@ -4,6 +4,7 @@ node_modules/
 # Database and venv
 env/
 venv/
+.venv/
 db.sqlite3
 
 # Sensitive files
@@ -115,3 +116,8 @@ logstash/logstash.conf
 /prometheus/prometheus.yml
 /webclient/core/tests/resources/ssl.crt
 /webclient/core/tests/resources/ssl.key
+
+# agents
+.codex/
+.claude/
+.cursor/

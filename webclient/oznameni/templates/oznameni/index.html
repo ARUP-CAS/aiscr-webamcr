@@ -6,6 +6,7 @@
 {% block title %}{% trans "oznameni.templates.oznameni.index.title" %}{% endblock %}
 
 {% block head %}
+  <script src="{% static 'js/theme-toggle.js' %}"></script>
   <script>
       const global_csrftoken = '{{ csrf_token }}';
   </script>
@@ -86,7 +87,7 @@
     </div>
     <div class="row mb-4 app-footer">
       <div class="col-sm-9">
-        <button type="button" class="btn btn-secondary mt-0" data-toggle="modal" data-target="#precistPodminky">
+        <button type="button" class="btn btn-secondary mt-0" data-bs-toggle="modal" data-bs-target="#precistPodminky">
           {% trans "oznameni.templates.oznameni.index.precistPodminky" %} <span class="material-icons">info</span>
         </button>
         <div class="form-check" id="div_id_souhlas" style="top: 3px;">
@@ -101,21 +102,20 @@
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">{% trans "oznameni.templates.oznameni.index.informaceGDPR" %}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 </button>
               </div>
               <div class="modal-body">
                 {% include "oznameni/podminky.html" %}
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "oznameni.templates.oznameni.index.zavritPodminky" %}</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "oznameni.templates.oznameni.index.zavritPodminky" %}</button>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-sm-3 text-right">
+      <div class="col-sm-3 text-end">
         <button type="submit" name="save" id="submit-id-save" class="btn btn-primary mt-0">
           {% trans 'oznameni.templates.oznameni.index.dalsiKrok' %} <span class="material-icons submit-remove">arrow_forward</span>
           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
@@ -188,7 +188,7 @@
   <script src="{% static 'js/daterangepicker-init.js' %}"></script>
   <script>
     window.onload = function (){
-      load_daterangepicker("div_id_planovane_zahajeni")
+      load_daterangepicker("#app-page-wrapper");
       const addPointToPoiLayer = (point_leaf, text) => {
             L.marker(point_leaf,{icon: pinIconRedProject}).bindPopup(text).addTo(poi);
         }

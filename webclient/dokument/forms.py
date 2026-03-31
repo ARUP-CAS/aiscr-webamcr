@@ -44,6 +44,13 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
     """
 
     def clean(self, value):
+        """
+        Provádí operaci clean.
+
+        :param value: Parametr ``value`` předává se do volání ``clean()``, ``debug()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací proměnná ``qs``.
+        """
         qs = super().clean(value)
         if value:
             i = 1
@@ -60,9 +67,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
 
 class CoordinatesDokumentForm(forms.Form):
-    """
-    Hlavní formulář pro editaci souřadnic v modelu 3D a PAS.
-    """
+    """Hlavní formulář pro editaci souřadnic v modelu 3D a PAS."""
 
     visible_ss_combo = forms.ChoiceField(
         label=_("pas.forms.coordinates.detector.label"),
@@ -89,9 +94,7 @@ class CoordinatesDokumentForm(forms.Form):
 
 
 class EditDokumentExtraDataForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D."""
 
     rada = forms.CharField(
         label=_("dokument.forms.editDokumentExtraDataForm.rada.label"),
@@ -100,6 +103,8 @@ class EditDokumentExtraDataForm(forms.ModelForm):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = DokumentExtraData
         fields = (
             "datum_vzniku",
@@ -217,6 +222,15 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        """
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
         dok_osoby = kwargs.pop("dok_osoby", None)
@@ -267,7 +281,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                         '<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-2 input-osoba select2-input",
+                css_class="col-sm-2 input-osoba select2-input form-group",
             )
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1
@@ -330,9 +344,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 
 
 class EditDokumentForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu."""
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -356,6 +368,8 @@ class EditDokumentForm(forms.ModelForm):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         fields = (
             "typ_dokumentu",
@@ -450,6 +464,16 @@ class EditDokumentForm(forms.ModelForm):
     def __init__(
         self, *args, readonly=False, required=None, required_next=None, can_edit_datum_zverejneni=False, **kwargs
     ):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param can_edit_datum_zverejneni: Parametr ``can_edit_datum_zverejneni`` ovlivňuje větvení podmínek.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+        """
         create = kwargs.pop("create", None)
         region_not_required = kwargs.pop("region_not_required", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
@@ -467,7 +491,7 @@ class EditDokumentForm(forms.ModelForm):
                         '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'
                     ),
                 ),
-                css_class="col-sm-2 input-osoba select2-input",
+                css_class="col-sm-2 input-osoba select2-input form-group",
             )
         else:
             autori_div = Div(
@@ -544,9 +568,7 @@ class EditDokumentForm(forms.ModelForm):
 
 
 class CreateModelDokumentForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D."""
 
     autori = AutoriField(
         Osoba.objects.all(),
@@ -558,6 +580,8 @@ class CreateModelDokumentForm(forms.ModelForm):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         fields = (
             "typ_dokumentu",
@@ -608,6 +632,15 @@ class CreateModelDokumentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
@@ -647,9 +680,7 @@ class CreateModelDokumentForm(forms.ModelForm):
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
-    """
-    Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D.
-    """
+    """Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D."""
 
     coordinate_wgs84_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_wgs84_x2 = forms.FloatField(required=False, widget=HiddenInput())
@@ -666,6 +697,8 @@ class CreateModelExtraDataForm(forms.ModelForm):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = DokumentExtraData
         fields = (
             "format",
@@ -701,9 +734,18 @@ class CreateModelExtraDataForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, required=None, required_next=None, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+        :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         # self.fields["format"].required = True
-        # Disabled hodnoty se neposilaji na server
+        # Hodnoty z disabled polí se na server neodesílají.
         self.fields["visible_x1"].widget.attrs["disabled"] = "disabled"
         self.fields["visible_x2"].widget.attrs["disabled"] = "disabled"
         self.fields["format"].choices = [("", "")] + heslar_list(
@@ -729,11 +771,16 @@ class CreateModelExtraDataForm(forms.ModelForm):
 
 
 class PripojitDokumentForm(forms.Form):
-    """
-    Hlavní formulář připojení dokumentu do projektu nebo arch záznamu.
-    """
+    """Hlavní formulář připojení dokumentu do projektu nebo arch záznamu."""
 
     def __init__(self, ident_zaznam, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param ident_zaznam: Identifikátor ``ident_zaznam`` používaný pro dohledání cílového záznamu.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(PripojitDokumentForm, self).__init__(*args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
             label=_("dokument.forms.pripojitDokumentForm.dokument.label"),
@@ -752,9 +799,7 @@ class PripojitDokumentForm(forms.Form):
 
 
 class DokumentCastForm(forms.ModelForm):
-    """
-    Hlavní formulář pro zobrazení Dokument části.
-    """
+    """Hlavní formulář pro zobrazení Dokument části."""
 
     poznamka = forms.CharField(
         help_text=_("dokument.forms.dokumentCastForm.poznamka.tooltip"),
@@ -763,10 +808,19 @@ class DokumentCastForm(forms.ModelForm):
     )
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = DokumentCast
         fields = ("poznamka",)
 
     def __init__(self, readonly=False, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(DokumentCastForm, self).__init__(*args, **kwargs)
 
         self.helper = FormHelper(self)
@@ -780,9 +834,7 @@ class DokumentCastForm(forms.ModelForm):
 
 
 class DokumentCastCreateForm(forms.Form):
-    """
-    Hlavní formulář pro vytvoření, editaci Dokument části.
-    """
+    """Hlavní formulář pro vytvoření, editaci Dokument části."""
 
     poznamka = forms.CharField(
         help_text=_("dokument.forms.dokumentCastCreateForm.poznamka.tooltip"),
@@ -791,6 +843,12 @@ class DokumentCastCreateForm(forms.Form):
     )
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(DokumentCastCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -799,11 +857,20 @@ class DokumentCastCreateForm(forms.Form):
 def create_tvar_form(not_readonly=True):
     """
     Funkce která vrací formulář Tvar pro formset.
+
     Pomocí ní je možné předat výběr formuláři.
+
+    :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+
+        :return: Vrací proměnná ``TvarForm``.
     """
 
     class TvarForm(forms.ModelForm):
+        """Implementuje komponentu ``TvarForm`` v rámci aplikace."""
+
         class Meta:
+            """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
             model = Tvar
             fields = ["tvar", "poznamka"]
             labels = {
@@ -826,6 +893,12 @@ def create_tvar_form(not_readonly=True):
             }
 
         def __init__(self, *args, **kwargs):
+            """
+            Inicializuje instanci třídy.
+
+            :param args: Parametr ``args`` se předává do volání ``__init__()``.
+            :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+            """
             super(TvarForm, self).__init__(*args, **kwargs)
             if not not_readonly:
                 self.fields["tvar"].required = False
@@ -843,11 +916,15 @@ def create_tvar_form(not_readonly=True):
 
 
 class TvarFormSetHelper(FormHelper):
-    """
-    Form helper pro správné vykreslení formuláře tvarů.
-    """
+    """Form helper pro správné vykreslení formuláře tvarů."""
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
@@ -855,4 +932,6 @@ class TvarFormSetHelper(FormHelper):
 
 
 class DokumentFilterForm(BaseFilterForm):
+    """Implementuje komponentu ``DokumentFilterForm`` v rámci aplikace."""
+
     list_to_check = ["historie_datum_zmeny_od", "datum_vzniku", "let_datum", "datum_zverejneni"]

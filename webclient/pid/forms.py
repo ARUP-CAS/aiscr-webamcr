@@ -3,18 +3,32 @@ from django.utils.translation import gettext as _
 
 
 class FormWithOrcid:
+    """Implementuje komponentu ``FormWithOrcid`` v rámci aplikace."""
+
     def clean_orcid(self):
+        """Provádí operaci clean orcid.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         data = self.cleaned_data["orcid"]
         return "https://orcid.org/" + data if len(data) > 0 else None
 
 
 class FormWithWikidata:
+    """Implementuje komponentu ``FormWithWikidata`` v rámci aplikace."""
+
     def clean_wikidata(self):
+        """Provádí operaci clean wikidata.
+
+        :return: Vrací hodnotu podle větve zpracování.
+        """
         data = self.cleaned_data["wikidata"]
         return "https://www.wikidata.org/entity/" + data if len(data) > 0 else None
 
 
 class UpdateDocumentObjectIdentifierFileForm(forms.Form):
+    """Implementuje komponentu ``UpdateDocumentObjectIdentifierFileForm`` v rámci aplikace."""
+
     ident_list_file = forms.FileField(
         required=True,
         label=_("core.forms.UpdateDocumentObjectIdentifierFileForm.file.label"),

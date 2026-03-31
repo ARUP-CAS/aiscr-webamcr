@@ -6,6 +6,8 @@
     align-items: unset;
 
     .step {
+      margin-right: -15px;
+      margin-left: -15px;
       &.active {
         .bs-stepper-label {
           color: $blue;

@@ -1,0 +1,111 @@
+{
+  "_meta": {
+    "status": "completed",
+    "task_id": "T10",
+    "completed_at": "2026-03-09T21:13:14Z",
+    "needs_agent_update": false
+  },
+  "categories": {
+    "deploy": [
+      "scripts/prod_deploy.sh",
+      "scripts/dev_deploy.sh",
+      "scripts/test_deploy.sh",
+      "scripts/git_prod_deploy.sh",
+      "scripts/build_prod_image.sh",
+      "scripts/ci_deployment/deploy_server.sh",
+      "scripts/ci_deployment/deploy_test_server.sh"
+    ],
+    "runtime": [
+      "scripts/entrypoint.sh",
+      "scripts/entrypoint.dev.sh"
+    ],
+    "healthcheck_maintenance": [
+      "scripts/healthcheck.sh",
+      "scripts/run-healthcheck.sh",
+      "scripts/run-healthcheck_celery.sh",
+      "scripts/restore_database.sh",
+      "scripts/db/db_connection_from_docker-web.py",
+      "scripts/db/clone_test_db.py"
+    ],
+    "test_ci": [
+      "scripts/start_selenium_tests.sh"
+    ],
+    "configuration": [
+      "scripts/crontab.txt",
+      "scripts/uwsgi_site.ini"
+    ]
+  },
+  "all_scripts": [
+    {"path": "scripts/prod_deploy.sh", "type": "deploy", "lines": 300, "has_set_e": false, "has_help": true},
+    {"path": "scripts/dev_deploy.sh", "type": "deploy", "lines": 246, "has_set_e": false, "has_help": true},
+    {"path": "scripts/test_deploy.sh", "type": "deploy", "lines": 244, "has_set_e": false, "has_help": true},
+    {"path": "scripts/git_prod_deploy.sh", "type": "deploy", "lines": 242, "has_set_e": false, "has_help": true},
+    {"path": "scripts/build_prod_image.sh", "type": "deploy", "lines": 7, "has_set_e": false, "has_help": false},
+    {"path": "scripts/ci_deployment/deploy_server.sh", "type": "deploy", "lines": 63, "has_set_e": false, "has_help": false},
+    {"path": "scripts/ci_deployment/deploy_test_server.sh", "type": "deploy", "lines": 86, "has_set_e": false, "has_help": false},
+    {"path": "scripts/entrypoint.sh", "type": "runtime", "lines": 108, "has_set_e": true, "has_help": false},
+    {"path": "scripts/entrypoint.dev.sh", "type": "runtime", "lines": 6, "has_set_e": false, "has_help": false},
+    {"path": "scripts/healthcheck.sh", "type": "healthcheck_maintenance", "lines": 8, "has_set_e": false, "has_help": false},
+    {"path": "scripts/run-healthcheck.sh", "type": "healthcheck_maintenance", "lines": 49, "has_set_e": false, "has_help": false},
+    {"path": "scripts/run-healthcheck_celery.sh", "type": "healthcheck_maintenance", "lines": 33, "has_set_e": false, "has_help": false},
+    {"path": "scripts/restore_database.sh", "type": "healthcheck_maintenance", "lines": 13, "has_set_e": false, "has_help": false},
+    {"path": "scripts/start_selenium_tests.sh", "type": "test_ci", "lines": 72, "has_set_e": false, "has_help": true},
+    {"path": "scripts/db/db_connection_from_docker-web.py", "type": "healthcheck_maintenance", "lines": 34, "has_help": false},
+    {"path": "scripts/db/clone_test_db.py", "type": "healthcheck_maintenance", "lines": 35, "has_help": false}
+  ],
+  "issues": [
+    {
+      "id": "T10-SH-01",
+      "severity": "Střední",
+      "summary": "Deploy skripty nemají set -e; selhání příkazu mimo er() může být přehlédnuto",
+      "scripts": ["scripts/prod_deploy.sh", "scripts/dev_deploy.sh", "scripts/test_deploy.sh", "scripts/git_prod_deploy.sh", "scripts/ci_deployment/deploy_server.sh", "scripts/ci_deployment/deploy_test_server.sh"],
+      "recommendation": "Přidat set -e na začátek (po shebangu) a případně set -o pipefail; u interaktivních bloků zvážit podmíněné vypnutí."
+    },
+    {
+      "id": "T10-SH-02",
+      "severity": "Nízká",
+      "summary": "Duplicitní logika: ask_continue, echo_dec, er(), check_create_network, check_stack_exists se opakují v prod_deploy, dev_deploy, test_deploy, git_prod_deploy",
+      "scripts": ["scripts/prod_deploy.sh", "scripts/dev_deploy.sh", "scripts/test_deploy.sh", "scripts/git_prod_deploy.sh"],
+      "recommendation": "Extrahovat společné funkce do souboru scripts/common.sh a v deploy skriptech ho načítat pomocí source."
+    },
+    {
+      "id": "T10-SH-03",
+      "severity": "Střední",
+      "summary": "restore_database.sh nepoužívá set -e a neověřuje proměnné DBNAME, USED_DB_BACKUP, DB_FLAG_ROLE před destruktivními příkazy",
+      "scripts": ["scripts/restore_database.sh"],
+      "recommendation": "Přidat set -e a na začátku kontrolu, že required env vars jsou nastaveny; při chybě skončit s jasnou hláškou."
+    },
+    {
+      "id": "T10-SH-04",
+      "severity": "Nízká",
+      "summary": "build_prod_image.sh nemá žádný error handling ani dokumentaci",
+      "scripts": ["scripts/build_prod_image.sh"],
+      "recommendation": "Přidat set -e; volitelně krátký komentář nebo -h s popisem."
+    },
+    {
+      "id": "T10-PY-01",
+      "severity": "Střední",
+      "summary": "db_connection_from_docker-web.py nečte DB_PORT ze secretu; připojení používá výchozí port 5432",
+      "scripts": ["scripts/db/db_connection_from_docker-web.py"],
+      "recommendation": "Přidat db_port = data.get(\"DB_PORT\", 5432) a předat port do psycopg2.connect()."
+    },
+    {
+      "id": "T10-PY-02",
+      "severity": "Nízká",
+      "summary": "clone_test_db.py neověřuje existenci /run/secrets/db_conf ani povinné klíče v JSON před použitím",
+      "scripts": ["scripts/db/clone_test_db.py"],
+      "recommendation": "Na začátku zkontrolovat existenci souboru a přítomnost klíčů; při chybě sys.exit(1) s popisem."
+    },
+    {
+      "id": "T10-PY-03",
+      "severity": "Nízká",
+      "summary": "clone_test_db.py používá f-stringy pro SQL; hodnoty pocházejí ze secretu, riziko injekce je nízké, ale konzistence s parametrizací by byla lepší",
+      "scripts": ["scripts/db/clone_test_db.py"],
+      "recommendation": "Použít parametrizované dotazy (cursor.execute s %s a tuple) tam, kde to psycopg2 umožňuje u DDL."
+    }
+  ],
+  "config_notes": {
+    "crontab.txt": "Spouští každou minutu: python3 manage.py runcrons \"cron.notifications.Notifications\" --settings=webclient.settings.production. Chyby z runcrons nejsou v crontabu ošetřeny; závisí na logování v aplikaci.",
+    "uwsgi_site.ini": "Konfigurace uWSGI pro produkci; nevolá přímo skripty z scripts/, pouze modul webclient.wsgi."
+  }
+}

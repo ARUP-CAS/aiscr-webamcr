@@ -69,8 +69,14 @@ logger = logging.getLogger(__name__)
 
 
 class SouborTypFilter(MultipleChoiceFilter):
+    """Implementuje komponentu ``SouborTypFilter`` v rámci aplikace."""
+
     @property
     def field(self):
+        """Provádí operaci field.
+
+        :return: Vrací atribut objektu.
+        """
         qs = self.model._default_manager.distinct()
         qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
         self.extra["choices"] = [(o, o) for o in qs if o is not None]
@@ -79,7 +85,7 @@ class SouborTypFilter(MultipleChoiceFilter):
 
 class HistorieFilter(FilterSet):
     """
-    Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
+    Třída pro základní filtrování historie. Třída je děděná v jednotlivých filtracích záznamů.
     """
 
     HISTORIE_TYP_ZMENY_STARTS_WITH = None
@@ -87,6 +93,11 @@ class HistorieFilter(FilterSet):
     TYP_VAZBY = None
 
     def set_filter_fields(self, user):
+        """
+        Nastaví filter fields.
+
+        :param user: Parametr ``user`` pracuje se s atributy ``hlavni_role``, ovlivňuje větvení podmínek.
+        """
         if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
             self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
                 queryset=User.objects.all(),
@@ -138,15 +149,27 @@ class HistorieFilter(FilterSet):
             widget=SelectMultipleSeparator(),
             distinct=True,
         )
+        self.filters["historie_poznamka"] = CharFilter(
+            field_name="historie__historie__poznamka",
+            lookup_expr="icontains",
+            label=_("dokument.filters.historieFilter.historiePoznamka.label"),
+            distinct=True,
+        )
 
     def _get_history_subquery(self):
+        """
+        Vrací history subquery.
+
+        :return: Načtená data odpovídající zadaným vstupům.
+        """
         logger.debug("dokument.filters.HistorieFilter._get_history_subquery.start")
         uzivatel_organizace = self.form.cleaned_data.pop("historie_uzivatel_organizace", None)
         zmena = self.form.cleaned_data.pop("historie_typ_zmeny", None)
         uzivatel = self.form.cleaned_data.pop("historie_uzivatel", None)
         datum = self.form.cleaned_data.pop("historie_datum_zmeny_od", None)
+        poznamka = self.form.cleaned_data.pop("historie_poznamka", None)
 
-        if not uzivatel_organizace and not zmena and not uzivatel and not datum:
+        if not uzivatel_organizace and not zmena and not uzivatel and not datum and not poznamka:
             return
 
         filtered_fields = {"typ_vazby": self.TYP_VAZBY}
@@ -164,19 +187,47 @@ class HistorieFilter(FilterSet):
             self.filters.pop("historie_datum_zmeny_od")
         if datum and datum.stop:
             filtered_fields["datum_zmeny__lte"] = datum.stop
+        if poznamka:
+            filtered_fields["poznamka__icontains"] = poznamka
+            self.filters.pop("historie_poznamka")
         return filtered_fields
+
+    def filter_ident_cely(self, queryset, name, value):
+        """
+        Metoda pro filtrování podle identu dokumentu/projektu/EZ, ale i dočasného.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` nepoužito.
+        :param value: Parametr ``value`` ovlivňuje větvení podmínek, předává se do volání ``filter()``.
+
+            :return: Vrací filtrovaný ``queryset`` podle ``ident_cely`` nebo poznámky z historie.
+        """
+        if not value:
+            return queryset
+
+        # 1) primárně hledat v Projekt.ident_cely
+        qs = queryset.filter(ident_cely__icontains=value)
+        if qs.exists():  # jen když něco najde, tak tím skončit
+            return qs
+
+        # 2) fallback: hledat v Historie.poznamka (přes vazbu Projekt.historie -> HistorieVazby -> Historie)
+        return queryset.filter(
+            historie__historie__poznamka__icontains=value,
+        ).distinct()
 
 
 class Model3DFilter(HistorieFilter, FilterSet):
     """
-    Třída pro zakladní filtrování modelu 3D a jejich potomků.
+    Třída pro základní filtrování modelu 3D a jejich potomků.
     """
 
     TYP_VAZBY = DOKUMENT_RELATION_TYPE
     INCLUDE_KAT_TYP_ZMENY = False
     HISTORIE_TYP_ZMENY_STARTS_WITH = "D"
 
-    ident_cely = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.ident_cely.label"))
+    ident_cely = CharFilter(
+        method="filter_ident_cely", distinct=True, label=_("dokument.filters.dokumentFilter.ident_cely.label")
+    )
 
     doi = CharFilter(lookup_expr="icontains", label=_("dokument.filters.dokumentFilter.doi.label"))
 
@@ -267,7 +318,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
     aktivity = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(
             nazev_heslare=HESLAR_AKTIVITA
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
+        ),  # Nezdá se mi použití obou hesel – platí i pro vytvoření a úpravu.
         field_name="casti__komponenty__komponenty__komponentaaktivita__aktivita",
         label=_("dokument.filters.dokumentFilter.aktivity.label"),
         widget=SelectMultiple(
@@ -283,7 +334,7 @@ class Model3DFilter(HistorieFilter, FilterSet):
     predmet_specifikace = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(
             nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
+        ),  # Nezdá se mi použití obou hesel – platí i pro vytvoření a úpravu.
         field_name="casti__komponenty__komponenty__predmety__specifikace",
         label=_("dokument.filters.dokumentFilter.predmetSpecifikace.label"),
         widget=SelectMultiple(
@@ -304,6 +355,13 @@ class Model3DFilter(HistorieFilter, FilterSet):
     )
 
     def filter_queryset(self, queryset):
+        """
+        Filtruje queryset. v aplikaci.
+
+        :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+            :return: Vrací proměnná ``queryset``.
+        """
         logger.debug("dokument.filters.AkceFilter.filter_queryset.start")
         historie = self._get_history_subquery()
         queryset = super(Model3DFilter, self).filter_queryset(queryset)
@@ -319,6 +377,8 @@ class Model3DFilter(HistorieFilter, FilterSet):
                 queryset_history &= Q(historie__historie__datum_zmeny__lte=historie["datum_zmeny__lte"])
             if "typ_zmeny" in historie:
                 queryset_history &= Q(historie__historie__typ_zmeny__in=historie["typ_zmeny"])
+            if "poznamka__icontains" in historie:
+                queryset_history &= Q(historie__historie__poznamka__icontains=historie["poznamka__icontains"])
             queryset = queryset.filter(queryset_history)
 
         return queryset
@@ -326,6 +386,12 @@ class Model3DFilter(HistorieFilter, FilterSet):
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metoda pro filtrování podle popisu, poznámky, odkazu a poznámek v objektech a předmětech.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -339,6 +405,12 @@ class Model3DFilter(HistorieFilter, FilterSet):
     def filter_roky(self, queryset, name, value):
         """
         Metoda pro filtrování podle roku revize a popisu ADB.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_roky``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if value:
             if value.start is not None and value.stop is not None:
@@ -359,6 +431,12 @@ class Model3DFilter(HistorieFilter, FilterSet):
     def filter_roky_range(self, queryset, name, value):
         """
         Metoda pro filtrování podle roku revize a popisu ADB.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_roky_range``.
+        :param value: Parametr ``value`` pracuje se s atributy ``start``, ``stop``, ovlivňuje větvení podmínek.
+
+            :return: Vrací proměnná ``queryset``.
         """
         if value:
             if value.start is not None:
@@ -378,11 +456,19 @@ class Model3DFilter(HistorieFilter, FilterSet):
         return queryset
 
     class Meta:
+        """Implementuje komponentu ``Meta`` v rámci aplikace."""
+
         model = Dokument
         exclude = []
         form = DokumentFilterForm
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+        """
         super(Model3DFilter, self).__init__(*args, **kwargs)
         user: User = kwargs.get("request").user
         self.filters["obdobi"] = MultipleChoiceFilter(
@@ -470,13 +556,16 @@ class Model3DFilter(HistorieFilter, FilterSet):
 
 
 class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
-    """
-    Třída pro správně zobrazení filtru.
-    """
+    """Třída pro správně zobrazení filtru."""
 
     form_method = "GET"
 
     def __init__(self, form=None):
+        """
+        Inicializuje instanci třídy.
+
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
+        """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("dokument.filters.model3DFilterFormHelper.historyDivider.label")
         }
@@ -511,7 +600,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(history_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#historieCollapse",
                     role="button",
                     aria_expanded="false",
@@ -520,9 +609,10 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),
@@ -534,7 +624,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
 
 class DokumentFilter(Model3DFilter):
     """
-    Třída pro zakladní filtrování dokumentu a jejich potomků.
+    Třída pro základní filtrování dokumentu a jejich potomků.
     """
 
     TYP_VAZBY = DOKUMENT_RELATION_TYPE
@@ -937,7 +1027,13 @@ class DokumentFilter(Model3DFilter):
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """
-        Metoda pro filtrování podle územní príslušnosti.
+        Metoda pro filtrování podle územní příslušnosti.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_uzemni_prislusnost``.
+        :param value: Parametr ``value`` předává se do volání ``debug()``, ``reduce()``.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         logger.debug("dokument.filters.DokumentFilter.filter_uzemni_prislusnost", extra={"value": value})
         query = reduce(operator.or_, (Q(ident_cely__contains=item) for item in value))
@@ -945,7 +1041,13 @@ class DokumentFilter(Model3DFilter):
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
-        Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regiónu a události.
+        Metoda pro filtrování podle popisu, poznámky, licence, čísla objektu, regionu a události.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``filter()``.
         """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
@@ -959,7 +1061,13 @@ class DokumentFilter(Model3DFilter):
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         """
-        Metoda pro filtrování podle poznámky a počtu predmětu.
+        Metoda pro filtrování podle poznámky a počtu předmětů.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_predmet_pozn_pocet``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
@@ -969,6 +1077,12 @@ class DokumentFilter(Model3DFilter):
     def filter_objekt_pozn_pocet(self, queryset, name, value):
         """
         Metoda pro filtrování podle poznámky a počtu objektu.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_objekt_pozn_pocet``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
@@ -978,6 +1092,12 @@ class DokumentFilter(Model3DFilter):
     def filter_jistota(self, queryset, name, value):
         """
         Metoda pro filtrování podle jistoty.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``distinct``, ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_jistota``.
+        :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if "True" in value and "False" in value:
             return queryset.distinct()
@@ -991,6 +1111,12 @@ class DokumentFilter(Model3DFilter):
     def filter_neident_poznamka(self, queryset, name, value):
         """
         Metoda pro filtrování podle neident akce.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_neident_poznamka``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(casti__neident_akce__poznamka__icontains=value)
@@ -1002,6 +1128,12 @@ class DokumentFilter(Model3DFilter):
     def filter_let_poznamka(self, queryset, name, value):
         """
         Metoda pro filtrování podle letu.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_let_poznamka``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(
             Q(let__typ_letounu__icontains=value)
@@ -1013,18 +1145,36 @@ class DokumentFilter(Model3DFilter):
     def filter_id_AZ(self, queryset, name, value):
         """
         Metoda pro filtrování podle id AZ.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_id_AZ``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(Q(casti__archeologicky_zaznam__ident_cely__icontains=value)).distinct()
 
     def filter_id_projekt(self, queryset, name, value):
         """
         Metoda pro filtrování podle id projektu.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_id_projekt``.
+        :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         return queryset.filter(Q(casti__projekt__ident_cely__icontains=value)).distinct()
 
     def filter_exist_neident_akce(self, queryset, name, value):
         """
         Metoda pro filtrování podle existence neident akce.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_neident_akce``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             akce = NeidentAkce.objects.filter(dokument_cast=models.OuterRef("pk"))
@@ -1042,6 +1192,12 @@ class DokumentFilter(Model3DFilter):
     def filter_exist_komponenty(self, queryset, name, value):
         """
         Metoda pro filtrování podle existence komponenty.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_komponenty``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             komponenty = Komponenta.objects.filter(komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
@@ -1058,6 +1214,12 @@ class DokumentFilter(Model3DFilter):
     def filter_exist_nalezy(self, queryset, name, value):
         """
         Metoda pro filtrování podle existence nálezu.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``exclude``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_nalezy``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             objekty = NalezObjekt.objects.filter(komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk"))
@@ -1081,6 +1243,12 @@ class DokumentFilter(Model3DFilter):
     def filter_exist_tvary(self, queryset, name, value):
         """
         Metoda pro filtrování podle existence tvaru.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``distinct``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_tvary``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             tvar = Tvar.objects.filter(dokument=models.OuterRef("pk"))
@@ -1095,6 +1263,12 @@ class DokumentFilter(Model3DFilter):
     def filter_exist_soubory(self, queryset, name, value):
         """
         Metoda pro filtrování podle existence souboru.
+
+        :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, ``distinct``, vstupuje do návratové hodnoty.
+        :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_exist_soubory``.
+        :param value: Parametr ``value`` předává se do volání ``len()``, ovlivňuje větvení podmínek.
+
+            :return: Vrací výsledek volání ``distinct()``.
         """
         if len(value) == 1:
             soubor = Soubor.objects.filter(vazba__dokument_souboru=models.OuterRef("pk"))
@@ -1107,18 +1281,27 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
         super(DokumentFilter, self).__init__(*args, **kwargs)
         self.helper = DokumentFilterFormHelper()
 
 
 class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
-    """
-    Třída pro správně zobrazení filtru.
-    """
+    """Třída pro správně zobrazení filtru."""
 
     form_method = "GET"
 
     def __init__(self, form=None):
+        """
+        Inicializuje instanci třídy.
+
+        :param form: Parametr ``form`` se předává do volání ``__init__()``.
+        """
         history_divider = "<span class='app-divider-label'>%(translation)s</span>" % {
             "translation": _("dokument.filters.dokumentFilterFormHelper.historyDivider.label")
         }
@@ -1171,7 +1354,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(history_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#historieCollapse",
                     role="button",
                     aria_expanded="false",
@@ -1180,9 +1363,10 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 ),
                 Div(
                     Div("historie_typ_zmeny", css_class="col-sm-2"),
-                    Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-                    Div("historie_uzivatel", css_class="col-sm-3"),
-                    Div("historie_uzivatel_organizace", css_class="col-sm-3"),
+                    Div("historie_datum_zmeny_od", css_class="col-sm-3 app-daterangepicker"),
+                    Div("historie_uzivatel", css_class="col-sm-2"),
+                    Div("historie_uzivatel_organizace", css_class="col-sm-2"),
+                    Div("historie_poznamka", css_class="col-sm-3"),
                     id="historieCollapse",
                     css_class="collapse row",
                 ),
@@ -1190,7 +1374,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(extra_data_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#extraDataCollapse",
                     role="button",
                     aria_expanded="false",
@@ -1216,7 +1400,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(komponenta_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#komponentaCollapse",
                     role="button",
                     aria_expanded="false",
@@ -1244,7 +1428,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(neident_akce_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#neidentAkceCollapse",
                     role="button",
                     aria_expanded="false",
@@ -1263,7 +1447,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(lety_tvary_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#letyTvaryCollapse",
                     role="button",
                     aria_expanded="false",
@@ -1290,7 +1474,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(soubory_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#souboryCollapse",
                     role="button",
                     aria_expanded="false",
@@ -1310,7 +1494,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                     HTML(vazby_divider),
                     HTML('<hr class="mt-0" />'),
-                    data_toggle="collapse",
+                    data_bs_toggle="collapse",
                     href="#vazbyCollapse",
                     role="button",
                     aria_expanded="false",

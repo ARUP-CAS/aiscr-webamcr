@@ -1,11 +1,7 @@
 import csv
-import io
 import json
 import logging
 import os
-import random
-import string
-import zipfile
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -20,27 +16,14 @@ from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
-from fedora_management.forms import UpdateMetadataFileForm
-from pid.forms import UpdateDocumentObjectIdentifierFileForm
 from polib import pofile
 from uzivatel.models import User
 
-from .connectors import RedisConnector
 from .constants import ROLE_NASTAVENI_ODSTAVKY
 from .exceptions import WrongCSVError, WrongSheetError
-from .forms import ImportDataAdminForm, OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
-from .import_data_mappers import (
-    ImportDataError,
-    ImportDataIntegrityError,
-    ImportDataUnsupportedFileError,
-    ImportDataUnsupportedFilesError,
-    ImportDataValidationResult,
-    ImportModelMapper,
-    LookupImportField,
-)
+from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .models import OdstavkaSystemu, Permissions, PermissionsSkip
 from .setting_models import CustomAdminSettings
-from .utils import is_maintenance_in_progress
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +31,7 @@ logger = logging.getLogger(__name__)
 class OdstavkaSystemuAdmin(admin.ModelAdmin):
     """
     Třída admin panelu pro zobrazení odstávek systému.
+
     Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
     """
 
@@ -63,8 +47,14 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         """
         Metoda na uložení modelu odstávky.
+
         Jednotlivé texty z modelu se ukladají do textú prekladů a template.
         Po uložení se restartuje wsgi pro načítaní nových prekladů.
+
+        :param request: Parametr ``request`` se předává do volání ``int()``, ``utime()``, pracuje se s atributy ``environ``.
+        :param obj: Parametr ``obj`` předává se do volání ``save_model()``.
+        :param form: Parametr ``form`` se předává do volání ``file_handler()``, ``save_model()``, pracuje se s atributy ``cleaned_data``.
+        :param change: Parametr ``change`` se předává do volání ``save_model()``.
         """
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
@@ -99,24 +89,39 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
                 uwsgi.reload()  # pretty easy right?
             except Exception as e:
                 logger.debug("core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e})
-                pass  # we may not be running under uwsgi :P
+                pass  # aplikace nemusí běžet pod uWSGI.
         super().save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
         """
         Metoda pro určení práv na modul odstávky.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def has_view_permission(self, request, obj=None, *args):
         """
         Metoda pro určení práv na videní odstávky.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_view_permission``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_view_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def has_add_permission(self, request, *args):
         """
         Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         if OdstavkaSystemu.objects.count() > 0:
             return False
@@ -125,12 +130,21 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None, *args):
         """
         Metoda pro určení práv pro úpravu odstávky.
+
+        :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
+        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
     def file_handler(self, language, form):
         """
         Pomocní metoda pro úpravu template zobrazených během odstávky.
+
+        :param language: Textový název, klíč nebo zpráva ``language`` používaná v rámci operace.
+        :param form: Parametr ``form`` se předává do volání ``replace_with()``, pracuje se s atributy ``cleaned_data``.
         """
         with open("/vol/web/nginx/data/" + language + "/custom_503.html") as fp:
             soup = BeautifulSoup(fp, "html.parser")
@@ -148,9 +162,7 @@ admin.site.register(OdstavkaSystemu, OdstavkaSystemuAdmin)
 
 
 class CustomAdminSettingsAdmin(admin.ModelAdmin):
-    """
-    Admin panel pro vlastních nastavení.
-    """
+    """Admin panel pro vlastních nastavení."""
 
     change_list_template = "core/custom_settings_changelist.html"
     model = CustomAdminSettings
@@ -162,9 +174,7 @@ admin.site.register(CustomAdminSettings, CustomAdminSettingsAdmin)
 
 @admin.register(Permissions)
 class PermissionAdmin(admin.ModelAdmin):
-    """
-    Třída admin panelu pro zobrazení a správu oprávnení.
-    """
+    """Třída admin panelu pro zobrazení a správu oprávnení."""
 
     change_list_template = "core/permissions_changelist.html"
     list_display = ["address_in_app", "main_role", "action", "base", "status", "ownership", "accessibility"]
@@ -172,11 +182,19 @@ class PermissionAdmin(admin.ModelAdmin):
     search_fields = ["address_in_app", "action"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
+        """
+               Provádí operaci changelist view.
+
+               :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
+               :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         return super().changelist_view(request, {"import_list": True})
 
     def get_urls(self):
-        """
-        Metoda pri definici dodatečných url.
+        """Metoda pri definici dodatečných url.
+
+        :return: Vrací hodnotu podle větve zpracování.
         """
         urls = super().get_urls()
         my_urls = [
@@ -197,6 +215,10 @@ class PermissionAdmin(admin.ModelAdmin):
     def import_file(self, request):
         """
         Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+
+        :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, pracuje se s atributy ``method``, ``FILES``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         model = self.model
         opts = model._meta
@@ -256,6 +278,10 @@ class PermissionAdmin(admin.ModelAdmin):
     def import_success(self, request):
         """
         Metoda view pro zobrazení tabulky s výsledkom importu.
+
+        :param request: Parametr ``request`` se předává do volání ``each_context()``, ``message_user()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         json_table = cache.get("import_json_results")
         missing_urls = cache.get("import_missing_results")
@@ -291,6 +317,10 @@ class PermissionAdmin(admin.ModelAdmin):
     def reload_permissions(self, request):
         """
         Metoda view pro automatický import oprávnění z csv v gitu a zobrazení výsledků importu.
+
+        :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         with open("core/resources/uzivatelska_prava.csv", "rb") as f:
             permission_file = SimpleUploadedFile(
@@ -336,9 +366,7 @@ class PermissionAdmin(admin.ModelAdmin):
 
 @admin.register(PermissionsSkip)
 class PermissionSkipAdmin(admin.ModelAdmin):
-    """
-    Třída admin panelu pro zobrazení a správu proskakovani oprávnení.
-    """
+    """Třída admin panelu pro zobrazení a správu proskakovani oprávnení."""
 
     change_list_template = "core/permissions_changelist.html"
     list_display = ["user"]
@@ -346,11 +374,19 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     search_fields = ["user"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
+        """
+               Provádí operaci changelist view.
+
+               :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
+               :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
+        :return: Výstup funkce odpovídající implementované logice.
+        """
         return super().changelist_view(request, {"import_skip_list": True})
 
     def get_urls(self):
-        """
-        Metoda pri definici dodatečných url.
+        """Metoda pri definici dodatečných url.
+
+        :return: Vrací hodnotu podle větve zpracování.
         """
         urls = super().get_urls()
         my_urls = [
@@ -368,6 +404,11 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     def validate_sheet(self, sheet):
         """
         Metoda pro validaci importovaného excelu a jeho úpravu.
+
+        :param sheet: Parametr ``sheet`` pracuje se s atributy ``columns``, ovlivňuje větvení podmínek.
+
+            :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+            :raises WrongCSVError: Vyvolá se při splnění podmínky ``not sheet.columns[0] == 'IDENT_CELY' or not sheet.columns[1] == 'IDENT_LIST'``.
         """
         if not sheet.columns[0] == "IDENT_CELY" or not sheet.columns[1] == "IDENT_LIST":
             raise WrongCSVError
@@ -376,6 +417,10 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     def import_skip_file(self, request):
         """
         Metoda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+
+        :param request: Parametr ``request`` se předává do volání ``message_user()``, ``each_context()``, pracuje se s atributy ``method``, ``FILES``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         model = self.model
         opts = model._meta
@@ -431,6 +476,13 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         )
 
     def check_save_row(self, row):
+        """
+        Ověří save row.
+
+        :param row: Parametr ``row`` předává se do volání ``create()``, ``get()``, pracuje se s atributy ``iloc``.
+
+            :return: Vrací str.
+        """
         try:
             PermissionsSkip.objects.create(
                 user=User.objects.get(ident_cely=row.iloc[0]),
@@ -444,6 +496,10 @@ class PermissionSkipAdmin(admin.ModelAdmin):
     def import_skip_success(self, request):
         """
         Metoda view pro zobrazení tabulky s výsledkom importu.
+
+        :param request: Parametr ``request`` se předává do volání ``each_context()``, ``message_user()``, vstupuje do návratové hodnoty.
+
+            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``TemplateResponse()``.
         """
         json_table = cache.get("import_json_results")
         cache.delete("import_json_results")
@@ -474,6 +530,14 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         )
 
     def export_as_csv(self, request, queryset):
+        """
+        Exportuje as csv.
+
+        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``export_as_csv``.
+        :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``export_as_csv``.
+
+            :return: Vrací proměnná ``response``.
+        """
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=opravneni_override.csv"
         writer = csv.writer(response, delimiter=";")
@@ -483,257 +547,3 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         return response
 
     export_as_csv.short_description = _("core.admin.permissionSkipAdmin.downloadAction_label")
-
-
-class FedoraCustomAdminSite(admin.AdminSite):
-    redis_connector = RedisConnector().get_connection_decode()
-
-    @staticmethod
-    def _read_file(uploaded_file, context):
-        sheet = None
-        if uploaded_file.content_type == "text/csv":
-            try:
-                sheet = pd.read_csv(uploaded_file, sep=",")
-            except Exception as err:
-                logger.debug(
-                    "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
-                    extra={"error": err},
-                )
-                context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
-        else:
-            try:
-                sheet = pd.read_excel(uploaded_file)
-            except Exception as err:
-                logger.debug(
-                    "fedora_management.admin.FedoraCustomAdminSite.update_metadata_file_upload" ".cannot_read_file",
-                    extra={"error": err},
-                )
-                context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
-        if sheet.shape[1] != 1:
-            context["error"] = _("fedora_management.admin.YourCustomAdminSite.too_many_columns")
-            sheet = None
-        if isinstance(sheet, pd.DataFrame):
-            sheet.columns = [
-                "ident_cely",
-            ]
-            sheet["ident_cely"] = sheet["ident_cely"].str.strip()
-            sheet = sheet.set_index("ident_cely")
-        return sheet
-
-    def update_doi(self, request):
-        context = {
-            "app_list": self.get_app_list(request),
-            **self.each_context(request),
-        }
-        if request.method == "POST" and request.user.is_superuser:
-            form = UpdateDocumentObjectIdentifierFileForm(request.POST, request.FILES)
-            context["form"] = form
-            if form.is_valid():
-                uploaded_file = request.FILES["ident_list_file"]
-                sheet = self._read_file(uploaded_file, context)
-                if isinstance(sheet, pd.DataFrame):
-                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
-                    job_id = f"update_pid_{job_id}"
-                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
-                    performed_action = form.cleaned_data["performed_action"]
-                    context["url"] = reverse("pid:continue-processing", args=[job_id, performed_action])
-            return TemplateResponse(request, "admin/update_running_job.html", context)
-        else:
-            context["form"] = UpdateDocumentObjectIdentifierFileForm()
-        return TemplateResponse(request, "admin/doi_management/update_doi.html", context)
-
-    def update_metadata_file_upload(self, request):
-        context = {
-            "app_list": self.get_app_list(request),
-            **self.each_context(request),
-        }
-        if request.method == "POST" and request.user.is_superuser:
-            form = UpdateMetadataFileForm(request.POST, request.FILES)
-            if form.is_valid():
-                uploaded_file = request.FILES["ident_list_file"]
-                sheet = self._read_file(uploaded_file, context)
-                if isinstance(sheet, pd.DataFrame):
-                    job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
-                    job_id = f"update_metadata_{job_id}"
-                    self.redis_connector.set(job_id, "0;" + ";".join(sheet.index.unique().tolist()))
-                    context["url"] = reverse("fedora:continue-processing", args=[job_id])
-            return TemplateResponse(request, "admin/update_running_job.html", context)
-        else:
-            context["form"] = UpdateMetadataFileForm()
-        return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
-
-    def import_data(self, request):
-        """
-        Creates a view for importing data from a zip file.
-        """
-
-        def normalize_file_name(name: str) -> str:
-            if "/" in name:
-                name = name.split("/")[-1]
-            return name.strip().lower()
-
-        context = {
-            "app_list": self.get_app_list(request),
-            "maintenance": is_maintenance_in_progress(),
-            **self.each_context(request),
-        }
-        if not is_maintenance_in_progress():
-            return TemplateResponse(request, "admin/import_data/import_data.html", context)
-        if request.method == "POST" and request.user.is_superuser:
-            data_file = request.FILES["data_file"]
-            form = ImportDataAdminForm(request.POST, request.FILES)
-            if form.is_valid():
-                cleaned_data = form.cleaned_data
-            else:
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            context["form"] = form
-            file_bytes = data_file.read()
-            job_id = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
-            context["url"] = reverse("core:data-import-progress", args=[job_id])
-            context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
-            validation_results = []
-            records = []
-            LookupImportField.records = records
-            record_id = 0
-            invalid_records = []
-            performed_action = cleaned_data["performed_action"]
-            try:
-                with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
-                    file_names = [
-                        name for name in zf.namelist() if not name.startswith("__MACOSX") and not name.endswith("/")
-                    ]
-                    mapper_dict = ImportModelMapper.get_import_data_mapper_dict()
-                    mapper_key_order = {f"{name}.csv": i for i, name in enumerate(mapper_dict.keys())}
-                    allowed_file_names = set(
-                        [
-                            f"{name}.csv".lower()
-                            for name, mapper in mapper_dict.items()
-                            if performed_action != ImportDataAdminForm.PERFORMED_ACTION_UPDATE or mapper.allow_update
-                        ]
-                    )
-                    normalized_imported_file_names = set([normalize_file_name(file_name) for file_name in file_names])
-                    if not normalized_imported_file_names.issubset(allowed_file_names):
-                        raise ImportDataUnsupportedFilesError(normalized_imported_file_names - allowed_file_names)
-                    file_names.sort(key=lambda fn: mapper_key_order.get(normalize_file_name(fn), len(mapper_key_order)))
-                    for file_name in file_names:
-                        with zf.open(file_name) as file:
-                            sheet = pd.read_csv(file)
-                        file_name = normalize_file_name(file_name)
-                        for idx, row in sheet.iterrows():
-                            mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
-
-                            def format_primary_key(pk):
-                                if isinstance(pk, dict):
-                                    return ", ".join("{}: {}".format(k, v) for k, v in pk.items())
-                                return str(pk)
-
-                            if mapper_class:
-                                try:
-                                    mapper = mapper_class(row.to_dict())
-                                    record = mapper.map(performed_action, serialize=True, include_primary_key=True)
-                                    mapper.check_required_fields(performed_action)
-                                    primary_key = mapper.import_validation(performed_action)
-                                    LookupImportField.records += mapper.create_records(performed_action)
-                                    record["__file_name"] = file_name
-                                except ImportDataIntegrityError as err:
-                                    validation_results.append(
-                                        ImportDataValidationResult(
-                                            item_order=record_id,
-                                            file_name=file_name,
-                                            primary_key_import=format_primary_key(err.record_id),
-                                            validation_result=str(err),
-                                        )
-                                    )
-                                    invalid_records.append(record_id)
-                                except ImportDataError as err:
-                                    validation_results.append(
-                                        ImportDataValidationResult(
-                                            item_order=record_id,
-                                            file_name=file_name,
-                                            validation_result=str(err),
-                                        )
-                                    )
-                                    invalid_records.append(record_id)
-                                else:
-                                    records.append(record)
-                                    validation_results.append(
-                                        ImportDataValidationResult(
-                                            item_order=record_id,
-                                            file_name=file_name,
-                                            primary_key_import=format_primary_key(primary_key),
-                                            validation_result=_("core.admin.import_data.record_valid"),
-                                        )
-                                    )
-                                    self.redis_connector.set(
-                                        f"import_data_{job_id}_record_{record_id}", json.dumps(record)
-                                    )
-                                record_id += 1
-                            else:
-                                raise ImportDataUnsupportedFileError(file_name)
-            except zipfile.BadZipFile:
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = _("core.admin.import_data.error.bad_zip_file")
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except ImportDataUnsupportedFilesError as err:
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = str(err)
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            except Exception as err:
-                logger.exception("core.admin.FedoraCustomAdminSite.import_data.unexpected_error", extra={"err": err})
-                context["error_message"] = _("core.admin.import_data.error.import_error")
-                context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
-                return TemplateResponse(request, "admin/import_data/import_data.html", context)
-            records_count = record_id
-            self.redis_connector.set(f"import_data_count_{job_id}", records_count)
-            self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
-            self.redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
-            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0)
-            context["records_count"] = records_count
-            context["validation_results"] = validation_results
-            context["invalid_records"] = ", ".join([str(r) for r in invalid_records])
-            try:
-                import_directory_settings_obj = CustomAdminSettings.objects.get(item_id="import_directory_settings")
-                import_directory_settings = json.loads(import_directory_settings_obj.value)
-                import_directory_path = import_directory_settings.get("DIRECTORY_PATH")
-                context["import_directory_configured"] = bool(
-                    import_directory_path and os.path.isdir(import_directory_path)
-                )
-            except (CustomAdminSettings.DoesNotExist, json.JSONDecodeError, ValueError, KeyError):
-                context["import_directory_configured"] = False
-            context["url_start"] = reverse("core:data-import-start", args=[job_id])
-            if not invalid_records:
-                context["stop_request"] = False
-            else:
-                context["stop_request"] = True
-            logger.debug(
-                "core.admin.FedoraCustomAdminSite.import_data.end",
-                extra={"job_id": job_id, "records_count": records_count, "invalid_records": invalid_records},
-            )
-            return TemplateResponse(request, "admin/import_data/import_data.html", context)
-        else:
-            context["form"] = ImportDataAdminForm()
-        return TemplateResponse(request, "admin/import_data/import_data.html", context)
-
-    def get_urls(
-        self,
-    ):
-        return [
-            path(
-                "update-metadata/",
-                self.admin_view(self.update_metadata_file_upload),
-                name="update_metadata",
-            ),
-            path(
-                "update-doi/",
-                self.admin_view(self.update_doi),
-                name="update_doi",
-            ),
-            path(
-                "import-data/",
-                self.admin_view(self.import_data),
-                name="import_data",
-            ),
-        ] + super().get_urls()
-
-
-admin.site.__class__ = FedoraCustomAdminSite

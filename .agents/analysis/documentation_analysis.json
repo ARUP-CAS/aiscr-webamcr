@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "status": "done — T08",
+    "needs_agent_update": false
+  },
+  "sphinx_docs": {
+    "location": "docs/",
+    "readthedocs_config": "docs/source/conf.py",
+    "readthedocs_url": "https://aiscr-webamcr.readthedocs.io/cs/stable/",
+    "issues": [
+      {
+        "severity": "Nízká",
+        "description": "Konfigurace Read the Docs instaluje plné `webclient/requirements.txt`, což zahrnuje i vývojové/testovací závislosti (Selenium, debug-toolbar apod.); pro build dokumentace to není nutné a prodlužuje to čas i riziko konfliktů.",
+        "recommendation": "Zvážit vytvoření separátního requirements souboru pro dokumentaci (např. `docs/requirements.txt`) s minimální sadou balíků a ten používat v `.readthedocs.yaml`."
+      }
+    ]
+  },
+  "documentation_generators": [
+    {
+      "name": "generate_module_docs.py",
+      "path": "docs/generate_module_docs.py",
+      "description": "Generuje RST dokumentaci pro Django moduly ve `webclient/` (models, forms, views, urls atd.) a pro projektové skripty.",
+      "key_behaviour": [
+        "AST parser pro `urls.py` s generováním tabulek URL (včetně app_name a view cíle).",
+        "Používá `check_content_changed`, aby nedocházelo k přepisování beze změny (pomáhá udržet přehledné diffy).",
+        "Při generování URL routing dokumentace vytváří `docs/source/04_django_aplikace/04_01_core/url_routing.rst`."
+      ],
+      "issues": []
+    },
+    {
+      "name": "generate_selenium_test_docs.py",
+      "path": "docs/generate_selenium_test_docs.py",
+      "description": "Parsuje docstringy Selenium testů (`test_selenium.py`) a generuje přehled a detaily testů do `selenium_testy.rst`.",
+      "key_behaviour": [
+        "Vyžaduje přítomnost sekcí `Steps:` a `Expected:` v docstringu; strukturuje je do RST sekcí.",
+        "Ignoruje šumové adresáře (venv, node_modules, __pycache__, .git).",
+        "Používá značky `.. AUTO-GENERATED-SELENIUM-TESTS-START/END` pro bezpečné přepisování generované části."
+      ],
+      "issues": []
+    },
+    {
+      "name": "convert_to_rst.py",
+      "path": "docs/licenses/convert_to_rst.py",
+      "description": "Generuje tabulku licencí Python knihoven z výstupu `pip-licenses` do `docs/source/12_zavislosti/python_knihovny.rst`.",
+      "key_behaviour": [
+        "Spouští `pip-licenses` s parametry `--format=json --with-urls --from=mixed --with-system` a JSON výstup převádí na RST list-table.",
+        "Používá placeholder `@licence_table` v šabloně `knihovny_for_edit.rst`, který nahrazuje vygenerovanými řádky.",
+        "U některých balíků (např. `wrapt`) ručně přepisuje pole licence pomocí mapy `LICENSES_MANUAL_FIXES`."
+      ],
+      "issues": [
+        {
+          "severity": "Nízká",
+          "description": "Skript nemá ošetřené chyby při běhu `pip-licenses` (např. chybějící nástroj nebo nevalidní JSON), což může vést k málo srozumitelným tracebackům při generování licenční tabulky.",
+          "recommendation": "Doplnit kontrolu `returncode` a try/except kolem `json.loads`, s uživatelsky přívětivou chybovou hláškou."
+        }
+      ]
+    }
+  ],
+  "broken_links": [],
+  "coverage_gaps": [
+    {
+      "area": "Selenium testy",
+      "description": "Generátor Selenium dokumentace počítá s docstringy na každé `test_` metodě; případné chybějící docstringy nebo sekce `Steps`/`Expected` vedou k tomu, že test nebude dobře zdokumentován.",
+      "recommendation": "Pravidelně spouštět `generate_selenium_test_docs.py` v CI a selhat build, pokud najde test bez povinných sekcí."
+    }
+  ],
+  "outdated_content": []
+}

@@ -1,4 +1,4 @@
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.2 AS python-builder
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.3 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ="Europe/Prague"
@@ -52,19 +52,19 @@ ENV VERSION=$VERSION_APP \
 RUN echo $TZ > /etc/timezone && \
     apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
-        tzdata \
-        cron \
-        sudo \
-        nano \
-        python3 \
-        python3-pip \
-        libgdal-dev \
-        locales \
-        gettext \
-        poppler-utils \
-        unrar \
-        redis-tools \
-        libmagic1 && \
+    tzdata \
+    cron \
+    sudo \
+    nano \
+    python3 \
+    python3-pip \
+    libgdal-dev \
+    locales \
+    gettext \
+    poppler-utils \
+    unrar \
+    redis-tools \
+    libmagic1 && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -83,7 +83,7 @@ RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale /vol/web/nginx/data 
     usermod -aG sudo user
 
 WORKDIR /code
-COPY --chown=user:user ./webclient /code
+#COPY --chown=user:user ./webclient /code
 COPY --chown=user:user ./scripts /scripts
 COPY --chown=user:user ./cert /cert
 ADD --chown=user:user ./proxy/custom_html /vol/web/nginx/data

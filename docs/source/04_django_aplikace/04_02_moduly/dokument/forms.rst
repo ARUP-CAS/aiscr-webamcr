@@ -14,6 +14,12 @@ Třídy
 
    .. py:method:: clean()
 
+      Provádí operaci clean.
+
+      :param value: Parametr ``value`` předává se do volání ``clean()``, ``debug()``, ovlivňuje větvení podmínek.
+
+      :return: Vrací proměnná ``qs``.
+
 
 .. py:class:: CoordinatesDokumentForm
 
@@ -28,6 +34,14 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+
 
 .. py:class:: EditDokumentForm
 
@@ -36,6 +50,15 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param can_edit_datum_zverejneni: Parametr ``can_edit_datum_zverejneni`` ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
 
 
 .. py:class:: CreateModelDokumentForm
@@ -46,6 +69,14 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: CreateModelExtraDataForm
 
@@ -54,6 +85,14 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: PripojitDokumentForm
@@ -64,6 +103,12 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param ident_zaznam: Identifikátor ``ident_zaznam`` používaný pro dohledání cílového záznamu.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: DokumentCastForm
 
@@ -72,6 +117,12 @@ Třídy
    **Metody:**
 
    .. py:method:: __init__()
+
+      Inicializuje instanci třídy.
+
+      :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: DokumentCastCreateForm
@@ -82,6 +133,11 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: TvarFormSetHelper
 
@@ -91,10 +147,15 @@ Třídy
 
    .. py:method:: __init__()
 
+      Inicializuje instanci třídy.
+
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 .. py:class:: DokumentFilterForm
 
-   Popis není k dispozici.
+   Implementuje komponentu ``DokumentFilterForm`` v rámci aplikace.
 
 
 Funkce
@@ -103,4 +164,9 @@ Funkce
 .. py:function:: create_tvar_form(not_readonly)
 
    Funkce která vrací formulář Tvar pro formset.
+
    Pomocí ní je možné předat výběr formuláři.
+
+   :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+
+   :return: Vrací proměnná ``TvarForm``.

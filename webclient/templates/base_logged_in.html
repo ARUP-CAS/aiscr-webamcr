@@ -12,7 +12,7 @@
   {% endcompress %} -->
   <div id="app-sidebar-wrapper">
   <div class="sidebar-toggle-2-container">
-    <button class="btn btn-dark ml-2" id="sidebar-toggle-2"><span class="material-icons" style="color: white">menu_open</span></button>
+    <button class="btn btn-dark ms-2" id="sidebar-toggle-2"><span class="material-icons" style="color: white">menu_open</span></button>
   </div>
     <div class="app-sidebar-heading">
       <a href="/" title="{% trans 'templates.baseLogedIn.sidebar.home' %}">
@@ -24,18 +24,18 @@
       <div class="card">        
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left" data-target="#collapseProjekty">
+            <span class="btn index-link d-grid d-md-block text-start" data-bs-target="#collapseProjekty">
               <a href="{% url 'projekt:index' %}" class="{% if request.resolver_match.app_name == 'projekt' %}active{% endif %}">
                 <span class="material-icons">dynamic_feed</span> {% trans "templates.baseLogedIn.sidebar.projekty" %}
               </a>
-              <span class="expand-click collapsed" data-toggle="collapse" data-target="#collapseProjekty" aria-expanded="false"
+              <span class="expand-click collapsed" data-bs-toggle="collapse" data-bs-target="#collapseProjekty" aria-expanded="false"
                     aria-controls="collapseProjekty">
                 <span id="menuProjekty" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
         </div>        
-        <div id="collapseProjekty" class="collapse" data-parent="#accordionSidebar">
+        <div id="collapseProjekty" class="collapse" data-bs-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
               <li><a href="{% url 'projekt:create' %}">{% trans "templates.baseLogedIn.sidebar.projekty.zapsat" %}</a></li>
@@ -63,18 +63,18 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span class="btn index-link d-grid d-md-block text-start">
               <a href="{% url 'arch_z:index' %}" class="{% if request.resolver_match.app_name == 'arch_z' %}active{% endif %}">
                 <span class="material-icons">brush</span> {% trans "templates.baseLogedIn.sidebar.samostatneAkce" %}
               </a>
-              <span class="expand-click collapsed" data-toggle="collapse"
-                    data-target="#collapseAkce" aria-expanded="false" aria-controls="collapseAkce">
+              <span class="expand-click collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#collapseAkce" aria-expanded="false" aria-controls="collapseAkce">
                 <span id="menuSamostatneAkce" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
         </div>
-        <div id="collapseAkce" class="collapse" data-parent="#accordionSidebar">
+        <div id="collapseAkce" class="collapse" data-bs-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
               <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.zapsat" %}</a></li>
@@ -93,18 +93,18 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span class="btn index-link d-grid d-md-block text-start">
               <a href="{% url 'lokalita:index' %}" class="{% if request.resolver_match.app_name == 'lokalita' %}active{% endif %}">
                 <span class="material-icons">tour</span> {% trans "templates.baseLogedIn.sidebar.lokality" %}
               </a>
-              <span class="expand-click collapsed" data-toggle="collapse"
-                    data-target="#collapseLokality" aria-expanded="false" aria-controls="collapseLokality">
+              <span class="expand-click collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#collapseLokality" aria-expanded="false" aria-controls="collapseLokality">
                 <span id="menuLokality" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
         </div>
-        <div id="collapseLokality" class="collapse" data-parent="#accordionSidebar">
+        <div id="collapseLokality" class="collapse" data-bs-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
               <li><a href="{% url 'lokalita:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.zapsat" %}</a></li>
@@ -123,18 +123,18 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span class="btn index-link d-grid d-md-block text-start">
               <a href="{% url 'pas:index' %}" class="{% if request.resolver_match.app_name == 'pas' %}active{% endif %}">
                 <span class="material-icons">location_on</span> {% trans "templates.baseLogedIn.sidebar.samostatneNalezy" %}
               </a>
-              <span class="expand-click collapsed" data-toggle="collapse"
-                    data-target="#collapseSn" aria-expanded="false" aria-controls="collapseSn">
+              <span class="expand-click collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#collapseSn" aria-expanded="false" aria-controls="collapseSn">
                 <span id="menuSamostatneNalezy" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
         </div>
-        <div id="collapseSn" class="collapse" data-parent="#accordionSidebar">
+        <div id="collapseSn" class="collapse" data-bs-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
               <li><a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
@@ -157,18 +157,18 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span class="btn index-link d-grid d-md-block text-start">
               <a href="{% url 'dokument:index-model-3D' %}"  class="{% if request.resolver_match.app_name == 'dokument' and 'model' in request.path %}active{% endif %}">
                 <span class="material-icons">3d_rotation</span> {% trans "templates.baseLogedIn.sidebar.knihovna3D" %}
               </a>
-              <span class="expand-click collapsed" data-toggle="collapse"
-                    data-target="#collapse3d" aria-expanded="true" aria-controls="collapse3d">
+              <span class="expand-click collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#collapse3d" aria-expanded="true" aria-controls="collapse3d">
                 <span id="menuKnihovna3D" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
         </div>
-        <div id="collapse3d" class="collapse" data-parent="#accordionSidebar">
+        <div id="collapse3d" class="collapse" data-bs-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
               <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.zapsat" %}</a></li>
@@ -187,18 +187,18 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left">
+            <span class="btn index-link d-grid d-md-block text-start">
               <a href="{% url 'dokument:index' %}" class="{% if request.resolver_match.app_name == 'dokument' and 'model' not in request.path %}active{% endif %}">
               <span class="material-icons">description</span> {% trans "templates.baseLogedIn.sidebar.dokumenty" %}
               </a>
-              <span class="expand-click collapsed" data-toggle="collapse"
-                    data-target="#collapseDokument" aria-expanded="true" aria-controls="collapseDokument">
+              <span class="expand-click collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#collapseDokument" aria-expanded="true" aria-controls="collapseDokument">
                 <span id="menuDokumenty" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
         </div>
-        <div id="collapseDokument" class="collapse" data-parent="#accordionSidebar">
+        <div id="collapseDokument" class="collapse" data-bs-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
               {% if show_dokumenty_zapsat %}
@@ -219,18 +219,18 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <span class="btn index-link btn-block text-left collapsed">
+            <span class="btn index-link d-grid d-md-block text-start collapsed">
               <a href="{% url 'ez:index' %}" class="{% if request.resolver_match.app_name == 'ez' %}active{% endif %}">
               <span class="material-icons">menu_book</span> {% trans "templates.baseLogedIn.sidebar.externiZdroje" %}
               </a>
-              <span class="expand-click collapsed" data-toggle="collapse"
-                    data-target="#collapseEz" aria-expanded="false" aria-controls="collapseEz">
+              <span class="expand-click collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#collapseEz" aria-expanded="false" aria-controls="collapseEz">
                 <span id="menuExterniZdroje" class="material-icons app-icon-expand">expand_more</span>
               </span>
             </span>
           </h2>
         </div>
-        <div id="collapseEz" class="collapse" data-parent="#accordionSidebar">
+        <div id="collapseEz" class="collapse" data-bs-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
               <li><a href="{% url 'ez:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.zapsat" %}</a></li>
@@ -250,7 +250,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn index-link btn-block text-left .btn-link.collapsed" type="button">
+            <button class="btn index-link d-grid d-md-block text-start .btn-link.collapsed" type="button">
               <a href="/admin/" class="menu-direct-link"><span class="material-icons">settings</span> {% trans "templates.baseLogedIn.sidebar.administrace" %}</a>
             </button>
           </h2>
@@ -309,15 +309,15 @@
         {% endif %}
       {% endif %}
     </span>
-    <button class="navbar-toggler" id="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"
+    <button class="navbar-toggler" id="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMobile"
             aria-controls="navbarMobile" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navbarMobile">
-      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+      <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
         <li class="nav-item d-lg-none d-xl-block">
-          <span class="nav-link" rel="tooltip" data-placement="top"  title="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
+          <span class="nav-link" rel="tooltip" data-bs-placement="top"  title="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <small>
               <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}</strong> {{ user.ident_cely }}
             </small>
@@ -332,15 +332,15 @@
           </span>
         </li>
         <li class="nav-item d-none d-lg-block d-xl-none">
-          <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-toggle="popover" data-placement="bottom"
-            data-content="<strong>{% trans 'templates.baseLogedIn.navbar.informace.prihlasen' %}</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
+          <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-bs-toggle="popover" data-bs-placement="bottom" title="{% trans 'templates.baseLogedIn.navbar.informace.prihlasen' %}"
+            data-bs-content="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <span class="material-icons">info</span>
             {% trans "templates.baseLogedIn.navbar.informace" %}
           </a>
         </li>
         <li class="nav-item app-pipe"></li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'uzivatel:update-uzivatel' %}" rel="tooltip" data-placement="top" title="{% trans 'templates.baseLogedIn.navbar.uzivatel.title' %}">
+          <a class="nav-link" href="{% url 'uzivatel:update-uzivatel' %}" rel="tooltip" data-bs-placement="top" title="{% trans 'templates.baseLogedIn.navbar.uzivatel.title' %}">
             <span class="material-icons">person</span>
             <span>{% trans "templates.baseLogedIn.navbar.uzivatel" %}</span>
           </a>
@@ -357,6 +357,12 @@
           </form>
         </li>
         <li class="nav-item app-pipe"></li>
+        <li class="nav-item">
+          <button class="nav-link" id="theme-toggle-btn" title="{% trans 'templates.baseLogedIn.navbar.toggleTheme' %}">
+            <span class="material-icons">dark_mode</span>
+          </button>
+        </li>
+        <li class="nav-item app-pipe"></li>
         <li class="nav-item app-flags">
           <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
             <img src="{% static 'img/flag-cs.svg' %}" alt="" class="app-flag" />
@@ -371,7 +377,7 @@
 {% endblock %}
 
 {% block modal-form %}
-  <div class="modal fade app-modal-form" tabindex="-1" role="dialog" id="modal-form">
+  <div class="modal fade app-modal-form" tabindex="-1" role="dialog" id="modal-form" data-bs-focus="false">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
       <div class="modal-content form" id="id-modal-content"></div>
     </div>
@@ -382,9 +388,9 @@
   <footer class="text-lg-start">
     <div class="d-lg-flex justify-content-lg-between p-3 app-footer-wrapper">
       <div>
-        <a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerLicence">{% trans "templates.baseLogedIn.footer.licence" %}</a><span class="app-pipe"></span><!--
-        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerKontakt">{% trans "templates.baseLogedIn.footer.kontakt" %}</a><span class="app-pipe"></span><!--
-        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerPartneri">{% trans "templates.baseLogedIn.footer.partneri" %}</a><span class="app-pipe"></span><!--
+        <a href="#" class="text-uppercase" data-bs-toggle="modal" data-bs-target="#footerLicence">{% trans "templates.baseLogedIn.footer.licence" %}</a><span class="app-pipe"></span><!--
+        --><a href="#" class="text-uppercase" data-bs-toggle="modal" data-bs-target="#footerKontakt">{% trans "templates.baseLogedIn.footer.kontakt" %}</a><span class="app-pipe"></span><!--
+        --><a href="#" class="text-uppercase" data-bs-toggle="modal" data-bs-target="#footerPartneri">{% trans "templates.baseLogedIn.footer.partneri" %}</a><span class="app-pipe"></span><!--
         --><a href="https://amcr-help.aiscr.cz/" class="text-uppercase" target="_blank">{% trans "templates.baseLogedIn.footer.napoveda" %}</a>
       </div>
       <div>
@@ -432,13 +438,53 @@
     }
     $("#sidebar-toggle").click(sidebar_toggle_func);
     $("#sidebar-toggle-2").click(sidebar_toggle_func);
-    $('[rel="tooltip"]').tooltip({
-      container : '#app-page-wrapper',
-      html : true,
+    // Suppress Bootstrap's "multiple instance" error for tooltips
+    const originalError = console.error;
+    const suppressTooltipError = function() {
+      return function(...args) {
+        if (args[0] && args[0].includes && args[0].includes("Bootstrap doesn't allow more than one instance")) {
+          return; // Silently suppress this specific error
+        }
+        originalError.apply(console, args);
+      };
+    };
+    console.error = suppressTooltipError();
+    
+    // Initialize all tooltips with proper instance management
+    window.reinitializeTooltips = function() {
+      const tooltipTriggerList = document.querySelectorAll('[rel="tooltip"], [data-bs-toggle="tooltip"]')
+      tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        try {
+          // This safely gets existing instance or creates new one - prevents "multiple instance" error
+          bootstrap.Tooltip.getOrCreateInstance(tooltipTriggerEl);
+        } catch (e) {
+          // Silently skip if instance creation fails
+        }
+      })
+    };
+    window.reinitializeTooltips();
+    
+    // Hide tooltips when dropdowns open
+    const dropdownElements = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+    dropdownElements.forEach(function(dropdownEl) {
+      dropdownEl.addEventListener('show.bs.dropdown', function() {
+        const tooltip = bootstrap.Tooltip.getInstance(this);
+        if (tooltip) {
+          tooltip.hide();
+        }
+      });
+      
+      dropdownEl.addEventListener('hidden.bs.dropdown', function() {
+        const tooltip = bootstrap.Tooltip.getInstance(this);
+        if (tooltip) {
+          tooltip.show();
+        }
+      });
     });
-    $('[data-toggle="popover"]').popover({
-      html : true
-    });
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+      return new bootstrap.Popover(popoverTriggerEl)
+    })
   </script>
   <script>
 
@@ -623,46 +669,38 @@
 
     const increase_ul_height = (parent_element) => {
         const li_elements = parent_element.querySelectorAll("li.select2-selection__choice");
-        const select2_element = parent_element;
-        const select2_element_selection_rendered = parent_element.querySelector(".select2-selection__rendered")
-        const select2_element_selection = parent_element.querySelector(".select2-selection");
         let element_line_width_sum = 0;
         const line_limits = [parent_element.offsetWidth - 5 - 11, parent_element.offsetWidth - 5, parent_element.offsetWidth - 5];
-        let current_line = 1
-        let rows_needed = 1
+        let current_line = 1;
+        let rows_needed = 1;
+
         if (li_elements.length === 1) {
-            const element = li_elements[0]
+            const element = li_elements[0];
             const computedStyle = window.getComputedStyle(element);
-            const lineHeight = Number(computedStyle.lineHeight.replace("px", ""))
-            rows_needed = Math.ceil(element.getBoundingClientRect().height / lineHeight)
+            const lineHeight = Number(computedStyle.lineHeight.replace("px", ""));
+            rows_needed = Math.ceil(element.getBoundingClientRect().height / lineHeight);
         } else {
-          for (const li_element of li_elements) {
-              const element_width = li_element.getBoundingClientRect().width + 16;
-              const element_height = li_element.getBoundingClientRect().height;
-              // Added borders, padding and margins
-              element_line_width_sum += element_width;
-              if (element_line_width_sum > line_limits[current_line-1]) {
-                  current_line++;
-                  element_line_width_sum = element_width;
-                  li_element.style.clear = "left";
-              }
-          }
-          rows_needed = Math.min(current_line, 3);
+            for (const li_element of li_elements) {
+                const element_width = li_element.getBoundingClientRect().width + 16;
+                // Added borders, padding and margins
+                element_line_width_sum += element_width;
+                if (element_line_width_sum > line_limits[current_line - 1]) {
+                    current_line++;
+                    element_line_width_sum = element_width;
+                    li_element.classList.add("select2-choice-clear-left");
+                } else {
+                    li_element.classList.remove("select2-choice-clear-left");
+                }
+            }
+            rows_needed = Math.min(current_line, 3);
         }
-        let height = 1.5 * Math.min(Math.max(rows_needed, 1), 3);
-        if (height > 1.5) {
-            height -= 0.125
-        }
-        if (select2_element) {
-            select2_element.style = `height: ${height}rem!important;`;
-        }
-        if (select2_element_selection) {
-            select2_element_selection.style = `height: ${height}rem!important;`;
-        }
-        if (select2_element_selection_rendered) {
-            rendered_height = height - 0.2
-            select2_element_selection_rendered.style = `height: ${rendered_height}rem!important;`;
-        }
+
+        // Remove all height classes
+        parent_element.classList.remove("select2-height-1", "select2-height-2", "select2-height-3");
+
+        // Add appropriate height class based on rows needed
+        const heightClass = `select2-height-${Math.min(Math.max(rows_needed, 1), 3)}`;
+        parent_element.classList.add(heightClass);
     }
 
     const field_click = (item) => {
@@ -712,19 +750,74 @@
       })
     })
 
-  $('.selectpicker.form-control').on('show.bs.select', function () {
+  //Fix for select2 multiple select, when clicking on x to remove selected item, 
+  //the item is removed from select2 but not from select element, 
+  //so we need to trigger change event on select element to update the select2
+  $(document).on('mousedown', '.select2-selection__choice__remove', function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      var $choice = $(this).closest('.select2-selection__choice');
+      var val = $choice.data('select2-id'); // or use the title attribute
+
+      // Find the bound select element and deselect the value
+      var $select = $(this).closest('.select2-container').prev('select');
+      // OR: var $select = $('#your-select-id');
+
+      var choiceText = $choice.attr('title');
+      $select.find('option').filter(function() {
+          return $(this).text() === choiceText || $(this).val() === choiceText;
+      }).prop('selected', false);
+
+      $select.trigger('change');
+  });
+
+  $('.selectpicker.form-select').on('show.bs.select', function () {
       const closestDiv = $(this).closest('.content-with-table-responsive');
       if (closestDiv.length) {
           closestDiv.css('overflow', 'visible');
       }
   });
-  $('.selectpicker.form-control').on('hide.bs.select', function () {
+  $('.selectpicker.form-select').on('hide.bs.select', function () {
       const closestDiv = $(this).closest('.content-with-table-responsive');
       if (closestDiv.length) {
           closestDiv.css('overflow', 'scroll');
       }
   });
 
+  // Close other dropdowns after one is shown
+  $(document).on('shown.bs.dropdown', function(e) {
+      // Get the button that was clicked
+      const clickedButton = e.relatedTarget;
+      
+      // Close all other dropdown menus
+      const allToggles = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+      allToggles.forEach(toggle => {
+          if (toggle !== clickedButton) {
+              // Remove show class from the menu
+              const menu = toggle.nextElementSibling;
+              if (menu && menu.classList.contains('dropdown-menu')) {
+                  menu.classList.remove('show');
+              }
+          }
+      });
+  });
+
+  // Close dropdown when clicking outside of it (but not for bootstrap-select)
+  $(document).on('click', function(e) {
+      // Don't close if clicking on a dropdown button, inside a dropdown menu, or inside bootstrap-select
+      if ($(e.target).closest('[data-bs-toggle="dropdown"]').length === 0 && 
+          $(e.target).closest('.dropdown-menu').length === 0 &&
+          $(e.target).closest('.bootstrap-select').length === 0) {
+          // Close all open dropdowns (but not bootstrap-select)
+          const allMenus = document.querySelectorAll('.dropdown-menu.show:not(.bootstrap-select .dropdown-menu)');
+          allMenus.forEach(menu => {
+              menu.classList.remove('show');
+          });
+      }
+  });
+
 </script>
 <script src="{% static 'js/copyIdentLink.js' %}"></script>
+<script src="{% static 'js/theme-toggle.js' %}"></script>
 {% endblock %}
