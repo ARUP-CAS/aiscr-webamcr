@@ -71,6 +71,11 @@ def detail(request, ident_cely):
         instance=pian,
     )
     if form.is_valid():
+        conflicting_fields = form.get_conflicting_fields()
+        if conflicting_fields:
+            conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+            request.session[f"pian_concurrent_changes_{pian.ident_cely}"] = conflicting_labels
+            return redirect(dj.get_absolute_url() + "/pian/edit/" + str(ident_cely))
         logger.debug("pian.views.detail.form.valid", extra={"ident_cely": pian.ident_cely})
         pian = form.save(commit=False)
         fedora_transaction = pian.create_transaction(request.user)

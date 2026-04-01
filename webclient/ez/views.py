@@ -344,6 +344,13 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
             :return: Vrací výsledek volání ``HttpResponseRedirect()``.
         """
+        conflicting_fields = form.get_conflicting_fields()
+        if conflicting_fields:
+            conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+            context = self.get_context_data(form=form)
+            context["concurrent_changes"] = conflicting_labels
+            context["fresh_form_url"] = reverse("ez:edit", kwargs={"slug": self.object.ident_cely})
+            return self.render_to_response(context)
         self.object: ExterniZdroj = form.save(commit=False)
         self.object.active_transaction = self.object.create_transaction(self.request.user)
         self.object.active_transaction.redirect_on_error = True

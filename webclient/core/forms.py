@@ -1,3 +1,4 @@
+import json
 import logging
 
 from bs4 import BeautifulSoup
@@ -376,6 +377,135 @@ class PermissionSkipImportForm(forms.Form):
         label=_("core.forms.permissionSkipImport.file.label"),
         widget=forms.FileInput(attrs={"accept": ".csv"}),
     )
+
+
+class OptimisticLockingMixin:
+    """Mixin pro detekci souběžných úprav záznamu (optimistické zamykání).
+
+    Při inicializaci formuláře s existující instancí uloží aktuální hodnoty polí modelu
+    do skrytého pole (výchozí název ``optimistic_lock_data``, lze přepsat atributem
+    :attr:`optimistic_lock_field_name`). Při odeslání formuláře lze pomocí metody
+    :meth:`get_conflicting_fields` zjistit, která pole byla mezitím změněna v databázi.
+
+    Pokud je na jedné stránce více formulářů sdílejících jeden POST, je nutné v každé
+    podtřídě nastavit unikátní :attr:`optimistic_lock_field_name`, aby nedošlo ke kolizi.
+
+    Podtřída by měla skryté pole zahrnout do layoutu formuláře nebo ho vykreslit ručně v šabloně.
+    """
+
+    #: Název skrytého pole pro uložení snapshotu dat. Přepište v podtřídě při kolizi názvů.
+    optimistic_lock_field_name = "optimistic_lock_data"
+
+    #: Pole formuláře, která se přeskočí při porovnávání (seznam názvů polí).
+    optimistic_lock_exclude = []
+
+    #: Pole dostupná jako atributy instance, ale nikoli jako DB modelová pole (např. vlastnosti
+    #: odvozené z geometrie). Hodnoty se čtou přes ``getattr(instance, field_name)``.
+    optimistic_lock_instance_fields = []
+
+    def __init__(self, *args, **kwargs):
+        """Inicializuje mixin a přidá skryté pole pro optimistické zamykání.
+
+        :param args: Parametry předané do nadřazeného ``__init__``.
+        :param kwargs: Klíčové parametry předané do nadřazeného ``__init__``.
+        """
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+        if instance and instance.pk:
+            self.fields[self.optimistic_lock_field_name] = forms.CharField(
+                widget=forms.HiddenInput(),
+                required=False,
+                label="",
+            )
+            if not self.is_bound:
+                self.initial[self.optimistic_lock_field_name] = self._serialize_instance_for_lock(instance)
+
+    def _get_lock_fields(self):
+        """Vrací seznam názvů polí formuláře zahrnutých do kontroly souběžných změn.
+
+        Zahrnuje DB modelová pole i pole z :attr:`optimistic_lock_instance_fields`.
+
+        :return: Seznam názvů polí, která jsou sledována a nejsou vyloučena.
+        """
+        result = []
+        for field_name in self.fields:
+            if field_name in self.optimistic_lock_exclude or field_name == self.optimistic_lock_field_name:
+                continue
+            try:
+                self._meta.model._meta.get_field(field_name)
+                result.append(field_name)
+            except Exception:
+                pass
+        for field_name in self.optimistic_lock_instance_fields:
+            if field_name not in result and field_name not in self.optimistic_lock_exclude:
+                result.append(field_name)
+        return result
+
+    def _serialize_instance_for_lock(self, instance):
+        """Serializuje hodnoty polí instance modelu do JSON řetězce.
+
+        :param instance: Instance modelu, jehož hodnoty se serializují.
+        :return: JSON řetězec s hodnotami polí pro pozdější porovnání.
+        """
+        from django.core.exceptions import FieldDoesNotExist
+
+        data = {}
+        for field_name in self._get_lock_fields():
+            if field_name in self.optimistic_lock_instance_fields:
+                value = getattr(instance, field_name, None)
+                if value is None:
+                    data[field_name] = None
+                elif hasattr(value, "isoformat"):
+                    data[field_name] = value.isoformat()
+                else:
+                    data[field_name] = value if isinstance(value, (int, float, bool)) else str(value)
+                continue
+            try:
+                model_field = self._meta.model._meta.get_field(field_name)
+            except FieldDoesNotExist:
+                continue
+            if model_field.many_to_many:
+                m2m_manager = getattr(instance, field_name, None)
+                data[field_name] = sorted([obj.pk for obj in m2m_manager.all()]) if m2m_manager is not None else []
+            elif model_field.is_relation:
+                data[field_name] = getattr(instance, f"{field_name}_id", None)
+            else:
+                value = getattr(instance, field_name, None)
+                if value is None:
+                    data[field_name] = None
+                elif hasattr(value, "isoformat"):
+                    data[field_name] = value.isoformat()
+                else:
+                    data[field_name] = value if isinstance(value, (int, float, bool)) else str(value)
+        return json.dumps(data, default=str)
+
+    def get_conflicting_fields(self):
+        """Porovná původní stav polí se stavem v databázi a vrátí seznam konfliktních polí.
+
+        Načte čerstvý stav záznamu z databáze a porovná ho s hodnotami uloženými
+        při renderování formuláře v poli :attr:`optimistic_lock_field_name`.
+
+        :return: Seznam názvů polí, která byla mezitím změněna jinou úpravou.
+        """
+        if not self.instance or not self.instance.pk:
+            return []
+        lock_data_str = self.data.get(self.add_prefix(self.optimistic_lock_field_name), "")
+        if not lock_data_str:
+            return []
+        try:
+            original_data = json.loads(lock_data_str)
+        except (json.JSONDecodeError, ValueError):
+            return []
+        try:
+            fresh_instance = self._meta.model.objects.get(pk=self.instance.pk)
+        except self._meta.model.DoesNotExist:
+            return list(original_data.keys())
+        current_data = json.loads(self._serialize_instance_for_lock(fresh_instance))
+        return [
+            field_name
+            for field_name, original_value in original_data.items()
+            if field_name in current_data and current_data[field_name] != original_value
+        ]
 
 
 class BaseFilterForm(forms.Form):

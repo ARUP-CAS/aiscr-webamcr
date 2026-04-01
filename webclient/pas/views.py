@@ -411,6 +411,26 @@ def edit(request, ident_cely):
             )
         if form.is_valid():
             logger.debug("pas.views.edit.form_valid")
+            conflicting_fields = form.get_conflicting_fields()
+            if conflicting_fields:
+                geom_label = str(_("pas.forms.createSamostatnyNalezForm.souradnice.label"))
+                conflicting_labels = [
+                    geom_label if f == "geom" else str(form.fields[f].label)
+                    for f in conflicting_fields
+                    if f == "geom" or f in form.fields
+                ]
+                return render(
+                    request,
+                    "pas/edit.html",
+                    {
+                        "sn": sn,
+                        "global_map_can_edit": True,
+                        "formCoor": form_coor,
+                        "form": form,
+                        "concurrent_changes": conflicting_labels,
+                        "fresh_form_url": reverse("pas:edit", kwargs={"ident_cely": ident_cely}),
+                    },
+                )
             sn.geom_system = form_coor.data.get("coordinate_system")
             if geom is not None:
                 sn.katastr = get_cadastre_from_point(geom)

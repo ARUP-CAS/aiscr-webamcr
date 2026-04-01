@@ -1,7 +1,7 @@
 import logging
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
-from core.forms import BaseFilterForm, TwoLevelSelectField
+from core.forms import BaseFilterForm, OptimisticLockingMixin, TwoLevelSelectField
 from core.widgets import AutocompleteModelSelect2
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -159,8 +159,10 @@ class PotvrditNalezForm(forms.ModelForm):
                 self.fields[key].required = False
 
 
-class CreateSamostatnyNalezForm(forms.ModelForm):
+class CreateSamostatnyNalezForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení samostatnýho nálezu."""
+
+    optimistic_lock_instance_fields = ["geom"]
 
     katastr = forms.CharField(
         label=_("pas.forms.createSamostatnyNalezForm.katastr.label"),
