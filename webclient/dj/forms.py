@@ -84,10 +84,15 @@ class CreateDJForm(forms.ModelForm):
                 queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID, TYP_DJ_KATASTR])
             else:
                 queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
-            if jednotky.filter(typ__id=TYP_DJ_KATASTR).exists() and (
-                hasattr(instance, "typ") and instance.typ != Heslar.objects.get(id=TYP_DJ_KATASTR)
-            ):
-                queryset = queryset.filter(~Q(id=TYP_DJ_KATASTR))
+            _unique_typy_ids = [TYP_DJ_CELEK, TYP_DJ_KATASTR, TYP_DJ_LOKALITA]
+            is_editing_unique = hasattr(instance, "typ") and (
+                instance.typ is not None and instance.typ.id in _unique_typy_ids
+            )
+            if not is_editing_unique:
+                if jednotky.filter(typ__id__in=[TYP_DJ_KATASTR, TYP_DJ_LOKALITA]).exists():
+                    queryset = queryset.none()
+                elif jednotky.filter(typ__id__in=_unique_typy_ids).exists():
+                    queryset = queryset.filter(~Q(id__in=_unique_typy_ids))
         return queryset
 
     class Meta:

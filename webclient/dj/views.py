@@ -259,19 +259,33 @@ def zapsat(request, arch_z_ident_cely):
             TYP_DJ_LOKALITA: DJ_TYP_LOKALITA_JIZ_EXISTUJE,
         }
         with transaction.atomic():
-            if typ and typ.id in _unique_typy:
+            if typ:
                 ArcheologickyZaznam.objects.select_for_update().get(pk=az.pk)
-                existujici = (
-                    DokumentacniJednotka.objects.filter(archeologicky_zaznam=az, typ__id__in=list(_unique_typy.keys()))
+                blocking_typ = (
+                    DokumentacniJednotka.objects.filter(
+                        archeologicky_zaznam=az, typ__id__in=[TYP_DJ_KATASTR, TYP_DJ_LOKALITA]
+                    )
                     .values_list("typ__id", flat=True)
                     .first()
                 )
-                if existujici is not None:
+                if blocking_typ is not None:
+                    logger.debug(
+                        "dj.views.detail.zapsat.blocking_typ_exists",
+                        extra={"arch_z": arch_z_ident_cely, "blocking_typ": blocking_typ, "novy_typ": typ.id},
+                    )
+                    messages.add_message(request, messages.ERROR, _unique_typy.get(blocking_typ, _unique_typy[typ.id]))
+                    return az.get_redirect()
+                if (
+                    typ.id in _unique_typy
+                    and DokumentacniJednotka.objects.filter(
+                        archeologicky_zaznam=az, typ__id__in=list(_unique_typy.keys())
+                    ).exists()
+                ):
                     logger.debug(
                         "dj.views.detail.zapsat.unique_typ_already_exists",
-                        extra={"arch_z": arch_z_ident_cely, "existujici_typ": existujici, "novy_typ": typ.id},
+                        extra={"arch_z": arch_z_ident_cely, "novy_typ": typ.id},
                     )
-                    messages.add_message(request, messages.ERROR, _unique_typy.get(existujici, _unique_typy[typ.id]))
+                    messages.add_message(request, messages.ERROR, _unique_typy[typ.id])
                     return az.get_redirect()
             vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
             vazba.save()  # TODO: přesunout do signálů.
