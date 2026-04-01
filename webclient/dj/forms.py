@@ -1,6 +1,7 @@
 import logging
 
 from arch_z.models import Akce, ArcheologickyZaznam
+from core.forms import OptimisticLockingMixin
 from core.widgets import AutocompleteModelSelect2
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -15,7 +16,7 @@ from heslar.models import Heslar, RuianKatastr
 logger = logging.getLogger(__name__)
 
 
-class CreateDJForm(forms.ModelForm):
+class CreateDJForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky."""
 
     pian_text = forms.CharField(
@@ -187,6 +188,8 @@ class CreateDJForm(forms.ModelForm):
                 css_class="row",
             ),
         )
+        if "optimistic_lock_data" in self.fields:
+            self.helper.layout[0].append(Div("optimistic_lock_data", css_class="d-none"))
         self.fields["pian"].widget.attrs["disabled"] = "disabled"
         self.fields["pian"].widget.attrs["class"] = self.fields["pian"].widget.attrs.get("class", "") + " pian_disabled"
         self.fields["typ"].widget.attrs["id"] = "dj_typ_id"

@@ -12,6 +12,7 @@
 {% block content %}
   <div class="app-entity-ext_zdroj">
     {% include "toolbar_externi_zdroj.html" with name=toolbar_name %}
+    {% include "core/concurrent_changes_modal.html" with concurrent_changes=concurrent_changes fresh_form_url=fresh_form_url %}
     <form method="post" class="submit-spinner">
       {% csrf_token %}
       <div class="card app-card-form">

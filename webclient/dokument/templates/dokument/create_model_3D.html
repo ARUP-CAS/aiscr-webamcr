@@ -20,8 +20,12 @@
 {% block content %}
   <div class="app-entity-knihovna_3d">
     {% include "toolbar_dokument.html" with is_3d=True is_edit=True d=object %}
+    {% include "core/concurrent_changes_modal.html" with concurrent_changes=concurrent_changes fresh_form_url=fresh_form_url %}
     <form method="post" class="submit-spinner">
       {% csrf_token %}
+      {{ formDokument.optimistic_lock_data_model_dok }}
+      {{ formExtraData.optimistic_lock_data_model_extra }}
+      {{ formKomponenta.optimistic_lock_data }}
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">

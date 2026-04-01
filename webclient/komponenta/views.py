@@ -66,6 +66,36 @@ def detail(request, typ_vazby, ident_cely):
     komponenta: Komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     fedora_transaction = FedoraTransaction(komponenta, request.user, suppress_message=True)
     komponenta.active_transaction = fedora_transaction
+    if komponenta.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+        if (
+            komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.typ_zaznamu
+            == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
+        ):
+            url = reverse(
+                "arch_z:update-komponenta",
+                args=[
+                    komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
+                    komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely,
+                    komponenta.ident_cely,
+                ],
+            )
+        else:
+            url = reverse(
+                "lokalita:update-komponenta",
+                args=[
+                    komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
+                    komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely,
+                    komponenta.ident_cely,
+                ],
+            )
+    else:
+        url = reverse(
+            "dokument:detail-komponenta",
+            args=[
+                komponenta.komponenta_vazby.casti_dokumentu.dokument.ident_cely,
+                komponenta.ident_cely,
+            ],
+        )
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     form = CreateKomponentaForm(
@@ -77,6 +107,14 @@ def detail(request, typ_vazby, ident_cely):
     )
     if form.is_valid() and form.has_changed():
         logger.debug("komponenta.views.detail.form_valid", extra={"ident_cely": ident_cely})
+        conflicting_fields = form.get_conflicting_fields()
+        if conflicting_fields:
+            conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+            request.session[f"komp_concurrent_changes_{ident_cely}"] = conflicting_labels
+            request.session[f"komp_post_data_{ident_cely}"] = request.POST.dict()
+            fedora_transaction.rollback_transaction()
+            response = redirect(url)
+            return response
         komponenta = form.save(commit=False)
         komponenta.active_transaction = fedora_transaction
         komponenta.save()
@@ -114,10 +152,49 @@ def detail(request, typ_vazby, ident_cely):
             and (formset_objekt.has_changed() or formset_predmet.has_changed())
         ):
             logger.debug("komponenta.views.detail.form_valid_2")
+            conflicting_fields = []
+            for fs_form in formset_objekt.forms:
+                conflicting_fields += fs_form.get_conflicting_fields()
+            for fs_form in formset_predmet.forms:
+                conflicting_fields += fs_form.get_conflicting_fields()
+            if conflicting_fields:
+                conflicting_labels = list(
+                    dict.fromkeys(
+                        [
+                            str(fs_form.fields[f].label)
+                            for fs_form in formset_objekt.forms
+                            for f in conflicting_fields
+                            if f in fs_form.fields
+                        ]
+                        + [
+                            str(fs_form.fields[f].label)
+                            for fs_form in formset_predmet.forms
+                            for f in conflicting_fields
+                            if f in fs_form.fields
+                        ]
+                    )
+                )
+                request.session[f"komp_concurrent_changes_{ident_cely}"] = conflicting_labels
+                request.session["_old_nalez_post"] = request.POST
+                request.session["komp_ident_cely"] = ident_cely
+                fedora_transaction.rollback_transaction()
+                return redirect(url)
             formset_predmet.save()
             formset_objekt.save()
             messages.add_message(request, messages.SUCCESS, PREDMET_OBJEKT_USPESNE_EDITOVAN)
         elif not formset_objekt.is_valid() or not formset_predmet.is_valid():
+            id_conflicts = [
+                fs_form
+                for fs_form in list(formset_objekt.forms) + list(formset_predmet.forms)
+                if fs_form.errors.get("id")
+            ]
+            if id_conflicts:
+                conflicting_labels = list(dict.fromkeys(str(fs_form.fields["druh"].label) for fs_form in id_conflicts))
+                request.session[f"komp_concurrent_changes_{ident_cely}"] = conflicting_labels
+                request.session["_old_nalez_post"] = request.POST
+                request.session["komp_ident_cely"] = ident_cely
+                fedora_transaction.rollback_transaction()
+                return redirect(url)
             logger.debug(
                 "komponenta.views.detail.form_not_valid_2",
                 extra={
@@ -129,36 +206,6 @@ def detail(request, typ_vazby, ident_cely):
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
 
-    if komponenta.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
-        if (
-            komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.typ_zaznamu
-            == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
-        ):
-            url = reverse(
-                "arch_z:update-komponenta",
-                args=[
-                    komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
-                    komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely,
-                    komponenta.ident_cely,
-                ],
-            )
-        else:
-            url = reverse(
-                "lokalita:update-komponenta",
-                args=[
-                    komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
-                    komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely,
-                    komponenta.ident_cely,
-                ],
-            )
-    else:
-        url = reverse(
-            "dokument:detail-komponenta",
-            args=[
-                komponenta.komponenta_vazby.casti_dokumentu.dokument.ident_cely,
-                komponenta.ident_cely,
-            ],
-        )
     response = redirect(url)
     komponenta.close_active_transaction_when_finished = True
     komponenta.save()

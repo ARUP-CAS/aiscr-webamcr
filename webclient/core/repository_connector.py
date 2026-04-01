@@ -1625,11 +1625,10 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
                 extra={"ident_cely": self.record.ident_cely, "ident_cely_old": ident_cely_old},
             )
             raise IdentChangeFedoraError()
-        base_url = f"{settings.FEDORA_PROTOCOL}://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
         ident_cely_new = self.record.ident_cely
         data = (
             f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> "
-            f"<{base_url}{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}>}}"
+            f"<info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}>}}"
         )
         headers = {"Content-Type": "application/sparql-update"}
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, ident_cely=ident_cely_new)
