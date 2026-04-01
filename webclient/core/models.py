@@ -62,12 +62,11 @@ class AntivirusCheckResult(Enum):
 
 def get_upload_to(instance, filename):
     """
-    Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
+    Určí cestu pro uložení souboru.
 
-    :param instance: Parametr ``instance`` předává se do volání ``fullmatch()``, ``join()``, pracuje se s atributy ``vazba``, ``nazev``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-    :param filename: Parametr ``filename`` slouží jako vstup pro logiku funkce ``get_upload_to``.
-
-        :return: Vrací výsledek volání ``join()``.
+    :param instance: Instance souboru.
+    :param filename: Název souboru.
+    :return: Cesta pro uložení souboru.
     """
     instance: Soubor
     vazba: SouborVazby = instance.vazba
@@ -112,9 +111,9 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
     @property
     def navazany_objekt(self) -> Optional[ModelWithMetadata]:
         """
-               Provádí operaci navazany objekt.
+        Vrátí navázaný objekt podle typu vazby.
 
-        :return: Výstup funkce odpovídající implementované logice.
+        :return: Navázaný objekt (Projekt, Dokument nebo SamostatnyNalez).
         """
         if self.typ_vazby == PROJEKT_RELATION_TYPE:
             return self.projekt_souboru
@@ -145,9 +144,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def url(self):
-        """Provádí operaci url.
+        """
+        Vrátí URL pro přístup k souboru.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, str.
+        :return: URL souboru nebo prázdný řetězec.
         """
         if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return f"{settings.DIGIARCHIV_SERVER_URL}id/{self.path.split('record/')[1]}"
@@ -155,7 +155,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def repository_uuid(self):
-        """Provádí operaci repository uuid.
+        """
+        Vrátí UUID souboru v repozitáři.
 
         :return: Vrací vybranou hodnotu z kolekce.
         """
@@ -668,9 +669,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @cached_property
     def large_thumbnail(self) -> FileResponse | None:
         """
-               Provádí operaci large thumbnail.
+        Vrátí větší náhled obrázku.
 
-        :return: Výstup funkce odpovídající implementované logice.
+        :return: FileResponse s náhledem nebo None.
         """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_large=True)
         if self.repository_uuid is not None and rep_bin_file:
@@ -683,9 +684,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @cached_property
     def small_thumbnail(self) -> FileResponse | None:
         """
-               Provádí operaci small thumbnail.
+        Vrátí menší náhled obrázku.
 
-        :return: Výstup funkce odpovídající implementované logice.
+        :return: FileResponse s náhledem nebo None.
         """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content(thumb_small=True)
         if self.repository_uuid is not None and rep_bin_file:
@@ -698,9 +699,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @cached_property
     def content_file_response(self) -> FileResponse | None:
         """
-               Provádí operaci content file response.
+        Vrátí soubor jako HTTP response.
 
-        :return: Výstup funkce odpovídající implementované logice.
+        :return: FileResponse se souborem nebo None.
         """
         rep_bin_file: RepositoryBinaryFile = self.get_repository_content()
         if self.repository_uuid is not None and rep_bin_file and rep_bin_file.size_mb > 0:
@@ -708,9 +709,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         return None
 
     def getMock(self):
-        """Provádí operaci getMock.
+        """
+        Vrátí mock reprezentaci souboru.
 
-        :return: Vrací slovník.
+        :return: Slovník s daty souboru.
         """
         return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
 

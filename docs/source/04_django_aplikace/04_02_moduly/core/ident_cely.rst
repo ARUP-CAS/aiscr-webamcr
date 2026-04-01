@@ -86,17 +86,16 @@ Funkce
 
 .. py:function:: get_komponenta_ident(zaznam, fedora_transaction)
 
-   Metoda pro výpočet identu komponenty DJ a dokument části.
+   Vypočítá identifikátor komponenty pro dokumentační jednotku nebo dokument.
 
    Logika složení je: ident_cely arch záznamu nebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulami.
    Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
 
-   :param zaznam: Parametr ``zaznam`` předává se do volání ``isinstance()``, pracuje se s atributy ``dokumentacni_jednotky_akce``, ``casti``, ovlivňuje větvení podmínek.
-   :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``get_komponenta_ident``.
-   :return: Vrací výsledek operace.
-
-   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_KOMPONENTAS``.
+   :param zaznam: Archeologický záznam nebo dokument k zpracování.
+   :param fedora_transaction: Aktivní transakce Fedora pro práci s repozitářem.
+   :return: Vygenerovaný identifikátor komponenty.
+   :raises MaximalIdentNumberError: Vyvolá se při překročení maxima komponent (999).
 
 .. py:function:: get_sm_from_point(point)
 

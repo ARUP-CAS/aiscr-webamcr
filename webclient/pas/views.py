@@ -807,7 +807,9 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
     vypis_app = "pas"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """
+        Inicializuje překlady pro zobrazení seznamu.
+        """
         super().init_translations()
         self.page_title = _("pas.views.samostatnyNalezListView.pageTitle")
         self.search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
@@ -1030,7 +1032,9 @@ class UzivatelSpolupraceListView(SearchListView):
     typ_zmeny_lookup = SPOLUPRACE_ZADOST
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """
+        Inicializuje překlady pro zobrazení seznamu.
+        """
         super().init_translations()
         self.page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
         self.search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")

@@ -151,7 +151,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @property
     def initial_pristupnost(self):
-        """Provádí operaci initial pristupnost.
+        """
+        Vrací výchozí hodnotu dostupnosti.
 
         :return: Vrací atribut objektu.
         """
@@ -325,9 +326,11 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @property
     def nahled_soubor(self):
-        """Provádí operaci nahled soubor.
+        """
+        Vrací cestu k miniaturnímu náhledu souboru.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, None.
+        :return: První soubor nebo None, pokud žádný neexistuje.
+
         """
         if self.soubory.soubory.count() > 0:
             return self.soubory.soubory.first()
@@ -336,7 +339,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @cached_property
     def large_thumbnail(self):
-        """Provádí operaci large thumbnail.
+        """
+        Vrací cestu k velké miniaturě obrázku.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
         """
@@ -347,7 +351,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     @cached_property
     def small_thumbnail(self):
-        """Provádí operaci small thumbnail.
+        """
+        Vrací cestu k malé miniaturě obrázku.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
         """
@@ -441,11 +446,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         return (self.projekt.organizace,)
 
-    @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací hodnotu podle větve zpracování.
+        """
+        Vrací identifikátor snímku v Redisu.
         """
         from pas.views import SamostatnyNalezListView
 
@@ -477,11 +480,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
         return DigitalObjectIdentifierClient(self)
 
-    @property
     def igsn_exists(self):
-        """Provádí operaci igsn exists.
-
-        :return: Vrací výsledek volání ``check_record_exists()``.
+        """
+        Určuje, zda existuje IGSN identifikátor.
         """
         return self._get_igsn_client().check_record_exists()
 
@@ -529,11 +530,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         if self.igsn:
             return self._get_igsn_client().update_record(check_status, reload_record)
 
-    @property
     def igsn_url(self):
-        """Provádí operaci igsn url.
-
-        :return: Vrací výsledek volání ``get_record_url()``.
+        """
+        Vrací URL odkaz na nález v IGSN databázi.
         """
         return self._get_igsn_client().get_record_url()
 
@@ -580,11 +579,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         self.active_transaction = None
         self.close_active_transaction_when_finished = False
 
-    @property
     def aktivni(self):
-        """Provádí operaci aktivni.
-
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+        """
+        Vrací hodnotu určující, zda je spolupráce aktivní.
         """
         return self.stav == SPOLUPRACE_AKTIVNI
 
@@ -674,11 +671,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         return (self.vedouci.organizace,)
 
-    @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
-
-        :return: Vrací hodnotu podle větve zpracování.
+        """
+        Vrací identifikátor snímku v Redisu.
         """
         from pas.views import UzivatelSpolupraceListView
 

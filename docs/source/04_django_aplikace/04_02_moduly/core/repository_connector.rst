@@ -19,13 +19,13 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje FedoraError výjimku.
 
-      :param url: Parametr ``url`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param code: Aplikační nebo HTTP kód, který funkce převádí na odpověď.
-      :param headers: Textový nebo strukturální vstup `headers` používaný při sestavení nebo zpracování obsahu.
-      :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``main_record``, ``redirect_on_error``.
+      :param url: URL Fedora serveru.
+      :param message: Chybová zpráva.
+      :param code: HTTP kód chyby.
+      :param headers: HTTP hlavičky odpovědi.
+      :param fedora_transaction: Aktivní transakce Fedora.
 
 
 .. py:class:: FedoraUpdatedByAnotherTransactionError
@@ -59,33 +59,33 @@ Třídy
 
    .. py:method:: url_without_domain()
 
-      Provádí operaci url without domain.
+      Vrací URL bez domény.
 
-      :return: Vrací výsledek volání ``get_url_without_domain()``.
+      :return: URL bez předsazené domény.
 
    .. py:method:: uuid()
 
-      Provádí operaci uuid.
+      Vrátí UUID souboru.
 
-      :return: Vrací vybranou hodnotu z kolekce.
+      :return: UUID souboru.
 
    .. py:method:: _calculate_sha_512()
 
-      Provádí operaci calculate sha 512.
+      Vypočítá SHA-512 hash souboru.
 
-      :return: Textová reprezentace UID transakce.
+      :return: None
 
    .. py:method:: size_mb()
 
-      Provádí operaci size mb.
+      Vrátí velikost v MB.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      :return: Velikost souboru v MB.
 
    .. py:method:: mime_type()
 
-      Provádí operaci mime type.
+      Vrátí MIME type souboru.
 
-      :return: Vrací výsledek volání ``get_mime_type()``.
+      :return: MIME type nebo None.
 
    .. py:method:: __init__()
 

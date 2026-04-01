@@ -276,39 +276,39 @@ Třídy
 
    .. py:method:: _serialize_descriptions()
 
-      Provádí operaci serialize descriptions.
+      Serializuje popisy dokumentu (abstrakt a technické informace).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků obsahujících jazykové varianty popisu.
 
    .. py:method:: _serialize_geolocations()
 
-      Provádí operaci serialize geolocations.
+      Serializuje geografické lokalizace dokumentu z projektů, akcí a lokalit.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s geografickými souřadnicemi a metadaty.
 
    .. py:method:: _serialize_related_identifiers()
 
-      Provádí operaci serialize related identifiers.
+      Serializuje související identifikátory (soubory, archivní odkaz, související akce).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s identifikátory související obsahu.
 
    .. py:method:: _serialize_rightslist()
 
-      Provádí operaci serialize rightslist.
+      Serializuje informace o právech a licencích dokumentu.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s údaji o licencích a právech.
 
    .. py:method:: _serialize_subjects()
 
-      Provádí operaci serialize subjects.
+      Serializuje předmětová hesla z posudků, osob, typů událostí a komponent.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s předmětovými hesly.
 
    .. py:method:: _serialize_types()
 
-      Provádí operaci serialize types.
+      Serializuje typ dokumentu do DataCite schématu.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Slovník s ResourceType a ResourceTypeGeneral.
 
    .. py:method:: _get_formats()
 
@@ -374,63 +374,63 @@ Třídy
 
    .. py:method:: _serialize_alternate_identifiers()
 
-      Provádí operaci serialize alternate identifiers.
+      Serializuje alternativní identifikátory nálezu (evidenční čísla).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s alternativními identifikátory.
 
    .. py:method:: _serialize_contributors()
 
-      Provádí operaci serialize contributors.
+      Serializuje přispěvatele (vedoucí projektu, organizaci, která nálezy převzala).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s informacemi o přispěvatelích.
 
    .. py:method:: _serialize_creators()
 
-      Provádí operaci serialize creators.
+      Serializuje tvůrce nálezu (nálezce a jeho organizaci).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s údaji o nálezci.
 
    .. py:method:: _serialize_dates()
 
-      Provádí operaci serialize dates.
+      Serializuje data nálezu (datum nálezu, vytvoření, potvrzení, archivace).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s daty a jejich typy.
 
    .. py:method:: _serialize_descriptions()
 
-      Provádí operaci serialize descriptions.
+      Serializuje popisy nálezu (poznámky, okolnosti, hloubku, počet).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s jazykovými variantami popisu.
 
    .. py:method:: _serialize_geolocations()
 
-      Provádí operaci serialize geolocations.
+      Serializuje geografické lokalizace dokumentu z projektů, akcí a lokalit.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s geografickými souřadnicemi a metadaty.
 
    .. py:method:: _serialize_related_identifiers()
 
-      Provádí operaci serialize related identifiers.
+      Serializuje související identifikátory (soubory, archivní odkaz, související akce).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s identifikátory související obsahu.
 
    .. py:method:: _serialize_rightslist()
 
-      Provádí operaci serialize rightslist.
+      Serializuje informace o právech a licencích dokumentu.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s údaji o licencích a právech.
 
    .. py:method:: _serialize_subjects()
 
-      Provádí operaci serialize subjects.
+      Serializuje předmětová hesla z posudků, osob, typů událostí a komponent.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s předmětovými hesly.
 
    .. py:method:: _serialize_types()
 
-      Provádí operaci serialize types.
+      Serializuje typ nálezu do DataCite schématu.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Slovník s ResourceType a ResourceTypeGeneral.
 
    .. py:method:: _get_formats()
 
@@ -477,9 +477,9 @@ Třídy
 
    .. py:method:: _serialize_contributors()
 
-      Provádí operaci serialize contributors.
+      Serializuje přispěvatele (vedoucí projektu, organizaci, která nálezy převzala).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s informacemi o přispěvatelích.
 
    .. py:method:: _get_soubory_queryset()
 
@@ -489,15 +489,15 @@ Třídy
 
    .. py:method:: _serialize_dates()
 
-      Provádí operaci serialize dates.
+      Serializuje data lokality (vytvoření, změny, archivace z historie archeologické akce).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s daty a jejich typy.
 
    .. py:method:: _serialize_descriptions()
 
-      Provádí operaci serialize descriptions.
+      Serializuje popisy nálezu (poznámky, okolnosti, hloubku, počet).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s jazykovými variantami popisu.
 
    .. py:method:: _get_externi_odkaz_query()
 
@@ -507,9 +507,9 @@ Třídy
 
    .. py:method:: _serialize_geolocations()
 
-      Provádí operaci serialize geolocations.
+      Serializuje geografické lokalizace dokumentu z projektů, akcí a lokalit.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s geografickými souřadnicemi a metadaty.
 
    .. py:method:: _get_publication_year()
 
@@ -519,9 +519,9 @@ Třídy
 
    .. py:method:: _serialize_rightslist()
 
-      Provádí operaci serialize rightslist.
+      Serializuje informace o právech a licencích dokumentu.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s údaji o licencích a právech.
 
    .. py:method:: _get_title()
 
@@ -532,39 +532,39 @@ Třídy
 
    .. py:method:: _serialize_alternate_identifiers()
 
-      Provádí operaci serialize alternate identifiers.
+      Serializuje alternativní identifikátory nálezu (evidenční čísla).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s alternativními identifikátory.
 
    .. py:method:: _serialize_creators()
 
-      Provádí operaci serialize creators.
+      Serializuje tvůrce nálezu (nálezce a jeho organizaci).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s údaji o nálezci.
 
    .. py:method:: _serialize_related_identifiers()
 
-      Provádí operaci serialize related identifiers.
+      Serializuje související identifikátory (soubory, archivní odkaz, související akce).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s identifikátory související obsahu.
 
    .. py:method:: _serialize_related_items()
 
-      Provádí operaci serialize related items.
+      Serializuje související položky (externí zdroje související s lokalitou).
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků se související obsahu.
 
    .. py:method:: _serialize_subjects()
 
-      Provádí operaci serialize subjects.
+      Serializuje předmětová hesla z posudků, osob, typů událostí a komponent.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Seznam slovníků s předmětovými hesly.
 
    .. py:method:: _serialize_types()
 
-      Provádí operaci serialize types.
+      Serializuje typ nálezu do DataCite schématu.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Slovník s ResourceType a ResourceTypeGeneral.
 
    .. py:method:: _get_formats()
 
@@ -574,15 +574,15 @@ Třídy
 
    .. py:method:: serialize_publish()
 
-      Provádí operaci serialize publish.
+      Serializuje lokalitu pro publikaci s přidáním souvisejících položek.
 
-      :return: Vrací proměnná ``publish``.
+      :return: Slovník s připraveným datovým balíčkem pro DataCite.
 
    .. py:method:: serialize_update()
 
-      Provádí operaci serialize update.
+      Serializuje lokalitu pro aktualizaci se smazáním pole event.
 
-      :return: Vrací proměnná ``result``.
+      :return: Slovník s připraveným datovým balíčkem pro DataCite.
 
 
 Funkce

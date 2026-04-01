@@ -262,7 +262,7 @@ class Model3DListView(SearchListView):
     vypis_app = "model"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         super().init_translations()
         self.page_title = _("dokument.views.Model3DListView.pageTitle.text")
         self.search_sum = _("dokument.views.Model3DListView.search_sum.text")
@@ -346,7 +346,7 @@ class DokumentListView(SearchListView):
     vypis_app = "dokument"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         super().init_translations()
         self.page_title = _("dokument.views.DokumentListView.pageTitle.text")
         self.search_sum = _("dokument.views.DokumentListView.search_sum.text")
@@ -438,11 +438,11 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
     def get_cast(self, context, cast, **kwargs):
         """
-        Metoda pro získaní informací ohlědně části dokumentu.
+        Metoda pro získaní informací o součásti dokumentu.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_cast``.
-        :param cast: Typ nebo hodnota použitá při převodu datového typu.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_cast``.
+        :param context: Slovník kontextu pro aktualizaci.
+        :param cast: Součást dokumentu k zobrazení.
+        :param kwargs: Dodatečné pojmenované argumenty.
         """
         context["cast"] = cast
         cast_form = DokumentCastForm(
@@ -1120,7 +1120,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     action = ""
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = "title"
         self.button = "button"
 
@@ -1219,7 +1219,7 @@ class DokumentCastPripojitAkciView(TransakceView):
     id_tag = "pripojit-eo-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
         self.success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
@@ -1279,7 +1279,7 @@ class DokumentCastPripojitProjektView(TransakceView):
     id_tag = "pripojit-projekt-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
         self.button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
         self.success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
@@ -1332,7 +1332,7 @@ class DokumentCastOdpojitView(TransakceView):
     id_tag = "odpojit-cast-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentCastOdpojitView.title.text")
         self.button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
         self.success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
@@ -1416,7 +1416,7 @@ class DokumentCastSmazatView(TransakceView):
     id_tag = "smazat-cast-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentCastSmazatView.title.text")
         self.button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
         self.success_message = DOKUMENT_CAST_USPESNE_SMAZANA
@@ -1484,7 +1484,7 @@ class DokumentNeidentAkceSmazatView(TransakceView):
     id_tag = "smazat-neident-akce-form"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Inicializuje přeložené texty pro seznam dokumentů."""
         self.title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
         self.button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
         self.success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA

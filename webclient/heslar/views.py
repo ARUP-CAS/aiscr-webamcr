@@ -37,12 +37,12 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
 
 def merge_heslare(first, second):
     """
-    Pomocní funkce pro vytvoření dvoustupňového selectu.
+    Vytvoří dvoustupňový select z dvou sad hesel.
 
-    :param first: Parametr ``first`` slouží jako vstup pro logiku funkce ``merge_heslare``.
-    :param second: Parametr ``second`` slouží jako vstup pro logiku funkce ``merge_heslare``.
+    :param first: První sada hesel s ID a názvy
+    :param second: Druhá sada hesel hierarchicky podřazena první sadě
 
-        :return: Vrací proměnná ``data``.
+    :return: Seznam dvojic (název, možnosti) pro dvoustupňový select
     """
     data = [("", "")]
     # logger.debug(get_language())
@@ -233,13 +233,13 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
 
 def heslar_list(heslo_nazev, filter={}, use_exclude=False):
     """
-    Provádí operaci heslar list.
+    Vrací seznam hesel z heslaře filtrovaných podle kritérií.
 
-    :param heslo_nazev: Heslo ``heslo_nazev`` používané při vytváření nebo aktualizaci účtu.
-    :param filter: Queryset/filtr ``filter`` použitý při výběru záznamů.
-    :param use_exclude: Parametr ``use_exclude`` ovlivňuje větvení podmínek.
+    :param heslo_nazev: Název heslaře, ze kterého se načítají hesla
+    :param filter: Slovník kritérií pro filtrování záznamů
+    :param use_exclude: Má-li být použita metoda exclude namíste filter
 
-        :return: Vrací výsledek volání ``list()``.
+    :return: Seznam dvojic (ID, název hesla) ve zvolném jazyce
     """
     hesla = Heslar.objects.filter(nazev_heslare=heslo_nazev)
     if use_exclude:

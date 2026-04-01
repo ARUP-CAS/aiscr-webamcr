@@ -61,7 +61,7 @@ Třídy
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+      :return: Vrací kontext šablony
 
 
 .. py:class:: ArcheologickyZaznamDetailView
@@ -423,8 +423,8 @@ Třídy
       Celá událost je zapsaná do historie.
       Uživatel je presmerován na detail akce.
 
-      :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``PripojitProjektForm()``, pracuje se s atributy ``POST``, ``user``, ovlivňuje větvení podmínek.
-      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param request: Objekt HTTP požadavku s POST daty
+      :param args: Další poziční argumenty dědězité z nadřazené třídy, nepoužívané.
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``.

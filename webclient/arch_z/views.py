@@ -238,7 +238,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací kontext šablony
         """
         context = super().get_context_data(**kwargs)
         self.check_locality_arch_z_conflict()
@@ -295,7 +295,7 @@ class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateV
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
@@ -349,7 +349,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["active_dj_ident"] = self.get_dokumentacni_jednotka().ident_cely
@@ -364,7 +364,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
         :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-            :return: Vrací výsledek volání ``get()``.
+        :return: Vrací výsledek volání ``get()``.
         """
         return super().get(request, *args, **kwargs)
 
@@ -381,7 +381,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         typ_akce = None
@@ -414,7 +414,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
         :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-            :return: Vrací výsledek volání ``get()``.
+        :return: Vrací výsledek volání ``get()``.
         """
         return super().get(request, *args, **kwargs)
 
@@ -430,7 +430,7 @@ class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRel
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         old_adb_post = self.request.session.pop("_old_adb_post", None)
@@ -455,7 +455,7 @@ class KomponentaCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
@@ -518,7 +518,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         komponenta = self.get_komponenta()
@@ -545,7 +545,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -561,7 +561,7 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         :param args: Poziční argumenty předávané nadřazené metodě get.
         :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
             :raises Exception: Vyvolá se s textem "arch_z.views.PianCreateView.get.label_not_found"; nebo s textem "arch_z.views.PianCreateView.get.transormation_error".
         """
         context = self.get_context_data(**kwargs)
@@ -623,7 +623,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -644,7 +644,7 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         :param args: Poziční argumenty předávané nadřazené metodě get.
         :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
             :raises PermissionDenied: Vyvolá se při splnění podmínky ``context['j'].pian.stav == PIAN_POTVRZEN``.
             :raises Exception: Vyvolá se s textem "arch_z.views.PianUpdateView.get.label_not_found"; nebo s textem "arch_z.views.PianUpdateView.transormation_error".
         """
@@ -686,7 +686,7 @@ class AdbCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
@@ -1737,7 +1737,7 @@ class AkceIndexView(LoginRequiredMixin, TemplateView):
 
         :param kwargs: Klíčové argumenty; nejsou předávány nadřazené metodě, kontext se sestavuje přímo.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         context = {
             "toolbar_name": _("arch_z.views.akceIndexView.toolbarName"),
@@ -1855,7 +1855,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
         :param kwargs: Klíčové argumenty předávané do sestavení kontextu.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         az = self.get_archeologicky_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -1876,7 +1876,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         :param args: Poziční argumenty předávané nadřazené metodě get.
         :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
@@ -1900,7 +1900,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         :param args: Poziční argumenty předávané nadřazené metodě post.
         :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
-            :return: Vrací výsledek volání ``JsonResponse()``.
+        :return: Vrací výsledek volání ``JsonResponse()``.
         """
         context = self.get_context_data(**kwargs)
         az = context["object"]
@@ -1942,7 +1942,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
         :param kwargs: Klíčové argumenty předávané do sestavení kontextu.
 
-            :return: Vrací proměnná ``context``.
+        :return: Vrací proměnná ``context``.
         """
         az = self.get_archeologicky_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -1963,7 +1963,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         :param args: Poziční argumenty předávané nadřazené metodě get.
         :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
         """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
@@ -1986,11 +1986,11 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         Celá událost je zapsaná do historie.
         Uživatel je presmerován na detail akce.
 
-        :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``PripojitProjektForm()``, pracuje se s atributy ``POST``, ``user``, ovlivňuje větvení podmínek.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+        :param request: Objekt HTTP požadavku s POST daty
+        :param args: Další poziční argumenty dědězité z nadřazené třídy, nepoužívané.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``.
+        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``.
         """
         context = self.get_context_data(**kwargs)
         az = context["object"]

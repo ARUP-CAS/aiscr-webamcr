@@ -334,9 +334,9 @@ class SouborHistorieListView(HistorieListView):
 
     def add_extra_context(self, context):
         """
-        Provádí operaci add extra context.
+        Doplní kontext o informace o projektu a předchozím objektu.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``add_extra_context``.
+        :param context: Kontext pohledu, do kterého jsou přidány klíče ``projekt``, ``back_ident`` a ``back_model``.
         """
         soubor_id = self.get_lookup_value()
         soubor = get_object_or_404(Soubor, pk=soubor_id)
@@ -464,11 +464,11 @@ class PianHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """
-        Vrací header config.
+        Vrací konfiguraci záhlaví pro historii Pianu.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+        :param context: Kontext pohledu obsahující identifikátory akce a dokumentační jednotky.
 
-            :return: Vrací slovník.
+        :return: Vrací slovník s URL, ikonou a textem záhlaví.
         """
         return {
             "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),
@@ -486,11 +486,11 @@ class PianLokalitaHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """
-        Vrací header config.
+        Vrací konfiguraci záhlaví pro historii Pianu lokality.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+        :param context: Kontext pohledu obsahující identifikátory lokality a dokumentační jednotky.
 
-            :return: Vrací slovník.
+        :return: Vrací slovník s URL, ikonou a textem záhlaví.
         """
         return {
             "url": reverse(
@@ -510,11 +510,11 @@ class AdbHistorieListView(HistorieListView):
 
     def get_header_config(self, context):
         """
-        Vrací header config.
+        Vrací konfiguraci záhlaví pro historii ADB.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+        :param context: Kontext pohledu obsahující identifikátory akce a dokumentační jednotky.
 
-            :return: Vrací slovník.
+        :return: Vrací slovník s URL, ikonou a textem záhlaví.
         """
         return {
             "url": reverse("arch_z:detail-dj", args=[self.kwargs["akce_ident_cely"], self.kwargs["dj_ident_cely"]]),

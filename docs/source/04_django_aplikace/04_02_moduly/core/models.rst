@@ -21,9 +21,9 @@ Třídy
 
    .. py:method:: navazany_objekt()
 
-      Provádí operaci navazany objekt.
+      Vrátí navázaný objekt podle typu vazby.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: Navázaný objekt (Projekt, Dokument nebo SamostatnyNalez).
 
 
 .. py:class:: Soubor
@@ -34,13 +34,13 @@ Třídy
 
    .. py:method:: url()
 
-      Provádí operaci url.
+      Vrátí URL pro přístup k souboru.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, str.
+      :return: URL souboru nebo prázdný řetězec.
 
    .. py:method:: repository_uuid()
 
-      Provádí operaci repository uuid.
+      Vrátí UUID souboru v repozitáři.
 
       :return: Vrací vybranou hodnotu z kolekce.
 
@@ -169,27 +169,27 @@ Třídy
 
    .. py:method:: large_thumbnail()
 
-      Provádí operaci large thumbnail.
+      Vrátí větší náhled obrázku.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: FileResponse s náhledem nebo None.
 
    .. py:method:: small_thumbnail()
 
-      Provádí operaci small thumbnail.
+      Vrátí menší náhled obrázku.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: FileResponse s náhledem nebo None.
 
    .. py:method:: content_file_response()
 
-      Provádí operaci content file response.
+      Vrátí soubor jako HTTP response.
 
-      :return: Výstup funkce odpovídající implementované logice.
+      :return: FileResponse se souborem nebo None.
 
    .. py:method:: getMock()
 
-      Provádí operaci getMock.
+      Vrátí mock reprezentaci souboru.
 
-      :return: Vrací slovník.
+      :return: Slovník s daty souboru.
 
    .. py:method:: get_historicke_verze()
 
@@ -298,12 +298,11 @@ Funkce
 
 .. py:function:: get_upload_to(instance, filename)
 
-   Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
+   Určí cestu pro uložení souboru.
 
-   :param instance: Parametr ``instance`` předává se do volání ``fullmatch()``, ``join()``, pracuje se s atributy ``vazba``, ``nazev``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param filename: Parametr ``filename`` slouží jako vstup pro logiku funkce ``get_upload_to``.
-
-   :return: Vrací výsledek volání ``join()``.
+   :param instance: Instance souboru.
+   :param filename: Název souboru.
+   :return: Cesta pro uložení souboru.
 
 .. py:function:: check_permissions(action, user, ident)
 

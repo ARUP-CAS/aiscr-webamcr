@@ -36,13 +36,13 @@ class FedoraError(Exception):
 
     def __init__(self, url, message, code, headers=None, fedora_transaction=None):
         """
-        Inicializuje instanci třídy.
+        Inicializuje FedoraError výjimku.
 
-        :param url: Parametr ``url`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
-        :param code: Aplikační nebo HTTP kód, který funkce převádí na odpověď.
-        :param headers: Textový nebo strukturální vstup `headers` používaný při sestavení nebo zpracování obsahu.
-        :param fedora_transaction: Parametr ``fedora_transaction`` pracuje se s atributy ``main_record``, ``redirect_on_error``.
+        :param url: URL Fedora serveru.
+        :param message: Chybová zpráva.
+        :param code: HTTP kód chyby.
+        :param headers: HTTP hlavičky odpovědi.
+        :param fedora_transaction: Aktivní transakce Fedora.
         """
         self.url = url
         self.message = message
@@ -89,25 +89,26 @@ class RepositoryBinaryFile:
 
     @property
     def url_without_domain(self):
-        """Provádí operaci url without domain.
+        """Vrací URL bez domény.
 
-        :return: Vrací výsledek volání ``get_url_without_domain()``.
+        :return: URL bez předsazené domény.
         """
         return self.get_url_without_domain(self.url)
 
     @property
     def uuid(self):
-        """Provádí operaci uuid.
+        """
+        Vrátí UUID souboru.
 
-        :return: Vrací vybranou hodnotu z kolekce.
+        :return: UUID souboru.
         """
         return self.url.split("/")[-1]
 
     def _calculate_sha_512(self):
         """
-        Provádí operaci calculate sha 512.
+        Vypočítá SHA-512 hash souboru.
 
-        :return: Textová reprezentace UID transakce.
+        :return: None
         """
         data = self.content.read()
         sha_512 = hashlib.sha512(data).hexdigest()
@@ -116,17 +117,19 @@ class RepositoryBinaryFile:
 
     @property
     def size_mb(self):
-        """Provádí operaci size mb.
+        """
+        Vrátí velikost v MB.
 
-        :return: Vrací hodnotu podle větve zpracování.
+        :return: Velikost souboru v MB.
         """
         return self.size / 1024**2
 
     @property
     def mime_type(self):
-        """Provádí operaci mime type.
+        """
+        Vrátí MIME type souboru.
 
-        :return: Vrací výsledek volání ``get_mime_type()``.
+        :return: MIME type nebo None.
         """
         if self.filename is not None:
             return get_mime_type(self.filename)

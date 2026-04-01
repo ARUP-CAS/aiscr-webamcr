@@ -45,12 +45,11 @@ class LetAdmin(DokumentWithMetadataAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         """
-        Vrací readonly fields.
+        Vrací seznam polí, která jsou v administraci jen pro čtení.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
-        :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, atribut objektu.
+        :param request: HTTP požadavek ze strany administrátora.
+        :param obj: Objekt v editaci (None při vytváření).
+        :return: Tuple polí určených jako readonly.
         """
         if obj:  # editace existujícího objektu
             return self.readonly_fields + ("ident_cely",)

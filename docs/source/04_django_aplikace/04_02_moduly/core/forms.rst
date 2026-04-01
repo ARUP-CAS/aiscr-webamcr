@@ -28,11 +28,10 @@ Třídy
 
    .. py:method:: to_python()
 
-      Provádí operaci to python.
+      Konvertuje vybranou hodnotu na Python objekt Heslar.
 
-      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo None.
 
    .. py:method:: has_changed()
 
@@ -51,19 +50,17 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Vrátí instanci Heslar objektu nebo spustí standardní vyčištění pole.
 
-      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, výsledek volání ``clean()``.
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo výsledek ```super().clean()``.
 
    .. py:method:: to_python()
 
-      Provádí operaci to python.
+      Konvertuje vybranou hodnotu na Python objekt Heslar.
 
-      :param selected_value: Kolekce nebo datová struktura `selected_value` zpracovávaná touto funkcí.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo None.
 
    .. py:method:: has_changed()
 
@@ -94,10 +91,10 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Ověří, že se stav záznamu nezměnil mezi načtením a odesláním.
 
-      :return: Vrací proměnná ``cleaned_data``.
-      :raises forms.ValidationError: Vyvolá se s textem "State_changed".
+      :return: Ověřená data.
+      :raises forms.ValidationError: Vyvolá se s textem "State_changed" pokud se stav změnil.
 
 
 .. py:class:: VratitForm
@@ -151,11 +148,10 @@ Třídy
 
    .. py:method:: format_value()
 
-      Provádí operaci format value.
+      Zformátuje hodnotu na 3 desetinná místa.
 
-      :param value: Parametr ``value`` předává se do volání ``localize_input()``, ``str()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``localize_input()``, výsledek volání ``str()``.
+      :param value: Hodnota k zformátování.
+      :return: Zformátovaná hodnota nebo None.
 
 
 .. py:class:: OdstavkaSystemuForm

@@ -20,7 +20,9 @@ class AkceDokumenty(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceDokumenty`` v rámci aplikace."""
 
     def go_to_form_zapsat(self):
-        """Provádí operaci go to form zapsat."""
+        """
+        Naviguje na stránku pro zapsání dokumentu.
+        """
         self.goToAddress("/dokument/zapsat")
 
     def test_064_zapsani_dokumentu_p_001(self):
@@ -1270,7 +1272,9 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
     """Implementuje komponentu ``AkceKnihovna3D`` v rámci aplikace."""
 
     def go_to_form_zapsat(self):
-        """Provádí operaci go to form zapsat."""
+        """
+        Naviguje na stránku pro zapsání dokumentu.
+        """
         self.goToAddress("/dokument/model/zapsat")
 
     def zapsat_zaznam(self):
