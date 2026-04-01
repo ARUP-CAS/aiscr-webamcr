@@ -9,10 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 def list_files_in_db():
-    # Provede vlastní zpracování.
-    """Provádí operaci list files in db.
+    """Vrátí seznam absolutních cest ke všem souborům evidovaným v databázi.
 
-    :return: Vrací hodnotu podle větve zpracování.
+    :return: Seznam absolutních cest souborů evidovaných v modelu Soubor.
     """
     soubory_query = Soubor.objects.all()
     return [soubor.path.path for soubor in soubory_query if soubor.path.name != "not specified yet"]
@@ -20,9 +19,9 @@ def list_files_in_db():
 
 def remove_orphans(files_in_database):
     """
-    Provádí operaci remove orphans.
+    Projde adresář MEDIA_ROOT a smaže soubory, které nejsou evidovány v databázi.
 
-    :param files_in_database: Parametr ``files_in_database`` ovlivňuje větvení podmínek.
+    :param files_in_database: Seznam absolutních cest souborů evidovaných v databázi.
     """
     for path, subdirs, files in os.walk(MEDIA_ROOT):
         for name in files:

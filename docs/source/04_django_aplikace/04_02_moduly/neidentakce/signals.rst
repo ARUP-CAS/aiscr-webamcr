@@ -8,16 +8,16 @@ Funkce
 
 .. py:function:: neident_akce_post_save(sender, instance)
 
-   Provádí operaci neident akce post save.
+   Uloží metadata nadřazeného dokumentu po uložení neidentifikované akce.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``neident_akce_post_save``.
-   :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``dokument_cast``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``neident_akce_post_save``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Ukládaná instance neidentifikované akce.
+   :param kwargs: Další parametry signálu.
 
 .. py:function:: neident_akce_post_delete(sender, instance)
 
-   Provádí operaci neident akce post delete.
+   Aktualizuje metadata nadřazeného dokumentu po smazání neidentifikované akce.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``neident_akce_post_delete``.
-   :param instance: Parametr ``instance`` předává se do volání ``on_commit()``, pracuje se s atributy ``dokument_cast``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``neident_akce_post_delete``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Smazaná instance neidentifikované akce.
+   :param kwargs: Další parametry signálu.

@@ -46,9 +46,9 @@ def detail(request, typ_vazby, ident_cely):
     """
     Funkce pohledu pro editaci dokumentační jednotky a ADB.
 
-    :param request: Parametr ``request`` se předává do volání ``create_transaction()``, ``CreateDJForm()``, pracuje se s atributy ``user``, ``POST``, ovlivňuje větvení podmínek.
-    :param typ_vazby: Parametr ``typ_vazby`` slouží jako vstup pro logiku funkce ``detail``.
-    :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``CreateDJForm()``.
+    :param request: HTTP požadavek s daty formuláře DJ.
+    :param typ_vazby: Typ vazby dokumentační jednotky (DJ nebo dokument).
+    :param ident_cely: Identifikátor dokumentační jednotky.
 
         :return: Vrací proměnná ``response``.
     """
@@ -377,7 +377,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Vrací context data.
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Další klíčové argumenty předané do základní třídy.
 
             :return: Vrací proměnná ``context``.
         """
@@ -396,9 +396,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Vrací výsledek operace.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param request: HTTP GET požadavek.
+        :param args: Poziční argumenty.
+        :param kwargs: Klíčové argumenty předané do ``get_context_data()``.
 
             :return: Vrací výsledek volání ``render_to_response()``.
         """
@@ -410,9 +410,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
         """
         Obsluhuje HTTP metodu POST.
 
-        :param request: Parametr ``request`` předává se do volání ``ChangeKatastrForm()``, ``create_transaction()``, pracuje se s atributy ``POST``, ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
+        :param request: HTTP POST požadavek s daty formuláře pro změnu katastru.
+        :param args: Poziční argumenty.
+        :param kwargs: Klíčové argumenty.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """

@@ -7,7 +7,7 @@ class EzConfig(AppConfig):
     name = "ez"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Zaregistruje signály aplikace ez po spuštění Django."""
         super(EzConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import ez.signals

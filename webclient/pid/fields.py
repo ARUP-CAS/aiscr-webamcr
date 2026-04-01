@@ -53,9 +53,9 @@ class DoiAutocompleteField(PidAutocompleteField):
 
     def valid_value(self, value):
         """
-        Provádí operaci valid value.
+        Ověří, zda zadaná hodnota DOI existuje v databázi DOI identifikátorů.
 
-        :param value: Parametr ``value`` předává se do volání ``verify_doi()``, vstupuje do návratové hodnoty.
+        :param value: Řetězec s DOI identifikátorem, jehož platnost se ověřuje.
 
             :return: Vrací výsledek volání ``verify_doi()``.
         """
@@ -90,9 +90,9 @@ class OrcidAutocompleteField(PidAutocompleteField):
 
     def prepare_value(self, value):
         """
-        Provádí operaci prepare value.
+        Odstraní z ORCID hodnoty prefix URL a vrátí pouze samotný identifikátor.
 
-        :param value: Parametr ``value`` pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+        :param value: Řetězec s ORCID identifikátorem, případně s prefixem ``https://orcid.org/``.
 
             :return: Vrací hodnotu podle větve zpracování.
         """
@@ -100,9 +100,9 @@ class OrcidAutocompleteField(PidAutocompleteField):
 
     def valid_value(self, value):
         """
-        Provádí operaci valid value.
+        Ověří, zda zadaný ORCID identifikátor existuje v databázi ORCID.
 
-        :param value: Parametr ``value`` předává se do volání ``verify_orcid()``, vstupuje do návratové hodnoty.
+        :param value: Řetězec s ORCID identifikátorem, jehož platnost se ověřuje.
 
             :return: Vrací výsledek volání ``verify_orcid()``.
         """
@@ -127,9 +127,9 @@ class RorAutocompleteField(PidAutocompleteField):
 
     def valid_value(self, value):
         """
-        Provádí operaci valid value.
+        Ověří, zda zadaný ROR identifikátor existuje v databázi ROR organizací.
 
-        :param value: Parametr ``value`` předává se do volání ``verify_ror()``, vstupuje do návratové hodnoty.
+        :param value: Řetězec s ROR identifikátorem, jehož platnost se ověřuje.
 
             :return: Vrací výsledek volání ``verify_ror()``.
         """
@@ -164,9 +164,9 @@ class WikiDataAutocompleteField(PidAutocompleteField):
 
     def prepare_value(self, value):
         """
-        Provádí operaci prepare value.
+        Odstraní z hodnoty Wikidata prefix URL a vrátí pouze samotný identifikátor entity.
 
-        :param value: Parametr ``value`` pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+        :param value: Řetězec s identifikátorem Wikidata, případně s prefixem ``https://www.wikidata.org/entity/``.
 
             :return: Vrací hodnotu podle větve zpracování.
         """
@@ -174,9 +174,9 @@ class WikiDataAutocompleteField(PidAutocompleteField):
 
     def valid_value(self, value):
         """
-        Provádí operaci valid value.
+        Ověří, zda zadaný identifikátor Wikidata existuje jako platná entita.
 
-        :param value: Parametr ``value`` předává se do volání ``verify_wikidata()``, vstupuje do návratové hodnoty.
+        :param value: Řetězec s identifikátorem nebo URL záznamu Wikidata, jehož platnost se ověřuje.
 
             :return: Vrací výsledek volání ``verify_wikidata()``.
         """

@@ -43,7 +43,7 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
 
     @property
     def navazany_objekt(self):
-        """Provádí operaci navazany objekt.
+        """Vrátí navázaný objekt (část dokumentu nebo dokumentační jednotku) podle typu vazby.
 
         :return: Vrací atribut objektu.
         """
@@ -101,7 +101,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     @property
     def ident_cely_safe(self):
-        """Provádí operaci ident cely safe.
+        """Vrátí identifikátor komponenty s pomlčkami nahrazenými podtržítky (vhodný pro použití v HTML atributech).
 
         :return: Vrací výsledek volání ``replace()``.
         """
@@ -109,7 +109,7 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     @property
     def pocet_nalezu(self):
-        """Provádí operaci pocet nalezu.
+        """Vrátí celkový počet nálezů (objektů a předmětů) přiřazených ke komponentě.
 
         :return: Vrací hodnotu podle větve zpracování.
         """

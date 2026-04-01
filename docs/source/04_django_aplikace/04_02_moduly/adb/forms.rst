@@ -14,11 +14,10 @@ Třídy
 
    .. py:method:: format_value()
 
-      Provádí operaci format value.
+      Vrátí textový popis osoby (vypis_cely) pro zobrazení v read-only poli.
 
-      :param value: Parametr ``value`` předává se do volání ``filter()``, ovlivňuje větvení podmínek.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+      :param value: Primární klíč záznamu Osoba.
+      :return: Textový popis osoby nebo prázdný řetězec, pokud záznam neexistuje.
 
 
 .. py:class:: CreateADBForm

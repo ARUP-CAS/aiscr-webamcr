@@ -107,8 +107,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Metoda pro určení práv na videní odstávky.
 
         :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_view_permission``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_view_permission``.
+        :param obj: Volitelný objekt modelu, na který se oprávnění vztahuje (není využit).
+        :param args: Další poziční argumenty (nejsou využity).
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -119,7 +119,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Metoda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
 
         :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+        :param args: Další poziční argumenty (nejsou využity).
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -132,8 +132,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         Metoda pro určení práv pro úpravu odstávky.
 
         :param request: Parametr ``request`` pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-        :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+        :param obj: Volitelný objekt modelu, na který se oprávnění vztahuje (není využit).
+        :param args: Další poziční argumenty (nejsou využity).
 
             :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -183,11 +183,12 @@ class PermissionAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
         """
-               Provádí operaci changelist view.
+        Zobrazí přehledovou stránku oprávnění s přidaným příznakem pro zobrazení tlačítka importu.
 
-               :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
-               :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param request: HTTP požadavek od klienta.
+        :param extra_context: Volitelný slovník s dalším kontextem předaným do šablony.
+
+        :return: HTTP odpověď s vyrenderovanou šablonou přehledové stránky.
         """
         return super().changelist_view(request, {"import_list": True})
 
@@ -375,11 +376,12 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
         """
-               Provádí operaci changelist view.
+        Zobrazí přehledovou stránku výjimek oprávnění s přidaným příznakem pro zobrazení tlačítka importu.
 
-               :param request: Parametr ``request`` předává se do volání ``changelist_view()``, vstupuje do návratové hodnoty.
-               :param extra_context: Kolekce ``extra_context`` zpracovávaná touto funkcí.
-        :return: Výstup funkce odpovídající implementované logice.
+        :param request: HTTP požadavek od klienta.
+        :param extra_context: Volitelný slovník s dalším kontextem předaným do šablony.
+
+        :return: HTTP odpověď s vyrenderovanou šablonou přehledové stránky.
         """
         return super().changelist_view(request, {"import_skip_list": True})
 
@@ -531,12 +533,12 @@ class PermissionSkipAdmin(admin.ModelAdmin):
 
     def export_as_csv(self, request, queryset):
         """
-        Exportuje as csv.
+        Exportuje vybrané záznamy PermissionsSkip do CSV souboru ke stažení.
 
-        :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``export_as_csv``.
-        :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``export_as_csv``.
+        :param request: HTTP požadavek od klienta.
+        :param queryset: Queryset vybraných záznamů PermissionsSkip určených k exportu.
 
-            :return: Vrací proměnná ``response``.
+        :return: HTTP odpověď s CSV souborem ke stažení.
         """
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=opravneni_override.csv"

@@ -21,9 +21,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param status_code: Stavová nebo časová hodnota `status_code` používaná při rozhodování logiky.
-      :param response_text: Číselná hodnota ``response_text`` použitá při výpočtu nebo transformaci.
-      :param request_url: Parametr ``request_url`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param status_code: HTTP stavový kód odpovědi z DataCite API.
+      :param response_text: Textový obsah chybové odpovědi z DataCite API.
+      :param request_url: URL adresa požadavku, který skončil chybou.
 
 
 .. py:class:: DoiConnectionError

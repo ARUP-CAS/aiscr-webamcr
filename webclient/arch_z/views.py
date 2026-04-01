@@ -312,11 +312,11 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-               Provádí operaci dispatch.
+        Ověří správnost vazby mezi dokumentační jednotkou a archeologickým záznamem před zpracováním požadavku.
 
-               :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param request: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
+        :param args: Poziční argumenty předávané nadřazené metodě dispatch.
+        :param kwargs: Klíčové argumenty obsahující ``dj_ident_cely`` a ``ident_cely`` pro načtení objektů.
         :return: Výstup funkce odpovídající implementované logice.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
@@ -470,11 +470,11 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-               Provádí operaci dispatch.
+        Ověří správnost vazby mezi komponentou a dokumentační jednotkou před zpracováním požadavku.
 
-               :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param request: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
+        :param args: Poziční argumenty předávané nadřazené metodě dispatch.
+        :param kwargs: Klíčové argumenty obsahující ``dj_ident_cely`` a ``komponenta_ident_cely`` pro načtení objektů.
         :return: Výstup funkce odpovídající implementované logice.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
@@ -558,8 +558,8 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         Vrací výsledek operace.
 
         :param request: Parametr ``request`` předává se do volání ``get()``, ``str()``, pracuje se s atributy ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param args: Poziční argumenty předávané nadřazené metodě get.
+        :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
             :raises Exception: Vyvolá se s textem "arch_z.views.PianCreateView.get.label_not_found"; nebo s textem "arch_z.views.PianCreateView.get.transormation_error".
@@ -596,11 +596,11 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
     def dispatch(self, request, *args, **kwargs) -> HttpResponse:
         """
-               Provádí operaci dispatch.
+        Ověří správnost vazby mezi PIAN a dokumentační jednotkou před zpracováním požadavku.
 
-               :param request: Parametr ``request`` předává se do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-               :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-               :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+        :param request: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
+        :param args: Poziční argumenty předávané nadřazené metodě dispatch.
+        :param kwargs: Klíčové argumenty obsahující ``dj_ident_cely`` a ``pian_ident_cely`` pro načtení objektů.
         :return: Výstup funkce odpovídající implementované logice.
         """
         dj = get_object_or_404(DokumentacniJednotka, ident_cely=self.kwargs["dj_ident_cely"])
@@ -641,8 +641,8 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         Vrací výsledek operace.
 
         :param request: Parametr ``request`` předává se do volání ``get()``, ``str()``, pracuje se s atributy ``user``.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param args: Poziční argumenty předávané nadřazené metodě get.
+        :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
             :raises PermissionDenied: Vyvolá se při splnění podmínky ``context['j'].pian.stav == PIAN_POTVRZEN``.
@@ -1735,7 +1735,7 @@ class AkceIndexView(LoginRequiredMixin, TemplateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Klíčové argumenty; nejsou předávány nadřazené metodě, kontext se sestavuje přímo.
 
             :return: Vrací proměnná ``context``.
         """
@@ -1761,7 +1761,7 @@ class AkceListView(SearchListView):
     vypis_app = "akce"
 
     def init_translations(self):
-        """Provádí operaci init translations."""
+        """Nastaví přeložené texty pro nadpisy, popisky a záhlaví přehledu akcí."""
         super().init_translations()
         self.page_title = _("arch_z.views.AkceListView.page_title.text")
         self.search_sum = _("arch_z.views.AkceListView.search_sum.text")
@@ -1776,9 +1776,9 @@ class AkceListView(SearchListView):
     @staticmethod
     def rename_field_for_ordering(field: str):
         """
-        Provádí operaci rename field for ordering.
+        Převede název pole z URL parametru na odpovídající databázový název pro řazení querysetu akcí.
 
-        :param field: Parametr ``field`` předává se do volání ``get()``, pracuje se s atributy ``replace``, vstupuje do návratové hodnoty.
+        :param field: Název pole z požadavku (může začínat znaménkem ``-`` pro sestupné řazení).
 
             :return: Vrací výsledek volání ``get()``.
         """
@@ -1853,7 +1853,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Klíčové argumenty předávané do sestavení kontextu.
 
             :return: Vrací proměnná ``context``.
         """
@@ -1873,8 +1873,8 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         Metoda pro vrácení stránky při volání GET.
 
         :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ovlivňuje větvení podmínek.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param args: Poziční argumenty předávané nadřazené metodě get.
+        :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
         """
@@ -1897,8 +1897,8 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         Uživatel je presmerován na detail akce.
 
         :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param args: Poziční argumenty předávané nadřazené metodě post.
+        :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
             :return: Vrací výsledek volání ``JsonResponse()``.
         """
@@ -1940,7 +1940,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         """
         Metoda pro získaní kontextu podlehu.
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
+        :param kwargs: Klíčové argumenty předávané do sestavení kontextu.
 
             :return: Vrací proměnná ``context``.
         """
@@ -1960,8 +1960,8 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         Metoda pro vrácení stránky při volání GET s formulářem pro výběr projektu.
 
         :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ovlivňuje větvení podmínek.
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+        :param args: Poziční argumenty předávané nadřazené metodě get.
+        :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
 
             :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
         """

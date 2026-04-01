@@ -50,7 +50,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
         """Implementuje komponentu ``CreateAkceVedouciObjektForm`` v rámci aplikace."""
 
         def clean(self):
-            """Provádí operaci clean.
+            """Ověří, že vedoucí a organizace jsou buď oba vyplněni, nebo oba prázdní.
 
             :raises forms.ValidationError: Vyvolá se při splnění podmínky ``cleaned_data.get('vedouci', None) is None and cleaned_data.get('organizace', None) is not None or (cleaned_data.get('vedouci', None) is not ``.
             """
@@ -254,7 +254,7 @@ class CustomDateInput(forms.DateField):
     @classmethod
     def year_only(cls, value):
         """
-        Provádí operaci year only.
+        Ověří, zda zadaná hodnota odpovídá formátu čtyřciferného roku.
 
         :param value: Parametr ``value`` předává se do volání ``fullmatch()``, vstupuje do návratové hodnoty.
 

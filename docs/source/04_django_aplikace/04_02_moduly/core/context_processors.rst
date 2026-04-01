@@ -10,7 +10,7 @@ Funkce
 
    Automatický import stavov projektú do kontextu všech template.
 
-   :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``constants_import``.
+   :param request: HTTP požadavek; není přímo využit, ale Django jej předává každému context processoru.
 
    :return: Vrací proměnná ``constants_dict``.
 
@@ -18,15 +18,15 @@ Funkce
 
    Automatický import linkov na digitálni archiv zo settings do kontextov všech template.
 
-   :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``digi_links_from_settings``.
+   :param request: HTTP požadavek; není přímo využit, ale Django jej předává každému context processoru.
 
    :return: Vrací výsledek volání ``getattr()``.
 
 .. py:function:: logout_next_url(request)
 
-   Provádí operaci logout next url.
+   Vrátí do kontextu šablony aktuální cestu požadavku pro použití jako ``next`` parametr po odhlášení.
 
-   :param request: Parametr ``request`` předává se do volání ``debug()``, pracuje se s atributy ``path``, vstupuje do návratové hodnoty.
+   :param request: HTTP požadavek, z jehož atributu ``path`` se čte aktuální URL.
 
    :return: Vrací slovník.
 
@@ -40,8 +40,8 @@ Funkce
 
 .. py:function:: main_shows(request)
 
-   Provádí operaci main shows.
+   Připraví do kontextu šablony příznaky viditelnosti hlavních sekcí aplikace podle role přihlášeného uživatele.
 
-   :param request: Parametr ``request`` pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+   :param request: HTTP požadavek, z jehož atributu ``user`` se čte přihlášený uživatel a jeho role.
 
    :return: Vrací proměnná ``main_show``.

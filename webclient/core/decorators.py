@@ -16,7 +16,7 @@ def allowed_user_groups(allowed_groups):
     Na vstupe je list povolených uživatelských skupin.
     Jestli uživatel nemá jesnou z daných skupin jako hlavní tak funkce vráti exception PermissionError a nezobrazí formulár.
 
-    :param allowed_groups: Parametr ``allowed_groups`` slouží jako vstup pro logiku funkce ``allowed_user_groups``.
+    :param allowed_groups: Seznam nebo množina ID povolených hlavních rolí (skupin), jimž je přístup povolen.
 
         :return: Vrací proměnná ``_method_wrapper``.
     """
@@ -25,21 +25,22 @@ def allowed_user_groups(allowed_groups):
     def _method_wrapper(func):
         """Obalí cílovou funkci kontrolou hlavní role uživatele.
 
-        :param func: Parametr ``func`` slouží jako vstup pro logiku funkce ``_method_wrapper``.
+        :param func: View funkce, která má být chráněna kontrolou hlavní role.
         :return: Vrací proměnná ``_arguments_wrapper``.
         """
 
         @wraps(func)
         def _arguments_wrapper(request, *args, **kwargs):
             """
-                       Provádí operaci arguments wrapper.
+            Zkontroluje hlavní roli přihlášeného uživatele a buď vyvolá PermissionError, nebo předá řízení obalené funkci.
 
-                       :param request: Parametr ``request`` předává se do volání ``func()``, pracuje se s atributy ``user``, vstupuje do návratové hodnoty.
-                       :param args: Parametr ``args`` se předává do volání ``func()``, vstupuje do návratové hodnoty.
-                       :param kwargs: Parametr ``kwargs`` se předává do volání ``func()``, vstupuje do návratové hodnoty.
+            :param request: HTTP požadavek, z jehož atributu ``user.hlavni_role`` se čte ID hlavní role.
+            :param args: Další poziční argumenty předané obalené view funkci.
+            :param kwargs: Klíčové argumenty předané obalené view funkci.
+
             :return: Výstup funkce odpovídající implementované logice.
 
-                :raises PermissionError: Vyvolá se s textem "Nepovolená uživatelská role".
+            :raises PermissionError: Vyvolá se s textem "Nepovolená uživatelská role".
             """
             hlavni_role = request.user.hlavni_role
             if hlavni_role.id not in allowed_groups:

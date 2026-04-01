@@ -603,20 +603,14 @@ class BasePostUploadView(View):
 
     Poskytuje společnou logiku pro upload nového souboru i nahrazení existujícího souboru.
     Implementuje kompletní workflow pro validaci nahrávaných souborů včetně kontroly MIME typů,
-    antivirové kontroly a detekce šifrovaných souborů. Potomci musí implementovat metodu
-    handle_upload() pro specifické zpracování.
+    antivirové kontroly a detekce šifrovaných souborů. Workflow zahrnuje: kontrolu přítomnosti
+    souboru, validaci MIME typu a detekci šifrování, antivirovou kontrolu a předání validovaného
+    souboru potomkům přes handle_upload(). Potomci musí tuto metodu implementovat.
 
-    Process Description:
-    1. Kontrola přítomnosti souboru v requestu
-    2. Validace MIME typu a detekce šifrování
-    3. Antivirová kontrola nahrávaného obsahu
-    4. Předání validovaného souboru potomkům pro konkrétní zpracování
-
-    Attributes:
-    http_method_names (list): Povolené HTTP metody - pouze POST
-    source_url (str): URL zdroje souboru (pokud je specifikována)
-    fedora_transaction (FedoraTransaction): Instance transakce pro práci s Fedora repository
-    original_filename (str): Původní název nahrávaného souboru
+    :ivar http_method_names: Povolené HTTP metody — pouze POST.
+    :ivar source_url: URL zdroje souboru, pokud je specifikována.
+    :ivar fedora_transaction: Instance transakce pro práci s Fedora repository.
+    :ivar original_filename: Původní název nahrávaného souboru.
     """
 
     http_method_names = ["post"]
@@ -755,19 +749,13 @@ class NewFileUploadView(BasePostUploadView):
     """
     Pohled pro nahrání nového souboru k záznamu (projekt, dokument, samostatný nález).
 
-    Process Description:
-    1. Kontrola oprávnění uživatele (nebo anonymního přístupu pro projekty)
-    2. Rozlišení typu záznamu a generování názvu souboru
-    3. Validace a případná úprava přípony souboru podle MIME typu
-    4. Odstranění GPS dat z obrázků samostatných nálezů
-    5. Uložení do Fedora repository
-    6. Vytvoření záznamu v databázi s metadaty
-    7. Detekce duplicit podle SHA-512 hashe
-    8. Zaznamenání události nahrání do historie
+    Zpracovává workflow vytvoření nového souboru: kontrolu oprávnění (vč. anonymního přístupu
+    pro projekty), rozlišení typu záznamu, validaci a úpravu přípony podle MIME typu, odstranění
+    GPS dat z obrázků, uložení do Fedora repository, vytvoření databázového záznamu s metadaty,
+    detekci duplicit podle SHA-512 hashe a zaznamenání události do historie.
 
-    URL Parameters:
-    ident_cely (str): Identifikátor záznamu, ke kterému má být soubor nahrán
-    typ_vazby (str): Typ vazby - "projekt", "dokument", "model3d", nebo "pas"
+    :ivar ident_cely: Identifikátor záznamu, ke kterému má být soubor nahrán.
+    :ivar typ_vazby: Typ vazby — ``"projekt"``, ``"dokument"``, ``"model3d"`` nebo ``"pas"``.
     """
 
     def handle_upload(self, request, soubor, soubor_data, *args, **kwargs):

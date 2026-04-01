@@ -53,11 +53,11 @@ pageinfo = "platypus example"
 
 def draw_image(filename, canvas, counter):
     """
-    Provádí operaci draw image.
+    Vykreslí obrázek na ReportLab canvas na pozici určenou pořadovým číslem (vlevo, uprostřed, vpravo).
 
-    :param filename: Parametr ``filename`` se předává do volání ``ImageReader()``, ``drawImage()``.
-    :param canvas: Parametr ``canvas`` pracuje se s atributy ``drawImage``.
-    :param counter: Parametr ``counter`` ovlivňuje větvení podmínek.
+    :param filename: Cesta k souboru obrázku, který se vykreslí do záhlaví.
+    :param canvas: ReportLab canvas objekt, na který se obrázek nakreslí.
+    :param counter: Pořadové číslo obrázku (0 = vlevo, 1 = uprostřed, 2 = vpravo).
     """
     img = utils.ImageReader(filename)
     iw, ih = img.getSize()

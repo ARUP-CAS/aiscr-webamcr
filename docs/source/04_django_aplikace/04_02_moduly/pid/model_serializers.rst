@@ -16,21 +16,21 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param record: Parametr ``record`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param record: Doménový objekt (Dokument, Lokalita, SamostatnyNalez), jehož metadata budou serializována.
 
    .. py:method:: format_date()
 
-      Provádí operaci format date.
+      Naformátuje datum do řetězce ve formátu ISO 8601 (YYYY-MM-DD).
 
-      :param date: Časový údaj ``date`` použitý při filtrování nebo výpočtu.
+      :param date: Objekt typu ``date`` určený k formátování.
 
       :return: Vrací výsledek volání ``strftime()``.
 
    .. py:method:: format_date_time()
 
-      Provádí operaci format date time.
+      Naformátuje datum a čas do řetězce ve formátu ISO 8601 včetně časové zóny.
 
-      :param date_time: Časový údaj ``date_time`` použitý při filtrování nebo výpočtu.
+      :param date_time: Objekt typu ``datetime`` určený k formátování.
 
       :return: Vrací výsledek volání ``strftime()``.
 
@@ -83,61 +83,61 @@ Třídy
 
    .. py:method:: _serialize_alternate_identifiers()
 
-      Provádí operaci serialize alternate identifiers.
+      Sestaví seznam alternativních identifikátorů záznamu pro DataCite, obsahující přístupové číslo AMČR.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_contributors()
 
-      Provádí operaci serialize contributors.
+      Sestaví seznam přispěvatelů záznamu pro DataCite, zahrnující AIS CR jako hostitelskou instituci.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_creators()
 
-      Provádí operaci serialize creators.
+      Sestaví seznam tvůrců záznamu pro DataCite.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_dates()
 
-      Provádí operaci serialize dates.
+      Sestaví seznam dat (vznik, odeslání, archivace apod.) pro DataCite metadata.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_descriptions()
 
-      Provádí operaci serialize descriptions.
+      Sestaví seznam popisů záznamu pro DataCite (abstrakt, technické informace apod.).
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_geolocations()
 
-      Provádí operaci serialize geolocations.
+      Sestaví seznam geografických souřadnic a lokalit záznamu pro DataCite metadata.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_related_identifiers()
 
-      Provádí operaci serialize related identifiers.
+      Sestaví seznam souvisejících identifikátorů záznamu pro DataCite, včetně odkazu na OAI-PMH metadata.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_rightslist()
 
-      Provádí operaci serialize rightslist.
+      Sestaví seznam licenčních práv záznamu pro DataCite metadata.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_subjects()
 
-      Provádí operaci serialize subjects.
+      Sestaví základní seznam tematických klíčových slov pro DataCite, obsahující klasifikaci oboru archeologie.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_types()
 
-      Provádí operaci serialize types.
+      Sestaví slovník s typem zdroje záznamu pro DataCite metadata.
 
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -149,25 +149,25 @@ Třídy
 
    .. py:method:: serialize_delete()
 
-      Provádí operaci serialize delete.
+      Sestaví DataCite payload pro skrytí záznamu s doplněním zprávy o odstranění z repozitáře AMČR.
 
       :return: Vrací slovník.
 
    .. py:method:: serialize_hide()
 
-      Provádí operaci serialize hide.
+      Sestaví minimální DataCite payload s událostí ``hide`` pro skrytí záznamu.
 
       :return: Vrací slovník.
 
    .. py:method:: serialize_publish()
 
-      Provádí operaci serialize publish.
+      Sestaví kompletní DataCite payload pro publikaci záznamu včetně všech povinných metadat.
 
       :return: Vrací proměnná ``data``.
 
    .. py:method:: serialize_update()
 
-      Provádí operaci serialize update.
+      Sestaví DataCite payload pro aktualizaci záznamu (bez pole ``event`` oproti publish).
 
       :return: Vrací proměnná ``result``.
 
@@ -182,11 +182,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param record: Parametr ``record`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param record: Doménový objekt, jehož metadata budou částečně serializována.
 
    .. py:method:: serialize_publish()
 
-      Provádí operaci serialize publish.
+      Sestaví částečný DataCite payload pro publikaci záznamu (abstraktní implementace).
 
 
 .. py:class:: DokumentSerializer
@@ -252,25 +252,25 @@ Třídy
 
    .. py:method:: _serialize_alternate_identifiers()
 
-      Provádí operaci serialize alternate identifiers.
+      Sestaví seznam alternativních identifikátorů dokumentu pro DataCite, včetně označení originálu.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_contributors()
 
-      Provádí operaci serialize contributors.
+      Sestaví seznam přispěvatelů dokumentu pro DataCite, zahrnující pozorovatele letu, vedoucí neidentifikovatelných akcí a vedoucí projektů.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_creators()
 
-      Provádí operaci serialize creators.
+      Sestaví seznam tvůrců dokumentu pro DataCite ze seznamu autorů dokumentu.
 
       :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _serialize_dates()
 
-      Provádí operaci serialize dates.
+      Sestaví seznam dat dokumentu pro DataCite z jeho historie (zápis, odeslání, archivace, vrácení) a z období komponent.
 
       :return: Výstup funkce odpovídající implementované logice.
 
@@ -597,82 +597,82 @@ Funkce
 
 .. py:function:: serialize_ez_creator(autor)
 
-   Provádí operaci serialize ez creator.
+   Serializuje osobu jako tvůrce externího zdroje do formátu DataCite.
 
-   :param autor: Parametr ``autor`` pracuje se s atributy ``vypis_cely``, ``jmeno``, vstupuje do návratové hodnoty.
+   :param autor: Osoba vystupující jako autor externího zdroje v systému AMČR.
    :return: Výstup funkce odpovídající implementované logice.
 
 .. py:function:: serialize_ez_contributor(contributor)
 
-   Provádí operaci serialize ez contributor.
+   Serializuje osobu jako přispěvatele (editora) externího zdroje do formátu DataCite.
 
-   :param contributor: Parametr ``contributor`` pracuje se s atributy ``vypis_cely``, ``jmeno``, vstupuje do návratové hodnoty.
+   :param contributor: Osoba vystupující jako editor externího zdroje v systému AMČR.
    :return: Výstup funkce odpovídající implementované logice.
 
 .. py:function:: serialize_geom(geom, katastr, verejne)
 
-   Provádí operaci serialize geom.
+   Serializuje geometrii a katastr do formátu geoLocationPoint/geoLocationPlace pro DataCite metadata.
 
-   :param geom: Parametr ``geom`` předává se do volání ``update()``, ``frozenset()``, pracuje se s atributy ``centroid``, ovlivňuje větvení podmínek.
-   :param katastr: Parametr ``katastr`` pracuje se s atributy ``nazev``, ``okres``, ovlivňuje větvení podmínek.
-   :param verejne: Parametr ``verejne`` ovlivňuje větvení podmínek.
+   :param geom: Geometrie záznamu (bod nebo polygon), z níž se použije centroid; ``None`` přeskočí souřadnice.
+   :param katastr: Katastrální území záznamu použité pro textový popis polohy; ``None`` přeskočí lokalitu.
+   :param verejne: Příznak, zda má být záznam zobrazen veřejně — ovlivňuje úroveň detailu souřadnic.
    :return: Výstup funkce odpovídající implementované logice.
 
 .. py:function:: serialize_affiliation(organizace)
 
-   Provádí operaci serialize affiliation.
+   Serializuje organizaci jako institucionální příslušnost osoby do formátu DataCite.
 
-   :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
+   :param organizace: Organizace AMČR, jejíž název a případný ROR identifikátor budou zahrnuty.
 
    :return: Vrací proměnná ``serialized_affiliation``.
 
 .. py:function:: serialize_organizace_contributor(organizace, contributor_type)
 
-   Provádí operaci serialize organizace contributor.
+   Serializuje organizaci jako přispěvatele záznamu do formátu DataCite.
 
-   :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
-   :param contributor_type: Parametr ``contributor_type`` vstupuje do návratové hodnoty.
+   :param organizace: Organizace AMČR, která má být zahrnuta jako přispěvatel.
+   :param contributor_type: Typ přispěvatele dle schématu DataCite (např. ``DataCurator``, ``HostingInstitution``).
 
    :return: Vrací slovník.
 
 .. py:function:: serialize_osoba_identifiers(osoba)
 
-   Provádí operaci serialize osoba identifiers.
+   Sestaví seznam identifikátorů osoby (AMČR, ORCID, Wikidata) pro DataCite metadata.
 
-   :param osoba: Uživatel nebo osoba ``osoba``, v jejímž kontextu se operace provádí.
+   :param osoba: Osoba z číselníku AMČR, jejíž identifikátory mají být zahrnuty.
 
    :return: Vrací proměnná ``result``.
 
 .. py:function:: serialize_osoba(osoba, organizace, contributor_type)
 
-   Provádí operaci serialize osoba.
+   Serializuje osobu (autora nebo přispěvatele) do formátu DataCite včetně identifikátorů a příslušnosti.
 
-   :param osoba: Uživatel nebo osoba ``osoba``, v jejímž kontextu se operace provádí.
-   :param organizace: Uživatel nebo osoba `organizace`, v jejímž kontextu se operace provádí.
-   :param contributor_type: Parametr ``contributor_type`` ovlivňuje větvení podmínek.
+   :param osoba: Osoba z číselníku AMČR, která má být serializována.
+   :param organizace: Organizace, ke které je osoba přiřazena; ``None`` vynechá příslušnost.
+   :param contributor_type: Typ přispěvatele dle DataCite; pokud je zadán, bude přidán do výsledku.
    :return: Výstup funkce odpovídající implementované logice.
 
 .. py:function:: serialize_subject(serialized_record, subject_attr, lang)
 
-   Provádí operaci serialize subject.
+   Serializuje heslo ze slovníku AMČR jako tematické klíčové slovo pro DataCite metadata.
 
-   :param serialized_record: Parametr ``serialized_record`` předává se do volání ``getattr()``, pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek.
-   :param subject_attr: Textový nebo strukturální vstup `subject_attr` používaný při sestavení nebo zpracování obsahu.
-   :param lang: Textová hodnota `lang` používaná pro vyhledání, pojmenování nebo hlášení stavu.
+   :param serialized_record: Heslo ze slovníku AMČR (Heslar), které má být serializováno; ``None`` vrátí prázdnou množinu.
+   :param subject_attr: Název atributu objektu ``serialized_record``, jehož hodnota bude použita jako text hesla.
+   :param lang: Kód jazyka dle ISO 639-1 pro pole ``lang`` ve výstupu DataCite.
 
    :return: Vrací výsledek volání ``frozenset()``.
 
 .. py:function:: serialize_subjects_komponenty(komp)
 
-   Provádí operaci serialize subjects komponenty.
+   Sestaví seznam tematických klíčových slov ze všech atributů komponenty (období, areál, aktivity, objekty, předměty).
 
-   :param komp: Komponenta nebo její serializovaný reprezentant.
+   :param komp: Komponenta dokumentační jednotky nebo části dokumentu v systému AMČR.
 
    :return: Vrací proměnná ``result``.
 
 .. py:function:: serialize_dates_coverage(datace)
 
-   Provádí operaci serialize dates coverage.
+   Serializuje časové pokrytí komponenty (období) do formátu DataCite date Coverage.
 
-   :param datace: Kolekce ``datace`` zpracovávaná touto funkcí.
+   :param datace: Heslo ze slovníku AMČR reprezentující dataci s vazbou na rozsah let.
    :return: Výstup funkce odpovídající implementované logice.

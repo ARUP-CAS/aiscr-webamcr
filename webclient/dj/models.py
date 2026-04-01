@@ -68,7 +68,7 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     @property
     def ident_cely_safe(self):
-        """Provádí operaci ident cely safe.
+        """Vrátí identifikátor dokumentační jednotky s pomlčkami nahrazenými podtržítky (vhodný pro HTML atributy).
 
         :return: Vrací výsledek volání ``replace()``.
         """

@@ -7,7 +7,7 @@ class HistorieConfig(AppConfig):
     name = "historie"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Načte signály aplikace historie po spuštění Django."""
         super(HistorieConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import historie.signals

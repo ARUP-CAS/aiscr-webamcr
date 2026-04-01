@@ -239,7 +239,7 @@ class DokumentHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+        :param context: Kontext pohledu obsahující ``ident_cely`` záznamu.
 
             :return: Vrací slovník.
         """
@@ -258,9 +258,9 @@ class DokumentHistorieListView(HistorieListView):
 
     def add_extra_context(self, context):
         """
-        Provádí operaci add extra context.
+        Doplní kontext o typ záznamu (dokument nebo knihovna_3d) podle identifikátoru.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``add_extra_context``.
+        :param context: Kontext pohledu, do kterého jsou přidány klíče ``typ`` a ``entity``.
         """
         ident = self.get_lookup_value()
         typ = "knihovna_3d" if "3D" in ident else "dokument"
@@ -302,7 +302,7 @@ class SpolupraceHistorieListView(HistorieListView):
         """
         Vrací header config.
 
-        :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+        :param context: Kontext pohledu (nevyužíván, odkaz je vždy na seznam spolupráce).
 
             :return: Vrací slovník.
         """
@@ -324,9 +324,9 @@ class SouborHistorieListView(HistorieListView):
 
     def prepare_queryset(self, qs):
         """
-        Provádí operaci prepare queryset.
+        Seřadí queryset záznamů Historie souboru sestupně podle data změny.
 
-        :param qs: Parametr ``qs`` pracuje se s atributy ``order_by``, vstupuje do návratové hodnoty.
+        :param qs: Queryset záznamů Historie, který má být seřazen.
 
             :return: Vrací výsledek volání ``order_by()``.
         """

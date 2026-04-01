@@ -7,7 +7,7 @@ class ArchZConfig(AppConfig):
     name = "arch_z"
 
     def ready(self):
-        """Provádí operaci ready."""
+        """Registruje signály aplikace arch_z při spuštění Django."""
         super(ArchZConfig, self).ready()
         # noinspection PyUnresolvedReferences
         import arch_z.signals

@@ -238,9 +238,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
+        """Vrátí identifikátor Redis snímku pro tento externí zdroj.
 
-        :return: Vrací hodnotu podle větve zpracování.
+        :return: Řetězec tvaru ``<prefix>_<ident_cely>`` používaný jako klíč v Redis.
         """
         from ez.views import ExterniZdrojListView
 

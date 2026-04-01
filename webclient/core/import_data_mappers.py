@@ -106,14 +106,13 @@ from uzivatel.models import Organizace, Osoba, User, UserNotificationType
 @dataclass
 class ImportDataValidationResult:
     """
-    Datová třída, která reprezentuje výsledek validace jednoho záznamu při importu dat.
+    Datová třída reprezentující výsledek validace jednoho záznamu při importu dat.
 
-    Attributes:
-    item_order: Pořadové číslo záznamu v importu.
-    file_name: Název CSV souboru, ze kterého záznam pochází.
-    primary_key_import: Primární klíč záznamu v datovém souboru.
-    primary_key_table: Primární klíč záznamu v databázi.
-    validation_result: Textový popis výsledku validace (úspěch nebo chybová zpráva).
+    :ivar item_order: Pořadové číslo záznamu v importu.
+    :ivar file_name: Název CSV souboru, ze kterého záznam pochází.
+    :ivar primary_key_import: Primární klíč záznamu v datovém souboru.
+    :ivar primary_key_table: Primární klíč záznamu v databázi.
+    :ivar validation_result: Textový popis výsledku validace (úspěch nebo chybová zpráva).
     """
 
     item_order: int

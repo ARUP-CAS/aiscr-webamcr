@@ -12,23 +12,23 @@ Funkce
 
    Metoda se volá po uložením DJ.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``save_dokumentacni_jednotka``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param created: Parametr ``created`` ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``save_dokumentacni_jednotka``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Ukládaná instance dokumentační jednotky.
+   :param created: True pokud byl záznam právě vytvořen, False při aktualizaci.
+   :param kwargs: Další parametry signálu.
 
 .. py:function:: pre_delete_dokumentacni_jednotka(sender, instance)
 
-   Provádí operaci pre delete dokumentacni jednotka.
+   Zpracuje odpojení pianu a jeho případné smazání před smazáním dokumentační jednotky.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``pre_delete_dokumentacni_jednotka``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, ``filter()``, pracuje se s atributy ``ident_cely``, ``active_transaction``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``pre_delete_dokumentacni_jednotka``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Mazaná instance dokumentační jednotky.
+   :param kwargs: Další parametry signálu.
 
 .. py:function:: delete_dokumentacni_jednotka(sender, instance)
 
    Odstraní dokumentacni jednotka.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``delete_dokumentacni_jednotka``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``delete_dokumentacni_jednotka``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Smazaná instance dokumentační jednotky.
+   :param kwargs: Další parametry signálu.

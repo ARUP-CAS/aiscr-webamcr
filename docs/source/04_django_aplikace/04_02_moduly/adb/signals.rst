@@ -8,33 +8,33 @@ Funkce
 
 .. py:function:: adb_save_metadata(sender, instance, created)
 
-   Provádí operaci adb save metadata.
+   Uloží metadata záznamu ADB do Fedory po jeho uložení.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``adb_save_metadata``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param created: Parametr ``created`` ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``adb_save_metadata``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Ukládaná instance záznamu ADB.
+   :param created: True pokud byl záznam právě vytvořen, False při aktualizaci.
+   :param kwargs: Další parametry signálu.
 
 .. py:function:: vyskovy_bod_save_metadata(sender, instance)
 
-   Provádí operaci vyskovy bod save metadata.
+   Uloží metadata nadřazeného záznamu ADB po uložení výškového bodu.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``vyskovy_bod_save_metadata``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``suppress_signal``, ovlivňuje větvení podmínek.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``vyskovy_bod_save_metadata``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Ukládaná instance výškového bodu.
+   :param kwargs: Další parametry signálu.
 
 .. py:function:: adb_delete_repository_container(sender, instance)
 
-   Provádí operaci adb delete repository container.
+   Odstraní kontejner záznamu ADB z Fedory a aktualizuje metadata nadřazeného záznamu.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``adb_delete_repository_container``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``adb_delete_repository_container``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Smazaná instance záznamu ADB.
+   :param kwargs: Další parametry signálu.
 
 .. py:function:: vyskovy_bod_delete_repository_container(sender, instance)
 
-   Provádí operaci vyskovy bod delete repository container.
+   Aktualizuje metadata nadřazeného záznamu ADB po smazání výškového bodu.
 
-   :param sender: Parametr ``sender`` slouží jako vstup pro logiku funkce ``vyskovy_bod_delete_repository_container``.
-   :param instance: Parametr ``instance`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``, ``active_transaction``.
-   :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``vyskovy_bod_delete_repository_container``.
+   :param sender: Třída modelu, která signál vyslala.
+   :param instance: Smazaná instance výškového bodu.
+   :param kwargs: Další parametry signálu.

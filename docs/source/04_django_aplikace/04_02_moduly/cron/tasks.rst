@@ -87,7 +87,7 @@ Funkce
 
 .. py:function:: call_digiarchiv_update_task()
 
-   Provádí operaci call digiarchiv update task.
+   Zavolá URL digiarchívu pro spuštění aktualizace dat.
 
 .. py:function:: run_data_import(job_id, user_id)
 

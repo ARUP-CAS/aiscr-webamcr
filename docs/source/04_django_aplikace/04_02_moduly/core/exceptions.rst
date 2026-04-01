@@ -14,10 +14,10 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku s odkazem na PIAN, jehož geometrie neleží v žádném kladu mapových listů.
 
-      :param pian: Parametr ``pian`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param pian: Instance PIANu, jehož geometrie se nenachází v žádném kladu mapových listů.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: MaximalIdentNumberError
@@ -28,10 +28,10 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku s číslem identifikátoru, které překročilo povolené maximum.
 
-      :param number: Parametr ``number`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param number: Číslo identifikátoru, které překročilo maximální povolenou hodnotu.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: DJNemaPianError
@@ -42,10 +42,10 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy dokumentační jednotka nemá přiřazen žádný PIAN.
 
-      :param dj: Parametr ``dj`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param dj: Instance dokumentační jednotky, která postrádá přiřazený PIAN.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: NelzeZjistitRaduError
@@ -56,9 +56,9 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy nelze určit řadu dokumentu.
 
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: NeocekavanaRadaError
@@ -69,9 +69,9 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy je zjištěna neočekávaná řada dokumentu.
 
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: WrongSheetError
@@ -82,9 +82,9 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy importovaný Excel soubor nemá správné sloupce.
 
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: NeznamaGeometrieError
@@ -95,9 +95,9 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy je zjištěn neznámý nebo neočekávaný typ geometrie PIANu.
 
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: UnexpectedDataRelations
@@ -108,9 +108,9 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ duplicitních nebo chybějících datových relací při importu.
 
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: MaximalEventCount
@@ -121,10 +121,10 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy byl překročen maximální počet archeologických akcí.
 
-      :param number: Parametr ``number`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param number: Aktuální počet akcí, jenž překročil povolené maximum.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: WrongCSVError
@@ -135,9 +135,9 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy importovaný CSV soubor nemá správné sloupce.
 
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: ZaznamSouborNotmatching
@@ -148,9 +148,9 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy záznam AMČR neobsahuje očekávaný soubor.
 
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: StateChangedError
@@ -161,7 +161,7 @@ Třídy
 
    .. py:method:: __init__()
 
-      Inicializuje instanci třídy.
+      Inicializuje výjimku pro případ, kdy byl stav záznamu AMČR změněn jiným uživatelem od jeho načtení.
 
-      :param message: Parametr ``message`` slouží jako vstup pro logiku funkce ``__init__``.
+      :param message: Textová zpráva popisující důvod výjimky.
 
