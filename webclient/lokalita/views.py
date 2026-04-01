@@ -390,7 +390,22 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         """
         logger.debug("Lokalita.EditForm is valid")
         form_az = CreateArchZForm(self.request.POST, instance=self.object.archeologicky_zaznam)
-        if form_az.is_valid():
+        form_az_valid = form_az.is_valid()
+        conflicting_fields = form.get_conflicting_fields() + (form_az.get_conflicting_fields() if form_az_valid else [])
+        if conflicting_fields:
+            conflicting_labels = list(
+                dict.fromkeys(str(form.fields[f].label) for f in conflicting_fields if f in form.fields)
+            )
+            conflicting_labels += list(
+                dict.fromkeys(str(form_az.fields[f].label) for f in conflicting_fields if f in form_az.fields)
+            )
+            context = self.get_context_data(form=form)
+            context["concurrent_changes"] = conflicting_labels
+            context["fresh_form_url"] = reverse(
+                "lokalita:edit", kwargs={"slug": self.object.archeologicky_zaznam.ident_cely}
+            )
+            return self.render_to_response(context)
+        if form_az_valid:
             logger.debug("Lokalita.EditFormAz is valid")
             az = form_az.save(commit=False)
             az: ArcheologickyZaznam
@@ -542,7 +557,11 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
         """
         context = super().get_context_data(**kwargs)
         context["j"] = get_dj_form_detail(
-            "lokalita", self.get_dokumentacni_jednotka(), show=self.get_shows(), user=self.request.user
+            "lokalita",
+            self.get_dokumentacni_jednotka(),
+            show=self.get_shows(),
+            user=self.request.user,
+            session=self.request.session,
         )
         return context
 
@@ -630,7 +649,9 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         old_nalez_post = self.request.session.pop("_old_nalez_post", None)
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
         show = self.get_shows()
-        context["k"] = get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
+        context["k"] = get_komponenta_form_detail(
+            komponenta, show, old_nalez_post, komp_ident_cely, session=self.request.session
+        )
         context["j"] = self.get_dokumentacni_jednotka()
         context["active_komp_ident"] = komponenta.ident_cely
         return context
@@ -736,8 +757,13 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         """
         context = super().get_context_data(**kwargs)
         self.pian = self.get_pian()
-        context["pian_ident_cely"] = self.pian.ident_cely
+        pian_ident_cely = self.pian.ident_cely
+        context["pian_ident_cely"] = pian_ident_cely
         context["pian_form_update"] = PianCreateForm(instance=self.pian)
+        context["pian_concurrent_changes"] = self.request.session.pop(
+            f"pian_concurrent_changes_{pian_ident_cely}", None
+        )
+        context["pian_fresh_form_url"] = self.request.path
         return context
 
     def get(self, request, *args, **kwargs):

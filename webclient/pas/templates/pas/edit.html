@@ -13,8 +13,10 @@
   <div class="app-entity-samostatny_nalez">
     {% include "toolbar_pas.html" %}
 
+    {% include "core/concurrent_changes_modal.html" with concurrent_changes=concurrent_changes fresh_form_url=fresh_form_url %}
     <form method="post" class="submit-spinner">
       {% csrf_token %}
+      {{ form.optimistic_lock_data }}
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">

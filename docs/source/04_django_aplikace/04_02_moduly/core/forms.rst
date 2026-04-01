@@ -184,6 +184,54 @@ Třídy
    Implementuje komponentu ``PermissionSkipImportForm`` v rámci aplikace.
 
 
+.. py:class:: OptimisticLockingMixin
+
+   Mixin pro detekci souběžných úprav záznamu (optimistické zamykání).
+
+   Při inicializaci formuláře s existující instancí uloží aktuální hodnoty polí modelu
+   do skrytého pole (výchozí název ``optimistic_lock_data``, lze přepsat atributem
+   :attr:`optimistic_lock_field_name`). Při odeslání formuláře lze pomocí metody
+   :meth:`get_conflicting_fields` zjistit, která pole byla mezitím změněna v databázi.
+
+   Pokud je na jedné stránce více formulářů sdílejících jeden POST, je nutné v každé
+   podtřídě nastavit unikátní :attr:`optimistic_lock_field_name`, aby nedošlo ke kolizi.
+
+   Podtřída by měla skryté pole zahrnout do layoutu formuláře nebo ho vykreslit ručně v šabloně.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje mixin a přidá skryté pole pro optimistické zamykání.
+
+      :param args: Parametry předané do nadřazeného ``__init__``.
+      :param kwargs: Klíčové parametry předané do nadřazeného ``__init__``.
+
+   .. py:method:: _get_lock_fields()
+
+      Vrací seznam názvů polí formuláře zahrnutých do kontroly souběžných změn.
+
+      Zahrnuje DB modelová pole i pole z :attr:`optimistic_lock_instance_fields`.
+
+      :return: Seznam názvů polí, která jsou sledována a nejsou vyloučena.
+
+   .. py:method:: _serialize_instance_for_lock()
+
+      Serializuje hodnoty polí instance modelu do JSON řetězce.
+
+      :param instance: Instance modelu, jehož hodnoty se serializují.
+      :return: JSON řetězec s hodnotami polí pro pozdější porovnání.
+
+   .. py:method:: get_conflicting_fields()
+
+      Porovná původní stav polí se stavem v databázi a vrátí seznam konfliktních polí.
+
+      Načte čerstvý stav záznamu z databáze a porovná ho s hodnotami uloženými
+      při renderování formuláře v poli :attr:`optimistic_lock_field_name`.
+
+      :return: Seznam názvů polí, která byla mezitím změněna jinou úpravou.
+
+
 .. py:class:: BaseFilterForm
 
    Implementuje komponentu ``BaseFilterForm`` v rámci aplikace.

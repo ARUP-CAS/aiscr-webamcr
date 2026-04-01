@@ -3,7 +3,7 @@ import logging
 import re
 
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
-from core.forms import BaseFilterForm, TwoLevelSelectField
+from core.forms import BaseFilterForm, OptimisticLockingMixin, TwoLevelSelectField
 from core.validators import validate_date_min_1600
 from core.widgets import AutocompleteModelSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.helper import FormHelper
@@ -46,7 +46,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
     :return: Vnitřní ``ModelForm`` pro evidenci vedoucího akce.
     """
 
-    class CreateAkceVedouciObjektForm(forms.ModelForm):
+    class CreateAkceVedouciObjektForm(OptimisticLockingMixin, forms.ModelForm):
         """Implementuje komponentu ``CreateAkceVedouciObjektForm`` v rámci aplikace."""
 
         def clean(self):
@@ -105,8 +105,10 @@ def create_akce_vedouci_objekt_form(readonly=True):
     return CreateAkceVedouciObjektForm
 
 
-class CreateArchZForm(forms.ModelForm):
+class CreateArchZForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení Archeologického záznamu."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_az"
 
     class Meta:
         """Implementuje komponentu ``Meta`` v rámci aplikace."""
@@ -304,8 +306,10 @@ class EndDateInput(CustomDateInput):
     year_only_day = 31
 
 
-class CreateAkceForm(forms.ModelForm):
+class CreateAkceForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení akce."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_akce"
 
     datum_zahajeni = StartDateInput(
         help_text=_("arch_z.forms.CreateAkceForm.datum_zahajeni.tooltip"),

@@ -67,6 +67,13 @@ def detail(request, typ_vazby, ident_cely):
     old_typ = dj.typ.id
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
+        conflicting_fields = form.get_conflicting_fields()
+        if conflicting_fields:
+            conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+            request.session[f"dj_concurrent_changes_{ident_cely}"] = conflicting_labels
+            request.session[f"dj_post_data_{ident_cely}"] = request.POST.dict()
+            fedora_transaction.rollback_transaction()
+            return dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
         logger.debug("dj.views.detail.form_is_valid", extra={"ident_cely": dj.ident_cely})
         dj: DokumentacniJednotka = form.save(commit=False)
         dj.active_transaction = fedora_transaction
@@ -161,6 +168,14 @@ def detail(request, typ_vazby, ident_cely):
                 "dj.views.detail.adb_detail.form_is_valid",
                 extra={"ident_cely": dj.ident_cely, "adb_ident_cely": ident_cely},
             )
+            conflicting_fields = form.get_conflicting_fields()
+            if conflicting_fields:
+                conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+                request.session[f"adb_concurrent_changes_{ident_cely}"] = conflicting_labels
+                request.session["_old_adb_post"] = request.POST
+                request.session["adb_ident_cely"] = ident_cely
+                fedora_transaction.rollback_transaction()
+                return dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
             adb = form.save(commit=False)
             adb.active_transaction = fedora_transaction
             adb.save()
@@ -192,6 +207,27 @@ def detail(request, typ_vazby, ident_cely):
                 "dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid",
                 extra={"ident_cely": dj.ident_cely, "adb_ident_cely": adb_ident_cely},
             )
+            conflicting_fields = []
+            for fs_form in formset.forms:
+                conflicting_fields += fs_form.get_conflicting_fields()
+            if not conflicting_fields:
+                for fs_form in formset.forms:
+                    if fs_form.errors.get("id"):
+                        conflicting_fields.append("typ")
+            if conflicting_fields:
+                conflicting_labels = list(
+                    dict.fromkeys(
+                        str(fs_form.fields[f].label)
+                        for fs_form in formset.forms
+                        for f in conflicting_fields
+                        if f in fs_form.fields
+                    )
+                )
+                request.session[f"adb_concurrent_changes_{adb_ident_cely}"] = conflicting_labels
+                request.session["_old_adb_post"] = request.POST
+                request.session["adb_ident_cely"] = adb_ident_cely
+                fedora_transaction.rollback_transaction()
+                return dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
             instances = formset.save(commit=False)
             for i in range(0, len(instances)):
                 vyskovy_bod = instances[i]
