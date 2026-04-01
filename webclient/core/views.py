@@ -1327,10 +1327,9 @@ def redirect_ident_view(request, ident_cely):
         object = get_record_from_ident(ident_cely)
     except Http404:
         # Záměr: ident_cely je v poznamka unikátní — vícenásobná shoda indikuje chybu dat, ne správný výsledek.
-        # order_by() odstraňuje výchozí řazení modelu; [:1] zabrání zbytečnému načítání dalších řádků.
         h = next(
             iter(Historie.objects.select_related("vazba").filter(poznamka__icontains=ident_cely).order_by()[:1]), None
-        )
+        ) # order_by() odstraňuje výchozí řazení; [:1] zabrání zbytečnému načítání dalších řádků. Nejedná se o bug.
         object = h.vazba.navazany_objekt if h and h.vazba else None
     if object:
         try:
