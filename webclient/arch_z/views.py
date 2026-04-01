@@ -34,6 +34,7 @@ from core.exceptions import MaximalEventCount, StateChangedError
 from core.forms import CheckStavNotChangedForm, VratitFormAZ, VratitFormDokument
 from core.ident_cely import get_project_event_ident, get_temp_akce_ident
 from core.message_constants import (
+    FORM_NOT_VALID,
     MAXIMUM_AKCII_DOSAZENO,
     PRISTUP_ZAKAZAN,
     SPATNY_ZAZNAM_ZAZNAM_VAZBA,
@@ -437,7 +438,9 @@ class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRel
         show = self.get_shows()
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         jednotky = self.get_jednotky()
-        context["j"] = get_dj_form_detail("akce", jednotka, jednotky, show, old_adb_post, self.request.user)
+        context["j"] = get_dj_form_detail(
+            "akce", jednotka, jednotky, show, old_adb_post, self.request.user, session=self.request.session
+        )
         return context
 
 
@@ -523,7 +526,9 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
         show = self.get_shows()
 
-        context["k"] = get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
+        context["k"] = get_komponenta_form_detail(
+            komponenta, show, old_nalez_post, komp_ident_cely, session=self.request.session
+        )
         context["j"] = self.get_dokumentacni_jednotka()
         context["active_komp_ident"] = komponenta.ident_cely
         return context
@@ -622,7 +627,13 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
-        context["pian_form_update"] = PianCreateForm(instance=context["j"].pian)
+        pian = context["j"].pian
+        context["pian_form_update"] = PianCreateForm(instance=pian)
+        pian_ident_cely = pian.ident_cely
+        context["pian_concurrent_changes"] = self.request.session.pop(
+            f"pian_concurrent_changes_{pian_ident_cely}", None
+        )
+        context["pian_fresh_form_url"] = self.request.path
         return context
 
     def get(self, request, *args, **kwargs):
@@ -729,6 +740,46 @@ def edit(request, ident_cely):
 
         if form_az.is_valid() and form_akce.is_valid() and ostatni_vedouci_objekt_formset.is_valid():
             logger.debug("arch_z.views.edit.form_valid")
+            conflicting_fields = form_az.get_conflicting_fields() + form_akce.get_conflicting_fields()
+            for formset_form in ostatni_vedouci_objekt_formset.forms:
+                conflicting_fields += formset_form.get_conflicting_fields()
+            if conflicting_fields:
+                conflicting_labels = list(
+                    dict.fromkeys(
+                        [str(form_az.fields[f].label) for f in conflicting_fields if f in form_az.fields]
+                        + [str(form_akce.fields[f].label) for f in conflicting_fields if f in form_akce.fields]
+                        + [
+                            str(label)
+                            for fs_form in ostatni_vedouci_objekt_formset.forms
+                            for f in conflicting_fields
+                            if f in fs_form.fields
+                            for label in [fs_form.fields[f].label]
+                        ]
+                    )
+                )
+                return render(
+                    request,
+                    "arch_z/create.html",
+                    {
+                        "zaznam": zaznam,
+                        "formAZ": form_az,
+                        "formAkce": form_akce,
+                        "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
+                        "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
+                        "ostatni_vedouci_objekt_formset_readonly": not check_permissions(
+                            p.actionChoices.archz_vedouci_smazat, request.user, zaznam.ident_cely
+                        ),
+                        "title": _("arch_z.views.edit.title.text"),
+                        "header": _("arch_z.views.edit.header.text"),
+                        "button": _("arch_z.views.edit.submitButton.text"),
+                        "sam_akce": False if zaznam.akce.projekt else True,
+                        "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
+                        "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
+                        "arch_z_ident_cely": zaznam.ident_cely,
+                        "toolbar_name": _("arch_z.views.edit.toolbar_name.text"),
+                        "concurrent_changes": conflicting_labels,
+                    },
+                )
             az = form_az.save(commit=False)
             fedora_transaction = az.create_transaction(request.user)
             fedora_transaction.redirect_on_error = True
@@ -747,6 +798,7 @@ def edit(request, ident_cely):
                 "arch_z.views.edit.form_az_valid",
                 extra={"az_error": str(form_az.errors), "error": str(form_akce.errors)},
             )
+            messages.add_message(request, messages.WARNING, FORM_NOT_VALID)
     else:
         form_az = CreateArchZForm(instance=zaznam)
         form_akce = CreateAkceForm(
@@ -1610,7 +1662,7 @@ def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
     """
     logger.debug("arch_z.views.smazat_akce_vedoucí.start", extra={"ident_cely": ident_cely, "pk": akce_vedouci_id})
-    zaznam: AkceVedouci = AkceVedouci.objects.get(id=akce_vedouci_id)
+    zaznam: AkceVedouci = get_object_or_404(AkceVedouci, id=akce_vedouci_id)
     az: ArcheologickyZaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if request.method == "POST":
         if zaznam.akce.archeologicky_zaznam.ident_cely != ident_cely:
@@ -2050,7 +2102,7 @@ class ArchZTableRowView(LoginRequiredMixin, View):
         return HttpResponse(render_to_string("ez/ez_odkazy_table_row.html", context))
 
 
-def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None, user=None):
+def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None, user=None, session=None):
     """
     Funkce pro získaní dictionary contextu dokumentační jednotky.
 
@@ -2060,6 +2112,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
     :param show: dictionary pro zobrazení možnosti uživatele na stránce.
     :param old_adb_post: staré volání CreateADBForm pro správně zobrazení chyb formuláře.
     :param user: Parametr ``user`` se předává do volání ``check_permissions()``, pracuje se s atributy ``hlavni_role``, ovlivňuje větvení podmínek.
+    :param session: Volitelná Django session pro načtení dat souběžné editace ADB formuláře.
 
     :return: dictionary kontextu DJ pro správné zobrazení stránky.
     """
@@ -2139,8 +2192,23 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         show_dj_smazat = False
     else:
         show_dj_smazat = check_permissions(p.actionChoices.dj_smazat, user, jednotka.ident_cely)
+    concurrent_changes = session.pop(f"dj_concurrent_changes_{jednotka.ident_cely}", None) if session else None
+    post_data_dict = (
+        session.pop(f"dj_post_data_{jednotka.ident_cely}", None) if (session and concurrent_changes) else None
+    )
+    if post_data_dict:
+        from django.http import QueryDict
+
+        post_qd = QueryDict(mutable=True)
+        post_qd.update(post_data_dict)
+        create_db_form.data = post_qd
+        create_db_form.files = {}
+        create_db_form.is_bound = True
+
     dj_form_detail = {
         "ident_cely": jednotka.ident_cely,
+        "concurrent_changes": concurrent_changes,
+        "fresh_form_url": jednotka.archeologicky_zaznam.get_absolute_url(jednotka.ident_cely),
         "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
         "form": create_db_form,
         "show_add_adb": show_adb_add,
@@ -2178,13 +2246,21 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
     }
     if has_adb and app != "lokalita":
         logger.debug("arch_z.views.get_dj_form_detail", extra={"ident_cely": jednotka.ident_cely})
-        dj_form_detail["adb_form"] = CreateADBForm(
+        adb_concurrent_changes = (
+            session.pop(f"adb_concurrent_changes_{jednotka.adb.ident_cely}", None) if session else None
+        )
+        adb_form = CreateADBForm(
             old_adb_post,
             instance=jednotka.adb,
             # prefix=jednotka.adb.ident_cely,
             readonly=not show["editovat"],
         )
+        if old_adb_post and adb_concurrent_changes:
+            adb_form.is_bound = True
+        dj_form_detail["adb_form"] = adb_form
         dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
+        dj_form_detail["adb_concurrent_changes"] = adb_concurrent_changes
+        dj_form_detail["adb_fresh_form_url"] = jednotka.archeologicky_zaznam.get_absolute_url(jednotka.ident_cely)
         dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
             instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
         )

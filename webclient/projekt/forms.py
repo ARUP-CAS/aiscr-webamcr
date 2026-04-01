@@ -2,7 +2,7 @@ import logging
 
 from arch_z import validators
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU
-from core.forms import BaseFilterForm
+from core.forms import BaseFilterForm, OptimisticLockingMixin
 from core.validators import validate_date_min_1600
 from core.widgets import AutocompleteListSelect2, AutocompleteModelSelect2Multiple
 from crispy_forms.bootstrap import AppendedText
@@ -172,8 +172,10 @@ class CreateProjektForm(forms.ModelForm):
         return cleaned_data
 
 
-class EditProjektForm(forms.ModelForm):
+class EditProjektForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro editaci projektu."""
+
+    optimistic_lock_instance_fields = ["geom"]
 
     coordinate_x1 = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_x2 = forms.FloatField(required=False, widget=HiddenInput())
@@ -374,6 +376,7 @@ class EditProjektForm(forms.ModelForm):
                         Div("kulturni_pamatka_popis", css_class="col-sm-6"),
                         Div("coordinate_x1", css_class="hidden"),
                         Div("coordinate_x2", css_class="hidden"),
+                        Div("optimistic_lock_data", css_class="d-none"),
                         Div(
                             HTML('<span class="app-divider-label">'),
                             HTML(_("projekt.forms.editProjekt.terenniCast.divider")),

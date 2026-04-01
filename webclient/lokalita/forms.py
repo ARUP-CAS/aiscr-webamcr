@@ -1,6 +1,6 @@
 import logging
 
-from core.forms import TwoLevelSelectField
+from core.forms import OptimisticLockingMixin, TwoLevelSelectField
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from heslar.hesla import HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT
@@ -12,8 +12,10 @@ from .models import Lokalita
 logger = logging.getLogger(__name__)
 
 
-class LokalitaForm(forms.ModelForm):
+class LokalitaForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení lokality."""
+
+    optimistic_lock_field_name = "optimistic_lock_data_lok"
 
     typ_lokality_disp = forms.CharField(
         label=_("lokalita.forms.typLokality.label"),

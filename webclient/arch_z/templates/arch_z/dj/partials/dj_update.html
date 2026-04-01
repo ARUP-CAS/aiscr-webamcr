@@ -3,6 +3,7 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
+{% with modal_id="ccm-dj-"|add:j.ident_cely %}{% include "core/concurrent_changes_modal.html" with concurrent_changes=j.concurrent_changes fresh_form_url=j.fresh_form_url modal_id=modal_id %}{% endwith %}
 <div class="card app-card-form" id="detail_dj_form_{{ j.ident_cely }}">
   <div class="card-header">
     <div class="app-fx app-left">
@@ -128,6 +129,7 @@
     {% endif %}
 
     {% if j.adb_form %}
+      {% with modal_id="ccm-adb-"|add:j.ident_cely %}{% include "core/concurrent_changes_modal.html" with concurrent_changes=j.adb_concurrent_changes fresh_form_url=j.adb_fresh_form_url modal_id=modal_id %}{% endwith %}
       <form class="mb-3 submit-spinner" method="POST" action="{% url 'dj:detail' 'akce_dj_zakladni' j.ident_cely %}">
         {% crispy j.form %}
         <div class="card app-card-form app-card-inner">

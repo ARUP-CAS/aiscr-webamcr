@@ -1,6 +1,6 @@
 import logging
 
-from core.forms import TwoLevelSelectField
+from core.forms import OptimisticLockingMixin, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
@@ -12,7 +12,7 @@ from komponenta.models import Komponenta
 logger = logging.getLogger(__name__)
 
 
-class CreateKomponentaForm(forms.ModelForm):
+class CreateKomponentaForm(OptimisticLockingMixin, forms.ModelForm):
     """Hlavní formulář pro vytvoření, editaci a zobrazení komponenty."""
 
     class Meta:
@@ -95,6 +95,8 @@ class CreateKomponentaForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        if self.optimistic_lock_field_name in self.fields:
+            self.helper.layout[0].append(Div(self.optimistic_lock_field_name, css_class="d-none"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if self.fields[key].disabled:
