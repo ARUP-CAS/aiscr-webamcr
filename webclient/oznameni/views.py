@@ -338,6 +338,18 @@ def edit(request, ident_cely):
     if request.method == "POST":
         form = OznamovatelProjektForm(request.POST, instance=oznameni, required_next=True)
         if form.is_valid():
+            conflicting_fields = form.get_conflicting_fields()
+            if conflicting_fields:
+                conflicting_labels = [str(form.fields[f].label) for f in conflicting_fields if f in form.fields]
+                return render(
+                    request,
+                    "oznameni/edit.html",
+                    {
+                        "form": form,
+                        "oznameni": oznameni,
+                        "concurrent_changes": conflicting_labels,
+                    },
+                )
             oznameni = form.save(commit=False)
             oznameni.projekt = projekt
             oznameni.save()

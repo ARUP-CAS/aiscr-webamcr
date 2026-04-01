@@ -527,6 +527,24 @@ def edit(request, ident_cely):
                             _("projekt.views.edit.typ_projektu_error.pruzkum"),
                         )
         if form.is_valid():
+            conflicting_fields = form.get_conflicting_fields()
+            if conflicting_fields:
+                geom_label = str(_("projekt.forms.editProjekt.souradnice.label"))
+                conflicting_labels = [
+                    geom_label if f == "geom" else str(form.fields[f].label)
+                    for f in conflicting_fields
+                    if f == "geom" or f in form.fields
+                ]
+                return render(
+                    request,
+                    "projekt/edit.html",
+                    {
+                        "form_projekt": form,
+                        "projekt": projekt,
+                        "edit_geom": edit_geom,
+                        "concurrent_changes": conflicting_labels,
+                    },
+                )
             if (form.fields["coordinate_x1"].disabled or form.fields["coordinate_x2"].disabled) and (
                 projekt.geom is not None and len(projekt.geom) > 0
             ):

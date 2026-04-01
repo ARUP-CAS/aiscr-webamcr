@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 
+from core.forms import OptimisticLockingMixin
 from core.utils import get_cadastre_from_point
 from core.validators import validate_date_min_1600, validate_phone_number
 from core.widgets import AutocompleteModelSelect2Multiple
@@ -185,7 +186,7 @@ class OznamovatelForm(forms.ModelForm):
                     self.fields[key].widget.attrs["class"] = "required-next"
 
 
-class OznamovatelProjektForm(OznamovatelForm):
+class OznamovatelProjektForm(OptimisticLockingMixin, OznamovatelForm):
     """Hlavní formulář pro vytvoření oznámení."""
 
     telefon = forms.CharField(
@@ -198,6 +199,17 @@ class OznamovatelProjektForm(OznamovatelForm):
         label=_("oznameni.forms.oznamovatelForm.email.label"),
         widget=forms.TextInput(),
     )
+
+    def __init__(self, *args, **kwargs):
+        """
+        Inicializuje instanci třídy a přidá pole optimistického zamykání do layoutu.
+
+        :param args: Parametr ``args`` se předává do volání ``__init__()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+        """
+        super().__init__(*args, **kwargs)
+        if "optimistic_lock_data" in self.fields and self.helper.layout is not None:
+            self.helper.layout[0][1][0].append(Div("optimistic_lock_data", css_class="d-none"))
 
 
 class OznamovatelProjektCreateForm(OznamovatelProjektForm):

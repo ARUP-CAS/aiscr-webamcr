@@ -21,6 +21,10 @@
 
 {% block content %}
 <div class="app-entity-akce">
+  {% if zaznam %}
+    {% url 'arch_z:edit' zaznam.ident_cely as fresh_form_url %}
+    {% include "core/concurrent_changes_modal.html" with concurrent_changes=concurrent_changes fresh_form_url=fresh_form_url %}
+  {% endif %}
   {% include "toolbar_akce.html" with type="akce" %}
   <form method="post" class="submit-spinner">
     <div class="card app-card-form">
@@ -116,6 +120,8 @@
         </div>
       </div>
     </div>
+    {{ formAZ.optimistic_lock_data_az }}
+    {{ formAkce.optimistic_lock_data_akce }}
     <div class="mt-3">
       <div class="form-group">
         <button type="submit" id="actionSubmitBtn" class="btn btn-primary">{{ button }}

@@ -180,7 +180,8 @@
         </div>
       </div>
       <div class="card-body formset-table">
-        {% if form_tvary %}  
+        {% with modal_id="ccm-tvar-"|add:dokument.ident_cely %}{% include "core/concurrent_changes_modal.html" with concurrent_changes=tvar_concurrent_changes fresh_form_url=request.path modal_id=modal_id %}{% endwith %}
+        {% if form_tvary %}
         <form class="mb-3 submit-spinner" method="POST" action="{% url 'dokument:edit-tvar' dokument.ident_cely %}">
             {% crispy form_tvary tvary_helper %}
             {% if show.tvary_edit %}
