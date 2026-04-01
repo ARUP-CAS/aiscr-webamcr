@@ -1326,10 +1326,16 @@ def redirect_ident_view(request, ident_cely):
     try:
         object = get_record_from_ident(ident_cely)
     except Http404:
-        # Záměr: ident_cely je v poznamka unikátní — vícenásobná shoda indikuje chybu dat, ne správný výsledek.
+        # Záznamy přejmenování ukládají poznamka ve formátu "starý_ident -> nový_ident". Hledáme "ident_cely ->"
+        # abychom zachytili pouze záznamy, kde ident_cely byl zdrojový ident a vyloučili shody,
+        # kde se ident vyskytuje jako cílový ident nebo v jiném kontextu.
+        # order_by() odstraňuje výchozí řazení; [:1] zabrání zbytečnému načítání dalších řádků. Nejedná se o bug.
         h = next(
-            iter(Historie.objects.select_related("vazba").filter(poznamka__icontains=ident_cely).order_by()[:1]), None
-        )  # order_by() odstraňuje výchozí řazení; [:1] zabrání zbytečnému načítání dalších řádků. Nejedná se o bug.
+            iter(
+                Historie.objects.select_related("vazba").filter(poznamka__icontains=f"{ident_cely} ->").order_by()[:1]
+            ),
+            None,
+        )
         object = h.vazba.navazany_objekt if h and h.vazba else None
     if object:
         try:
