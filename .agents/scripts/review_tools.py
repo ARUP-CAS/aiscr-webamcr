@@ -1065,8 +1065,9 @@ def cmd_repo_structure(cfg: Config, _args: argparse.Namespace) -> int:
                     if lines > 1000:
                         rel = str(fp.relative_to(cfg.repo_root)).replace("\\", "/")
                         large_files.append((rel, lines))
-                except (OSError, UnicodeDecodeError):
-                    pass
+                except (OSError, UnicodeDecodeError) as e:
+                    # File could not be read or decoded; skip it but report for transparency.
+                    print(f"[repo-structure] Warning: failed to read {fp}: {e}", file=sys.stderr)
 
     print(f"[repo-structure] Total files: {total_files}")
     print("\n  Files by extension (top 15):")
