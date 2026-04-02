@@ -80,13 +80,11 @@ class LogMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        """
-        Provádí operaci call.
+        """Zpracuje požadavek a zaznamenává informace o volání (URL, uživatel, čas, výjimky).
 
-        :param request: Parametr ``request`` předává se do volání ``get_response()``, ``_resolve_view_info()``, pracuje se s atributy ``get_full_path``, ``user``.
-
-            :return: Vrací proměnná ``response``.
-            :raises Exception: Vyvolá se při zpracování zachycené výjimky typu ``Exception``.
+        :param request: Objekt požadavku Django.
+        :return: Objekt odpovědi Django.
+        :raises Exception: Jakákoliv výjimka zachycená během zpracování.
         """
         start = time.monotonic()
         log_request_data.url = request.get_full_path()

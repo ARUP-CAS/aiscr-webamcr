@@ -39,11 +39,10 @@ class CannotFindCadasterCentre(Exception):
 
 def file_validate_epsg(epsg):
     """
-    Provádí operaci file validate epsg.
+    Ověří, zda je zadaný EPSG kód podporován (aktuálně pouze WGS-84/4326).
 
-    :param epsg: Parametr ``epsg`` ovlivňuje větvení podmínek.
-
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    :param epsg: EPSG kód souřadnicového systému k ověření.
+    :return: ``True`` pokud je EPSG=4326, ``False`` jinak.
     """
     if epsg == "4326":
         return True
@@ -55,11 +54,10 @@ def file_validate_epsg(epsg):
 
 def balanced_parentheses(expression):
     """
-    Provádí operaci balanced parentheses.
+    Ověří, zda má výraz vyrovnané závorky (stejný počet otevíracích a zavíracích).
 
-    :param expression: Číselná hodnota ``expression`` použitá při výpočtu nebo transformaci.
-
-        :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+    :param expression: Řetězec výrazu k ověření.
+    :return: ``True`` pokud jsou závorky vyrovnané, ``False`` jinak.
     """
     stack = 0
     for char in expression:
@@ -342,10 +340,10 @@ def update_main_katastr_within_ku(ident_cely: str, katastr: RuianKatastr):
 
 def update_all_katastr_within_akce_or_lokalita(dj, fedora_transaction):
     """
-    Funkce pro update katastru u akce a lokalit.
+    Aktualizuje katastry pro všechny akce a lokality související s dokumentační jednotkou.
 
-    :param dj: Parametr ``dj`` pracuje se s atributy ``typ``, ``archeologicky_zaznam``, ovlivňuje větvení podmínek.
-    :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``update_all_katastr_within_akce_or_lokalita``.
+    :param dj: Dokumentační jednotka obsahující odkaz na akci/lokalitu.
+    :param fedora_transaction: Aktivní Fedora transakce pro uložení metadat.
     """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     if dj.typ.id == TYP_DJ_KATASTR:

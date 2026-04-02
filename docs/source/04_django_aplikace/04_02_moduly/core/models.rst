@@ -46,9 +46,9 @@ Třídy
 
    .. py:method:: calculate_sha_512()
 
-      Provádí operaci calculate sha 512.
+      Vrátí SHA-512 hash souboru uloženého v Fedora repozitáři.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+      :return: Haš souboru ze skladiště nebo prázdný řetězec, pokud soubor neexistuje.
 
    .. py:method:: delete()
 
@@ -78,9 +78,9 @@ Třídy
 
    .. py:method:: vytvoreno()
 
-      Provádí operaci vytvoreno.
+      Vrátí záznam historie s typem zmény "Nahrání SBR" (prvního nahrání souboru).
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, None.
+      :return: Záznam historie nebo ``None``, pokud soubor nevlastní historii.
 
    .. py:method:: get_repository_content()
 
@@ -237,13 +237,12 @@ Třídy
 
    .. py:method:: check_concrete_permission()
 
-      Ověří concrete permission.
+      Ověří, zda má uživatel konkrétní oprávnění na daný záznam a typ.
 
-      :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
-      :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-      :param typ: Parametr ``typ`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
-
-      :return: Vrací hodnotu podle větve zpracování, typicky: bool, proměnná ``perm_check``.
+      :param user: Uživatel, pro kterého se kontroluje oprávnění.
+      :param ident: Identifikátor archeologického záznamu (např. C-XX-YYYYNNNNN).
+      :param typ: Typ objektu, pro který se kontroluje oprávnění (např. projekt, lokalita).
+      :return: ``True`` pokud má uživatel oprávnění, ``False`` jinak.
 
    .. py:method:: check_base()
 

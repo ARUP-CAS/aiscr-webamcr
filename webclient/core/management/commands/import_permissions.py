@@ -33,10 +33,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Zpracuje hodnotu. v aplikaci.
+        Importuje uživatelská oprávnění z CSV souboru do databáze.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
-        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
+        :param options: Pojmenované argumenty ze příkazového řádku (nepoužívá se).
         """
         logger.debug("core.management.commands.import_permissions.start")
         with open("core/resources/uzivatelska_prava.csv", "rb") as f:

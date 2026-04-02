@@ -236,10 +236,10 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Validuje rozmezí datumů v historii — startovní datum musí být dříve než koncové.
 
-      :return: Vrací proměnná ``cleaned_data``.
-      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``error_list``.
+      :return: Slovník s očistěnými daty formuláře.
+      :raises forms.ValidationError: Pokud je startovní datum pozdější než koncové.
 
 
 .. py:class:: TransaltionImportForm
@@ -250,10 +250,10 @@ Třídy
 
    .. py:method:: clean()
 
-      Provádí operaci clean.
+      Validuje nahraný PO soubor — kontroluje velikost a formát.
 
-      :return: Vrací proměnná ``cleaned_data``.
-      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``file.size < 1000``; nebo při splnění podmínky ``file.name.split('.')[-1] != 'po'``.
+      :return: Slovník s očistěnými daty formuláře.
+      :raises forms.ValidationError: Pokud je soubor příliš malý (< 1000 B) nebo nemá příponu ``.po``.
 
 
 .. py:class:: ImportDataAdminForm

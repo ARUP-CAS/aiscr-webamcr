@@ -42,14 +42,12 @@ class IPWhitelistMixin:
     """
 
     def dispatch(self, request, *args, **kwargs):
-        """
-        Provádí operaci dispatch.
+        """Ověří, že požadavek pochází z lokální IP adresy (loopback, privátní nebo link-local).
 
-        :param request: Parametr ``request`` předává se do volání ``dispatch()``, pracuje se s atributy ``META``, vstupuje do návratové hodnoty.
-        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseForbidden()``, výsledek volání ``dispatch()``.
+        :param request: Objekt požadavku Django.
+        :param args: Poziční argumenty view.
+        :param kwargs: Pojmenované argumenty view.
+        :return: ``HttpResponseForbidden`` při neoprávněném přístupu, jinak výsledek nadřazené metody ``dispatch``.
         """
         client_ip = None
         try:

@@ -164,9 +164,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return self.path.split("/")[-1]
 
     def calculate_sha_512(self):
-        """Provádí operaci calculate sha 512.
+        """Vrátí SHA-512 hash souboru uloženého v Fedora repozitáři.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        :return: Haš souboru ze skladiště nebo prázdný řetězec, pokud soubor neexistuje.
         """
         repository_content = self.get_repository_content()
         if repository_content is not None:
@@ -235,9 +235,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def vytvoreno(self):
-        """Provádí operaci vytvoreno.
+        """Vrátí záznam historie s typem zmény "Nahrání SBR" (prvního nahrání souboru).
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, None.
+        :return: Záznam historie nebo ``None``, pokud soubor nevlastní historii.
         """
         if self.historie is not None:
             return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
@@ -1133,14 +1133,12 @@ class Permissions(models.Model):
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
     def check_concrete_permission(self, user, ident=None, typ=None):
-        """
-        Ověří concrete permission.
+        """Ověří, zda má uživatel konkrétní oprávnění na daný záznam a typ.
 
-        :param user: Parametr ``user`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
-        :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-        :param typ: Parametr ``typ`` slouží jako vstup pro logiku funkce ``check_concrete_permission``.
-
-            :return: Vrací hodnotu podle větve zpracování, typicky: bool, proměnná ``perm_check``.
+        :param user: Uživatel, pro kterého se kontroluje oprávnění.
+        :param ident: Identifikátor archeologického záznamu (např. C-XX-YYYYNNNNN).
+        :param typ: Typ objektu, pro který se kontroluje oprávnění (např. projekt, lokalita).
+        :return: ``True`` pokud má uživatel oprávnění, ``False`` jinak.
         """
         self.typ = typ
         self.object = None

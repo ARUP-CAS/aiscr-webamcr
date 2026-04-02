@@ -27,10 +27,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """
-        Zpracuje hodnotu. v aplikaci.
+        Aktualizuje snapshot pole AMČR záznamů pro optimalizaci výkonu dotazů.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``handle``.
-        :param options: Parametr ``options`` slouží jako vstup pro logiku funkce ``handle``.
+        :param args: Poziční argumenty příkazu (nepoužívá se).
+        :param options: Pojmenované argumenty ze příkazového řádku (nepoužívá se).
         """
         logger.debug("core.management.commands.update_snapshot_fields.start")
         update_snapshot_fields()

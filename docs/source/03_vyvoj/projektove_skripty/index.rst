@@ -8,7 +8,6 @@ Tato sekce obsahuje automaticky generovanou dokumentaci souborů v adresáři ``
    :caption: Obsah:
 
    build_prod_image_sh
-   check_vendor_js_py
    crontab_txt
    dev_deploy_sh
    entrypoint_dev_sh

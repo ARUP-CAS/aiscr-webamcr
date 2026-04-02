@@ -8,7 +8,7 @@ Třídy
 
 .. py:class:: PermissionMiddleware
 
-   Middleware třída užívaná pro kontrolu oprávnení.
+   Middleware třída užívaná pro kontrolu oprávnění.
 
    **Metody:**
 
@@ -16,15 +16,14 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+      :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
 
    .. py:method:: __call__()
 
-      Provádí operaci call.
+      Zpracovává příchozí HTTP požadavek a kontroluje oprávnění uživatele.
 
-      :param request: Parametr ``request`` předává se do volání ``get_response()``.
-
-      :return: Vrací proměnná ``response``.
+      :param request: HTTP požadavek ze strany klienta.
+      :return: HTTP response vygenerovaná aplikací.
 
    .. py:method:: process_view()
 
@@ -40,7 +39,7 @@ Třídy
 
 .. py:class:: ErrorMiddleware
 
-   Implementuje komponentu ``ErrorMiddleware`` v rámci aplikace.
+   Implementuje komponentu pro zachycení a zpracování chyb (ErrorMiddleware) v rámci aplikace.
 
    **Metody:**
 
@@ -48,24 +47,22 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+      :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
 
    .. py:method:: __call__()
 
-      Provádí operaci call.
+      Zpracovává příchozí HTTP požadavek.
 
-      :param request: Parametr ``request`` předává se do volání ``get_response()``.
-
-      :return: Vrací proměnná ``response``.
+      :param request: HTTP požadavek ze strany klienta.
+      :return: HTTP response vygenerovaná aplikací.
 
    .. py:method:: process_exception()
 
-      Provádí operaci process exception.
+      Zachycuje a zpracovává Fedora a databázové výjimky během zpracování požadavku.
 
-      :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
-      :param exception: Číselná hodnota ``exception`` použitá při výpočtu nebo transformaci.
-
-      :return: Vrací výsledek volání ``render()``.
+      :param request: HTTP požadavek pro vykreslení chybové stránky.
+      :param exception: Vyvolená výjimka během zpracování požadavku.
+      :return: HTML error response nebo None pokud jde o neznámou výjimku.
 
 
 .. py:class:: InactiveUserMiddleware
@@ -100,7 +97,7 @@ Třídy
 
 .. py:class:: StatusMessageMiddleware
 
-   Implementuje komponentu ``StatusMessageMiddleware`` v rámci aplikace.
+   Middleware pro zobrazení stavových zpráv z Fedora transakcí skrze Redis.
 
    **Metody:**
 
@@ -108,31 +105,29 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
+      :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
 
    .. py:method:: __call__()
 
-      Provádí operaci call.
+      Zpracovává příchozí HTTP požadavek.
 
-      :param request: Parametr ``request`` předává se do volání ``get_response()``.
-
-      :return: Vrací proměnná ``response``.
+      :param request: HTTP požadavek ze strany klienta.
+      :return: HTTP response vygenerovaná aplikací.
 
    .. py:method:: _show_message()
 
-      Provádí operaci show message.
+      Zobrazí stavovou zprávu uživateli na základě výsledku Fedora transakce.
 
-      :param value: Parametr ``value`` předává se do volání ``int()``, pracuje se s atributy ``decode``, ovlivňuje větvení podmínek.
-      :param request: Parametr ``request`` předává se do volání ``add_message()``.
-      :param redis_key: Textový název nebo klíč ``redis_key`` používaný v rámci operace.
-      :return: Výstup funkce odpovídající implementované logice.
+      :param value: Kódová hodnota stavu transakce z Redis (COMMITED nebo FAILED).
+      :param request: HTTP požadavek pro přidání zprávy do session.
+      :param redis_key: Klíč v Redis pro načtení stavových zpráv a smazání záznamu.
 
    .. py:method:: process_view()
 
-      Provádí operaci process view.
+      Detekuje a zobrazuje stavové zprávy Fedora transakcí pro AMČR identifikátory v URL.
 
-      :param request: Parametr ``request`` předává se do volání ``findall()``, ``get_transaction_redis_key()``, pracuje se s atributy ``path``, ``user``.
-      :param view_func: View funkce obalená dekorátorem nebo middlewarem.
-      :param view_args: Dodatečné argumenty předané voláním.
-      :param view_kwargs: Dodatečné argumenty předané voláním.
+      :param request: HTTP požadavek obsahující cestu s potenciálním AMČR identifikátorem.
+      :param view_func: View funkce, kterou se chystá aplikace volat.
+      :param view_args: Poziční argumenty pro view funkci.
+      :param view_kwargs: Pojmenované argumenty pro view funkci.
 
