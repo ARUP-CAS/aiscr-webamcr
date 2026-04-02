@@ -15,6 +15,7 @@ from core.constants import (
     SPOLUPRACE_NEAKTIVNI,
     SPOLUPRACE_ZADOST,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
+    VRACENI_SN,
     ZAPSANI_SN,
 )
 from core.exceptions import MaximalIdentNumberError
@@ -1369,6 +1370,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN, anonymized),
         "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN, anonymized),
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN, anonymized),
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_SN, anonymized),
     }
     return historie
 

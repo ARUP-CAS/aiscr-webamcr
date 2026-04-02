@@ -12,6 +12,7 @@ from core.constants import (
     POTVRZENI_EXT_ZD,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
+    VRACENI_EXT_ZD,
     ZAPSANI_EXT_ZD,
 )
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -1195,6 +1196,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_EXT_ZD, anonymized),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_EXT_ZD, anonymized),
         "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_EXT_ZD, anonymized),
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_EXT_ZD, anonymized),
     }
     return historie
 
