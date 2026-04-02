@@ -313,9 +313,7 @@ def zapsat(request, arch_z_ident_cely):
                     return az.get_redirect()
                 if (
                     typ.id in _unique_typy
-                    and DokumentacniJednotka.objects.filter(
-                        archeologicky_zaznam=az, typ__id__in=list(_unique_typy.keys())
-                    ).exists()
+                    and DokumentacniJednotka.objects.filter(archeologicky_zaznam=az, typ__id=typ.id).exists()
                 ):
                     logger.debug(
                         "dj.views.detail.zapsat.unique_typ_already_exists",
