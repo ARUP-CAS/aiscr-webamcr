@@ -57,7 +57,8 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
-        """Metoda pro získání absolutní URL archeologického záznamu pro dokumentační jednotku.
+        """
+        Metoda pro získání absolutní URL archeologického záznamu pro dokumentační jednotku.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
@@ -68,14 +69,16 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     @property
     def ident_cely_safe(self):
-        """Vrátí identifikátor dokumentační jednotky s pomlčkami nahrazenými podtržítky (vhodný pro HTML atributy).
+        """
+        Vrátí identifikátor dokumentační jednotky s pomlčkami nahrazenými podtržítky (vhodný pro HTML atributy).
 
         :return: Vrací výsledek volání ``replace()``.
         """
         return self.ident_cely.replace("-", "_")
 
     def has_adb(self):
-        """Metoda pro ověření, jestli dokumentační jednotka má ADB.
+        """
+        Metoda pro ověření, jestli dokumentační jednotka má ADB.
 
         :return: Vrací proměnná ``has_adb``.
         """
@@ -87,7 +90,8 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         return has_adb
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací atribut objektu.
         """
@@ -110,7 +114,8 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
 
     @property
     def initial_pian(self):
-        """Vrátí objekt Pian na základě initial_pian_id (líné načtení).
+        """
+        Vrátí objekt Pian na základě initial_pian_id (líné načtení).
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
         """

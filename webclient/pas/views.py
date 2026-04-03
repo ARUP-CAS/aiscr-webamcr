@@ -177,7 +177,8 @@ class SamostatnyNalezCreateView(LoginRequiredMixin, CreateView):
         self.copy_source = copy_source
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
+        """
+        Vrací form kwargs.
 
         :return: Vrací proměnná ``kwargs``.
         """
@@ -845,7 +846,8 @@ class SamostatnyNalezListView(SearchListView, PasPermissionFilterMixin):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -1057,7 +1059,8 @@ class UzivatelSpolupraceListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``order_by()``.
         """
@@ -1128,7 +1131,8 @@ class UzivatelSpolupraceListView(SearchListView):
         return context
 
     def get_table_kwargs(self):
-        """Vrací table kwargs.
+        """
+        Vrací table kwargs.
 
         :return: Vrací slovník.
         """
@@ -1222,7 +1226,8 @@ class DeaktivaceSpolupraceView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_object(self):
-        """Vrací object. v aplikaci.
+        """
+        Vrací object. v aplikaci.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """

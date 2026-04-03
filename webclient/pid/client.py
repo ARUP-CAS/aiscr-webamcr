@@ -28,7 +28,8 @@ class DigitalObjectIdentifierClient:
     }
 
     def __init__(self, record):
-        """Inicializuje klienta podle typu předaného doménového záznamu.
+        """
+        Inicializuje klienta podle typu předaného doménového záznamu.
 
         :param record: Parametr ``record`` předává se do volání ``type()``.
         :raises ValueError: Vyvolá se při splnění podmínky ``record_type in self.record_serializer_map``.
@@ -64,7 +65,8 @@ class DigitalObjectIdentifierClient:
             raise DoiWriteError(response.status_code, response.text, response.url)
 
     def get_record_url(self):
-        """Vrátí URL detailu záznamu v DataCite.
+        """
+        Vrátí URL detailu záznamu v DataCite.
 
         :return: Vrací hodnotu podle větve zpracování.
         """

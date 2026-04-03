@@ -89,7 +89,8 @@ class RepositoryBinaryFile:
 
     @property
     def url_without_domain(self):
-        """Vrací URL bez domény.
+        """
+        Vrací URL bez domény.
 
         :return: URL bez předsazené domény.
         """
@@ -332,7 +333,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
 
     @staticmethod
     def get_base_url():
-        """Vrací base url.
+        """
+        Vrací base url.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -763,7 +765,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         )
 
     def container_exists(self):
-        """Ověří existenci kontejneru v Fedora repositáři.
+        """
+        Ověří existenci kontejneru v Fedora repositáři.
 
         :return: True pokud kontejner existuje, False pokud byl smazán.
         """
@@ -786,7 +789,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         return True
 
     def _connect_deleted_container(self):
-        """Obnoví smazaný záznam změnou metadata v Fedoře z 'deleted' na 'restored'.
+        """
+        Obnoví smazaný záznam změnou metadata v Fedoře z 'deleted' na 'restored'.
 
         :return: Textová reprezentace UID transakce.
         """
@@ -817,7 +821,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         )
 
     def link_exists(self):
-        """Ověří existenci odkazu na kontejner v repositáři.
+        """
+        Ověří existenci odkazu na kontejner v repositáři.
 
         :return: True pokud odkaz existuje, False pokud byl smazán.
         """
@@ -989,7 +994,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         return result
 
     def get_historie_metadat(self):
-        """Metoda k získání info o verzích metadat
+        """
+        Metoda k získání info o verzích metadat
 
         :return: Vrací proměnná ``result``.
         """
@@ -1037,7 +1043,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         result = self._send_request(url, FedoraRequestType.GET_METADATA)
 
         def generate_metadata():
-            """Vygeneruje metadata. v aplikaci.
+            """
+            Vygeneruje metadata. v aplikaci.
 
             :return: Vrací n-tici.
             """
@@ -1125,7 +1132,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
         logger.debug("core_repository_connector.__generate_thumb.start", extra={"file": file_name, "large": large})
 
         def resize_image(image: BytesIO, large_inner=False):
-            """Změní velikost obrázku na zadaný rozměr a vrátí jako PNG v BytesIO.
+            """
+            Změní velikost obrázku na zadaný rozměr a vrátí jako PNG v BytesIO.
 
             :param image: Vstupní obrázek v binární podobě k převzorkování.
             :param large_inner: Příznak pro výběr max. rozměru (False: 100x100px, True: 800x800px).
@@ -1299,7 +1307,8 @@ INSERT DATA {{ <> dcterms:creator <info:fedora/{settings.FEDORA_SERVER_NAME}/rec
     def migrate_binary_file(
         self, soubor, include_content=True, check_if_exists=True, ident_cely_old=None
     ) -> Optional[RepositoryBinaryFile]:
-        """Migruje binární soubor do Fedora repositáře a vrátí wrapper se metadaty.
+        """
+        Migruje binární soubor do Fedora repositáře a vrátí wrapper se metadaty.
 
         :param soubor: Objekt `Soubor` k migraci s atributy ``pk`` a ``repository_uuid``.
         :param include_content: Pokud True, migruje i binární obsah souboru.
@@ -1600,7 +1609,8 @@ INSERT DATA { <> dcterms:type "deleted" .};"""
         )
 
     def record_ident_change(self, ident_cely_old, delete_container=True):
-        """Přejmenuje kontejner v Fedoře na základě změny identifikátoru záznamu.
+        """
+        Přejmenuje kontejner v Fedoře na základě změny identifikátoru záznamu.
 
         :param ident_cely_old: Starý identifikátor ``ident_cely``; používá se k dohledání původního kontejneru.
         :param delete_container: Pokud True, smaže původní kontejner po přejmenování.
@@ -1880,7 +1890,8 @@ class FedoraTransaction(BaseFedoraTransaction):
 
     @property
     def _transaction_redis_key(self):
-        """Vrací klíč transakce v Redis pro cachování stavu.
+        """
+        Vrací klíč transakce v Redis pro cachování stavu.
 
         :return: Klíč ve formátu 'fedora-transaction-result-{ident}-{user_id}'.
         """
@@ -1888,7 +1899,8 @@ class FedoraTransaction(BaseFedoraTransaction):
 
     @property
     def status(self):
-        """Vrací aktuální stav transakce.
+        """
+        Vrací aktuální stav transakce.
 
         :return: Stav transakce (běžící, dokončená, chyba).
         """
@@ -2009,7 +2021,8 @@ class FedoraTransaction(BaseFedoraTransaction):
         new_transaction.mark_transaction_as_closed()
 
     def __create_transaction(self):
-        """Vytvoří novou transakci ve Fedoře.
+        """
+        Vytvoří novou transakci ve Fedoře.
 
         :raises FedoraTransactionNoIDError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``; nebo při splnění podmínky ``match``.
         """
@@ -2041,7 +2054,8 @@ class FedoraTransaction(BaseFedoraTransaction):
 
     @staticmethod
     def call_digiarchiv_update():
-        """Spustí asynchronní aktualizaci DigiArchivu přes Celery task.
+        """
+        Spustí asynchronní aktualizaci DigiArchivu přes Celery task.
 
         Kontroluje duplicitní úlohy (již naplánovaná nebo běžící) a spouští jen pokud není aktivní.
         """

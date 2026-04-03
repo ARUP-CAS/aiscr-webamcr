@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 @register.filter
 def url_to_classes(value):
-    """Mapuje URL cestu na CSS třídy oddělené tečkami.
+    """
+    Mapuje URL cestu na CSS třídy oddělené tečkami.
 
     :param url_path: CestaURL k transformaci.
     :return: Řetězec s CSS třídami.

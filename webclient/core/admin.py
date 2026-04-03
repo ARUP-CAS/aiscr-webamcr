@@ -193,7 +193,8 @@ class PermissionAdmin(admin.ModelAdmin):
         return super().changelist_view(request, {"import_list": True})
 
     def get_urls(self):
-        """Metoda pri definici dodatečných url.
+        """
+        Metoda pri definici dodatečných url.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -386,7 +387,8 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         return super().changelist_view(request, {"import_skip_list": True})
 
     def get_urls(self):
-        """Metoda pri definici dodatečných url.
+        """
+        Metoda pri definici dodatečných url.
 
         :return: Vrací hodnotu podle větve zpracování.
         """

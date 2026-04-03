@@ -6,7 +6,8 @@ class FormWithOrcid:
     """Implementuje komponentu ``FormWithOrcid`` v rámci aplikace."""
 
     def clean_orcid(self):
-        """Doplní k zadanému ORCID identifikátoru prefix URL ``https://orcid.org/`` a vrátí jej, nebo ``None`` pro prázdný vstup.
+        """
+        Doplní k zadanému ORCID identifikátoru prefix URL ``https://orcid.org/`` a vrátí jej, nebo ``None`` pro prázdný vstup.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -18,7 +19,8 @@ class FormWithWikidata:
     """Implementuje komponentu ``FormWithWikidata`` v rámci aplikace."""
 
     def clean_wikidata(self):
-        """Doplní k zadanému identifikátoru Wikidata prefix URL ``https://www.wikidata.org/entity/`` a vrátí jej, nebo ``None`` pro prázdný vstup.
+        """
+        Doplní k zadanému identifikátoru Wikidata prefix URL ``https://www.wikidata.org/entity/`` a vrátí jej, nebo ``None`` pro prázdný vstup.
 
         :return: Vrací hodnotu podle větve zpracování.
         """

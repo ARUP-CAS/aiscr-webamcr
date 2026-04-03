@@ -73,7 +73,8 @@ def balanced_parentheses(expression):
 
 
 def load_database_translation_strings():
-    """Načte database translation strings.
+    """
+    Načte database translation strings.
 
     :return: Vrací seznam.
     """
@@ -1044,7 +1045,8 @@ class SearchTable(ColumnShiftTableBootstrap4):
     column_excluded = ["ident_cely"]
 
     def get_column_default_show(self):
-        """Vrací column default show.
+        """
+        Vrací column default show.
 
         :return: Vrací výsledek volání ``get_column_default_show()``.
         """
@@ -1087,7 +1089,8 @@ class SearchTable(ColumnShiftTableBootstrap4):
         return ""
 
     def get_all_idents(self):
-        """Vrátí seznam identifikátorů záznamů tabulky.
+        """
+        Vrátí seznam identifikátorů záznamů tabulky.
 
         :return: Vrací výsledek volání ``join()``.
         """
@@ -1213,7 +1216,8 @@ def find_pos_with_backup(lang, project_apps=True, django_apps=False, third_party
 
 
 def replace_last(source_string, old, new):
-    """Nahradí poslední výskyt řetězce v textu novým řetězcem.
+    """
+    Nahradí poslední výskyt řetězce v textu novým řetězcem.
 
     :param source_string: Vstupní text.
     :param old: Řetězec k nahrazení.
@@ -1257,7 +1261,8 @@ class SessionIdentifier:
         cache.delete(f"{self.cache_key}_files")
 
     def set_ident(self, ident_cely, timeout=3600):
-        """Přidá soubor do session cache.
+        """
+        Přidá soubor do session cache.
 
         :param file_path: Cesta k souboru.
         """
@@ -1267,7 +1272,8 @@ class SessionIdentifier:
         cache.set(self.cache_key, ident_cely, timeout)
 
     def get_ident(self):
-        """Vrací ident. v aplikaci.
+        """
+        Vrací ident. v aplikaci.
 
         :return: Vrací výsledek volání ``get()``.
         """
@@ -1285,7 +1291,8 @@ class SessionIdentifier:
         cache.set(f"{self.cache_key}_files", files, timeout)
 
     def file_exists(self, ident):
-        """Odebere soubor z session cache.
+        """
+        Odebere soubor z session cache.
 
         :param file_path: Cesta k odebrání.
         """
@@ -1306,7 +1313,8 @@ class SessionIdentifier:
             cache.set(f"{self.cache_key}_files", files)
 
     def get_cached_files(self):
-        """Vrací cached files.
+        """
+        Vrací cached files.
 
         :return: Vrací proměnná ``files``.
         """
@@ -1343,7 +1351,8 @@ class SessionIdentifier:
 
 
 def get_set_maintenance_in_cache():
-    """Funkce pro získání nastavení údržby z cache.
+    """
+    Funkce pro získání nastavení údržby z cache.
 
     :return: Vrací proměnná ``maintenance``.
     """
@@ -1365,7 +1374,8 @@ def get_set_maintenance_in_cache():
 
 
 def is_maintenance_in_progress():
-    """Funkce pro zjištění, zda je údržba v průběhu.
+    """
+    Funkce pro zjištění, zda je údržba v průběhu.
 
     :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
     """
@@ -1379,7 +1389,8 @@ def is_maintenance_in_progress():
 
 
 def get_timezone():
-    """Funkce pro získání časového pásma z nastavení.
+    """
+    Funkce pro získání časového pásma z nastavení.
 
     :return: Vrací výsledek volání ``timezone()``.
     """

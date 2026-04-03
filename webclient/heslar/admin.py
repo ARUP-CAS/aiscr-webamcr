@@ -299,7 +299,8 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     form = HeslarHierarchieForm
 
     def heslo_podrazene_ident_cely(self, obj):
-        """Vrací identifikátor podřazeného hesla.
+        """
+        Vrací identifikátor podřazeného hesla.
 
         :param obj: Objekt hierarchie.
         :return: Identifikátor.

@@ -90,7 +90,8 @@ class WaitForPageLoad:
         self.old_page = self.browser.find_element(By.TAG_NAME, "html")
 
     def page_has_loaded(self):
-        """Ověří, že se stránka plně načetla kontrolou elementů.
+        """
+        Ověří, že se stránka plně načetla kontrolou elementů.
 
         :param driver: Selenium WebDriver.
         :return: True pokud je stránka připravena.
@@ -99,7 +100,8 @@ class WaitForPageLoad:
         return new_page.id != self.old_page.id
 
     def page_is_ready(self):
-        """Ověří, zda jsou všechny asynchronní operace dokončeny.
+        """
+        Ověří, zda jsou všechny asynchronní operace dokončeny.
 
         :param driver: Selenium WebDriver.
         :return: True pokud je stránka v klidu.
@@ -162,7 +164,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Provádí operaci setUpClass.
+        """
+        Provádí operaci setUpClass.
 
         :raises RuntimeError: Vyvolá se při splnění podmínky ``cls.server_thread.error``.
         """
@@ -179,7 +182,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
 
     @classmethod
     def _create_server_thread(cls, connections_override):
-        """Vytvoření vlastního serverového vlákna
+        """
+        Vytvoření vlastního serverového vlákna
 
         :param connections_override: Parametr ``connections_override`` slouží jako vstup pro logiku funkce ``_create_server_thread``.
         :return: Vrací výsledek volání ``WerkzeugServerThread()``.
@@ -336,7 +340,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         return not rozdil.getbbox()
 
     def check_container_content(self, container_path, path):
-        """Porovnává PNG obrázky a ověřuje shodnost obsahu.
+        """
+        Porovnává PNG obrázky a ověřuje shodnost obsahu.
 
         :param png_path: Cesta k PNG souboru.
         :param expected: Očekávaný obsah.
@@ -429,7 +434,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             )
 
     def wipe_Fedora_dir(self, name, deep):
-        """Vymaže kontejner v repositáři.
+        """
+        Vymaže kontejner v repositáři.
 
         :param name: Parametr ``name`` předává se do volání ``get_container_content()``.
         :param deep: Parametr ``deep`` předává se do volání ``wipe_Fedora_dir()``, ovlivňuje větvení podmínek.
@@ -656,7 +662,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
         result = self._outcome.result
 
         def has_issue():
-            """Určí, zda issue.
+            """
+            Určí, zda issue.
 
             :return: Vrací výsledek volání ``any()``.
             """
@@ -857,7 +864,8 @@ class BaseSeleniumTestClass(LiveServerTestCase):
             raise Exception("ElementSendKeysError")
 
     def clickAt(self, el, position_x, position_y):
-        """Klikne na element se čekáním na jeho dostupnost.
+        """
+        Klikne na element se čekáním na jeho dostupnost.
 
         :param el: Parametr ``el`` se předává do volání ``move_to_element_with_offset()``.
         :param position_x: Číselná hodnota ``position_x`` použitá při výpočtu nebo transformaci.
@@ -949,7 +957,8 @@ return new Date('2025-06-28T12:00:00Z');}};
             time.sleep(1)
 
     def _select_radion_group_item(self, item_order=1):
-        """Vybere položku z radion group.
+        """
+        Vybere položku z radion group.
 
         :param item_order: Parametr ``item_order`` se předává do volání ``find_element()``.
         :return: Výstup funkce odpovídající implementované logice.
@@ -1374,7 +1383,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         puvodni_base = max(uri_counter, key=uri_counter.get)
 
         # Nahraď v grafech
-        """nove_triples = []
+        """
+        nove_triples = []
         for s, p, o in list(graf):
             novy_s = URIRef(str(s).replace(puvodni_base, nova_base_uri)) if isinstance(s, URIRef) and str(s).startswith(puvodni_base) else s
             novy_o = URIRef(str(o).replace(puvodni_base, nova_base_uri)) if isinstance(o, URIRef) and str(o).startswith(puvodni_base) else o
@@ -1496,7 +1506,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def uprav_rdf_pred_ulozenim(self, rdf_input, ignorovat_predikaty=None):
-        """Upraví rdf pred ulozenim.
+        """
+        Upraví rdf pred ulozenim.
 
         Načte RDF z textu nebo bytes, odstraní proměnlivé predikáty, base URI a UUID,
         a vrátí výstup jako serializovaný Turtle string.
@@ -1691,7 +1702,8 @@ return new Date('2025-06-28T12:00:00Z');}};
         return res
 
     def getTime(self):
-        """Provádí operaci getTime.
+        """
+        Provádí operaci getTime.
 
         :return: Vrací proměnná ``t``.
         """

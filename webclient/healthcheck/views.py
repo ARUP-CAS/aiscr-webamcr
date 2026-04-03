@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 def check_status():
-    """Ověří status. v aplikaci.
+    """
+    Ověří status. v aplikaci.
 
     :return: Vrací n-tici.
     """

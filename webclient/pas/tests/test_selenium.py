@@ -25,7 +25,8 @@ class AkceSamostatneNalezy(BaseSeleniumTestClass):
         self.goToAddress("/pas/zapsat")
 
     def create_PAS(self):
-        """Vytvoří PAS. v aplikaci.
+        """
+        Vytvoří PAS. v aplikaci.
 
         :return: Vrací vybranou hodnotu z kolekce.
         """

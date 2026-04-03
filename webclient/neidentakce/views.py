@@ -27,7 +27,8 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     prefix = "neident_modal"
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
+        """
+        Vrací form kwargs.
 
         :return: Vrací proměnná ``kwargs``.
         """
@@ -55,7 +56,8 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Vrací success url.
+        """
+        Vrací success url.
 
         :return: Vrací výsledek volání ``reverse()``.
         """

@@ -43,7 +43,8 @@ class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Mod
 
     @property
     def navazany_objekt(self):
-        """Vrátí navázaný objekt (část dokumentu nebo dokumentační jednotku) podle typu vazby.
+        """
+        Vrátí navázaný objekt (část dokumentu nebo dokumentační jednotku) podle typu vazby.
 
         :return: Vrací atribut objektu.
         """
@@ -101,7 +102,8 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     @property
     def ident_cely_safe(self):
-        """Vrátí identifikátor komponenty s pomlčkami nahrazenými podtržítky (vhodný pro použití v HTML atributech).
+        """
+        Vrátí identifikátor komponenty s pomlčkami nahrazenými podtržítky (vhodný pro použití v HTML atributech).
 
         :return: Vrací výsledek volání ``replace()``.
         """
@@ -109,7 +111,8 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
 
     @property
     def pocet_nalezu(self):
-        """Vrátí celkový počet nálezů (objektů a předmětů) přiřazených ke komponentě.
+        """
+        Vrátí celkový počet nálezů (objektů a předmětů) přiřazených ke komponentě.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -122,7 +125,8 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
-        """Vrací absolute url.
+        """
+        Vrací absolute url.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``reverse()``, výsledek volání ``get_absolute_url()``.
         """
@@ -159,7 +163,8 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), BaseAmcrModel):
             )
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací výsledek volání ``get_permission_object()``.
         """

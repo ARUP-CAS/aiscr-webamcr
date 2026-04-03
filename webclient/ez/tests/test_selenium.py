@@ -25,7 +25,8 @@ class AkceExterniZdroj(BaseSeleniumTestClass):
         self.goToAddress("/ext-zdroj/vyber?sort=autori&sort=rok_vydani_vzniku&sort=nazev")
 
     def zapsat_zaznam(self):
-        """Vyplní a odešle formulář pro zapsání nového externího zdroje a vrátí jeho identifikátor.
+        """
+        Vyplní a odešle formulář pro zapsání nového externího zdroje a vrátí jeho identifikátor.
 
         :return: Vrací proměnná ``ident``.
         """

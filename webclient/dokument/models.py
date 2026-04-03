@@ -210,7 +210,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return self.ident_cely
 
     def get_absolute_url(self):
-        """Metoda pro získaní absolut url záznamu podle typu dokumentu.
+        """
+        Metoda pro získaní absolut url záznamu podle typu dokumentu.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
@@ -381,7 +382,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return result
 
     def has_extra_data(self):
-        """Metoda na zjištení že dokument má extra data.
+        """
+        Metoda na zjištení že dokument má extra data.
 
         :return: Vrací proměnná ``has_extra_data``.
         """
@@ -393,7 +395,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return has_extra_data
 
     def get_komponenta(self):
-        """Metoda na získaní všech komponent dokumentu.
+        """
+        Metoda na získaní všech komponent dokumentu.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, None.
         :raises UnexpectedDataRelations: Vyvolá se s textem "Neleze ziskat komponentu modelu 3D.".
@@ -493,14 +496,16 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.datum_zverejneni = datetime.date(year, month, day)
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací proměnná ``self``.
         """
         return self
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
@@ -511,7 +516,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
@@ -599,7 +605,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             return f"{DokumentListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """
+        Vygeneruje redis snapshot.
 
         :return: Vrací n-tici.
         """
@@ -628,7 +635,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @property
     def doi_exists(self):
-        """Zjistí, zda existuje DOI záznam.
+        """
+        Zjistí, zda existuje DOI záznam.
 
         :return: Vrací výsledek volání ``check_record_exists()``.
         """
@@ -677,7 +685,8 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
     @property
     def doi_url(self):
-        """Vrací URL adresu DOI záznamu.
+        """
+        Vrací URL adresu DOI záznamu.
 
         :return: Vrací výsledek volání ``get_record_url()``.
         """
@@ -735,7 +744,8 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         ]
 
     def get_absolute_url(self):
-        """Metoda pro získaní absolut url.
+        """
+        Metoda pro získaní absolut url.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_absolute_url()``, výsledek volání ``reverse()``.
         """
@@ -750,7 +760,8 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), BaseAmcrModel):
         )
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací výsledek volání ``get_permission_object()``.
         """
@@ -1152,7 +1163,8 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
             raise ValidationError(_("dokument.models.Let.save.check_container_deleted_or_not_exists.invalid"))
 
     def get_absolute_url(self):
-        """Vrací absolute url.
+        """
+        Vrací absolute url.
 
         :return: Vrací výsledek volání ``reverse()``.
         """

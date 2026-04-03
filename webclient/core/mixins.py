@@ -16,7 +16,8 @@ class ManyToManyRestrictedClassMixin:
 
     @property
     def has_connections(self):
-        """Určí, zda connections.
+        """
+        Určí, zda connections.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -42,7 +43,8 @@ class IPWhitelistMixin:
     """
 
     def dispatch(self, request, *args, **kwargs):
-        """Ověří, že požadavek pochází z lokální IP adresy (loopback, privátní nebo link-local).
+        """
+        Ověří, že požadavek pochází z lokální IP adresy (loopback, privátní nebo link-local).
 
         :param request: Objekt požadavku Django.
         :param args: Poziční argumenty view.

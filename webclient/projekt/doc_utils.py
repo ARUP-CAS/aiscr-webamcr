@@ -374,7 +374,8 @@ class DocumentCreator(ABC):
 
     @property
     def body_style(self):
-        """Provádí operaci body style.
+        """
+        Provádí operaci body style.
 
         :return: Vrací vybranou hodnotu z kolekce.
         """

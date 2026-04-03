@@ -21,7 +21,8 @@ class ForeignKeyReadOnlyTextInput(forms.TextInput):
         self.value = None
 
     def format_value(self, value):
-        """Formátuje hodnotu cizího klíče pro čtení jako textový popis.
+        """
+        Formátuje hodnotu cizího klíče pro čtení jako textový popis.
 
         :param value: Primární klíč objektu k zobrazení.
         :return: Textový popis objektu.

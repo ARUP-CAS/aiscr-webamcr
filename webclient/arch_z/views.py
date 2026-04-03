@@ -107,7 +107,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_obdobi_choices():
-    """Funkce která vrací dvou stupňový heslař pro období.
+    """
+    Funkce která vrací dvou stupňový heslař pro období.
 
     :return: Vrací výsledek volání ``heslar_12()``.
     """
@@ -115,7 +116,8 @@ def get_obdobi_choices():
 
 
 def get_areal_choices():
-    """Funkce která vrací dvou stupňový heslař pro areál.
+    """
+    Funkce která vrací dvou stupňový heslař pro areál.
 
     :return: Vrací výsledek volání ``heslar_12()``.
     """
@@ -129,14 +131,16 @@ class AkceRelatedRecordUpdateView(TemplateView):
     scroll_to_dj = False
 
     def get_shows(self):
-        """Metoda pro získaní informací které části stránky mají být zobrazeny.
+        """
+        Metoda pro získaní informací které části stránky mají být zobrazeny.
 
         :return: Vrací výsledek volání ``get_detail_template_shows()``.
         """
         return get_detail_template_shows(self.get_archeologicky_zaznam(), self.get_jednotky(), self.request.user)
 
     def get_archeologicky_zaznam(self):
-        """Metoda pro získaní akce z db.
+        """
+        Metoda pro získaní akce z db.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """
@@ -151,7 +155,8 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
 
     def get_jednotky(self):
-        """Metoda pro získaní dokumentační jednotky navázané na akci.
+        """
+        Metoda pro získaní dokumentační jednotky navázané na akci.
 
         :return: Vrací výsledek volání ``prefetch_related()``.
         """
@@ -170,7 +175,8 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
 
     def get_dokumenty(self):
-        """Metoda pro získaní dokumentů navázaných na akci.
+        """
+        Metoda pro získaní dokumentů navázaných na akci.
 
         :return: Vrací výsledek volání ``order_by()``.
         """
@@ -182,7 +188,8 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
 
     def get_externi_odkazy(self):
-        """Metoda pro získaní externích odkazů navázaných na akci.
+        """
+        Metoda pro získaní externích odkazů navázaných na akci.
 
         :return: Vrací výsledek volání ``order_by()``.
         """
@@ -221,7 +228,8 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
 
     def check_locality_arch_z_conflict(self):
-        """Ověří locality arch z conflict.
+        """
+        Ověří locality arch z conflict.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         :raises Http404: Vyvolá se při splnění podmínky ``self.get_archeologicky_zaznam().lokalita``.
@@ -334,7 +342,8 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_dokumentacni_jednotka(self):
-        """Metoda pro získani záznamu DJ z db podle ident_cely.
+        """
+        Metoda pro získani záznamu DJ z db podle ident_cely.
 
         :return: Vrací proměnná ``objects``.
         """
@@ -492,7 +501,8 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
         return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
-        """Metoda pro získani záznamu komponenty z db podle ident_cely.
+        """
+        Metoda pro získani záznamu komponenty z db podle ident_cely.
 
         :return: Vrací proměnná ``object``.
         """
@@ -501,7 +511,8 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
         return object
 
     def get_dokumentacni_jednotka(self):
-        """Vrací dokumentacni jednotka.
+        """
+        Vrací dokumentacni jednotka.
 
         :return: Vrací proměnná ``object``.
         """
@@ -1802,7 +1813,8 @@ class AkceListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -2050,7 +2062,8 @@ class ArchZAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Pe
             return f"{result.ident_cely} ({result.lokalita.nazev})"
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
         """

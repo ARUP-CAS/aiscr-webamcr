@@ -65,7 +65,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         db_table = "lokalita"
 
     def get_absolute_url(self):
-        """Metoda pro získaní absolut url záznamu podle identu.
+        """
+        Metoda pro získaní absolut url záznamu podle identu.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
@@ -91,7 +92,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     @property
     def redis_snapshot_id(self):
-        """Vrací identifikátor snímku v Redis.
+        """
+        Vrací identifikátor snímku v Redis.
 
         :return: Redis klíč snímku.
         """
@@ -100,7 +102,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return f"{LokalitaListView.redis_snapshot_prefix}_{self.archeologicky_zaznam.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """
+        Vygeneruje redis snapshot.
 
         :return: Vrací n-tici.
         """
@@ -112,7 +115,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return self.redis_snapshot_id, data
 
     def _get_igsn_client(self):
-        """Vrací instanci igsn lienta.
+        """
+        Vrací instanci igsn lienta.
 
         :return: Načtená data odpovídající zadaným vstupům.
         """
@@ -122,14 +126,16 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     @property
     def igsn_exists(self):
-        """Ověří existenci IGSN identifikátoru.
+        """
+        Ověří existenci IGSN identifikátoru.
 
         :return: True pokud IGSN existuje.
         """
         return self._get_igsn_client().check_record_exists()
 
     def igsn_delete(self, check_status=True):
-        """Smaže IGSN identifikátor.
+        """
+        Smaže IGSN identifikátor.
 
         :param check_status: Parametr ``check_status`` předává se do volání ``delete_record()``, vstupuje do návratové hodnoty.
 
@@ -139,7 +145,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
             return self._get_igsn_client().delete_record(check_status)
 
     def igsn_hide(self, check_status=True):
-        """Skryje IGSN identifikátor.
+        """
+        Skryje IGSN identifikátor.
 
         :param check_status: Parametr ``check_status`` předává se do volání ``hide_record()``, vstupuje do návratové hodnoty.
 
@@ -149,7 +156,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
             return self._get_igsn_client().hide_record(check_status)
 
     def igsn_publish(self, check_status=True):
-        """Publikuje IGSN identifikátor.
+        """
+        Publikuje IGSN identifikátor.
 
         :param check_status: Parametr ``check_status`` předává se do volání ``publish_record()``, vstupuje do návratové hodnoty.
 
@@ -158,7 +166,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return self._get_igsn_client().publish_record(check_status)
 
     def igsn_update(self, check_status=True, reload_record=False):
-        """Aktualizuje IGSN identifikátor.
+        """
+        Aktualizuje IGSN identifikátor.
 
         :param check_status: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
         :param reload_record: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
@@ -170,7 +179,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     @property
     def igsn_url(self):
-        """Vrací IGSN adresu záznamu.
+        """
+        Vrací IGSN adresu záznamu.
 
         :return: Vrací výsledek volání ``get_record_url()``.
         """
@@ -178,7 +188,8 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
 
     @classmethod
     def get_by_ident_cely(cls, ident_cely):
-        """Vyhledá záznam na základě identifikátoru.
+        """
+        Vyhledá záznam na základě identifikátoru.
 
         :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 

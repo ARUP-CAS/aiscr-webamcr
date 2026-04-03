@@ -486,7 +486,8 @@ class AmcrCustomAdminSite(admin.AdminSite):
     def get_urls(
         self,
     ):
-        """Vrátí vlastní URL cesty admin site pro hromadné operace.
+        """
+        Vrátí vlastní URL cesty admin site pro hromadné operace.
 
         :return: Seznam URL vzorů rozšířený o cesty pro aktualizaci metadat,
             aktualizaci DOI/IGSN a hromadný import dat.

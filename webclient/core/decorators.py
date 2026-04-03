@@ -23,7 +23,8 @@ def allowed_user_groups(allowed_groups):
 
     @wraps(allowed_groups)
     def _method_wrapper(func):
-        """Obalí cílovou funkci kontrolou hlavní role uživatele.
+        """
+        Obalí cílovou funkci kontrolou hlavní role uživatele.
 
         :param func: View funkce, která má být chráněna kontrolou hlavní role.
         :return: Vrací proměnná ``_arguments_wrapper``.

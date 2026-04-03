@@ -19,7 +19,8 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
     """Třída pohledu pro autocomplete ruian katastru."""
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací proměnná ``qs``.
         """
@@ -162,7 +163,8 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     """Třída pohledu pro autocomplete dokument typu."""
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací proměnná ``qs``.
         """
@@ -176,7 +178,8 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
     """Třída pohledu pro autocomplete dokument formatu."""
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací proměnná ``qs``.
         """
@@ -190,7 +193,8 @@ class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
     """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací proměnná ``qs``.
         """
@@ -204,7 +208,8 @@ class HeslarAutocompleteView(LoginRequiredMixin, autocomplete.Select2QuerySetVie
     """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací proměnná ``qs``.
         """
@@ -221,7 +226,8 @@ class HeslarNazevAutocompleteView(LoginRequiredMixin, autocomplete.Select2QueryS
     """Třída pohledu pro autocomplete pristupnosti."""
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací proměnná ``qs``.
         """

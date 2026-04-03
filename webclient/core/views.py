@@ -518,7 +518,8 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
     http_method_names = ["get", "post"]
 
     def get_zaznam(self):
-        """Načte doménový záznam, ke kterému se budou soubory nahrávat.
+        """
+        Načte doménový záznam, ke kterému se budou soubory nahrávat.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """
@@ -568,7 +569,8 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        """Zpracuje HTTP požadavek na nahrání souboru s ověřením přístupu.
+        """
+        Zpracuje HTTP požadavek na nahrání souboru s ověřením přístupu.
 
         :param request: HTTP požadavek.
         :param args: Poziční argumenty.
@@ -1779,7 +1781,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         return context
 
     def get_queryset(self):
-        """Vrací queryset výsledků vyhledávání podle zadaných filtrů.
+        """
+        Vrací queryset výsledků vyhledávání podle zadaných filtrů.
 
         :return: Vrací proměnná ``qs``.
         """

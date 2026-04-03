@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 def list_files_in_db():
-    """Vrátí seznam absolutních cest ke všem souborům evidovaným v databázi.
+    """
+    Vrátí seznam absolutních cest ke všem souborům evidovaným v databázi.
 
     :return: Seznam absolutních cest souborů evidovaných v modelu Soubor.
     """

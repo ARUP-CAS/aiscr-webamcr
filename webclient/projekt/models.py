@@ -187,7 +187,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def datum_oznameni(self):
-        """Provádí operaci datum oznameni.
+        """
+        Provádí operaci datum oznameni.
 
         :return: Vrací atribut objektu.
         """
@@ -195,7 +196,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def pristupnost(self):
-        """Provádí operaci pristupnost.
+        """
+        Provádí operaci pristupnost.
 
         :return: Vrací atribut objektu.
         """
@@ -203,7 +205,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def get_ident_cely_link(self):
-        """Vrací ident cely link.
+        """
+        Vrací ident cely link.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -631,7 +634,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         return permanent, region, year, number
 
     def has_oznamovatel(self):
-        """Metoda pro kontrolu, jestli má projekt oznamovatele.
+        """
+        Metoda pro kontrolu, jestli má projekt oznamovatele.
 
         :return: Vrací proměnná ``has_oznamovatel``.
         """
@@ -797,7 +801,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def expert_list_can_be_created(self):
-        """Provádí operaci expert list can be created.
+        """
+        Provádí operaci expert list can be created.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -819,7 +824,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def should_generate_confirmation_document(self):
-        """Provádí operaci should generate confirmation document.
+        """
+        Provádí operaci should generate confirmation document.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -828,7 +834,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         return False
 
     def get_absolute_url(self):
-        """Vrací absolute url.
+        """
+        Vrací absolute url.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
@@ -867,7 +874,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def planovane_zahajeni_str(self):
-        """Provádí operaci planovane zahajeni str.
+        """
+        Provádí operaci planovane zahajeni str.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, str.
         """
@@ -878,7 +886,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def planovane_zahajeni_vypis(self):
-        """Provádí operaci planovane zahajeni vypis.
+        """
+        Provádí operaci planovane zahajeni vypis.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, str.
         """
@@ -888,14 +897,16 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             return ""
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací proměnná ``self``.
         """
         return self
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
@@ -906,7 +917,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
@@ -914,7 +926,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def redis_snapshot_id(self):
-        """Provádí operaci redis snapshot id.
+        """
+        Provádí operaci redis snapshot id.
 
         :return: Vrací hodnotu podle větve zpracování.
         """
@@ -923,7 +936,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         return f"{ProjektListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """
+        Vygeneruje redis snapshot.
 
         :return: Vrací n-tici.
         """
@@ -935,7 +949,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         return self.redis_snapshot_id, data
 
     def get_kraje_s_emailem(self):
-        """Vrací kraje s emailem.
+        """
+        Vrací kraje s emailem.
 
         :return: Vrací výsledek volání ``exclude()``.
         """

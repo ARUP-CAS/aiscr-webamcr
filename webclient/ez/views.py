@@ -129,7 +129,8 @@ class ExterniZdrojListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -216,7 +217,8 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     form_class = ExterniZdrojForm
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
+        """
+        Vrací form kwargs.
 
         :return: Vrací proměnná ``kwargs``.
         """
@@ -310,7 +312,8 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     slug_field = "ident_cely"
 
     def get_form_kwargs(self):
-        """Vrací form kwargs.
+        """
+        Vrací form kwargs.
 
         :return: Vrací proměnná ``kwargs``.
         """
@@ -877,7 +880,8 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Vrací success url.
+        """
+        Vrací success url.
 
         :return: Vrací proměnná ``response``.
         """
@@ -976,7 +980,8 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """
@@ -1063,7 +1068,8 @@ class ExterniZdrojAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetV
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vydani_vzniku}: {result.nazev})"
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
         """
@@ -1117,7 +1123,8 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací proměnná ``zaznam``.
         """

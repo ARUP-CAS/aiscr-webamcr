@@ -94,7 +94,8 @@ class ApiView(autocomplete.Select2ListView):
         return [dict(id=x, text=y) for x, y in results]
 
     def get_list(self):
-        """Vrací list. v aplikaci.
+        """
+        Vrací list. v aplikaci.
 
         :return: Vrací výsledek volání ``api_call()``.
         """

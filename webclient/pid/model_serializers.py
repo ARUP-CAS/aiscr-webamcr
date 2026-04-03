@@ -285,7 +285,8 @@ class ModelSerializer(ABC):
         pass
 
     def serialize_delete(self):
-        """Sestaví DataCite payload pro skrytí záznamu s doplněním zprávy o odstranění z repozitáře AMČR.
+        """
+        Sestaví DataCite payload pro skrytí záznamu s doplněním zprávy o odstranění z repozitáře AMČR.
 
         :return: Vrací slovník.
         """
@@ -307,14 +308,16 @@ class ModelSerializer(ABC):
         }
 
     def serialize_hide(self):
-        """Sestaví minimální DataCite payload s událostí ``hide`` pro skrytí záznamu.
+        """
+        Sestaví minimální DataCite payload s událostí ``hide`` pro skrytí záznamu.
 
         :return: Vrací slovník.
         """
         return {"data": {"type": "dois", "attributes": {"event": "hide"}}}
 
     def serialize_publish(self):
-        """Sestaví kompletní DataCite payload pro publikaci záznamu včetně všech povinných metadat.
+        """
+        Sestaví kompletní DataCite payload pro publikaci záznamu včetně všech povinných metadat.
 
         :return: Vrací proměnná ``data``.
         """
@@ -373,7 +376,8 @@ class ModelSerializer(ABC):
         return data
 
     def serialize_update(self):
-        """Sestaví DataCite payload pro aktualizaci záznamu (bez pole ``event`` oproti publish).
+        """
+        Sestaví DataCite payload pro aktualizaci záznamu (bez pole ``event`` oproti publish).
 
         :return: Vrací proměnná ``result``.
         """
@@ -651,7 +655,8 @@ class DokumentSerializer(ModelSerializer):
         return self.record.historie.historie_set
 
     def get_ident_cely(self):
-        """Vrací ident cely.
+        """
+        Vrací ident cely.
 
         :return: Vrací atribut objektu.
         """
@@ -1072,7 +1077,8 @@ class SamostatnyNalezSerializer(ModelSerializer):
         return self.record.historie.historie_set
 
     def get_ident_cely(self):
-        """Vrací ident cely.
+        """
+        Vrací ident cely.
 
         :return: Vrací atribut objektu.
         """
@@ -1340,7 +1346,8 @@ class LokalitaSerializer(ModelSerializer):
         pass
 
     def get_ident_cely(self):
-        """Vrací ident cely.
+        """
+        Vrací ident cely.
 
         :return: Vrací atribut objektu.
         """

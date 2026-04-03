@@ -377,7 +377,8 @@ class PermissionSkipImportForm(forms.Form):
 
 
 class OptimisticLockingMixin:
-    """Mixin pro detekci souběžných úprav záznamu (optimistické zamykání).
+    """
+    Mixin pro detekci souběžných úprav záznamu (optimistické zamykání).
 
     Při inicializaci formuláře s existující instancí uloží aktuální hodnoty polí modelu
     do skrytého pole (výchozí název ``optimistic_lock_data``, lze přepsat atributem
@@ -401,7 +402,8 @@ class OptimisticLockingMixin:
     optimistic_lock_instance_fields = []
 
     def __init__(self, *args, **kwargs):
-        """Inicializuje mixin a přidá skryté pole pro optimistické zamykání.
+        """
+        Inicializuje mixin a přidá skryté pole pro optimistické zamykání.
 
         :param args: Parametry předané do nadřazeného ``__init__``.
         :param kwargs: Klíčové parametry předané do nadřazeného ``__init__``.
@@ -418,7 +420,8 @@ class OptimisticLockingMixin:
                 self.initial[self.optimistic_lock_field_name] = self._serialize_instance_for_lock(instance)
 
     def _get_lock_fields(self):
-        """Vrací seznam názvů polí formuláře zahrnutých do kontroly souběžných změn.
+        """
+        Vrací seznam názvů polí formuláře zahrnutých do kontroly souběžných změn.
 
         Zahrnuje DB modelová pole i pole z :attr:`optimistic_lock_instance_fields`.
 
@@ -439,7 +442,8 @@ class OptimisticLockingMixin:
         return result
 
     def _serialize_instance_for_lock(self, instance):
-        """Serializuje hodnoty polí instance modelu do JSON řetězce.
+        """
+        Serializuje hodnoty polí instance modelu do JSON řetězce.
 
         :param instance: Instance modelu, jehož hodnoty se serializují.
         :return: JSON řetězec s hodnotami polí pro pozdější porovnání.
@@ -477,7 +481,8 @@ class OptimisticLockingMixin:
         return json.dumps(data, default=str)
 
     def get_conflicting_fields(self):
-        """Porovná původní stav polí se stavem v databázi a vrátí seznam konfliktních polí.
+        """
+        Porovná původní stav polí se stavem v databázi a vrátí seznam konfliktních polí.
 
         Načte čerstvý stav záznamu z databáze a porovná ho s hodnotami uloženými
         při renderování formuláře v poli :attr:`optimistic_lock_field_name`.
@@ -511,7 +516,8 @@ class BaseFilterForm(forms.Form):
     list_to_check = ["historie_datum_zmeny_od"]
 
     def clean(self):
-        """Validuje rozmezí datumů v historii — startovní datum musí být dříve než koncové.
+        """
+        Validuje rozmezí datumů v historii — startovní datum musí být dříve než koncové.
 
         :return: Slovník s očistěnými daty formuláře.
         :raises forms.ValidationError: Pokud je startovní datum pozdější než koncové.
@@ -553,7 +559,8 @@ class TransaltionImportForm(forms.Form):
     )
 
     def clean(self):
-        """Validuje nahraný PO soubor — kontroluje velikost a formát.
+        """
+        Validuje nahraný PO soubor — kontroluje velikost a formát.
 
         :return: Slovník s očistěnými daty formuláře.
         :raises forms.ValidationError: Pokud je soubor příliš malý (< 1000 B) nebo nemá příponu ``.po``.

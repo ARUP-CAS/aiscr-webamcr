@@ -230,7 +230,8 @@ class AkceTable(SearchTable):
         super(AkceTable, self).__init__(*args, **kwargs)
 
     def get_all_idents(self):
-        """Vrátí seznam identifikátorů archeologických záznamů pro akci.
+        """
+        Vrátí seznam identifikátorů archeologických záznamů pro akci.
 
         :return: Vrací výsledek volání ``join()``.
         """

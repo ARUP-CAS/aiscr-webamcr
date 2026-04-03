@@ -34,7 +34,8 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def dokument_typ_material_rada(self):
-        """Vrací navázané záznamy třídy ``HeslarDokumentTypMaterialRada``.
+        """
+        Vrací navázané záznamy třídy ``HeslarDokumentTypMaterialRada``.
 
         :return: QuerySet záznamů.
         """
@@ -42,7 +43,8 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def podrazena_hesla(self):
-        """Vrací podřazené záznamy třídy ``HeslarHierarchie``.
+        """
+        Vrací podřazené záznamy třídy ``HeslarHierarchie``.
 
         :return: QuerySet podřazených hesel.
         """
@@ -50,7 +52,8 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def nadrazena_hesla(self):
-        """Vrací nadřazené záznamy třídy ``HeslarHierarchie``.
+        """
+        Vrací nadřazené záznamy třídy ``HeslarHierarchie``.
 
         :return: QuerySet nadřazených hesel.
         """
@@ -345,7 +348,8 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def pian_ident_cely(self):
-        """Vrací identifikátor PIANu katastru.
+        """
+        Vrací identifikátor PIANu katastru.
 
         :return: PIAN identifikátor.
         """
@@ -362,7 +366,8 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
         verbose_name_plural = "Ruian katastry"
 
     def __str__(self):
-        """Vrací plný název katastru.
+        """
+        Vrací plný název katastru.
 
         :return: Plný název ve formátu \'název (okres; kód)\'.
         """
@@ -370,7 +375,8 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def ident_cely(self):
-        """Vrací úplný identifikátor katastru RUIAN.
+        """
+        Vrací úplný identifikátor katastru RUIAN.
 
         :return: Identifikátor ve formátu \'ruian-{kod}\'.
         """
@@ -416,7 +422,8 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
         verbose_name_plural = "Ruian kraje"
 
     def __str__(self):
-        """Vrací název kraje.
+        """
+        Vrací název kraje.
 
         :return: Název kraje.
         """
@@ -424,7 +431,8 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
 
     @property
     def ident_cely(self):
-        """Vrací úplný identifikátor kraje RUIAN.
+        """
+        Vrací úplný identifikátor kraje RUIAN.
 
         :return: Identifikátor ve formátu \'ruian-{kod}\'.
         """
@@ -472,7 +480,8 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
         verbose_name_plural = "Ruian okresy"
 
     def __str__(self):
-        """Vrací název okresu.
+        """
+        Vrací název okresu.
 
         :return: Název okresu.
         """
@@ -480,7 +489,8 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
 
     @property
     def ident_cely(self):
-        """Vrací úplný identifikátor okresu RUIAN.
+        """
+        Vrací úplný identifikátor okresu RUIAN.
 
         :return: Identifikátor ve formátu \'ruian-{kod}\'.
         """

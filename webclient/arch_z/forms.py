@@ -50,7 +50,8 @@ def create_akce_vedouci_objekt_form(readonly=True):
         """Implementuje komponentu ``CreateAkceVedouciObjektForm`` v rámci aplikace."""
 
         def clean(self):
-            """Ověří, že vedoucí a organizace jsou buď oba vyplněni, nebo oba prázdní.
+            """
+            Ověří, že vedoucí a organizace jsou buď oba vyplněni, nebo oba prázdní.
 
             :raises forms.ValidationError: Vyvolá se při splnění podmínky ``cleaned_data.get('vedouci', None) is None and cleaned_data.get('organizace', None) is not None or (cleaned_data.get('vedouci', None) is not ``.
             """
@@ -153,7 +154,8 @@ class CreateArchZForm(OptimisticLockingMixin, forms.ModelForm):
         readonly=False,
         **kwargs,
     ):
-        """Prepis init metody pro vyplnení init hodnot, nastanvení readonly.
+        """
+        Prepis init metody pro vyplnení init hodnot, nastanvení readonly.
 
         :param required: Parametr ``required`` ovlivňuje větvení podmínek.
         :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
@@ -328,7 +330,8 @@ class CreateAkceForm(OptimisticLockingMixin, forms.ModelForm):
     )
 
     def clean(self):
-        """Přepis clean metody s custom oveřením datumu ukončení a zahájení.
+        """
+        Přepis clean metody s custom oveřením datumu ukončení a zahájení.
 
         :return: Vrací atribut objektu.
         :raises forms.ValidationError: Vyvolá se při splnění podmínky ``cleaned_data.get('datum_ukonceni') is not None and cleaned_data.get('datum_zahajeni') is None``; nebo při splnění podmínky ``cleaned_data.get('datum_zahajeni') > cleaned_data.get('datum_ukonceni')``.
@@ -537,7 +540,8 @@ class CreateAkceForm(OptimisticLockingMixin, forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean_odlozena_nz(self):
-        """Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True.
+        """
+        Custom clean metoda pro ověření že je_nz a odlozena_nz nejsou oba True.
 
         :return: Vrací proměnná ``odlozena_nz``.
         :raises ValidationError: Vyvolá se při splnění podmínky ``odlozena_nz and je_nz``.

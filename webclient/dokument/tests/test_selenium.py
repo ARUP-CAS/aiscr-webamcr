@@ -1278,7 +1278,8 @@ class AkceKnihovna3D(BaseSeleniumTestClass):
         self.goToAddress("/dokument/model/zapsat")
 
     def zapsat_zaznam(self):
-        """Provádí operaci zapsat zaznam.
+        """
+        Provádí operaci zapsat zaznam.
 
         :return: Vrací proměnná ``ident``.
         """

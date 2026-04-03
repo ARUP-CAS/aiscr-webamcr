@@ -303,7 +303,8 @@ class Model3DListView(SearchListView):
         return context
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -358,7 +359,8 @@ class DokumentListView(SearchListView):
         self.default_header = _("dokument.views.DokumentListView.default_header.text")
 
     def get_context_data(self, **kwargs):
-        """Vytvoří kontext pro renderování šablony.
+        """
+        Vytvoří kontext pro renderování šablony.
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
@@ -396,7 +398,8 @@ class DokumentListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -705,7 +708,8 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def get_success_url(self):
-        """Vrací success url.
+        """
+        Vrací success url.
 
         :return: Vrací výsledek volání ``get_absolute_url()``.
         """
@@ -952,7 +956,8 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """
@@ -1137,7 +1142,8 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
-        """Vytvoří kontext pro renderování šablony
+        """
+        Vytvoří kontext pro renderování šablony
 
         :return: kontext šablony.
         """
@@ -2287,7 +2293,8 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
         return f"{result.ident_cely} ({result.autori_snapshot} {result.rok_vzniku})"
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
         """
@@ -2307,7 +2314,8 @@ class DokumentAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView,
 
 
 def get_hierarchie_dokument_typ():
-    """Funkce pro získaní hierarchie pro heslař.
+    """
+    Funkce pro získaní hierarchie pro heslař.
 
     :return: Vrací proměnná ``hierarchie``.
     """
@@ -2937,7 +2945,8 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
 
 
 def get_obdobi_choices():
-    """Funkce která vrací dvou stupňový heslař pro období.
+    """
+    Funkce která vrací dvou stupňový heslař pro období.
 
     :return: Vrací výsledek volání ``heslar_12()``.
     """
@@ -2945,7 +2954,8 @@ def get_obdobi_choices():
 
 
 def get_areal_choices():
-    """Funkce která vrací dvou stupňový heslař pro areál.
+    """
+    Funkce která vrací dvou stupňový heslař pro areál.
 
     :return: Vrací výsledek volání ``heslar_12()``.
     """

@@ -26,7 +26,8 @@ class WerkzeugServerThread(Thread):
         self.error = None
 
     def setup_ssl(self):
-        """Nainstaluje SSL certifikáty a klíče pro HTTPS testovacího serveru.
+        """
+        Nainstaluje SSL certifikáty a klíče pro HTTPS testovacího serveru.
 
         :return: Cesta k certifikátu.
         """
@@ -50,7 +51,8 @@ class WerkzeugServerThread(Thread):
         pass
 
     def get_free_port(self):
-        """Vrací volný port.
+        """
+        Vrací volný port.
 
         :return: Číslo portu
         """

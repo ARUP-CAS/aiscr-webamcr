@@ -260,14 +260,16 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         self.save()
 
     def get_absolute_url(self):
-        """Metoda pro získaní absolut url záznamu podle identu.
+        """
+        Metoda pro získaní absolut url záznamu podle identu.
 
         :return: Vrací výsledek volání ``reverse()``.
         """
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
     def check_pred_archivaci(self):
-        """Ověří pred archivaci.
+        """
+        Ověří pred archivaci.
 
         :return: Vrací proměnná ``resp``.
         """
@@ -278,7 +280,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return resp
 
     def check_pred_potvrzenim(self):
-        """Ověří pred potvrzenim.
+        """
+        Ověří pred potvrzenim.
 
         :return: Vrací proměnná ``resp``.
         """
@@ -362,7 +365,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return None
 
     def generate_coord_forms_initial(self):
-        """Vygeneruje coord forms initial.
+        """
+        Vygeneruje coord forms initial.
 
         :return: Vrací slovník.
         """
@@ -423,14 +427,16 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return "Samostatny nalez [ident_cely not yet assigned]"
 
     def get_permission_object(self):
-        """Vrací permission object.
+        """
+        Vrací permission object.
 
         :return: Vrací proměnná ``self``.
         """
         return self
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
@@ -440,7 +446,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return ()
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
@@ -455,7 +462,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         return f"{SamostatnyNalezListView.redis_snapshot_prefix}_{self.ident_cely}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """
+        Vygeneruje redis snapshot.
 
         :return: Vrací n-tici.
         """
@@ -658,14 +666,16 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
 
     def get_create_user(self):
-        """Vrací create user.
+        """
+        Vrací create user.
 
         :return: Vrací n-tici.
         """
         return (self.spolupracovnik,)
 
     def get_create_org(self):
-        """Vrací create org.
+        """
+        Vrací create org.
 
         :return: Vrací n-tici.
         """
@@ -680,7 +690,8 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         return f"{UzivatelSpolupraceListView.redis_snapshot_prefix}_{self.pk}"
 
     def generate_redis_snapshot(self):
-        """Vygeneruje redis snapshot.
+        """
+        Vygeneruje redis snapshot.
 
         :return: Vrací n-tici.
         """

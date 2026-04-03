@@ -127,7 +127,8 @@ class LokalitaListView(SearchListView):
         }.get(field, field)
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -185,7 +186,8 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         return self.render_to_response(context)
 
     def get_archeologicky_zaznam(self):
-        """Metoda pro získaní akce z db.
+        """
+        Metoda pro získaní akce z db.
 
         :return: Vrací atribut objektu.
         """
@@ -213,7 +215,8 @@ class LokalitaDetailView(LoginRequiredMixin, SingleObjectMixin, AkceRelatedRecor
         return context
 
     def get_shows(self):
-        """Vrací shows. v aplikaci.
+        """
+        Vrací shows. v aplikaci.
 
         :return: Vrací výsledek volání ``get_detail_template_shows()``.
         """
@@ -262,7 +265,8 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """Validuje data ve formuláři
+        """
+        Validuje data ve formuláři
 
         :param form: Instance vyplněného formuláře.
         :return: HTTP odpověď.
@@ -301,7 +305,8 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
+        """
+        Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
         :param form: Instance vyplněného formuláře.
         :return: HTTP odpověď.
@@ -377,7 +382,8 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        """Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
+        """
+        Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
         :param form: Instance vyplněného formuláře.
         :return: HTTP odpověď.
@@ -415,7 +421,8 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
+        """
+        Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
         :param form: Instance vyplněného formuláře.
         :return: HTTP odpověď.
@@ -465,7 +472,8 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
     template_name = "lokalita/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
-        """Zpracuje dispečing požadavku.
+        """
+        Zpracuje dispečing požadavku.
 
         :param request: HTTP požadavek.
         :param args: Poziční argumenty.
@@ -509,7 +517,8 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_dokumentacni_jednotka(self):
-        """Vrací dokumentacni jednotka.
+        """
+        Vrací dokumentacni jednotka.
 
         :return: Vrací proměnná ``object``.
         """
@@ -578,7 +587,8 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """Zpracuje dispečing požadavku.
+        """
+        Zpracuje dispečing požadavku.
 
         :param request: HTTP požadavek.
         :param args: Poziční argumenty.
@@ -618,7 +628,8 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_komponenta(self):
-        """Vrací komponenta. v aplikaci.
+        """
+        Vrací komponenta. v aplikaci.
 
         :return: Vrací proměnná ``object``.
         """
@@ -730,7 +741,8 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_pian(self):
-        """Vrací pian. v aplikaci.
+        """
+        Vrací pian. v aplikaci.
 
         :return: Vrací výsledek volání ``get_object_or_404()``.
         """

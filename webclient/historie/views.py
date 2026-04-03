@@ -46,7 +46,8 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     fedora_lookup = "ident_cely"
 
     def get_lookup_value(self):
-        """Vrátí hodnotu z URL podle lookup_kwarg.
+        """
+        Vrátí hodnotu z URL podle lookup_kwarg.
 
         :return: Vrací vybranou hodnotu z kolekce.
         """
@@ -71,7 +72,8 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
         pass
 
     def get_queryset(self):
-        """Vrací queryset historie po aplikaci výchozího řazení a filtrů.
+        """
+        Vrací queryset historie po aplikaci výchozího řazení a filtrů.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, proměnná ``qs``.
         :raises ValueError: Vyvolá se při splnění podmínky ``not self.queryset_filter``.

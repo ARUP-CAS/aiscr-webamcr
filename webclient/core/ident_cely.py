@@ -415,7 +415,8 @@ def get_next_sequence_integrity_check(object_class: Type[ModelWithMetadata] | Ty
 
 
 def get_heslar_ident():
-    """Metoda pro výpočet identu hesláře.
+    """
+    Metoda pro výpočet identu hesláře.
 
     :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
     """
@@ -423,7 +424,8 @@ def get_heslar_ident():
 
 
 def get_uzivatel_ident():
-    """Metoda pro výpočet identu uživatele.
+    """
+    Metoda pro výpočet identu uživatele.
 
     :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
     """
@@ -431,7 +433,8 @@ def get_uzivatel_ident():
 
 
 def get_organizace_ident():
-    """Metoda pro výpočet identu organizce.
+    """
+    Metoda pro výpočet identu organizce.
 
     :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
     """
@@ -439,7 +442,8 @@ def get_organizace_ident():
 
 
 def get_osoba_ident():
-    """Metoda pro výpočet identu osoby.
+    """
+    Metoda pro výpočet identu osoby.
 
     :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
     """

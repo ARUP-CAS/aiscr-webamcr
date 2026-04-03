@@ -798,7 +798,8 @@ class ProjektListView(SearchListView, ProjektPermissionFilterMixin):
         return df
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací výsledek volání ``check_filter_permission()``.
         """
@@ -1823,7 +1824,8 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView, ProjektP
         return f"{result.ident_cely} ({result.hlavni_katastr}; {result.vedouci_projektu})"
 
     def get_queryset(self):
-        """Vrací queryset. v aplikaci.
+        """
+        Vrací queryset. v aplikaci.
 
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
         """
@@ -2003,7 +2005,8 @@ class ZadostUdajeOznamovatelView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací proměnná ``zaznam``.
         """
@@ -2065,7 +2068,8 @@ class ZadostOdhlaseniProjektuView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací proměnná ``zaznam``.
         """
@@ -2127,7 +2131,8 @@ class ZadostZruseniProjektuView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_zaznam(self):
-        """Vrací zaznam. v aplikaci.
+        """
+        Vrací zaznam. v aplikaci.
 
         :return: Vrací proměnná ``zaznam``.
         """

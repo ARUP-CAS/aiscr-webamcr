@@ -20,7 +20,8 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
     """Rozšíření třídy TextTestResult s podporou číslování testovacích případů."""
 
     def __init__(self, stream, descriptions, verbosity):
-        """Inicializuje generátor čísel testů a poté zavolá implementaci předka.
+        """
+        Inicializuje generátor čísel testů a poté zavolá implementaci předka.
 
         :param stream: Parametr ``stream`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
         :param descriptions: Parametr ``descriptions`` předává se do volání ``__init__()``, vstupuje do návratové hodnoty.
@@ -53,7 +54,8 @@ class CustomTextTestResult(unittest.runner.TextTestResult):
         return super(CustomTextTestResult, self).startTest(test)
 
     def _exc_info_to_string(self, err, test):
-        """Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu.
+        """
+        Získá text informací o výjimce z předka a na začátek přidá řádek s číslem testu.
 
         :param err: Parametr ``err`` předává se do volání ``_exc_info_to_string()``.
         :param test: Parametr ``test`` předává se do volání ``_exc_info_to_string()``, ``format()``, pracuje se s atributy ``progress_index``.
@@ -126,7 +128,8 @@ class AMCRSeleniumTestRunner(BaseRunner):
     def teardown_databases(self, *args, **kwargs):
         # do somthing
         # return super().teardown_databases(*args, **kwargs)
-        """Smaže testovací databáze a vyčistí jejich prostředky.
+        """
+        Smaže testovací databáze a vyčistí jejich prostředky.
 
         :param verbosity: Úroveň podrobnosti výstupu.
         :param parallel_sync_disabled: Příznak pro synchronizaci parallelích testů.

@@ -164,7 +164,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return self.path.split("/")[-1]
 
     def calculate_sha_512(self):
-        """Vrátí SHA-512 hash souboru uloženého v Fedora repozitáři.
+        """
+        Vrátí SHA-512 hash souboru uloženého v Fedora repozitáři.
 
         :return: Haš souboru ze skladiště nebo prázdný řetězec, pokud soubor neexistuje.
         """
@@ -235,7 +236,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def vytvoreno(self):
-        """Vrátí záznam historie s typem zmény "Nahrání SBR" (prvního nahrání souboru).
+        """
+        Vrátí záznam historie s typem zmény "Nahrání SBR" (prvního nahrání souboru).
 
         :return: Záznam historie nebo ``None``, pokud soubor nevlastní historii.
         """
@@ -717,7 +719,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         return {"name": self.nazev, "size": float(self.size_mb * 1000000), "type": self.mimetype, "id": self.pk}
 
     def get_historicke_verze(self):
-        """Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
+        """
+        Metoda k získání údajů o historických verzích ve Fedoře pro tabulku historie
 
         :return: Vrací proměnná ``results``.
         """
@@ -798,7 +801,8 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
         verbose_name_plural = _("core.model.OdstavkaSystemu.modelTitles.label")
 
     def clean(self):
-        """Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
+        """
+        Metoda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
 
         :raises ValidationError: Vyvolá se při splnění podmínky ``odstavky.first().pk != self.pk``.
         """
@@ -1133,7 +1137,8 @@ class Permissions(models.Model):
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
     def check_concrete_permission(self, user, ident=None, typ=None):
-        """Ověří, zda má uživatel konkrétní oprávnění na daný záznam a typ.
+        """
+        Ověří, zda má uživatel konkrétní oprávnění na daný záznam a typ.
 
         :param user: Uživatel, pro kterého se kontroluje oprávnění.
         :param ident: Identifikátor archeologického záznamu (např. C-XX-YYYYNNNNN).
@@ -1168,7 +1173,8 @@ class Permissions(models.Model):
         return perm_check
 
     def check_base(self):
-        """Ověří base. v aplikaci.
+        """
+        Ověří base. v aplikaci.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -1178,7 +1184,8 @@ class Permissions(models.Model):
             return False
 
     def check_status(self):
-        """Ověří status. v aplikaci.
+        """
+        Ověří status. v aplikaci.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -1234,7 +1241,8 @@ class Permissions(models.Model):
         return True
 
     def check_accessibility(self):
-        """Ověří accessibility. v aplikaci.
+        """
+        Ověří accessibility. v aplikaci.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -1252,7 +1260,8 @@ class Permissions(models.Model):
         return True
 
     def check_permission_skip(self):
-        """Ověří permission skip.
+        """
+        Ověří permission skip.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
@@ -1310,7 +1319,8 @@ class Permissions(models.Model):
                 self.permission_object = "error"
 
     def permission_override(self):
-        """Metoda pro uplatneni specifickych obejiti opravneni podle nazvu akce.
+        """
+        Metoda pro uplatneni specifickych obejiti opravneni podle nazvu akce.
 
         :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
         """
