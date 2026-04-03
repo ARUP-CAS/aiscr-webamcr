@@ -96,7 +96,7 @@ class QuerystringNodeMulti(Node):
 @register.tag
 def querystring_multi(parser, token):
     """
-    Provádí operaci querystring multi.
+    Upravuje řetězec dotazu přidáním nebo změnou parametru s více hodnotami.
 
     Vytvoří URL (obsahující pouze dotazový řetězec [včetně „?“]) odvozený
     z dotazového řetězce aktuální URL, a to jeho aktualizací pomocí zadaných
@@ -113,8 +113,8 @@ def querystring_multi(parser, token):
     :param parser: Parametr ``parser`` předává se do volání ``token_kwargs()``, pracuje se s atributy ``compile_filter``.
     :param token: Textový nebo strukturální vstup `token` používaný při sestavení nebo zpracování obsahu.
 
-        :return: Vrací výsledek volání ``QuerystringNodeMulti()``.
-        :raises TemplateSyntaxError: Vyvolá se při splnění podmínky ``bits and bits.pop(0) != 'without'``.
+    :return: Vrací výsledek volání ``QuerystringNodeMulti()``.
+    :raises TemplateSyntaxError: Vyvolá se při splnění podmínky ``bits and bits.pop(0) != 'without'``.
     """
     bits = token.split_contents()
     tag = bits.pop(0)

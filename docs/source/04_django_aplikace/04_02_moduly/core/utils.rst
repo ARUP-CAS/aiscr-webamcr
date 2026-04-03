@@ -66,10 +66,9 @@ Třídy
 
    .. py:method:: set_ident()
 
-      Nastaví ident. v aplikaci.
+      Přidá soubor do session cache.
 
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``set()``, ovlivňuje větvení podmínek.
-      :param timeout: Časový údaj ``timeout`` použitý při filtrování nebo výpočtu.
+      :param file_path: Cesta k souboru.
 
    .. py:method:: get_ident()
 
@@ -86,11 +85,9 @@ Třídy
 
    .. py:method:: file_exists()
 
-      Provádí operaci file exists.
+      Odebere soubor z session cache.
 
-      :param ident: Identifikátor ``ident`` používaný pro dohledání cílového záznamu.
-
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      :param file_path: Cesta k odebrání.
 
    .. py:method:: remove_file_reference()
 
@@ -426,13 +423,12 @@ Funkce
 
 .. py:function:: replace_last(source_string, old, new)
 
-   Provádí operaci replace last.
+   Nahradí poslední výskyt řetězce v textu novým řetězcem.
 
-   :param source_string: Textový nebo strukturální vstup `source_string` používaný při sestavení nebo zpracování obsahu.
-   :param old: Parametr ``old`` se předává do volání ``rfind()``, ``replace()``.
-   :param new: Nová hodnota porovnávaná nebo nastavovaná oproti původnímu stavu.
-
-   :return: Vrací hodnotu podle větve zpracování, typicky: hodnotu podle větve zpracování, proměnná ``source_string``.
+   :param source_string: Vstupní text.
+   :param old: Řetězec k nahrazení.
+   :param new: Nový řetězec.
+   :return: Text s nahrazeným poslední výskytem.
 
 .. py:function:: get_set_maintenance_in_cache()
 

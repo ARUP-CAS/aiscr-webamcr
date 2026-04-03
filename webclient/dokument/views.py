@@ -358,12 +358,11 @@ class DokumentListView(SearchListView):
         self.default_header = _("dokument.views.DokumentListView.default_header.text")
 
     def get_context_data(self, **kwargs):
-        """
-        Vrací context data.
+        """Vytvoří kontext pro renderování šablony.
 
         :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-            :return: Vrací proměnná ``context``.
+        :return: kontext šablony
         """
         context = super().get_context_data(**kwargs)
         context["is_3d"] = False
@@ -1138,12 +1137,9 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         )
 
     def get_context_data(self, **kwargs):
-        """
-        Vrací context data.
+        """Vytvoří kontext pro renderování šablony
 
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
-
-            :return: Vrací proměnná ``context``.
+        :return: kontext šablony.
         """
         self.init_translations()
         zaznam = self.get_zaznam()

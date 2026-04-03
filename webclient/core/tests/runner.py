@@ -112,12 +112,12 @@ class AMCRSeleniumTestRunner(BaseRunner):
 
     def setup_databases(self, *args, **kwargs):
         """
-        Provádí operaci setup databases.
+        Připraví instanci testovací databáze
 
         :param args: Parametr ``args`` se předává do volání ``setup_databases()``.
         :param kwargs: Parametr ``kwargs`` se předává do volání ``setup_databases()``.
 
-            :return: Vrací proměnná ``temp_return``.
+        :return: Vrací proměnná ``temp_return``.
         """
         self.keepdb = True
         temp_return = super().setup_databases(*args, **kwargs)
@@ -126,10 +126,9 @@ class AMCRSeleniumTestRunner(BaseRunner):
     def teardown_databases(self, *args, **kwargs):
         # do somthing
         # return super().teardown_databases(*args, **kwargs)
-        """
-        Provádí operaci teardown databases.
+        """Smaže testovací databáze a vyčistí jejich prostředky.
 
-        :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``teardown_databases``.
-        :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``teardown_databases``.
+        :param verbosity: Úroveň podrobnosti výstupu.
+        :param parallel_sync_disabled: Příznak pro synchronizaci parallelích testů.
         """
         pass

@@ -53,7 +53,9 @@ Funkce
 
 .. py:function:: _get_anonymous()
 
-   Popis není k dispozici.
+   Vrací identifikátor anonymního uživatele z cache nebo databáze.
+
+   :return: Identifikátor uživatele (ident_cely) nebo řetězec "anonymous".
 
 .. py:function:: _resolve_view_info(request)
 

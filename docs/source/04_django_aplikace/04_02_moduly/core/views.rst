@@ -125,13 +125,12 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+      Zpracuje HTTP požadavek na nahrání souboru s ověřením přístupu.
 
-      :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, ``dispatch()``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``dispatch()``.
+      :param request: HTTP požadavek.
+      :param args: Poziční argumenty.
+      :param kwargs: Pojmenované argumenty.
+      :return: HTTP odpověď.
 
    .. py:method:: post()
 

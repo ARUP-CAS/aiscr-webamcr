@@ -568,14 +568,12 @@ class UploadFileView(LoginRequiredMixin, TemplateView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        """
-        Provádí operaci dispatch.
+        """Zpracuje HTTP požadavek na nahrání souboru s ověřením přístupu.
 
-        :param request: Parametr ``request`` předává se do volání ``SessionIdentifier()``, ``dispatch()``, vstupuje do návratové hodnoty.
-        :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``dispatch()``.
+        :param request: HTTP požadavek.
+        :param args: Poziční argumenty.
+        :param kwargs: Pojmenované argumenty.
+        :return: HTTP odpověď.
         """
         ident_cely = self.kwargs.get("ident_cely")
         self.session_identifier = SessionIdentifier(request)

@@ -262,12 +262,10 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        """
-        Provádí operaci form valid.
+        """Validuje data ve formuláři
 
-        :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, pracuje se s atributy ``save``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``form_valid()``.
+        :param form: Instance vyplněného formuláře.
+        :return: HTTP odpověď.
         """
         logger.debug("lokalita.views.LokalitaCreateView.form_valid.start")
         form_az = CreateArchZForm(self.request.POST)
@@ -303,12 +301,10 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """
-        Provádí operaci form invalid.
+        """Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``form_invalid()``.
+        :param form: Instance vyplněného formuláře.
+        :return: HTTP odpověď.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         logger.debug("main form is invalid")
@@ -381,12 +377,10 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        """
-        Provádí operaci form valid.
+        """Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-        :param form: Parametr ``form`` se předává do volání ``form_invalid()``, ``form_valid()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``form_valid()``.
+        :param form: Instance vyplněného formuláře.
+        :return: HTTP odpověď.
         """
         logger.debug("Lokalita.EditForm is valid")
         form_az = CreateArchZForm(self.request.POST, instance=self.object.archeologicky_zaznam)
@@ -421,12 +415,10 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """
-        Provádí operaci form invalid.
+        """Informuje uživatele o nevalidním vyplnění formuláře a zaloguje ho.
 
-        :param form: Parametr ``form`` se předává do volání ``debug()``, ``form_invalid()``, pracuje se s atributy ``errors``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``form_invalid()``.
+        :param form: Instance vyplněného formuláře.
+        :return: HTTP odpověď.
         """
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         logger.debug("main form is invalid")
@@ -473,12 +465,12 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
     template_name = "lokalita/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
-        """
-        Vrací context data.
+        """Zpracuje dispečing požadavku.
 
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-            :return: Vrací proměnná ``context``.
+        :param request: HTTP požadavek.
+        :param args: Poziční argumenty.
+        :param kwargs: Pojmenované argumenty.
+        :return: HTTP odpověď.
         """
         context = super().get_context_data(**kwargs)
         context["dj_form_create"] = CreateDJForm(typ_arch_z=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA)
@@ -586,14 +578,12 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
     @method_decorator(never_cache)
     def get(self, request, *args, **kwargs):
-        """
-        Vrací výsledek operace.
+        """Zpracuje dispečing požadavku.
 
-        :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-        :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-        :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-
-            :return: Vrací výsledek volání ``get()``.
+        :param request: HTTP požadavek.
+        :param args: Poziční argumenty.
+        :param kwargs: Pojmenované argumenty.
+        :return: HTTP odpověď.
         """
         return super().get(request, *args, **kwargs)
 

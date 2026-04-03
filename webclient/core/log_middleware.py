@@ -30,6 +30,10 @@ SLOW_REQUEST_THRESHOLD = get_slow_request_settings()
 
 
 def _get_anonymous():
+    """Vrací identifikátor anonymního uživatele z cache nebo databáze.
+
+    :return: Identifikátor uživatele (ident_cely) nebo řetězec "anonymous".
+    """
     global _ANONYMOUS
     if _ANONYMOUS is None:
         from heslar.hesla_dynamicka import ADMIN_USER

@@ -56,11 +56,11 @@ Třídy
 
    .. py:method:: get_context_data()
 
-      Vrací context data.
+      Vytvoří kontext pro renderování šablony.
 
       :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      :return: Vrací proměnná ``context``.
+      :return: kontext šablony
 
    .. py:method:: rename_field_for_ordering()
 
@@ -381,11 +381,9 @@ Třídy
 
    .. py:method:: get_context_data()
 
-      Vrací context data.
+      Vytvoří kontext pro renderování šablony
 
-      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
-
-      :return: Vrací proměnná ``context``.
+      :return: kontext šablony.
 
    .. py:method:: dispatch()
 

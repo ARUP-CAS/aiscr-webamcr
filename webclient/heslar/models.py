@@ -34,25 +34,25 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def dokument_typ_material_rada(self):
-        """Provádí operaci dokument typ material rada.
+        """Vrací navázané záznamy třídy ``HeslarDokumentTypMaterialRada``.
 
-        :return: Vrací výsledek volání ``filter()``.
+        :return: QuerySet záznamů.
         """
         return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):
-        """Provádí operaci podrazena hesla.
+        """Vrací podřazené záznamy třídy ``HeslarHierarchie``.
 
-        :return: Vrací výsledek volání ``filter()``.
+        :return: QuerySet podřazených hesel.
         """
         return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
 
     @property
     def nadrazena_hesla(self):
-        """Provádí operaci nadrazena hesla.
+        """Vrací nadřazené záznamy třídy ``HeslarHierarchie``.
 
-        :return: Vrací výsledek volání ``filter()``.
+        :return: QuerySet nadřazených hesel.
         """
         return HeslarHierarchie.objects.filter(heslo_podrazene=self)
 
@@ -345,9 +345,9 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def pian_ident_cely(self):
-        """Provádí operaci pian ident cely.
+        """Vrací identifikátor PIANu katastru.
 
-        :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
+        :return: PIAN identifikátor.
         """
         if self.pian is not None:
             return self.pian.ident_cely
@@ -362,20 +362,17 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
         verbose_name_plural = "Ruian katastry"
 
     def __str__(self):
-        """
-               Vrací textovou reprezentaci objektu.
+        """Vrací plný název katastru.
 
-        Textová reprezentace objektu.
-
-            :return: Vrací hodnotu podle větve zpracování.
+        :return: Plný název ve formátu \'název (okres; kód)\'.
         """
         return f"{self.nazev} ({self.okres.nazev}; {self.kod})"
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely.
+        """Vrací úplný identifikátor katastru RUIAN.
 
-        :return: Vrací hodnotu podle větve zpracování.
+        :return: Identifikátor ve formátu \'ruian-{kod}\'.
         """
         return f"ruian-{self.kod}"
 
@@ -419,20 +416,17 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
         verbose_name_plural = "Ruian kraje"
 
     def __str__(self):
-        """
-               Vrací textovou reprezentaci objektu.
+        """Vrací název kraje.
 
-        Textová reprezentace objektu.
-
-            :return: Vrací atribut objektu.
+        :return: Název kraje.
         """
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely.
+        """Vrací úplný identifikátor kraje RUIAN.
 
-        :return: Vrací hodnotu podle větve zpracování.
+        :return: Identifikátor ve formátu \'ruian-{kod}\'.
         """
         return f"ruian-{self.kod}"
 
@@ -478,20 +472,17 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
         verbose_name_plural = "Ruian okresy"
 
     def __str__(self):
-        """
-               Vrací textovou reprezentaci objektu.
+        """Vrací název okresu.
 
-        Textová reprezentace objektu.
-
-            :return: Vrací atribut objektu.
+        :return: Název okresu.
         """
         return self.nazev
 
     @property
     def ident_cely(self):
-        """Provádí operaci ident cely.
+        """Vrací úplný identifikátor okresu RUIAN.
 
-        :return: Vrací hodnotu podle větve zpracování.
+        :return: Identifikátor ve formátu \'ruian-{kod}\'.
         """
         return f"ruian-{self.kod}"
 

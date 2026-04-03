@@ -1,11 +1,10 @@
 import logging
 import socket
-import ssl
 from threading import Event, Thread
 
 from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.core.wsgi import get_wsgi_application
-from werkzeug.serving import make_ssl_devcert, run_simple
+from werkzeug.serving import run_simple
 
 
 class WerkzeugServerThread(Thread):
@@ -27,17 +26,10 @@ class WerkzeugServerThread(Thread):
         self.error = None
 
     def setup_ssl(self):
-        """Provádí operaci setup ssl."""
-        try:
-            cert_path, key_path = make_ssl_devcert("./core/tests/resources/ssl", host="localhost")
-            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            context.load_cert_chain(certfile=cert_path, keyfile=key_path)
-            self.ssl_context = context
-        except Exception as e:
-            self.error = str(e)
+        """Nainstaluje SSL certifikáty a klíče pro HTTPS testovacího serveru.
 
-    def run(self):
-        """Spustí hodnotu. v aplikaci."""
+        :return: Cesta k certifikátu.
+        """
         try:
             self.setup_ssl()
             application = StaticFilesHandler(get_wsgi_application())
@@ -58,9 +50,9 @@ class WerkzeugServerThread(Thread):
         pass
 
     def get_free_port(self):
-        """Vrací free port.
+        """Vrací volný port.
 
-        :return: Vrací proměnná ``port``.
+        :return: Číslo portu
         """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(("127.0.0.1", 0))  # Bind na port 0, což znamená "najdi volný port"
