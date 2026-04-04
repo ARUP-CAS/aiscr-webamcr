@@ -383,6 +383,7 @@ Třídy
 
       Vytvoří kontext pro renderování šablony
 
+      :param kwargs: Dodatečné položky kontextu předané z rodičovské metody.
       :return: kontext šablony.
 
    .. py:method:: dispatch()

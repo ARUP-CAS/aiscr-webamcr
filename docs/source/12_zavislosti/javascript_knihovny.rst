@@ -17,63 +17,63 @@ Knihovny instalované pomocí Node.js
    * - bootstrap
      - 5.3.8
      - MIT
-     - https://getbootstrap.com/
+     - 
    * - bootstrap-datepicker
      - 1.10.0
      - Apache-2.0
-     - https://github.com/uxsolutions/bootstrap-datepicker
+     - 
    * - bootstrap-icons
      - 1.5.0
      - MIT
-     - https://icons.getbootstrap.com/
+     - 
    * - bootstrap-select
      - 1.14.0-beta3
      - MIT
-     - https://developer.snapappointments.com/bootstrap-select
+     - 
    * - daterangepicker
      - 3.1.0
      - MIT
-     - https://github.com/dangrossman/daterangepicker
+     - 
    * - dropzone
      - 5.7.0
      - MIT
-     - http://www.dropzonejs.com
+     - 
    * - jquery
      - 3.7.1
      - MIT
-     - https://jquery.com
+     - 
    * - leaflet
      - 1.9.4
      - BSD-2-Clause
-     - https://leafletjs.com/
+     - 
    * - leaflet-draw
      - 1.0.4
      - MIT
-     - https://github.com/Leaflet/Leaflet.draw
+     - 
    * - leaflet-fullscreen
      - 1.0.2
      - ISC
-     - git://github.com/Leaflet/Leaflet.fullscreen
+     - 
    * - leaflet-spin
      - 1.1.2
      - MIT
-     - http://makinacorpus.github.io/Leaflet.Spin/
+     - 
    * - leaflet.featuregroup.subgroup
      - 1.0.2
      - BSD-2-Clause
-     - https://github.com/ghybs/Leaflet.FeatureGroup.SubGroup#readme
+     - 
    * - leaflet.markercluster
      - 1.5.3
      - MIT
-     - https://github.com/Leaflet/Leaflet.markercluster
+     - 
    * - moment
      - 2.30.1
      - MIT
-     - https://momentjs.com
+     - 
    * - spin.js
      - 4.1.1
      - MIT
-     - git://github.com/fgnass/spin.js
+     - 
 
 .. END GENERATED NODEJS LIBRARIES
 

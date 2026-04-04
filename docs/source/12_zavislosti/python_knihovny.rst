@@ -144,11 +144,11 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT
      - https://github.com/asottile/cfgv
    * - charset-normalizer
-     - 3.4.6
+     - 3.4.7
      - MIT
      - https://github.com/jawah/charset_normalizer/blob/master/CHANGELOG.md
    * - click
-     - 8.3.1
+     - 8.3.2
      - BSD-3-Clause
      - https://github.com/pallets/click/
    * - click-didyoumean
@@ -380,7 +380,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - Apache-2.0 OR BSD-2-Clause
      - https://github.com/pypa/packaging
    * - pandas
-     - 3.0.1
+     - 3.0.2
      - BSD License
      - https://pandas.pydata.org
    * - pdf2image
@@ -388,7 +388,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - MIT License
      - https://github.com/Belval/pdf2image
    * - phonenumbers
-     - 9.0.26
+     - 9.0.27
      - Apache-2.0
      - https://github.com/daviddrysdale/python-phonenumbers
    * - piexif
@@ -516,7 +516,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - BSD License
      - https://www.reportlab.com/
    * - requests
-     - 2.33.0
+     - 2.33.1
      - Apache Software License
      - https://github.com/psf/requests
    * - rjsmin
@@ -632,7 +632,7 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - PSF-2.0
      - https://github.com/python/typing_extensions
    * - tzdata
-     - 2025.3
+     - 2026.1
      - Apache-2.0
      - https://github.com/python/tzdata
    * - tzlocal
@@ -679,4 +679,13 @@ Tento soubor je důležitý pro porozumění právním aspektům použitých kni
      - 1.3.0
      - BSD License
      - http://www.python-excel.org/
+
+
+Ostatní knihovny a závislosti
+-------------------------------
+
+Použité JavaScript knihovny a Docker image jsou uvedeny v samostatné části dokumentace.
+
+:doc:`Docker image <12_zavislosti/docker_images>`.
+:doc:`JavaScript knihovny <12_zavislosti/javascript_knihovny>`.
 
