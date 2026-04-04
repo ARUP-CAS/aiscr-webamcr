@@ -583,7 +583,10 @@ def run_data_import(job_id, user_id):
                     mapper_class = ImportModelMapper.get_import_data_mapper(serialized_record.pop("__file_name"))
                     mapper_classes[record_id] = mapper_class
                     records = mapper_class(serialized_record).create_records(performed_action)
-                    if ImportDataAdminForm.PERFORMED_ACTION_UPDATE and not mapper_class.allow_update:
+                    if (
+                        performed_action == ImportDataAdminForm.PERFORMED_ACTION_UPDATE
+                        and not mapper_class.allow_update
+                    ):
                         raise ImportDataError(_("cron.tasks.run_data_import.update_now_allowed"))
                     if mapper_class == SouborMapper:
                         import_files_list += records
