@@ -113,8 +113,7 @@ services:
       - redis_host
     depends_on:
       - redis
-    entrypoint: ['/bin/sh', '-c', 'export REDIS_ADDR=$$(cat /var/run/secrets/redis_host)
-          ; export REDIS_PASSWORD=$$(cat /run/secrets/redis_pass) ; /redis_exporter']
+    entrypoint: ["/bin/sh", "-c", "export REDIS_ADDR=$$(cat /var/run/secrets/redis_host) ; export REDIS_PASSWORD=$$(cat /run/secrets/redis_pass) ; /redis_exporter"]
 
   grafana:
     image: grafana/grafana-enterprise:12.4.2
