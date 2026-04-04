@@ -1,3 +1,10 @@
+FROM node:20-bookworm-slim AS node-modules
+
+WORKDIR /node_modules_build
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
 FROM ghcr.io/osgeo/gdal:ubuntu-small-3.12.3 AS python-builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -21,22 +28,15 @@ RUN echo $TZ > /etc/timezone && \
         unrar \
         jq \
         postgresql-client \
-        curl \
         libmagic1 \
         redis-tools && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y --no-install-recommends nodejs && \
     locale-gen cs_CZ.utf8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./webclient/requirements.txt /tmp/requirements.txt
-COPY ./package*.json /node_modules_build/
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip3 wheel --wheel-dir /wheels -r /tmp/requirements.txt
-
-RUN --mount=type=cache,target=/root/.npm \
-    cd /node_modules_build && npm ci
 
 FROM python-builder AS app-builder
 
@@ -97,7 +97,7 @@ RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --brea
     rm -rf /wheels ~/.cache/pip
 
 COPY --from=app-builder /code /code
-COPY --from=python-builder /node_modules_build/node_modules /node_modules
+COPY --from=node-modules /node_modules_build/node_modules /node_modules
 # Kořen repozitáře v image = / (WORKDIR /code → BASE_DIR.parent); potřeba pro _npm_staticfiles_dirs().
 COPY ./package.json ./package-lock.json /
 
