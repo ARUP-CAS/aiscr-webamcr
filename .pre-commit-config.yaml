@@ -18,7 +18,7 @@ repos:
     hooks:
       - id: container-image-reference-parity
         name: Container image reference parity (Dockerfile + compose)
-        entry: python3 scripts/check_container_image_reference_parity.py --fix
+        entry: python scripts/check_container_image_reference_parity.py --fix
         language: python
         pass_filenames: false
         always_run: true
@@ -29,27 +29,27 @@ repos:
           - packaging>=23.0
       - id: npm-vendor-package-names
         name: NPM vendor names vs base.py
-        entry: python3 scripts/check_npm_vendor_package_names.py --fix
+        entry: python scripts/check_npm_vendor_package_names.py --fix
         language: python
         pass_filenames: false
         files: ^(package\.json|webclient/webclient/settings/base\.py)$
         require_serial: true
       - id: method-docstring-style-reminder
         name: Method docstring style reminder (non-blocking)
-        entry: python3 docs/check_method_docstrings.py
+        entry: python docs/check_method_docstrings.py
         language: python
         types: [python]
         verbose: true
       - id: generate-module-docs
         name: Generate module documentation
-        entry: python3 docs/generate_module_docs.py
+        entry: python docs/generate_module_docs.py
         language: python
         pass_filenames: false
         always_run: true
         additional_dependencies: [pyyaml]
       - id: generate-selenium-test-docs
         name: Generate selenium test documentation
-        entry: python3 docs/generate_selenium_test_docs.py
+        entry: python docs/generate_selenium_test_docs.py
         language: python
         pass_filenames: false
         always_run: true

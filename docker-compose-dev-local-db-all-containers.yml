@@ -186,8 +186,7 @@ services:
       - "9808:9808"
     depends_on:
       - redis
-    entrypoint: ['/bin/sh', '-c', 'export CE_BROKER_URL="redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat
-          /var/run/secrets/redis_host)"; python /app/cli.py']
+    entrypoint: ["/bin/sh", "-c", "export CE_BROKER_URL=\"redis://:$$(cat /var/run/secrets/redis_pass)@$$(cat /var/run/secrets/redis_host)\"; python /app/cli.py"]
 
   selenium:
     image: selenium/standalone-chromium:145.0
@@ -242,8 +241,7 @@ services:
     environment:
       - UMASK=002
       - TOMCAT_USERS_FILE=/var/run/secrets/tomcat_users
-      - JAVA_TOOL_OPTIONS=-Dfcrepo.config.file=/opt/fcrepo/conf/fcrepo.properties
-        -Dfcrepo.log=DEBUG
+      - JAVA_TOOL_OPTIONS=-Dfcrepo.config.file=/opt/fcrepo/conf/fcrepo.properties -Dfcrepo.log=DEBUG
     container_name: fcrepo
     logging:
       driver: "json-file"

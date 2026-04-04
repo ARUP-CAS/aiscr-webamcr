@@ -54,15 +54,27 @@ def main() -> None:
     """Vygeneruje RST pro Python knihovny a Docker image."""
     csv_to_rst_table()
     repo_root = Path(__file__).resolve().parents[2]
-    subprocess.run(
+    result = subprocess.run(
         [
             sys.executable,
             str(repo_root / "docs" / "generate_module_docs.py"),
             "--docker-images-only",
         ],
-        check=True,
         cwd=str(repo_root),
+        text=True,
     )
+    if result.returncode == 1:
+        # generate_module_docs.py používá návratový kód 1 jako signál „soubory změněny“ (pre-commit).
+        print(
+            "Soubor docs/source/12_zavislosti/docker_images.rst byl aktualizován "
+            "(generate_module_docs.py skončil kódem 1 — očekávané při změnách).",
+        )
+    elif result.returncode != 0:
+        print(
+            f"generate_module_docs.py --docker-images-only selhal s návratovým kódem {result.returncode}.",
+            file=sys.stderr,
+        )
+        sys.exit(result.returncode)
 
 
 if __name__ == "__main__":
