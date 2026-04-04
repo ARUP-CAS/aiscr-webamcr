@@ -16,14 +16,9 @@ Třídy
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
+          :return: Vrací proměnná ``context``.
 
 
 .. py:class:: PesCreateView
@@ -36,16 +31,11 @@ Třídy
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``PesFormset()``, ``PesNotificationsForm()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``PesFormset()``, ``PesNotificationsForm()``, pracuje se s atributy ``POST``, ``user``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``redirect()``.
-
+          :return: Vrací výsledek volání ``redirect()``.
 
 
 .. py:class:: PesSmazatView
@@ -58,60 +48,39 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Načtená data odpovídající zadaným vstupům.
-
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_object_identification()
 
       Vrací object identification.
 
-      **Návratová hodnota:**
-
-      Načtená data odpovídající zadaným vstupům.
-
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
 
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``render_to_response()``.
-
+          :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``filter()``, ``add_message()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``filter()``, ``add_message()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 

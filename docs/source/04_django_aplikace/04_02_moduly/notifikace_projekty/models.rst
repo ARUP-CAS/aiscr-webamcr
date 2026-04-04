@@ -16,28 +16,19 @@ Třídy
 
       Provádí operaci ident cely.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``getattr()``.
-
+      :return: Vrací výsledek volání ``getattr()``.
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``str()``.
-
+          :return: Vrací výsledek volání ``str()``.
 
    .. py:method:: get_create_user()
 
       Vrací create user.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 

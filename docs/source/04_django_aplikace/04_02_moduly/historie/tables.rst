@@ -16,14 +16,9 @@ Třídy
 
       Vyrenderuje uzivatel custom.
 
-      **Parametry:**
+      :param record: Parametr ``record`` pracuje se s atributy ``uzivatel``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      - ``record``: Parametr ``record`` pracuje se s atributy ``uzivatel``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``display_name()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``display_name()``.
 
 
 .. py:class:: SimpleHistoryTable
@@ -41,40 +36,25 @@ Třídy
 
       Vyrenderuje uzivatel. v aplikaci.
 
-      **Parametry:**
+      :param record: Parametr ``record`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
 
-      - ``record``: Parametr ``record`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``display_name()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``display_name()``.
 
    .. py:method:: render_url()
 
       Vyrenderuje url. v aplikaci.
 
-      **Parametry:**
+      :param value: Hodnota URL sloupce.
+      :param record: Slovník záznamu tabulky obsahující URL ke stažení.
 
-      - ``value``: Hodnota URL sloupce.
-      - ``record``: Slovník záznamu tabulky obsahující URL ke stažení.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``format_html()``.
-
+          :return: Vrací výsledek volání ``format_html()``.
 
    .. py:method:: value_url()
 
       Vrátí absolutní URL záznamu Fedory včetně hostname pro export tabulky.
 
-      **Parametry:**
+      :param value: Hodnota URL sloupce.
+      :param record: Slovník záznamu tabulky obsahující relativní URL.
 
-      - ``value``: Hodnota URL sloupce.
-      - ``record``: Slovník záznamu tabulky obsahující relativní URL.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování.
-
+          :return: Vrací hodnotu podle větve zpracování.
 

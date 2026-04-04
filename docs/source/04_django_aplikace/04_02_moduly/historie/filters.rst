@@ -16,26 +16,16 @@ Třídy
 
       Vrací queryset. v aplikaci.
 
-      **Parametry:**
+      :param request: HTTP požadavek.
 
-      - ``request``: HTTP požadavek.
-
-      **Návratová hodnota:**
-
-      Výsledek volání ``all()``.
-
+      :return: Výsledek volání ``all()``.
 
    .. py:method:: filter()
 
       Filtruje hodnotu. v aplikaci.
 
-      **Parametry:**
+      :param qs: Queryset, který má být filtrován.
+      :param value: Vybrané hodnoty filtru (v této implementaci se queryset vrací beze změny).
 
-      - ``qs``: Queryset, který má být filtrován.
-      - ``value``: Vybrané hodnoty filtru (v této implementaci se queryset vrací beze změny).
-
-      **Návratová hodnota:**
-
-      Proměnná ``qs``.
-
+      :return: Proměnná ``qs``.
 

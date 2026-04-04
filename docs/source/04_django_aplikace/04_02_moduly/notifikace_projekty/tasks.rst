@@ -10,24 +10,14 @@ Funkce
 
    Vrací project type notification.
 
-   **Parametry:**
+   :param projekt_type: Parametr ``projekt_type`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
 
-   - ``projekt_type``: Parametr ``projekt_type`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``get()``.
-
+       :return: Vrací výsledek volání ``get()``.
 
 .. py:function:: check_hlidaci_pes(projekt_id)
 
    Task pro celery pro skontrolování jestli je nastavený hlídací pes.
 
-   **Parametry:**
+   :param projekt_id: Identifikátor ``projekt_id`` používaný pro dohledání cílového záznamu.
 
-   - ``projekt_id``: Identifikátor ``projekt_id`` používaný pro dohledání cílového záznamu.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``send_ep02()``.
-
+       :return: Vrací výsledek volání ``send_ep02()``.

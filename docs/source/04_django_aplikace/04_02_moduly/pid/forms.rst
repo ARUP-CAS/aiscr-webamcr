@@ -16,10 +16,7 @@ Třídy
 
       Doplní k zadanému ORCID identifikátoru prefix URL ``https://orcid.org/`` a vrátí jej, nebo ``None`` pro prázdný vstup.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování.
-
+      :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: FormWithWikidata
@@ -32,10 +29,7 @@ Třídy
 
       Doplní k zadanému identifikátoru Wikidata prefix URL ``https://www.wikidata.org/entity/`` a vrátí jej, nebo ``None`` pro prázdný vstup.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování.
-
+      :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: UpdateDocumentObjectIdentifierFileForm

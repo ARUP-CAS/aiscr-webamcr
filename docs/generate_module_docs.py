@@ -1216,194 +1216,28 @@ def extract_docstrings(source_file: Path) -> Tuple[Optional[str], List[Dict[str,
 
 
 def _looks_like_sphinx_fieldlist(docstring: str) -> bool:
-    """Vrátí True, pokud text vypadá jako Sphinx seznam polí (:param:, :return: atd.)."""
+    """Vrátí True, pokud text vypadá jako Sphinx info pole (:param:, :return: atd.)."""
     return bool(
         re.search(r"^\s*:(?:param|type|return|returns|raises|raise|yield|yields|rtype)\b", docstring, re.I | re.M)
     )
 
 
-def _format_sphinx_fieldlist_rst(docstring: str, indent: str) -> List[str]:
-    """Převede docstring se Sphinx poli (:param:, :return:, …) na řádky RST (bez rizika interpretace ``:role:``)."""
-    lines = docstring.splitlines()
-    n = len(lines)
-    i = 0
-
-    def is_field_start(stripped: str) -> bool:
-        return bool(re.match(r"^:(?:param|type|return|returns|raises|raise|yield|yields|rtype)\b", stripped, re.I))
-
-    summary_lines: List[str] = []
-    while i < n:
-        stripped = lines[i].strip()
-        if stripped and is_field_start(stripped):
-            break
-        summary_lines.append(lines[i])
-        i += 1
-    while summary_lines and not summary_lines[-1].strip():
-        summary_lines.pop()
-
-    params: List[Tuple[str, str]] = []
-    types: Dict[str, str] = {}
-    returns: List[str] = []
-    rtypes: List[str] = []
-    raises: List[str] = []
-    yields: List[str] = []
-    misc_field_lines: List[str] = []
-
-    def consume_continuation(start_i: int) -> Tuple[str, int]:
-        parts: List[str] = []
-        j = start_i
-        while j < n:
-            raw = lines[j]
-            st = raw.strip()
-            if not st:
-                j += 1
-                continue
-            if is_field_start(st):
-                break
-            if raw.startswith("    ") or raw.startswith("\t"):
-                parts.append(st)
-                j += 1
-            else:
-                break
-        return " ".join(parts).strip(), j
-
-    while i < n:
-        stripped = lines[i].strip()
-        if not stripped:
-            i += 1
-            continue
-
-        m = re.match(r"^:param\s+(\*?\*?\w+)\s*:\s*(.*)$", stripped, re.I)
-        if m:
-            name, first = m.group(1), m.group(2)
-            extra, j = consume_continuation(i + 1)
-            body = " ".join(x for x in [first.strip(), extra] if x).strip()
-            params.append((name, body))
-            i = j
-            continue
-
-        m = re.match(r"^:type\s+(\w+)\s*:\s*(.*)$", stripped, re.I)
-        if m:
-            types[m.group(1)] = m.group(2).strip()
-            i += 1
-            continue
-
-        m = re.match(r"^:return(?:s)?\s*:\s*(.*)$", stripped, re.I)
-        if m:
-            first = m.group(1)
-            extra, j = consume_continuation(i + 1)
-            ret = " ".join(x for x in [first.strip(), extra] if x).strip()
-            if ret:
-                returns.append(ret)
-            i = j
-            continue
-
-        m = re.match(r"^:rtype\s*:\s*(.*)$", stripped, re.I)
-        if m:
-            first = m.group(1)
-            extra, j = consume_continuation(i + 1)
-            rt = " ".join(x for x in [first.strip(), extra] if x).strip()
-            if rt:
-                rtypes.append(rt)
-            i = j
-            continue
-
-        m = re.match(r"^:raises?\s+([A-Za-z0-9_.]+)\s*:\s*(.*)$", stripped, re.I)
-        if m:
-            exc, first = m.group(1), m.group(2)
-            extra, j = consume_continuation(i + 1)
-            desc = " ".join(x for x in [first.strip(), extra] if x).strip()
-            raises.append(f"``{exc}``: {desc}" if desc else f"``{exc}``")
-            i = j
-            continue
-
-        m = re.match(r"^:yield(?:s)?\s*:\s*(.*)$", stripped, re.I)
-        if m:
-            first = m.group(1)
-            extra, j = consume_continuation(i + 1)
-            y = " ".join(x for x in [first.strip(), extra] if x).strip()
-            if y:
-                yields.append(y)
-            i = j
-            continue
-
-        misc_field_lines.append(stripped)
-        i += 1
-
+def _indent_docstring_lines(docstring: str, indent: str) -> List[str]:
+    """Přidá ``indent`` k neprázdným řádkům; prázdné řádky ponechá prázdné."""
     out: List[str] = []
-    for sl in summary_lines:
-        st = sl.strip()
-        if st:
-            out.append(f"{indent}{st}" if indent else st)
+    for line in docstring.splitlines():
+        if line.strip():
+            out.append(f"{indent}{line}")
         else:
             out.append("")
-    if summary_lines:
-        out.append("")
-
-    if params:
-        out.append(f"{indent}**Parametry:**")
-        out.append("")
-        param_names = {name for name, _ in params}
-        for name, desc in params:
-            typ = types.get(name)
-            if typ:
-                out.append(f"{indent}- ``{name}`` (*{typ}*): {desc}")
-            else:
-                out.append(f"{indent}- ``{name}``: {desc}")
-        for name in sorted(types):
-            if name not in param_names:
-                out.append(f"{indent}- *typ* ``{name}``: {types[name]}")
-        out.append("")
-    elif types:
-        out.append(f"{indent}**Typy:**")
-        out.append("")
-        for name in sorted(types):
-            out.append(f"{indent}- ``{name}``: {types[name]}")
-        out.append("")
-
-    if returns:
-        out.append(f"{indent}**Návratová hodnota:**")
-        out.append("")
-        for r in returns:
-            out.append(f"{indent}{r}")
-        out.append("")
-    if rtypes:
-        if returns:
-            out.append(f"{indent}*Typ:* {' '.join(rtypes)}")
-            out.append("")
-        else:
-            out.append(f"{indent}**Návratový typ:**")
-            out.append("")
-            for r in rtypes:
-                out.append(f"{indent}{r}")
-            out.append("")
-
-    if raises:
-        out.append(f"{indent}**Výjimky:**")
-        out.append("")
-        for r in raises:
-            out.append(f"{indent}- {r}")
-        out.append("")
-
-    if yields:
-        out.append(f"{indent}**Generuje:**")
-        out.append("")
-        for y in yields:
-            out.append(f"{indent}{y}")
-        out.append("")
-
-    for ml in misc_field_lines:
-        out.append(f"{indent}{ml}" if indent else ml)
-
     return out
 
 
 def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
-    """Formátuje docstring ve stylu Google pro výstup RST.
+    """Formátuje docstring pro výstup RST v režimu explicit.
 
-    Převádí sekce Args:, Returns: atd. do správného formátu RST
-    s názvy argumentů uzavřenými v zpětných lomítkách. Názvy sekcí jsou přeloženy
-    do češtiny.
+    Docstringy se Sphinx poli (:param:, :return:, …) se předají beze změny obsahu (jen odsazení).
+    Google sekce (Args:, Returns:, …) se převedou na stejná Sphinx info pole.
 
     :param docstring: Docstring, který se má formátovat
     :param indent: Prefix odsazení pro každý řádek.
@@ -1413,20 +1247,24 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
         return []
 
     if _looks_like_sphinx_fieldlist(docstring):
-        return _format_sphinx_fieldlist_rst(docstring, indent)
+        return _indent_docstring_lines(docstring, indent)
 
     lines = docstring.split("\n")
     result = []
     in_args_section = False
-    in_returns_section = False
+    args_variant = ""
+    in_returns_like = False
+    returns_variant = ""
     in_status_codes_section = False
     in_process_section = False
     in_custom_section = False
     in_other_section = False
 
-    # Klíčová slova sekcí, která formátují položky jako seznamy se zpětnými apostrofy kolem názvů.
+    field_cont = indent + "   "
+
+    # Sekce převáděné na Sphinx info pole: :param / :ivar (+ volitelně :type).
     args_like_sections = {"Args:", "Attributes:", "Response Data Keys:", "URL Parameters:"}
-    # Klíčová slova sekcí, která formátují položky kurzívou.
+    # Sekce převáděné na :return / :rtype, :raises resp. :yields.
     returns_like_sections = {"Returns:", "Raises:", "Yields:"}
     # Klíčová slova sekcí, která formátují položky jako seznamy se zpětnými apostrofy kolem kódů.
     status_codes_sections = {"Response Status Codes:"}
@@ -1499,27 +1337,36 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
         # Ověří, zda vstupujeme do nové sekce.
         if is_section_keyword(stripped):
             in_args_section = stripped in args_like_sections
-            in_returns_section = stripped in returns_like_sections
+            args_variant = stripped if in_args_section else ""
+            in_returns_like = stripped in returns_like_sections
+            returns_variant = stripped if in_returns_like else ""
             in_status_codes_section = stripped in status_codes_sections
             in_process_section = stripped in process_sections
             in_custom_section = False
             in_other_section = stripped in other_sections
 
-            translated_name = translate_section(stripped)
-            result.append("")
-            result.append(f"{indent}**{translated_name}:**")
-            result.append("")
+            use_translated_header = bool(in_status_codes_section or in_process_section or in_other_section)
+            if use_translated_header:
+                translated_name = translate_section(stripped)
+                result.append("")
+                result.append(f"{indent}**{translated_name}:**")
+                result.append("")
+            elif in_args_section or in_returns_like:
+                if result and result[-1].strip():
+                    result.append("")
             i += 1
             continue
 
         # Ověří, zda vstupujeme do vlastní sekce (např. „Rozdíly oproti NewFileUploadView:“).
         # Vlastní sekce detekuje jen tehdy, když už nejsme uvnitř známé sekce.
         in_any_section = (
-            in_args_section or in_returns_section or in_status_codes_section or in_process_section or in_custom_section
+            in_args_section or in_returns_like or in_status_codes_section or in_process_section or in_custom_section
         )
         if not in_any_section and is_custom_section(stripped, i):
             in_args_section = False
-            in_returns_section = False
+            args_variant = ""
+            in_returns_like = False
+            returns_variant = ""
             in_status_codes_section = False
             in_process_section = False
             in_custom_section = True
@@ -1533,7 +1380,7 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             i += 1
             continue
 
-        # Zpracuje sekce typu Args – formátuje je jako seznam se zpětnými apostrofy.
+        # Zpracuje sekce typu Args – převod na Sphinx :param / :ivar (+ :type).
         if in_args_section and stripped:
             # Ověří, zda jde o řádek argumentu (název (typ): popis).
             # nebo formát (name: description)
@@ -1543,11 +1390,11 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                 arg_name = arg_match.group(1)
                 arg_type = arg_match.group(2)
                 arg_desc = arg_match.group(3)
+                field = ":ivar" if args_variant == "Attributes:" else ":param"
 
+                result.append(f"{indent}{field} {arg_name}: {arg_desc}")
                 if arg_type:
-                    result.append(f"{indent}- ``{arg_name}`` (*{arg_type}*): {arg_desc}")
-                else:
-                    result.append(f"{indent}- ``{arg_name}``: {arg_desc}")
+                    result.append(f"{indent}:type {arg_name}: {arg_type}")
 
                 # Ověří navazující řádky (více odsazené než argument).
                 i += 1
@@ -1562,13 +1409,14 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
                         # Ověří, zda jde o nový argument (podporuje *args, **kwargs).
                         if re.match(r"^\s+\*{0,2}\w+\s*(?:\([^)]+\))?\s*:", next_line):
                             break
-                        result.append(f"{indent}  {next_stripped}")
+                        result.append(f"{field_cont}{next_stripped}")
                     else:
                         break
                     i += 1
                 continue
             elif not stripped:
                 in_args_section = False
+                args_variant = ""
 
         # Zpracuje sekci Response Status Codes – formátuje ji jako seznam se zpětnými apostrofy kolem kódů.
         if in_status_codes_section and stripped:
@@ -1677,41 +1525,58 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
             elif not stripped:
                 in_custom_section = False
 
-        # Handle Returns/Raises section
-        if in_returns_section and stripped:
-            # Ověří, zda to odpovídá formátu typ: popis.
-            # Supports: Type, Type[inner], Type | Type2, Optional[Type], etc.
-            ret_match = re.match(r"^([\w\[\], |]+)\s*:\s*(.*)$", stripped)
-            if ret_match:
-                ret_type = ret_match.group(1).strip()
-                ret_desc = ret_match.group(2)
-                result.append(f"{indent}*{ret_type}*: {ret_desc}")
+        # Returns / Raises / Yields → Sphinx :return, :raises, :yields
+        if in_returns_like:
+            if not stripped:
+                in_returns_like = False
+                returns_variant = ""
+            else:
+                # Ověří, zda to odpovídá formátu typ: popis.
+                # Supports: Type, Type[inner], Type | Type2, Optional[Type], etc.
+                ret_match = re.match(r"^([\w\[\], |]+)\s*:\s*(.*)$", stripped)
+                if ret_match:
+                    ret_type = ret_match.group(1).strip()
+                    ret_desc = ret_match.group(2)
+                    if returns_variant == "Returns:":
+                        result.append(f"{indent}:return: {ret_desc}")
+                        result.append(f"{indent}:rtype: {ret_type}")
+                    elif returns_variant == "Raises:":
+                        result.append(f"{indent}:raises {ret_type}: {ret_desc}")
+                    elif returns_variant == "Yields:":
+                        body = f"*{ret_type}*: {ret_desc}" if ret_desc else f"``{ret_type}``"
+                        result.append(f"{indent}:yields: {body}")
 
-                # Ověří navazující řádky.
-                i += 1
-                while i < len(lines):
-                    next_line = lines[i]
-                    next_stripped = next_line.strip()
-                    if not next_stripped or is_section_keyword(next_stripped):
-                        break
-                    if next_line.startswith("    ") or next_line.startswith("\t"):
-                        # Ověří, zda jde o novou položku typu.
-                        if re.match(r"^\s+[\w\[\], |]+\s*:", next_line):
-                            break
-                        result.append(f"{indent}{next_stripped}")
-                    else:
-                        break
+                    # Ověří navazující řádky.
                     i += 1
+                    while i < len(lines):
+                        next_line = lines[i]
+                        next_stripped = next_line.strip()
+                        if not next_stripped or is_section_keyword(next_stripped):
+                            break
+                        if next_line.startswith("    ") or next_line.startswith("\t"):
+                            # Ověří, zda jde o novou položku typu.
+                            if re.match(r"^\s+[\w\[\], |]+\s*:", next_line):
+                                break
+                            result.append(f"{field_cont}{next_stripped}")
+                        else:
+                            break
+                        i += 1
+                    continue
+                if returns_variant == "Returns:":
+                    result.append(f"{indent}:return: {stripped}")
+                elif returns_variant == "Raises:":
+                    result.append(f"{indent}{stripped}")
+                elif returns_variant == "Yields:":
+                    result.append(f"{indent}:yields: {stripped}")
+                i += 1
                 continue
-            elif not stripped:
-                in_returns_section = False
 
         # Handle other sections or regular text
         if in_other_section and stripped:
             result.append(f"{indent}{stripped}")
         elif (
             not in_args_section
-            and not in_returns_section
+            and not in_returns_like
             and not in_status_codes_section
             and not in_process_section
             and not in_custom_section

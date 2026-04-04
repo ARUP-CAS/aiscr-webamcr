@@ -16,25 +16,17 @@ Třídy
 
       Metoda pro správně zobrazení náhledu souboru.
 
-      **Parametry:**
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
+      :param record: Parametr ``record`` předává se do volání ``reverse()``, pracuje se s atributy ``nahled_soubor``, ``ident_cely``.
 
-      - ``value``: Parametr ``value`` slouží jako vstup pro logiku funkce ``render_nahled``.
-      - ``record``: Parametr ``record`` předává se do volání ``reverse()``, pracuje se s atributy ``nahled_soubor``, ``ident_cely``.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``format_html()``, str.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: AktivaceDeaktivaceColumn
@@ -47,18 +39,13 @@ Třídy
 
       Vyrenderuje hodnotu. v aplikaci.
 
-      **Parametry:**
+      :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``aktivni``, ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+      :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
 
-      - ``record``: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``aktivni``, ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      - ``table``: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      - ``value``: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
-      - ``bound_column``: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
 
 
 .. py:class:: smazatColumn
@@ -71,18 +58,13 @@ Třídy
 
       Vyrenderuje hodnotu. v aplikaci.
 
-      **Parametry:**
+      :param record: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param table: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param value: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+      :param bound_column: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
 
-      - ``record``: Parametr ``record`` předává se do volání ``check_permissions()``, ``render()``, pracuje se s atributy ``id``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      - ``table``: Parametr ``table`` předává se do volání ``hasattr()``, ``check_permissions()``, pracuje se s atributy ``request``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      - ``value``: Parametr ``value`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
-      - ``bound_column``: Parametr ``bound_column`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``render()``, výsledek volání ``format_html()``.
 
 
 .. py:class:: UzivatelSpolupraceTable
@@ -95,18 +77,12 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: get_all_idents()
 
       Vrátí prázdnu hodnotu. Metoda je zde kvůli kompatibilitě s ostatními tabulkami.
 
-      **Návratová hodnota:**
-
-      Vrací str.
-
+      :return: Vrací str.
 

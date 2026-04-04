@@ -16,14 +16,9 @@ Třídy
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``loads()``, pracuje se s atributy ``body``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``loads()``, pracuje se s atributy ``body``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ProjectPianFromEnvelopeView
@@ -36,14 +31,9 @@ Třídy
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``loads()``, pracuje se s atributy ``body``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``loads()``, pracuje se s atributy ``body``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ProjektPermissionFilterMixin
@@ -56,29 +46,19 @@ Třídy
 
       Provádí operaci add ownership lookup.
 
-      **Parametry:**
+      :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+      :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
 
-      - ``ownership``: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
-      - ``qs``: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``Q()``.
-
+          :return: Vrací výsledek volání ``Q()``.
 
    .. py:method:: add_accessibility_lookup()
 
       Provádí operaci add accessibility lookup.
 
-      **Parametry:**
+      :param permission: Parametr ``permission`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``accessibility``, vstupuje do návratové hodnoty.
+      :param qs: Parametr ``qs`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
 
-      - ``permission``: Parametr ``permission`` předává se do volání ``filter()``, ``add_ownership_lookup()``, pracuje se s atributy ``accessibility``, vstupuje do návratové hodnoty.
-      - ``qs``: Parametr ``qs`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``filter()``.
-
+          :return: Vrací výsledek volání ``filter()``.
 
 
 .. py:class:: ProjektListView
@@ -95,14 +75,9 @@ Třídy
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get_table_kwargs()
 
@@ -111,10 +86,7 @@ Třídy
       ``ProjektTable`` potřebuje uživatele pro metodu ``render_oznamovatel_oznamovatel``,
       která aplikuje pravidla viditelnosti oznamovatele per-řádek.
 
-      **Návratová hodnota:**
-
-      Slovník kwargs předávaných konstruktoru tabulky.
-
+      :return: Slovník kwargs předávaných konstruktoru tabulky.
 
    .. py:method:: postprocess_export_dataframe()
 
@@ -129,23 +101,14 @@ Třídy
       na modelu ``Projekt``. DB provede filtrování viditelnosti a vrátí pouze relevantní
       identifikátory; Python-level smyčka přes všechny projekty je vyloučena.
 
-      **Parametry:**
-
-      - ``df``: DataFrame sestavený z Redis snapshotů se strojovými názvy sloupců.
-
-      **Návratová hodnota:**
-
-      Upravený DataFrame s aplikovanými pravidly viditelnosti oznamovatele.
-
+      :param df: DataFrame sestavený z Redis snapshotů se strojovými názvy sloupců.
+      :return: Upravený DataFrame s aplikovanými pravidly viditelnosti oznamovatele.
 
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``check_filter_permission()``.
-
+      :return: Vrací výsledek volání ``check_filter_permission()``.
 
 
 .. py:class:: GenerovatOznameniView
@@ -158,15 +121,10 @@ Třídy
 
       Vrací redirect url.
 
-      **Parametry:**
+      :param args: Parametr ``args`` se předává do volání ``get_redirect_url()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_redirect_url()``, vstupuje do návratové hodnoty.
 
-      - ``args``: Parametr ``args`` se předává do volání ``get_redirect_url()``, vstupuje do návratové hodnoty.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_redirect_url()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``get_redirect_url()``.
-
+          :return: Vrací výsledek volání ``get_redirect_url()``.
 
 
 .. py:class:: ProjektAutocompleteBezZrusenych
@@ -179,36 +137,23 @@ Třídy
 
       Vrací result label.
 
-      **Parametry:**
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
 
-      - ``result``: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování.
-
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
-
+      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
 
    .. py:method:: check_filter_permission()
 
       Ověří filter permission.
 
-      **Parametry:**
+      :param qs: Parametr ``qs`` předává se do volání ``filter_by_permission()``, vstupuje do návratové hodnoty.
 
-      - ``qs``: Parametr ``qs`` předává se do volání ``filter_by_permission()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+          :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: ProjectTableRowView
@@ -221,14 +166,9 @@ Třídy
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``HttpResponse()``.
-
+          :return: Vrací výsledek volání ``HttpResponse()``.
 
 
 .. py:class:: UpravitDatumOznameniView
@@ -241,57 +181,36 @@ Třídy
 
       Vrací existing record.
 
-      **Parametry:**
-
-      - ``projekt``: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``historie``.
-
-      **Návratová hodnota:**
-
-      Načtená data odpovídající zadaným vstupům.
-
+      :param projekt: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``historie``.
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
 
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get_context_data``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``render_to_response()``.
-
+          :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``UpravitDatumOznameniForm()``, ``create_transaction()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``UpravitDatumOznameniForm()``, ``create_transaction()``, pracuje se s atributy ``POST``, ``user``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ZadostUdajeOznamovatelView
@@ -304,40 +223,27 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``zaznam``.
-
+      :return: Vrací proměnná ``zaznam``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``render_to_response()``.
-
+          :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep08()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep08()``, pracuje se s atributy ``POST``, ``user``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ZadostOdhlaseniProjektuView
@@ -350,40 +256,27 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``zaznam``.
-
+      :return: Vrací proměnná ``zaznam``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``render_to_response()``.
-
+          :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep07()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep07()``, pracuje se s atributy ``POST``, ``user``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 .. py:class:: ZadostZruseniProjektuView
@@ -396,40 +289,27 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``zaznam``.
-
+      :return: Vrací proměnná ``zaznam``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``get``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``render_to_response()``.
-
+          :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep11()``, pracuje se s atributy ``POST``, ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``ZadostProjektForm()``, ``send_ep11()``, pracuje se s atributy ``POST``, ``user``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 Funkce
@@ -439,344 +319,216 @@ Funkce
 
    Funkce pohledu pro zobrazení indexu s navigací projektu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``render()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``render()``.
-
+       :return: Vrací výsledek volání ``render()``.
 
 .. py:function:: detail(request, ident_cely)
 
    Funkce pohledu pro zobrazení detailu projektu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``get_history_dates()``, ``get_detail_template_shows()``, pracuje se s atributy ``session``, ``user``, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``filter()``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``get_history_dates()``, ``get_detail_template_shows()``, pracuje se s atributy ``session``, ``user``, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``filter()``.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``render()``.
-
+       :return: Vrací výsledek volání ``render()``.
 
 .. py:function:: post_ajax_get_projects_limit(request)
 
    Funkce pohledu pro získaní heatmapy projektu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``loads()``, ``get_num_projects_from_envelope()``, pracuje se s atributy ``body``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``loads()``, ``get_num_projects_from_envelope()``, pracuje se s atributy ``body``.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``JsonResponse()``.
-
+       :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: post_ajax_get_project_one(request)
 
    Funkce pohledu pro získaní geometrie projektu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``JsonResponse()``.
-
+       :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: create(request)
 
    Funkce pohledu pro vytvoření projektu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``katastr_text_to_id()``, ``CreateProjektForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``katastr_text_to_id()``, ``CreateProjektForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
 
 .. py:function:: edit(request, ident_cely)
 
    Funkce pohledu pro editaci projektu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``katastr_text_to_id()``, ``EditProjektForm()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``redirect()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``katastr_text_to_id()``, ``EditProjektForm()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``redirect()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
 
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro smazání projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: schvalit(request, ident_cely)
 
    Funkce pohledu pro schválení projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: prihlasit(request, ident_cely)
 
    Funkce pohledu pro přihlášení projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``user``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: zahajit_v_terenu(request, ident_cely)
 
    Funkce pohledu pro zahájení v terenu projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``session``, ``method``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: ukoncit_v_terenu(request, ident_cely)
 
    Funkce pohledu pro ukončení v terenu projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: uzavrit(request, ident_cely)
 
    Funkce pohledu pro uzavření projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: archivovat(request, ident_cely)
 
    Funkce pohledu pro archivaci projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: navrhnout_ke_zruseni(request, ident_cely)
 
    Funkce pohledu pro navržení projektu ke zrušení pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: zrusit(request, ident_cely)
 
    Funkce pohledu pro zrušení projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: vratit(request, ident_cely)
 
    Funkce pohledu pro vrácení projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: vratit_navrh_zruseni(request, ident_cely)
 
    Funkce pohledu pro vrácení návrhu na zrušení projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``JsonResponse()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
 
 .. py:function:: odpojit_dokument(request, ident_cely, proj_ident_cely)
 
    Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``, ``odpojit()``, vstupuje do návratové hodnoty.
+   :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``url_has_allowed_host_and_scheme()``, pracuje se s atributy ``GET``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``filter()``, ``odpojit()``, vstupuje do návratové hodnoty.
-   - ``proj_ident_cely``: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``odpojit()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``odpojit()``.
 
 .. py:function:: pripojit_dokument(request, proj_ident_cely)
 
    Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``pripojit()``, vstupuje do návratové hodnoty.
+   :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``pripojit()``, vstupuje do návratové hodnoty.
-   - ``proj_ident_cely``: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``pripojit()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``pripojit()``.
 
 .. py:function:: generovat_oznameni(request, ident_cely)
 
    Funkce pohledu pro generování oznámení projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``debug()``, ``add_message()``, pracuje se s atributy ``POST``, ``user``, ovlivňuje větvení podmínek.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``debug()``, ``add_message()``, pracuje se s atributy ``POST``, ``user``, ovlivňuje větvení podmínek.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``redirect()``.
-
+       :return: Vrací výsledek volání ``redirect()``.
 
 .. py:function:: generovat_expertni_list(request, ident_cely)
 
    Funkce pohledu pro generování expertního listu projektu pomoci modalu.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``add_message()``, pracuje se s atributy ``POST``.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, pracuje se s atributy ``POST``.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, proměnná ``response``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, proměnná ``response``.
 
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
    Funkce pro získaní dátumů pro historii.
 
-   **Parametry:**
-
-   - ``historie_vazby``: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
-   - ``request_user``: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
-
-   **Návratová hodnota:**
-
-   Slovník dat jednotlivých změn stavu pro zobrazení v historii.
-
+   :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+   :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+   :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
 
 .. py:function:: get_detail_template_shows(projekt, user)
 
    Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
 
-   **Parametry:**
-
-   - ``projekt``: Parametr ``projekt`` předává se do volání ``get_show_oznamovatel()``, ``check_permissions()``, pracuje se s atributy ``typ_projektu``, ``ident_cely``, ovlivňuje větvení podmínek.
-   - ``user``: Parametr ``user`` se předává do volání ``get_show_oznamovatel()``, ``check_permissions()``, pracuje se s atributy ``organizace``.
-
-   **Návratová hodnota:**
-
-   Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
-
+   :param projekt: Parametr ``projekt`` předává se do volání ``get_show_oznamovatel()``, ``check_permissions()``, pracuje se s atributy ``typ_projektu``, ``ident_cely``, ovlivňuje větvení podmínek.
+   :param user: Parametr ``user`` se předává do volání ``get_show_oznamovatel()``, ``check_permissions()``, pracuje se s atributy ``organizace``.
+   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
 
 .. py:function:: get_required_fields(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu projektu.
 
-   **Parametry:**
-
-   - ``zaznam``: Parametr ``zaznam`` pracuje se s atributy ``stav``, ovlivňuje větvení podmínek.
-   - ``next``: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
-
-   **Návratová hodnota:**
-
-   Seznam názvů polí, která mají být v daném stavu povinná.
-
+   :param zaznam: Parametr ``zaznam`` pracuje se s atributy ``stav``, ovlivňuje větvení podmínek.
+   :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+   :return: Seznam názvů polí, která mají být v daném stavu povinná.
 
 .. py:function:: katastr_text_to_id(request)
 
    Funkce podlehu pro získaní ID katastru podle názvu katastru.
 
-   **Parametry:**
+   :param request: Parametr ``request`` pracuje se s atributy ``POST``, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` pracuje se s atributy ``POST``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``copy()``, proměnná ``post``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``copy()``, proměnná ``post``.

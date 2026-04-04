@@ -10,11 +10,6 @@ Funkce
 
    Vrací config. v aplikaci.
 
-   **Parametry:**
+   :param name: Parametr ``name`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
 
-   - ``name``: Parametr ``name`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``get()``.
-
+       :return: Vrací výsledek volání ``get()``.

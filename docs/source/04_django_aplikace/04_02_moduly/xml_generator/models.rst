@@ -14,23 +14,17 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování.
-
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_ident_cely_link()
 
       Vrací ident cely link.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování.
-
+      :return: Vrací hodnotu podle větve zpracování.
 
 
 .. py:class:: ModelWithMetadata
@@ -43,135 +37,89 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: create_transaction()
 
       Vytvoří transaction. v aplikaci.
 
-      **Parametry:**
+      :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+      :param success_message: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
+      :param error_message: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
 
-      - ``transaction_user``: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
-      - ``success_message``: Parametr ``success_message`` předává se do volání ``FedoraTransaction()``.
-      - ``error_message``: Parametr ``error_message`` předává se do volání ``FedoraTransaction()``.
-
-      **Návratová hodnota:**
-
-      Vrací atribut objektu.
-
+          :return: Vrací atribut objektu.
 
    .. py:method:: metadata()
 
       Provádí operaci metadata.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``get_metadata()``.
-
+      :return: Vrací výsledek volání ``get_metadata()``.
 
    .. py:method:: get_metadata_historicka()
 
       Metoda k získání vlastního souboru metadat dané verze z Fedory
 
-      **Parametry:**
+      :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
 
-      - ``timestamp``: Časový údaj použitý při filtrování nebo výpočtu.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``get_metadata_historicka()``.
-
+          :return: Vrací výsledek volání ``get_metadata_historicka()``.
 
    .. py:method:: get_historicke_verze()
 
       Metoda k získání údajů o historických verzích metadat ve Fedoře pro tabulku historie
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``results``.
-
+      :return: Vrací proměnná ``results``.
 
    .. py:method:: save_metadata()
 
       Uloží metadata. v aplikaci.
 
-      **Parametry:**
-
-      - ``fedora_transaction``: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``isinstance()``, pracuje se s atributy ``add_updated_ident_cely``, ``uid``, ovlivňuje větvení podmínek.
-      - ``include_files``: Parametr ``include_files`` ovlivňuje větvení podmínek.
-      - ``close_transaction``: Parametr ``close_transaction`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
-      - ``skip_container_check``: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``save_metadata``.
-
+      :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``isinstance()``, pracuje se s atributy ``add_updated_ident_cely``, ``uid``, ovlivňuje větvení podmínek.
+      :param include_files: Parametr ``include_files`` ovlivňuje větvení podmínek.
+      :param close_transaction: Parametr ``close_transaction`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
+      :param skip_container_check: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``save_metadata``.
 
    .. py:method:: save_record_deletion_record()
 
       Uloží record deletion record.
 
-      **Parametry:**
-
-      - ``fedora_transaction``: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``save_metadata()``.
-      - ``deleted_by_user``: Parametr ``deleted_by_user`` ovlivňuje větvení podmínek.
-
+      :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``save_metadata()``.
+      :param deleted_by_user: Parametr ``deleted_by_user`` ovlivňuje větvení podmínek.
 
    .. py:method:: _get_fedora_transaction()
 
       Vrací fedora transaction.
 
-      **Parametry:**
+      :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :return: Načtená data odpovídající zadaným vstupům.
 
-      - ``fedora_transaction``: Parametr ``fedora_transaction`` předává se do volání ``isinstance()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Načtená data odpovídající zadaným vstupům.
-
-      **Výjimky:**
-
-      - ``ValueError``: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
-
+          :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
 
    .. py:method:: record_deletion()
 
       Provádí operaci record deletion.
 
-      **Parametry:**
-
-      - ``fedora_transaction``: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``FedoraRepositoryConnector()``, pracuje se s atributy ``mark_transaction_as_closed``.
-      - ``close_transaction``: Parametr ``close_transaction`` ovlivňuje větvení podmínek.
-
+      :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``_get_fedora_transaction()``, ``FedoraRepositoryConnector()``, pracuje se s atributy ``mark_transaction_as_closed``.
+      :param close_transaction: Parametr ``close_transaction`` ovlivňuje větvení podmínek.
 
    .. py:method:: record_ident_change()
 
       Provádí operaci record ident change.
 
-      **Parametry:**
+      :param old_ident_cely: Identifikátor ``old_ident_cely`` používaný pro dohledání cílového záznamu.
+      :param fedora_transaction: Parametr ``fedora_transaction`` předává se do volání ``debug()``, ``isinstance()``, pracuje se s atributy ``uid``, ``post_commit_tasks``, ovlivňuje větvení podmínek.
+      :param new_ident_cely: Identifikátor ``new_ident_cely`` používaný pro dohledání cílového záznamu.
+      :param delete_container: Parametr ``delete_container`` předává se do volání ``record_ident_change()``.
 
-      - ``old_ident_cely``: Identifikátor ``old_ident_cely`` používaný pro dohledání cílového záznamu.
-      - ``fedora_transaction``: Parametr ``fedora_transaction`` předává se do volání ``debug()``, ``isinstance()``, pracuje se s atributy ``uid``, ``post_commit_tasks``, ovlivňuje větvení podmínek.
-      - ``new_ident_cely``: Identifikátor ``new_ident_cely`` používaný pro dohledání cílového záznamu.
-      - ``delete_container``: Parametr ``delete_container`` předává se do volání ``record_ident_change()``.
-
-      **Výjimky:**
-
-      - ``ValueError``: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
-
+          :raises ValueError: Vyvolá se s textem "No Fedora transaction"; nebo s textem "fedora_transaction must be a FedoraTransaction class object".
 
    .. py:method:: get_by_ident_cely()
 
       Vrací by ident cely.
 
-      **Parametry:**
+      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
 
-      - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 
 
 Funkce
@@ -181,13 +129,8 @@ Funkce
 
    Ověří if task queued.
 
-   **Parametry:**
+   :param class_name: Parametr ``class_name`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
+   :param pk: Primární klíč zpracovávaného záznamu.
+   :param task_name: Textový název nebo klíč ``task_name`` používaný v rámci operace.
 
-   - ``class_name``: Parametr ``class_name`` předává se do volání ``warning()``, ``debug()``, ovlivňuje větvení podmínek.
-   - ``pk``: Primární klíč zpracovávaného záznamu.
-   - ``task_name``: Textový název nebo klíč ``task_name`` používaný v rámci operace.
-
-   **Návratová hodnota:**
-
-   Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+       :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.

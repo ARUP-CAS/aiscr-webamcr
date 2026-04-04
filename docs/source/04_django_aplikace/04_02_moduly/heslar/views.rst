@@ -16,10 +16,7 @@ Třídy
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: DokumentTypAutocomplete
@@ -32,10 +29,7 @@ Třídy
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: DokumentFormatAutocomplete
@@ -48,10 +42,7 @@ Třídy
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: PristupnostAutocomplete
@@ -64,10 +55,7 @@ Třídy
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: HeslarAutocompleteView
@@ -80,10 +68,7 @@ Třídy
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: HeslarNazevAutocompleteView
@@ -96,10 +81,7 @@ Třídy
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+      :return: Vrací proměnná ``qs``.
 
 
 Funkce
@@ -109,81 +91,51 @@ Funkce
 
    Vytvoří dvoustupňový select z dvou sad hesel.
 
-   **Parametry:**
+   :param first: První sada hesel s ID a názvy
+   :param second: Druhá sada hesel hierarchicky podřazena první sadě
 
-   - ``first``: První sada hesel s ID a názvy
-   - ``second``: Druhá sada hesel hierarchicky podřazena první sadě
-
-   **Návratová hodnota:**
-
-   Seznam dvojic (název, možnosti) pro dvoustupňový select
-
+   :return: Seznam dvojic (název, možnosti) pro dvoustupňový select
 
 .. py:function:: heslar_12(druha, prvni_kat, id)
 
    Funkce pro vytvoření dvoustupňového selectu.
 
-   **Parametry:**
+   :param druha: Parametr ``druha`` se předává do volání ``filter()``, ``merge_heslare()``, vstupuje do návratové hodnoty.
+   :param prvni_kat: Parametr ``prvni_kat`` se předává do volání ``filter()``.
+   :param id: Identifikátor ``id`` používaný pro dohledání cílového záznamu.
 
-   - ``druha``: Parametr ``druha`` se předává do volání ``filter()``, ``merge_heslare()``, vstupuje do návratové hodnoty.
-   - ``prvni_kat``: Parametr ``prvni_kat`` se předává do volání ``filter()``.
-   - ``id``: Identifikátor ``id`` používaný pro dohledání cílového záznamu.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``merge_heslare()``.
-
+       :return: Vrací výsledek volání ``merge_heslare()``.
 
 .. py:function:: zjisti_katastr_souradnic(request)
 
    Funkce pohledu pro vrácení katastru podle souradnic.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``filter()``, ``Point()``, pracuje se s atributy ``GET``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``filter()``, ``Point()``, pracuje se s atributy ``GET``.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``JsonResponse()``.
-
+       :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: zjisti_vychozi_hodnotu(request)
 
    Funkce pohledu pro zjištení výchozí hodnoty z heslaře.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``int()``, pracuje se s atributy ``GET``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``int()``, pracuje se s atributy ``GET``.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``JsonResponse()``.
-
+       :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: zjisti_nadrazenou_hodnotu(request)
 
    Funkce pohledu pro zjištení nadřazené hodnoty z heslaře.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``int()``, pracuje se s atributy ``GET``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``int()``, pracuje se s atributy ``GET``.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``JsonResponse()``.
-
+       :return: Vrací výsledek volání ``JsonResponse()``.
 
 .. py:function:: heslar_list(heslo_nazev, filter, use_exclude)
 
    Vrací seznam hesel z heslaře filtrovaných podle kritérií.
 
-   **Parametry:**
+   :param heslo_nazev: Název heslaře, ze kterého se načítají hesla
+   :param filter: Slovník kritérií pro filtrování záznamů
+   :param use_exclude: Má-li být použita metoda exclude namíste filter
 
-   - ``heslo_nazev``: Název heslaře, ze kterého se načítají hesla
-   - ``filter``: Slovník kritérií pro filtrování záznamů
-   - ``use_exclude``: Má-li být použita metoda exclude namíste filter
-
-   **Návratová hodnota:**
-
-   Seznam dvojic (ID, název hesla) ve zvolném jazyce
-
+   :return: Seznam dvojic (ID, název hesla) ve zvolném jazyce

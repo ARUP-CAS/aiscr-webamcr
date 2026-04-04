@@ -16,41 +16,29 @@ Třídy
 
       Metoda pro získaní absolut url záznamu podle identu.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``reverse()``.
-
+      :return: Vrací výsledek volání ``reverse()``.
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: set_odeslany()
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_vraceny()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-      - ``new_state``: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
-      - ``poznamka``: Parametr ``poznamka`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
+      :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+      :param poznamka: Parametr ``poznamka`` se předává do volání ``Historie()``.
 
    .. py:method:: set_potvrzeny()
 
@@ -58,46 +46,31 @@ Třídy
 
       Pokud je ident dočasný nahrazení identem stálým.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_zapsany()
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``self``.
-
+      :return: Vrací proměnná ``self``.
 
    .. py:method:: get_create_user()
 
       Vrací create user.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: set_snapshots()
 
@@ -107,28 +80,19 @@ Třídy
 
       Vrátí identifikátor Redis snímku pro tento externí zdroj.
 
-      **Návratová hodnota:**
-
-      Řetězec tvaru ``<prefix>_<ident_cely>`` používaný jako klíč v Redis.
-
+      :return: Řetězec tvaru ``<prefix>_<ident_cely>`` používaný jako klíč v Redis.
 
    .. py:method:: generate_redis_snapshot()
 
       Vygeneruje redis snapshot.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: check_set_permanent_ident()
 
       Ověří set permanent ident.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``historie_poznamka``.
-
+      :return: Vrací proměnná ``historie_poznamka``.
 
 
 .. py:class:: ExterniZdrojAutor
@@ -141,10 +105,7 @@ Třídy
 
       Vrací osoba. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací atribut objektu.
-
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: ExterniZdrojEditor
@@ -157,10 +118,7 @@ Třídy
 
       Vrací osoba. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací atribut objektu.
-
+      :return: Vrací atribut objektu.
 
 
 .. py:class:: ExterniZdrojSekvence
@@ -177,11 +135,5 @@ Funkce
 
    Funkce vrátí pro permanentní ident ID podle sekvence externího zdroje.
 
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování.
-
-   **Výjimky:**
-
-   - ``MaximalIdentNumberError``: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.
-
+       :return: Vrací hodnotu podle větve zpracování.
+       :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence >= MAXIMUM``; nebo při splnění podmínky ``missing[0] >= MAXIMUM``.

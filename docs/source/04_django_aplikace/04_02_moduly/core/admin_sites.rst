@@ -16,80 +16,46 @@ Třídy
 
       Reorganizuje seznam aplikací v admin rozhraní do požadované struktury menu.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek.
-      - ``app_label``: Volitelný label aplikace pro filtrování.
-
-      **Návratová hodnota:**
-
-      Vrací reorganizovaný seznam aplikací.
-
+      :param request: HTTP požadavek.
+      :param app_label: Volitelný label aplikace pro filtrování.
+      :return: Vrací reorganizovaný seznam aplikací.
 
    .. py:method:: _read_file()
 
       Načte CSV/XLSX soubor se seznamem identifikátorů a převede jej na DataFrame.
 
-      **Parametry:**
-
-      - ``uploaded_file``: Nahraný soubor z formuláře; podle ``content_type`` se načte jako CSV nebo Excel.
-      - ``context``: Slovník kontextu pro šablonu; při chybě čtení nebo neplatném formátu se do něj uloží klíč ``error``.
-
-      **Návratová hodnota:**
-
-      DataFrame s jedním sloupcem ``ident_cely`` indexovaným touto hodnotou, nebo ``None`` při chybě.
-
+      :param uploaded_file: Nahraný soubor z formuláře; podle ``content_type`` se načte jako CSV nebo Excel.
+      :param context: Slovník kontextu pro šablonu; při chybě čtení nebo neplatném formátu se do něj uloží klíč ``error``.
+      :return: DataFrame s jedním sloupcem ``ident_cely`` indexovaným touto hodnotou, nebo ``None`` při chybě.
 
    .. py:method:: update_doi()
 
       Zpracuje hromadnou aktualizaci DOI/IGSN podle nahraného seznamu identifikátorů.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek; u ``POST`` od superuživatele validuje formulář, připraví job v Redis a vrátí stránku průběhu.
-
-      **Návratová hodnota:**
-
-      Odpověď ``TemplateResponse`` s formulářem nebo stránkou spuštěného jobu.
-
+      :param request: HTTP požadavek; u ``POST`` od superuživatele validuje formulář, připraví job v Redis a vrátí stránku průběhu.
+      :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou spuštěného jobu.
 
    .. py:method:: update_metadata_file_upload()
 
       Zpracuje hromadnou aktualizaci metadat ve Fedora repozitáři.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek; u ``POST`` od superuživatele validuje formulář, připraví job v Redis a vrátí stránku průběhu.
-
-      **Návratová hodnota:**
-
-      Odpověď ``TemplateResponse`` s formulářem nebo stránkou spuštěného jobu.
-
+      :param request: HTTP požadavek; u ``POST`` od superuživatele validuje formulář, připraví job v Redis a vrátí stránku průběhu.
+      :return: Odpověď ``TemplateResponse`` s formulářem nebo stránkou spuštěného jobu.
 
    .. py:method:: import_data()
 
       Importuje datové CSV soubory ze ZIP archivu do interní importní fronty.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek; při ``POST`` od superuživatele zvaliduje vstupní formulář, zpracuje obsah ZIPu, provede validační kroky přes mapery a uloží připravené záznamy do Redis.
-
-      **Návratová hodnota:**
-
-      Odpověď ``TemplateResponse`` s výsledkem validace, případně s chybovou hláškou importu.
-
-      **Výjimky:**
-
-      - ``ImportDataUnsupportedFilesError``: Vyvolá se, pokud ZIP obsahuje soubory mimo povolenou sadu názvů.
-      - ``ImportDataUnsupportedFileError``: Vyvolá se, pokud pro nalezený CSV soubor neexistuje mapper.
-
+      :param request: HTTP požadavek; při ``POST`` od superuživatele zvaliduje vstupní formulář,
+          zpracuje obsah ZIPu, provede validační kroky přes mapery a uloží připravené záznamy do Redis.
+      :return: Odpověď ``TemplateResponse`` s výsledkem validace, případně s chybovou hláškou importu.
+      :raises ImportDataUnsupportedFilesError: Vyvolá se, pokud ZIP obsahuje soubory mimo povolenou sadu názvů.
+      :raises ImportDataUnsupportedFileError: Vyvolá se, pokud pro nalezený CSV soubor neexistuje mapper.
 
    .. py:method:: get_urls()
 
       Vrátí vlastní URL cesty admin site pro hromadné operace.
 
-      **Návratová hodnota:**
-
-      Seznam URL vzorů rozšířený o cesty pro aktualizaci metadat, aktualizaci DOI/IGSN a hromadný import dat.
-
+      :return: Seznam URL vzorů rozšířený o cesty pro aktualizaci metadat,
+          aktualizaci DOI/IGSN a hromadný import dat.
 

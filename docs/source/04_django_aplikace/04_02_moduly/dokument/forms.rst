@@ -16,14 +16,8 @@ Třídy
 
       Očistí a seřadí seznam autorů podle zadaného pořadí.
 
-      **Parametry:**
-
-      - ``value``: Seznam ID autorů.
-
-      **Návratová hodnota:**
-
-      QuerySet autorů seřazený podle zadaného pořadí.
-
+      :param value: Seznam ID autorů.
+      :return: QuerySet autorů seřazený podle zadaného pořadí.
 
 
 .. py:class:: CoordinatesDokumentForm
@@ -41,14 +35,11 @@ Třídy
 
       Inicializuje formulář pro editaci metadat dokumentu s kontrolou dostupnosti polí.
 
-      **Parametry:**
-
-      - ``args``: Poziční argumenty pro ModelForm.
-      - ``readonly``: Zda jsou pole jen pro čtení.
-      - ``required``: Která pole jsou povinná.
-      - ``required_next``: Která pole budou povinná v následující relaci.
-      - ``kwargs``: Pojmenované argumenty včetně rada, let, dok_osoby a edit.
-
+      :param args: Poziční argumenty pro ModelForm.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param required: Která pole jsou povinná.
+      :param required_next: Která pole budou povinná v následující relaci.
+      :param kwargs: Pojmenované argumenty včetně rada, let, dok_osoby a edit.
 
 
 .. py:class:: EditDokumentForm
@@ -61,15 +52,12 @@ Třídy
 
       Inicializuje formulář s kontrolou práv a dostupnosti polí.
 
-      **Parametry:**
-
-      - ``args``: Poziční argumenty pro ModelForm.
-      - ``readonly``: Zda jsou pole jen pro čtení.
-      - ``required``: Která pole jsou povinná.
-      - ``required_next``: Která pole budou povinná v následující relaci.
-      - ``can_edit_datum_zverejneni``: Zda lze editovat datum zveřejnění.
-      - ``kwargs``: Klíčové argumenty včetně create a region_not_required.
-
+      :param args: Poziční argumenty pro ModelForm.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param required: Která pole jsou povinná.
+      :param required_next: Která pole budou povinná v následující relaci.
+      :param can_edit_datum_zverejneni: Zda lze editovat datum zveřejnění.
+      :param kwargs: Klíčové argumenty včetně create a region_not_required.
 
 
 .. py:class:: CreateModelDokumentForm
@@ -82,14 +70,11 @@ Třídy
 
       Inicializuje formulář pro vytvoření 3D modelu s nastavením dostupných typů.
 
-      **Parametry:**
-
-      - ``args``: Poziční argumenty pro ModelForm.
-      - ``readonly``: Zda jsou pole jen pro čtení.
-      - ``required``: Která pole jsou povinná.
-      - ``required_next``: Která pole budou povinná v následující relaci.
-      - ``kwargs``: Pojmenované argumenty pro ModelForm.
-
+      :param args: Poziční argumenty pro ModelForm.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param required: Která pole jsou povinná.
+      :param required_next: Která pole budou povinná v následující relaci.
+      :param kwargs: Pojmenované argumenty pro ModelForm.
 
 
 .. py:class:: CreateModelExtraDataForm
@@ -102,14 +87,11 @@ Třídy
 
       Inicializuje formulář pro zadání extra dat 3D modelu.
 
-      **Parametry:**
-
-      - ``args``: Poziční argumenty pro ModelForm.
-      - ``readonly``: Zda jsou pole jen pro čtení.
-      - ``required``: Která pole jsou povinná.
-      - ``required_next``: Která pole budou povinná v následující relaci.
-      - ``kwargs``: Pojmenované argumenty pro ModelForm.
-
+      :param args: Poziční argumenty pro ModelForm.
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param required: Která pole jsou povinná.
+      :param required_next: Která pole budou povinná v následující relaci.
+      :param kwargs: Pojmenované argumenty pro ModelForm.
 
 
 .. py:class:: PripojitDokumentForm
@@ -122,12 +104,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``ident_zaznam``: Identifikátor ``ident_zaznam`` používaný pro dohledání cílového záznamu.
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param ident_zaznam: Identifikátor ``ident_zaznam`` používaný pro dohledání cílového záznamu.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: DokumentCastForm
@@ -140,12 +119,9 @@ Třídy
 
       Inicializuje formulář pro editaci poznámky k součásti dokumentu.
 
-      **Parametry:**
-
-      - ``readonly``: Zda jsou pole jen pro čtení.
-      - ``args``: Poziční argumenty pro ModelForm.
-      - ``kwargs``: Pojmenované argumenty pro ModelForm.
-
+      :param readonly: Zda jsou pole jen pro čtení.
+      :param args: Poziční argumenty pro ModelForm.
+      :param kwargs: Pojmenované argumenty pro ModelForm.
 
 
 .. py:class:: DokumentCastCreateForm
@@ -158,11 +134,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: TvarFormSetHelper
@@ -175,11 +148,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: DokumentFilterForm
@@ -196,11 +166,6 @@ Funkce
 
    Pomocí ní je možné předat výběr formuláři.
 
-   **Parametry:**
+   :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
 
-   - ``not_readonly``: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
-
-   **Návratová hodnota:**
-
-   Vrací proměnná ``TvarForm``.
-
+       :return: Vrací proměnná ``TvarForm``.

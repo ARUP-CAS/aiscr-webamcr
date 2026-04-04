@@ -18,10 +18,7 @@ Třídy
 
       Určí, zda connections.
 
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 
 .. py:class:: IPWhitelistMixin
@@ -35,14 +32,8 @@ Třídy
 
       Ověří, že požadavek pochází z lokální IP adresy (loopback, privátní nebo link-local).
 
-      **Parametry:**
-
-      - ``request``: Objekt požadavku Django.
-      - ``args``: Poziční argumenty view.
-      - ``kwargs``: Pojmenované argumenty view.
-
-      **Návratová hodnota:**
-
-      ``HttpResponseForbidden`` při neoprávněném přístupu, jinak výsledek nadřazené metody ``dispatch``.
-
+      :param request: Objekt požadavku Django.
+      :param args: Poziční argumenty view.
+      :param kwargs: Pojmenované argumenty view.
+      :return: ``HttpResponseForbidden`` při neoprávněném přístupu, jinak výsledek nadřazené metody ``dispatch``.
 

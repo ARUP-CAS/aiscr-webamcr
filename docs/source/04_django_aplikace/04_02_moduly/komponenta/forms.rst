@@ -16,14 +16,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``obdobi_choices``: Parametr ``obdobi_choices`` se předává do volání ``TwoLevelSelectField()``, ``Select()``.
-      - ``areal_choices``: Parametr ``areal_choices`` předává se do volání ``TwoLevelSelectField()``, ``Select()``.
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``readonly``: Příznak, zda mají být všechna pole formuláře zobrazena pouze pro čtení.
-      - ``required``: Parametr ``required`` ovlivňuje větvení podmínek.
-      - ``required_next``: Parametr ``required_next`` ovlivňuje větvení podmínek.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param obdobi_choices: Parametr ``obdobi_choices`` se předává do volání ``TwoLevelSelectField()``, ``Select()``.
+      :param areal_choices: Parametr ``areal_choices`` předává se do volání ``TwoLevelSelectField()``, ``Select()``.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param readonly: Příznak, zda mají být všechna pole formuláře zobrazena pouze pro čtení.
+      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
+      :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 

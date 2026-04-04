@@ -16,10 +16,7 @@ Třídy
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: UzivatelAutocomplete
@@ -32,51 +29,33 @@ Třídy
 
       Vrací result label.
 
-      **Parametry:**
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
 
-      - ``result``: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``display_name()``.
-
+          :return: Vrací výsledek volání ``display_name()``.
 
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``check_filter_permission()``.
-
+      :return: Vrací výsledek volání ``check_filter_permission()``.
 
    .. py:method:: add_accessibility_lookup()
 
       Provádí operaci add accessibility lookup.
 
-      **Parametry:**
+      :param permission: Parametr ``permission`` slouží jako vstup pro logiku funkce ``add_accessibility_lookup``.
+      :param qs: Parametr ``qs`` vstupuje do návratové hodnoty.
 
-      - ``permission``: Parametr ``permission`` slouží jako vstup pro logiku funkce ``add_accessibility_lookup``.
-      - ``qs``: Parametr ``qs`` vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+          :return: Vrací proměnná ``qs``.
 
    .. py:method:: add_ownership_lookup()
 
       Provádí operaci add ownership lookup.
 
-      **Parametry:**
+      :param ownership: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
+      :param qs: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
 
-      - ``ownership``: Uživatel nebo osoba ``ownership``, v jejímž kontextu se operace provádí.
-      - ``qs``: Parametr ``qs`` slouží jako vstup pro logiku funkce ``add_ownership_lookup``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``Q()``.
-
+          :return: Vrací výsledek volání ``Q()``.
 
 
 .. py:class:: UzivatelAutocompletePublic
@@ -89,23 +68,15 @@ Třídy
 
       Vrací result label.
 
-      **Parametry:**
+      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
 
-      - ``result``: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``display_name()``.
-
+          :return: Vrací výsledek volání ``display_name()``.
 
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``qs``.
-
+      :return: Vrací proměnná ``qs``.
 
 
 .. py:class:: UserRegistrationView
@@ -118,10 +89,7 @@ Třídy
 
       Odešle activation email.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``send_activation_email()``, ``_log_notification()``, pracuje se s atributy ``email``.
-
+      :param user: Parametr ``user`` se předává do volání ``send_activation_email()``, ``_log_notification()``, pracuje se s atributy ``email``.
 
 
 .. py:class:: UserLoginView
@@ -139,16 +107,11 @@ Třídy
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``post()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
 
-      - ``request``: Parametr ``request`` předává se do volání ``post()``, pracuje se s atributy ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      - ``args``: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``post()``.
-
+          :return: Vrací výsledek volání ``post()``.
 
 
 .. py:class:: UserAccountUpdateView
@@ -161,70 +124,44 @@ Třídy
 
       Vrací object. v aplikaci.
 
-      **Parametry:**
+      :param queryset: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``get_object``.
 
-      - ``queryset``: Parametr ``queryset`` slouží jako vstup pro logiku funkce ``get_object``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``get()``.
-
+          :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: _change_password()
 
-      Provádí operaci change password.
+             Provádí operaci change password.
 
-      **Parametry:**
-
-      - ``request``: Parametr ``request`` předává se do volání ``Historie()``, ``add_message()``, pracuje se s atributy ``user``.
-      - ``request_data``: Kolekce ``request_data`` zpracovávaná touto funkcí.
-
-      **Návratová hodnota:**
-
-      Výstup funkce odpovídající implementované logice.
-
+             :param request: Parametr ``request`` předává se do volání ``Historie()``, ``add_message()``, pracuje se s atributy ``user``.
+             :param request_data: Kolekce ``request_data`` zpracovávaná touto funkcí.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: invalid_form_context()
 
       Provádí operaci invalid form context.
 
-      **Parametry:**
+      :param form: Parametr ``form`` slouží jako vstup pro logiku funkce ``invalid_form_context``.
+      :param form_tag: Parametr ``form_tag`` slouží jako vstup pro logiku funkce ``invalid_form_context``.
 
-      - ``form``: Parametr ``form`` slouží jako vstup pro logiku funkce ``invalid_form_context``.
-      - ``form_tag``: Parametr ``form_tag`` slouží jako vstup pro logiku funkce ``invalid_form_context``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``dict()``, ``form_class()``, pracuje se s atributy ``POST``, ``user``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``dict()``, ``form_class()``, pracuje se s atributy ``POST``, ``user``, vstupuje do návratové hodnoty.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``redirect()``.
 
 
 .. py:class:: UserActivationView
@@ -235,31 +172,20 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
-      **Parametry:**
-
-      - ``request``: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
-      - ``args``: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Výstup funkce odpovídající implementované logice.
-
+             :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
+             :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+             :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: activate()
 
       Provádí operaci activate.
 
-      **Parametry:**
+      :param form: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
 
-      - ``form``: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``user``.
-
+          :return: Vrací proměnná ``user``.
 
 
 .. py:class:: UserPasswordResetView
@@ -270,18 +196,12 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
-      **Parametry:**
-
-      - ``request``: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
-      - ``args``: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Výstup funkce odpovídající implementované logice.
-
+             :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
+             :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+             :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :return: Výstup funkce odpovídající implementované logice.
 
 
 .. py:class:: TokenAuthenticationBearer
@@ -292,35 +212,21 @@ Třídy
 
    .. py:method:: dispatch()
 
-      Provádí operaci dispatch.
+             Provádí operaci dispatch.
 
-      **Parametry:**
-
-      - ``request``: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
-      - ``args``: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Výstup funkce odpovídající implementované logice.
-
+             :param request: Parametr ``request`` předává se do volání ``dispatch()``, vstupuje do návratové hodnoty.
+             :param args: Parametr ``args`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+             :param kwargs: Parametr ``kwargs`` se předává do volání ``dispatch()``, vstupuje do návratové hodnoty.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: authenticate_credentials()
 
       Provádí operaci authenticate credentials.
 
-      **Parametry:**
+      :param key: Textový název nebo klíč ``key`` používaný v rámci operace.
 
-      - ``key``: Textový název nebo klíč ``key`` používaný v rámci operace.
-
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
-      **Výjimky:**
-
-      - ``exceptions.AuthenticationFailed``: Vyvolá se při zpracování zachycené výjimky typu ``model.DoesNotExist``; nebo při splnění podmínky ``not token.user.is_active``.
-
+          :return: Vrací n-tici.
+          :raises exceptions.AuthenticationFailed: Vyvolá se při zpracování zachycené výjimky typu ``model.DoesNotExist``; nebo při splnění podmínky ``not token.user.is_active``.
 
 
 .. py:class:: MyXMLRenderer
@@ -333,16 +239,11 @@ Třídy
 
       Renders `data` into serialized XML.
 
-      **Parametry:**
+      :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+      :param accepted_media_type: Parametr ``accepted_media_type`` slouží jako vstup pro logiku funkce ``render``.
+      :param renderer_context: Kolekce ``renderer_context`` zpracovávaná touto funkcí.
 
-      - ``data``: Kolekce ``data`` zpracovávaná touto funkcí.
-      - ``accepted_media_type``: Parametr ``accepted_media_type`` slouží jako vstup pro logiku funkce ``render``.
-      - ``renderer_context``: Kolekce ``renderer_context`` zpracovávaná touto funkcí.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``data``.
-
+          :return: Vrací proměnná ``data``.
 
 
 .. py:class:: GetUserInfo
@@ -355,58 +256,38 @@ Třídy
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: Parametr ``request`` pracuje se s atributy ``user``.
+      :param format: Parametr ``format`` slouží jako vstup pro logiku funkce ``get``.
 
-      - ``request``: Parametr ``request`` pracuje se s atributy ``user``.
-      - ``format``: Parametr ``format`` slouží jako vstup pro logiku funkce ``get``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``Response()``.
-
+          :return: Vrací výsledek volání ``Response()``.
 
    .. py:method:: handle_exception()
 
       Zpracuje exception. v aplikaci.
 
-      **Parametry:**
+      :param exc: Číselná hodnota ``exc`` použitá při výpočtu nebo transformaci.
 
-      - ``exc``: Číselná hodnota ``exc`` použitá při výpočtu nebo transformaci.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``handle_exception()``.
-
+          :return: Vrací výsledek volání ``handle_exception()``.
 
    .. py:method:: perform_content_negotiation()
 
       Provádí operaci perform content negotiation.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
+      :param force: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
 
-      - ``request``: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-      - ``force``: Parametr ``force`` se předává do volání ``perform_content_negotiation()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, výsledek volání ``perform_content_negotiation()``.
 
    .. py:method:: finalize_response()
 
       Provádí operaci finalize response.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
+      :param response: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
+      :param args: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
 
-      - ``request``: Parametr ``request`` předává se do volání ``perform_content_negotiation()``, ``finalize_response()``, pracuje se s atributy ``accepted_renderer``, ``accepted_media_type``, vstupuje do návratové hodnoty.
-      - ``response``: Textový nebo strukturální vstup `response` používaný při sestavení nebo zpracování obsahu.
-      - ``args``: Parametr ``args`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``finalize_response()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``finalize_response()``.
-
+          :return: Vrací výsledek volání ``finalize_response()``.
 
 
 .. py:class:: ObtainAuthTokenWithUpdate
@@ -419,16 +300,11 @@ Třídy
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``get_serializer()``, pracuje se s atributy ``data``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``Response()``.
-
+          :return: Vrací výsledek volání ``Response()``.
 
 
 .. py:class:: UserDeleteRequest
@@ -441,31 +317,21 @@ Třídy
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``send_eu07()``, ``add_message()``, pracuje se s atributy ``user``.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``send_eu07()``, ``add_message()``, pracuje se s atributy ``user``.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``post``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``post``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
+      :param args: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
+      :param kwargs: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``render()``, vstupuje do návratové hodnoty.
-      - ``args``: Parametr ``args`` slouží jako vstup pro logiku funkce ``get``.
-      - ``kwargs``: Parametr ``kwargs`` slouží jako vstup pro logiku funkce ``get``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``render()``.
-
+          :return: Vrací výsledek volání ``render()``.
 
 
 Funkce
@@ -475,24 +341,14 @@ Funkce
 
    Funkce pohledu pro vytvoření osoby.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``OsobaForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-   - ``request``: Parametr ``request`` se předává do volání ``OsobaForm()``, ``add_message()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``JsonResponse()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render()``, výsledek volání ``JsonResponse()``.
 
 .. py:function:: update_notifications(request)
 
    Funkce pohledu pro editaci notifikací.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``NotificationsForm()``, ``FedoraTransaction()``, pracuje se s atributy ``POST``, ``user``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``NotificationsForm()``, ``FedoraTransaction()``, pracuje se s atributy ``POST``, ``user``.
-
-   **Návratová hodnota:**
-
-   Vrací výsledek volání ``redirect()``.
-
+       :return: Vrací výsledek volání ``redirect()``.

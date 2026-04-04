@@ -16,39 +16,25 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``get_response``: Callable ze WSGI řetězce middleware, který vrátí response.
-
+      :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
 
    .. py:method:: __call__()
 
       Zpracovává příchozí HTTP požadavek a kontroluje oprávnění uživatele.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek ze strany klienta.
-
-      **Návratová hodnota:**
-
-      HTTP response vygenerovaná aplikací.
-
+      :param request: HTTP požadavek ze strany klienta.
+      :return: HTTP response vygenerovaná aplikací.
 
    .. py:method:: process_view()
 
       Metoda pro kontrolu oprvávnení pro každý view.
 
-      **Parametry:**
+      :param request: Parametr ``request`` se předává do volání ``append()``, ``check_concrete_permission()``, pracuje se s atributy ``user``, ``resolver_match``, ovlivňuje větvení podmínek.
+      :param view_func: View funkce obalená dekorátorem nebo middlewarem.
+      :param view_args: Dodatečné argumenty předané voláním.
+      :param view_kwargs: Dodatečné argumenty předané voláním.
 
-      - ``request``: Parametr ``request`` se předává do volání ``append()``, ``check_concrete_permission()``, pracuje se s atributy ``user``, ``resolver_match``, ovlivňuje větvení podmínek.
-      - ``view_func``: View funkce obalená dekorátorem nebo middlewarem.
-      - ``view_args``: Dodatečné argumenty předané voláním.
-      - ``view_kwargs``: Dodatečné argumenty předané voláním.
-
-      **Výjimky:**
-
-      - ``PermissionDenied``: Vyvolá se při splnění podmínky ``any(tested)``.
-
+          :raises PermissionDenied: Vyvolá se při splnění podmínky ``any(tested)``.
 
 
 .. py:class:: ErrorMiddleware
@@ -61,37 +47,22 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``get_response``: Callable ze WSGI řetězce middleware, který vrátí response.
-
+      :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
 
    .. py:method:: __call__()
 
       Zpracovává příchozí HTTP požadavek.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek ze strany klienta.
-
-      **Návratová hodnota:**
-
-      HTTP response vygenerovaná aplikací.
-
+      :param request: HTTP požadavek ze strany klienta.
+      :return: HTTP response vygenerovaná aplikací.
 
    .. py:method:: process_exception()
 
       Zachycuje a zpracovává Fedora a databázové výjimky během zpracování požadavku.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek pro vykreslení chybové stránky.
-      - ``exception``: Vyvolená výjimka během zpracování požadavku.
-
-      **Návratová hodnota:**
-
-      HTML error response nebo None pokud jde o neznámou výjimku.
-
+      :param request: HTTP požadavek pro vykreslení chybové stránky.
+      :param exception: Vyvolená výjimka během zpracování požadavku.
+      :return: HTML error response nebo None pokud jde o neznámou výjimku.
 
 
 .. py:class:: InactiveUserMiddleware
@@ -109,10 +80,8 @@ Třídy
 
       Inicializuje middleware.
 
-      **Parametry:**
-
-      - ``get_response``: Callable z middleware řetězce, který zpracuje požadavek a vrátí response.
-
+      :param get_response: Callable z middleware řetězce,
+                           který zpracuje požadavek a vrátí response.
 
    .. py:method:: __call__()
 
@@ -122,14 +91,8 @@ Třídy
       Pokud je chyba zachycena, session se zruší a uživatel je
       přesměrován na přihlašovací stránku.
 
-      **Parametry:**
-
-      - ``request``: Instance ``HttpRequest``.
-
-      **Návratová hodnota:**
-
-      Standardní ``response`` nebo přesměrování na login.
-
+      :param request: Instance ``HttpRequest``.
+      :return: Standardní ``response`` nebo přesměrování na login.
 
 
 .. py:class:: StatusMessageMiddleware
@@ -142,44 +105,29 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``get_response``: Callable ze WSGI řetězce middleware, který vrátí response.
-
+      :param get_response: Callable ze WSGI řetězce middleware, který vrátí response.
 
    .. py:method:: __call__()
 
       Zpracovává příchozí HTTP požadavek.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek ze strany klienta.
-
-      **Návratová hodnota:**
-
-      HTTP response vygenerovaná aplikací.
-
+      :param request: HTTP požadavek ze strany klienta.
+      :return: HTTP response vygenerovaná aplikací.
 
    .. py:method:: _show_message()
 
       Zobrazí stavovou zprávu uživateli na základě výsledku Fedora transakce.
 
-      **Parametry:**
-
-      - ``value``: Kódová hodnota stavu transakce z Redis (COMMITED nebo FAILED).
-      - ``request``: HTTP požadavek pro přidání zprávy do session.
-      - ``redis_key``: Klíč v Redis pro načtení stavových zpráv a smazání záznamu.
-
+      :param value: Kódová hodnota stavu transakce z Redis (COMMITED nebo FAILED).
+      :param request: HTTP požadavek pro přidání zprávy do session.
+      :param redis_key: Klíč v Redis pro načtení stavových zpráv a smazání záznamu.
 
    .. py:method:: process_view()
 
       Detekuje a zobrazuje stavové zprávy Fedora transakcí pro AMČR identifikátory v URL.
 
-      **Parametry:**
-
-      - ``request``: HTTP požadavek obsahující cestu s potenciálním AMČR identifikátorem.
-      - ``view_func``: View funkce, kterou se chystá aplikace volat.
-      - ``view_args``: Poziční argumenty pro view funkci.
-      - ``view_kwargs``: Pojmenované argumenty pro view funkci.
-
+      :param request: HTTP požadavek obsahující cestu s potenciálním AMČR identifikátorem.
+      :param view_func: View funkce, kterou se chystá aplikace volat.
+      :param view_args: Poziční argumenty pro view funkci.
+      :param view_kwargs: Pojmenované argumenty pro view funkci.
 

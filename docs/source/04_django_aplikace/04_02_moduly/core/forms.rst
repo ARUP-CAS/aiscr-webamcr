@@ -16,11 +16,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``attrs``: Kolekce ``attrs`` zpracovávaná touto funkcí.
-      - ``choices``: Parametr ``choices`` se předává do volání ``__init__()``.
-
+      :param attrs: Kolekce ``attrs`` zpracovávaná touto funkcí.
+      :param choices: Parametr ``choices`` se předává do volání ``__init__()``.
 
 
 .. py:class:: TwoLevelSelectField
@@ -33,28 +30,16 @@ Třídy
 
       Konvertuje vybranou hodnotu na Python objekt Heslar.
 
-      **Parametry:**
-
-      - ``selected_value``: ID vybraného hesláře.
-
-      **Návratová hodnota:**
-
-      Instance Heslar objektu nebo None.
-
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo None.
 
    .. py:method:: has_changed()
 
       Určí, zda changed.
 
-      **Parametry:**
-
-      - ``initial``: Stavová nebo časová hodnota `initial` používaná při rozhodování logiky.
-      - ``data``: Kolekce ``data`` zpracovávaná touto funkcí.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek ověření nebo validačního pravidla.
-
+      :param initial: Stavová nebo časová hodnota `initial` používaná při rozhodování logiky.
+      :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: HeslarChoiceFieldField
@@ -67,41 +52,23 @@ Třídy
 
       Vrátí instanci Heslar objektu nebo spustí standardní vyčištění pole.
 
-      **Parametry:**
-
-      - ``selected_value``: ID vybraného hesláře.
-
-      **Návratová hodnota:**
-
-      Instance Heslar objektu nebo výsledek ```super().clean()``.
-
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo výsledek ```super().clean()``.
 
    .. py:method:: to_python()
 
       Konvertuje vybranou hodnotu na Python objekt Heslar.
 
-      **Parametry:**
-
-      - ``selected_value``: ID vybraného hesláře.
-
-      **Návratová hodnota:**
-
-      Instance Heslar objektu nebo None.
-
+      :param selected_value: ID vybraného hesláře.
+      :return: Instance Heslar objektu nebo None.
 
    .. py:method:: has_changed()
 
       Určí, zda changed.
 
-      **Parametry:**
-
-      - ``initial``: Stavová nebo časová hodnota `initial` používaná při rozhodování logiky.
-      - ``data``: Kolekce ``data`` zpracovávaná touto funkcí.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek ověření nebo validačního pravidla.
-
+      :param initial: Stavová nebo časová hodnota `initial` používaná při rozhodování logiky.
+      :param data: Kolekce ``data`` zpracovávaná touto funkcí.
+      :return: Vrací výsledek ověření nebo validačního pravidla.
 
 
 .. py:class:: CheckStavNotChangedForm
@@ -116,27 +83,18 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``db_stav``: Stavová hodnota načtená z databáze.
-      - ``require_confirmation``: Parametr ``require_confirmation`` ovlivňuje větvení podmínek.
-      - ``dokument_warnings``: Parametr ``dokument_warnings`` předává se do volání ``append()``, ``HTML()``, ovlivňuje větvení podmínek.
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param db_stav: Stavová hodnota načtená z databáze.
+      :param require_confirmation: Parametr ``require_confirmation`` ovlivňuje větvení podmínek.
+      :param dokument_warnings: Parametr ``dokument_warnings`` předává se do volání ``append()``, ``HTML()``, ovlivňuje větvení podmínek.
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: clean()
 
       Ověří, že se stav záznamu nezměnil mezi načtením a odesláním.
 
-      **Návratová hodnota:**
-
-      Ověřená data.
-
-      **Výjimky:**
-
-      - ``forms.ValidationError``: Vyvolá se s textem "State_changed" pokud se stav změnil.
-
+      :return: Ověřená data.
+      :raises forms.ValidationError: Vyvolá se s textem "State_changed" pokud se stav změnil.
 
 
 .. py:class:: VratitForm
@@ -149,11 +107,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: VratitFormDokument
@@ -166,11 +121,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: VratitFormAZ
@@ -183,12 +135,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``az``: Parametr ``az`` se předává do volání ``filter()``, pracuje se s atributy ``stav``, ``ident_cely``, ovlivňuje větvení podmínek.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param az: Parametr ``az`` se předává do volání ``filter()``, pracuje se s atributy ``stav``, ``ident_cely``, ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: DecimalTextWideget
@@ -201,14 +150,8 @@ Třídy
 
       Zformátuje hodnotu na 3 desetinná místa.
 
-      **Parametry:**
-
-      - ``value``: Hodnota k zformátování.
-
-      **Návratová hodnota:**
-
-      Zformátovaná hodnota nebo None.
-
+      :param value: Hodnota k zformátování.
+      :return: Zformátovaná hodnota nebo None.
 
 
 .. py:class:: OdstavkaSystemuForm
@@ -223,11 +166,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: PermissionImportForm
@@ -260,11 +200,8 @@ Třídy
 
       Inicializuje mixin a přidá skryté pole pro optimistické zamykání.
 
-      **Parametry:**
-
-      - ``args``: Parametry předané do nadřazeného ``__init__``.
-      - ``kwargs``: Klíčové parametry předané do nadřazeného ``__init__``.
-
+      :param args: Parametry předané do nadřazeného ``__init__``.
+      :param kwargs: Klíčové parametry předané do nadřazeného ``__init__``.
 
    .. py:method:: _get_lock_fields()
 
@@ -272,23 +209,14 @@ Třídy
 
       Zahrnuje DB modelová pole i pole z :attr:`optimistic_lock_instance_fields`.
 
-      **Návratová hodnota:**
-
-      Seznam názvů polí, která jsou sledována a nejsou vyloučena.
-
+      :return: Seznam názvů polí, která jsou sledována a nejsou vyloučena.
 
    .. py:method:: _serialize_instance_for_lock()
 
       Serializuje hodnoty polí instance modelu do JSON řetězce.
 
-      **Parametry:**
-
-      - ``instance``: Instance modelu, jehož hodnoty se serializují.
-
-      **Návratová hodnota:**
-
-      JSON řetězec s hodnotami polí pro pozdější porovnání.
-
+      :param instance: Instance modelu, jehož hodnoty se serializují.
+      :return: JSON řetězec s hodnotami polí pro pozdější porovnání.
 
    .. py:method:: get_conflicting_fields()
 
@@ -297,10 +225,7 @@ Třídy
       Načte čerstvý stav záznamu z databáze a porovná ho s hodnotami uloženými
       při renderování formuláře v poli :attr:`optimistic_lock_field_name`.
 
-      **Návratová hodnota:**
-
-      Seznam názvů polí, která byla mezitím změněna jinou úpravou.
-
+      :return: Seznam názvů polí, která byla mezitím změněna jinou úpravou.
 
 
 .. py:class:: BaseFilterForm
@@ -313,14 +238,8 @@ Třídy
 
       Validuje rozmezí datumů v historii — startovní datum musí být dříve než koncové.
 
-      **Návratová hodnota:**
-
-      Slovník s očistěnými daty formuláře.
-
-      **Výjimky:**
-
-      - ``forms.ValidationError``: Pokud je startovní datum pozdější než koncové.
-
+      :return: Slovník s očistěnými daty formuláře.
+      :raises forms.ValidationError: Pokud je startovní datum pozdější než koncové.
 
 
 .. py:class:: TransaltionImportForm
@@ -333,14 +252,8 @@ Třídy
 
       Validuje nahraný PO soubor — kontroluje velikost a formát.
 
-      **Návratová hodnota:**
-
-      Slovník s očistěnými daty formuláře.
-
-      **Výjimky:**
-
-      - ``forms.ValidationError``: Pokud je soubor příliš malý (< 1000 B) nebo nemá příponu ``.po``.
-
+      :return: Slovník s očistěnými daty formuláře.
+      :raises forms.ValidationError: Pokud je soubor příliš malý (< 1000 B) nebo nemá příponu ``.po``.
 
 
 .. py:class:: ImportDataAdminForm

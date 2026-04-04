@@ -16,11 +16,8 @@ Třídy
 
       Inicializuje výjimku s odkazem na PIAN, jehož geometrie neleží v žádném kladu mapových listů.
 
-      **Parametry:**
-
-      - ``pian``: Instance PIANu, jehož geometrie se nenachází v žádném kladu mapových listů.
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param pian: Instance PIANu, jehož geometrie se nenachází v žádném kladu mapových listů.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: MaximalIdentNumberError
@@ -33,11 +30,8 @@ Třídy
 
       Inicializuje výjimku s číslem identifikátoru, které překročilo povolené maximum.
 
-      **Parametry:**
-
-      - ``number``: Číslo identifikátoru, které překročilo maximální povolenou hodnotu.
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param number: Číslo identifikátoru, které překročilo maximální povolenou hodnotu.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: DJNemaPianError
@@ -50,11 +44,8 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy dokumentační jednotka nemá přiřazen žádný PIAN.
 
-      **Parametry:**
-
-      - ``dj``: Instance dokumentační jednotky, která postrádá přiřazený PIAN.
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param dj: Instance dokumentační jednotky, která postrádá přiřazený PIAN.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: NelzeZjistitRaduError
@@ -67,10 +58,7 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy nelze určit řadu dokumentu.
 
-      **Parametry:**
-
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: NeocekavanaRadaError
@@ -83,10 +71,7 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy je zjištěna neočekávaná řada dokumentu.
 
-      **Parametry:**
-
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: WrongSheetError
@@ -99,10 +84,7 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy importovaný Excel soubor nemá správné sloupce.
 
-      **Parametry:**
-
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: NeznamaGeometrieError
@@ -115,10 +97,7 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy je zjištěn neznámý nebo neočekávaný typ geometrie PIANu.
 
-      **Parametry:**
-
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: UnexpectedDataRelations
@@ -131,10 +110,7 @@ Třídy
 
       Inicializuje výjimku pro případ duplicitních nebo chybějících datových relací při importu.
 
-      **Parametry:**
-
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: MaximalEventCount
@@ -147,11 +123,8 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy byl překročen maximální počet archeologických akcí.
 
-      **Parametry:**
-
-      - ``number``: Aktuální počet akcí, jenž překročil povolené maximum.
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param number: Aktuální počet akcí, jenž překročil povolené maximum.
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: WrongCSVError
@@ -164,10 +137,7 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy importovaný CSV soubor nemá správné sloupce.
 
-      **Parametry:**
-
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: ZaznamSouborNotmatching
@@ -180,10 +150,7 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy záznam AMČR neobsahuje očekávaný soubor.
 
-      **Parametry:**
-
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param message: Textová zpráva popisující důvod výjimky.
 
 
 .. py:class:: StateChangedError
@@ -196,8 +163,5 @@ Třídy
 
       Inicializuje výjimku pro případ, kdy byl stav záznamu AMČR změněn jiným uživatelem od jeho načtení.
 
-      **Parametry:**
-
-      - ``message``: Textová zpráva popisující důvod výjimky.
-
+      :param message: Textová zpráva popisující důvod výjimky.
 

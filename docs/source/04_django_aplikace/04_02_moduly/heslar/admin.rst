@@ -16,15 +16,10 @@ Třídy
 
       Provádí operaci metadata.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``metadata``.
+      :param obj: Parametr ``obj`` pracuje se s atributy ``metadata``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``metadata``.
-      - ``obj``: Parametr ``obj`` pracuje se s atributy ``metadata``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``response``.
-
+          :return: Vrací proměnná ``response``.
 
 
 .. py:class:: HeslarWithMetadataAdmin
@@ -44,43 +39,28 @@ Třídy
 
       Určí, zda add permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_change_permission()
 
       Určí, zda change permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 
 .. py:class:: HeslarAdmin
@@ -93,61 +73,41 @@ Třídy
 
       Vyrenderuje change form.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+      :param context: Parametr ``context`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+      :param add: Parametr ``add`` předává se do volání ``render_change_form()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      :param change: Parametr ``change`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+      :param form_url: Parametr ``form_url`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
+      :param obj: Parametr ``obj`` předává se do volání ``render_change_form()``, vstupuje do návratové hodnoty.
 
-      - ``request``: Parametr ``request`` předává se do volání ``render_change_form()``, vstupuje do návratové hodnoty.
-      - ``context``: Parametr ``context`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
-      - ``add``: Parametr ``add`` předává se do volání ``render_change_form()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      - ``change``: Parametr ``change`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
-      - ``form_url``: Parametr ``form_url`` se předává do volání ``render_change_form()``, vstupuje do návratové hodnoty.
-      - ``obj``: Parametr ``obj`` předává se do volání ``render_change_form()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``render_change_form()``.
-
+          :return: Vrací výsledek volání ``render_change_form()``.
 
    .. py:method:: has_change_permission()
 
       Určí, zda change permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``has_change_permission()``, vstupuje do návratové hodnoty.
+      :param obj: Parametr ``obj`` předává se do volání ``has_change_permission()``, pracuje se s atributy ``nazev_heslare``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      - ``request``: Parametr ``request`` předává se do volání ``has_change_permission()``, vstupuje do návratové hodnoty.
-      - ``obj``: Parametr ``obj`` předává se do volání ``has_change_permission()``, pracuje se s atributy ``nazev_heslare``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_change_permission()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_change_permission()``.
 
    .. py:method:: get_readonly_fields()
 
       Vrací readonly fields.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
+      :param obj: Parametr ``obj`` pracuje se s atributy ``pk``, ovlivňuje větvení podmínek.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
-      - ``obj``: Parametr ``obj`` pracuje se s atributy ``pk``, ovlivňuje větvení podmínek.
-
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+          :return: Vrací n-tici.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+      :param obj: Parametr ``obj`` pracuje se s atributy ``nazev_heslare``, ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      - ``request``: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
-      - ``obj``: Parametr ``obj`` pracuje se s atributy ``nazev_heslare``, ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
 
 
 .. py:class:: HeslarDataceAdmin
@@ -160,28 +120,18 @@ Třídy
 
       Vrací readonly fields.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
+      :param obj: Parametr ``obj`` ovlivňuje větvení podmínek.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_readonly_fields``.
-      - ``obj``: Parametr ``obj`` ovlivňuje větvení podmínek.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: n-tici, seznam.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: n-tici, seznam.
 
    .. py:method:: obdobi_ident_cely()
 
       Provádí operaci obdobi ident cely.
 
-      **Parametry:**
+      :param obj: Parametr ``obj`` pracuje se s atributy ``obdobi``, vstupuje do návratové hodnoty.
 
-      - ``obj``: Parametr ``obj`` pracuje se s atributy ``obdobi``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací atribut objektu.
-
+          :return: Vrací atribut objektu.
 
 
 .. py:class:: HeslarDokumentTypMaterialRadaAdmin
@@ -196,43 +146,28 @@ Třídy
 
       Určí, zda add permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_change_permission()
 
       Určí, zda change permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 
 .. py:class:: HeslarOdkazAdmin
@@ -245,14 +180,9 @@ Třídy
 
       Provádí operaci heslo ident cely.
 
-      **Parametry:**
+      :param obj: Parametr ``obj`` pracuje se s atributy ``heslo``, vstupuje do návratové hodnoty.
 
-      - ``obj``: Parametr ``obj`` pracuje se s atributy ``heslo``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací atribut objektu.
-
+          :return: Vrací atribut objektu.
 
 
 .. py:class:: HeslarHierarchieAdmin
@@ -265,14 +195,8 @@ Třídy
 
       Vrací identifikátor podřazeného hesla.
 
-      **Parametry:**
-
-      - ``obj``: Objekt hierarchie.
-
-      **Návratová hodnota:**
-
-      Identifikátor.
-
+      :param obj: Objekt hierarchie.
+      :return: Identifikátor.
 
 
 .. py:class:: OsobaAdmin
@@ -285,39 +209,26 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+      :param obj: Parametr ``obj`` pracuje se s atributy ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      - ``request``: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
-      - ``obj``: Parametr ``obj`` pracuje se s atributy ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
 
    .. py:method:: get_fields()
 
       Vrací fields. v aplikaci.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_fields``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``get_fields``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``get_fields``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``get_fields``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``tuple()``.
-
+          :return: Vrací výsledek volání ``tuple()``.
 
 
 .. py:class:: OrganizaceAdmin
@@ -330,15 +241,10 @@ Třídy
 
       Určí, zda delete permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
+      :param obj: Parametr ``obj`` pracuje se s atributy ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      - ``request``: Parametr ``request`` předává se do volání ``has_delete_permission()``, vstupuje do návratové hodnoty.
-      - ``obj``: Parametr ``obj`` pracuje se s atributy ``has_connections``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: bool, výsledek volání ``has_delete_permission()``.
 
 
 .. py:class:: HeslarRuianAdmin
@@ -351,43 +257,28 @@ Třídy
 
       Určí, zda add permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_add_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_add_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_delete_permission()
 
       Určí, zda delete permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_delete_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
    .. py:method:: has_change_permission()
 
       Určí, zda change permission.
 
-      **Parametry:**
+      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
+      :param obj: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
 
-      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-      - ``obj``: Parametr ``obj`` slouží jako vstup pro logiku funkce ``has_change_permission``.
-
-      **Návratová hodnota:**
-
-      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-
+          :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
 
 
 .. py:class:: HeslarRuianKrajAdmin

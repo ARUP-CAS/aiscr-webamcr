@@ -16,103 +16,70 @@ Třídy
 
       Vrací výchozí hodnotu dostupnosti.
 
-      **Návratová hodnota:**
-
-      Vrací atribut objektu.
-
+      :return: Vrací atribut objektu.
 
    .. py:method:: initial_pristupnost()
 
       Provádí operaci initial pristupnost.
 
-      **Parametry:**
-
-      - ``value``: Parametr ``value`` slouží jako vstup pro logiku funkce ``initial_pristupnost``.
-
+      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``initial_pristupnost``.
 
    .. py:method:: save()
 
       Uloží změny objektu.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``save()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``save()``.
-
+      :param args: Parametr ``args`` se předává do volání ``save()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
    .. py:method:: set_zapsany()
 
       Metoda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_vracen()
 
       Metoda pro vrácení o jeden stav méně a uložení změny do historie pro samostatný nález.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-      - ``new_state``: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
-      - ``poznamka``: Parametr ``poznamka`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
+      :param new_state: Stavová nebo časová hodnota `new_state` používaná při rozhodování logiky.
+      :param poznamka: Parametr ``poznamka`` se předává do volání ``Historie()``.
 
    .. py:method:: set_odeslany()
 
       Metoda pro nastavení stavu odeslaný a uložení změny do historie pro samostatný nález.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_potvrzeny()
 
       Metoda pro nastavení stavu potvrzený a uložení změny do historie pro samostatný nález.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_archivovany()
 
       Metoda pro nastavení stavu archivovaný a uložení změny do historie pro samostatný nález.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: get_absolute_url()
 
       Metoda pro získaní absolut url záznamu podle identu.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``reverse()``.
-
+      :return: Vrací výsledek volání ``reverse()``.
 
    .. py:method:: check_pred_archivaci()
 
       Ověří pred archivaci.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``resp``.
-
+      :return: Vrací proměnná ``resp``.
 
    .. py:method:: check_pred_potvrzenim()
 
       Ověří pred potvrzenim.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``resp``.
-
+      :return: Vrací proměnná ``resp``.
 
    .. py:method:: check_pred_odeslanim()
 
@@ -122,84 +89,57 @@ Třídy
 
       Samostaný nález má připojený alespoň jeden soubor.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``resp``.
-
+          :return: Vrací proměnná ``resp``.
 
    .. py:method:: nahled_soubor()
 
       Vrací cestu k miniaturnímu náhledu souboru.
 
-      **Návratová hodnota:**
-
-      První soubor nebo None, pokud žádný neexistuje.
-
+      :return: První soubor nebo None, pokud žádný neexistuje.
 
    .. py:method:: large_thumbnail()
 
       Vrací cestu k velké miniaturě obrázku.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
-
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
 
    .. py:method:: small_thumbnail()
 
       Vrací cestu k malé miniaturě obrázku.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
-
+      :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, None.
 
    .. py:method:: generate_coord_forms_initial()
 
       Vygeneruje coord forms initial.
 
-      **Návratová hodnota:**
-
-      Vrací slovník.
-
+      :return: Vrací slovník.
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``self``.
-
+      :return: Vrací proměnná ``self``.
 
    .. py:method:: get_create_user()
 
       Vrací create user.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: redis_snapshot_id()
 
@@ -209,10 +149,7 @@ Třídy
 
       Vygeneruje redis snapshot.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: set_igsn()
 
@@ -222,10 +159,7 @@ Třídy
 
       Vrací igsn client.
 
-      **Návratová hodnota:**
-
-      Načtená data odpovídající zadaným vstupům.
-
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: igsn_exists()
 
@@ -235,54 +169,34 @@ Třídy
 
       Provádí operaci igsn delete.
 
-      **Parametry:**
+      :param check_status: Parametr ``check_status`` předává se do volání ``delete_record()``, vstupuje do návratové hodnoty.
 
-      - ``check_status``: Parametr ``check_status`` předává se do volání ``delete_record()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``delete_record()``.
-
+          :return: Vrací výsledek volání ``delete_record()``.
 
    .. py:method:: igsn_hide()
 
       Provádí operaci igsn hide.
 
-      **Parametry:**
+      :param check_status: Parametr ``check_status`` předává se do volání ``hide_record()``, vstupuje do návratové hodnoty.
 
-      - ``check_status``: Parametr ``check_status`` předává se do volání ``hide_record()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``hide_record()``.
-
+          :return: Vrací výsledek volání ``hide_record()``.
 
    .. py:method:: igsn_publish()
 
       Provádí operaci igsn publish.
 
-      **Parametry:**
+      :param check_status: Parametr ``check_status`` předává se do volání ``publish_record()``, vstupuje do návratové hodnoty.
 
-      - ``check_status``: Parametr ``check_status`` předává se do volání ``publish_record()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``publish_record()``.
-
+          :return: Vrací výsledek volání ``publish_record()``.
 
    .. py:method:: igsn_update()
 
       Provádí operaci igsn update.
 
-      **Parametry:**
+      :param check_status: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
+      :param reload_record: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
 
-      - ``check_status``: Parametr ``check_status`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
-      - ``reload_record``: Parametr ``reload_record`` předává se do volání ``update_record()``, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``update_record()``.
-
+          :return: Vrací výsledek volání ``update_record()``.
 
    .. py:method:: igsn_url()
 
@@ -299,11 +213,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: aktivni()
 
@@ -313,20 +224,14 @@ Třídy
 
       Metoda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
 
    .. py:method:: set_neaktivni()
 
       Metoda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
 
-      **Parametry:**
-
-      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
-      - ``duvod``: Textový důvod prováděné operace.
-
+      :param user: Parametr ``user`` se předává do volání ``Historie()``.
+      :param duvod: Textový důvod prováděné operace.
 
    .. py:method:: check_pred_aktivaci()
 
@@ -334,10 +239,7 @@ Třídy
 
       Kontrola že stav není aktivný.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``result``.
-
+          :return: Vrací proměnná ``result``.
 
    .. py:method:: check_pred_deaktivaci()
 
@@ -345,39 +247,27 @@ Třídy
 
       Kontrola že stav není neaktivný.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``result``.
-
+          :return: Vrací proměnná ``result``.
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování.
-
+          :return: Vrací hodnotu podle větve zpracování.
 
    .. py:method:: get_create_user()
 
       Vrací create user.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: redis_snapshot_id()
 
@@ -387,21 +277,13 @@ Třídy
 
       Vygeneruje redis snapshot.
 
-      **Návratová hodnota:**
-
-      Vrací n-tici.
-
+      :return: Vrací n-tici.
 
    .. py:method:: get_by_ident_cely()
 
       Vrací by ident cely.
 
-      **Parametry:**
+      :param pk: Primární klíč zpracovávaného záznamu.
 
-      - ``pk``: Primární klíč zpracovávaného záznamu.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
 

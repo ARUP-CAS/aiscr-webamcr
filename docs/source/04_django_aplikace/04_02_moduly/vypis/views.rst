@@ -16,18 +16,10 @@ Třídy
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``, pracuje se s atributy ``get``.
 
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``, pracuje se s atributy ``get``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
-      **Výjimky:**
-
-      - ``Http404``: Vyvolá se s textem "Page not found"; nebo s textem "Model not found".
-
+          :return: Vrací proměnná ``context``.
+          :raises Http404: Vyvolá se s textem "Page not found"; nebo s textem "Model not found".
 
 
 .. py:class:: VypisOnlyView
@@ -45,18 +37,10 @@ Třídy
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``, pracuje se s atributy ``get``.
 
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``, pracuje se s atributy ``get``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
-      **Výjimky:**
-
-      - ``Http404``: Vyvolá se s textem "Page not found".
-
+          :return: Vrací proměnná ``context``.
+          :raises Http404: Vyvolá se s textem "Page not found".
 
 
 Funkce
@@ -66,12 +50,9 @@ Funkce
 
    Provádí operaci add section data.
 
-   **Parametry:**
-
-   - ``instance``: Parametr ``instance`` předává se do volání ``get_permission()``, ``get_sections()``, ovlivňuje větvení podmínek.
-   - ``section``: Parametr ``section`` předává se do volání ``debug()``, ``add_section_data()``, ovlivňuje větvení podmínek.
-   - ``fields``: Parametr ``fields`` předává se do volání ``isinstance()``, ``add_section_data()``, pracuje se s atributy ``items``, ovlivňuje větvení podmínek.
-   - ``sections_data``: Kolekce ``sections_data`` zpracovávaná touto funkcí.
-   - ``iterator``: Parametr ``iterator`` ovlivňuje větvení podmínek.
-   - ``user``: Parametr ``user`` se předává do volání ``get_permission()``, ``add_section_data()``, ovlivňuje větvení podmínek.
-
+   :param instance: Parametr ``instance`` předává se do volání ``get_permission()``, ``get_sections()``, ovlivňuje větvení podmínek.
+   :param section: Parametr ``section`` předává se do volání ``debug()``, ``add_section_data()``, ovlivňuje větvení podmínek.
+   :param fields: Parametr ``fields`` předává se do volání ``isinstance()``, ``add_section_data()``, pracuje se s atributy ``items``, ovlivňuje větvení podmínek.
+   :param sections_data: Kolekce ``sections_data`` zpracovávaná touto funkcí.
+   :param iterator: Parametr ``iterator`` ovlivňuje větvení podmínek.
+   :param user: Parametr ``user`` se předává do volání ``get_permission()``, ``add_section_data()``, ovlivňuje větvení podmínek.

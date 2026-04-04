@@ -16,18 +16,10 @@ Třídy
 
       Provádí operaci to python.
 
-      **Parametry:**
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, pracuje se s atributy ``split``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      - ``value``: Parametr ``value`` předává se do volání ``isinstance()``, pracuje se s atributy ``split``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: proměnná ``value``, výsledek volání ``DateRange()``.
-
-      **Výjimky:**
-
-      - ``ValidationError``: Vyvolá se při splnění podmínky ``from_date is None or to_date is None``; nebo při zpracování zachycené výjimky typu ``Exception``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``value``, výsledek volání ``DateRange()``.
+          :raises ValidationError: Vyvolá se při splnění podmínky ``from_date is None or to_date is None``; nebo při zpracování zachycené výjimky typu ``Exception``.
 
 
 .. py:class:: DateRangeWidget
@@ -40,14 +32,9 @@ Třídy
 
       Provádí operaci format value.
 
-      **Parametry:**
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      - ``value``: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
 
 
 .. py:class:: OznamovatelForm
@@ -60,11 +47,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
 
 
 .. py:class:: OznamovatelProjektForm
@@ -77,11 +61,8 @@ Třídy
 
       Inicializuje instanci třídy a přidá pole optimistického zamykání do layoutu.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: OznamovatelProjektCreateForm
@@ -94,20 +75,14 @@ Třídy
 
       Provádí operaci clean send mail.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``get()``.
-
+      :return: Vrací výsledek volání ``get()``.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: ProjektOznameniForm
@@ -120,11 +95,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
 
 
 .. py:class:: FormWithCaptcha

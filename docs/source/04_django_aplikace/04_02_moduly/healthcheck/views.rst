@@ -16,14 +16,9 @@ Třídy
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: HTTP GET požadavek.
 
-      - ``request``: HTTP GET požadavek.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+      :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 Funkce
@@ -33,7 +28,4 @@ Funkce
 
    Ověří status. v aplikaci.
 
-   **Návratová hodnota:**
-
-   Vrací n-tici.
-
+   :return: Vrací n-tici.

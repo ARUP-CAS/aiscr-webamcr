@@ -19,45 +19,27 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``get_response``: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
-
+      :param get_response: Textový nebo strukturální vstup `get_response` používaný při sestavení nebo zpracování obsahu.
 
    .. py:method:: __call__()
 
       Zpracuje požadavek a zaznamenává informace o volání (URL, uživatel, čas, výjimky).
 
-      **Parametry:**
-
-      - ``request``: Objekt požadavku Django.
-
-      **Návratová hodnota:**
-
-      Objekt odpovědi Django.
-
-      **Výjimky:**
-
-      - ``Exception``: Jakákoliv výjimka zachycená během zpracování.
-
+      :param request: Objekt požadavku Django.
+      :return: Objekt odpovědi Django.
+      :raises Exception: Jakákoliv výjimka zachycená během zpracování.
 
    .. py:method:: get_request_url()
 
       Vrací request url.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``getattr()``.
-
+      :return: Vrací výsledek volání ``getattr()``.
 
    .. py:method:: get_user_id()
 
       Vrací user id.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``getattr()``.
-
+      :return: Vrací výsledek volání ``getattr()``.
 
 
 Funkce
@@ -67,29 +49,17 @@ Funkce
 
    Vrací slow request settings.
 
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, float.
-
+   :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, float.
 
 .. py:function:: _get_anonymous()
 
    Vrací identifikátor anonymního uživatele z cache nebo databáze.
 
-   **Návratová hodnota:**
-
-   Identifikátor uživatele (ident_cely) nebo řetězec "anonymous".
-
+   :return: Identifikátor uživatele (ident_cely) nebo řetězec "anonymous".
 
 .. py:function:: _resolve_view_info(request)
 
    Vrátí dict s informacemi o view: view_name, view_module, kwargs.
 
-   **Parametry:**
-
-   - ``request``: Parametr ``request`` předává se do volání ``resolve()``, pracuje se s atributy ``path_info``.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu typu ``dict`` (slovník).
-
+   :param request: Parametr ``request`` předává se do volání ``resolve()``, pracuje se s atributy ``path_info``.
+   :return: Vrací hodnotu typu ``dict`` (slovník).

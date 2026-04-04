@@ -16,25 +16,16 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
    .. py:method:: render_nahled()
 
       Vykreslí HTML náhled modelu 3D.
 
-      **Parametry:**
-
-      - ``value``: Hodnota sloupce (ignorováno).
-      - ``record``: Záznam s daty modelu 3D.
-
-      **Návratová hodnota:**
-
-      HTML řetězec s náhledem nebo prázdný řetězec.
-
+      :param value: Hodnota sloupce (ignorováno).
+      :param record: Záznam s daty modelu 3D.
+      :return: HTML řetězec s náhledem nebo prázdný řetězec.
 
 
 .. py:class:: DokumentTable
@@ -47,23 +38,14 @@ Třídy
 
       Vykreslí HTML náhled modelu 3D.
 
-      **Parametry:**
-
-      - ``value``: Hodnota sloupce (ignorováno).
-      - ``record``: Záznam s daty modelu 3D.
-
-      **Návratová hodnota:**
-
-      HTML řetězec s náhledem nebo prázdný řetězec.
-
+      :param value: Hodnota sloupce (ignorováno).
+      :param record: Záznam s daty modelu 3D.
+      :return: HTML řetězec s náhledem nebo prázdný řetězec.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 

@@ -16,53 +16,35 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Načtená data odpovídající zadaným vstupům.
-
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Další klíčové argumenty předané do základní třídy.
 
-      - ``kwargs``: Další klíčové argumenty předané do základní třídy.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      **Parametry:**
+      :param request: HTTP GET požadavek.
+      :param args: Poziční argumenty.
+      :param kwargs: Klíčové argumenty předané do ``get_context_data()``.
 
-      - ``request``: HTTP GET požadavek.
-      - ``args``: Poziční argumenty.
-      - ``kwargs``: Klíčové argumenty předané do ``get_context_data()``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``render_to_response()``.
-
+          :return: Vrací výsledek volání ``render_to_response()``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: HTTP POST požadavek s daty formuláře pro změnu katastru.
+      :param args: Poziční argumenty.
+      :param kwargs: Klíčové argumenty.
 
-      - ``request``: HTTP POST požadavek s daty formuláře pro změnu katastru.
-      - ``args``: Poziční argumenty.
-      - ``kwargs``: Klíčové argumenty.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
 
 Funkce
@@ -72,41 +54,26 @@ Funkce
 
    Funkce pohledu pro editaci dokumentační jednotky a ADB.
 
-   **Parametry:**
+   :param request: HTTP požadavek s daty formuláře DJ.
+   :param typ_vazby: Typ vazby dokumentační jednotky (DJ nebo dokument).
+   :param ident_cely: Identifikátor dokumentační jednotky.
 
-   - ``request``: HTTP požadavek s daty formuláře DJ.
-   - ``typ_vazby``: Typ vazby dokumentační jednotky (DJ nebo dokument).
-   - ``ident_cely``: Identifikátor dokumentační jednotky.
-
-   **Návratová hodnota:**
-
-   Vrací proměnná ``response``.
-
+       :return: Vrací proměnná ``response``.
 
 .. py:function:: zapsat(request, arch_z_ident_cely)
 
    Funkce pohledu pro vytvoření dokumentační jednotky.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``CreateDJForm()``, ``add_message()``, pracuje se s atributy ``POST``, ``user``.
+   :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
 
-   - ``request``: Parametr ``request`` se předává do volání ``CreateDJForm()``, ``add_message()``, pracuje se s atributy ``POST``, ``user``.
-   - ``arch_z_ident_cely``: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
-
-   **Návratová hodnota:**
-
-   Vrací proměnná ``redirect``.
-
+       :return: Vrací proměnná ``redirect``.
 
 .. py:function:: smazat(request, ident_cely)
 
    Funkce pohledu pro smazání dokumentační jednotky.
 
-   **Parametry:**
+   :param request: Parametr ``request`` se předává do volání ``create_transaction()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``warning()``.
 
-   - ``request``: Parametr ``request`` se předává do volání ``create_transaction()``, ``add_message()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``warning()``.
-
-   **Návratová hodnota:**
-
-   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-
+       :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.

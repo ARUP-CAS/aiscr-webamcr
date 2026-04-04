@@ -16,10 +16,7 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``readonly``: Parametr ``readonly`` ovlivňuje větvení podmínek.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 

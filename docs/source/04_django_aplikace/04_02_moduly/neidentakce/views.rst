@@ -16,71 +16,45 @@ Třídy
 
       Vrací form kwargs.
 
-      **Návratová hodnota:**
-
-      Vrací proměnná ``kwargs``.
-
+      :return: Vrací proměnná ``kwargs``.
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      **Parametry:**
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
 
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``context``.
-
+          :return: Vrací proměnná ``context``.
 
    .. py:method:: get_success_url()
 
       Vrací success url.
 
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``reverse()``.
-
+      :return: Vrací výsledek volání ``reverse()``.
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      **Parametry:**
+      :param request: Parametr ``request`` předává se do volání ``post()``.
+      :param args: Parametr ``args`` se předává do volání ``post()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``.
 
-      - ``request``: Parametr ``request`` předává se do volání ``post()``.
-      - ``args``: Parametr ``args`` se předává do volání ``post()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``post()``.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``JsonResponse()``.
-
+          :return: Vrací výsledek volání ``JsonResponse()``.
 
    .. py:method:: form_valid()
 
       Zpracuje platný formulář editace neidentifikované akce a zobrazí zprávu o úspěchu.
 
-      **Parametry:**
+      :param form: Validovaný formulář editace.
 
-      - ``form``: Validovaný formulář editace.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``form_valid()``.
-
+          :return: Vrací výsledek volání ``form_valid()``.
 
    .. py:method:: form_invalid()
 
       Zpracuje neplatný formulář editace neidentifikované akce a zobrazí chybovou zprávu.
 
-      **Parametry:**
+      :param form: Nevalidní formulář s chybami.
 
-      - ``form``: Nevalidní formulář s chybami.
-
-      **Návratová hodnota:**
-
-      Vrací výsledek volání ``form_invalid()``.
-
+          :return: Vrací výsledek volání ``form_invalid()``.
 

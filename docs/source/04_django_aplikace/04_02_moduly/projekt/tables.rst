@@ -16,24 +16,16 @@ Třídy
 
       Vyrenderuje planovane zahajeni.
 
-      **Parametry:**
+      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
 
-      - ``value``: Parametr ``value`` předává se do volání ``isinstance()``, ``str()``, pracuje se s atributy ``lower``, ``upper``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: None, hodnotu podle větve zpracování, výsledek volání ``str()``.
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``. Může obsahovat klíč ``user`` s instancí přihlášeného uživatele, který se používá pro řízení viditelnosti oznamovatele na úrovni řádku.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``. Může obsahovat klíč ``user`` s instancí přihlášeného uživatele, který se používá pro řízení viditelnosti oznamovatele na úrovni řádku.
 
    .. py:method:: render_oznamovatel_oznamovatel()
 
@@ -44,13 +36,8 @@ Třídy
       (``datum_prihlaseni``, ``datum_uzavreni``) a přístupná přes ``getattr`` na záznamu modelu.
       Pokud není uživatel k dispozici (kontext generování Redis snapshotu), vrátí hodnotu bez filtrování.
 
-      **Parametry:**
-
-      - ``value``: Hodnota pole ``oznamovatel.oznamovatel`` z přidruženého záznamu.
-      - ``record``: Instance projektu z aktuálního řádku tabulky.
-
-      **Návratová hodnota:**
-
-      Hodnota oznamovatele, přeložený label ``oznamovatel_oznamovatel.hidden`` pokud uživatel nemá oprávnění ji zobrazit, nebo prázdný řetězec pokud projekt nemá oznamovatele.
-
+      :param value: Hodnota pole ``oznamovatel.oznamovatel`` z přidruženého záznamu.
+      :param record: Instance projektu z aktuálního řádku tabulky.
+      :return: Hodnota oznamovatele, přeložený label ``oznamovatel_oznamovatel.hidden`` pokud uživatel
+          nemá oprávnění ji zobrazit, nebo prázdný řetězec pokud projekt nemá oznamovatele.
 

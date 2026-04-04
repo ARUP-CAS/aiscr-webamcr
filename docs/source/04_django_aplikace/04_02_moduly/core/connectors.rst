@@ -16,50 +16,33 @@ Třídy
 
       Vytvoří connection.
 
-      **Návratová hodnota:**
-
-      Nově vytvořená hodnota připravená touto funkcí.
-
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: _create_connection_decode()
 
       Vytvoří connection decode.
 
-      **Návratová hodnota:**
-
-      Nově vytvořená hodnota připravená touto funkcí.
-
+      :return: Nově vytvořená hodnota připravená touto funkcí.
 
    .. py:method:: get_connection()
 
       Vrací connection. v aplikaci.
 
-      **Návratová hodnota:**
-
-      Načtená data odpovídající zadaným vstupům.
-
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: get_connection_decode()
 
       Vrací connection decode.
 
-      **Návratová hodnota:**
-
-      Načtená data odpovídající zadaným vstupům.
-
+      :return: Načtená data odpovídající zadaným vstupům.
 
    .. py:method:: prepare_model_for_redis()
 
       Převede řádek Django-tables2 tabulky do slovníku pro uložení do Redis cache.
 
-      **Parametry:**
+      :param table: Tabulka (django-tables2) obsahující jeden řádek s daty záznamu.
 
-      - ``table``: Tabulka (django-tables2) obsahující jeden řádek s daty záznamu.
-
-      **Návratová hodnota:**
-
-      Vrací proměnná ``data``.
-
+          :return: Vrací proměnná ``data``.
 
 
 .. py:class:: ClamdError
@@ -101,106 +84,56 @@ Třídy
 
       Skenuje buffer na přítomnost virů.
 
-      **Parametry:**
-
-      - ``buff``: Binární stream (``BytesIO``) se souborem určeným ke kontrole.
-
-      **Návratová hodnota:**
-
-      Slovník ve formátu ``{filename: (status, reason)}`` pro odpověď clamd.
-
-      **Výjimky:**
-
-      - ``ClamdBufferTooLongError``: Pokud je stream větší než povolený limit clamd.
-      - ``ClamdConnectionError``: Při chybě komunikace se službou clamd.
-
+      :param buff: Binární stream (``BytesIO``) se souborem určeným ke kontrole.
+      :return: Slovník ve formátu ``{filename: (status, reason)}`` pro odpověď clamd.
+      :raises ClamdBufferTooLongError: Pokud je stream větší než povolený limit clamd.
+      :raises ClamdConnectionError: Při chybě komunikace se službou clamd.
 
    .. py:method:: _basic_command()
 
       Odešle jednoduchý příkaz do clamd a vrátí jeho odpověď.
 
-      **Parametry:**
+      :param command: Název příkazu zasílaného do clamd démona (např. 'PING', 'VERSION').
 
-      - ``command``: Název příkazu zasílaného do clamd démona (např. 'PING', 'VERSION').
+      :return: Výstup funkce odpovídající implementované logice.
 
-      **Návratová hodnota:**
-
-      Výstup funkce odpovídající implementované logice.
-
-      **Výjimky:**
-
-      - ``ClamdResponseError``: Vyvolá se při splnění podmínky ``len(response) > 1``.
-
+      :raises ClamdResponseError: Vyvolá se při splnění podmínky ``len(response) > 1``.
 
    .. py:method:: _init_socket()
 
       Inicializuje socketové připojení k clamd.
 
       Pouze pro interní použití.
-
-      **Výjimky:**
-
-      - ``ClamdConnectionError``: Pokud se nelze připojit ke clamd.
-
+      :raises ClamdConnectionError: Pokud se nelze připojit ke clamd.
 
    .. py:method:: _error_message()
 
       Formátuje chybovou zprávu pro selhání socketového připojení.
-
-      **Parametry:**
-
-      - ``exception``: Zachycená síťová výjimka při navazování spojení.
-
-      **Návratová hodnota:**
-
-      Formátovaná chybová zpráva pro logování.
-
+      :param exception: Zachycená síťová výjimka při navazování spojení.
+      :return: Formátovaná chybová zpráva pro logování.
 
    .. py:method:: _send_command()
 
-      Odešle command.
+             Odešle command.
 
-      Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
+             Používá prefix 'n' a ukončovač nového řádku podle doporučení `man clamd`.
 
-      **Parametry:**
-
-      - ``cmd``: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
-      - ``args``: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
-
-      **Návratová hodnota:**
-
-      Výstup funkce odpovídající implementované logice.
-
+             :param cmd: Textový název, klíč nebo zpráva ``cmd`` používaná v rámci operace.
+             :param args: Parametr ``args`` se předává do volání ``join()``, ovlivňuje větvení podmínek.
+      :return: Výstup funkce odpovídající implementované logice.
 
    .. py:method:: _recv_response()
 
       Přijme jednořádkovou odpověď od clamd.
-
-      **Návratová hodnota:**
-
-      Dekódovaný řádek odpovědi od clamd.
-
-      **Výjimky:**
-
-      - ``ClamdConnectionError``: Při chybě čtení ze socketu.
-
+      :return: Dekódovaný řádek odpovědi od clamd.
+      :raises ClamdConnectionError: Při chybě čtení ze socketu.
 
    .. py:method:: _parse_response()
 
       Parsuje odpovědi pro příkazy SCAN, CONTSCAN, MULTISCAN a STREAM.
-
-      **Parametry:**
-
-      - ``msg``: Textová odpověď vrácená službou clamd.
-
-      **Návratová hodnota:**
-
-      N-tice ``(path, virus, status)`` extrahovaná z odpovědi.
-
-      **Výjimky:**
-
-      - ``ClamdResponseError``: Pokud odpověď nelze naparsovat.
-
+      :param msg: Textová odpověď vrácená službou clamd.
+      :return: N-tice ``(path, virus, status)`` extrahovaná z odpovědi.
+      :raises ClamdResponseError: Pokud odpověď nelze naparsovat.
 
    .. py:method:: _close_socket()
 

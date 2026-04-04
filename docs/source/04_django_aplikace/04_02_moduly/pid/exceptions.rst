@@ -21,12 +21,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``status_code``: HTTP stavový kód odpovědi z DataCite API.
-      - ``response_text``: Textový obsah chybové odpovědi z DataCite API.
-      - ``request_url``: URL adresa požadavku, který skončil chybou.
-
+      :param status_code: HTTP stavový kód odpovědi z DataCite API.
+      :param response_text: Textový obsah chybové odpovědi z DataCite API.
+      :param request_url: URL adresa požadavku, který skončil chybou.
 
 
 .. py:class:: DoiConnectionError

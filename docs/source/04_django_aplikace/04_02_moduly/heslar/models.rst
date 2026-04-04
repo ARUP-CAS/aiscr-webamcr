@@ -16,53 +16,36 @@ Třídy
 
       Vrací navázané záznamy třídy ``HeslarDokumentTypMaterialRada``.
 
-      **Návratová hodnota:**
-
-      QuerySet záznamů.
-
+      :return: QuerySet záznamů.
 
    .. py:method:: podrazena_hesla()
 
       Vrací podřazené záznamy třídy ``HeslarHierarchie``.
 
-      **Návratová hodnota:**
-
-      QuerySet podřazených hesel.
-
+      :return: QuerySet podřazených hesel.
 
    .. py:method:: nadrazena_hesla()
 
       Vrací nadřazené záznamy třídy ``HeslarHierarchie``.
 
-      **Návratová hodnota:**
-
-      QuerySet nadřazených hesel.
-
+      :return: QuerySet nadřazených hesel.
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      **Návratová hodnota:**
-
-      Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
-
+          :return: Vrací hodnotu podle větve zpracování, typicky: atribut objektu, str.
 
    .. py:method:: save()
 
       Uloží změny objektu.
 
-      **Parametry:**
+      :param args: Parametr ``args`` se předává do volání ``save()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      - ``args``: Parametr ``args`` se předává do volání ``save()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``save()``.
-
-      **Výjimky:**
-
-      - ``ValidationError``: Vyvolá se při splnění podmínky ``self._state.adding and (not FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'heslar'))``.
-
+          :raises ValidationError: Vyvolá se při splnění podmínky ``self._state.adding and (not FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'heslar'))``.
 
 
 .. py:class:: HeslarDatace
@@ -75,11 +58,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: HeslarDokumentTypMaterialRada
@@ -92,11 +72,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: HeslarHierarchie
@@ -109,11 +86,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: HeslarNazev
@@ -124,14 +98,11 @@ Třídy
 
    .. py:method:: __str__()
 
-      Vrací textovou reprezentaci objektu.
+             Vrací textovou reprezentaci objektu.
 
       Textová reprezentace objektu.
 
-      **Návratová hodnota:**
-
-      Vrací atribut objektu.
-
+          :return: Vrací atribut objektu.
 
 
 .. py:class:: HeslarOdkaz
@@ -144,11 +115,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 .. py:class:: RuianKatastr
@@ -161,42 +129,28 @@ Třídy
 
       Vrací identifikátor PIANu katastru.
 
-      **Návratová hodnota:**
-
-      PIAN identifikátor.
-
+      :return: PIAN identifikátor.
 
    .. py:method:: __str__()
 
       Vrací plný název katastru.
 
-      **Návratová hodnota:**
-
-      Plný název ve formátu 'název (okres; kód)'.
-
+      :return: Plný název ve formátu 'název (okres; kód)'.
 
    .. py:method:: ident_cely()
 
       Vrací úplný identifikátor katastru RUIAN.
 
-      **Návratová hodnota:**
-
-      Identifikátor ve formátu 'ruian-{kod}'.
-
+      :return: Identifikátor ve formátu 'ruian-{kod}'.
 
    .. py:method:: save()
 
       Uloží změny objektu.
 
-      **Parametry:**
+      :param args: Parametr ``args`` se předává do volání ``save()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      - ``args``: Parametr ``args`` se předává do volání ``save()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``save()``.
-
-      **Výjimky:**
-
-      - ``ValidationError``: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_katastr')``.
-
+          :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_katastr')``.
 
 
 .. py:class:: RuianKraj
@@ -209,33 +163,22 @@ Třídy
 
       Vrací název kraje.
 
-      **Návratová hodnota:**
-
-      Název kraje.
-
+      :return: Název kraje.
 
    .. py:method:: ident_cely()
 
       Vrací úplný identifikátor kraje RUIAN.
 
-      **Návratová hodnota:**
-
-      Identifikátor ve formátu 'ruian-{kod}'.
-
+      :return: Identifikátor ve formátu 'ruian-{kod}'.
 
    .. py:method:: save()
 
       Uloží změny objektu.
 
-      **Parametry:**
+      :param args: Parametr ``args`` se předává do volání ``save()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      - ``args``: Parametr ``args`` se předává do volání ``save()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``save()``.
-
-      **Výjimky:**
-
-      - ``ValidationError``: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_kraj')``.
-
+          :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_kraj')``.
 
 
 .. py:class:: RuianOkres
@@ -248,31 +191,20 @@ Třídy
 
       Vrací název okresu.
 
-      **Návratová hodnota:**
-
-      Název okresu.
-
+      :return: Název okresu.
 
    .. py:method:: ident_cely()
 
       Vrací úplný identifikátor okresu RUIAN.
 
-      **Návratová hodnota:**
-
-      Identifikátor ve formátu 'ruian-{kod}'.
-
+      :return: Identifikátor ve formátu 'ruian-{kod}'.
 
    .. py:method:: save()
 
       Uloží změny objektu.
 
-      **Parametry:**
+      :param args: Parametr ``args`` se předává do volání ``save()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``save()``.
 
-      - ``args``: Parametr ``args`` se předává do volání ``save()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``save()``.
-
-      **Výjimky:**
-
-      - ``ValidationError``: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_okres')``.
-
+          :raises ValidationError: Vyvolá se při splnění podmínky ``not self._state.adding or FedoraRepositoryConnector.check_container_deleted_or_not_exists(self.ident_cely, 'ruian_okres')``.
 

@@ -16,14 +16,8 @@ Třídy
 
       Vrátí textový popis osoby (vypis_cely) pro zobrazení v read-only poli.
 
-      **Parametry:**
-
-      - ``value``: Primární klíč záznamu Osoba.
-
-      **Návratová hodnota:**
-
-      Textový popis osoby nebo prázdný řetězec, pokud záznam neexistuje.
-
+      :param value: Primární klíč záznamu Osoba.
+      :return: Textový popis osoby nebo prázdný řetězec, pokud záznam neexistuje.
 
 
 .. py:class:: CreateADBForm
@@ -36,12 +30,9 @@ Třídy
 
       Init metoda pro vytvoření formuláře.
 
-      **Parametry:**
-
-      - ``args``: Dodatečné poziční argumenty předané konstruktoru formuláře.
-      - ``readonly``: Pokud ``True``, formulář se vykreslí jen pro čtení.
-      - ``kwargs``: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
-
+      :param args: Dodatečné poziční argumenty předané konstruktoru formuláře.
+      :param readonly: Pokud ``True``, formulář se vykreslí jen pro čtení.
+      :param kwargs: Dodatečné pojmenované argumenty předané konstruktoru formuláře.
 
 
 .. py:class:: VyskovyBodFormSetHelper
@@ -54,11 +45,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      **Parametry:**
-
-      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
-      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
-
+      :param args: Parametr ``args`` se předává do volání ``__init__()``.
+      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
 
 
 Funkce
@@ -68,13 +56,8 @@ Funkce
 
    Funkce která vrací formulář VB pro formset.
 
-   **Parametry:**
+   :param pian: objekt PIAN.
+   :param niveleta: niveleta objekt.
+   :param not_readonly: nastavuje formulář na readonly.
 
-   - ``pian``: objekt PIAN.
-   - ``niveleta``: niveleta objekt.
-   - ``not_readonly``: nastavuje formulář na readonly.
-
-   **Návratová hodnota:**
-
-   django model formulář VB.
-
+   :return: django model formulář VB.
