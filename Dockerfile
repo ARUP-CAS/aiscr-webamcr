@@ -98,6 +98,8 @@ RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --brea
 
 COPY --from=app-builder /code /code
 COPY --from=python-builder /node_modules_build/node_modules /node_modules
+# Kořen repozitáře v image = / (WORKDIR /code → BASE_DIR.parent); potřeba pro _npm_staticfiles_dirs().
+COPY ./package.json ./package-lock.json /
 
 RUN mkdir -p /vol/web/media /vol/web/static /vol/web/locale/cs/LC_MESSAGES /vol/web/locale/en/LC_MESSAGES && \
     userdel ubuntu && \

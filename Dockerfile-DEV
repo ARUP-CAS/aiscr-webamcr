@@ -74,6 +74,7 @@ RUN pip3 install --no-cache-dir --no-index --find-links=/wheels /wheels/* --brea
     rm -rf /wheels ~/.cache/pip
 
 COPY --from=python-builder /node_modules_build/node_modules /node_modules
+COPY ./package.json ./package-lock.json /
 
 RUN echo -e "alias python=python3\nalias pip=pip3" >> /etc/bash.bashrc
 

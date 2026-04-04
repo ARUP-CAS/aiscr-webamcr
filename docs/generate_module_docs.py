@@ -32,12 +32,12 @@ import subprocess
 import sys
 import traceback
 import urllib.request
-from urllib.parse import quote
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import quote
 
 import yaml
 
