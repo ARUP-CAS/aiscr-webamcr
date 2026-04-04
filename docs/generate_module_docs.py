@@ -2681,7 +2681,15 @@ def generate_docker_images_rst() -> bool:
         if not entry.get("image", "").startswith("${"):
             content_lines += _build_image_block(entry, versions, hub_cache)
 
-    new_content = "Docker images\n=============\n\n" + "\n".join(content_lines) + "\n"
+    banner_lines = [
+        "..",
+        "   Tento soubor je automaticky generován. Neupravujte ručně.",
+        "   Změny tagů: ``docker-compose*.yml``, ``Dockerfile-DB``; popis a licence:",
+        "   ``docs/docker_images_meta.yaml``. Obnovení: ``python docs/generate_module_docs.py``",
+        "   nebo ``python docs/licenses/convert_to_rst.py``.",
+        "",
+    ]
+    new_content = "\n".join(banner_lines) + "Docker images\n=============\n\n" + "\n".join(content_lines) + "\n"
 
     if check_content_changed(new_content, output_file):
         output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -3173,7 +3181,21 @@ def main() -> None:
         type=str,
         help="Specific module to process (e.g., 'adb', 'core'). If not specified, processes all modules.",
     )
+    parser.add_argument(
+        "--docker-images-only",
+        action="store_true",
+        help="Only regenerate docs/source/12_zavislosti/docker_images.rst (compose + docker_images_meta.yaml).",
+    )
     args = parser.parse_args()
+
+    if args.docker_images_only:
+        generate_docker_images_rst()
+        if changes_detected:
+            print("\n⚠ Documentation changes detected!")
+            print("The documentation files have been updated.")
+            print("Please review and commit these changes.")
+            sys.exit(1)
+        return
 
     # Generate RST files
     if not generate_all_modules(mode=args.mode, specific_module=args.module):

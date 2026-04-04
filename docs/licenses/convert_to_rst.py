@@ -1,7 +1,16 @@
-"""Generuje RST tabulku Python závislostí z výstupu nástroje pip-licenses."""
+"""Generuje RST dokumentaci závislostí pro Python i Docker image.
+
+- Tabulku Python knihoven z výstupu ``pip-licenses`` zapisuje do
+  ``docs/source/12_zavislosti/python_knihovny.rst``.
+- Soubor ``docs/source/12_zavislosti/docker_images.rst`` obnoví voláním
+  ``docs/generate_module_docs.py --docker-images-only`` (verze z compose a
+  ``docs/docker_images_meta.yaml``).
+"""
 
 import json
 import subprocess
+import sys
+from pathlib import Path
 
 LICENSES_MANUAL_FIXES = {
     "wrapt": "Copyright (c) 2013-2025, Graham Dumpleton",
@@ -11,7 +20,7 @@ LICENSES_MANUAL_FIXES = {
 def csv_to_rst_table():
     """Načte licence knihoven a zapíše je do dokumentace ve formátu RST."""
     output = subprocess.run(
-        ["pip-licenses", "--format=json", "--with-urls", "--from=mixed", "--with-system"],
+        [sys.executable, "-m", "piplicenses", "--format=json", "--with-urls", "--from=mixed", "--with-system"],
         capture_output=True,
         text=True,
     )
@@ -41,4 +50,20 @@ def csv_to_rst_table():
     print(f"Do souboru 'docs/source/12_zavislosti/python_knihovny.rst' bylo zapsáno {len(data_to_write)} knihoven.")
 
 
-csv_to_rst_table()
+def main() -> None:
+    """Vygeneruje RST pro Python knihovny a Docker image."""
+    csv_to_rst_table()
+    repo_root = Path(__file__).resolve().parents[2]
+    subprocess.run(
+        [
+            sys.executable,
+            str(repo_root / "docs" / "generate_module_docs.py"),
+            "--docker-images-only",
+        ],
+        check=True,
+        cwd=str(repo_root),
+    )
+
+
+if __name__ == "__main__":
+    main()
