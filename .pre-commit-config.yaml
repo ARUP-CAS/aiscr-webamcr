@@ -16,6 +16,24 @@ repos:
       - id: flake8
   - repo: local
     hooks:
+      - id: container-image-reference-parity
+        name: Container image reference parity (Dockerfile + compose)
+        entry: python3 scripts/check_container_image_reference_parity.py --fix
+        language: python
+        pass_filenames: false
+        always_run: true
+        files: (?i)(^|/)(dockerfile[^/]*|[^/]+\.dockerfile|docker-compose.*\.ya?ml|git_docker-compose.*\.ya?ml)$
+        require_serial: true
+        additional_dependencies:
+          - ruamel.yaml>=0.18.0
+          - packaging>=23.0
+      - id: npm-vendor-package-names
+        name: NPM vendor names vs base.py
+        entry: python3 scripts/check_npm_vendor_package_names.py --fix
+        language: python
+        pass_filenames: false
+        files: ^(package\.json|webclient/webclient/settings/base\.py)$
+        require_serial: true
       - id: method-docstring-style-reminder
         name: Method docstring style reminder (non-blocking)
         entry: python3 docs/check_method_docstrings.py

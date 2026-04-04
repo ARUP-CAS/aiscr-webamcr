@@ -10,38 +10,63 @@ Funkce
 
    Automatický import stavov projektú do kontextu všech template.
 
-   :param request: HTTP požadavek; není přímo využit, ale Django jej předává každému context processoru.
+   **Parametry:**
 
-   :return: Vrací proměnná ``constants_dict``.
+   - ``request``: HTTP požadavek; není přímo využit, ale Django jej předává každému context processoru.
+
+   **Návratová hodnota:**
+
+   Vrací proměnná ``constants_dict``.
+
 
 .. py:function:: digi_links_from_settings(request)
 
    Automatický import linkov na digitálni archiv zo settings do kontextov všech template.
 
-   :param request: HTTP požadavek; není přímo využit, ale Django jej předává každému context processoru.
+   **Parametry:**
 
-   :return: Vrací výsledek volání ``getattr()``.
+   - ``request``: HTTP požadavek; není přímo využit, ale Django jej předává každému context processoru.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``getattr()``.
+
 
 .. py:function:: logout_next_url(request)
 
    Vrátí do kontextu šablony aktuální cestu požadavku pro použití jako ``next`` parametr po odhlášení.
 
-   :param request: HTTP požadavek, z jehož atributu ``path`` se čte aktuální URL.
+   **Parametry:**
 
-   :return: Vrací slovník.
+   - ``request``: HTTP požadavek, z jehož atributu ``path`` se čte aktuální URL.
+
+   **Návratová hodnota:**
+
+   Vrací slovník.
+
 
 .. py:function:: auto_logout_client(request)
 
    Automatický výpočet a import kontextu potrebného pro správně zobrzazení automatického logoutu na všech stránkach.
 
-   :param request: Parametr ``request`` se předává do volání ``str()``, ``seconds_until_session_end()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: slovník, proměnná ``ctx``.
+   - ``request``: Parametr ``request`` se předává do volání ``str()``, ``seconds_until_session_end()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: slovník, proměnná ``ctx``.
+
 
 .. py:function:: main_shows(request)
 
    Připraví do kontextu šablony příznaky viditelnosti hlavních sekcí aplikace podle role přihlášeného uživatele.
 
-   :param request: HTTP požadavek, z jehož atributu ``user`` se čte přihlášený uživatel a jeho role.
+   **Parametry:**
 
-   :return: Vrací proměnná ``main_show``.
+   - ``request``: HTTP požadavek, z jehož atributu ``user`` se čte přihlášený uživatel a jeho role.
+
+   **Návratová hodnota:**
+
+   Vrací proměnná ``main_show``.
+

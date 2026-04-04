@@ -18,14 +18,20 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: navazany_objekt()
 
       Vrátí navázaný objekt (část dokumentu nebo dokumentační jednotku) podle typu vazby.
 
-      :return: Vrací atribut objektu.
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
 
 
 .. py:class:: Komponenta
@@ -38,40 +44,60 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: ident_cely_safe()
 
       Vrátí identifikátor komponenty s pomlčkami nahrazenými podtržítky (vhodný pro použití v HTML atributech).
 
-      :return: Vrací výsledek volání ``replace()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``replace()``.
+
 
    .. py:method:: pocet_nalezu()
 
       Vrátí celkový počet nálezů (objektů a předmětů) přiřazených ke komponentě.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 
    .. py:method:: get_absolute_url()
 
       Vrací absolute url.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``reverse()``, výsledek volání ``get_absolute_url()``.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``reverse()``, výsledek volání ``get_absolute_url()``.
+
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
-      :return: Vrací výsledek volání ``get_permission_object()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get_permission_object()``.
+
 
    .. py:method:: create_transaction()
 
       Vytvoří transaction. v aplikaci.
 
-      :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+      **Parametry:**
 
-      :return: Vrací atribut objektu.
+      - ``transaction_user``: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
 
    .. py:method:: set_transaction_main_record()
 

@@ -16,15 +16,24 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param value: Parametr ``value`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param attrs: Kolekce ``attrs`` zpracovávaná touto funkcí.
+      **Parametry:**
+
+      - ``value``: Parametr ``value`` slouží jako vstup pro logiku funkce ``__init__``.
+      - ``attrs``: Kolekce ``attrs`` zpracovávaná touto funkcí.
+
 
    .. py:method:: format_value()
 
       Formátuje hodnotu cizího klíče pro čtení jako textový popis.
 
-      :param value: Primární klíč objektu k zobrazení.
-      :return: Textový popis objektu.
+      **Parametry:**
+
+      - ``value``: Primární klíč objektu k zobrazení.
+
+      **Návratová hodnota:**
+
+      Textový popis objektu.
+
 
 
 .. py:class:: AutocompleteSelect2WidgetMixin
@@ -37,10 +46,15 @@ Třídy
 
       Nastaveni placeholderu pro pole, pokud neni poskytnuto a zmena zakladni tridy.
 
-      :param args: Parametr ``args`` se předává do volání ``build_attrs()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``build_attrs()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``attrs``.
+      - ``args``: Parametr ``args`` se předává do volání ``build_attrs()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``build_attrs()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``attrs``.
+
 
 
 .. py:class:: AutocompleteListSelect2

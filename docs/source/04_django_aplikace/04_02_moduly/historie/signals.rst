@@ -10,6 +10,9 @@ Funkce
 
    Před uložením záznamu Historie nastaví snímek organizace podle přiřazeného uživatele.
 
-   :param sender: Třída modelu, která signál vyslala.
-   :param instance: Ukládaná instance záznamu Historie.
-   :param kwargs: Další parametry signálu.
+   **Parametry:**
+
+   - ``sender``: Třída modelu, která signál vyslala.
+   - ``instance``: Ukládaná instance záznamu Historie.
+   - ``kwargs``: Další parametry signálu.
+

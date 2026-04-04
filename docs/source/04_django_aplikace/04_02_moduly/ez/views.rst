@@ -16,9 +16,14 @@ Třídy
 
       Vrátí kontext šablony s názvem panelu nástrojů pro domovskou stránku externích zdrojů.
 
-      :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
 
 .. py:class:: ExterniZdrojListView
@@ -35,24 +40,37 @@ Třídy
 
       Přeloží název pole z URL parametru na skutečný název databázového pole pro řazení.
 
-      :param field: Název pole z URL parametru řazení (může obsahovat prefix ``-`` pro sestupné řazení).
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``get()``.
+      - ``field``: Název pole z URL parametru řazení (může obsahovat prefix ``-`` pro sestupné řazení).
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get()``.
+
 
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
 
-      :return: Vrací výsledek volání ``check_filter_permission()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``check_filter_permission()``.
+
 
    .. py:method:: add_accessibility_lookup()
 
       Aplikuje filtrování přístupu na queryset externích zdrojů dle oprávnění uživatele.
 
-      :param permission: Objekt oprávnění určující úroveň přístupu uživatele.
-      :param qs: Vstupní queryset externích zdrojů, který se filtruje.
+      **Parametry:**
 
-      :return: Vrací proměnná ``qs``.
+      - ``permission``: Objekt oprávnění určující úroveň přístupu uživatele.
+      - ``qs``: Vstupní queryset externích zdrojů, který se filtruje.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``qs``.
+
 
 
 .. py:class:: ExterniZdrojDetailView
@@ -65,9 +83,14 @@ Třídy
 
       Vrátí kontext šablony s daty pro detail externího zdroje včetně připojených akcí a lokalit.
 
-      :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
 
 .. py:class:: ExterniZdrojCreateView
@@ -80,41 +103,64 @@ Třídy
 
       Vrací form kwargs.
 
-      :return: Vrací proměnná ``kwargs``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``kwargs``.
+
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: form_valid()
 
       Uloží nový externí zdroj do databáze i Fedory a přesměruje na jeho detail.
 
-      :param form: Validovaný formulář pro vytvoření externího zdroje.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseRedirect()``, výsledek volání ``form_invalid()``.
+      - ``form``: Validovaný formulář pro vytvoření externího zdroje.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``HttpResponseRedirect()``, výsledek volání ``form_invalid()``.
+
 
    .. py:method:: form_invalid()
 
       Zobrazí chybovou zprávu a znovu vykreslí formulář při neúspěšném vytvoření externího zdroje.
 
-      :param form: Nevalidní formulář s chybami validace.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``form_invalid()``.
+      - ``form``: Nevalidní formulář s chybami validace.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``form_invalid()``.
+
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``get()``.
+      - ``request``: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+      - ``args``: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get()``.
+
 
 
 .. py:class:: ExterniZdrojEditView
@@ -127,51 +173,79 @@ Třídy
 
       Vrací form kwargs.
 
-      :return: Vrací proměnná ``kwargs``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``kwargs``.
+
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: form_valid()
 
       Uloží změny externího zdroje do databáze a Fedory a přesměruje na jeho detail.
 
-      :param form: Validovaný formulář pro editaci externího zdroje.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``HttpResponseRedirect()``.
+      - ``form``: Validovaný formulář pro editaci externího zdroje.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``HttpResponseRedirect()``.
+
 
    .. py:method:: form_invalid()
 
       Zobrazí chybovou zprávu a znovu vykreslí formulář při neúspěšné editaci externího zdroje.
 
-      :param form: Nevalidní formulář s chybami validace.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``form_invalid()``.
+      - ``form``: Nevalidní formulář s chybami validace.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``form_invalid()``.
+
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``get()``.
+      - ``request``: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+      - ``args``: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get()``.
+
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      :param request: Parametr ``request`` předává se do volání ``post()``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``post()``.
+      - ``request``: Parametr ``request`` předává se do volání ``post()``, vstupuje do návratové hodnoty.
+      - ``args``: Parametr ``args`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``post()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``post()``.
+
 
 
 .. py:class:: TransakceView
@@ -188,45 +262,68 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      :return: Načtená data odpovídající zadaným vstupům.
+      **Návratová hodnota:**
+
+      Načtená data odpovídající zadaným vstupům.
+
 
    .. py:method:: get_context_data()
 
       Vrátí kontext šablony s daty pro modální dialog transakce externího zdroje.
 
-      :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: dispatch()
 
       Ověří, zda je stav externího zdroje povolený pro danou transakci, a zamítne přístup při neplatném stavu.
 
-      :param request: HTTP požadavek obsahující informace o uživateli.
-      :param args: Dodatečné poziční argumenty předávané nadřízené metodě.
-      :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``dispatch()``.
+      - ``request``: HTTP požadavek obsahující informace o uživateli.
+      - ``args``: Dodatečné poziční argumenty předávané nadřízené metodě.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``dispatch()``.
+
 
    .. py:method:: get()
 
       Zobrazí modální dialog pro transakci nad externím zdrojem.
 
-      :param request: HTTP požadavek.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``render_to_response()``.
+      - ``request``: HTTP požadavek.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``render_to_response()``.
+
 
    .. py:method:: post()
 
       Provede transakci změny stavu externího zdroje a přesměruje na jeho detail.
 
-      :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: HTTP požadavek obsahující informace o přihlášeném uživateli.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: ExterniZdrojOdeslatView
@@ -254,11 +351,16 @@ Třídy
 
       Potvrdí externí zdroj a případně aktualizuje IGSN lokalit; při chybě provede rollback transakce.
 
-      :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: HTTP požadavek obsahující informace o přihlášeném uživateli.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: ExterniZdrojSmazatView
@@ -275,11 +377,16 @@ Třídy
 
       Smaže externí zdroj z databáze i Fedory; při existenci navázaných záznamů zamítne smazání.
 
-      :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: HTTP požadavek obsahující informace o přihlášeném uživateli.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: ExterniZdrojVratitView
@@ -296,21 +403,31 @@ Třídy
 
       Zobrazí modální dialog pro vrácení externího zdroje s formulářem pro zadání důvodu.
 
-      :param request: HTTP požadavek.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``render_to_response()``.
+      - ``request``: HTTP požadavek.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``render_to_response()``.
+
 
    .. py:method:: post()
 
       Vrátí externí zdroj do předchozího stavu s důvodem; při neplatném formuláři znovu zobrazí dialog.
 
-      :param request: HTTP požadavek obsahující POST data s důvodem vrácení.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+      - ``request``: HTTP požadavek obsahující POST data s důvodem vrácení.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+
 
 
 .. py:class:: ExterniOdkazOdpojitView
@@ -323,11 +440,16 @@ Třídy
 
       Ověří, zda odpojovaný externí odkaz patří k danému externímu zdroji, a zamítne přístup při nesouladu.
 
-      :param request: HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předávané nadřízené metodě.
-      :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+      **Parametry:**
 
-      :return: Výstup funkce odpovídající implementované logice.
+      - ``request``: HTTP požadavek.
+      - ``args``: Dodatečné poziční argumenty předávané nadřízené metodě.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
+      **Návratová hodnota:**
+
+      Výstup funkce odpovídající implementované logice.
+
 
    .. py:method:: init_translation()
 
@@ -337,19 +459,29 @@ Třídy
 
       Vrací context data.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: post()
 
       Odpojí externí odkaz od externího zdroje a případně aktualizuje IGSN archivované lokality.
 
-      :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: HTTP požadavek obsahující informace o přihlášeném uživateli.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: ExterniOdkazPripojitView
@@ -366,19 +498,29 @@ Třídy
 
       Vrací context data.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: post()
 
       Připojí archeologický záznam k externímu zdroji vytvořením nového externího odkazu.
 
-      :param request: HTTP požadavek obsahující POST data s identifikátorem archeologického záznamu.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: HTTP požadavek obsahující POST data s identifikátorem archeologického záznamu.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané metodě ``get_context_data``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: ExterniOdkazEditView
@@ -391,59 +533,92 @@ Třídy
 
       Ověří, zda editovaný externí odkaz patří k zadanému záznamu dle typu vazby, a zamítne přístup při nesouladu.
 
-      :param request: HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předávané nadřízené metodě.
-      :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+      **Parametry:**
 
-      :return: Výstup funkce odpovídající implementované logice.
+      - ``request``: HTTP požadavek.
+      - ``args``: Dodatečné poziční argumenty předávané nadřízené metodě.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
+      **Návratová hodnota:**
+
+      Výstup funkce odpovídající implementované logice.
+
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: get_success_url()
 
       Vrací success url.
 
-      :return: Vrací proměnná ``response``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``response``.
+
 
    .. py:method:: get_object()
 
       Vrátí instanci externího odkazu a nastaví jí aktivní Fedora transakci, pokud existuje.
 
-      :param queryset: Volitelný queryset pro vyhledání objektu; pokud není zadán, použije se výchozí.
+      **Parametry:**
 
-      :return: Vrací proměnná ``object``.
+      - ``queryset``: Volitelný queryset pro vyhledání objektu; pokud není zadán, použije se výchozí.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``object``.
+
 
    .. py:method:: post()
 
       Obsluhuje HTTP metodu POST.
 
-      :param request: Parametr ``request`` předává se do volání ``create_transaction()``, ``post()``, pracuje se s atributy ``user``.
-      :param args: Parametr ``args`` se předává do volání ``post()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``post()``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: Parametr ``request`` předává se do volání ``create_transaction()``, ``post()``, pracuje se s atributy ``user``.
+      - ``args``: Parametr ``args`` se předává do volání ``post()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``post()``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
    .. py:method:: form_valid()
 
       Uloží změny externího odkazu a zobrazí zprávu o úspěšném uložení.
 
-      :param form: Validovaný formulář pro editaci externího odkazu.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``form_valid()``.
+      - ``form``: Validovaný formulář pro editaci externího odkazu.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``form_valid()``.
+
 
    .. py:method:: form_invalid()
 
       Zobrazí chybovou zprávu a znovu vykreslí formulář při neúspěšné editaci externího odkazu.
 
-      :param form: Nevalidní formulář s chybami validace.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``form_invalid()``.
+      - ``form``: Nevalidní formulář s chybami validace.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``form_invalid()``.
+
 
 
 .. py:class:: ExterniOdkazOdpojitAZView
@@ -460,35 +635,53 @@ Třídy
 
       Ověří, zda odpojovaný externí odkaz patří k danému archeologickému záznamu, a zamítne přístup při nesouladu.
 
-      :param request: HTTP požadavek.
-      :param args: Dodatečné poziční argumenty předávané nadřízené metodě.
-      :param kwargs: Dodatečné klíčové argumenty předávané nadřízené metodě.
+      **Parametry:**
 
-      :return: Výstup funkce odpovídající implementované logice.
+      - ``request``: HTTP požadavek.
+      - ``args``: Dodatečné poziční argumenty předávané nadřízené metodě.
+      - ``kwargs``: Dodatečné klíčové argumenty předávané nadřízené metodě.
+
+      **Návratová hodnota:**
+
+      Výstup funkce odpovídající implementované logice.
+
 
    .. py:method:: get_zaznam()
 
       Vrací zaznam. v aplikaci.
 
-      :return: Vrací výsledek volání ``get_object_or_404()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get_object_or_404()``.
+
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: post()
 
       Odpojí externí odkaz od archeologického záznamu a případně aktualizuje IGSN archivované lokality.
 
-      :param request: HTTP požadavek obsahující informace o přihlášeném uživateli.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: HTTP požadavek obsahující informace o přihlášeném uživateli.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: ExterniZdrojAutocomplete
@@ -501,24 +694,37 @@ Třídy
 
       Vrací result label.
 
-      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování.
+      - ``result``: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
+
 
    .. py:method:: add_accessibility_lookup()
 
       Aplikuje filtrování přístupu na queryset externích zdrojů pro autocomplete dle oprávnění uživatele.
 
-      :param permission: Objekt oprávnění určující úroveň přístupu uživatele.
-      :param qs: Vstupní queryset externích zdrojů, který se filtruje.
+      **Parametry:**
 
-      :return: Vrací proměnná ``qs``.
+      - ``permission``: Objekt oprávnění určující úroveň přístupu uživatele.
+      - ``qs``: Vstupní queryset externích zdrojů, který se filtruje.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``qs``.
+
 
 
 .. py:class:: ExterniZdrojTableRowView
@@ -531,9 +737,14 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``HttpResponse()``.
+      - ``request``: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``HttpResponse()``.
+
 
 
 .. py:class:: ExterniOdkazPripojitDoAzView
@@ -546,25 +757,38 @@ Třídy
 
       Vrací zaznam. v aplikaci.
 
-      :return: Vrací proměnná ``zaznam``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``zaznam``.
+
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: post()
 
       Připojí externí odkaz k archeologickému záznamu a uloží propojení do databáze a Fedory.
 
-      :param request: HTTP požadavek obsahující POST data s identifikátorem externího zdroje a paginací.
-      :param args: Dodatečné poziční argumenty.
-      :param kwargs: Dodatečné klíčové argumenty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: HTTP požadavek obsahující POST data s identifikátorem externího zdroje a paginací.
+      - ``args``: Dodatečné poziční argumenty.
+      - ``kwargs``: Dodatečné klíčové argumenty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: EzOdkazyTableView
@@ -577,10 +801,15 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``check_permissions()``, pracuje se s atributy ``GET``, ``user``.
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get()``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``HttpResponse()``.
+      - ``request``: Parametr ``request`` předává se do volání ``check_permissions()``, pracuje se s atributy ``GET``, ``user``.
+      - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get()``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``HttpResponse()``.
+
 
 
 Funkce
@@ -590,27 +819,45 @@ Funkce
 
    Funkce pro získaní historických datumu.
 
-   :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
-   :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
-   :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
+   **Parametry:**
+
+   - ``historie_vazby``: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+   - ``request_user``: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+
+   **Návratová hodnota:**
+
+   Slovník dat jednotlivých změn stavu pro zobrazení v historii.
+
 
 .. py:function:: get_detail_template_shows(zaznam, user)
 
    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
 
-   :param zaznam: Parametr ``zaznam`` předává se do volání ``check_permissions()``, pracuje se s atributy ``stav``, ``ident_cely``.
-   :param user: Parametr ``user`` se předává do volání ``check_permissions()``.
-   :return: Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
+   **Parametry:**
+
+   - ``zaznam``: Parametr ``zaznam`` předává se do volání ``check_permissions()``, pracuje se s atributy ``stav``, ``ident_cely``.
+   - ``user``: Parametr ``user`` se předává do volání ``check_permissions()``.
+
+   **Návratová hodnota:**
+
+   Slovník příznaků určujících, které akce a sekce detailu se mají zobrazit.
+
 
 .. py:function:: get_required_fields()
 
    Funkce pro získaní dictionary povinných polí podle stavu externího zdroje.
 
-   :return: Vrací proměnná ``required_fields``.
+   **Návratová hodnota:**
+
+   Vrací proměnná ``required_fields``.
+
 
 .. py:function:: save_autor_editor(zaznam, form)
 
    Funkce pro uložení autorů a editorů k externímu zdroji podle toho v jakém pořadí byly zadáni.
 
-   :param zaznam: Parametr ``zaznam`` předává se do volání ``create()``.
-   :param form: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
+   **Parametry:**
+
+   - ``zaznam``: Parametr ``zaznam`` předává se do volání ``create()``.
+   - ``form``: Parametr ``form`` pracuje se s atributy ``cleaned_data``.
+

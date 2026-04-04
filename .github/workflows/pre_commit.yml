@@ -124,6 +124,14 @@ jobs:
           grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
+          echo "image_parity_log<<EOF" >> "$GITHUB_OUTPUT"
+          grep '^\[image-ref-parity\]' precommit.clean.log || true
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+          echo "npm_vendor_log<<EOF" >> "$GITHUB_OUTPUT"
+          grep '^\[npm-vendor-names\]' precommit.clean.log || true
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
           grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log | while read line; do
             FILE=$(echo "$line" | cut -d: -f1)
             LINE=$(echo "$line" | cut -d: -f2)
@@ -173,6 +181,8 @@ jobs:
 
             It includes:
             - Pre-commit formatting fixes
+            - Container image / compose alignment (when the parity hook applied changes)
+            - NPM vendor names in `base.py` (when the npm-vendor hook applied changes)
             - Updated `python_knihovny.rst`
 
             Please merge this PR to make the original PR pass.
@@ -188,6 +198,20 @@ jobs:
               echo "## ✅ Pre-commit checks passed"
               echo ""
               echo "All hooks finished successfully."
+              if [ -n "${{ steps.hooks.outputs.image_parity_log }}" ]; then
+                echo ""
+                echo "### Container image reference parity"
+                echo '```'
+                echo "${{ steps.hooks.outputs.image_parity_log }}"
+                echo '```'
+              fi
+              if [ -n "${{ steps.hooks.outputs.npm_vendor_log }}" ]; then
+                echo ""
+                echo "### NPM vendor package names"
+                echo '```'
+                echo "${{ steps.hooks.outputs.npm_vendor_log }}"
+                echo '```'
+              fi
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
@@ -222,19 +246,37 @@ jobs:
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
 
+          if [ -n "${{ steps.hooks.outputs.image_parity_log }}" ]; then
+            echo "### Container image reference parity" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.hooks.outputs.image_parity_log }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -n "${{ steps.hooks.outputs.npm_vendor_log }}" ]; then
+            echo "### NPM vendor package names" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.hooks.outputs.npm_vendor_log }}" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Comment on original PR (sticky)
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
             const changed = "${{ steps.changes.outputs.changed }}" === "true";
+            const exitCode = "${{ steps.hooks.outputs.exit_code }}";
             const logWarnings = ${{ toJSON(steps.hooks.outputs.log_warnings || '') }};
             const docWarnings = ${{ toJSON(steps.hooks.outputs.doc_warnings || '') }};
             const flakeErrors = ${{ toJSON(steps.hooks.outputs.flake_errors || '') }};
+            const imageParityLog = ${{ toJSON(steps.hooks.outputs.image_parity_log || '') }};
+            const npmVendorLog = ${{ toJSON(steps.hooks.outputs.npm_vendor_log || '') }};
             const runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}";
             const marker = "<!-- precommit-bot-comment -->";
 
             const cleanRun =
+              exitCode === "0" &&
               !changed &&
               (!logWarnings || !logWarnings.trim()) &&
               (!docWarnings || !docWarnings.trim()) &&
@@ -243,11 +285,17 @@ jobs:
             let body;
 
             if (cleanRun) {
+              let hookLogBlocks = "";
+              if (imageParityLog && imageParityLog.trim()) {
+                hookLogBlocks += `\n\n### Container image reference parity\n\n\`\`\`\n${imageParityLog}\n\`\`\`\n`;
+              }
+              if (npmVendorLog && npmVendorLog.trim()) {
+                hookLogBlocks += `\n\n### NPM vendor package names\n\n\`\`\`\n${npmVendorLog}\n\`\`\`\n`;
+              }
               body = `${marker}
             ## ✅ Pre-commit checks passed
 
-            All pre-commit hooks finished successfully and no warnings were detected.
-
+            All pre-commit hooks finished successfully and no flake/doc/log warnings were detected.${hookLogBlocks}
             - Workflow run: [View logs](${runUrl})
             `;
             } else {
@@ -266,9 +314,18 @@ jobs:
                 sections.push(`### Flake8 errors\n\`\`\`\n${flakeErrors}\n\`\`\``);
               }
 
+              if (imageParityLog && imageParityLog.trim()) {
+                sections.push(`### Container image reference parity\n\`\`\`\n${imageParityLog}\n\`\`\``);
+              }
+
+              if (npmVendorLog && npmVendorLog.trim()) {
+                sections.push(`### NPM vendor package names\n\`\`\`\n${npmVendorLog}\n\`\`\``);
+              }
+
               body = `${marker}
             ## ⚠️ Pre-commit results
 
+            - Exit code: ${exitCode}
             - Changes detected: ${changed}
             - Workflow run: [View logs](${runUrl})
 
@@ -303,6 +360,12 @@ jobs:
                 body,
               });
             }
+
+      - name: Fail if pre-commit failed without auto-fix PR
+        if: steps.hooks.outputs.exit_code != '0' && steps.changes.outputs.changed != 'true'
+        run: |
+          echo "Pre-commit exited with ${{ steps.hooks.outputs.exit_code }} and no fix PR was generated."
+          exit 1
 
       - name: Final status check
         if: steps.hooks.outputs.strict_mode == 'true'

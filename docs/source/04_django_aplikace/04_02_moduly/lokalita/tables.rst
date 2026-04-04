@@ -16,5 +16,8 @@ Třídy
 
       Vrátí seznam identifikátorů archeologických záznamů pro lokalitu.
 
-      :return: Vrací výsledek volání ``join()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``join()``.
+
 

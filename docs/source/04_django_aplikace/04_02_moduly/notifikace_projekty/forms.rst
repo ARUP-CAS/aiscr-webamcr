@@ -16,8 +16,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: PesNotificationsForm
@@ -30,15 +33,21 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param pes_object_count: Parametr ``pes_object_count`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``pes_object_count``: Parametr ``pes_object_count`` slouží jako vstup pro logiku funkce ``__init__``.
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: clean()
 
       Provádí operaci clean.
 
-      :return: Vrací proměnná ``cleaned_data``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``cleaned_data``.
+
 
 
 .. py:class:: PesInlineFormSet
@@ -51,7 +60,10 @@ Třídy
 
       Provádí operaci count non empty forms.
 
-      :return: Vrací proměnná ``non_empty_count``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``non_empty_count``.
+
 
 
 Funkce
@@ -61,7 +73,12 @@ Funkce
 
    Funkce která vrací formulář hlídacího psa pro formset.
 
-   :param not_readonly: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
-   :param model_typ: Parametr ``model_typ`` slouží jako vstup pro logiku funkce ``create_pes_form``.
+   **Parametry:**
 
-   :return: Vrací proměnná ``PesForm``.
+   - ``not_readonly``: Číselná hodnota ``not_readonly`` použitá při výpočtu nebo transformaci.
+   - ``model_typ``: Parametr ``model_typ`` slouží jako vstup pro logiku funkce ``create_pes_form``.
+
+   **Návratová hodnota:**
+
+   Vrací proměnná ``PesForm``.
+

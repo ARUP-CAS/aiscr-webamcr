@@ -16,17 +16,26 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-      :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``required``: Parametr ``required`` ovlivňuje větvení podmínek.
+      - ``required_next``: Parametr ``required_next`` ovlivňuje větvení podmínek.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: clean()
 
       Provádí operaci clean.
 
-      :return: Vrací proměnná ``cleaned_data``.
-      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``not coordinate_x1 or not coordinate_x2``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``cleaned_data``.
+
+      **Výjimky:**
+
+      - ``forms.ValidationError``: Vyvolá se při splnění podmínky ``not coordinate_x1 or not coordinate_x2``.
+
 
 
 .. py:class:: EditProjektForm
@@ -39,18 +48,27 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-      :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
-      :param edit_fields: Parametr ``edit_fields`` ovlivňuje větvení podmínek.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``required``: Parametr ``required`` ovlivňuje větvení podmínek.
+      - ``required_next``: Parametr ``required_next`` ovlivňuje větvení podmínek.
+      - ``edit_fields``: Parametr ``edit_fields`` ovlivňuje větvení podmínek.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: clean()
 
       Kontrola datumu zahájení a ukončení pri validaci formuláře.
 
-      :return: Vrací atribut objektu.
-      :raises forms.ValidationError: Vyvolá se s textem "Datum zahájení nemůže být po datu ukončení".
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
+      **Výjimky:**
+
+      - ``forms.ValidationError``: Vyvolá se s textem "Datum zahájení nemůže být po datu ukončení".
+
 
 
 .. py:class:: NavrhnoutZruseniProjektForm
@@ -63,15 +81,24 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: clean()
 
       Metoda na kontrolu obsahu důvodu pro zrušení.
 
-      :return: Vrací atribut objektu.
-      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``not cleaned_data.get('projekt_id')``; nebo při splnění podmínky ``not cleaned_data.get('reason_text')``.
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
+      **Výjimky:**
+
+      - ``forms.ValidationError``: Vyvolá se při splnění podmínky ``not cleaned_data.get('projekt_id')``; nebo při splnění podmínky ``not cleaned_data.get('reason_text')``.
+
 
 
 .. py:class:: PrihlaseniProjektForm
@@ -84,8 +111,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+
 
 
 .. py:class:: ZahajitVTerenuForm
@@ -98,14 +128,20 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: clean()
 
       Provádí operaci clean.
 
-      :return: Vrací proměnná ``cleaned_data``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``cleaned_data``.
+
 
 
 .. py:class:: UkoncitVTerenuForm
@@ -118,15 +154,24 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: clean()
 
       Metoda pro kontrolu datumu ukončení.
 
-      :return: Vrací atribut objektu.
-      :raises forms.ValidationError: Vyvolá se při splnění podmínky ``self.instance.datum_zahajeni > cleaned_data.get('datum_ukonceni')``.
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
+      **Výjimky:**
+
+      - ``forms.ValidationError``: Vyvolá se při splnění podmínky ``self.instance.datum_zahajeni > cleaned_data.get('datum_ukonceni')``.
+
 
 
 .. py:class:: ZruseniProjektForm
@@ -139,8 +184,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: GenerovatNovePotvrzeniForm
@@ -153,8 +201,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: GenerovatExpertniListForm
@@ -167,8 +218,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: PripojitProjektForm
@@ -181,9 +235,12 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param dok: Parametr ``dok`` ovlivňuje větvení podmínek.
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``dok``: Parametr ``dok`` ovlivňuje větvení podmínek.
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: ProjektFilterForm
@@ -201,10 +258,13 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param label: Textový název nebo klíč ``label`` používaný v rámci operace.
-      :param help_text: Číselná hodnota ``help_text`` použitá při výpočtu nebo transformaci.
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``label``: Textový název nebo klíč ``label`` používaný v rámci operace.
+      - ``help_text``: Číselná hodnota ``help_text`` použitá při výpočtu nebo transformaci.
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: UpravitDatumOznameniForm
@@ -217,8 +277,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: NeodeslatMailForm
@@ -231,6 +294,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 

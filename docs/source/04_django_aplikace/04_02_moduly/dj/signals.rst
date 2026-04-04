@@ -12,23 +12,32 @@ Funkce
 
    Metoda se volá po uložením DJ.
 
-   :param sender: Třída modelu, která signál vyslala.
-   :param instance: Ukládaná instance dokumentační jednotky.
-   :param created: True pokud byl záznam právě vytvořen, False při aktualizaci.
-   :param kwargs: Další parametry signálu.
+   **Parametry:**
+
+   - ``sender``: Třída modelu, která signál vyslala.
+   - ``instance``: Ukládaná instance dokumentační jednotky.
+   - ``created``: True pokud byl záznam právě vytvořen, False při aktualizaci.
+   - ``kwargs``: Další parametry signálu.
+
 
 .. py:function:: pre_delete_dokumentacni_jednotka(sender, instance)
 
    Zpracuje odpojení pianu a jeho případné smazání před smazáním dokumentační jednotky.
 
-   :param sender: Třída modelu, která signál vyslala.
-   :param instance: Mazaná instance dokumentační jednotky.
-   :param kwargs: Další parametry signálu.
+   **Parametry:**
+
+   - ``sender``: Třída modelu, která signál vyslala.
+   - ``instance``: Mazaná instance dokumentační jednotky.
+   - ``kwargs``: Další parametry signálu.
+
 
 .. py:function:: delete_dokumentacni_jednotka(sender, instance)
 
    Odstraní dokumentacni jednotka.
 
-   :param sender: Třída modelu, která signál vyslala.
-   :param instance: Smazaná instance dokumentační jednotky.
-   :param kwargs: Další parametry signálu.
+   **Parametry:**
+
+   - ``sender``: Třída modelu, která signál vyslala.
+   - ``instance``: Smazaná instance dokumentační jednotky.
+   - ``kwargs``: Další parametry signálu.
+

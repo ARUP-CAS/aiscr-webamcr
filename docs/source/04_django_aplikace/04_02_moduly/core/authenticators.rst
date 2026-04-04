@@ -16,8 +16,16 @@ Třídy
 
       Ověří, zda se uživatel může přihlásit; vrátí True, nebo vyvolá ValidationError, pokud je neaktivní.
 
-      :param user: Uživatelský objekt, jehož atribut ``is_active`` se ověřuje.
+      **Parametry:**
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-      :raises ValidationError: Vyvolá se při splnění podmínky ``user.is_active``.
+      - ``user``: Uživatelský objekt, jehož atribut ``is_active`` se ověřuje.
+
+      **Návratová hodnota:**
+
+      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+
+      **Výjimky:**
+
+      - ``ValidationError``: Vyvolá se při splnění podmínky ``user.is_active``.
+
 

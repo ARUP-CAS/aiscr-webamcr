@@ -16,9 +16,14 @@ Třídy
 
       Vyrenderuje uzivatel custom.
 
-      :param record: Parametr ``record`` pracuje se s atributy ``uzivatel``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``display_name()``.
+      - ``record``: Parametr ``record`` pracuje se s atributy ``uzivatel``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: str, výsledek volání ``display_name()``.
+
 
 
 .. py:class:: SimpleHistoryTable
@@ -36,25 +41,40 @@ Třídy
 
       Vyrenderuje uzivatel. v aplikaci.
 
-      :param record: Parametr ``record`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``display_name()``.
+      - ``record``: Parametr ``record`` předává se do volání ``filter()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: vybranou hodnotu z kolekce, výsledek volání ``display_name()``.
+
 
    .. py:method:: render_url()
 
       Vyrenderuje url. v aplikaci.
 
-      :param value: Hodnota URL sloupce.
-      :param record: Slovník záznamu tabulky obsahující URL ke stažení.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``format_html()``.
+      - ``value``: Hodnota URL sloupce.
+      - ``record``: Slovník záznamu tabulky obsahující URL ke stažení.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``format_html()``.
+
 
    .. py:method:: value_url()
 
       Vrátí absolutní URL záznamu Fedory včetně hostname pro export tabulky.
 
-      :param value: Hodnota URL sloupce.
-      :param record: Slovník záznamu tabulky obsahující relativní URL.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování.
+      - ``value``: Hodnota URL sloupce.
+      - ``record``: Slovník záznamu tabulky obsahující relativní URL.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 

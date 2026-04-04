@@ -16,9 +16,14 @@ Třídy
 
       Provádí operaci label from instance.
 
-      :param obj: Parametr ``obj`` pracuje se s atributy ``ident_cely``, ``vedouci_projektu``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování.
+      - ``obj``: Parametr ``obj`` pracuje se s atributy ``ident_cely``, ``vedouci_projektu``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 
 
 .. py:class:: PotvrditNalezForm
@@ -31,11 +36,14 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param readonly: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param predano_required: Parametr ``predano_required`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param predano_hidden: Parametr ``predano_hidden`` ovlivňuje větvení podmínek.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``readonly``: Parametr ``readonly`` slouží jako vstup pro logiku funkce ``__init__``.
+      - ``predano_required``: Parametr ``predano_required`` slouží jako vstup pro logiku funkce ``__init__``.
+      - ``predano_hidden``: Parametr ``predano_hidden`` ovlivňuje větvení podmínek.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: CreateSamostatnyNalezForm
@@ -48,13 +56,16 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
-      :param user: Parametr ``user`` se předává do volání ``ProjectModelChoiceField()``, ``filter()``, pracuje se s atributy ``moje_spolupracujici_organizace``, ``moje_stavy_pruzkumnych_projektu``.
-      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-      :param required_next: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param project_ident: Identifikátor ``project_ident`` používaný pro dohledání cílového záznamu.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``readonly``: Parametr ``readonly`` ovlivňuje větvení podmínek.
+      - ``user``: Parametr ``user`` se předává do volání ``ProjectModelChoiceField()``, ``filter()``, pracuje se s atributy ``moje_spolupracujici_organizace``, ``moje_stavy_pruzkumnych_projektu``.
+      - ``required``: Parametr ``required`` ovlivňuje větvení podmínek.
+      - ``required_next``: Parametr ``required_next`` slouží jako vstup pro logiku funkce ``__init__``.
+      - ``project_ident``: Identifikátor ``project_ident`` používaný pro dohledání cílového záznamu.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``pop``.
+
 
 
 .. py:class:: CreateZadostForm
@@ -67,8 +78,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: PasFilterForm
@@ -86,8 +100,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 Funkce
@@ -97,6 +114,11 @@ Funkce
 
    Funkce pro validaci zadaného emailu uživatele.
 
-   :param email: Uživatel nebo osoba ``email``, v jejímž kontextu se operace provádí.
+   **Parametry:**
 
-   :raises ValidationError: Vyvolá se při splnění podmínky ``not user.exists()``; nebo při splnění podmínky ``user[0].hlavni_role not in Group.objects.filter(id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID))``.
+   - ``email``: Uživatel nebo osoba ``email``, v jejímž kontextu se operace provádí.
+
+   **Výjimky:**
+
+   - ``ValidationError``: Vyvolá se při splnění podmínky ``not user.exists()``; nebo při splnění podmínky ``user[0].hlavni_role not in Group.objects.filter(id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID))``.
+

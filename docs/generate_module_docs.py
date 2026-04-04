@@ -1177,16 +1177,17 @@ def has_meaningful_code(source_file: Path) -> bool:
         return False
 
 
-def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def extract_docstrings(source_file: Path) -> Tuple[Optional[str], List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Extrahuje docstrings z modulu Python pomocí AST parsování.
 
     :param source_file: Cesta ke zdrojovému souboru.
-    :return: tuple: (třídy, funkce), kde každá je seznamem slovníků.
+    :return: tuple: (docstring modulu nebo None, třídy, funkce); třídy a funkce jsou seznamy slovníků.
     """
     with open(source_file, "r", encoding="utf-8") as f:
         source_code = f.read()
 
     tree = ast.parse(source_code)
+    module_doc = ast.get_docstring(tree, clean=False)
 
     classes = []
     functions = []
@@ -1211,7 +1212,190 @@ def extract_docstrings(source_file: Path) -> Tuple[List[Dict[str, Any]], List[Di
             args = [arg.arg for arg in node.args.args]
             functions.append({"name": node.name, "docstring": docstring, "args": args, "lineno": node.lineno})
 
-    return classes, functions
+    return module_doc, classes, functions
+
+
+def _looks_like_sphinx_fieldlist(docstring: str) -> bool:
+    """Vrátí True, pokud text vypadá jako Sphinx seznam polí (:param:, :return: atd.)."""
+    return bool(
+        re.search(r"^\s*:(?:param|type|return|returns|raises|raise|yield|yields|rtype)\b", docstring, re.I | re.M)
+    )
+
+
+def _format_sphinx_fieldlist_rst(docstring: str, indent: str) -> List[str]:
+    """Převede docstring se Sphinx poli (:param:, :return:, …) na řádky RST (bez rizika interpretace ``:role:``)."""
+    lines = docstring.splitlines()
+    n = len(lines)
+    i = 0
+
+    def is_field_start(stripped: str) -> bool:
+        return bool(re.match(r"^:(?:param|type|return|returns|raises|raise|yield|yields|rtype)\b", stripped, re.I))
+
+    summary_lines: List[str] = []
+    while i < n:
+        stripped = lines[i].strip()
+        if stripped and is_field_start(stripped):
+            break
+        summary_lines.append(lines[i])
+        i += 1
+    while summary_lines and not summary_lines[-1].strip():
+        summary_lines.pop()
+
+    params: List[Tuple[str, str]] = []
+    types: Dict[str, str] = {}
+    returns: List[str] = []
+    rtypes: List[str] = []
+    raises: List[str] = []
+    yields: List[str] = []
+    misc_field_lines: List[str] = []
+
+    def consume_continuation(start_i: int) -> Tuple[str, int]:
+        parts: List[str] = []
+        j = start_i
+        while j < n:
+            raw = lines[j]
+            st = raw.strip()
+            if not st:
+                j += 1
+                continue
+            if is_field_start(st):
+                break
+            if raw.startswith("    ") or raw.startswith("\t"):
+                parts.append(st)
+                j += 1
+            else:
+                break
+        return " ".join(parts).strip(), j
+
+    while i < n:
+        stripped = lines[i].strip()
+        if not stripped:
+            i += 1
+            continue
+
+        m = re.match(r"^:param\s+(\*?\*?\w+)\s*:\s*(.*)$", stripped, re.I)
+        if m:
+            name, first = m.group(1), m.group(2)
+            extra, j = consume_continuation(i + 1)
+            body = " ".join(x for x in [first.strip(), extra] if x).strip()
+            params.append((name, body))
+            i = j
+            continue
+
+        m = re.match(r"^:type\s+(\w+)\s*:\s*(.*)$", stripped, re.I)
+        if m:
+            types[m.group(1)] = m.group(2).strip()
+            i += 1
+            continue
+
+        m = re.match(r"^:return(?:s)?\s*:\s*(.*)$", stripped, re.I)
+        if m:
+            first = m.group(1)
+            extra, j = consume_continuation(i + 1)
+            ret = " ".join(x for x in [first.strip(), extra] if x).strip()
+            if ret:
+                returns.append(ret)
+            i = j
+            continue
+
+        m = re.match(r"^:rtype\s*:\s*(.*)$", stripped, re.I)
+        if m:
+            first = m.group(1)
+            extra, j = consume_continuation(i + 1)
+            rt = " ".join(x for x in [first.strip(), extra] if x).strip()
+            if rt:
+                rtypes.append(rt)
+            i = j
+            continue
+
+        m = re.match(r"^:raises?\s+([A-Za-z0-9_.]+)\s*:\s*(.*)$", stripped, re.I)
+        if m:
+            exc, first = m.group(1), m.group(2)
+            extra, j = consume_continuation(i + 1)
+            desc = " ".join(x for x in [first.strip(), extra] if x).strip()
+            raises.append(f"``{exc}``: {desc}" if desc else f"``{exc}``")
+            i = j
+            continue
+
+        m = re.match(r"^:yield(?:s)?\s*:\s*(.*)$", stripped, re.I)
+        if m:
+            first = m.group(1)
+            extra, j = consume_continuation(i + 1)
+            y = " ".join(x for x in [first.strip(), extra] if x).strip()
+            if y:
+                yields.append(y)
+            i = j
+            continue
+
+        misc_field_lines.append(stripped)
+        i += 1
+
+    out: List[str] = []
+    for sl in summary_lines:
+        st = sl.strip()
+        if st:
+            out.append(f"{indent}{st}" if indent else st)
+        else:
+            out.append("")
+    if summary_lines:
+        out.append("")
+
+    if params:
+        out.append(f"{indent}**Parametry:**")
+        out.append("")
+        param_names = {name for name, _ in params}
+        for name, desc in params:
+            typ = types.get(name)
+            if typ:
+                out.append(f"{indent}- ``{name}`` (*{typ}*): {desc}")
+            else:
+                out.append(f"{indent}- ``{name}``: {desc}")
+        for name in sorted(types):
+            if name not in param_names:
+                out.append(f"{indent}- *typ* ``{name}``: {types[name]}")
+        out.append("")
+    elif types:
+        out.append(f"{indent}**Typy:**")
+        out.append("")
+        for name in sorted(types):
+            out.append(f"{indent}- ``{name}``: {types[name]}")
+        out.append("")
+
+    if returns:
+        out.append(f"{indent}**Návratová hodnota:**")
+        out.append("")
+        for r in returns:
+            out.append(f"{indent}{r}")
+        out.append("")
+    if rtypes:
+        if returns:
+            out.append(f"{indent}*Typ:* {' '.join(rtypes)}")
+            out.append("")
+        else:
+            out.append(f"{indent}**Návratový typ:**")
+            out.append("")
+            for r in rtypes:
+                out.append(f"{indent}{r}")
+            out.append("")
+
+    if raises:
+        out.append(f"{indent}**Výjimky:**")
+        out.append("")
+        for r in raises:
+            out.append(f"{indent}- {r}")
+        out.append("")
+
+    if yields:
+        out.append(f"{indent}**Generuje:**")
+        out.append("")
+        for y in yields:
+            out.append(f"{indent}{y}")
+        out.append("")
+
+    for ml in misc_field_lines:
+        out.append(f"{indent}{ml}" if indent else ml)
+
+    return out
 
 
 def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
@@ -1227,6 +1411,9 @@ def format_docstring_for_rst(docstring: str, indent: str = "") -> List[str]:
     """
     if not docstring:
         return []
+
+    if _looks_like_sphinx_fieldlist(docstring):
+        return _format_sphinx_fieldlist_rst(docstring, indent)
 
     lines = docstring.split("\n")
     result = []
@@ -1545,9 +1732,15 @@ def generate_rst_explicit(source_file: Path, module_name: str, module_title: str
     :param module_description: Popis modulu.
     :return: Vygenerovaný obsah RST.
     """
-    classes, functions = extract_docstrings(source_file)
+    module_doc, classes, functions = extract_docstrings(source_file)
 
     rst_lines = [module_title, "=" * len(module_title), "", module_description, ""]
+
+    if module_doc and module_doc.strip():
+        overview = "Přehled modulu"
+        rst_lines.extend([overview, "-" * len(overview), ""])
+        rst_lines.extend(format_docstring_for_rst(module_doc.strip(), ""))
+        rst_lines.append("")
 
     if classes:
         rst_lines.extend(["Třídy", "------", ""])
@@ -2012,7 +2205,37 @@ def generate_rst_for_project_script(source_file: Path, output_dir: Path) -> bool
     output_file = output_dir / f"{doc_name}.rst"
     language = get_script_language(source_file.name)
 
-    rst_content = f"""Skript {source_file.name}
+    if source_file.suffix.lower() == ".py":
+        module_title = f"Skript {source_file.name}"
+        module_description = f"Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``."
+        module_name = f"scripts.{source_file.stem}"
+        try:
+            body = generate_rst_explicit(source_file, module_name, module_title, module_description)
+            src_href = f"../../../../scripts/{source_file.name}"
+            code_heading = "Zdrojový kód"
+            rst_content = (
+                body.rstrip()
+                + "\n\n"
+                + f"{code_heading}\n"
+                + "-" * len(code_heading)
+                + "\n\n"
+                + f".. literalinclude:: {src_href}\n"
+                + f"   :language: {language}\n"
+                + "   :linenos:\n"
+            )
+        except Exception as e:
+            print(f"    ⚠ Falling back to literalinclude-only for {source_file.name}: {e}")
+            rst_content = f"""Skript {source_file.name}
+================{'=' * len(source_file.name)}
+
+Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``.
+
+.. literalinclude:: ../../../../scripts/{source_file.name}
+   :language: {language}
+   :linenos:
+"""
+    else:
+        rst_content = f"""Skript {source_file.name}
 ================{'=' * len(source_file.name)}
 
 Automaticky generovaná dokumentace skriptu ``scripts/{source_file.name}``.

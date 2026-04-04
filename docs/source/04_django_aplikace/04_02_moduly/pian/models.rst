@@ -16,29 +16,43 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: pristupnost_pom()
 
       Provádí operaci pristupnost pom.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
+
 
    .. py:method:: pristupnost()
 
       Provádí operaci pristupnost.
 
-      :return: Vrací atribut objektu.
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
 
    .. py:method:: evaluate_pristupnost_change()
 
       Provádí operaci evaluate pristupnost change.
 
-      :param added_pristupnost_id: Identifikátor objektu ``added_pristupnost``.
-      :param skip_zaznam_id: Identifikátor objektu ``skip_zaznam``.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
+      - ``added_pristupnost_id``: Identifikátor objektu ``added_pristupnost``.
+      - ``skip_zaznam_id``: Identifikátor objektu ``skip_zaznam``.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``first()``, výsledek volání ``get()``.
+
 
    .. py:method:: __str__()
 
@@ -46,33 +60,50 @@ Třídy
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 
    .. py:method:: get_absolute_url()
 
       Vrací absolute url.
 
-      :param request: Parametr ``request`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_absolute_url()``, výsledek volání ``reverse()``.
+      - ``request``: Parametr ``request`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_absolute_url()``, výsledek volání ``reverse()``.
+
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
-      :return: Vrací proměnná ``self``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``self``.
+
 
    .. py:method:: get_create_user()
 
       Vrací create user.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``my_list``, n-tici.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: proměnná ``my_list``, n-tici.
+
 
    .. py:method:: get_create_org()
 
       Vrací create org.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``our_list``, n-tici.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: proměnná ``our_list``, n-tici.
+
 
    .. py:method:: set_permanent_ident_cely()
 
@@ -80,26 +111,38 @@ Třídy
 
       Metoda vrátí identifikátor podle sekvence PIAN.
 
-      :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence < maximum``.
+      **Výjimky:**
+
+      - ``MaximalIdentNumberError``: Vyvolá se při splnění podmínky ``sequence.sekvence < maximum``.
+
 
    .. py:method:: set_vymezeny()
 
       Metoda pro nastavení stavu vymezený.
 
-      :param user: Parametr ``user`` se předává do volání ``zaznamenej_zapsani()``.
+      **Parametry:**
+
+      - ``user``: Parametr ``user`` se předává do volání ``zaznamenej_zapsani()``.
+
 
    .. py:method:: set_potvrzeny()
 
       Metoda pro nastavení stavu potvrzený.
 
-      :param user: Parametr ``user`` se předává do volání ``Historie()``.
-      :param old_ident: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
+      **Parametry:**
+
+      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
+      - ``old_ident``: Identifikátor ``old_ident`` používaný pro dohledání cílového záznamu.
+
 
    .. py:method:: zaznamenej_zapsani()
 
       Metoda pro uložení změny do historie pro pianu.
 
-      :param user: Parametr ``user`` se předává do volání ``Historie()``.
+      **Parametry:**
+
+      - ``user``: Parametr ``user`` se předává do volání ``Historie()``.
+
 
 
 .. py:class:: Kladyzm
@@ -119,17 +162,30 @@ Funkce
 
    Funkce pro vytvoření pianu v DB podle katastru.
 
-   :param katastr: Parametr ``katastr`` předává se do volání ``get_ZM_from_point()``, pracuje se s atributy ``definicni_bod``, ``hranice``.
-   :param fedora_transaction: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``vytvor_pian``.
+   **Parametry:**
 
-   :return: Vrací proměnná ``pian``.
-   :raises Exception: Vyvolá se s textem "zm10s.not_found"; nebo s textem "zm50s.not_found".
-   :raises ObjectDoesNotExist: Vyvolá se při zpracování zachycené výjimky typu ``ObjectDoesNotExist``.
+   - ``katastr``: Parametr ``katastr`` předává se do volání ``get_ZM_from_point()``, pracuje se s atributy ``definicni_bod``, ``hranice``.
+   - ``fedora_transaction``: Parametr ``fedora_transaction`` slouží jako vstup pro logiku funkce ``vytvor_pian``.
+
+   **Návratová hodnota:**
+
+   Vrací proměnná ``pian``.
+
+   **Výjimky:**
+
+   - ``Exception``: Vyvolá se s textem "zm10s.not_found"; nebo s textem "zm50s.not_found".
+   - ``ObjectDoesNotExist``: Vyvolá se při zpracování zachycené výjimky typu ``ObjectDoesNotExist``.
+
 
 .. py:function:: get_ZM_from_point(point)
 
    Vrací ZM from point.
 
-   :param point: Parametr ``point`` předává se do volání ``list()``, ``filter()``.
+   **Parametry:**
 
-   :return: Vrací n-tici.
+   - ``point``: Parametr ``point`` předává se do volání ``list()``, ``filter()``.
+
+   **Návratová hodnota:**
+
+   Vrací n-tici.
+

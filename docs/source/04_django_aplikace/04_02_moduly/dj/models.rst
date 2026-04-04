@@ -16,36 +16,54 @@ Třídy
 
       Metoda pro získání absolutní URL archeologického záznamu pro dokumentační jednotku.
 
-      :return: Vrací výsledek volání ``reverse()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``reverse()``.
+
 
    .. py:method:: ident_cely_safe()
 
       Vrátí identifikátor dokumentační jednotky s pomlčkami nahrazenými podtržítky (vhodný pro HTML atributy).
 
-      :return: Vrací výsledek volání ``replace()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``replace()``.
+
 
    .. py:method:: has_adb()
 
       Metoda pro ověření, jestli dokumentační jednotka má ADB.
 
-      :return: Vrací proměnná ``has_adb``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``has_adb``.
+
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
-      :return: Vrací atribut objektu.
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: initial_pian()
 
       Vrátí objekt Pian na základě initial_pian_id (líné načtení).
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get()``, None.
+
 

@@ -16,8 +16,11 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: __str__()
 
@@ -25,13 +28,19 @@ Třídy
 
       Textová reprezentace objektu.
 
-      :return: Vrací atribut objektu.
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
-      :return: Vrací výsledek volání ``get_permission_object()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get_permission_object()``.
+
 
 
 .. py:class:: NalezPredmet
@@ -44,8 +53,11 @@ Třídy
 
       Provádí operaci init.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
    .. py:method:: __str__()
 
@@ -53,11 +65,17 @@ Třídy
 
       Textová reprezentace objektu.
 
-      :return: Vrací atribut objektu.
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
 
    .. py:method:: get_permission_object()
 
       Vrací permission object.
 
-      :return: Vrací výsledek volání ``get_permission_object()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get_permission_object()``.
+
 

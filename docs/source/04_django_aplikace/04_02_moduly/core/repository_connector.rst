@@ -21,11 +21,14 @@ Třídy
 
       Inicializuje FedoraError výjimku.
 
-      :param url: URL Fedora serveru.
-      :param message: Chybová zpráva.
-      :param code: HTTP kód chyby.
-      :param headers: HTTP hlavičky odpovědi.
-      :param fedora_transaction: Aktivní transakce Fedora.
+      **Parametry:**
+
+      - ``url``: URL Fedora serveru.
+      - ``message``: Chybová zpráva.
+      - ``code``: HTTP kód chyby.
+      - ``headers``: HTTP hlavičky odpovědi.
+      - ``fedora_transaction``: Aktivní transakce Fedora.
+
 
 
 .. py:class:: FedoraUpdatedByAnotherTransactionError
@@ -53,47 +56,70 @@ Třídy
 
       Vrací url without domain.
 
-      :param url: Parametr ``url`` se předává do volání ``join()``, pracuje se s atributy ``split``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``join()``.
+      - ``url``: Parametr ``url`` se předává do volání ``join()``, pracuje se s atributy ``split``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``join()``.
+
 
    .. py:method:: url_without_domain()
 
       Vrací URL bez domény.
 
-      :return: URL bez předsazené domény.
+      **Návratová hodnota:**
+
+      URL bez předsazené domény.
+
 
    .. py:method:: uuid()
 
       Vrátí UUID souboru.
 
-      :return: UUID souboru.
+      **Návratová hodnota:**
+
+      UUID souboru.
+
 
    .. py:method:: _calculate_sha_512()
 
       Vypočítá SHA-512 hash souboru.
 
-      :return: None
+      **Návratová hodnota:**
+
+      None
+
 
    .. py:method:: size_mb()
 
       Vrátí velikost v MB.
 
-      :return: Velikost souboru v MB.
+      **Návratová hodnota:**
+
+      Velikost souboru v MB.
+
 
    .. py:method:: mime_type()
 
       Vrátí MIME type souboru.
 
-      :return: MIME type nebo None.
+      **Návratová hodnota:**
+
+      MIME type nebo None.
+
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param url: Parametr ``url`` slouží jako vstup pro logiku funkce ``__init__``.
-      :param content: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
-      :param filename: Parametr ``filename`` slouží jako vstup pro logiku funkce ``__init__``.
+      **Parametry:**
+
+      - ``url``: Parametr ``url`` slouží jako vstup pro logiku funkce ``__init__``.
+      - ``content``: Textový nebo strukturální vstup `content` používaný při sestavení nebo zpracování obsahu.
+      - ``filename``: Parametr ``filename`` slouží jako vstup pro logiku funkce ``__init__``.
+
 
 
 .. py:class:: FedoraRequestType
@@ -111,277 +137,433 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param record: Parametr ``record`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``.
-      :param transaction: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ovlivňuje větvení podmínek.
-      :param skip_container_check: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``__init__``.
+      **Parametry:**
+
+      - ``record``: Parametr ``record`` předává se do volání ``debug()``, pracuje se s atributy ``ident_cely``.
+      - ``transaction``: Parametr ``transaction`` se předává do volání ``isinstance()``, ``FedoraTransaction()``, pracuje se s atributy ``uid``, ``main_record``, ovlivňuje větvení podmínek.
+      - ``skip_container_check``: Parametr ``skip_container_check`` slouží jako vstup pro logiku funkce ``__init__``.
+
 
    .. py:method:: _get_model_name()
 
       Vrací model name.
 
-      :return: Načtená data odpovídající zadaným vstupům.
+      **Návratová hodnota:**
+
+      Načtená data odpovídající zadaným vstupům.
+
 
    .. py:method:: _get_creator_rdf_data()
 
       Vrací rdf inset data.
 
-      :return: Načtená data odpovídající zadaným vstupům.
+      **Návratová hodnota:**
+
+      Načtená data odpovídající zadaným vstupům.
+
 
    .. py:method:: _get_creator()
 
       Vrací creator.
 
-      :param url: Parametr ``url`` se předává do volání ``_send_request()``.
-      :return: Načtená data odpovídající zadaným vstupům.
+      **Parametry:**
 
-      :param only_uri: Parametr ``only_uri`` ovlivňuje větvení podmínek.
+      - ``url``: Parametr ``url`` se předává do volání ``_send_request()``.
+      - ``only_uri``: Parametr ``only_uri`` ovlivňuje větvení podmínek.
+
+      **Návratová hodnota:**
+
+      Načtená data odpovídající zadaným vstupům.
+
 
    .. py:method:: _update_creator()
 
       Aktualizuje creator.
 
-      :param request_type: Parametr ``request_type`` předává se do volání ``_get_request_url()``, ``_send_request()``.
-      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``_get_request_url()``.
-      :return: Textová reprezentace UID transakce.
+      **Parametry:**
+
+      - ``request_type``: Parametr ``request_type`` předává se do volání ``_get_request_url()``, ``_send_request()``.
+      - ``uuid``: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``_get_request_url()``.
+
+      **Návratová hodnota:**
+
+      Textová reprezentace UID transakce.
+
 
    .. py:method:: get_base_url()
 
       Vrací base url.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 
    .. py:method:: _get_request_url()
 
       Vrací request url.
 
-      :param request_type: Parametr ``request_type`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
-      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
-      :param ident_cely: Parametr ``ident_cely`` ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      :return: Načtená data odpovídající zadaným vstupům.
+      **Parametry:**
+
+      - ``request_type``: Parametr ``request_type`` předává se do volání ``error()``, ovlivňuje větvení podmínek.
+      - ``uuid``: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      - ``ident_cely``: Parametr ``ident_cely`` ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Načtená data odpovídající zadaným vstupům.
+
 
    .. py:method:: check_container_deleted()
 
       Ověří container deleted.
 
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``_send_request()``.
+      **Parametry:**
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``_send_request()``.
+
+      **Návratová hodnota:**
+
+      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+
 
    .. py:method:: check_container_deleted_or_not_exists()
 
       Ověří container deleted or not exists.
 
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``send_request()``.
-      :param model_name: Název modelu používaný pro cílení operace.
+      **Parametry:**
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+      - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``debug()``, ``send_request()``.
+      - ``model_name``: Název modelu používaný pro cílení operace.
+
+      **Návratová hodnota:**
+
+      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+
 
    .. py:method:: _get_auth()
 
       Vrací auth.
 
-      :param request_type: Parametr ``request_type`` ovlivňuje větvení podmínek.
-      :return: Načtená data odpovídající zadaným vstupům.
+      **Parametry:**
+
+      - ``request_type``: Parametr ``request_type`` ovlivňuje větvení podmínek.
+
+      **Návratová hodnota:**
+
+      Načtená data odpovídající zadaným vstupům.
+
 
    .. py:method:: _send_request()
 
       Odešle request.
 
-      :param url: Parametr ``url`` se předává do volání ``post()``, ``get()``.
-      :param request_type: Parametr ``request_type`` předává se do volání ``_get_auth()``, pracuje se s atributy ``value``, ovlivňuje větvení podmínek.
-      :param headers: Textový nebo strukturální vstup `headers` používaný při sestavení nebo zpracování obsahu.
-      :param data: Kolekce ``data`` zpracovávaná touto funkcí.
-      :return: Textová reprezentace UID transakce.
+      **Parametry:**
 
-      :raises FedoraUpdatedByAnotherTransactionError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
-      :raises FedoraError: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+      - ``url``: Parametr ``url`` se předává do volání ``post()``, ``get()``.
+      - ``request_type``: Parametr ``request_type`` předává se do volání ``_get_auth()``, pracuje se s atributy ``value``, ovlivňuje větvení podmínek.
+      - ``headers``: Textový nebo strukturální vstup `headers` používaný při sestavení nebo zpracování obsahu.
+      - ``data``: Kolekce ``data`` zpracovávaná touto funkcí.
+
+      **Návratová hodnota:**
+
+      Textová reprezentace UID transakce.
+
+      **Výjimky:**
+
+      - ``FedoraUpdatedByAnotherTransactionError``: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+      - ``FedoraError``: Vyvolá se při splnění podmínky ``response.status_code == 409``.
+
 
    .. py:method:: _create_container()
 
       Vytvoří container.
 
-      :return: Nově vytvořená hodnota připravená touto funkcí.
+      **Návratová hodnota:**
+
+      Nově vytvořená hodnota připravená touto funkcí.
+
 
    .. py:method:: create_link()
 
       Vytvoří link. v aplikaci.
 
-      :param ident_cely_proxy: Identifikátor ``ident_cely_proxy`` používaný pro dohledání cílového záznamu.
+      **Parametry:**
+
+      - ``ident_cely_proxy``: Identifikátor ``ident_cely_proxy`` používaný pro dohledání cílového záznamu.
+
 
    .. py:method:: container_exists()
 
       Ověří existenci kontejneru v Fedora repositáři.
 
-      :return: True pokud kontejner existuje, False pokud byl smazán.
+      **Návratová hodnota:**
+
+      True pokud kontejner existuje, False pokud byl smazán.
+
 
    .. py:method:: _connect_deleted_container()
 
       Obnoví smazaný záznam změnou metadata v Fedoře z 'deleted' na 'restored'.
 
-      :return: Textová reprezentace UID transakce.
+      **Návratová hodnota:**
+
+      Textová reprezentace UID transakce.
+
 
    .. py:method:: link_exists()
 
       Ověří existenci odkazu na kontejner v repositáři.
 
-      :return: True pokud odkaz existuje, False pokud byl smazán.
+      **Návratová hodnota:**
+
+      True pokud odkaz existuje, False pokud byl smazán.
+
 
    .. py:method:: _check_container()
 
       Ověří container.
 
-      :return: Vrací výsledek ověření nebo validačního pravidla.
+      **Návratová hodnota:**
+
+      Vrací výsledek ověření nebo validačního pravidla.
+
 
    .. py:method:: _create_binary_file_container()
 
       Vytvoří binary file container.
 
-      :return: Nově vytvořená hodnota připravená touto funkcí.
+      **Návratová hodnota:**
+
+      Nově vytvořená hodnota připravená touto funkcí.
+
 
    .. py:method:: _check_binary_file_container()
 
       Ověří binary file container.
 
-      :return: Vrací výsledek ověření nebo validačního pravidla.
+      **Návratová hodnota:**
+
+      Vrací výsledek ověření nebo validačního pravidla.
+
 
    .. py:method:: _generate_metadata()
 
       Vygeneruje metadata.
 
-      :return: Nově vytvořená hodnota připravená touto funkcí.
+      **Návratová hodnota:**
+
+      Nově vytvořená hodnota připravená touto funkcí.
+
 
    .. py:method:: get_metadata()
 
       Vrací metadata. v aplikaci.
 
-      :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
-      :return: Načtená data odpovídající zadaným vstupům.
+      **Parametry:**
+
+      - ``update``: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
+
+      **Návratová hodnota:**
+
+      Načtená data odpovídající zadaným vstupům.
+
 
    .. py:method:: get_metadata_historicka()
 
       Metoda varacející konkrétní verzi metadat
 
-      :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
+      **Parametry:**
 
-      :return: Vrací atribut objektu.
+      - ``timestamp``: Časový údaj použitý při filtrování nebo výpočtu.
+
+      **Návratová hodnota:**
+
+      Vrací atribut objektu.
+
 
    .. py:method:: parse_historie()
 
       Zpracuje historie. v aplikaci.
 
-      :param response_text: Číselná hodnota ``response_text`` použitá při výpočtu nebo transformaci.
+      **Parametry:**
 
-      :return: Vrací proměnná ``result`` - list dictů: {"datetime": datetime, "timestamp": str}
+      - ``response_text``: Číselná hodnota ``response_text`` použitá při výpočtu nebo transformaci.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``result`` - list dictů: {"datetime": datetime, "timestamp": str}
+
 
    .. py:method:: get_historie_metadat()
 
       Metoda k získání info o verzích metadat
 
-      :return: Vrací proměnná ``result``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``result``.
+
 
    .. py:method:: get_historie_file()
 
       Metoda k získání info o verzích souborů
 
-      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      **Parametry:**
 
-      :return: Vrací proměnná ``result``.
+      - ``uuid``: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``result``.
+
 
    .. py:method:: save_metadata()
 
       Uloží metadata. v aplikaci.
 
-      :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
+      **Parametry:**
 
-      :raises FedoraNoResponseError: Vyvolá se při splnění podmínky ``result is None``.
+      - ``update``: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
+
+      **Výjimky:**
+
+      - ``FedoraNoResponseError``: Vyvolá se při splnění podmínky ``result is None``.
+
 
    .. py:method:: save_binary_file()
 
       Uloží binary file.
 
-      :param file_name: Parametr ``file_name`` se předává do volání ``debug()``, ``RepositoryBinaryFile()``.
-      :param content_type: Parametr ``content_type`` slouží jako vstup pro logiku funkce ``save_binary_file``.
-      :param file: Soubor nebo cesta k souboru používaná při operaci.
-      :param save_thumbs: Parametr ``save_thumbs`` ovlivňuje větvení podmínek.
-      :return: Textová reprezentace UID transakce.
+      **Parametry:**
+
+      - ``file_name``: Parametr ``file_name`` se předává do volání ``debug()``, ``RepositoryBinaryFile()``.
+      - ``content_type``: Parametr ``content_type`` slouží jako vstup pro logiku funkce ``save_binary_file``.
+      - ``file``: Soubor nebo cesta k souboru používaná při operaci.
+      - ``save_thumbs``: Parametr ``save_thumbs`` ovlivňuje větvení podmínek.
+
+      **Návratová hodnota:**
+
+      Textová reprezentace UID transakce.
+
 
    .. py:method:: __generate_thumb()
 
       Vygeneruje thumb. v aplikaci.
 
-      :param file_name: Parametr ``file_name`` se předává do volání ``debug()``, ``__generate_thumb_from_icon()``, pracuje se s atributy ``lower``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      :param file_content: Parametr ``file_content`` se předává do volání ``convert_from_bytes()``, ``__generate_thumb_from_icon()``, pracuje se s atributy ``getvalue``, vstupuje do návratové hodnoty.
-      :param large: Parametr ``large`` se předává do volání ``debug()``, ``resize_image()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: proměnná ``thumbnail``, výsledek volání ``__generate_thumb_from_icon()``.
+      - ``file_name``: Parametr ``file_name`` se předává do volání ``debug()``, ``__generate_thumb_from_icon()``, pracuje se s atributy ``lower``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+      - ``file_content``: Parametr ``file_content`` se předává do volání ``convert_from_bytes()``, ``__generate_thumb_from_icon()``, pracuje se s atributy ``getvalue``, vstupuje do návratové hodnoty.
+      - ``large``: Parametr ``large`` se předává do volání ``debug()``, ``resize_image()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: proměnná ``thumbnail``, výsledek volání ``__generate_thumb_from_icon()``.
+
 
    .. py:method:: save_thumbs()
 
       Uloží thumbs. v aplikaci.
 
-      :param file_name: Parametr ``file_name`` se předává do volání ``debug()``, ``__generate_thumb()``, pracuje se s atributy ``rfind``.
-      :param file: Soubor nebo cesta k souboru používaná při operaci.
-      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
-      :param update: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
-      :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      **Parametry:**
+
+      - ``file_name``: Parametr ``file_name`` se předává do volání ``debug()``, ``__generate_thumb()``, pracuje se s atributy ``rfind``.
+      - ``file``: Soubor nebo cesta k souboru používaná při operaci.
+      - ``uuid``: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      - ``update``: Časový údaj ``update`` použitý při filtrování nebo výpočtu.
+      - ``ident_cely_old``: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+
 
    .. py:method:: migrate_binary_file()
 
       Migruje binární soubor do Fedora repositáře a vrátí wrapper se metadaty.
 
-      :param soubor: Objekt `Soubor` k migraci s atributy ``pk`` a ``repository_uuid``.
-      :param include_content: Pokud True, migruje i binární obsah souboru.
-      :param check_if_exists: Pokud True, ověří existenci souboru v repositáři.
-      :param ident_cely_old: Starý identifikátor pro mapování při změně identifikátoru záznamu.
-      :return: Objekt `RepositoryBinaryFile` nebo None, pokud migrace selhala.
+      **Parametry:**
+
+      - ``soubor``: Objekt `Soubor` k migraci s atributy ``pk`` a ``repository_uuid``.
+      - ``include_content``: Pokud True, migruje i binární obsah souboru.
+      - ``check_if_exists``: Pokud True, ověří existenci souboru v repositáři.
+      - ``ident_cely_old``: Starý identifikátor pro mapování při změně identifikátoru záznamu.
+
+      **Návratová hodnota:**
+
+      Objekt `RepositoryBinaryFile` nebo None, pokud migrace selhala.
+
 
    .. py:method:: get_binary_file()
 
       Vrací binary file.
 
-      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
-      :param ident_cely_old: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
-      :param thumb_small: Parametr ``thumb_small`` se předává do volání ``debug()``, ovlivňuje větvení podmínek.
-      :param thumb_large: Parametr ``thumb_large`` se předává do volání ``debug()``, ovlivňuje větvení podmínek.
-      :param timestamp: Časový údaj použitý při filtrování nebo výpočtu.
-      :return: Načtená data odpovídající zadaným vstupům.
+      **Parametry:**
+
+      - ``uuid``: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      - ``ident_cely_old``: Identifikátor ``ident_cely_old`` používaný pro dohledání cílového záznamu.
+      - ``thumb_small``: Parametr ``thumb_small`` se předává do volání ``debug()``, ovlivňuje větvení podmínek.
+      - ``thumb_large``: Parametr ``thumb_large`` se předává do volání ``debug()``, ovlivňuje větvení podmínek.
+      - ``timestamp``: Časový údaj použitý při filtrování nebo výpočtu.
+
+      **Návratová hodnota:**
+
+      Načtená data odpovídající zadaným vstupům.
+
 
    .. py:method:: update_binary_file()
 
       Aktualizuje binary file.
 
-      :param file_name: Parametr ``file_name`` se předává do volání ``debug()``, ``RepositoryBinaryFile()``.
-      :param content_type: Parametr ``content_type`` slouží jako vstup pro logiku funkce ``update_binary_file``.
-      :param file: Soubor nebo cesta k souboru používaná při operaci.
-      :param uuid: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
-      :param save_thumbs: Parametr ``save_thumbs`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
-      :return: Textová reprezentace UID transakce.
+      **Parametry:**
+
+      - ``file_name``: Parametr ``file_name`` se předává do volání ``debug()``, ``RepositoryBinaryFile()``.
+      - ``content_type``: Parametr ``content_type`` slouží jako vstup pro logiku funkce ``update_binary_file``.
+      - ``file``: Soubor nebo cesta k souboru používaná při operaci.
+      - ``uuid``: Identifikátor ``uuid`` používaný pro dohledání cílového záznamu.
+      - ``save_thumbs``: Parametr ``save_thumbs`` předává se do volání ``debug()``, ovlivňuje větvení podmínek.
+
+      **Návratová hodnota:**
+
+      Textová reprezentace UID transakce.
+
 
    .. py:method:: delete_binary_file()
 
       Odstraní binary file.
 
-      :param soubor: Parametr ``soubor`` se předává do volání ``debug()``, ``_get_request_url()``, pracuje se s atributy ``repository_uuid``, ``pk``, ovlivňuje větvení podmínek.
+      **Parametry:**
+
+      - ``soubor``: Parametr ``soubor`` se předává do volání ``debug()``, ``_get_request_url()``, pracuje se s atributy ``repository_uuid``, ``pk``, ovlivňuje větvení podmínek.
+
 
    .. py:method:: delete_binary_file_completely()
 
       Odstraní binary file completely.
 
-      :param soubor: Parametr ``soubor`` se předává do volání ``debug()``, ``_get_request_url()``, pracuje se s atributy ``repository_uuid``.
+      **Parametry:**
+
+      - ``soubor``: Parametr ``soubor`` se předává do volání ``debug()``, ``_get_request_url()``, pracuje se s atributy ``repository_uuid``.
+
 
    .. py:method:: delete_container()
 
       Odstraní container. v aplikaci.
 
-      :param delete_tombstone: Parametr ``delete_tombstone`` ovlivňuje větvení podmínek.
+      **Parametry:**
+
+      - ``delete_tombstone``: Parametr ``delete_tombstone`` ovlivňuje větvení podmínek.
+
 
    .. py:method:: _delete_link()
 
       Odstraní link.
 
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``_get_request_url()``.
-      :return: Vrací výsledek operace odstranění.
+      **Parametry:**
+
+      - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``_get_request_url()``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek operace odstranění.
+
 
    .. py:method:: record_deletion()
 
@@ -391,15 +573,24 @@ Třídy
 
       Přejmenuje kontejner v Fedoře na základě změny identifikátoru záznamu.
 
-      :param ident_cely_old: Starý identifikátor ``ident_cely``; používá se k dohledání původního kontejneru.
-      :param delete_container: Pokud True, smaže původní kontejner po přejmenování.
-      :raises IdentChangeFedoraError: Vyvolá se, pokud staný identifikátor není zadán nebo se rovná novému.
+      **Parametry:**
+
+      - ``ident_cely_old``: Starý identifikátor ``ident_cely``; používá se k dohledání původního kontejneru.
+      - ``delete_container``: Pokud True, smaže původní kontejner po přejmenování.
+
+      **Výjimky:**
+
+      - ``IdentChangeFedoraError``: Vyvolá se, pokud staný identifikátor není zadán nebo se rovná novému.
+
 
    .. py:method:: generate_thumb_for_single_file()
 
       Vygeneruje thumb for single file.
 
-      :param record: Parametr ``record`` předává se do volání ``isinstance()``, ``get()``, pracuje se s atributy ``vazba``, ``active_transaction``, ovlivňuje větvení podmínek.
+      **Parametry:**
+
+      - ``record``: Parametr ``record`` předává se do volání ``isinstance()``, ``get()``, pracuje se s atributy ``vazba``, ``active_transaction``, ovlivňuje větvení podmínek.
+
 
 
 .. py:class:: FedoraTransactionQueueClosedError
@@ -482,7 +673,10 @@ Třídy
 
       Přidá identifikátor záznamu do množiny dotčených záznamů.
 
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``add()``.
+      **Parametry:**
+
+      - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``add()``.
+
 
 
 .. py:class:: FedoraTransaction
@@ -499,60 +693,94 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param main_record: Parametr ``main_record`` slouží jako vstup pro logiku funkce ``__init__``. Hlavní záznam (ModelWithMetadata), ke kterému se transakce váže.
-      :param transaction_user: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
-      :param success_message: Parametr ``success_message`` slouží jako vstup pro logiku funkce ``__init__``. Zpráva zobrazená při úspěšném dokončení.
-      :param error_message: Parametr ``error_message`` slouží jako vstup pro logiku funkce ``__init__``. Zpráva zobrazená při chybě.
-      :param uid: Identifikátor `uid` používaný pro dohledání cílového záznamu. Existující UID transakce; pokud není zadáno, vytvoří se nová transakce.
-      :param request: Parametr ``request`` slouží jako vstup pro logiku funkce ``__init__``. HTTP request pro předání kontextu.
-      :param suppress_message: Pokud ``True``, výsledek transakce se neukládá do Redis.
-      :param redirect_on_error: Pokud ``True``, při chybě se použije přesměrování.
-      :param redirect_url: URL pro přesměrování při chybě transakce.
-      :raises FedoraTransactionNoIDError: Pokud se nepodaří vytvořit transakci nebo získat její UID.
+      **Parametry:**
+
+      - ``main_record``: Parametr ``main_record`` slouží jako vstup pro logiku funkce ``__init__``. Hlavní záznam (ModelWithMetadata), ke kterému se transakce váže.
+      - ``transaction_user``: Uživatel nebo osoba ``transaction_user``, v jejímž kontextu se operace provádí.
+      - ``success_message``: Parametr ``success_message`` slouží jako vstup pro logiku funkce ``__init__``. Zpráva zobrazená při úspěšném dokončení.
+      - ``error_message``: Parametr ``error_message`` slouží jako vstup pro logiku funkce ``__init__``. Zpráva zobrazená při chybě.
+      - ``uid``: Identifikátor `uid` používaný pro dohledání cílového záznamu. Existující UID transakce; pokud není zadáno, vytvoří se nová transakce.
+      - ``request``: Parametr ``request`` slouží jako vstup pro logiku funkce ``__init__``. HTTP request pro předání kontextu.
+      - ``suppress_message``: Pokud ``True``, výsledek transakce se neukládá do Redis.
+      - ``redirect_on_error``: Pokud ``True``, při chybě se použije přesměrování.
+      - ``redirect_url``: URL pro přesměrování při chybě transakce.
+
+      **Výjimky:**
+
+      - ``FedoraTransactionNoIDError``: Pokud se nepodaří vytvořit transakci nebo získat její UID.
+
 
    .. py:method:: __str__()
 
       Vrací textovou reprezentaci objektu.
 
-      :return: Textová reprezentace UID transakce.
+      **Návratová hodnota:**
+
+      Textová reprezentace UID transakce.
+
 
    .. py:method:: get_transaction_redis_key()
 
       Vrací transaction redis key.
 
-      :param ident_cely: Parametr ``ident_cely`` vstupuje do návratové hodnoty.
-      :param transaction_user_id: Identifikátor objektu ``transaction_user``.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování.
+      - ``ident_cely``: Parametr ``ident_cely`` vstupuje do návratové hodnoty.
+      - ``transaction_user_id``: Identifikátor objektu ``transaction_user``.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 
    .. py:method:: _transaction_redis_key()
 
       Vrací klíč transakce v Redis pro cachování stavu.
 
-      :return: Klíč ve formátu 'fedora-transaction-result-{ident}-{user_id}'.
+      **Návratová hodnota:**
+
+      Klíč ve formátu 'fedora-transaction-result-{ident}-{user_id}'.
+
 
    .. py:method:: status()
 
       Vrací aktuální stav transakce.
 
-      :return: Stav transakce (běžící, dokončená, chyba).
+      **Návratová hodnota:**
+
+      Stav transakce (běžící, dokončená, chyba).
+
 
    .. py:method:: _save_transaction_result_to_redis()
 
       Uloží transaction result to redis.
 
-      :param result: Výsledek transakce určený k uložení do Redis.
-      :return: Textová reprezentace UID transakce.
+      **Parametry:**
+
+      - ``result``: Výsledek transakce určený k uložení do Redis.
+
+      **Návratová hodnota:**
+
+      Textová reprezentace UID transakce.
+
 
    .. py:method:: _send_transaction_request()
 
       Odešle požadavek na commit nebo rollback transakce do Fedory.
 
-      :param operation: Parametr ``operation`` se předává do volání ``FedoraTransactionUnsupportedOperationError()``, ovlivňuje větvení podmínek.
-      :return: Textová reprezentace UID transakce.
+      **Parametry:**
 
-      :raises FedoraTransactionUnsupportedOperationError: Vyvolá se při splnění podmínky ``operation == FedoraTransactionOperation.ROLLBACK``.
-      :raises FedoraTransactionCommitFailedError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
+      - ``operation``: Parametr ``operation`` se předává do volání ``FedoraTransactionUnsupportedOperationError()``, ovlivňuje větvení podmínek.
+
+      **Návratová hodnota:**
+
+      Textová reprezentace UID transakce.
+
+      **Výjimky:**
+
+      - ``FedoraTransactionUnsupportedOperationError``: Vyvolá se při splnění podmínky ``operation == FedoraTransactionOperation.ROLLBACK``.
+      - ``FedoraTransactionCommitFailedError``: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``.
+
 
    .. py:method:: rollback_transaction()
 
@@ -570,7 +798,10 @@ Třídy
 
       Vytvoří novou transakci ve Fedoře.
 
-      :raises FedoraTransactionNoIDError: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``; nebo při splnění podmínky ``match``.
+      **Výjimky:**
+
+      - ``FedoraTransactionNoIDError``: Vyvolá se při splnění podmínky ``not str(response.status_code).startswith('2')``; nebo při splnění podmínky ``match``.
+
 
    .. py:method:: call_digiarchiv_update()
 
@@ -597,5 +828,8 @@ Třídy
 
       Přidá identifikátor záznamu do množiny dotčených záznamů.
 
-      :param ident_cely: Parametr ``ident_cely`` se předává do volání ``add()``.
+      **Parametry:**
+
+      - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``add()``.
+
 

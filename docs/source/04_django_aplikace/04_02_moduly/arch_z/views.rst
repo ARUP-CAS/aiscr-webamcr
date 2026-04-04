@@ -16,52 +16,81 @@ Třídy
 
       Metoda pro získaní informací které části stránky mají být zobrazeny.
 
-      :return: Vrací výsledek volání ``get_detail_template_shows()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get_detail_template_shows()``.
+
 
    .. py:method:: get_archeologicky_zaznam()
 
       Metoda pro získaní akce z db.
 
-      :return: Vrací výsledek volání ``get_object_or_404()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get_object_or_404()``.
+
 
    .. py:method:: get_jednotky()
 
       Metoda pro získaní dokumentační jednotky navázané na akci.
 
-      :return: Vrací výsledek volání ``prefetch_related()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``prefetch_related()``.
+
 
    .. py:method:: get_dokumenty()
 
       Metoda pro získaní dokumentů navázaných na akci.
 
-      :return: Vrací výsledek volání ``order_by()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``order_by()``.
+
 
    .. py:method:: get_externi_odkazy()
 
       Metoda pro získaní externích odkazů navázaných na akci.
 
-      :return: Vrací výsledek volání ``order_by()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``order_by()``.
+
 
    .. py:method:: get_vedouci()
 
       Metoda pro získaní dalších vedoucích navázaných na akci.
 
-      :param context: Parametr ``context`` se předává do volání ``ostatni_vedouci_objekt_formset()``, ``filter()``.
+      **Parametry:**
+
+      - ``context``: Parametr ``context`` se předává do volání ``ostatni_vedouci_objekt_formset()``, ``filter()``.
+
 
    .. py:method:: check_locality_arch_z_conflict()
 
       Ověří locality arch z conflict.
 
-      :return: Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
-      :raises Http404: Vyvolá se při splnění podmínky ``self.get_archeologicky_zaznam().lokalita``.
+      **Návratová hodnota:**
+
+      Vrací ``True`` nebo ``False`` podle vyhodnocení podmínek.
+
+      **Výjimky:**
+
+      - ``Http404``: Vyvolá se při splnění podmínky ``self.get_archeologicky_zaznam().lokalita``.
+
 
    .. py:method:: get_context_data()
 
       Metoda pro získaní contextu akci pro template.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací kontext šablony
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací kontext šablony
+
 
 
 .. py:class:: ArcheologickyZaznamDetailView
@@ -74,15 +103,23 @@ Třídy
 
       Metoda pro získani záznamu akce z db podle ident_cely.
 
-      :return: Vrací výsledek operace.
+      **Návratová hodnota:**
+
+      Vrací výsledek operace.
+
 
    .. py:method:: get_context_data()
 
       Metoda pro získaní context dat navíc oproti přepisované metóde.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
 
 .. py:class:: DokumentacniJednotkaRelatedUpdateView
@@ -95,34 +132,53 @@ Třídy
 
       Ověří správnost vazby mezi dokumentační jednotkou a archeologickým záznamem před zpracováním požadavku.
 
-      :param request: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
-      :param args: Poziční argumenty předávané nadřazené metodě dispatch.
-      :param kwargs: Klíčové argumenty obsahující ``dj_ident_cely`` a ``ident_cely`` pro načtení objektů.
-      :return: Výstup funkce odpovídající implementované logice.
+      **Parametry:**
+
+      - ``request``: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
+      - ``args``: Poziční argumenty předávané nadřazené metodě dispatch.
+      - ``kwargs``: Klíčové argumenty obsahující ``dj_ident_cely`` a ``ident_cely`` pro načtení objektů.
+
+      **Návratová hodnota:**
+
+      Výstup funkce odpovídající implementované logice.
+
 
    .. py:method:: get_dokumentacni_jednotka()
 
       Metoda pro získani záznamu DJ z db podle ident_cely.
 
-      :return: Vrací proměnná ``objects``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``objects``.
+
 
    .. py:method:: get_context_data()
 
       Metoda pro získaní context dat DJ navíc oproti přepisované metóde, záznam DJ.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``get()``.
+      - ``request``: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+      - ``args``: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get()``.
+
 
 
 .. py:class:: DokumentacniJednotkaCreateView
@@ -135,19 +191,29 @@ Třídy
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření DJ.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
-      :param args: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``get()``.
+      - ``request``: Parametr ``request`` předává se do volání ``get()``, vstupuje do návratové hodnoty.
+      - ``args``: Parametr ``args`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get()``.
+
 
 
 .. py:class:: DokumentacniJednotkaUpdateView
@@ -160,9 +226,14 @@ Třídy
 
       Metoda pro získaní context dat DJ navíc oproti přepisované metóde, pro zobrazení správneho detailu.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
 
 .. py:class:: KomponentaCreateView
@@ -175,9 +246,14 @@ Třídy
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář na vytvoření komponenty.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
 
 .. py:class:: KomponentaUpdateView
@@ -190,22 +266,34 @@ Třídy
 
       Ověří správnost vazby mezi komponentou a dokumentační jednotkou před zpracováním požadavku.
 
-      :param request: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
-      :param args: Poziční argumenty předávané nadřazené metodě dispatch.
-      :param kwargs: Klíčové argumenty obsahující ``dj_ident_cely`` a ``komponenta_ident_cely`` pro načtení objektů.
-      :return: Výstup funkce odpovídající implementované logice.
+      **Parametry:**
+
+      - ``request``: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
+      - ``args``: Poziční argumenty předávané nadřazené metodě dispatch.
+      - ``kwargs``: Klíčové argumenty obsahující ``dj_ident_cely`` a ``komponenta_ident_cely`` pro načtení objektů.
+
+      **Návratová hodnota:**
+
+      Výstup funkce odpovídající implementované logice.
+
 
    .. py:method:: get_komponenta()
 
       Metoda pro získani záznamu komponenty z db podle ident_cely.
 
-      :return: Vrací proměnná ``object``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``object``.
+
 
    .. py:method:: get_dokumentacni_jednotka()
 
       Vrací dokumentacni jednotka.
 
-      :return: Vrací proměnná ``object``.
+      **Návratová hodnota:**
+
+      Vrací proměnná ``object``.
+
 
    .. py:method:: get_context_data()
 
@@ -213,9 +301,14 @@ Třídy
 
       případně data poslaného chybného formuláře.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
 
 .. py:class:: PianCreateView
@@ -228,20 +321,33 @@ Třídy
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření PIANu.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, ``str()``, pracuje se s atributy ``user``.
-      :param args: Poziční argumenty předávané nadřazené metodě get.
-      :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
-      :raises Exception: Vyvolá se s textem "arch_z.views.PianCreateView.get.label_not_found"; nebo s textem "arch_z.views.PianCreateView.get.transormation_error".
+      - ``request``: Parametr ``request`` předává se do volání ``get()``, ``str()``, pracuje se s atributy ``user``.
+      - ``args``: Poziční argumenty předávané nadřazené metodě get.
+      - ``kwargs``: Klíčové argumenty předávané do ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
+
+      **Výjimky:**
+
+      - ``Exception``: Vyvolá se s textem "arch_z.views.PianCreateView.get.label_not_found"; nebo s textem "arch_z.views.PianCreateView.get.transormation_error".
+
 
 
 .. py:class:: PianUpdateView
@@ -254,30 +360,49 @@ Třídy
 
       Ověří správnost vazby mezi PIAN a dokumentační jednotkou před zpracováním požadavku.
 
-      :param request: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
-      :param args: Poziční argumenty předávané nadřazené metodě dispatch.
-      :param kwargs: Klíčové argumenty obsahující ``dj_ident_cely`` a ``pian_ident_cely`` pro načtení objektů.
-      :return: Výstup funkce odpovídající implementované logice.
+      **Parametry:**
+
+      - ``request``: HTTP požadavek; při nesprávné vazbě se použije k přesměrování na bezpečnou URL.
+      - ``args``: Poziční argumenty předávané nadřazené metodě dispatch.
+      - ``kwargs``: Klíčové argumenty obsahující ``dj_ident_cely`` a ``pian_ident_cely`` pro načtení objektů.
+
+      **Návratová hodnota:**
+
+      Výstup funkce odpovídající implementované logice.
+
 
    .. py:method:: get_context_data()
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro editaci PIANu.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: get()
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, ``str()``, pracuje se s atributy ``user``.
-      :param args: Poziční argumenty předávané nadřazené metodě get.
-      :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
-      :raises PermissionDenied: Vyvolá se při splnění podmínky ``context['j'].pian.stav == PIAN_POTVRZEN``.
-      :raises Exception: Vyvolá se s textem "arch_z.views.PianUpdateView.get.label_not_found"; nebo s textem "arch_z.views.PianUpdateView.transormation_error".
+      - ``request``: Parametr ``request`` předává se do volání ``get()``, ``str()``, pracuje se s atributy ``user``.
+      - ``args``: Poziční argumenty předávané nadřazené metodě get.
+      - ``kwargs``: Klíčové argumenty předávané do ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render_to_response()``.
+
+      **Výjimky:**
+
+      - ``PermissionDenied``: Vyvolá se při splnění podmínky ``context['j'].pian.stav == PIAN_POTVRZEN``.
+      - ``Exception``: Vyvolá se s textem "arch_z.views.PianUpdateView.get.label_not_found"; nebo s textem "arch_z.views.PianUpdateView.transormation_error".
+
 
 
 .. py:class:: AdbCreateView
@@ -290,9 +415,14 @@ Třídy
 
       Metoda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření ADB.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
 
 .. py:class:: GetAkceOtherKatastrView
@@ -305,9 +435,14 @@ Třídy
 
       Trida pohledu pro získaní souradnic dalších katastrů akce.
 
-      :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: AkceIndexView
@@ -320,9 +455,14 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
-      :param kwargs: Klíčové argumenty; nejsou předávány nadřazené metodě, kontext se sestavuje přímo.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Klíčové argumenty; nejsou předávány nadřazené metodě, kontext se sestavuje přímo.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
 
 .. py:class:: AkceListView
@@ -339,15 +479,23 @@ Třídy
 
       Převede název pole z URL parametru na odpovídající databázový název pro řazení querysetu akcí.
 
-      :param field: Název pole z požadavku (může začínat znaménkem ``-`` pro sestupné řazení).
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``get()``.
+      - ``field``: Název pole z požadavku (může začínat znaménkem ``-`` pro sestupné řazení).
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``get()``.
+
 
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
 
-      :return: Vrací výsledek volání ``check_filter_permission()``.
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``check_filter_permission()``.
+
 
 
 .. py:class:: ProjektAkceChange
@@ -360,19 +508,29 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
-      :param kwargs: Klíčové argumenty předávané do sestavení kontextu.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Klíčové argumenty předávané do sestavení kontextu.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: get()
 
       Metoda pro vrácení stránky při volání GET.
 
-      :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ovlivňuje větvení podmínek.
-      :param args: Poziční argumenty předávané nadřazené metodě get.
-      :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+      - ``request``: Parametr ``request`` se předává do volání ``check_stav_changed()``, ovlivňuje větvení podmínek.
+      - ``args``: Poziční argumenty předávané nadřazené metodě get.
+      - ``kwargs``: Klíčové argumenty předávané do ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+
 
    .. py:method:: post()
 
@@ -383,11 +541,16 @@ Třídy
       Celá událost je zapsaná do historie.
       Uživatel je presmerován na detail akce.
 
-      :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
-      :param args: Poziční argumenty předávané nadřazené metodě post.
-      :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``JsonResponse()``.
+      - ``request``: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``user``, ovlivňuje větvení podmínek.
+      - ``args``: Poziční argumenty předávané nadřazené metodě post.
+      - ``kwargs``: Klíčové argumenty předávané do ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``JsonResponse()``.
+
 
 
 .. py:class:: SamostatnaAkceChange
@@ -400,19 +563,29 @@ Třídy
 
       Metoda pro získaní kontextu podlehu.
 
-      :param kwargs: Klíčové argumenty předávané do sestavení kontextu.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Klíčové argumenty předávané do sestavení kontextu.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: get()
 
       Metoda pro vrácení stránky při volání GET s formulářem pro výběr projektu.
 
-      :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ovlivňuje větvení podmínek.
-      :param args: Poziční argumenty předávané nadřazené metodě get.
-      :param kwargs: Klíčové argumenty předávané do ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+      - ``request``: Parametr ``request`` se předává do volání ``check_stav_changed()``, ovlivňuje větvení podmínek.
+      - ``args``: Poziční argumenty předávané nadřazené metodě get.
+      - ``kwargs``: Klíčové argumenty předávané do ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render_to_response()``.
+
 
    .. py:method:: post()
 
@@ -423,11 +596,16 @@ Třídy
       Celá událost je zapsaná do historie.
       Uživatel je presmerován na detail akce.
 
-      :param request: Objekt HTTP požadavku s POST daty
-      :param args: Další poziční argumenty dědězité z nadřazené třídy, nepoužívané.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``.
+      - ``request``: Objekt HTTP požadavku s POST daty
+      - ``args``: Další poziční argumenty dědězité z nadřazené třídy, nepoužívané.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``redirect()``.
+
 
 
 .. py:class:: ArchZAutocomplete
@@ -440,15 +618,23 @@ Třídy
 
       Vrací result label.
 
-      :param result: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování.
+      - ``result``: Textový název, klíč nebo zpráva ``result`` používaná v rámci operace.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 
    .. py:method:: get_queryset()
 
       Vrací queryset. v aplikaci.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, výsledek volání ``check_filter_permission()``.
+
 
 
 .. py:class:: ArchZTableRowView
@@ -461,9 +647,14 @@ Třídy
 
       Vrací výsledek operace.
 
-      :param request: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``HttpResponse()``.
+      - ``request``: Parametr ``request`` předává se do volání ``get()``, pracuje se s atributy ``GET``.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``HttpResponse()``.
+
 
 
 Funkce
@@ -473,13 +664,19 @@ Funkce
 
    Funkce která vrací dvou stupňový heslař pro období.
 
-   :return: Vrací výsledek volání ``heslar_12()``.
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``heslar_12()``.
+
 
 .. py:function:: get_areal_choices()
 
    Funkce která vrací dvou stupňový heslař pro areál.
 
-   :return: Vrací výsledek volání ``heslar_12()``.
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``heslar_12()``.
+
 
 .. py:function:: edit(request, ident_cely)
 
@@ -488,11 +685,19 @@ Funkce
    Na začátku se kontroluje, jestli stav není archivovaný.
    Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
 
-   :param request: Parametr ``request`` se předává do volání ``CreateArchZForm()``, ``CreateAkceForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``redirect()``, vstupuje do návratové hodnoty.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-   :raises PermissionDenied: Vyvolá se při splnění podmínky ``zaznam.stav == AZ_STAV_ARCHIVOVANY``.
+   - ``request``: Parametr ``request`` se předává do volání ``CreateArchZForm()``, ``CreateAkceForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``redirect()``, vstupuje do návratové hodnoty.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+
+   **Výjimky:**
+
+   - ``PermissionDenied``: Vyvolá se při splnění podmínky ``zaznam.stav == AZ_STAV_ARCHIVOVANY``.
+
 
 .. py:function:: odeslat(request, ident_cely)
 
@@ -502,10 +707,15 @@ Funkce
    Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
    Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
 
-   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+
 
 .. py:function:: archivovat(request, ident_cely)
 
@@ -515,10 +725,15 @@ Funkce
    Při GET volání se kontrolují vyplněná pole akce a její relace pomocí metody na modelu.
    Po POST volání se volá metoda na modelu pro posun stavu do odeslaného.
 
-   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+
 
 .. py:function:: vratit(request, ident_cely)
 
@@ -529,12 +744,20 @@ Funkce
    Po POST volání se volá metoda na modelu pro posun stavu zpět.
    Pokud se jedná o projektovou akci, tak se vrací i stav projektu ze stavu uzavřený nebo archivovaný.
 
-   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
-   :raises PermissionDenied: Vyvolá se při splnění podmínky ``dokument.stav != D_STAV_ODESLANY``.
-   :raises StateChangedError: Vyvolá se při splnění podmínky ``check_stav_changed(request, dokument)``.
+   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``check_stav_changed()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+
+   **Výjimky:**
+
+   - ``PermissionDenied``: Vyvolá se při splnění podmínky ``dokument.stav != D_STAV_ODESLANY``.
+   - ``StateChangedError``: Vyvolá se při splnění podmínky ``check_stav_changed(request, dokument)``.
+
 
 .. py:function:: zapsat(request, projekt_ident_cely)
 
@@ -543,11 +766,19 @@ Funkce
    Na začátku se kontroluje, jestli jde o vytvoření projektové nebo samostatné akce a zda je možné projektovou akci vytvořit.
    Zobrazení se skládá ze 3 formulářů: CreateArchZForm, CreateAkceForm a formsetu pro další vedoucí.
 
-   :param request: Parametr ``request`` se předává do volání ``CreateArchZForm()``, ``CreateAkceForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param projekt_ident_cely: Identifikátor ``projekt_ident_cely`` používaný pro dohledání cílového záznamu.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
-   :raises PermissionDenied: Vyvolá se při splnění podmínky ``not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY``; nebo při splnění podmínky ``projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID``.
+   - ``request``: Parametr ``request`` se předává do volání ``CreateArchZForm()``, ``CreateAkceForm()``, pracuje se s atributy ``method``, ``POST``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   - ``projekt_ident_cely``: Identifikátor ``projekt_ident_cely`` používaný pro dohledání cílového záznamu.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``redirect()``, výsledek volání ``render()``.
+
+   **Výjimky:**
+
+   - ``PermissionDenied``: Vyvolá se při splnění podmínky ``not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY``; nebo při splnění podmínky ``projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID``.
+
 
 .. py:function:: smazat(request, ident_cely)
 
@@ -556,10 +787,15 @@ Funkce
    Na začátku se kontroluje, jestli někdo nezměnil stav akce během smazání.
    Po POST volání se volá metoda na modelu pro smazání akce.
 
-   :param request: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   - ``request``: Parametr ``request`` se předává do volání ``check_stav_changed()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``get_object_or_404()``, ``debug()``.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+
 
 .. py:function:: pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely)
 
@@ -567,11 +803,16 @@ Funkce
 
    Funkce volá další funkci pro připojení s parametrem třídou modelu navíc.
 
-   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``pripojit()``, vstupuje do návratové hodnoty.
-   :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
-   :param proj_ident_cely: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``pripojit()``.
+   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``pripojit()``, vstupuje do návratové hodnoty.
+   - ``arch_z_ident_cely``: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
+   - ``proj_ident_cely``: Identifikátor ``proj_ident_cely`` používaný pro dohledání cílového záznamu.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``pripojit()``.
+
 
 .. py:function:: odpojit_dokument(request, ident_cely, arch_z_ident_cely)
 
@@ -579,74 +820,117 @@ Funkce
 
    Funkce volá další funkci pro odpojení s parametrem navíc - arch záznamem.
 
-   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``odpojit()``, vstupuje do návratové hodnoty.
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``filter()``, ``odpojit()``, vstupuje do návratové hodnoty.
-   :param arch_z_ident_cely: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``odpojit()``.
+   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``odpojit()``, vstupuje do návratové hodnoty.
+   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``filter()``, ``odpojit()``, vstupuje do návratové hodnoty.
+   - ``arch_z_ident_cely``: Identifikátor ``arch_z_ident_cely`` používaný pro dohledání cílového záznamu.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``odpojit()``.
+
 
 .. py:function:: post_ajax_get_pians(request)
 
    Vypada nepouzito check s J. Bartos
 
-   :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+   **Parametry:**
 
-   :return: Vrací výsledek volání ``JsonResponse()``.
+   - ``request``: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``JsonResponse()``.
+
 
 .. py:function:: post_akce2kat(request)
 
    Funkce pohledu pro získaní souradnic katastru akce.
 
-   :param request: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+   **Parametry:**
 
-   :return: Vrací výsledek volání ``JsonResponse()``.
+   - ``request``: Parametr ``request`` se předává do volání ``loads()``, pracuje se s atributy ``body``.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``JsonResponse()``.
+
 
 .. py:function:: get_history_dates(historie_vazby, request_user)
 
    Funkce pro získaní dátumů pro historii.
 
-   :param historie_vazby: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
-   :param request_user: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
-   :return: Slovník dat jednotlivých změn stavu pro zobrazení v historii.
+   **Parametry:**
+
+   - ``historie_vazby``: Kolekce ``historie_vazby`` zpracovávaná touto funkcí.
+   - ``request_user``: Uživatel nebo osoba ``request_user``, v jejímž kontextu se operace provádí.
+
+   **Návratová hodnota:**
+
+   Slovník dat jednotlivých změn stavu pro zobrazení v historii.
+
 
 .. py:function:: get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app)
 
    Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
 
-   :param archeologicky_zaznam: Parametr ``archeologicky_zaznam`` předává se do volání ``check_permissions()``, pracuje se s atributy ``ident_cely``, ``stav``, ovlivňuje větvení podmínek.
-   :param dok_jednotky: Kolekce ``dok_jednotky`` zpracovávaná touto funkcí.
-   :param user: Parametr ``user`` se předává do volání ``check_permissions()``, ovlivňuje větvení podmínek.
-   :param app: Parametr ``app`` předává se do volání ``check_permissions()``.
-   :return: Slovník příznaků určujících, které akce se mají v detailu zobrazit.
+   **Parametry:**
+
+   - ``archeologicky_zaznam``: Parametr ``archeologicky_zaznam`` předává se do volání ``check_permissions()``, pracuje se s atributy ``ident_cely``, ``stav``, ovlivňuje větvení podmínek.
+   - ``dok_jednotky``: Kolekce ``dok_jednotky`` zpracovávaná touto funkcí.
+   - ``user``: Parametr ``user`` se předává do volání ``check_permissions()``, ovlivňuje větvení podmínek.
+   - ``app``: Parametr ``app`` předává se do volání ``check_permissions()``.
+
+   **Návratová hodnota:**
+
+   Slovník příznaků určujících, které akce se mají v detailu zobrazit.
+
 
 .. py:function:: get_required_fields(zaznam, next)
 
    Funkce pro získaní dictionary povinných polí podle stavu arch záznamů.
 
-   :param zaznam: Parametr ``zaznam`` pracuje se s atributy ``stav``, ovlivňuje větvení podmínek.
-   :param next: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
-   :return: Seznam názvů polí, která mají být v daném stavu povinná.
+   **Parametry:**
+
+   - ``zaznam``: Parametr ``zaznam`` pracuje se s atributy ``stav``, ovlivňuje větvení podmínek.
+   - ``next``: Posun vůči aktuálnímu stavu (pro kontrolu povinných polí v následujícím kroku).
+
+   **Návratová hodnota:**
+
+   Seznam názvů polí, která mají být v daném stavu povinná.
+
 
 .. py:function:: smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id)
 
    Funkce pohledu pro smazání dalšího vedoucího akce.
 
-   :param request: Parametr ``request`` se předává do volání ``add_message()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :param akce_vedouci_id: Identifikátor ``akce_vedouci_id`` používaný pro dohledání cílového záznamu.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   - ``request``: Parametr ``request`` se předává do volání ``add_message()``, ``create_transaction()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``debug()``, ``get_object_or_404()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   - ``akce_vedouci_id``: Identifikátor ``akce_vedouci_id`` používaný pro dohledání cílového záznamu.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+
 
 .. py:function:: get_dj_form_detail(app, jednotka, jednotky, show, old_adb_post, user, session)
 
    Funkce pro získaní dictionary contextu dokumentační jednotky.
 
-   :param app: druh archeologického záznamu ro který se daný context počítá.
-   :param jednotka: model DokumentacniJednotka pro který se daný context počítá.
-   :param jednotky: list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
-   :param show: dictionary pro zobrazení možnosti uživatele na stránce.
-   :param old_adb_post: staré volání CreateADBForm pro správně zobrazení chyb formuláře.
-   :param user: Parametr ``user`` se předává do volání ``check_permissions()``, pracuje se s atributy ``hlavni_role``, ovlivňuje větvení podmínek.
-   :param session: Volitelná Django session pro načtení dat souběžné editace ADB formuláře.
+   **Parametry:**
 
-   :return: dictionary kontextu DJ pro správné zobrazení stránky.
+   - ``app``: druh archeologického záznamu ro který se daný context počítá.
+   - ``jednotka``: model DokumentacniJednotka pro který se daný context počítá.
+   - ``jednotky``: list modelů DokumentacniJednotka použit pro správně zobrazení možnosti zmeny typu DJ.
+   - ``show``: dictionary pro zobrazení možnosti uživatele na stránce.
+   - ``old_adb_post``: staré volání CreateADBForm pro správně zobrazení chyb formuláře.
+   - ``user``: Parametr ``user`` se předává do volání ``check_permissions()``, pracuje se s atributy ``hlavni_role``, ovlivňuje větvení podmínek.
+   - ``session``: Volitelná Django session pro načtení dat souběžné editace ADB formuláře.
+
+   **Návratová hodnota:**
+
+   dictionary kontextu DJ pro správné zobrazení stránky.
+

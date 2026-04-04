@@ -10,28 +10,43 @@ Funkce
 
    Zpracuje uložení editace komponenty a souvisejících nálezových formulářů.
 
-   :param request: HTTP požadavek s daty editace komponenty.
-   :param typ_vazby: Typ vazby, který určuje návratovou URL po uložení.
-   :param ident_cely: Identifikátor upravované komponenty.
+   **Parametry:**
 
-   :return: Vrací proměnná ``response``.
+   - ``request``: HTTP požadavek s daty editace komponenty.
+   - ``typ_vazby``: Typ vazby, který určuje návratovou URL po uložení.
+   - ``ident_cely``: Identifikátor upravované komponenty.
+
+   **Návratová hodnota:**
+
+   Vrací proměnná ``response``.
+
 
 .. py:function:: zapsat(request, typ_vazby, dj_ident_cely)
 
    Vytvoří novou komponentu pro dokumentační jednotku nebo část dokumentu.
 
-   :param request: HTTP požadavek obsahující data nově zakládané komponenty.
-   :param typ_vazby: Typ vazby určující, zda jde o dokument nebo dokumentační jednotku.
-   :param dj_ident_cely: Identifikátor cílové dokumentační jednotky nebo části dokumentu.
+   **Parametry:**
 
-   :return: Vrací proměnná ``response``.
+   - ``request``: HTTP požadavek obsahující data nově zakládané komponenty.
+   - ``typ_vazby``: Typ vazby určující, zda jde o dokument nebo dokumentační jednotku.
+   - ``dj_ident_cely``: Identifikátor cílové dokumentační jednotky nebo části dokumentu.
+
+   **Návratová hodnota:**
+
+   Vrací proměnná ``response``.
+
 
 .. py:function:: smazat(request, typ_vazby, ident_cely)
 
    Odstraní komponentu a vrátí cílovou URL pro následný redirect.
 
-   :param request: HTTP požadavek; při POST provádí vlastní smazání komponenty.
-   :param typ_vazby: Typ vazby předaný URL konfigurací.
-   :param ident_cely: Identifikátor mazané komponenty.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+   - ``request``: HTTP požadavek; při POST provádí vlastní smazání komponenty.
+   - ``typ_vazby``: Typ vazby předaný URL konfigurací.
+   - ``ident_cely``: Identifikátor mazané komponenty.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``JsonResponse()``, výsledek volání ``render()``.
+

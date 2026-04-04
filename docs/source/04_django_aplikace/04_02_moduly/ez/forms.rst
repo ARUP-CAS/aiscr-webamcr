@@ -16,11 +16,14 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``, ``DoiAutocompleteField()``.
-      :param required: Parametr ``required`` ovlivňuje větvení podmínek.
-      :param required_next: Parametr ``required_next`` ovlivňuje větvení podmínek.
-      :param readonly: Parametr ``readonly`` ovlivňuje větvení podmínek.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``, ``DoiAutocompleteField()``.
+      - ``required``: Parametr ``required`` ovlivňuje větvení podmínek.
+      - ``required_next``: Parametr ``required_next`` ovlivňuje větvení podmínek.
+      - ``readonly``: Parametr ``readonly`` ovlivňuje větvení podmínek.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: ExterniOdkazForm
@@ -33,9 +36,12 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param type_arch: Typ archeologického záznamu (nevyužit v tomto formuláři, přijímán pro kompatibilitu).
-      :param args: Poziční argumenty předávané nadřízené třídě.
-      :param kwargs: Klíčové argumenty předávané nadřízené třídě.
+      **Parametry:**
+
+      - ``type_arch``: Typ archeologického záznamu (nevyužit v tomto formuláři, přijímán pro kompatibilitu).
+      - ``args``: Poziční argumenty předávané nadřízené třídě.
+      - ``kwargs``: Klíčové argumenty předávané nadřízené třídě.
+
 
 
 .. py:class:: PripojitArchZaznamForm
@@ -48,10 +54,13 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param type_arch: Parametr ``type_arch`` předává se do volání ``ChoiceField()``, ``AutocompleteListSelect2()``, ovlivňuje větvení podmínek.
-      :param dok: Parametr ``dok`` ovlivňuje větvení podmínek.
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``type_arch``: Parametr ``type_arch`` předává se do volání ``ChoiceField()``, ``AutocompleteListSelect2()``, ovlivňuje větvení podmínek.
+      - ``dok``: Parametr ``dok`` ovlivňuje větvení podmínek.
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: PripojitExterniOdkazForm
@@ -64,6 +73,9 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``.
+
 

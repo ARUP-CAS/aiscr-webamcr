@@ -16,46 +16,69 @@ Třídy
 
       Filtruje queryset. v aplikaci.
 
-      :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací proměnná ``queryset``.
+      - ``queryset``: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``queryset``.
+
 
    .. py:method:: filter_popisne_udaje()
 
       Metoda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
 
-      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-      :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
-      :param value: Hledaný řetězec, podle nějž se filtruje ve více textových polích externího zdroje.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``filter()``.
+      - ``queryset``: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      - ``name``: Název pole filtru (nevyužit přímo, předán Django filtersetem).
+      - ``value``: Hledaný řetězec, podle nějž se filtruje ve více textových polích externího zdroje.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``filter()``.
+
 
    .. py:method:: filter_akce_ident()
 
       Metoda pro filtrování podle identu celý akce.
 
-      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-      :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
-      :param value: Hledaný identifikátor akce, podle nějž se filtruje přes propojené archeologické záznamy typu akce.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``filter()``.
+      - ``queryset``: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      - ``name``: Název pole filtru (nevyužit přímo, předán Django filtersetem).
+      - ``value``: Hledaný identifikátor akce, podle nějž se filtruje přes propojené archeologické záznamy typu akce.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``filter()``.
+
 
    .. py:method:: filter_lokalita_ident()
 
       Metoda pro filtrování podle identu celý lokality.
 
-      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-      :param name: Název pole filtru (nevyužit přímo, předán Django filtersetem).
-      :param value: Hledaný identifikátor lokality, podle nějž se filtruje přes propojené archeologické záznamy typu lokalita.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``filter()``.
+      - ``queryset``: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      - ``name``: Název pole filtru (nevyužit přímo, předán Django filtersetem).
+      - ``value``: Hledaný identifikátor lokality, podle nějž se filtruje přes propojené archeologické záznamy typu lokalita.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``filter()``.
+
 
    .. py:method:: __init__()
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+
 
 
 .. py:class:: ExterniZdrojFilterFormHelper
@@ -68,5 +91,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param form: Parametr ``form`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``form``: Parametr ``form`` se předává do volání ``__init__()``.
+
 

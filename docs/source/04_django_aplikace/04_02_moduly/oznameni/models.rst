@@ -18,5 +18,8 @@ Třídy
 
       Textová reprezentace objektu.
 
-      :return: Vrací hodnotu podle větve zpracování.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování.
+
 

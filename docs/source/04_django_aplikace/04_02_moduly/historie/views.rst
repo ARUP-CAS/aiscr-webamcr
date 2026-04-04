@@ -18,34 +18,54 @@ Třídy
 
       Vrátí hodnotu z URL podle lookup_kwarg.
 
-      :return: Vrací vybranou hodnotu z kolekce.
+      **Návratová hodnota:**
+
+      Vrací vybranou hodnotu z kolekce.
+
 
    .. py:method:: prepare_queryset()
 
       Potomek může přepsat pro vlastní řazení nebo dodatečné filtry.
 
-      :param qs: Queryset/filtr ``qs`` použitý při výběru záznamů.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``order_by()``.
+      - ``qs``: Queryset/filtr ``qs`` použitý při výběru záznamů.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``order_by()``.
+
 
    .. py:method:: add_extra_context()
 
       Potomek může přepsat a doplnit další hodnoty do contextu.
 
-      :param context: Kolekce ``context`` zpracovávaná touto funkcí.
+      **Parametry:**
+
+      - ``context``: Kolekce ``context`` zpracovávaná touto funkcí.
+
 
    .. py:method:: get_queryset()
 
       Vrací queryset historie po aplikaci výchozího řazení a filtrů.
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, proměnná ``qs``.
-      :raises ValueError: Vyvolá se při splnění podmínky ``not self.queryset_filter``.
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``none()``, proměnná ``qs``.
+
+      **Výjimky:**
+
+      - ``ValueError``: Vyvolá se při splnění podmínky ``not self.queryset_filter``.
+
 
    .. py:method:: get_header_config()
 
       Potomek musí vrátit {'url': ..., 'icon': ..., 'text': ...}
 
-      :param context: Kolekce ``context`` zpracovávaná touto funkcí.
+      **Parametry:**
+
+      - ``context``: Kolekce ``context`` zpracovávaná touto funkcí.
+
 
    .. py:method:: add_fedora_history()
 
@@ -53,32 +73,50 @@ Třídy
 
       metadata historie z Fedory a přidá se druhá tabulka fedora_table.
 
-      :param context: Kolekce ``context`` zpracovávaná touto funkcí.
+      **Parametry:**
+
+      - ``context``: Kolekce ``context`` zpracovávaná touto funkcí.
+
 
    .. py:method:: get_table()
 
       Vrací tabulku historie naplněnou připraveným querysetem.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_table()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``get_table()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_table()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: None, výsledek volání ``get_table()``.
+
 
    .. py:method:: get_context_data()
 
       Vrací context data.
 
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``context``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``get_context_data()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``context``.
+
 
    .. py:method:: render_to_response()
 
       Vyrenderuje to response.
 
-      :param context: Parametr ``context`` se předává do volání ``render_to_response()``, pracuje se s atributy ``get``, vstupuje do návratové hodnoty.
-      :param response_kwargs: Parametr ``response_kwargs`` se předává do volání ``render_to_response()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render_to_response()``, výsledek volání ``response()``.
+      - ``context``: Parametr ``context`` se předává do volání ``render_to_response()``, pracuje se s atributy ``get``, vstupuje do návratové hodnoty.
+      - ``response_kwargs``: Parametr ``response_kwargs`` se předává do volání ``render_to_response()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``render_to_response()``, výsledek volání ``response()``.
+
 
 
 .. py:class:: ProjektHistorieListView
@@ -91,9 +129,14 @@ Třídy
 
       Vrací header config.
 
-      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``context``: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
 
 .. py:class:: AkceHistorieListView
@@ -106,9 +149,14 @@ Třídy
 
       Vrací header config.
 
-      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``context``: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
 
 .. py:class:: DokumentHistorieListView
@@ -121,15 +169,23 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontext pohledu obsahující ``ident_cely`` záznamu.
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``context``: Kontext pohledu obsahující ``ident_cely`` záznamu.
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
    .. py:method:: add_extra_context()
 
       Doplní kontext o typ záznamu (dokument nebo knihovna_3d) podle identifikátoru.
 
-      :param context: Kontext pohledu, do kterého jsou přidány klíče ``typ`` a ``entity``.
+      **Parametry:**
+
+      - ``context``: Kontext pohledu, do kterého jsou přidány klíče ``typ`` a ``entity``.
+
 
 
 .. py:class:: SamostatnyNalezHistorieListView
@@ -142,9 +198,14 @@ Třídy
 
       Vrací header config.
 
-      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``context``: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
 
 .. py:class:: SpolupraceHistorieListView
@@ -157,9 +218,14 @@ Třídy
 
       Vrací header config.
 
-      :param context: Kontext pohledu (nevyužíván, odkaz je vždy na seznam spolupráce).
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``context``: Kontext pohledu (nevyužíván, odkaz je vždy na seznam spolupráce).
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
 
 .. py:class:: SouborHistorieListView
@@ -172,23 +238,36 @@ Třídy
 
       Seřadí queryset záznamů Historie souboru sestupně podle data změny.
 
-      :param qs: Queryset záznamů Historie, který má být seřazen.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``order_by()``.
+      - ``qs``: Queryset záznamů Historie, který má být seřazen.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``order_by()``.
+
 
    .. py:method:: add_extra_context()
 
       Doplní kontext o informace o projektu a předchozím objektu.
 
-      :param context: Kontext pohledu, do kterého jsou přidány klíče ``projekt``, ``back_ident`` a ``back_model``.
+      **Parametry:**
+
+      - ``context``: Kontext pohledu, do kterého jsou přidány klíče ``projekt``, ``back_ident`` a ``back_model``.
+
 
    .. py:method:: get_header_config()
 
       Vrací header config.
 
-      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: slovník, None.
+      - ``context``: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: slovník, None.
+
 
 
 .. py:class:: LokalitaHistorieListView
@@ -201,9 +280,14 @@ Třídy
 
       Vrací header config.
 
-      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``context``: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
 
 .. py:class:: UzivatelHistorieListView
@@ -216,9 +300,14 @@ Třídy
 
       Vrací header config.
 
-      :param context: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``context``: Parametr ``context`` slouží jako vstup pro logiku funkce ``get_header_config``.
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
 
 .. py:class:: ExterniZdrojHistorieListView
@@ -231,9 +320,14 @@ Třídy
 
       Vrací header config.
 
-      :param context: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``context``: Parametr ``context`` se předává do volání ``reverse()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
 
 .. py:class:: PianHistorieListView
@@ -246,9 +340,14 @@ Třídy
 
       Vrací konfiguraci záhlaví pro historii Pianu.
 
-      :param context: Kontext pohledu obsahující identifikátory akce a dokumentační jednotky.
+      **Parametry:**
 
-      :return: Vrací slovník s URL, ikonou a textem záhlaví.
+      - ``context``: Kontext pohledu obsahující identifikátory akce a dokumentační jednotky.
+
+      **Návratová hodnota:**
+
+      Vrací slovník s URL, ikonou a textem záhlaví.
+
 
 
 .. py:class:: PianLokalitaHistorieListView
@@ -261,9 +360,14 @@ Třídy
 
       Vrací konfiguraci záhlaví pro historii Pianu lokality.
 
-      :param context: Kontext pohledu obsahující identifikátory lokality a dokumentační jednotky.
+      **Parametry:**
 
-      :return: Vrací slovník s URL, ikonou a textem záhlaví.
+      - ``context``: Kontext pohledu obsahující identifikátory lokality a dokumentační jednotky.
+
+      **Návratová hodnota:**
+
+      Vrací slovník s URL, ikonou a textem záhlaví.
+
 
 
 .. py:class:: AdbHistorieListView
@@ -276,7 +380,12 @@ Třídy
 
       Vrací konfiguraci záhlaví pro historii ADB.
 
-      :param context: Kontext pohledu obsahující identifikátory akce a dokumentační jednotky.
+      **Parametry:**
 
-      :return: Vrací slovník s URL, ikonou a textem záhlaví.
+      - ``context``: Kontext pohledu obsahující identifikátory akce a dokumentační jednotky.
+
+      **Návratová hodnota:**
+
+      Vrací slovník s URL, ikonou a textem záhlaví.
+
 

@@ -16,15 +16,25 @@ Třídy
 
       Metoda pro správně vrácení hodnot o osobe.
 
-      :param obj: Parametr ``obj`` předává se do volání ``str()``, pracuje se s atributy ``osoba``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací slovník.
+      - ``obj``: Parametr ``obj`` předává se do volání ``str()``, pracuje se s atributy ``osoba``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací slovník.
+
 
    .. py:method:: to_representation()
 
       Override reprezentace do dict pro správně zobrazení label.
 
-      :param instance: Parametr ``instance`` předává se do volání ``get_attribute()``.
+      **Parametry:**
 
-      :return: Vrací proměnná ``ret``.
+      - ``instance``: Parametr ``instance`` předává se do volání ``get_attribute()``.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``ret``.
+
 

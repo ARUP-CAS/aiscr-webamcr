@@ -10,8 +10,14 @@ Funkce
 
    Vrací next sequence.
 
-   :param sequence_name: Textový název nebo klíč ``sequence_name`` používaný v rámci operace.
-   :return: Načtená data odpovídající zadaným vstupům.
+   **Parametry:**
+
+   - ``sequence_name``: Textový název nebo klíč ``sequence_name`` používaný v rámci operace.
+
+   **Návratová hodnota:**
+
+   Načtená data odpovídající zadaným vstupům.
+
 
 .. py:function:: get_temporary_project_ident(region)
 
@@ -20,8 +26,14 @@ Funkce
    Logika složení je: "X-" + region (M nebo C) + "-" + 9místné číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
    Příklad: "X-M-000001234"
 
-   :param region: Parametr ``region`` vstupuje do návratové hodnoty.
-   :return: Vrací výsledek operace.
+   **Parametry:**
+
+   - ``region``: Parametr ``region`` vstupuje do návratové hodnoty.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek operace.
+
 
 .. py:function:: get_project_event_ident(project)
 
@@ -31,20 +43,36 @@ Funkce
    Při překročení maxima čísla sekvence (99999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A"
 
-   :param project: Parametr ``project`` pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-   :return: Vrací výsledek operace.
+   **Parametry:**
 
-   :raises MaximalEventCount: Vyvolá se při splnění podmínky ``len(idents) < MAXIMAL_PROJECT_EVENTS``.
+   - ``project``: Parametr ``project`` pracuje se s atributy ``ident_cely``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek operace.
+
+   **Výjimky:**
+
+   - ``MaximalEventCount``: Vyvolá se při splnění podmínky ``len(idents) < MAXIMAL_PROJECT_EVENTS``.
+
 
 .. py:function:: get_dokument_rada(typ, material)
 
    Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
 
-   :param typ: Parametr ``typ`` předává se do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
-   :param material: Parametr ``material`` se předává do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
+   **Parametry:**
 
-   :return: Vrací atribut objektu.
-   :raises NelzeZjistitRaduError: Vyvolá se při splnění podmínky ``len(instances) == 1``.
+   - ``typ``: Parametr ``typ`` předává se do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
+   - ``material``: Parametr ``material`` se předává do volání ``filter()``, ``error()``, pracuje se s atributy ``id``.
+
+   **Návratová hodnota:**
+
+   Vrací atribut objektu.
+
+   **Výjimky:**
+
+   - ``NelzeZjistitRaduError``: Vyvolá se při splnění podmínky ``len(instances) == 1``.
+
 
 .. py:function:: get_temp_dokument_ident(rada, region)
 
@@ -53,10 +81,15 @@ Funkce
    Logika složení je: "X-" + region (M nebo C) + "-" + řada (TX/DD/3D) + "-" 9místné číslo (ID ze sekvence dokument_xident_seq doplněné na 9 číslic nulami)
    Příklad: "X-M-TX-000000034"
 
-   :param rada: Parametr ``rada`` se předává do volání ``str()``.
-   :param region: Parametr ``region`` se předává do volání ``str()``.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování.
+   - ``rada``: Parametr ``rada`` se předává do volání ``str()``.
+   - ``region``: Parametr ``region`` se předává do volání ``str()``.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování.
+
 
 .. py:function:: get_cast_dokumentu_ident(dokument)
 
@@ -66,10 +99,18 @@ Funkce
    Při překročení maxima DJ u dokumentu (999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-DD-202100034-D001"
 
-   :param dokument: Parametr ``dokument`` pracuje se s atributy ``casti``, ``ident_cely``.
-   :return: Vrací výsledek operace.
+   **Parametry:**
 
-   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMUM``.
+   - ``dokument``: Parametr ``dokument`` pracuje se s atributy ``casti``, ``ident_cely``.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek operace.
+
+   **Výjimky:**
+
+   - ``MaximalIdentNumberError``: Vyvolá se při splnění podmínky ``max_count < MAXIMUM``.
+
 
 .. py:function:: get_dj_ident(event)
 
@@ -79,10 +120,18 @@ Funkce
    Při překročení maxima DJ u archeologického záznamu (99) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-D01"
 
-   :param event: Parametr ``event`` pracuje se s atributy ``dokumentacni_jednotky_akce``, ``ident_cely``.
-   :return: Vrací výsledek operace.
+   **Parametry:**
 
-   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_EVENT_DJS``.
+   - ``event``: Parametr ``event`` pracuje se s atributy ``dokumentacni_jednotky_akce``, ``ident_cely``.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek operace.
+
+   **Výjimky:**
+
+   - ``MaximalIdentNumberError``: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_EVENT_DJS``.
+
 
 .. py:function:: get_komponenta_ident(zaznam, fedora_transaction)
 
@@ -92,19 +141,36 @@ Funkce
    Při překročení maxima komponent u záznamu (999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-K001", "M-DD-202100034-K001"
 
-   :param zaznam: Archeologický záznam nebo dokument k zpracování.
-   :param fedora_transaction: Aktivní transakce Fedora pro práci s repozitářem.
-   :return: Vygenerovaný identifikátor komponenty.
-   :raises MaximalIdentNumberError: Vyvolá se při překročení maxima komponent (999).
+   **Parametry:**
+
+   - ``zaznam``: Archeologický záznam nebo dokument k zpracování.
+   - ``fedora_transaction``: Aktivní transakce Fedora pro práci s repozitářem.
+
+   **Návratová hodnota:**
+
+   Vygenerovaný identifikátor komponenty.
+
+   **Výjimky:**
+
+   - ``MaximalIdentNumberError``: Vyvolá se při překročení maxima komponent (999).
+
 
 .. py:function:: get_sm_from_point(point)
 
    Metoda pro získání kladu sm5 pro pian z bodu.
 
-   :param point: Parametr ``point`` předává se do volání ``filter()``, ``PianNotInKladysm5Error()``.
+   **Parametry:**
 
-   :return: Vrací proměnná ``mapovy_list``.
-   :raises PianNotInKladysm5Error: Vyvolá se při splnění podmínky ``mapovy_list.count() == 1``.
+   - ``point``: Parametr ``point`` předává se do volání ``filter()``, ``PianNotInKladysm5Error()``.
+
+   **Návratová hodnota:**
+
+   Vrací proměnná ``mapovy_list``.
+
+   **Výjimky:**
+
+   - ``PianNotInKladysm5Error``: Vyvolá se při splnění podmínky ``mapovy_list.count() == 1``.
+
 
 .. py:function:: get_temporary_pian_ident(zm50)
 
@@ -113,8 +179,14 @@ Funkce
    Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 9 místní číslo ze sekvence pian_xident_seq doplněno na 9 číslic.
    Příklad: "N-1224-000123456"
 
-   :param zm50: Parametr ``zm50`` se předává do volání ``str()``, pracuje se s atributy ``cislo``.
-   :return: Vrací výsledek operace.
+   **Parametry:**
+
+   - ``zm50``: Parametr ``zm50`` se předává do volání ``str()``, pracuje se s atributy ``cislo``.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek operace.
+
 
 .. py:function:: get_sn_ident(projekt)
 
@@ -124,10 +196,18 @@ Funkce
    Při překročení maxima SN u projektu (99999) se uživateli na web vrátí chybová hláška.
    Příklad: "M-202100034A-N00001"
 
-   :param projekt: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``.
-   :return: Vrací výsledek operace.
+   **Parametry:**
 
-   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_FINDS``.
+   - ``projekt``: Parametr ``projekt`` předává se do volání ``filter()``, pracuje se s atributy ``ident_cely``.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek operace.
+
+   **Výjimky:**
+
+   - ``MaximalIdentNumberError``: Vyvolá se při splnění podmínky ``max_count < MAXIMAL_FINDS``.
+
 
 .. py:function:: get_adb_ident(pian)
 
@@ -137,11 +217,19 @@ Funkce
    Při překročení maxima sekvence u ADB (999999) se uživateli na web vrátí chybová hláška.
    Příklad: "ADB-PRAH43-000012"
 
-   :param pian: Parametr ``pian`` předává se do volání ``isinstance()``, ``Centroid()``, pracuje se s atributy ``geom``, ovlivňuje větvení podmínek.
-   :return: Vrací výsledek operace.
+   **Parametry:**
 
-   :raises NeznamaGeometrieError: Vyvolá se při splnění podmínky ``isinstance(pian.geom, Polygon)``.
-   :raises MaximalIdentNumberError: Vyvolá se při splnění podmínky ``sequence.sekvence < MAXIMAL_ADBS``.
+   - ``pian``: Parametr ``pian`` předává se do volání ``isinstance()``, ``Centroid()``, pracuje se s atributy ``geom``, ovlivňuje větvení podmínek.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek operace.
+
+   **Výjimky:**
+
+   - ``NeznamaGeometrieError``: Vyvolá se při splnění podmínky ``isinstance(pian.geom, Polygon)``.
+   - ``MaximalIdentNumberError``: Vyvolá se při splnění podmínky ``sequence.sekvence < MAXIMAL_ADBS``.
+
 
 .. py:function:: get_temp_lokalita_ident(typ, region)
 
@@ -151,10 +239,15 @@ Funkce
 
    Příklad: "X-M-L000123456"
 
-   :param typ: Parametr ``typ`` předává se do volání ``str()``.
-   :param region: Parametr ``region`` se předává do volání ``str()``.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování.
+   - ``typ``: Parametr ``typ`` předává se do volání ``str()``.
+   - ``region``: Parametr ``region`` se předává do volání ``str()``.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování.
+
 
 .. py:function:: get_temp_akce_ident(region)
 
@@ -164,9 +257,14 @@ Funkce
 
    Příklad: "X-M-9000123456A"
 
-   :param region: Parametr ``region`` se předává do volání ``str()``, vstupuje do návratové hodnoty.
+   **Parametry:**
 
-   :return: Vrací výsledek volání ``str()``.
+   - ``region``: Parametr ``region`` se předává do volání ``str()``, vstupuje do návratové hodnoty.
+
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``str()``.
+
 
 .. py:function:: get_temp_ez_ident()
 
@@ -176,43 +274,69 @@ Funkce
 
    Příklad: "X-BIB-000123456"
 
-   :return: Vrací výsledek volání ``str()``.
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``str()``.
+
 
 .. py:function:: get_next_sequence_integrity_check(object_class)
 
    Vrací next sequence integrity check.
 
-   :param object_class: Parametr ``object_class`` předává se do volání ``get_next_sequence()``, pracuje se s atributy ``IDENT_PREFIX``, ``SEQUENCE_NAME``, ovlivňuje větvení podmínek.
-   :return: Načtená data odpovídající zadaným vstupům.
+   **Parametry:**
+
+   - ``object_class``: Parametr ``object_class`` předává se do volání ``get_next_sequence()``, pracuje se s atributy ``IDENT_PREFIX``, ``SEQUENCE_NAME``, ovlivňuje větvení podmínek.
+
+   **Návratová hodnota:**
+
+   Načtená data odpovídající zadaným vstupům.
+
 
 .. py:function:: get_heslar_ident()
 
    Metoda pro výpočet identu hesláře.
 
-   :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+
 
 .. py:function:: get_uzivatel_ident()
 
    Metoda pro výpočet identu uživatele.
 
-   :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+
 
 .. py:function:: get_organizace_ident()
 
    Metoda pro výpočet identu organizce.
 
-   :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+
 
 .. py:function:: get_osoba_ident()
 
    Metoda pro výpočet identu osoby.
 
-   :return: Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+   **Návratová hodnota:**
+
+   Vrací výsledek volání ``get_next_sequence_integrity_check()``.
+
 
 .. py:function:: get_record_from_ident(ident_cely)
 
    Funkce pro získaní záznamu podle ident cely.
 
-   :param ident_cely: Parametr ``ident_cely`` se předává do volání ``bool()``, ``fullmatch()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+   **Parametry:**
 
-   :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_object_or_404()``, None.
+   - ``ident_cely``: Parametr ``ident_cely`` se předává do volání ``bool()``, ``fullmatch()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
+
+   **Návratová hodnota:**
+
+   Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``get_object_or_404()``, None.
+

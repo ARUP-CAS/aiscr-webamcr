@@ -21,7 +21,13 @@ Třídy
 
       Vrací seznam polí, která jsou v administraci jen pro čtení.
 
-      :param request: HTTP požadavek ze strany administrátora.
-      :param obj: Objekt v editaci (None při vytváření).
-      :return: Tuple polí určených jako readonly.
+      **Parametry:**
+
+      - ``request``: HTTP požadavek ze strany administrátora.
+      - ``obj``: Objekt v editaci (None při vytváření).
+
+      **Návratová hodnota:**
+
+      Tuple polí určených jako readonly.
+
 

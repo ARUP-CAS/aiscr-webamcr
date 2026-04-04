@@ -16,56 +16,84 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+
 
    .. py:method:: filter_queryset()
 
       Filtruje queryset. v aplikaci.
 
-      :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací proměnná ``queryset``.
+      - ``queryset``: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``queryset``.
+
 
    .. py:method:: filter_obdobi()
 
       Filtruje samostatné nálezy podle období.
 
-      :param queryset: Soubor záznamů k filtrování
-      :param name: Název pole pro filtrování
-      :param value: Hodnota pro filtrování
+      **Parametry:**
 
-      :return: Vrací filtrovaný ``queryset``
+      - ``queryset``: Soubor záznamů k filtrování
+      - ``name``: Název pole pro filtrování
+      - ``value``: Hodnota pro filtrování
+
+      **Návratová hodnota:**
+
+      Vrací filtrovaný ``queryset``
+
 
    .. py:method:: filter_druh_nalezu()
 
       Filtruje samostatné nálezy podle typu.
 
-      :param queryset: Soubor záznamů k filtrování
-      :param name: Název pole pro filtrování
-      :param value: Hodnota pro filtrování
+      **Parametry:**
 
-      :return: Vrací filtrovaný ``queryset``
+      - ``queryset``: Soubor záznamů k filtrování
+      - ``name``: Název pole pro filtrování
+      - ``value``: Hodnota pro filtrování
+
+      **Návratová hodnota:**
+
+      Vrací filtrovaný ``queryset``
+
 
    .. py:method:: filter_popisne_udaje()
 
       Metoda pro filtrování podle lokalizace, poznámek a evidenčního čísla.
 
-      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
-      :param value: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací výsledek volání ``filter()``.
+      - ``queryset``: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      - ``name``: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_popisne_udaje``.
+      - ``value``: Parametr ``value`` předává se do volání ``filter()``, ``Q()``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací výsledek volání ``filter()``.
+
 
    .. py:method:: filter_by_oblast()
 
       Metoda pro filtrování podle oblasti.
 
-      :param queryset: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
-      :param name: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_by_oblast``.
-      :param value: Parametr ``value`` ovlivňuje větvení podmínek.
+      **Parametry:**
 
-      :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
+      - ``queryset``: Parametr ``queryset`` pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      - ``name``: Parametr ``name`` slouží jako vstup pro logiku funkce ``filter_by_oblast``.
+      - ``value``: Parametr ``value`` ovlivňuje větvení podmínek.
+
+      **Návratová hodnota:**
+
+      Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``filter()``, proměnná ``queryset``.
+
 
 
 .. py:class:: UzivatelSpolupraceFilter
@@ -78,16 +106,24 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param args: Parametr ``args`` se předává do volání ``__init__()``.
-      :param kwargs: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+      **Parametry:**
+
+      - ``args``: Parametr ``args`` se předává do volání ``__init__()``.
+      - ``kwargs``: Parametr ``kwargs`` se předává do volání ``__init__()``, pracuje se s atributy ``get``.
+
 
    .. py:method:: filter_queryset()
 
       Filtruje queryset. v aplikaci.
 
-      :param queryset: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+      **Parametry:**
 
-      :return: Vrací proměnná ``queryset``.
+      - ``queryset``: Parametr ``queryset`` předává se do volání ``filter_queryset()``, pracuje se s atributy ``filter``, vstupuje do návratové hodnoty.
+
+      **Návratová hodnota:**
+
+      Vrací proměnná ``queryset``.
+
 
 
 .. py:class:: SamostatnyNalezFilterFormHelper
@@ -100,7 +136,10 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param form: Parametr ``form`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``form``: Parametr ``form`` se předává do volání ``__init__()``.
+
 
 
 .. py:class:: UzivatelSpolupraceFilterFormHelper
@@ -113,5 +152,8 @@ Třídy
 
       Inicializuje instanci třídy.
 
-      :param form: Parametr ``form`` se předává do volání ``__init__()``.
+      **Parametry:**
+
+      - ``form``: Parametr ``form`` se předává do volání ``__init__()``.
+
 
