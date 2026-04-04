@@ -1,0 +1,9 @@
+{% load i18n %}
+{% if history_dates.datum_vraceni.poznamka %}
+<div class="alert alert-primary mt-2" role="alert">
+  <strong>{% trans "templates.vraceniNotifikace.header" %}</strong>
+  <p class="mb-1"><small class="text-muted">{{ history_dates.datum_vraceni.datum|date:'Y-m-d H:i' }}</small> {{ history_dates.datum_vraceni.poznamka }}</p>
+  <hr class="my-1">
+  <small>{% trans "templates.vraceniNotifikace.historyHint" %}</small>
+</div>
+{% endif %}
