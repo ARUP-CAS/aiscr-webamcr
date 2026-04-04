@@ -32,6 +32,7 @@ import subprocess
 import sys
 import traceback
 import urllib.request
+from urllib.parse import quote
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
@@ -2600,18 +2601,86 @@ def load_json(path: Path) -> dict:
 
 
 def normalize_repo_url(url: str) -> str:
-    """Normalizuje URL repozitáře odstraněním prefixu ``git+`` a suffixu ``.git``.
+    """Normalizuje URL repozitáře pro zobrazení v dokumentaci.
+
+    Odstraní prefix ``git+``, převede ``git://host/…`` na ``https://host/…``
+    (prohlížeče ``git://`` nepodporují spolehlivě) a ořízne příponu ``.git``.
 
     :param url: Surová URL repozitáře (např. ``git+https://github.com/foo/bar.git``).
     :type url: str
     :return: Normalizovaná URL (např. ``https://github.com/foo/bar``).
     :rtype: str
     """
+    if not url:
+        return url
     if url.startswith("git+"):
         url = url[4:]
+    if url.startswith("git://"):
+        url = "https://" + url[6:]
     if url.endswith(".git"):
         url = url[:-4]
     return url
+
+
+def npm_package_page_url(package_name: str) -> str:
+    """Vrátí kanonickou URL stránky balíčku na https://www.npmjs.com/.
+
+    Používá se jako záložní odkaz, když v ``node_modules`` není k dispozici
+    ``homepage`` ani ``repository`` (např. při běhu generátoru bez ``npm install``).
+    Scoped balíčky (``@scope/name``) se kódují s ``%2F`` místo lomítka v cestě.
+
+    :param package_name: Název balíčku z ``package.json`` (např. ``leaflet`` nebo ``@types/node``).
+    :type package_name: str
+    :return: URL ve tvaru ``https://www.npmjs.com/package/...``.
+    :rtype: str
+    """
+    encoded = quote(package_name, safe="@")
+    return f"https://www.npmjs.com/package/{encoded}"
+
+
+def parse_preserved_js_library_links(rst_content: str) -> Dict[str, str]:
+    """Z existujícího RST vytáhne mapu ``název balíčku → odkaz`` z generovaného bloku.
+
+    Parsuje řádky ``list-table`` mezi značkami ``.. BEGIN GENERATED NODEJS LIBRARIES``
+    a ``.. END GENERATED NODEJS LIBRARIES``. Řádek záhlaví tabulky
+    (``Název knihovny``) se přeskočí. Slouží k zachování odkazů při běhu bez
+    ``node_modules`` (např. CI), aby se nepřepisovaly platné URL hodnotami
+    z :func:`npm_package_page_url`.
+
+    Očekává stejný čtyřřádkový tvar řádků tabulky jako :func:`build_rst_table`;
+    ruční zalamování buněk může parsování rozhodit.
+
+    :param rst_content: Obsah souboru ``javascript_knihovny.rst`` (nebo ekvivalent).
+    :type rst_content: str
+    :return: Slovník ``{název balíčku: URL}`` pro neprázdné odkazy.
+    :rtype: Dict[str, str]
+    """
+    if BEGIN_MARKER not in rst_content or END_MARKER not in rst_content:
+        return {}
+
+    start = rst_content.index(BEGIN_MARKER)
+    end = rst_content.index(END_MARKER)
+    section = rst_content[start:end]
+    preserved: Dict[str, str] = {}
+    lines = section.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("   * - "):
+            name = line[7:].strip()
+            if (
+                i + 3 < len(lines)
+                and lines[i + 1].startswith("     - ")
+                and lines[i + 2].startswith("     - ")
+                and lines[i + 3].startswith("     - ")
+            ):
+                url = lines[i + 3][len("     - ") :].strip()
+                if name != "Název knihovny" and url:
+                    preserved[name] = url
+                i += 4
+                continue
+        i += 1
+    return preserved
 
 
 def load_dependencies(package_json: dict) -> Dict[str, str]:
@@ -2647,6 +2716,8 @@ def load_lock_licenses(lock_file: Path) -> Dict[str, str]:
         if key.startswith("node_modules/"):
             name = key[len("node_modules/") :]
             license_val = info.get("license")
+            if isinstance(license_val, dict):
+                license_val = (license_val.get("type") or "").strip()
 
             if license_val:
                 licenses[name] = license_val
@@ -2658,7 +2729,9 @@ def read_node_module_metadata(project_root: Path, name: str) -> tuple[str, str]:
     """Načte licenci a URL domovské stránky balíčku z adresáře ``node_modules``.
 
     Pokud soubor ``package.json`` daného balíčku neexistuje, vrátí dvojici
-    prázdných řetězců. URL repozitáře je normalizována pomocí :func:`normalize_repo_url`.
+    prázdných řetězců. Pole ``license`` může být řetězec nebo objekt s klíčem
+    ``type`` (starší formát npm). URL repozitáře je normalizována pomocí
+    :func:`normalize_repo_url`.
 
     :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
     :type project_root: Path
@@ -2676,6 +2749,8 @@ def read_node_module_metadata(project_root: Path, name: str) -> tuple[str, str]:
     data = load_json(nm_pkg)
 
     license_val = data.get("license", "")
+    if isinstance(license_val, dict):
+        license_val = (license_val.get("type") or "").strip()
 
     homepage = data.get("homepage", "")
 
@@ -2695,13 +2770,18 @@ def collect_libraries(
     project_root: Path,
     dependencies: Dict[str, str],
     lock_licenses: Dict[str, str],
+    preserved_links: Optional[Dict[str, str]] = None,
 ) -> List[JsLibrary]:
     """Sestaví seznam Node.js knihoven obohacený o licence a URL.
 
     Pro každou závislost z ``dependencies`` nejprve hledá licenci v ``lock_licenses``
     (ze souboru ``package-lock.json``), a pokud ji nenajde, čte ji přímo
-    ze souboru ``package.json`` v ``node_modules``. Homepage je vždy čtena
-    z ``node_modules``. Záznamy jsou seřazeny abecedně podle názvu balíčku.
+    ze souboru ``package.json`` v ``node_modules``. Homepage se čte z
+    ``node_modules``; chybí-li, použije se dříve uložený odkaz z ``preserved_links``
+    (poslední generovaný blok v RST — stabilizuje CI bez ``npm ci``), jinak URL
+    stránky balíčku na npm (:func:`npm_package_page_url`). Nový balíček bez
+    uloženého odkazu tedy dostane vždy npm URL. Záznamy jsou seřazeny abecedně
+    podle názvu balíčku.
 
     :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
     :type project_root: Path
@@ -2709,6 +2789,8 @@ def collect_libraries(
     :type dependencies: Dict[str, str]
     :param lock_licenses: Slovník ``{název balíčku: licence}`` z ``package-lock.json``.
     :type lock_licenses: Dict[str, str]
+    :param preserved_links: Volitelně odkazy z existujícího generovaného bloku RST.
+    :type preserved_links: Optional[Dict[str, str]]
     :return: Seřazený seznam objektů :class:`JsLibrary`.
     :rtype: List[JsLibrary]
     """
@@ -2726,6 +2808,10 @@ def collect_libraries(
             license_val = nm_license
 
         homepage = nm_homepage
+        if not homepage and preserved_links:
+            homepage = preserved_links.get(name, "")
+        if not homepage:
+            homepage = npm_package_page_url(name)
 
         rows.append(JsLibrary(name, version, license_val, homepage))
 
@@ -2794,6 +2880,11 @@ def insert_generated_block(content: str, block: str) -> str:
 def generate_js_libraries_rst() -> bool:
     """Vygeneruje tabulku Node.js JavaScript knihoven pro javascript_knihovny.rst.
 
+    Licences berou z ``package-lock.json``; odkazy nejprve z ``node_modules``,
+    při jejich absenci z existujícího generovaného bloku v souboru, jinak z
+    :func:`npm_package_page_url`. Pro aktualizaci odkazů z metadat balíčků
+    (homepage, repository) je potřeba mít nainstalované závislosti (``npm ci``).
+
     :return: True v případě úspěchu, False v opačném případě.
     :rtype: bool
     """
@@ -2821,13 +2912,14 @@ def generate_js_libraries_rst() -> bool:
 
     lock_licenses = load_lock_licenses(package_lock_file)
 
-    rows = collect_libraries(project_root, dependencies, lock_licenses)
-
-    table_block = build_rst_table(rows)
-
     existing_content = ""
     if output_file.exists():
         existing_content = output_file.read_text(encoding="utf-8")
+
+    preserved_links = parse_preserved_js_library_links(existing_content)
+    rows = collect_libraries(project_root, dependencies, lock_licenses, preserved_links)
+
+    table_block = build_rst_table(rows)
 
     new_content = insert_generated_block(existing_content, table_block)
 

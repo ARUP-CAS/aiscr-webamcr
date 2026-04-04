@@ -213,6 +213,7 @@ Pravidla:
 1. Ručně neupravujte auto-generované bloky.
 2. Po změně Selenium testů spusťte generátor dokumentace.
 3. Po změně závislostí zkontrolujte generování seznamu knihoven.
+4. Tabulka Node.js knihoven (`docs/source/12_zavislosti/javascript_knihovny.rst`): sloupec Odkaz se bere z `node_modules/`; chybí-li (např. jen Python pre-commit v CI), zůstane odkaz z posledního uloženého generovaného bloku, jinak se doplní URL na npmjs.com. Pro odkazy z `homepage` / `repository` v `package.json` spusťte `npm ci` a znovu `docs/generate_module_docs.py`.
 
 ---
 

@@ -535,12 +535,46 @@ Funkce
 
 .. py:function:: normalize_repo_url(url)
 
-   Normalizuje URL repozitáře odstraněním prefixu ``git+`` a suffixu ``.git``.
+   Normalizuje URL repozitáře pro zobrazení v dokumentaci.
+
+   Odstraní prefix ``git+``, převede ``git://host/…`` na ``https://host/…``
+   (prohlížeče ``git://`` nepodporují spolehlivě) a ořízne příponu ``.git``.
 
    :param url: Surová URL repozitáře (např. ``git+https://github.com/foo/bar.git``).
    :type url: str
    :return: Normalizovaná URL (např. ``https://github.com/foo/bar``).
    :rtype: str
+
+.. py:function:: npm_package_page_url(package_name)
+
+   Vrátí kanonickou URL stránky balíčku na https://www.npmjs.com/.
+
+   Používá se jako záložní odkaz, když v ``node_modules`` není k dispozici
+   ``homepage`` ani ``repository`` (např. při běhu generátoru bez ``npm install``).
+   Scoped balíčky (``@scope/name``) se kódují s ``%2F`` místo lomítka v cestě.
+
+   :param package_name: Název balíčku z ``package.json`` (např. ``leaflet`` nebo ``@types/node``).
+   :type package_name: str
+   :return: URL ve tvaru ``https://www.npmjs.com/package/...``.
+   :rtype: str
+
+.. py:function:: parse_preserved_js_library_links(rst_content)
+
+   Z existujícího RST vytáhne mapu ``název balíčku → odkaz`` z generovaného bloku.
+
+   Parsuje řádky ``list-table`` mezi značkami ``.. BEGIN GENERATED NODEJS LIBRARIES``
+   a ``.. END GENERATED NODEJS LIBRARIES``. Řádek záhlaví tabulky
+   (``Název knihovny``) se přeskočí. Slouží k zachování odkazů při běhu bez
+   ``node_modules`` (např. CI), aby se nepřepisovaly platné URL hodnotami
+   z :func:`npm_package_page_url`.
+
+   Očekává stejný čtyřřádkový tvar řádků tabulky jako :func:`build_rst_table`;
+   ruční zalamování buněk může parsování rozhodit.
+
+   :param rst_content: Obsah souboru ``javascript_knihovny.rst`` (nebo ekvivalent).
+   :type rst_content: str
+   :return: Slovník ``{název balíčku: URL}`` pro neprázdné odkazy.
+   :rtype: Dict[str, str]
 
 .. py:function:: load_dependencies(package_json)
 
@@ -568,7 +602,9 @@ Funkce
    Načte licenci a URL domovské stránky balíčku z adresáře ``node_modules``.
 
    Pokud soubor ``package.json`` daného balíčku neexistuje, vrátí dvojici
-   prázdných řetězců. URL repozitáře je normalizována pomocí :func:`normalize_repo_url`.
+   prázdných řetězců. Pole ``license`` může být řetězec nebo objekt s klíčem
+   ``type`` (starší formát npm). URL repozitáře je normalizována pomocí
+   :func:`normalize_repo_url`.
 
    :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
    :type project_root: Path
@@ -577,14 +613,18 @@ Funkce
    :return: Dvojice ``(licence, homepage_url)``.
    :rtype: tuple[str, str]
 
-.. py:function:: collect_libraries(project_root, dependencies, lock_licenses)
+.. py:function:: collect_libraries(project_root, dependencies, lock_licenses, preserved_links)
 
    Sestaví seznam Node.js knihoven obohacený o licence a URL.
 
    Pro každou závislost z ``dependencies`` nejprve hledá licenci v ``lock_licenses``
    (ze souboru ``package-lock.json``), a pokud ji nenajde, čte ji přímo
-   ze souboru ``package.json`` v ``node_modules``. Homepage je vždy čtena
-   z ``node_modules``. Záznamy jsou seřazeny abecedně podle názvu balíčku.
+   ze souboru ``package.json`` v ``node_modules``. Homepage se čte z
+   ``node_modules``; chybí-li, použije se dříve uložený odkaz z ``preserved_links``
+   (poslední generovaný blok v RST — stabilizuje CI bez ``npm ci``), jinak URL
+   stránky balíčku na npm (:func:`npm_package_page_url`). Nový balíček bez
+   uloženého odkazu tedy dostane vždy npm URL. Záznamy jsou seřazeny abecedně
+   podle názvu balíčku.
 
    :param project_root: Kořenový adresář projektu obsahující ``node_modules``.
    :type project_root: Path
@@ -592,6 +632,8 @@ Funkce
    :type dependencies: Dict[str, str]
    :param lock_licenses: Slovník ``{název balíčku: licence}`` z ``package-lock.json``.
    :type lock_licenses: Dict[str, str]
+   :param preserved_links: Volitelně odkazy z existujícího generovaného bloku RST.
+   :type preserved_links: Optional[Dict[str, str]]
    :return: Seřazený seznam objektů :class:`JsLibrary`.
    :rtype: List[JsLibrary]
 
@@ -619,6 +661,11 @@ Funkce
 .. py:function:: generate_js_libraries_rst()
 
    Vygeneruje tabulku Node.js JavaScript knihoven pro javascript_knihovny.rst.
+
+   Licences berou z ``package-lock.json``; odkazy nejprve z ``node_modules``,
+   při jejich absenci z existujícího generovaného bloku v souboru, jinak z
+   :func:`npm_package_page_url`. Pro aktualizaci odkazů z metadat balíčků
+   (homepage, repository) je potřeba mít nainstalované závislosti (``npm ci``).
 
    :return: True v případě úspěchu, False v opačném případě.
    :rtype: bool
