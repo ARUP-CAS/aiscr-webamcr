@@ -2774,6 +2774,12 @@ def build_rst_table(rows: List[JsLibrary]) -> str:
 
 
 def insert_generated_block(content: str, block: str) -> str:
+    """Vloží nebo nahradí generovaný blok mezi značkami v RST obsahu.
+
+    :param content: Původní text souboru (např. ``.rst``).
+    :param block: Nový generovaný úsek včetně značek začátku a konce.
+    :return: Obsah po vložení bloku, jinak ``block`` předřazený před ``content``.
+    """
     if BEGIN_MARKER in content and END_MARKER in content:
         start = content.index(BEGIN_MARKER)
         end = content.index(END_MARKER) + len(END_MARKER)

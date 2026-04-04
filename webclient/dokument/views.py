@@ -1145,6 +1145,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
         """
         Vytvoří kontext pro renderování šablony
 
+        :param kwargs: Dodatečné položky kontextu předané z rodičovské metody.
         :return: kontext šablony.
         """
         self.init_translations()

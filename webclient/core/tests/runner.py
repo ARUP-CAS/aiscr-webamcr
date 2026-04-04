@@ -131,7 +131,7 @@ class AMCRSeleniumTestRunner(BaseRunner):
         """
         Smaže testovací databáze a vyčistí jejich prostředky.
 
-        :param verbosity: Úroveň podrobnosti výstupu.
-        :param parallel_sync_disabled: Příznak pro synchronizaci parallelích testů.
+        :param args: Parametr ``args`` se předává do volání ``teardown_databases()``.
+        :param kwargs: Parametr ``kwargs`` se předává do volání ``teardown_databases()``.
         """
         pass

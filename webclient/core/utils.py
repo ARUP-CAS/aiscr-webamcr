@@ -1262,9 +1262,12 @@ class SessionIdentifier:
 
     def set_ident(self, ident_cely, timeout=3600):
         """
-        Přidá soubor do session cache.
+        Uloží identifikátor záznamu do session cache.
 
-        :param file_path: Cesta k souboru.
+        Při změně identifikátoru vymaže cache souborů.
+
+        :param ident_cely: Identifikátor záznamu ukládaný do cache.
+        :param timeout: Platnost hodnoty v cache v sekundách.
         """
         old_ident_cely = self.get_ident()
         if old_ident_cely != ident_cely:
@@ -1292,9 +1295,9 @@ class SessionIdentifier:
 
     def file_exists(self, ident):
         """
-        Odebere soubor z session cache.
+        Zjistí, zda je identifikátor mezi referencemi na soubory v session cache.
 
-        :param file_path: Cesta k odebrání.
+        :param ident: Identifikátor souboru nebo záznamu k ověření.
         """
         files = cache.get(f"{self.cache_key}_files", set())
         if ident in files:
