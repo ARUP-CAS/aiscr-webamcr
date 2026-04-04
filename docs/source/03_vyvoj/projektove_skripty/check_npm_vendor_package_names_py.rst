@@ -34,7 +34,10 @@ Funkce
 
    :param root: Kořen repozitáře.
    :return: Klíče sekce ``dependencies``.
-   :raises: ``FileNotFoundError``, ``json.JSONDecodeError``, ``ValueError`` při neplatném obsahu.
+   :raises FileNotFoundError: Vyvolá se, pokud v kořeni chybí soubor ``package.json``.
+   :raises json.JSONDecodeError: Vyvolá se při neplatném JSON v souboru.
+   :raises ValueError: Vyvolá se, pokud kořen JSON není objekt, pole ``dependencies`` není objekt,
+       nebo ne všechny klíče v ``dependencies`` jsou řetězce.
 
 .. py:function:: _tuple_inner_span(text, open_paren_index)
 
