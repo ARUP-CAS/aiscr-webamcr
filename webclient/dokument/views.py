@@ -18,6 +18,7 @@ from core.constants import (
     ODESLANI_DOK,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
+    VRACENI_DOK,
     ZAPSANI_DOK,
 )
 from core.coordTransform import convertToJTSK
@@ -2345,6 +2346,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK, anonymized),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK, anonymized),
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK, anonymized),
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_DOK, anonymized),
     }
     return historie
 

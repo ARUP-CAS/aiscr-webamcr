@@ -26,6 +26,7 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
+    VRACENI_AZ,
     ZAPSANI_AZ,
     ZMENA_AZ,
 )
@@ -1543,6 +1544,7 @@ def get_history_dates(historie_vazby, request_user):
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ, anonymized),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ, anonymized),
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ, anonymized),
+        "datum_vraceni": historie_vazby.get_last_transaction_if_type(VRACENI_AZ, anonymized),
     }
     return historie
 
