@@ -610,7 +610,11 @@ Funkce
 
 .. py:function:: insert_generated_block(content, block)
 
-   Popis není k dispozici.
+   Vloží nebo nahradí generovaný blok mezi značkami v RST obsahu.
+
+   :param content: Původní text souboru (např. ``.rst``).
+   :param block: Nový generovaný úsek včetně značek začátku a konce.
+   :return: Obsah po vložení bloku, jinak ``block`` předřazený před ``content``.
 
 .. py:function:: generate_js_libraries_rst()
 

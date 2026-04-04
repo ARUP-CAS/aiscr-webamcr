@@ -66,9 +66,12 @@ Třídy
 
    .. py:method:: set_ident()
 
-      Přidá soubor do session cache.
+      Uloží identifikátor záznamu do session cache.
 
-      :param file_path: Cesta k souboru.
+      Při změně identifikátoru vymaže cache souborů.
+
+      :param ident_cely: Identifikátor záznamu ukládaný do cache.
+      :param timeout: Platnost hodnoty v cache v sekundách.
 
    .. py:method:: get_ident()
 
@@ -85,9 +88,9 @@ Třídy
 
    .. py:method:: file_exists()
 
-      Odebere soubor z session cache.
+      Zjistí, zda je identifikátor mezi referencemi na soubory v session cache.
 
-      :param file_path: Cesta k odebrání.
+      :param ident: Identifikátor souboru nebo záznamu k ověření.
 
    .. py:method:: remove_file_reference()
 
