@@ -117,19 +117,19 @@ jobs:
           echo "log_warnings<<EOF" >> "$GITHUB_OUTPUT"
           grep -Ei "(^warning:|::warning::| WARN )" precommit.clean.log \
             | grep -Evi "warning DOC[0-9][0-9][0-9]" \
-            | sort -u || true
+            | sort -u >> "$GITHUB_OUTPUT" || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           echo "flake_errors<<EOF" >> "$GITHUB_OUTPUT"
-          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log || true
+          grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log >> "$GITHUB_OUTPUT" || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           echo "image_parity_log<<EOF" >> "$GITHUB_OUTPUT"
-          grep '^\[image-ref-parity\]' precommit.clean.log || true
+          grep '^\[image-ref-parity\]' precommit.clean.log >> "$GITHUB_OUTPUT" || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           echo "npm_vendor_log<<EOF" >> "$GITHUB_OUTPUT"
-          grep '^\[npm-vendor-names\]' precommit.clean.log || true
+          grep '^\[npm-vendor-names\]' precommit.clean.log >> "$GITHUB_OUTPUT" || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           grep -E "^[^ ]+:[0-9]+:[0-9]+: [A-Z][0-9]{3}" precommit.clean.log | while read line; do
@@ -141,7 +141,7 @@ jobs:
           done || true
 
           echo "log_tail<<EOF" >> "$GITHUB_OUTPUT"
-          tail -n 80 precommit.clean.log || true
+          tail -n 80 precommit.clean.log >> "$GITHUB_OUTPUT" || true
           echo "EOF" >> "$GITHUB_OUTPUT"
 
           exit 0
