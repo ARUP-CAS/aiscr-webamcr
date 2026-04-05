@@ -36,6 +36,32 @@ Třídy
 
       :return: Načtená data odpovídající zadaným vstupům.
 
+   .. py:method:: acquire_import_lock()
+
+      Atomicky získá Redis lock pro běžící hromadný import.
+
+      :param connection: Redis spojení, přes které se lock zapisuje.
+      :param token: Jedinečný token vlastníka locku.
+      :param ttl_seconds: Doba expirace locku v sekundách.
+      :return: ``True``, pokud byl lock získán; jinak ``False``.
+
+   .. py:method:: refresh_import_lock()
+
+      Prodlouží expiraci importního locku pouze tehdy, pokud ho stále vlastní zadaný token.
+
+      :param connection: Redis spojení, přes které se lock obnovuje.
+      :param token: Jedinečný token vlastníka locku.
+      :param ttl_seconds: Nová doba expirace locku v sekundách.
+      :return: ``True``, pokud byl lock úspěšně obnoven; jinak ``False``.
+
+   .. py:method:: release_import_lock()
+
+      Uvolní importní lock pouze tehdy, pokud ho stále vlastní zadaný token.
+
+      :param connection: Redis spojení, přes které se lock maže.
+      :param token: Jedinečný token vlastníka locku.
+      :return: ``True``, pokud byl lock odstraněn; jinak ``False``.
+
    .. py:method:: prepare_model_for_redis()
 
       Provádí operaci prepare model for redis.

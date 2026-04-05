@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import re
+import secrets
 import tempfile
 import unicodedata
 import zipfile
@@ -2531,5 +2532,19 @@ class DataImportStart(LoginRequiredMixin, View):
         job_id = kwargs.get("job_id")
         from cron import tasks
 
-        tasks.run_data_import.delay(job_id, request.user.id)
+        redis_connector = RedisConnector.get_connection_decode()
+        lock_token = secrets.token_hex(16)
+        if not RedisConnector.acquire_import_lock(redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS):
+            return JsonResponse(
+                {
+                    "result": "already_running",
+                    "status_message": _("core.templates.admin.import_data.import_is_running"),
+                },
+                status=409,
+            )
+        try:
+            tasks.run_data_import.delay(job_id, request.user.id, lock_token)
+        except Exception:
+            RedisConnector.release_import_lock(redis_connector, lock_token)
+            raise
         return JsonResponse({"result": "ok"})

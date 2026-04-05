@@ -24,6 +24,7 @@ from .import_data_mappers import (
     ImportModelMapper,
     LookupImportField,
 )
+from .models import AntivirusCheckResult, Soubor
 from .setting_models import CustomAdminSettings
 from .utils import is_maintenance_in_progress
 
@@ -308,6 +309,9 @@ class AmcrCustomAdminSite(admin.AdminSite):
             context["form"] = UpdateMetadataFileForm()
         return TemplateResponse(request, "admin/fedora_management/update_metadata.html", context)
 
+    IMPORT_DATA_REDIS_EXPIRATION = 6 * 60 * 60  # 6 hodin
+    IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE = 1024 * 1024 * 1024  # 1024 MB
+
     def import_data(self, request):
         """
         Importuje datové CSV soubory ze ZIP archivu do interní importní fronty.
@@ -330,18 +334,22 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 name = name.split("/")[-1]
             return name.strip().lower()
 
+        # Missing Redis key returns None, so bool(get(...)) is False when no import lock is held.
+        import_data_running = bool(self.redis_connector.get(RedisConnector.IMPORT_DATA_LOCK_KEY))
+
         context = {
             "app_list": self.get_app_list(request),
             "maintenance": is_maintenance_in_progress(),
+            "import_data_running": import_data_running,
             **self.each_context(request),
         }
-        if not is_maintenance_in_progress():
+        if not is_maintenance_in_progress() or import_data_running:
             return TemplateResponse(request, "admin/import_data/import_data.html", context)
         if request.method == "POST" and request.user.is_superuser:
+            data_file = request.FILES["data_file"]
             form = ImportDataAdminForm(request.POST, request.FILES)
             if form.is_valid():
                 cleaned_data = form.cleaned_data
-                data_file = cleaned_data["data_file"]
             else:
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             context["form"] = form
@@ -351,11 +359,19 @@ class AmcrCustomAdminSite(admin.AdminSite):
             context["url_stop"] = reverse("core:data-import-stop", args=[job_id])
             validation_results = []
             records = []
-            LookupImportField.records = records
-            LookupImportField.clear_cache()
-            record_id = 0
+            record_id = 0  # index of valid records only — used as Redis key suffix and records_count
+            row_order = 0  # index of every CSV row (valid + invalid) — used as item_order in validation results
             invalid_records = []
             performed_action = cleaned_data["performed_action"]
+            antivirus_result = Soubor.check_antivirus(io.BytesIO(file_bytes))
+            if antivirus_result == AntivirusCheckResult.VIRUS_FOUND:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = _("core.admin.import_data.error.virus_found")
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            if antivirus_result == AntivirusCheckResult.CHECK_FAILED:
+                logger.warning("core.admin_sites.AmcrCustomAdminSite.import_data.antivirus_check_failed")
+            LookupImportField.set_records(records)
+            LookupImportField.clear_cache()
             try:
                 with zipfile.ZipFile(io.BytesIO(file_bytes)) as zf:
                     file_names = [
@@ -374,12 +390,15 @@ class AmcrCustomAdminSite(admin.AdminSite):
                     if not normalized_imported_file_names.issubset(allowed_file_names):
                         raise ImportDataUnsupportedFilesError(normalized_imported_file_names - allowed_file_names)
                     file_names.sort(key=lambda fn: mapper_key_order.get(normalize_file_name(fn), len(mapper_key_order)))
+                    total_uncompressed_size = sum(zf.getinfo(fn).file_size for fn in file_names)
+                    if total_uncompressed_size > self.IMPORT_ZIP_MAX_UNCOMPRESSED_SIZE:
+                        raise ValueError(_("core.admin.import_data.error.zip_too_large"))
                     for file_name in file_names:
                         with zf.open(file_name) as file:
                             sheet = pd.read_csv(file)
                         file_name = normalize_file_name(file_name)
+                        mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
                         for idx, row in sheet.iterrows():
-                            mapper_class = ImportModelMapper.get_import_data_mapper(file_name)
 
                             def format_primary_key(pk):
                                 """
@@ -397,42 +416,45 @@ class AmcrCustomAdminSite(admin.AdminSite):
                                     mapper = mapper_class(row.to_dict())
                                     record = mapper.map(performed_action, serialize=True, include_primary_key=True)
                                     mapper.check_required_fields(performed_action)
-                                    primary_key = mapper.import_validation(performed_action)
-                                    LookupImportField.records += mapper.create_records(performed_action)
+                                    primary_key = mapper.import_validation(performed_action, request.user.pk)
+                                    records += mapper.create_records(performed_action)
                                     record["__file_name"] = file_name
                                 except ImportDataIntegrityError as err:
                                     validation_results.append(
                                         ImportDataValidationResult(
-                                            item_order=record_id,
+                                            item_order=row_order,
                                             file_name=file_name,
                                             primary_key_import=format_primary_key(err.record_id),
                                             validation_result=str(err),
                                         )
                                     )
-                                    invalid_records.append(record_id)
+                                    invalid_records.append(row_order)
                                 except ImportDataError as err:
                                     validation_results.append(
                                         ImportDataValidationResult(
-                                            item_order=record_id,
+                                            item_order=row_order,
                                             file_name=file_name,
                                             validation_result=str(err),
                                         )
                                     )
-                                    invalid_records.append(record_id)
+                                    invalid_records.append(row_order)
                                 else:
                                     records.append(record)
                                     validation_results.append(
                                         ImportDataValidationResult(
-                                            item_order=record_id,
+                                            item_order=row_order,
                                             file_name=file_name,
                                             primary_key_import=format_primary_key(primary_key),
                                             validation_result=_("core.admin.import_data.record_valid"),
                                         )
                                     )
                                     self.redis_connector.set(
-                                        f"import_data_{job_id}_record_{record_id}", json.dumps(record)
+                                        f"import_data_{job_id}_record_{record_id}",
+                                        json.dumps(record),
+                                        ex=self.IMPORT_DATA_REDIS_EXPIRATION,
                                     )
-                                record_id += 1
+                                    record_id += 1
+                                row_order += 1
                             else:
                                 raise ImportDataUnsupportedFileError(file_name)
             except zipfile.BadZipFile:
@@ -440,6 +462,10 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 context["error_message_details"] = _("core.admin.import_data.error.bad_zip_file")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             except ImportDataUnsupportedFilesError as err:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = str(err)
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            except ImportDataUnsupportedFileError as err:
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = str(err)
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
@@ -451,16 +477,32 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 context["error_message_details"] = _("core.admin.import_data.error.unexpected_error")
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             finally:
-                LookupImportField.records = []
+                LookupImportField.clear_records()
                 LookupImportField.clear_cache()
             records_count = record_id
-            self.redis_connector.set(f"import_data_count_{job_id}", records_count)
-            self.redis_connector.set(f"import_performed_action_{job_id}", performed_action)
-            self.redis_connector.set(f"import_data_files_{job_id}", json.dumps([]))
-            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0)
+            self.redis_connector.set(f"import_data_count_{job_id}", records_count, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
+            self.redis_connector.set(
+                f"import_performed_action_{job_id}", performed_action, ex=self.IMPORT_DATA_REDIS_EXPIRATION
+            )
+            self.redis_connector.set(
+                f"import_data_progress_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
+            )
+            self.redis_connector.set(
+                f"import_data_primary_keys_{job_id}", json.dumps({}), ex=self.IMPORT_DATA_REDIS_EXPIRATION
+            )
+            self.redis_connector.set(
+                f"import_data_files_{job_id}", json.dumps([]), ex=self.IMPORT_DATA_REDIS_EXPIRATION
+            )
+            self.redis_connector.set(f"import_data_progress_files_{job_id}", 0, ex=self.IMPORT_DATA_REDIS_EXPIRATION)
+            self.redis_connector.set(
+                f"import_data_status_message_{job_id}",
+                _("core.templates.admin.import_data.starting"),
+                ex=self.IMPORT_DATA_REDIS_EXPIRATION,
+            )
             self.redis_connector.set(
                 f"import_data_validation_results_{job_id}",
                 json.dumps([r.to_dict() for r in validation_results]),
+                ex=self.IMPORT_DATA_REDIS_EXPIRATION,
             )
             context["records_count"] = records_count
             context["job_id"] = job_id

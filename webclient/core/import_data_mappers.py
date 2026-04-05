@@ -1,7 +1,9 @@
 import datetime
+import functools
 import re
 from abc import ABC
 from collections.abc import Iterable
+from contextvars import ContextVar
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -519,7 +521,7 @@ class PositiveIntegerImportField(BaseImportField):
 class DecimalImportField(BaseImportField):
     """Importní pole pro desetinná čísla (float)."""
 
-    pattern = re.compile(r"\d+\.\d*")
+    pattern = re.compile(r"\d+\.?\d*")
 
     def _process_value(self, value) -> float | None:
         """
@@ -717,8 +719,8 @@ class DateRangeImportField(BaseImportField):
 class LookupImportField(BaseImportField):
     """Importní pole pro hodnoty odkazující na instanci jiného modelu (cizí klíč)."""
 
-    records = []
-    lookup_cache = {}
+    _records_context = ContextVar("lookup_import_field_records", default=None)
+    _lookup_cache_context = ContextVar("lookup_import_field_cache", default=None)
 
     def __init__(
         self, lookup_model_classes=None, lookup_field_name: str = "ident_cely", limit_choices_to: dict | None = None
@@ -750,11 +752,56 @@ class LookupImportField(BaseImportField):
     @classmethod
     def clear_cache(cls):
         """
-        Vyčistí sdílenou cache vyhledaných FK záznamů.
+        Vyčistí cache vyhledaných FK záznamů v aktuálním kontextu.
 
         :return: Funkce nevrací žádnou hodnotu.
         """
-        LookupImportField.lookup_cache = {}
+        cls._lookup_cache_context.set({})
+
+    @classmethod
+    def clear_records(cls):
+        """
+        Vyčistí seznam importovaných záznamů v aktuálním kontextu.
+
+        :return: Funkce nevrací žádnou hodnotu.
+        """
+        cls._records_context.set([])
+
+    @classmethod
+    def set_records(cls, records):
+        """
+        Nastaví seznam dosud připravených importovaných záznamů pro aktuální kontext.
+
+        :param records: Seznam záznamů dostupný pro FK lookup při validaci importu.
+        :return: Funkce nevrací žádnou hodnotu.
+        """
+        cls._records_context.set(records)
+
+    @classmethod
+    def get_records(cls):
+        """
+        Vrátí seznam importovaných záznamů dostupný v aktuálním kontextu.
+
+        :return: Seznam záznamů nebo prázdný seznam, pokud ještě nebyl nastaven.
+        """
+        records = cls._records_context.get()
+        if records is None:
+            records = []
+            cls._records_context.set(records)
+        return records
+
+    @classmethod
+    def get_lookup_cache(cls):
+        """
+        Vrátí cache vyhledaných FK záznamů pro aktuální kontext.
+
+        :return: Slovník s cache lookup výsledků.
+        """
+        lookup_cache = cls._lookup_cache_context.get()
+        if lookup_cache is None:
+            lookup_cache = {}
+            cls._lookup_cache_context.set(lookup_cache)
+        return lookup_cache
 
     @property
     def instance_value(self):
@@ -821,27 +868,29 @@ class LookupImportField(BaseImportField):
 
         if str(value).lower() == "nan" or value is None or len(str(value)) == 0:
             return None
+        lookup_cache = self.get_lookup_cache()
+        records = self.get_records()
         for current_class in self.lookup_model_class_list:
             cache_key = self._get_cache_key(current_class, self.lookup_field_name, value)
-            record = LookupImportField.lookup_cache.get(cache_key)
+            record = lookup_cache.get(cache_key)
             if record:
                 self._check_limit_choices_to(record)
                 self._instance_value = record
                 return value
             record = current_class.objects.filter(**{self.lookup_field_name: value}).first()
             if record:
-                LookupImportField.lookup_cache[cache_key] = record
+                lookup_cache[cache_key] = record
                 self._check_limit_choices_to(record)
                 self._instance_value = record
                 return value
             filtered_records = [
                 record
-                for record in self.records
+                for record in records
                 if isinstance(record, current_class)
                 and self._get_record_lookup_value(record, self.lookup_field_name) == value
             ]
             if len(filtered_records) == 1:
-                LookupImportField.lookup_cache[cache_key] = filtered_records[0]
+                lookup_cache[cache_key] = filtered_records[0]
                 self._check_limit_choices_to(filtered_records[0])
                 self._instance_value = filtered_records[0]
                 return value
@@ -958,6 +1007,8 @@ class GeomImportField(BaseImportField):
         if isinstance(value, str):
             value = GEOSGeometry(value, srid=self.srid)
         if isinstance(value, GEOSGeometry):
+            if value.srid != self.srid:
+                value.transform(self.srid)
             return value
         raise ImportDataError(f"{_('core_admin.GeomImportField.message.invalid_date_value')}: {value}")
 
@@ -985,27 +1036,31 @@ class GenericForeignKeyImportField(LookupImportField):
         :return: Vrací hodnotu podle větve zpracování, typicky: výsledek volání ``getattr()``, atribut objektu.
         """
         if self.serialized_attribute:
-            return getattr(self._value, self.serialized_attribute)
+            return getattr(self._instance_value, self.serialized_attribute)
         else:
-            return self._value.pk
+            return self._value
 
     def _process_value(self, value: str | int):
         """
-               Provádí operaci process value.
+        Vyhledá objekt generického cizího klíče v databázi a vrátí původní identifikátor.
 
-               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :return: Výstup funkce odpovídající implementované logice.
+        Model instanci ukládá do ``self._instance_value`` — stejný kontrakt jako ``LookupImportField``.
+        Původní identifikátor (string nebo int) se vrací jako návratová hodnota, čímž je zachován
+        LSP kontrakt s rodičovskou třídou.
 
-            :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
+        :param value: Identifikátor záznamu — string ve formátu ``"<prefix>-<číslo>"`` nebo číslo.
+        :return: Původní identifikátor po případné konverzi na int.
+        :raises ImportDataMissingReferencedValueError: Vyvolá se, pokud hodnota není nalezena v žádném z modelů.
         """
         if isinstance(value, str) and (match := re.match(r"(?:\w+-)?(\d+)", value)):
             value = int(match.group(1))
 
         for current_class in self.lookup_model_class_list:
-            if current_class.objects.filter(**{self.lookup_field_name: value}).exists():
-                value = current_class.objects.get(**{self.lookup_field_name: value})
-                self._instance_value = value
+            try:
+                self._instance_value = current_class.objects.get(**{self.lookup_field_name: value})
                 return value
+            except current_class.DoesNotExist:
+                continue
         raise ImportDataMissingReferencedValueError(
             value,
             ", ".join([current_class.__name__ for current_class in self.lookup_model_class_list]),
@@ -3642,14 +3697,29 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         field_mapping["ruian"] = GenericForeignKeyImportField([RuianKatastr, RuianOkres, RuianKraj], "kod", "kod")
         return field_mapping
 
+    @functools.cached_property
+    def _ruian_content_object(self) -> RuianKatastr | RuianOkres | RuianKraj:
+        """
+        Vrátí objekt RUIAN odpovídající hodnotě v importovaném záznamu.
+
+        Výsledek je cachován per-instance — DB dotaz proběhne nejvýše jednou za řádek CSV,
+        i když je ``_ruian_content_object`` voláno z více metod (``_get_filter_kwargs_primary_key``,
+        ``map``, ``create_records``).
+
+        :return: Instance modelu ``RuianKatastr``, ``RuianOkres`` nebo ``RuianKraj``.
+        :raises ImportDataMissingReferencedValueError: Vyvolá se, pokud hodnota není nalezena v žádném z modelů.
+        """
+        field = GenericForeignKeyImportField([RuianKatastr, RuianOkres, RuianKraj], "kod", "kod")
+        field.value = self.value_dict.get("ruian", self.value_dict.get("object_id"))
+        return field._instance_value
+
     def _get_filter_kwargs_primary_key(self) -> dict | None:
         """
         Vrací filter kwargs primary key.
 
         :return: Načtená data odpovídající zadaným vstupům.
         """
-        primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
-        content_object = primary_key_import_field._process_value(self.value_dict["ruian"])
+        content_object = self._ruian_content_object
         return {
             "user__ident_cely": self.value_dict["uzivatel"],
             "content_type": ContentType.objects.get_for_model(content_object),
@@ -3679,10 +3749,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         mapping_dict = self.map(performed_action, True)
         mapping_dict = {self.map_column_name_to_field_name(field): value for field, value in mapping_dict.items()}
         app_label, model = mapping_dict["content_type"].split(".")
-        primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
-        content_object = primary_key_import_field._process_value(
-            self.value_dict.get("ruian", self.value_dict.get("object_id"))
-        )
+        content_object = self._ruian_content_object
         return [
             Pes(
                 user=mapping_dict["user"],
@@ -3720,10 +3787,7 @@ class UzivatelNotifikaceProjektMapper(ImportModelMapper):
         :return: Výstup funkce odpovídající implementované logice.
         """
         mapping_dict = super().map(performed_action, instance_values, serialize, include_primary_key)
-        primary_key_import_field: GenericForeignKeyImportField = self.get_mapping()["ruian"]
-        content_object = primary_key_import_field._process_value(
-            self.value_dict.get("ruian", self.value_dict.get("object_id"))
-        )
+        content_object = self._ruian_content_object
         content_type: ContentType = ContentType.objects.get_for_model(content_object)
         return {
             "uzivatel": mapping_dict["uzivatel"],

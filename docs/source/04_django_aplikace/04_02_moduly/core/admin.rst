@@ -214,16 +214,6 @@ Třídy
 
       :return: Vrací výsledek volání ``TemplateResponse()``.
 
-   .. py:method:: import_data()
-
-      Creates a view for importing data from a zip file.
-
-      :param request: Parametr ``request`` se předává do volání ``get_app_list()``, ``each_context()``, pracuje se s atributy ``method``, ``user``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-
-      :return: Vrací výsledek volání ``TemplateResponse()``.
-      :raises ImportDataUnsupportedFilesError: Vyvolá se při splnění podmínky ``not normalized_imported_file_names.issubset(allowed_file_names)``.
-      :raises ImportDataUnsupportedFileError: Vyvolá se při splnění podmínky ``mapper_class``.
-
    .. py:method:: get_urls()
 
       Vrací urls. v aplikaci.

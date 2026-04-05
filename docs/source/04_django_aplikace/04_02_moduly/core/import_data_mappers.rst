@@ -421,9 +421,34 @@ Třídy
 
    .. py:method:: clear_cache()
 
-      Vyčistí sdílenou cache vyhledaných FK záznamů.
+      Vyčistí cache vyhledaných FK záznamů v aktuálním kontextu.
 
       :return: Funkce nevrací žádnou hodnotu.
+
+   .. py:method:: clear_records()
+
+      Vyčistí seznam importovaných záznamů v aktuálním kontextu.
+
+      :return: Funkce nevrací žádnou hodnotu.
+
+   .. py:method:: set_records()
+
+      Nastaví seznam dosud připravených importovaných záznamů pro aktuální kontext.
+
+      :param records: Seznam záznamů dostupný pro FK lookup při validaci importu.
+      :return: Funkce nevrací žádnou hodnotu.
+
+   .. py:method:: get_records()
+
+      Vrátí seznam importovaných záznamů dostupný v aktuálním kontextu.
+
+      :return: Seznam záznamů nebo prázdný seznam, pokud ještě nebyl nastaven.
+
+   .. py:method:: get_lookup_cache()
+
+      Vrátí cache vyhledaných FK záznamů pro aktuální kontext.
+
+      :return: Slovník s cache lookup výsledků.
 
    .. py:method:: instance_value()
 
@@ -560,12 +585,15 @@ Třídy
 
    .. py:method:: _process_value()
 
-      Provádí operaci process value.
+      Vyhledá objekt generického cizího klíče v databázi a vrátí původní identifikátor.
 
-      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``match()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      :return: Výstup funkce odpovídající implementované logice.
+      Model instanci ukládá do ``self._instance_value`` — stejný kontrakt jako ``LookupImportField``.
+      Původní identifikátor (string nebo int) se vrací jako návratová hodnota, čímž je zachován
+      LSP kontrakt s rodičovskou třídou.
 
-      :raises ImportDataMissingReferencedValueError: Vyvolá se v konkrétních chybových větvích této funkce.
+      :param value: Identifikátor záznamu — string ve formátu ``"<prefix>-<číslo>"`` nebo číslo.
+      :return: Původní identifikátor po případné konverzi na int.
+      :raises ImportDataMissingReferencedValueError: Vyvolá se, pokud hodnota není nalezena v žádném z modelů.
 
 
 .. py:class:: ImportModelMapper
@@ -1897,6 +1925,17 @@ Třídy
       :param include_primary_key: Parametr ``include_primary_key`` slouží jako vstup pro logiku funkce ``get_mapping``.
 
       :return: Vrací proměnná ``field_mapping``.
+
+   .. py:method:: _ruian_content_object()
+
+      Vrátí objekt RUIAN odpovídající hodnotě v importovaném záznamu.
+
+      Výsledek je cachován per-instance — DB dotaz proběhne nejvýše jednou za řádek CSV,
+      i když je ``_ruian_content_object`` voláno z více metod (``_get_filter_kwargs_primary_key``,
+      ``map``, ``create_records``).
+
+      :return: Instance modelu ``RuianKatastr``, ``RuianOkres`` nebo ``RuianKraj``.
+      :raises ImportDataMissingReferencedValueError: Vyvolá se, pokud hodnota není nalezena v žádném z modelů.
 
    .. py:method:: _get_filter_kwargs_primary_key()
 

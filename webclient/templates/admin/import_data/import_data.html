@@ -172,6 +172,7 @@
       const translations = {
           "cron.tasks.run_data_import.success": "{% trans 'cron.tasks.run_data_import.success' %}",
           "cron.tasks.run_data_import.file": "{% trans 'cron.tasks.run_data_import.file' %}",
+          "cron.tasks.run_data_import.rolled_back": "{% trans 'cron.tasks.run_data_import.rolled_back' %}",
       }
       const requestUrl = "{{ url }}"
       const stopRequestUrl = "{{ url_stop }}"
@@ -193,7 +194,17 @@
                 stopRequestButton.disabled = false
             }
             document.getElementById("processCurrentStatus").textContent = "{% trans 'core.templates.admin.import_data.starting' %}"
-            await fetch(startRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+            const response = await fetch(startRequestUrl, {method: "POST", headers: {"X-CSRFToken": csrfToken}})
+            if (!response.ok) {
+                if (stopRequestButton) {
+                    stopRequestButton.disabled = true
+                }
+                startImportButton.disabled = false
+                const data = await response.json().catch(() => null)
+                document.getElementById("processCurrentStatus").textContent =
+                    data?.status_message || "{% trans 'core.templates.admin.import_data.import_is_running' %}"
+                return
+            }
             process()
         });
       }

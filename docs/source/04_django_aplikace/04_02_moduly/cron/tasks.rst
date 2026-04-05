@@ -89,7 +89,7 @@ Funkce
 
    Provádí operaci call digiarchiv update task.
 
-.. py:function:: run_data_import(job_id, user_id)
+.. py:function:: run_data_import(job_id, user_id, lock_token)
 
    Spustí data import.
 
