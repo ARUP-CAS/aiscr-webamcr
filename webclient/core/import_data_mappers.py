@@ -382,6 +382,19 @@ class ImportDataActiveUserCannotBeDeleted(ImportDataError):
         )
 
 
+class ImportDataEmptyError(ImportDataError):
+    """
+    Výjimka vyvolaná při pokusu o import ZIP archivu bez platných záznamů.
+
+    Vyvolá se po dokončení validační smyčky, pokud žádný CSV soubor neobsahuje žádný
+    záznam k importu.
+    """
+
+    def __init__(self):
+        """Inicializuje výjimku pro prázdný import."""
+        super().__init__(_("core.admin.import_data.error.empty_import"))
+
+
 class BaseImportField:
     """
     Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -453,12 +466,15 @@ class FileNameImportField(BaseImportField):
 
     def _process_value(self, value) -> str | None:
         """
-               Provádí operaci process value.
+        Ověří a normalizuje název souboru pro import.
 
-               :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``decode()``, ``str()``, ``startswith()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-        :return: Výstup funkce odpovídající implementované logice.
+        Hodnotu typu ``bytes`` dekóduje jako UTF-8, ostatní ne-řetězcové typy převede na ``str``.
+        Odmítne názvy obsahující adresářové oddělovače (``/``, ``\\``) nebo začínající tečkou,
+        protože takové hodnoty by mohly vést k průchodu adresáři nebo skrytým souborům.
 
-            :raises ImportDataError: Vyvolá se při neplatném názvu souboru.
+        :param value: Název souboru k ověření; může být ``str``, ``bytes`` nebo jiný typ.
+        :return: Ověřený název souboru jako řetězec, nebo ``None`` pokud je vstup ``None``.
+        :raises ImportDataError: Vyvolá se, pokud název obsahuje ``/`` nebo ``\\``, nebo začíná tečkou.
         """
         if value is None:
             return None

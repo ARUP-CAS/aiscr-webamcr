@@ -585,15 +585,17 @@ class FedoraCustomAdminSite(admin.AdminSite):
                     extra={"error": err},
                 )
                 context["error"] = _("fedora_management.admin.YourCustomAdminSite.cannot_read_file")
+        if not isinstance(sheet, pd.DataFrame):
+            return None
         if sheet.shape[1] != 1:
             context["error"] = _("fedora_management.admin.YourCustomAdminSite.too_many_columns")
-            sheet = None
-        if isinstance(sheet, pd.DataFrame):
-            sheet.columns = [
-                "ident_cely",
-            ]
-            sheet["ident_cely"] = sheet["ident_cely"].str.strip()
-            sheet = sheet.set_index("ident_cely")
+            return None
+        sheet.columns = [
+            "ident_cely",
+        ]
+        sheet["ident_cely"] = sheet["ident_cely"].astype(str).str.strip()
+        sheet = sheet[sheet["ident_cely"] != ""]
+        sheet = sheet.set_index("ident_cely")
         return sheet
 
     def update_doi(self, request):

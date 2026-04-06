@@ -8,6 +8,7 @@ import zipfile
 
 import pandas as pd
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.translation import gettext as _
@@ -16,6 +17,7 @@ from rosetta.templatetags.rosetta import can_translate as rosetta_can_translate
 from .connectors import RedisConnector
 from .forms import ImportDataAdminForm
 from .import_data_mappers import (
+    ImportDataEmptyError,
     ImportDataError,
     ImportDataIntegrityError,
     ImportDataUnsupportedFileError,
@@ -323,6 +325,9 @@ class AmcrCustomAdminSite(admin.AdminSite):
         :raises ImportDataUnsupportedFileError: Vyvolá se, pokud pro nalezený CSV soubor neexistuje mapper.
         """
 
+        if not request.user.is_superuser:
+            raise PermissionDenied
+
         def normalize_file_name(name: str) -> str:
             """
             Normalizuje název souboru ze ZIP archivu na formát pro porovnání s mapery.
@@ -457,6 +462,8 @@ class AmcrCustomAdminSite(admin.AdminSite):
                                 row_order += 1
                             else:
                                 raise ImportDataUnsupportedFileError(file_name)
+                    if row_order == 0:
+                        raise ImportDataEmptyError()
             except zipfile.BadZipFile:
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = _("core.admin.import_data.error.bad_zip_file")
@@ -466,6 +473,10 @@ class AmcrCustomAdminSite(admin.AdminSite):
                 context["error_message_details"] = str(err)
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
             except ImportDataUnsupportedFileError as err:
+                context["error_message"] = _("core.admin.import_data.error.import_error")
+                context["error_message_details"] = str(err)
+                return TemplateResponse(request, "admin/import_data/import_data.html", context)
+            except ImportDataEmptyError as err:
                 context["error_message"] = _("core.admin.import_data.error.import_error")
                 context["error_message_details"] = str(err)
                 return TemplateResponse(request, "admin/import_data/import_data.html", context)
@@ -502,6 +513,11 @@ class AmcrCustomAdminSite(admin.AdminSite):
             self.redis_connector.set(
                 f"import_data_validation_results_{job_id}",
                 json.dumps([r.to_dict() for r in validation_results]),
+                ex=self.IMPORT_DATA_REDIS_EXPIRATION,
+            )
+            self.redis_connector.set(
+                f"import_data_valid_{job_id}",
+                "1" if not invalid_records else "0",
                 ex=self.IMPORT_DATA_REDIS_EXPIRATION,
             )
             context["records_count"] = records_count

@@ -58,6 +58,7 @@ from core.utils import (
     get_message,
     get_pas_from_envelope,
     get_pian_from_envelope,
+    is_maintenance_in_progress,
     replace_last,
 )
 from django.conf import settings
@@ -2529,10 +2530,26 @@ class DataImportStart(LoginRequiredMixin, View):
         """
         if not request.user.is_superuser:
             raise PermissionDenied
+        if not is_maintenance_in_progress():
+            return JsonResponse(
+                {
+                    "result": "error",
+                    "status_message": _("core.templates.admin.import_data.not_maintenance"),
+                },
+                status=403,
+            )
         job_id = kwargs.get("job_id")
         from cron import tasks
 
         redis_connector = RedisConnector.get_connection_decode()
+        if redis_connector.get(f"import_data_valid_{job_id}") != "1":
+            return JsonResponse(
+                {
+                    "result": "error",
+                    "status_message": _("core.templates.admin.import_data.invalid_records"),
+                },
+                status=422,
+            )
         lock_token = secrets.token_hex(16)
         if not RedisConnector.acquire_import_lock(redis_connector, lock_token, tasks.IMPORT_DATA_RUNNING_TTL_SECONDS):
             return JsonResponse(

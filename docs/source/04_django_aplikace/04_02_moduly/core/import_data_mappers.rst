@@ -173,6 +173,20 @@ Třídy
       :param primary_key_value: Hodnota ``ident_cely`` uživatele, který nesmí být smazán.
 
 
+.. py:class:: ImportDataEmptyError
+
+   Výjimka vyvolaná při pokusu o import ZIP archivu bez platných záznamů.
+
+   Vyvolá se po dokončení validační smyčky, pokud žádný CSV soubor neobsahuje žádný
+   záznam k importu.
+
+   **Metody:**
+
+   .. py:method:: __init__()
+
+      Inicializuje výjimku pro prázdný import.
+
+
 .. py:class:: BaseImportField
 
    Základní třída pro importní pole. Neprovádí žádnou validaci ani zpracování hodnoty.
@@ -231,12 +245,15 @@ Třídy
 
    .. py:method:: _process_value()
 
-      Provádí operaci process value.
+      Ověří a normalizuje název souboru pro import.
 
-      :param value: Parametr ``value`` předává se do volání ``isinstance()``, ``decode()``, ``str()``, ``startswith()``, ovlivňuje větvení podmínek, vstupuje do návratové hodnoty.
-      :return: Výstup funkce odpovídající implementované logice.
+      Hodnotu typu ``bytes`` dekóduje jako UTF-8, ostatní ne-řetězcové typy převede na ``str``.
+      Odmítne názvy obsahující adresářové oddělovače (``/``, ``\``) nebo začínající tečkou,
+      protože takové hodnoty by mohly vést k průchodu adresáři nebo skrytým souborům.
 
-      :raises ImportDataError: Vyvolá se při neplatném názvu souboru.
+      :param value: Název souboru k ověření; může být ``str``, ``bytes`` nebo jiný typ.
+      :return: Ověřený název souboru jako řetězec, nebo ``None`` pokud je vstup ``None``.
+      :raises ImportDataError: Vyvolá se, pokud název obsahuje ``/`` nebo ``\``, nebo začíná tečkou.
 
 
 .. py:class:: IntegerImportField

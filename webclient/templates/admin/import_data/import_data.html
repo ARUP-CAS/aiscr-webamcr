@@ -57,9 +57,7 @@
 
 {% block content %}
   <div id="content-main">
-    {% if not request.user.is_superuser %}
-      <p>{% trans "core.templates.admin.import_data.not_superuser" %}</p>
-    {% elif not maintenance %}
+    {% if not maintenance %}
       <p>{% trans "core.templates.admin.import_data.not_maintenance" %}</p>
     {% elif import_data_running %}
       <p>{% trans "core.templates.admin.import_data.import_is_running" %}</p>
