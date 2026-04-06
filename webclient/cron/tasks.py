@@ -574,12 +574,13 @@ def run_data_import(job_id, user_id, lock_token):
                     item_class, item_pk = item
                     record = item_class.objects.get(pk=item_pk)
                     if getattr(record, "ident_cely", None):
-                        converted_items.add(record.ident_cely)
+                        converted_key = record.ident_cely
+                        converted_items.add(converted_key)
+                        fedora_update_targets_record_ids_dict[converted_key].append(record_id)
                         continue
                 converted_items.add(item)
-            fedora_update_targets_set |= converted_items
-            for item in items:
                 fedora_update_targets_record_ids_dict[item].append(record_id)
+            fedora_update_targets_set |= converted_items
 
         try:
             with transaction.atomic():
